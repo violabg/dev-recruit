@@ -1,0 +1,184 @@
+"use server";
+
+import { randomUUID } from "node:crypto";
+
+import { candidateQuizAssignmentSchema } from "@/lib/schemas";
+import { revalidatePath } from "next/cache";
+
+import { requireUser } from "../auth-server";
+import prisma from "../prisma";
+
+export type AssignQuizzesToCandidateState = {
+  message: string;
+  errors?: {
+    quizIds?: string[];
+    candidateId?: string[];
+    general?: string[];
+  };
+  createdInterviews?: {
+    quizId: string;
+    token: string;
+    quizTitle: string;
+  }[];
+  success?: boolean;
+};
+
+const generateInterviewToken = async (): Promise<string> => {
+  while (true) {
+    const token = randomUUID().replace(/-/g, "");
+
+    const existing = await prisma.interview.findUnique({
+      where: { token },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return token;
+    }
+  }
+};
+
+export async function assignQuizzesToCandidate(
+  _prevState: AssignQuizzesToCandidateState,
+  formData: FormData
+): Promise<AssignQuizzesToCandidateState> {
+  const quizIds = formData.getAll("quizIds").map((value) => String(value));
+  const candidateId = formData.get("candidateId");
+
+  const validated = candidateQuizAssignmentSchema.safeParse({
+    quizIds,
+    candidateId,
+  });
+
+  if (!validated.success) {
+    return {
+      message: "Invalid form data.",
+      errors: validated.error.flatten().fieldErrors,
+    };
+  }
+
+  const { quizIds: validatedQuizIds, candidateId: validatedCandidateId } =
+    validated.data;
+
+  const user = await requireUser();
+
+  const candidate = await prisma.candidate.findFirst({
+    where: {
+      id: validatedCandidateId,
+      createdBy: user.id,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      positionId: true,
+    },
+  });
+
+  if (!candidate) {
+    return { message: "Candidate not found." };
+  }
+
+  const quizzes = await prisma.quiz.findMany({
+    where: {
+      id: {
+        in: validatedQuizIds,
+      },
+      createdBy: user.id,
+    },
+    select: {
+      id: true,
+      title: true,
+      positionId: true,
+    },
+  });
+
+  if (!quizzes.length) {
+    return {
+      message: "No valid quizzes selected.",
+      errors: {
+        quizIds: ["Seleziona almeno un quiz valido."],
+      },
+    };
+  }
+
+  const invalidQuizzes = quizzes.filter(
+    (quiz) => quiz.positionId !== candidate.positionId
+  );
+
+  if (invalidQuizzes.length > 0) {
+    return {
+      message:
+        "Some quizzes are not valid for this candidate's position or you don't have permission.",
+    };
+  }
+
+  const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
+
+  const createdInterviews: NonNullable<
+    AssignQuizzesToCandidateState["createdInterviews"]
+  > = [];
+  const generalErrors: string[] = [];
+
+  for (const quizId of validatedQuizIds) {
+    const quiz = quizMap.get(quizId);
+
+    if (!quiz) {
+      generalErrors.push("Quiz non trovato");
+      continue;
+    }
+
+    const existingInterview = await prisma.interview.findFirst({
+      where: {
+        candidateId: candidate.id,
+        quizId: quiz.id,
+      },
+      select: { id: true },
+    });
+
+    if (existingInterview) {
+      generalErrors.push(`Esiste già un colloquio per ${quiz.title}.`);
+      continue;
+    }
+
+    const token = await generateInterviewToken();
+
+    const interview = await prisma.interview.create({
+      data: {
+        candidateId: candidate.id,
+        quizId: quiz.id,
+        status: "pending",
+        token,
+        answers: {},
+      },
+      select: {
+        token: true,
+      },
+    });
+
+    createdInterviews.push({
+      quizId: quiz.id,
+      token: interview.token,
+      quizTitle: quiz.title,
+    });
+  }
+
+  revalidatePath(`/dashboard/candidates/${candidate.id}/quiz`);
+  revalidatePath(`/dashboard/candidates/${candidate.id}`);
+
+  if (generalErrors.length > 0) {
+    return {
+      message: `Alcuni colloqui non sono stati creati (${generalErrors.length}).`,
+      createdInterviews,
+      errors: {
+        general: generalErrors,
+      },
+    };
+  }
+
+  return {
+    message: "Interviste create con successo.",
+    createdInterviews,
+    success: true,
+  };
+}

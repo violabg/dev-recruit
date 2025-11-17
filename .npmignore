@@ -1,0 +1,29 @@
+# npm publish ignore — keep it conservative
+# Exclude local configs, tests, docs, and CI
+coverage/
+tests/
+stories/
+.storybook/
+.vscode/
+.git/
+.github/
+.specify/
+specs/
+docs/
+.DS_Store
+
+# node stuff
+node_modules/
+
+# local env
+.env*
+
+# build
+.next/
+dist/
+
+# lockfiles
+pnpm-lock.yaml
+.yarn.lock
+package-lock.json
+

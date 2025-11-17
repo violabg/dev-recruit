@@ -1,0 +1,180 @@
+generator client {
+  provider   = "prisma-client"
+  output     = "../lib/prisma"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Better Auth models
+
+model User {
+  id String @id @default(cuid())
+
+  name          String
+  firstName     String?
+  lastName      String?
+  email         String
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  role       String    @default("user")
+  banned     Boolean   @default(false)
+  banReason  String?
+  banExpires DateTime?
+
+  sessions   Session[]
+  accounts   Account[]
+  profile    Profile?
+  positions  Position[]  @relation("UserPositions")
+  candidates Candidate[] @relation("UserCandidates")
+  quizzes    Quiz[]      @relation("UserQuizzes")
+
+  isAnonymous Boolean?
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id String @id @default(cuid())
+
+  expiresAt      DateTime
+  token          String
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("sessions")
+}
+
+model Account {
+  id String @id @default(cuid())
+
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model Verification {
+  id String @id @default(cuid())
+
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+// App-specific models
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  fullName  String?
+  userName  String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Position {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  experienceLevel String
+  skills          String[]
+  softSkills      String[]
+  contractType    String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+
+  creator    User        @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
+  candidates Candidate[]
+  quizzes    Quiz[]
+
+  @@map("positions")
+}
+
+model Candidate {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  positionId String
+  status     String   @default("pending")
+  resumeUrl  String?
+  createdBy  String
+  createdAt  DateTime @default(now())
+
+  position   Position    @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator    User        @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
+  interviews Interview[]
+
+  @@map("candidates")
+}
+
+model Quiz {
+  id         String   @id @default(cuid())
+  title      String
+  positionId String
+  questions  Json
+  timeLimit  Int?
+  createdBy  String
+  createdAt  DateTime @default(now())
+
+  position   Position    @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator    User        @relation("UserQuizzes", fields: [createdBy], references: [id], onDelete: Cascade)
+  interviews Interview[]
+
+  @@map("quizzes")
+}
+
+model Interview {
+  id          String    @id @default(cuid())
+  candidateId String
+  quizId      String
+  status      String    @default("pending")
+  startedAt   DateTime?
+  completedAt DateTime?
+  score       Float?
+  answers     Json?
+  token       String    @unique
+  createdAt   DateTime  @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  quiz      Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("interviews")
+}

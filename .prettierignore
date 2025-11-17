@@ -1,0 +1,17 @@
+# Files and folders to ignore by Prettier
+node_modules
+.next
+.out
+.build
+dist
+coverage
+storybook-static
+.pnpm-store
+.vscode
+.DS_Store
+
+# Lockfiles and config
+pnpm-lock.yaml
+.yarn.lock
+package-lock.json
+
