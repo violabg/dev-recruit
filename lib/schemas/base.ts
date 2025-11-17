@@ -6,8 +6,17 @@ import { z } from "zod/v4";
 // Enhanced base schemas with consistent validation for the unified schema system
 
 export const baseSchemas = {
-  // Identity schemas
-  uuid: z.uuid(),
+  // Identity schemas - supports both UUID and cuid formats
+  uuid: z.string().refine(
+    (val) => {
+      // Allow both UUID and cuid formats
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const cuidRegex = /^c[a-z0-9]{24}$/;
+      return uuidRegex.test(val) || cuidRegex.test(val);
+    },
+    { message: "Invalid ID format (UUID or cuid required)" }
+  ),
   id: z.string().min(1, "ID is required"),
 
   // Text schemas with consistent validation
@@ -32,22 +41,25 @@ export const baseSchemas = {
 
   // Password validation with Italian error message
   password: z.string().min(6, {
-      error: "Minimo 6 caratteri"
-}),
+    error: "Minimo 6 caratteri",
+  }),
 
   // Name validation with Italian error message
   name: z.string().min(2, "Nome deve contenere almeno 2 caratteri"),
 
   // Numeric schemas with validation
-  difficulty: z.int()
+  difficulty: z
+    .int()
     .min(1, "Minimum difficulty is 1")
     .max(5, "Maximum difficulty is 5"),
 
-  questionCount: z.int()
+  questionCount: z
+    .int()
     .min(1, "At least 1 question required")
     .max(50, "Maximum 50 questions allowed"),
 
-  timeLimit: z.int()
+  timeLimit: z
+    .int()
     .min(5, "Minimum time limit is 5 minutes")
     .max(120, "Maximum time limit is 120 minutes")
     .nullable(),

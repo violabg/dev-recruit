@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuizzesForPosition } from "@/lib/data/quiz-data";
-import { BrainCircuit, Link } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
+import Link from "next/link";
 
 export default async function Quizes({ id }: { id: string }) {
   const quizzes = await getQuizzesForPosition(id);
