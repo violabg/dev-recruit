@@ -1,17 +1,9 @@
 import { PasswordForm } from "@/components/profile/password-form";
 import { Button } from "@/components/ui/button";
-import { getProfile } from "@/lib/actions/profile";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 export default async function ChangePasswordPage() {
-  const { user, error } = await getProfile();
-
-  if (error || !user) {
-    redirect("/auth/login");
-  }
-
   return (
     <div className="space-y-6 mx-auto w-full max-w-2xl">
       <div className="flex items-center space-x-4">

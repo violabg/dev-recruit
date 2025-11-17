@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth-server";
 import {
   getCandidatesCount,
   getCompletedInterviewsCount,
@@ -23,12 +22,8 @@ async function OpenPositions() {
   // "use cache";
   // cacheLife("hours");
   // cacheTag("positions");
-  const user = await getCurrentUser();
 
-  if (!user) {
-    return null;
-  }
-  const positionsCount = await getPositionsCount(user.id);
+  const positionsCount = await getPositionsCount();
 
   return (
     <Card>
@@ -49,13 +44,7 @@ async function Candidates() {
   // "use cache";
   // cacheLife("hours");
   // cacheTag("candidates");
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const candidatesCount = await getCandidatesCount(user.id);
+  const candidatesCount = await getCandidatesCount();
 
   return (
     <Card>
@@ -76,13 +65,7 @@ async function Interviews() {
   // "use cache";
   // cacheLife("hours");
   // cacheTag("interviews");
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const interviewsCount = await getCompletedInterviewsCount(user.id);
+  const interviewsCount = await getCompletedInterviewsCount();
 
   return (
     <Card>
@@ -104,13 +87,7 @@ async function Interviews() {
 
 // Server component for recent positions
 async function RecentPositions() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const positions = await getRecentPositions(user.id, 5);
+  const positions = await getRecentPositions(5);
 
   return (
     <Card className="col-span-1">

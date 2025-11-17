@@ -23,7 +23,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col items-center min-h-dvh">
       <main className="flex-1">
-        <section className="bg-gradient-to-b from-background via-background/90 to-muted/20 py-20 md:py-32">
+        <section className="bg-linear-to-b from-background via-background/90 to-muted/20 py-20 md:py-32">
           <div className="px-4 md:px-6 container">
             <div className="items-center gap-6 lg:gap-12 grid lg:grid-cols-2">
               <div className="flex flex-col justify-center space-y-4">
@@ -100,7 +100,7 @@ export default async function Home() {
                               }
                               style={style}
                             >
-                              <code className="break-words whitespace-pre-wrap">
+                              <code className="wrap-break-word whitespace-pre-wrap">
                                 {tokens.map((line, i) => {
                                   const { key: lineKey, ...lineProps } =
                                     getLineProps({
@@ -150,7 +150,7 @@ export default async function Home() {
             </div>
             <div className="gap-8 grid md:grid-cols-3">
               <div className="flex flex-col items-center space-y-4 shadow-vision-sm hover:shadow-vision p-6 border border-glass-border rounded-xl text-center transition-all duration-300 ease-vision glass-card vision-elevated vision-interactive">
-                <div className="bg-gradient-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
+                <div className="bg-linear-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <BrainCircuit className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="font-bold text-xl">
@@ -162,7 +162,7 @@ export default async function Home() {
                 </p>
               </div>
               <div className="flex flex-col items-center space-y-4 shadow-vision-sm hover:shadow-vision p-6 border border-glass-border rounded-xl text-center transition-all duration-300 ease-vision glass-card vision-elevated vision-interactive">
-                <div className="bg-gradient-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
+                <div className="bg-linear-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <Users className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="font-bold text-xl">Colloqui in tempo reale</h3>
@@ -172,7 +172,7 @@ export default async function Home() {
                 </p>
               </div>
               <div className="flex flex-col items-center space-y-4 shadow-vision-sm hover:shadow-vision p-6 border border-glass-border rounded-xl text-center transition-all duration-300 ease-vision glass-card vision-elevated vision-interactive">
-                <div className="bg-gradient-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
+                <div className="bg-linear-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <CheckCircle className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="font-bold text-xl">Valutazione oggettiva</h3>
