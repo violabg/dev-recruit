@@ -3,8 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrentUser } from "@/lib/auth-server";
-import { getUserPositionById } from "@/lib/data/positions";
+import { getPositionById } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Edit } from "lucide-react";
 import Link from "next/link";
@@ -29,23 +28,7 @@ export default async function PositionDetailPage({
 async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params; // Await the params object
 
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
-        <p className="font-medium text-lg">Accesso richiesto</p>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Effettua l&apos;accesso per visualizzare i dettagli della posizione
-        </p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/positions">Torna alle posizioni</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  const position = await getUserPositionById(user.id, id);
+  const position = await getPositionById(id);
 
   if (!position) {
     return (

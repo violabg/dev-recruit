@@ -63,7 +63,7 @@ export const QuizForm = ({ position }: QuizFormProps) => {
       difficulty: 3,
       timeLimit: 30,
       enableTimeLimit: true,
-      specificModel: LLM_MODELS.VERSATILE,
+      specificModel: LLM_MODELS.KIMI,
     },
   });
 
@@ -357,7 +357,7 @@ export const QuizForm = ({ position }: QuizFormProps) => {
               <FormLabel>Modello LLM</FormLabel>
               <FormControl>
                 <LLMModelSelect
-                  value={field.value || LLM_MODELS.VERSATILE}
+                  value={field.value || LLM_MODELS.KIMI}
                   onValueChange={field.onChange}
                 />
               </FormControl>

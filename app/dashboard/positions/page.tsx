@@ -9,8 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getCurrentUser } from "@/lib/auth-server";
-import { getUserPositions } from "@/lib/data/positions";
+import { getPositions } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -44,13 +43,7 @@ export default async function PositionsPage({
 }
 
 const PositionsTable = async ({ query }: { query?: string }) => {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const positions = await getUserPositions(user.id, query);
+  const positions = await getPositions(query);
   return (
     <>
       <div className="flex items-center gap-4">

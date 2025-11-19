@@ -103,7 +103,7 @@ export const AIQuestionGenerationDialog = ({
   const form = useForm<GenerationFormData>({
     resolver: zodResolver(generationSchema),
     defaultValues: {
-      llmModel: LLM_MODELS.VERSATILE,
+      llmModel: LLM_MODELS.KIMI,
       difficulty: defaultDifficulty,
       distractorComplexity: "moderate",
       expectedResponseLength: "medium",
@@ -118,7 +118,7 @@ export const AIQuestionGenerationDialog = ({
   useEffect(() => {
     if (open && questionType) {
       form.reset({
-        llmModel: LLM_MODELS.VERSATILE,
+        llmModel: LLM_MODELS.KIMI,
         difficulty: defaultDifficulty,
         distractorComplexity: "moderate",
         expectedResponseLength: "medium",
@@ -428,7 +428,7 @@ export const AIQuestionGenerationDialog = ({
                       onChange={(e) =>
                         setEvaluationCriteriaInput(e.target.value)
                       }
-                      onKeyPress={(e) => {
+                      onKeyUp={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
                           addEvaluationCriteria();

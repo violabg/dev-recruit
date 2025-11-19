@@ -8,8 +8,11 @@ export async function proxy(request: NextRequest) {
   });
   const { pathname } = request.nextUrl;
 
+  // condensed root handling and login redirect
   if (pathname === "/") {
-    return NextResponse.next();
+    return session?.user
+      ? NextResponse.redirect(new URL("/dashboard", request.url))
+      : NextResponse.next();
   }
 
   if (!session?.user && !pathname.startsWith("/auth")) {

@@ -7,16 +7,16 @@ import { z } from "zod/v4";
 
 export const baseSchemas = {
   // Identity schemas - supports both UUID and cuid formats
-  uuid: z.string().refine(
-    (val) => {
-      // Allow both UUID and cuid formats
-      const uuidRegex =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      const cuidRegex = /^c[a-z0-9]{24}$/;
-      return uuidRegex.test(val) || cuidRegex.test(val);
-    },
-    { message: "Invalid ID format (UUID or cuid required)" }
-  ),
+  // uuid: z.string().refine(
+  //   (val) => {
+  //     // Allow both UUID and cuid formats
+  //     const uuidRegex =
+  //       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  //     const cuidRegex = /^c[a-z0-9]{24}$/;
+  //     return uuidRegex.test(val) || cuidRegex.test(val);
+  //   },
+  //   { message: "Invalid ID format (UUID or cuid required)" }
+  // ),
   id: z.string().min(1, "ID is required"),
 
   // Text schemas with consistent validation
@@ -124,8 +124,8 @@ export const commonSchemas = {
   }),
 
   userReference: z.object({
-    created_by: baseSchemas.uuid,
-    updated_by: baseSchemas.uuid.optional(),
+    created_by: baseSchemas.id,
+    updated_by: baseSchemas.id.optional(),
   }),
 } as const;
 

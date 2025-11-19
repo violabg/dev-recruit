@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { deleteQuiz } from "@/lib/actions/quizzes";
-import { getCurrentUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { Question } from "@/lib/schemas";
 import { formatDate } from "@/lib/utils";
@@ -38,21 +37,9 @@ export default async function QuizDetailPage({
   params: { id: string };
 }) {
   const { id } = await Promise.resolve(params);
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
-        <p className="font-medium text-lg">Accesso richiesto</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/quizzes">Torna ai quiz</Link>
-        </Button>
-      </div>
-    );
-  }
 
   const quizRecord = await prisma.quiz.findFirst({
-    where: { id, createdBy: user.id },
+    where: { id },
     include: {
       position: {
         select: {

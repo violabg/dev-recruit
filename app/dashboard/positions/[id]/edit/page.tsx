@@ -1,7 +1,6 @@
 import { EditPositionForm } from "@/components/positions/edit-position-form";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/auth-server";
-import { getUserPositionById } from "@/lib/data/positions";
+import { getPositionById } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -12,20 +11,7 @@ export default async function EditPositionPage({
 }) {
   const params = await incomingParams;
 
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
-        <p className="font-medium text-lg">Accesso richiesto</p>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Effettua l&apos;accesso per modificare questa posizione
-        </p>
-      </div>
-    );
-  }
-
-  const position = await getUserPositionById(user.id, params.id);
+  const position = await getPositionById(params.id);
 
   if (!position) {
     return (

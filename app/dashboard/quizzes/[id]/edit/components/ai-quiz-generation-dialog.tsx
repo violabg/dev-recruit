@@ -52,7 +52,7 @@ export const AIQuizGenerationDialog = ({
     resolver: zodResolver(aiGenerationSchema),
     defaultValues: {
       instructions: "",
-      llmModel: LLM_MODELS.VERSATILE,
+      llmModel: LLM_MODELS.KIMI,
       difficulty: showDifficulty ? defaultDifficulty : undefined,
     },
   });
@@ -63,7 +63,7 @@ export const AIQuizGenerationDialog = ({
       onOpenChange(false);
       form.reset({
         instructions: "",
-        llmModel: LLM_MODELS.VERSATILE,
+        llmModel: LLM_MODELS.KIMI,
         difficulty: showDifficulty ? defaultDifficulty : undefined,
       });
     } catch (error) {

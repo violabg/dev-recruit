@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { updatePosition } from "@/lib/actions/positions";
+import { Position } from "@/lib/prisma/client";
 import { PositionFormData, positionFormSchema } from "@/lib/schemas";
-import type { Position as PrismaPosition } from "@prisma/client";
 import {
   contractTypes,
   databases,
@@ -40,7 +40,7 @@ import {
 } from "./data";
 
 type EditPositionFormProps = {
-  position: PrismaPosition;
+  position: Position;
 };
 
 export function EditPositionForm({ position }: EditPositionFormProps) {

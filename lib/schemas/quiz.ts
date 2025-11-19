@@ -8,7 +8,7 @@ import { questionSchemas } from "./question";
 // Consolidated quiz schemas eliminating duplication and providing single source of truth
 
 // AI Generation schema - only includes fields that the AI should generate
-// This schema excludes backend-managed fields like UUIDs, timestamps, etc.
+// This schema excludes backend-managed fields like IDs, timestamps, etc.
 export const aiQuizGenerationSchema = z.object({
   title: baseSchemas.title,
   questions: z.array(questionSchemas.flexible),
@@ -19,17 +19,17 @@ export const aiQuizGenerationSchema = z.object({
 
 // Core quiz data schema - the single source of truth
 export const quizDataSchema = z.object({
-  id: baseSchemas.uuid.optional(), // Optional for creation
+  id: baseSchemas.id.optional(), // Optional for creation
   title: baseSchemas.title,
-  position_id: baseSchemas.uuid,
+  position_id: baseSchemas.id,
   questions: z.array(questionSchemas.flexible),
   time_limit: baseSchemas.timeLimit,
   difficulty: baseSchemas.difficulty.optional(),
   instructions: baseSchemas.instructions,
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime().optional(),
-  created_by: baseSchemas.uuid,
-  updated_by: baseSchemas.uuid.optional(),
+  created_by: baseSchemas.id,
+  updated_by: baseSchemas.id.optional(),
 });
 
 // Generation configuration - shared across all generation contexts
@@ -59,23 +59,23 @@ export const quizGenerationConfigSchema = z.object({
 // API request schemas - extend base configuration
 export const quizApiSchemas = {
   generateQuiz: quizGenerationConfigSchema.extend({
-    positionId: baseSchemas.uuid,
+    positionId: baseSchemas.id,
   }),
 
   // Quiz update request (unified schema)
   update: z.object({
-    quiz_id: baseSchemas.uuid,
+    quiz_id: baseSchemas.id,
     title: baseSchemas.title,
     time_limit: baseSchemas.timeLimit,
     questions: z.array(questionSchemas.flexible),
     instructions: baseSchemas.instructions.optional(),
-    updated_by: baseSchemas.uuid.optional(),
+    updated_by: baseSchemas.id.optional(),
   }),
 
   // Quiz save request
   save: z.object({
     title: baseSchemas.title,
-    position_id: baseSchemas.uuid,
+    position_id: baseSchemas.id,
     questions: z
       .array(questionSchemas.flexible)
       .min(1, "At least one question required"),
@@ -100,7 +100,8 @@ export const quizApiSchemas = {
       .optional(),
     specificModel: z.string().optional(),
     instructions: baseSchemas.instructions,
-    questionIndex: z.int()
+    questionIndex: z
+      .int()
       .min(0, "Question index must be a non-negative integer"),
 
     // Type-specific parameters for different question types
@@ -132,7 +133,7 @@ export const quizFormSchemas = {
 
   // FormData schema (server actions) with transformations
   formData: z.object({
-    position_id: baseSchemas.uuid,
+    position_id: baseSchemas.id,
     title: baseSchemas.title,
     question_count: formTransformers.coerceInt.pipe(baseSchemas.questionCount),
     difficulty: formTransformers.coerceInt.pipe(baseSchemas.difficulty),
@@ -166,23 +167,23 @@ export const quizFormSchemas = {
 export const quizEntitySchemas = {
   // Complete quiz entity from database
   complete: z.object({
-    id: baseSchemas.uuid,
+    id: baseSchemas.id,
     title: baseSchemas.title,
-    position_id: baseSchemas.uuid,
+    position_id: baseSchemas.id,
     questions: z.array(questionSchemas.flexible),
     time_limit: z.number().nullable(),
     difficulty: baseSchemas.difficulty.optional(),
     created_at: z.string(),
-    created_by: baseSchemas.uuid,
+    created_by: baseSchemas.id,
     updated_at: z.string().optional(),
-    updated_by: baseSchemas.uuid.optional(),
+    updated_by: baseSchemas.id.optional(),
   }),
 
   // Minimal quiz for listing
   summary: z.object({
-    id: baseSchemas.uuid,
+    id: baseSchemas.id,
     title: baseSchemas.title,
-    position_id: baseSchemas.uuid,
+    position_id: baseSchemas.id,
     difficulty: baseSchemas.difficulty.optional(),
     created_at: z.string(),
     question_count: z.int().min(0),

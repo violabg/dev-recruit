@@ -26,17 +26,17 @@ export const LLMModelSelect = ({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
+        <SelectItem value={LLM_MODELS.KIMI}>
+          🔬 Kimi - Kimi K2 Instruct (Raccomandato)
+        </SelectItem>
         <SelectItem value={LLM_MODELS.VERSATILE}>
-          🚀 Versatile - Llama 3.3 70B (Raccomandato)
+          🚀 Versatile - Llama 3.3 70B
         </SelectItem>
         <SelectItem value={LLM_MODELS.INSTANT}>
           ⚡ Instant - Llama 3.1 8B (Veloce)
         </SelectItem>
         <SelectItem value={LLM_MODELS.REASONING}>
           🧠 Reasoning - DeepSeek R1 70B (Valutazione)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.KIMI}>
-          🔬 Kimi - Kimi K2 Instruct (Sperimentale)
         </SelectItem>
         <SelectItem value={LLM_MODELS.MAVERICK}>
           🔬 Maverick - Llama 4 17B (Sperimentale)

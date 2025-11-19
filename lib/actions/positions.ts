@@ -31,17 +31,6 @@ export async function createPosition(values: PositionFormData) {
 }
 
 export async function deletePosition(id: string) {
-  const user = await requireUser();
-
-  const position = await prisma.position.findUnique({
-    where: { id },
-    select: { createdBy: true },
-  });
-
-  if (!position || position.createdBy !== user.id) {
-    throw new Error("Not authorized to delete this position");
-  }
-
   await prisma.position.delete({ where: { id } });
 
   revalidatePath("/dashboard/positions");
@@ -88,15 +77,6 @@ export async function updatePosition(id: string, formData: FormData) {
     contract_type:
       (formData.get("contract_type") as string | null)?.trim() || undefined,
   });
-
-  const current = await prisma.position.findUnique({
-    where: { id },
-    select: { createdBy: true },
-  });
-
-  if (!current || current.createdBy !== user.id) {
-    throw new Error("Not authorized to update this position");
-  }
 
   await prisma.position.update({
     where: { id },

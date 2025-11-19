@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth-server";
-import { getUserPositionById } from "@/lib/data/positions";
+import { getPositionById } from "@/lib/data/positions";
 import { BrainCircuit } from "lucide-react";
 import { redirect } from "next/navigation";
 import { QuizForm } from "./QuizForm";
@@ -12,13 +11,8 @@ export default async function GenerateQuizPage({
 }) {
   // await new Promise((resolve) => setTimeout(resolve, 10000));
   const { id } = await incomingParams;
-  const user = await getCurrentUser();
 
-  if (!user) {
-    redirect("/dashboard/positions");
-  }
-
-  const position = await getUserPositionById(user.id, id);
+  const position = await getPositionById(id);
 
   if (!position) {
     redirect("/dashboard/positions");
