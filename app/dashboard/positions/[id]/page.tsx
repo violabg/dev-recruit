@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPositionById } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Edit } from "lucide-react";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
 import Candidates from "./components/candidates";
@@ -26,6 +27,9 @@ export default async function PositionDetailPage({
 }
 
 async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`positions-${id}`);
   const { id } = await params; // Await the params object
 
   const position = await getPositionById(id);
