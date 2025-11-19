@@ -22,8 +22,6 @@ export default async function PositionsPage({
 }: {
   searchParams: Promise<{ q: string | undefined }>;
 }) {
-  const params = await searchParams;
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -36,13 +34,18 @@ export default async function PositionsPage({
         </Button>
       </div>
       <Suspense fallback={<PositionsSkeleton />}>
-        <PositionsTable query={params.q} />
+        <PositionsTable searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-const PositionsTable = async ({ query }: { query?: string }) => {
+const PositionsTable = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ q: string | undefined }>;
+}) => {
+  const { q: query } = await searchParams;
   const positions = await getPositions(query);
   return (
     <>

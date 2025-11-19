@@ -29,9 +29,13 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-[Gates determined based on constitution file]
+- Verify the plan keeps Prisma/AI fetches inside `'use cache'` + `cacheLife` scopes, tags them with `cacheTag`/`revalidateTag`, and defers runtime data (`cookies()`, `headers()`, `searchParams`, `params`) to request time inside `<Suspense>` fallbacks so the static shell stays valid with `cacheComponents: true` enabled (Principle I).
+- Confirm any AI interactions reuse `lib/services/ai-service.ts`, follow the prompt/validation guidance in `docs/QUIZ_AI_GENERATION_SYSTEM.md`, and include Zod guard coverage (Principle II).
+- Ensure mutations flow through `lib/actions/*` with `requireUser()` checks so row-level security and cache tags stay consistent (Principle III).
+- Outline how UI work uses `components/ui/` primitives, Tailwind v4, and Vision Pro tokens described in `docs/VISION_PRO_STYLE_GUIDE.md`, especially for forms (Principle IV).
+- Reference this constitution (see `.specify/memory/constitution.md`) in the plan summary to anchor architectural decisions (Principle V).
 
 ## Project Structure
 
@@ -48,6 +52,7 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
   for this feature. Delete unused options and expand the chosen structure with
@@ -98,7 +103,7 @@ directories captured above]
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |

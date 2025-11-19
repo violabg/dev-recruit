@@ -1,5 +1,52 @@
 # Copilot Instructions
 
+## Architecture Snapshot
+
+- **App Router + cache components:** every route under `app/` renders as a server component. Keep Prisma/AI calls in `'use cache'` scopes, use `cacheLife`, and wrap any runtime data (`cookies()`, `headers()`, etc.) inside Suspense boundaries (see `app/dashboard/candidates/page.tsx`).
+- **Dashboard shell:** `app/dashboard/layout.tsx` wires the sidebar, breadcrumbs, theme toggle, and content surface. Shared navigation and helpers live under `components/dashboard/`.
+- **Lib layer:** `lib/actions/` contains server actions for quiz generation, candidate management, and interviews. `lib/services/ai-service.ts` orchestrates Groq AI requests with retries/fallbacks and Zod validation. `lib/prisma.ts` exposes the Neon-backed Prisma client used everywhere.
+- **UI/design system:** base primitives in `components/ui/` power buttons, cards, tabs, skeletons, etc. Styling relies on Tailwind v4 utilities, OKLCH tokens in `app/globals.css`, and Vision Pro gradients from `docs/VISION_PRO_STYLE_GUIDE.md`.
+
+## Data & Flow Patterns
+
+- **Server actions + Prisma:** mutate state inside `lib/actions/*`, typically calling `requireUser()` from `lib/auth-server.ts`. Reuse helpers from `lib/data/` when filtering/aggregating dashboard data (e.g., `lib/data/dashboard.ts`).
+- **AI prompts:** `AIQuizService` builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Refer to `docs/QUIZ_AI_GENERATION_SYSTEM.md` for the full flow and error-handling knobs.
+- **Dashboard pages:** split UI into Suspense-backed sections that fetch data independently so cached parts stay in the static shell while runtime segments stream separately.
+- **SQL helpers:** custom functions from `schema.sql` (like `search_interviews` or `get_candidates_for_quiz_assignment`) live close to the calling logic via Prisma raw queries.
+
+## Workflows & Commands
+
+- Dev server: `pnpm dev` (Next.js MCP enabled).
+- Build/lint/test/storybook: `pnpm build`, `pnpm lint`, `pnpm test` (if available), `pnpm storybook`.
+- Database migrations: `pnpm prisma migrate deploy` (prod) or `pnpm prisma db push` (local dev).
+- Cache updates should use `cacheLife(...)` and tagged scopes (`cacheTag`/`revalidateTag`) as described in `docs/CACHE_IMPLEMENTATION.md`.
+
+## Project-Specific Conventions
+
+- **Styling:** favor Tailwind v4 utilities, gradients, and Vision Pro glass tokens. CSS files must declare colors in OKLCH format (`oklch(...)`). Compose classes with `clsx`, `cn`, or `tailwind-merge` helpers.
+- **Forms:** always pair `react-hook-form` with Zod resolvers using schemas from `lib/schemas/`; validate before invoking server actions.
+- **Data fetching:** keep Prisma queries in server components. Only mark components `use client` when necessary for interactivity, and wrap runtime APIs inside Suspense with skeleton fallbacks.
+- **Authentication:** Better Auth config lives in `lib/auth.ts`; prefer `getCurrentUser()`/`requireUser()` helpers to enforce row-level security in server actions and routes.
+
+## Essential References
+
+- `README.md` – features, architecture, and commands overview.
+- `docs/QUIZ_AI_GENERATION_SYSTEM.md` – prompt design, validation, and error handling for AI generation.
+- `lib/services/ai-service.ts` + `lib/schemas/` – model selection, retries, and Zod guards.
+- `app/dashboard/layout.tsx` + `components/dashboard/` – layout, navigation, and theme wiring.
+- `prisma/schema.prisma` + `schema.sql` – data model, migrations, and SQL helpers.
+- `lib/data/` + `lib/actions/` – shared helpers to reuse instead of duplicating logic.
+- `app/globals.css` & `docs/VISION_PRO_STYLE_GUIDE.md` – color tokens, gradients, and animation utilities.
+
+## Handling Requests
+
+1. Inspect the affected route (`layout.tsx`, `page.tsx`, `loading.tsx`, `error.tsx`) before editing.
+2. Keep Prisma/AI calls inside `'use cache'` scopes and wrap runtime APIs with Suspense + skeleton fallbacks.
+3. Reuse UI primitives from `components/ui` or existing dashboard components before building new ones.
+4. Document substantial behavior changes in `docs/` (e.g., caching, AI flows, layout shifts).
+
+Let me know if any section needs clarification or more examples.# Copilot Instructions
+
 ## Project Context
 
 - This project uses Next.js (v16.0.3), React (v19.2.0), and TypeScript (v5.8.3).

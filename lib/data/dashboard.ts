@@ -1,23 +1,22 @@
 import prisma from "@/lib/prisma";
-import { cache } from "react";
 
-export const getPositionsCount = cache(async () => {
+export const getPositionsCount = async () => {
   return prisma.position.count();
-});
+};
 
-export const getCandidatesCount = cache(async () => {
+export const getCandidatesCount = async () => {
   return prisma.candidate.count();
-});
+};
 
-export const getCompletedInterviewsCount = cache(async () => {
+export const getCompletedInterviewsCount = async () => {
   return prisma.interview.count({
     where: {
       status: "completed",
     },
   });
-});
+};
 
-export const getRecentPositions = cache(async (limit = 5) => {
+export const getRecentPositions = async (limit = 5) => {
   return prisma.position.findMany({
     orderBy: {
       createdAt: "desc",
@@ -29,4 +28,4 @@ export const getRecentPositions = cache(async (limit = 5) => {
       experienceLevel: true,
     },
   });
-});
+};

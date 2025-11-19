@@ -134,6 +134,15 @@ sequenceDiagram
     DB->>U: Send Interview Links
 ```
 
+## 🔁 Cache Components Strategy
+
+- `next.config.mjs` enables `cacheComponents: true`, which prerenders a static shell while streaming request-specific subtrees inside `<Suspense>` boundaries.
+- Runtime APIs such as `cookies()`, `headers()`, `searchParams`, and dynamic `params` drive the Suspense subtree so they never block the static shell or live inside `'use cache'` scopes. Fallback UI keeps the layout responsive while those values resolve.
+- Repeated data queries stay inside `'use cache'` + `cacheLife(...)` profiles, and mutations refresh `cacheTag`/`revalidateTag` to keep cached shells aligned with Prisma updates. See `docs/CACHE_IMPLEMENTATION.md` for the full caching reference.
+
+- Suspense fallbacks reuse the shared `components/ui/skeleton` primitives so every loading state matches the shadcn component structure documented in `docs/VISION_PRO_STYLE_GUIDE.md`.
+- Server actions should call `updateTag` after writes when they touch `positions`, `candidates`, `quizes`, or `interviews` data so the cached cards and lists revalidate immediately and the shell stays accurate.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
