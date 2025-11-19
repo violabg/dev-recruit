@@ -8,6 +8,10 @@ export async function proxy(request: NextRequest) {
   });
   const { pathname } = request.nextUrl;
 
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
   if (!session?.user && !pathname.startsWith("/auth")) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
