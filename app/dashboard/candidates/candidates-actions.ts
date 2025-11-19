@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 type PrismaCandidateWithRelations = Prisma.CandidateGetPayload<{
   include: {
@@ -120,6 +120,7 @@ const buildCandidateWhere = ({
 export async function fetchCandidateStats() {
   "use cache";
   cacheLife("hours");
+  cacheTag("candidates");
 
   const [statusCountsRaw, totalCandidates] = await Promise.all([
     prisma.candidate.groupBy({
@@ -142,6 +143,7 @@ export async function fetchCandidateStats() {
 export async function fetchCandidatePositions() {
   "use cache";
   cacheLife("hours");
+  cacheTag("positions");
 
   return prisma.position.findMany({
     select: { id: true, title: true },
@@ -156,7 +158,8 @@ export async function fetchFilteredCandidates({
   sort,
 }: FetchCandidatesParams) {
   "use cache";
-  cacheLife({ stale: 30, revalidate: 60, expire: 300 });
+  cacheLife("hours");
+  cacheTag("candidates");
 
   const candidates = await prisma.candidate.findMany({
     where: buildCandidateWhere({ search, status, positionId }),

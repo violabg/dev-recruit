@@ -31,6 +31,7 @@ storybook-static
 # OS / editor
 .DS_Store
 .idea/
+Thumbs.db
 
 # build / cache
 .cache

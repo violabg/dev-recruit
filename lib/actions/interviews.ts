@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 
 import { candidateQuizSelectionSchema } from "@/lib/schemas";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
@@ -273,6 +273,8 @@ export async function startInterview(token: string) {
     },
   });
 
+  updateTag("interviews");
+
   return { success: true };
 }
 
@@ -308,6 +310,8 @@ export async function submitAnswer(
     },
   });
 
+  updateTag("interviews");
+
   return { success: true };
 }
 
@@ -330,6 +334,8 @@ export async function completeInterview(token: string) {
       completedAt: new Date(),
     },
   });
+
+  updateTag("interviews");
 
   return { success: true };
 }
@@ -377,20 +383,29 @@ export async function getInterviewsByQuiz(
 export type InterviewsByQuiz = Awaited<ReturnType<typeof getInterviewsByQuiz>>;
 
 export async function deleteInterview(id: string) {
+  const user = await requireUser();
+
   const interview = await prisma.interview.findUnique({
     where: { id },
     select: {
       quizId: true,
+      quiz: {
+        select: {
+          createdBy: true,
+        },
+      },
     },
   });
 
-  if (!interview) {
-    throw new Error("Interview not found");
+  if (!interview || interview.quiz?.createdBy !== user.id) {
+    throw new Error("Interview not found or you don't have permission");
   }
 
   await prisma.interview.delete({
     where: { id },
   });
+
+  updateTag("interviews");
 
   revalidatePath("/dashboard/interviews");
   revalidatePath(`/dashboard/quizzes/${interview.quizId}`);
@@ -536,6 +551,10 @@ export async function assignCandidatesToQuiz(
   }
 
   revalidatePath(`/dashboard/quizzes/${quiz.id}/invite`);
+
+  if (createdInterviews.length > 0) {
+    updateTag("interviews");
+  }
 
   if (generalErrors.length > 0) {
     return {

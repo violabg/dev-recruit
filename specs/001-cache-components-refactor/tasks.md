@@ -12,7 +12,7 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 [P] Create `app/dashboard/fallbacks.tsx` that exports `StatsSkeleton`, `FiltersSkeleton`, `CandidatesListSkeleton`, and `InterviewsSkeleton` wrappers built on `components/ui/skeleton.tsx` so every Suspense boundary reuses the same fallback UI.
+- [x] T001 [P] Create `app/dashboard/fallbacks.tsx` that exports `StatsSkeleton`, `FiltersSkeleton`, `CandidatesListSkeleton`, and `InterviewsSkeleton` wrappers built on `components/ui/skeleton.tsx` so every Suspense boundary reuses the same fallback UI.
 
 ---
 

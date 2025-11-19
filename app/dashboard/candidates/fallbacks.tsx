@@ -6,7 +6,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-
 export const StatsSkeleton = () => (
   <div className="gap-4 grid md:grid-cols-4">
     {Array.from({ length: 4 }).map((_, index) => (
