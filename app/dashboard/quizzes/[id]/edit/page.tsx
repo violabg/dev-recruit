@@ -3,8 +3,6 @@ import { getQuizData } from "@/lib/data/quiz-data";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-export const dynamic = "force-dynamic";
-
 export default async function EditQuizPage({
   params,
 }: {
