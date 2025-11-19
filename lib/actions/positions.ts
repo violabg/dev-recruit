@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
@@ -25,7 +25,6 @@ export async function createPosition(values: PositionFormData) {
     select: { id: true },
   });
 
-  revalidatePath("/dashboard/positions");
   updateTag("positions");
 
   redirect(`/dashboard/positions/${position.id}`);
@@ -47,13 +46,10 @@ export async function deletePosition(id: string) {
 
   updateTag("positions");
 
-  revalidatePath("/dashboard/positions");
   redirect("/dashboard/positions");
 }
 
 export async function updatePosition(id: string, formData: FormData) {
-  const user = await requireUser();
-
   const parseJsonArray = (
     value: FormDataEntryValue | null,
     field: string
@@ -105,9 +101,7 @@ export async function updatePosition(id: string, formData: FormData) {
   });
 
   updateTag("positions");
-
-  revalidatePath("/dashboard/positions");
-  revalidatePath(`/dashboard/positions/${id}`);
+  updateTag(`positions-${id}`);
 
   redirect(`/dashboard/positions/${id}`);
 }
