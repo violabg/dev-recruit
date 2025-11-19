@@ -3,8 +3,7 @@
 import { randomUUID } from "node:crypto";
 
 import { candidateQuizSelectionSchema } from "@/lib/schemas";
-import { revalidatePath, updateTag } from "next/cache";
-
+import { cacheLife, cacheTag, revalidatePath, updateTag } from "next/cache";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
@@ -81,7 +80,13 @@ const generateInterviewToken = async (): Promise<string> => {
 };
 
 export async function fetchInterviewsData(filters: InterviewsFilters = {}) {
-  const user = await requireUser();
+  "use cache";
+  cacheLife({
+    stale: 600,
+    revalidate: 600,
+    expire: 600,
+  });
+  cacheTag("interviews");
 
   const {
     search = "",
@@ -98,9 +103,7 @@ export async function fetchInterviewsData(filters: InterviewsFilters = {}) {
 
   const whereClauses: Prisma.InterviewWhereInput[] = [
     {
-      candidate: {
-        createdBy: user.id,
-      },
+      candidate: {},
     },
   ];
 
@@ -217,9 +220,6 @@ export async function fetchInterviewsData(filters: InterviewsFilters = {}) {
   const totalPages = Math.max(1, Math.ceil(totalCount / normalizedLimit));
 
   const positions = await prisma.position.findMany({
-    where: {
-      createdBy: user.id,
-    },
     select: {
       id: true,
       title: true,
@@ -383,8 +383,6 @@ export async function getInterviewsByQuiz(
 export type InterviewsByQuiz = Awaited<ReturnType<typeof getInterviewsByQuiz>>;
 
 export async function deleteInterview(id: string) {
-  const user = await requireUser();
-
   const interview = await prisma.interview.findUnique({
     where: { id },
     select: {
@@ -397,7 +395,7 @@ export async function deleteInterview(id: string) {
     },
   });
 
-  if (!interview || interview.quiz?.createdBy !== user.id) {
+  if (!interview) {
     throw new Error("Interview not found or you don't have permission");
   }
 
