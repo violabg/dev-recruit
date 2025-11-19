@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { convertToStrictQuestions, saveQuizRequestSchema } from "@/lib/schemas";
 import { QuizErrorCode } from "@/lib/services/error-handler";
 import { getErrorResponse } from "@/lib/utils/error-response";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 const saveQuizHandler = withValidation(
@@ -68,6 +69,9 @@ const saveQuizHandler = withValidation(
           { status: 500 }
         );
       }
+
+      // Invalidate cache to refresh quizzes list
+      revalidatePath("/dashboard/quizzes");
 
       return NextResponse.json({
         id: quiz.id,

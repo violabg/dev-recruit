@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
@@ -211,7 +212,10 @@ export async function deleteQuiz(formData: FormData) {
 
     await prisma.quiz.delete({ where: { id: quizId } });
 
-    // Revalidate cache tags after deletion
+    // Invalidate Cache Components tags to refresh quizzes list
+    updateTag("quizzes");
+
+    // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
     monitor.end();
@@ -314,7 +318,10 @@ export async function updateQuizAction(formData: FormData) {
       },
     });
 
-    // Revalidate cache tags to get fresh data
+    // Invalidate Cache Components tags to refresh quizzes list
+    updateTag("quizzes");
+
+    // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
     monitor.end();

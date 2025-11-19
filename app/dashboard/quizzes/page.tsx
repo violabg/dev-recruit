@@ -1,10 +1,33 @@
 import { QuizCard } from "@/components/quiz/quiz-card";
 import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { fetchQuizzesData } from "./quizzes-actions";
+import { Suspense } from "react";
+import { QuizCardsSkeleton, QuizzesStatisticsSkeleton } from "./fallbacks";
+import { CachedQuizzesContent, fetchQuizzesData } from "./quizzes-actions";
+import { QuizzesStatisticsSection } from "./quizzes-components";
 
+/**
+ * CACHE COMPONENTS ARCHITECTURE:
+ *
+ * This page uses Cache Components for optimal performance:
+ *
+ * 1. Static Shell (prerendered at build time):
+ *    - Page title, navigation buttons
+ *    - Search/filter UI (client component)
+ *
+ * 2. Cached Content (revalidates every hour):
+ *    - Quiz cards fetched with CachedQuizzesContent
+ *    - Tagged "quizzes" for manual revalidation on mutations
+ *    - Wrapped in Suspense with QuizCardsSkeleton fallback
+ *
+ * 3. Cached Statistics (revalidates every hour):
+ *    - Statistics section with position breakdowns
+ *    - Tagged "quizzes" for manual revalidation
+ *    - Wrapped in Suspense with QuizzesStatisticsSkeleton fallback
+ *
+ * Dynamic search/sort/filter on client triggers fresh fetch via useSearchParams
+ */
 export default async function QuizzesPage({
   searchParams,
 }: {
@@ -16,8 +39,12 @@ export default async function QuizzesPage({
   const sort = params?.sort || "newest";
   const filter = params?.filter || "all";
 
-  const { quizzes, fetchError, uniqueLevels, positionCounts } =
-    await fetchQuizzesData({ search, sort, filter });
+  // Fetch unique levels and initial data for filter options
+  const { uniqueLevels, positionCounts } = await fetchQuizzesData({
+    search: "",
+    sort: "newest",
+    filter: "all",
+  });
 
   return (
     <div className="space-y-6">
@@ -39,116 +66,109 @@ export default async function QuizzesPage({
         {/* The second column (stats/actions) will flow below the first on narrower container widths. */}
         <div className="gap-4 grid grid-cols-1 @[700px]:grid-cols-[1fr_250px]">
           <div className="space-y-4">
+            {/* Search/Filter - Client Component (always rendered) */}
             <SearchAndFilterQuizzes uniqueLevels={uniqueLevels} />
 
-            {fetchError ? (
-              <div className="bg-destructive/15 p-4 rounded-md text-destructive">
-                <p>
-                  Si è verificato un errore nel caricamento dei quiz:{" "}
-                  {fetchError}
-                </p>
-              </div>
-            ) : quizzes && quizzes.length > 0 ? (
-              // Quiz items grid:
-              // - 1 column by default.
-              // - 2 columns when its container (the div above) is >= 1060px wide.
-              // - 3 columns when its container is >= 1470px wide.
-              <div className="gap-4 grid grid-cols-1 @[1060px]:grid-cols-2 @[1470px]:grid-cols-3">
-                {quizzes.map((quiz) => (
-                  <QuizCard key={quiz.id} quiz={quiz} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[300px]">
-                <div className="text-center">
-                  <p className="text-muted-foreground text-sm">
-                    {search || filter !== "all"
-                      ? "Nessun quiz trovato con i criteri di ricerca specificati."
-                      : "Nessun quiz creato. Crea un quiz per una posizione."}
-                  </p>
-                  <Button className="mt-4" size="sm" asChild>
-                    <Link href="/dashboard/positions">Vai alle posizioni</Link>
-                  </Button>
-                </div>
-              </div>
-            )}
+            {/* Quiz Cards - Cached with Suspense boundary */}
+            <Suspense fallback={<QuizCardsSkeleton />}>
+              <QuizzesListContent search={search} sort={sort} filter={filter} />
+            </Suspense>
           </div>
 
-          {/* This is the second column (statistics, actions). */}
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Statistiche</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Quiz totali:</span>
-                    <span className="font-medium">{quizzes?.length || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Quiz inviati:</span>
-                    <span className="font-medium">0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Quiz completati:</span>
-                    <span className="font-medium">0</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quiz per posizione</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {positionCounts && positionCounts.length > 0 ? (
-                  <div className="space-y-2">
-                    {positionCounts.map((item) => (
-                      <div
-                        key={item.position_id}
-                        className="flex justify-between"
-                      >
-                        <span className="truncate">{item.position_title}</span>
-                        <span className="font-medium">{item.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Nessun dato disponibile
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Azioni rapide</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button
-                    className="justify-start w-full"
-                    variant="outline"
-                    asChild
-                  >
-                    <Link href="/dashboard/positions">Crea nuovo quiz</Link>
-                  </Button>
-                  <Button
-                    className="justify-start w-full"
-                    variant="outline"
-                    asChild
-                  >
-                    <Link href="/dashboard/candidates">Gestisci candidati</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Statistics Sidebar - Cached with Suspense boundary */}
+          <Suspense fallback={<QuizzesStatisticsSkeleton />}>
+            <QuizzesStatisticsSidebarContent
+              search={search}
+              sort={sort}
+              filter={filter}
+            />
+          </Suspense>
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * QuizzesListContent - Cached component rendering quiz cards
+ * Fetches and caches quiz data with Cache Components
+ */
+async function QuizzesListContent({
+  search,
+  sort,
+  filter,
+}: {
+  search: string;
+  sort: string;
+  filter: string;
+}) {
+  const { quizzes, fetchError } = await CachedQuizzesContent({
+    search,
+    sort,
+    filter,
+  });
+
+  if (fetchError) {
+    return (
+      <div className="bg-destructive/15 p-4 rounded-md text-destructive">
+        <p>Si è verificato un errore nel caricamento dei quiz: {fetchError}</p>
+      </div>
+    );
+  }
+
+  if (!quizzes || quizzes.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[300px]">
+        <div className="text-center">
+          <p className="text-muted-foreground text-sm">
+            {search || filter !== "all"
+              ? "Nessun quiz trovato con i criteri di ricerca specificati."
+              : "Nessun quiz creato. Crea un quiz per una posizione."}
+          </p>
+          <Button className="mt-4" size="sm" asChild>
+            <Link href="/dashboard/positions">Vai alle posizioni</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    // Quiz items grid:
+    // - 1 column by default.
+    // - 2 columns when its container is >= 1060px wide.
+    // - 3 columns when its container is >= 1470px wide.
+    <div className="gap-4 grid grid-cols-1 @[1060px]:grid-cols-2 @[1470px]:grid-cols-3">
+      {quizzes.map((quiz) => (
+        <QuizCard key={quiz.id} quiz={quiz} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * QuizzesStatisticsSidebarContent - Cached statistics sidebar
+ * Fetches and displays cached quiz statistics
+ */
+async function QuizzesStatisticsSidebarContent({
+  search,
+  sort,
+  filter,
+}: {
+  search: string;
+  sort: string;
+  filter: string;
+}) {
+  const { quizzes, positionCounts } = await CachedQuizzesContent({
+    search,
+    sort,
+    filter,
+  });
+
+  return (
+    <QuizzesStatisticsSection
+      quizzes={quizzes}
+      positionCounts={positionCounts}
+    />
   );
 }
