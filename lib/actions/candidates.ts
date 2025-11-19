@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
@@ -76,6 +76,7 @@ export async function createCandidate(formData: FormData) {
 
   revalidatePath(`/dashboard/positions/${candidate.positionId}`);
   revalidatePath("/dashboard/candidates");
+  updateTag("candidates");
 
   return { success: true as const, candidateId: candidate.id };
 }
@@ -150,6 +151,8 @@ export async function updateCandidate(
     revalidatePath(`/dashboard/positions/${positionToRefresh}`);
   }
 
+  updateTag("candidates");
+
   return { success: true };
 }
 
@@ -167,6 +170,7 @@ export async function deleteCandidate(id: string) {
   if (candidate.positionId) {
     revalidatePath(`/dashboard/positions/${candidate.positionId}`);
   }
+  updateTag("candidates");
 
   return { success: true as const };
 }

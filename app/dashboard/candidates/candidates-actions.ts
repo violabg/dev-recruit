@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
+import { cacheLife, cacheTag } from "next/cache";
 
 type PrismaCandidateWithRelations = Prisma.CandidateGetPayload<{
   include: {
@@ -47,19 +48,55 @@ export type CandidateStatusSummary = {
   count: number;
 };
 
-type FetchCandidatesParams = {
+export type CandidatePositionOption = { id: string; title: string };
+
+export type FetchCandidatesParams = {
   search: string;
   status: string;
   positionId: string;
   sort: string;
 };
 
-export async function fetchCandidatesData({
+const ORDER_BY_MAP: Record<string, Prisma.CandidateOrderByWithRelationInput> = {
+  newest: { createdAt: "desc" },
+  oldest: { createdAt: "asc" },
+  name: { name: "asc" },
+  status: { status: "asc" },
+};
+
+const mapCandidate = (
+  candidate: PrismaCandidateWithRelations
+): CandidateWithRelations => ({
+  id: candidate.id,
+  name: candidate.name,
+  email: candidate.email,
+  status: candidate.status,
+  resumeUrl: candidate.resumeUrl,
+  positionId: candidate.positionId,
+  createdAt: candidate.createdAt.toISOString(),
+  position: candidate.position
+    ? {
+        id: candidate.position.id,
+        title: candidate.position.title,
+        experienceLevel: candidate.position.experienceLevel,
+      }
+    : null,
+  interviews: candidate.interviews.map((interview) => ({
+    id: interview.id,
+    status: interview.status,
+    score: interview.score,
+    createdAt: interview.createdAt ? interview.createdAt.toISOString() : null,
+  })),
+});
+
+const buildCandidateWhere = ({
   search,
   status,
   positionId,
-  sort,
-}: FetchCandidatesParams) {
+}: Pick<
+  FetchCandidatesParams,
+  "search" | "status" | "positionId"
+>): Prisma.CandidateWhereInput => {
   const where: Prisma.CandidateWhereInput = {};
 
   if (status !== "all") {
@@ -77,18 +114,56 @@ export async function fetchCandidatesData({
     ];
   }
 
-  const orderByMap: Record<string, Prisma.CandidateOrderByWithRelationInput> = {
-    newest: { createdAt: "desc" },
-    oldest: { createdAt: "asc" },
-    name: { name: "asc" },
-    status: { status: "asc" },
-  };
+  return where;
+};
 
-  const orderBy = orderByMap[sort] ?? orderByMap.newest;
+export async function fetchCandidateStats() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("candidates");
+
+  const [statusCountsRaw, totalCandidates] = await Promise.all([
+    prisma.candidate.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
+    prisma.candidate.count(),
+  ]);
+
+  const statusCounts: CandidateStatusSummary[] = statusCountsRaw.map(
+    (item) => ({
+      status: item.status,
+      count: item._count._all,
+    })
+  );
+
+  return { statusCounts, totalCandidates };
+}
+
+export async function fetchCandidatePositions() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("positions");
+
+  return prisma.position.findMany({
+    select: { id: true, title: true },
+    orderBy: { title: "asc" },
+  });
+}
+
+export async function fetchFilteredCandidates({
+  search,
+  status,
+  positionId,
+  sort,
+}: FetchCandidatesParams) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("candidates");
 
   const candidates = await prisma.candidate.findMany({
-    where,
-    orderBy,
+    where: buildCandidateWhere({ search, status, positionId }),
+    orderBy: ORDER_BY_MAP[sort] ?? ORDER_BY_MAP.newest,
     include: {
       position: {
         select: {
@@ -108,56 +183,5 @@ export async function fetchCandidatesData({
     },
   });
 
-  const mappedCandidates: CandidateWithRelations[] = candidates.map(
-    (candidate: PrismaCandidateWithRelations) => ({
-      id: candidate.id,
-      name: candidate.name,
-      email: candidate.email,
-      status: candidate.status,
-      resumeUrl: candidate.resumeUrl,
-      positionId: candidate.positionId,
-      createdAt: candidate.createdAt.toISOString(),
-      position: candidate.position
-        ? {
-            id: candidate.position.id,
-            title: candidate.position.title,
-            experienceLevel: candidate.position.experienceLevel,
-          }
-        : null,
-      interviews: candidate.interviews.map((interview) => ({
-        id: interview.id,
-        status: interview.status,
-        score: interview.score,
-        createdAt: interview.createdAt
-          ? interview.createdAt.toISOString()
-          : null,
-      })),
-    })
-  );
-
-  const positions = await prisma.position.findMany({
-    select: { id: true, title: true },
-    orderBy: { title: "asc" },
-  });
-
-  const statusCountsRaw = await prisma.candidate.groupBy({
-    by: ["status"],
-    _count: { _all: true },
-  });
-
-  const statusCounts: CandidateStatusSummary[] = statusCountsRaw.map(
-    (item) => ({
-      status: item.status,
-      count: item._count._all,
-    })
-  );
-
-  const totalCandidates = await prisma.candidate.count({});
-
-  return {
-    candidates: mappedCandidates,
-    positions,
-    statusCounts,
-    totalCandidates,
-  };
+  return candidates.map(mapCandidate);
 }

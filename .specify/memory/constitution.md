@@ -1,92 +1,54 @@
-# DevRecruit AI Constitution
-
 <!--
 Sync Impact Report
-
-- Version change: 1.0.0 → 2.0.0
-- Modified principles: II. Test-First & Schema Safety → II. Schema Safety (removed test-first requirement)
-- Added sections: none
-- Removed sections: none
- - Templates requiring updates:
- - .specify/templates/plan-template.md ✅ updated
- - .specify/templates/spec-template.md ⚠ pending review
- - .specify/templates/tasks-template.md ✅ (already optional)
- - Follow-up TODOs: none
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: I. Cache-First Server Architecture (expanded to cover runtime data boundaries)
+- Added sections: None
+- Removed sections: None
+- Templates requiring updates: plan-template.md ✅ spec-template.md ✅ tasks-template.md ✅
+- Follow-up TODOs: None
 -->
+
+# DevRecruit AI Constitution
 
 ## Core Principles
 
-### I. AI Safety & Deterministic Validation
+### I. Cache-First Server Architecture (NON-NEGOTIABLE)
 
-All AI-generated artifacts (quizzes, questions, sample answers, code snippets) MUST be validated by automated schema checks
-and deterministic rules before persistence or production exposure. Validation includes: schema conformance (Zod), profanity
-filtering, prompt-injection protections, and explicit sampling/seed practices to reduce nondeterminism in assessments.
+With `cacheComponents: true` enabled, every route under `app/` renders as a server component whose static shell is prerendered. Prisma queries, Groq AI requests, and other repeated external calls belong inside `'use cache'` scopes defined with explicit `cacheLife(...)` profiles and tagged by `cacheTag` so their results live in cached entries instead of blocking each render. Runtime data (`cookies()`, `headers()`, `searchParams`, `params`) and any non-deterministic work require request context and therefore must be deferred to request time by wrapping the consuming subtree in `<Suspense>` with clear fallbacks (see `app/dashboard/positions/page.tsx`). Server actions must reissue `updateTag` calls for the same caches after mutations so Suspense content stays fresh while the cached shell remains fast. Keeping Suspense boundaries tight around runtime work preserves the static shell, enables streaming, and prevents Next.js from raising the blocking-route error when uncached data escapes outside the fallback.
 
-Rationale: AI outputs are probabilistic. Requiring deterministic validation prevents malformed or unsafe quiz content from
-reaching candidates and enables reliable grading and analytics.
+### II. Safe AI Workflows
 
-### II. Schema Safety
+AI operations must reuse `lib/services/ai-service.ts` and the prompts, retry/fallback logic, and schema guards defined in `lib/schemas/`. `getOptimalModel` should pick the right Groq model, responses must pass the Zod validation described in `docs/QUIZ_AI_GENERATION_SYSTEM.md`, and every server action invoking AI needs explicit error handling, logging, and fallback paths before persisting outputs to Neon.
 
-New features and changes that affect data shapes, APIs, or AI output formats MUST have Zod schemas for validation. All persisted shapes MUST have Zod schemas.
+### III. Action-Driven Mutations
 
-Rationale: The project relies on structured AI outputs and database contracts; schemas prevent regressions and preserve consumer expectations (APIs, DB, UI).
+All mutations run through `lib/actions/*` so `requireUser()` from `lib/auth-server.ts` can enforce Better Auth context and row-level security. Server actions must return structured results, update tags with `cacheTag`/`revalidateTag`, and surface any changes to Prisma through reusable helpers instead of ad-hoc queries.
 
-### III. Security & Data Isolation
+### IV. Vision Pro UI System
 
-All user data MUST be protected via Row Level Security (RLS) and least-privilege server actions. Interview access MUST use
-cryptographically secure tokens. Secrets and service keys MUST never be checked into the repository. Authentication and
-authorization checks MUST run server-side for all write/read operations.
+UI work lives in `components/ui/` or the domain folders under `components/`. Every new component honors Tailwind v4 utilities, OKLCH color tokens from `app/globals.css`, and the glassmorphism guidance in `docs/VISION_PRO_STYLE_GUIDE.md`. Forms use `react-hook-form` + Zod resolvers (schemas in `lib/schemas/`), Radix primitives for accessibility, and consistent button/card variants defined by the shared design system.
 
-Rationale: The platform stores candidate data and assessment artifacts; strong defaults for data protection are required by law
-and by customer trust.
+### V. Documented Workflow Discipline
 
-### IV. Versioning, Change Management & Backward Compatibility
+Development aligns with the documented commands (`pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm test`, `pnpm storybook`) and rigorous documentation in `README.md`, `docs/QUIZ_AI_GENERATION_SYSTEM.md`, and `docs/CACHE_IMPLEMENTATION.md`. Every architectural decision (caching, AI, authentication, layout) must be captured in the docs before releasing.
 
-Public contracts (API request/response, database schemas, persisted quiz formats) MUST follow semantic versioning. Any breaking
-change to contracts requires a MAJOR version bump and a migration plan documented in the spec. Minor changes (new optional
-fields, non-breaking additions) increment MINOR. Clarifications and wording fixes are PATCH.
+## Operational Constraints
 
-Rationale: Clear versioning prevents silent breakage for integrators and enables safe rollouts and migrations.
+- With `cacheComponents` enabled, runtime APIs (`cookies()`, `headers()`, `searchParams`, `params`) must execute inside `<Suspense>` boundaries with fallbacks built from `components/ui/skeleton`; they cannot be mixed into `'use cache'` scopes because they rely on request-time context. Use `'use cache'`, `cacheLife`, and cache tags for repeated data so the static shell stays fast, and call `updateTag` from mutations so cached stats refresh immediately.
+- Groq requests must be funneled through `lib/services/ai-service.ts`, validated against Zod, timed/retried, and fail gracefully with descriptive errors before hitting the database.
+- Authentication relies on Better Auth (`lib/auth.ts`, `lib/auth-server.ts`, `lib/auth-client.ts`). All server actions mutate data only after `requireUser()` returns a user with appropriate row-level scope.
+- Prisma access uses `lib/prisma.ts` and the shared helpers in `lib/actions`, `lib/data`, or domain-specific folders. Keep raw SQL (e.g., `search_interviews`, `get_candidates_for_quiz_assignment`) close to the server action that needs it.
+- Styling must reuse `components/ui` primitives whenever possible, follow OKLCH color rules, and respect Vision Pro gradients referenced in `docs/VISION_PRO_STYLE_GUIDE.md`.
 
-### V. Accessibility, UX Consistency & Design Tokens
+## Development Workflow & Review Process
 
-Application UI MUST be accessible and theme-aware. Design tokens and color variables used in CSS files MUST be specified in
-OKLCH format (see project styling guidelines). Tailwind utilities (v4) and Radix primitives MUST be used for consistent
-component behavior and accessibility.
-
-Rationale: Accessibility and consistent design prevent discrimination, improve usability, and lower maintenance cost.
-
-## Constraints & Technology Standards
-
-This project is opinionated about its stack and low-level rules. Conformance to these standards is REQUIRED unless a
-documented exception is approved by maintainers.
-
-- Frontend: Next.js (App Router) with React and TypeScript — prefer server components and server actions where appropriate.
-- Styling: Tailwind CSS v4.x utility classes for layout; all color values in CSS files MUST use OKLCH form (e.g., oklch(0.7 0.1 200)). Use Tailwind classes in TSX for convenience but keep CSS tokens in OKLCH.
-- Forms & Validation: React Hook Form + Zod for validation and resolver-based form handling.
-- AI Integration: Use Groq/`@ai-sdk/groq` and the local AI service wrappers in `lib/services/ai-service.ts`. All AI calls MUST include input sanitization and schema validation of the response.
-- Backend: Prisma with Neon for database, Better Auth for authentication and user management.
-- Logging & Observability: Structured logs and basic metrics around AI generation latency, failure rate, and token usage.
-
-## Development Workflow & Quality Gates
-
-- Pull Requests: All changes MUST be in a named feature branch and include an associated spec or task when the change is more than trivial.
-- Reviews: At least one approving review from a maintainer is REQUIRED for non-trivial changes. Security and schema changes REQUIRE an additional reviewer with DB/infra knowledge.
-- CI: Every PR MUST pass lint, typecheck. The repository's quality gates are: Build: PASS, Lint/Typecheck: PASS.
-- Release: Tag releases that change public contracts with semantic versions and include migration notes in the release body.
+- Start with `pnpm dev` for local work, then `pnpm lint`, `pnpm test`, and `pnpm storybook` before merging. Migrations use `pnpm prisma migrate deploy` (prod) or `pnpm prisma db push` (local).
+- Feature planning must reference the constitution, especially before touching caching, AI, or authentication. Document how UI changes fit the Vision Pro tokens and confirm server actions abide by the shared helpers.
+- Code reviews must verify cache boundaries, form validation, and AI schemas. Add documentation updates in `docs/` whenever the behavior linked to caching or AI changes.
+- Governance expects explicit `cacheLife` choices, Suspense fallback strategies, Zod validation, and test coverage for AI pipelines. If a change introduces new primitives, update `components/ui/` or `docs/VISION_PRO_STYLE_GUIDE.md` accordingly before merging.
 
 ## Governance
 
-Amendments: Any amendment to this constitution is proposed as a documentation PR that links to a migration plan (if required)
-and a spec that explains the need and impact. Approval requires two maintainers or one maintainer + one security/infra owner.
+The constitution governs all architectural and behavioral rules. Any amendment must be recorded in `docs/` and receive explicit agreement from the maintainers. Larger changes must include a migration or rollback plan and mention relevant documentation updates in the PR description.
 
-Versioning Rules:
-
-- MAJOR: Backwards incompatible governance change or principle removal/redefinition.
-- MINOR: Addition of a principle or material expansion of guidance.
-- PATCH: Clarifications, typos, non-substantive language changes.
-
-Compliance Review: Every quarter the maintainers will run a lightweight compliance audit. The `Constitution Check` step in the
-project plan (see `.specify/templates/plan-template.md`) MUST be completed before major milestones.
-
-**Version**: 2.0.0 | **Ratified**: 2025-11-14 | **Last Amended**: 2025-11-14
+**Version**: 1.1.0 | **Ratified**: 2025-11-19 | **Last Amended**: 2025-11-19

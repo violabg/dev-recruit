@@ -1,7 +1,10 @@
 import prisma from "@/lib/prisma";
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 
-export const getPositions = cache(async (search?: string) => {
+export const getPositions = async (search?: string) => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("positions");
   const filter = search?.trim();
 
   return prisma.position.findMany({
@@ -17,33 +20,15 @@ export const getPositions = cache(async (search?: string) => {
     },
     orderBy: { createdAt: "desc" },
   });
-});
+};
 
-export const getUserPositions = cache(
-  async (userId: string, search?: string) => {
-    const filter = search?.trim();
-
-    return prisma.position.findMany({
-      where: {
-        createdBy: userId,
-        ...(filter
-          ? {
-              title: {
-                contains: filter,
-                mode: "insensitive",
-              },
-            }
-          : {}),
-      },
-      orderBy: { createdAt: "desc" },
-    });
-  }
-);
-
-export const getPositionById = cache(async (positionId: string) => {
+export const getPositionById = async (positionId: string) => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`positions-${positionId}`);
   return prisma.position.findFirst({
     where: {
       id: positionId,
     },
   });
-});
+};

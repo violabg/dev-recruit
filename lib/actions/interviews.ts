@@ -3,8 +3,7 @@
 import { randomUUID } from "node:crypto";
 
 import { candidateQuizSelectionSchema } from "@/lib/schemas";
-import { revalidatePath } from "next/cache";
-
+import { cacheLife, cacheTag, revalidatePath, updateTag } from "next/cache";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
@@ -81,7 +80,13 @@ const generateInterviewToken = async (): Promise<string> => {
 };
 
 export async function fetchInterviewsData(filters: InterviewsFilters = {}) {
-  const user = await requireUser();
+  "use cache";
+  cacheLife({
+    stale: 600,
+    revalidate: 600,
+    expire: 600,
+  });
+  cacheTag("interviews");
 
   const {
     search = "",
@@ -98,9 +103,7 @@ export async function fetchInterviewsData(filters: InterviewsFilters = {}) {
 
   const whereClauses: Prisma.InterviewWhereInput[] = [
     {
-      candidate: {
-        createdBy: user.id,
-      },
+      candidate: {},
     },
   ];
 
@@ -217,9 +220,6 @@ export async function fetchInterviewsData(filters: InterviewsFilters = {}) {
   const totalPages = Math.max(1, Math.ceil(totalCount / normalizedLimit));
 
   const positions = await prisma.position.findMany({
-    where: {
-      createdBy: user.id,
-    },
     select: {
       id: true,
       title: true,
@@ -273,6 +273,8 @@ export async function startInterview(token: string) {
     },
   });
 
+  updateTag("interviews");
+
   return { success: true };
 }
 
@@ -308,6 +310,8 @@ export async function submitAnswer(
     },
   });
 
+  updateTag("interviews");
+
   return { success: true };
 }
 
@@ -330,6 +334,8 @@ export async function completeInterview(token: string) {
       completedAt: new Date(),
     },
   });
+
+  updateTag("interviews");
 
   return { success: true };
 }
@@ -381,16 +387,23 @@ export async function deleteInterview(id: string) {
     where: { id },
     select: {
       quizId: true,
+      quiz: {
+        select: {
+          createdBy: true,
+        },
+      },
     },
   });
 
   if (!interview) {
-    throw new Error("Interview not found");
+    throw new Error("Interview not found or you don't have permission");
   }
 
   await prisma.interview.delete({
     where: { id },
   });
+
+  updateTag("interviews");
 
   revalidatePath("/dashboard/interviews");
   revalidatePath(`/dashboard/quizzes/${interview.quizId}`);
@@ -536,6 +549,10 @@ export async function assignCandidatesToQuiz(
   }
 
   revalidatePath(`/dashboard/quizzes/${quiz.id}/invite`);
+
+  if (createdInterviews.length > 0) {
+    updateTag("interviews");
+  }
 
   if (generalErrors.length > 0) {
     return {

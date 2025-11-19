@@ -31,19 +31,11 @@
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Constitution-aligned gates (must be validated for Phase 0 completion):
-
-- AI Safety & Validation: All AI-generated artifacts referenced by the plan MUST include a Zod schema and a validation
-  plan (sanitization, filtering, schema assertions) before saving to the DB.
-- Schema Safety: Any change to data shapes or public contracts described in this plan MUST include Zod schemas for validation.
-- Security & Data Isolation: Plans that touch user data MUST include RLS considerations and token management details where
-  applicable.
-- Versioning: If the plan introduces or modifies a persisted contract or API, include the semantic version impact (MAJOR/MINOR/PATCH)
-  and a migration strategy.
-- Accessibility & UI Tokens: UI plans MUST document theme tokens and confirm OKLCH usage in CSS files and Tailwind v4 utility
-  compatibility where styling is specified.
-
-Each gate should be answered with: PASS / FAIL / N/A and brief evidence or next steps.
+- Verify the plan keeps Prisma/AI fetches inside `'use cache'` + `cacheLife` scopes, tags them with `cacheTag`/`revalidateTag`, and defers runtime data (`cookies()`, `headers()`, `searchParams`, `params`) to request time inside `<Suspense>` fallbacks so the static shell stays valid with `cacheComponents: true` enabled (Principle I).
+- Confirm any AI interactions reuse `lib/services/ai-service.ts`, follow the prompt/validation guidance in `docs/QUIZ_AI_GENERATION_SYSTEM.md`, and include Zod guard coverage (Principle II).
+- Ensure mutations flow through `lib/actions/*` with `requireUser()` checks so row-level security and cache tags stay consistent (Principle III).
+- Outline how UI work uses `components/ui/` primitives, Tailwind v4, and Vision Pro tokens described in `docs/VISION_PRO_STYLE_GUIDE.md`, especially for forms (Principle IV).
+- Reference this constitution (see `.specify/memory/constitution.md`) in the plan summary to anchor architectural decisions (Principle V).
 
 ## Project Structure
 

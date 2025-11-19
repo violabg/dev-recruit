@@ -1,4 +1,3 @@
-import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { Question } from "@/lib/schemas";
@@ -38,11 +37,7 @@ export async function fetchQuizzesData({
   }[] = [];
 
   try {
-    const user = await requireUser();
-
-    const where: Prisma.QuizWhereInput = {
-      createdBy: user.id,
-    };
+    const where: Prisma.QuizWhereInput = {};
 
     if (search) {
       where.title = {
@@ -99,9 +94,7 @@ export async function fetchQuizzesData({
     }));
 
     const experienceLevels = await prisma.position.findMany({
-      where: {
-        createdBy: user.id,
-      },
+      where: {},
       select: { experienceLevel: true },
     });
 
@@ -115,12 +108,10 @@ export async function fetchQuizzesData({
 
     const quizCounts = await prisma.quiz.groupBy({
       by: ["positionId"],
-      where: { createdBy: user.id },
       _count: { _all: true },
     });
 
     const positions = await prisma.position.findMany({
-      where: { createdBy: user.id },
       select: {
         id: true,
         title: true,

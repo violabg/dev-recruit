@@ -2,9 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuizzesForPosition } from "@/lib/data/quiz-data";
 import { BrainCircuit } from "lucide-react";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
 export default async function Quizes({ id }: { id: string }) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`positions-${id}`);
   const quizzes = await getQuizzesForPosition(id);
 
   return (

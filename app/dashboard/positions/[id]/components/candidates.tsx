@@ -1,19 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth-server";
 import { getCandidatesByPosition } from "@/lib/data/candidates";
 import { Plus, Users } from "lucide-react";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
 export default async function Candidates({ id }: { id: string }) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const candidates = await getCandidatesByPosition(user.id, id);
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`positions-${id}`);
+  const candidates = await getCandidatesByPosition(id);
 
   return (
     <>

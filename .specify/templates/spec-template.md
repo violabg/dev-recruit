@@ -5,7 +5,15 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
-## User Scenarios _(mandatory)_
+## Constitution Alignment (mandatory)
+
+- Describe how the feature keeps server-side work inside `'use cache'` + `cacheLife` scopes, tags cache entries with `cacheTag`/`revalidateTag`, and keeps runtime data (`cookies()`, `headers()`, `searchParams`, `params`) inside `<Suspense>` boundaries so the route aligns with `cacheComponents: true` (Principle I).
+- If the feature touches AI, reference `lib/services/ai-service.ts`, the prompt/validation flow in `docs/QUIZ_AI_GENERATION_SYSTEM.md`, and the Zod schema that will guard the response (Principle II).
+- Any mutation must be funneled through `lib/actions/*` with `requireUser()` and include `cacheTag`/`revalidateTag` considerations (Principle III).
+- Document the UI primitives that follow the Tailwind v4 + Vision Pro token guidance (`components/ui/`, `docs/VISION_PRO_STYLE_GUIDE.md`) and the Zod-backed forms using React Hook Form (Principle IV).
+- Note what documentation updates (README, docs/...) will capture this work and confirm the plan links to the constitution (Principle V).
+
+## User Scenarios & Testing _(mandatory)_
 
 <!--
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.

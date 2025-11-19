@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
@@ -25,21 +25,31 @@ export async function createPosition(values: PositionFormData) {
     select: { id: true },
   });
 
-  revalidatePath("/dashboard/positions");
+  updateTag("positions");
 
   redirect(`/dashboard/positions/${position.id}`);
 }
 
 export async function deletePosition(id: string) {
+  const user = await requireUser();
+
+  const position = await prisma.position.findUnique({
+    where: { id },
+    select: { createdBy: true },
+  });
+
+  if (!position || position.createdBy !== user.id) {
+    throw new Error("Position not found or you don't have permission");
+  }
+
   await prisma.position.delete({ where: { id } });
 
-  revalidatePath("/dashboard/positions");
+  updateTag("positions");
+
   redirect("/dashboard/positions");
 }
 
 export async function updatePosition(id: string, formData: FormData) {
-  const user = await requireUser();
-
   const parseJsonArray = (
     value: FormDataEntryValue | null,
     field: string
@@ -90,8 +100,8 @@ export async function updatePosition(id: string, formData: FormData) {
     },
   });
 
-  revalidatePath("/dashboard/positions");
-  revalidatePath(`/dashboard/positions/${id}`);
+  updateTag("positions");
+  updateTag(`positions-${id}`);
 
   redirect(`/dashboard/positions/${id}`);
 }
