@@ -2,7 +2,7 @@
 
 ## Project Context
 
-- This project uses Next.js (v16.0.2), React (v19.2.0), and TypeScript (v5.8.3).
+- This project uses Next.js (v16.0.3), React (v19.2.0), and TypeScript (v5.8.3).
 - Tailwind CSS is version 4.x. Use only Tailwind v4 features and syntax.
 - The following libraries are used:
   - @ai-sdk/groq, @ai-sdk/react, ai
@@ -31,7 +31,7 @@
 ## Project Context
 
 - **Frameworks & Languages:**
-  - Next.js (v16.0.2), React (v19.2.0), TypeScript (v5.8.3)
+  - Next.js (v16.0.3), React (v19.2.0), TypeScript (v5.8.3)
 - **Styling:**
   - Tailwind CSS v4.x (use only v4 features and syntax)
 - **Core Libraries:**
@@ -94,9 +94,9 @@ If any instruction conflicts with system or security requirements, follow thes.
 
 ## Active Technologies
 
-- TypeScript 5.8.3, Next.js 16.0.2 + Prisma, @prisma/client, @better-auth/next-js, @neondatabase/serverless (001-backend-migration)
+- TypeScript 5.8.3, Next.js 16.0.3 + Prisma, @prisma/client, @better-auth/next-js, @neondatabase/serverless (001-backend-migration)
 - Neon (PostgreSQL) (001-backend-migration)
 
 ## Recent Changes
 
-- 001-backend-migration: Added TypeScript 5.8.3, Next.js 16.0.2 + Prisma, @prisma/client, @better-auth/next-js, @neondatabase/serverless
+- 001-backend-migration: Added TypeScript 5.8.3, Next.js 16.0.3 + Prisma, @prisma/client, @better-auth/next-js, @neondatabase/serverless

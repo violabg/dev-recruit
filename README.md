@@ -1,6 +1,6 @@
 # DevRecruit AI
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.0.2-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.3-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.0-blue)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-5.19.1-2D3748)](https://www.prisma.io/)
@@ -308,7 +308,7 @@ model Interview {
 
 ### Frontend Framework
 
-- **[Next.js 16.0.2](https://nextjs.org/)** - React framework with App Router
+- **[Next.js 16.0.3](https://nextjs.org/)** - React framework with App Router
 - **[React 19.2.0](https://reactjs.org/)** - UI library with concurrent features
 - **[TypeScript 5.8.3](https://www.typescriptlang.org/)** - Type-safe development
 

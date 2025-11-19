@@ -29,21 +29,9 @@
 
 ## Constitution Check
 
-_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Constitution-aligned gates (must be validated for Phase 0 completion):
-
-- AI Safety & Validation: All AI-generated artifacts referenced by the plan MUST include a Zod schema and a validation
-  plan (sanitization, filtering, schema assertions) before saving to the DB.
-- Schema Safety: Any change to data shapes or public contracts described in this plan MUST include Zod schemas for validation.
-- Security & Data Isolation: Plans that touch user data MUST include RLS considerations and token management details where
-  applicable.
-- Versioning: If the plan introduces or modifies a persisted contract or API, include the semantic version impact (MAJOR/MINOR/PATCH)
-  and a migration strategy.
-- Accessibility & UI Tokens: UI plans MUST document theme tokens and confirm OKLCH usage in CSS files and Tailwind v4 utility
-  compatibility where styling is specified.
-
-Each gate should be answered with: PASS / FAIL / N/A and brief evidence or next steps.
+[Gates determined based on constitution file]
 
 ## Project Structure
 
@@ -60,7 +48,6 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
   for this feature. Delete unused options and expand the chosen structure with
@@ -111,7 +98,7 @@ directories captured above]
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
-| -------------------------- | ------------------ | ------------------------------------ |
-| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
