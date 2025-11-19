@@ -29,8 +29,8 @@ export default async function PositionDetailPage({
 async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
   "use cache";
   cacheLife("hours");
-  cacheTag(`positions-${id}`);
   const { id } = await params; // Await the params object
+  cacheTag(`positions-${id}`);
 
   const position = await getPositionById(id);
 

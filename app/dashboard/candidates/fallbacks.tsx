@@ -8,7 +8,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 export const StatsSkeleton = () => (
   <div className="gap-4 grid md:grid-cols-4">
-    {Array.from({ length: 4 }).map((_, index) => (
+    {Array.from({ length: 2 }).map((_, index) => (
       <Card key={index}>
         <CardHeader className="pb-2">
           <CardTitle>
@@ -35,7 +35,7 @@ export const FiltersSkeleton = () => (
     </CardHeader>
     <CardContent>
       <div className="flex flex-col gap-4">
-        {Array.from({ length: 3 }).map((_, index) => (
+        {Array.from({ length: 1 }).map((_, index) => (
           <Skeleton key={index} className="w-full h-12" />
         ))}
       </div>
