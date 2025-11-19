@@ -30,7 +30,6 @@ storybook-static
 
 # OS / editor
 .DS_Store
-.vscode/
 .idea/
 
 # build / cache
