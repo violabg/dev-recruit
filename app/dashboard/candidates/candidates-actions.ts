@@ -1,4 +1,3 @@
-import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 
@@ -61,11 +60,7 @@ export async function fetchCandidatesData({
   positionId,
   sort,
 }: FetchCandidatesParams) {
-  const user = await requireUser();
-
-  const where: Prisma.CandidateWhereInput = {
-    createdBy: user.id,
-  };
+  const where: Prisma.CandidateWhereInput = {};
 
   if (status !== "all") {
     where.status = status;
@@ -141,14 +136,12 @@ export async function fetchCandidatesData({
   );
 
   const positions = await prisma.position.findMany({
-    where: { createdBy: user.id },
     select: { id: true, title: true },
     orderBy: { title: "asc" },
   });
 
   const statusCountsRaw = await prisma.candidate.groupBy({
     by: ["status"],
-    where: { createdBy: user.id },
     _count: { _all: true },
   });
 
@@ -159,12 +152,9 @@ export async function fetchCandidatesData({
     })
   );
 
-  const totalCandidates = await prisma.candidate.count({
-    where: { createdBy: user.id },
-  });
+  const totalCandidates = await prisma.candidate.count({});
 
   return {
-    user,
     candidates: mappedCandidates,
     positions,
     statusCounts,

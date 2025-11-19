@@ -2,7 +2,6 @@ import { CandidateStatusBadge } from "@/components/candidates/candidate-status-b
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 
@@ -12,21 +11,9 @@ export default async function CandidateDetailPage({
   params: { id: string };
 }) {
   const { id } = await params;
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
-        <p className="font-medium text-lg">Accesso richiesto</p>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Effettua l&apos;accesso per visualizzare il candidato
-        </p>
-      </div>
-    );
-  }
 
   const candidate = await prisma.candidate.findFirst({
-    where: { id, createdBy: user.id },
+    where: { id },
     include: {
       position: {
         select: {

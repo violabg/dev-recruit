@@ -36,17 +36,13 @@ export default async function CandidatesPage({
   const sort = params?.sort || "newest";
   const view = params?.view || "table";
 
-  const { user, candidates, positions, statusCounts, totalCandidates } =
+  const { candidates, positions, statusCounts, totalCandidates } =
     await fetchCandidatesData({
       search,
       status,
       positionId,
       sort,
     });
-
-  if (!user) {
-    return null;
-  }
 
   return (
     <div className="space-y-6">

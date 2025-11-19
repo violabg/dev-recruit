@@ -14,7 +14,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrentUser } from "@/lib/auth-server";
 import { getCandidateQuizData } from "@/lib/data/interview-data";
 
 export default async function CandidateQuizPage({
@@ -23,11 +22,6 @@ export default async function CandidateQuizPage({
   params: { id: string };
 }) {
   const { id: candidateId } = await params;
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return redirect("/login" as Route);
-  }
 
   const data = await getCandidateQuizData(candidateId);
 

@@ -1,5 +1,4 @@
 import { CandidateNewForm } from "@/components/candidates/candidate-new-form";
-import { getCurrentUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 
 type NewCandidatePageProps = {
@@ -12,21 +11,7 @@ export default async function NewCandidatePage({
   const params = await searchParams;
   const positionId = params.positionId;
 
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
-        <p className="font-medium text-lg">Accesso richiesto</p>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Effettua l&apos;accesso per aggiungere un candidato
-        </p>
-      </div>
-    );
-  }
-
   const positions = await prisma.position.findMany({
-    where: { createdBy: user.id },
     select: { id: true, title: true },
     orderBy: { title: "asc" },
   });

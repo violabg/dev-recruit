@@ -1,7 +1,5 @@
 import { ArrowLeft } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { CandidateSelectionForm } from "@/components/interview/candidate-selection-form";
 import { InvitesList } from "@/components/interview/invites-list"; // Import AssignedInterview type
@@ -14,7 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrentUser } from "@/lib/auth-server";
 import { getQuizAssignmentData } from "@/lib/data/interview-data";
 
 export default async function InviteCandidatesPage({
@@ -23,11 +20,6 @@ export default async function InviteCandidatesPage({
   params: { id: string };
 }) {
   const { id: quizId } = await params; // Destructure and rename id to quizId for clarity
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return redirect("/login" as Route);
-  }
 
   const data = await getQuizAssignmentData(quizId);
 
