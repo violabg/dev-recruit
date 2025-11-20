@@ -187,7 +187,6 @@ lib/actions/interviews.ts:
 
 1. `lib/data/quiz-data.ts` – Add `cacheTag("quizzes")` to all query functions
 2. `lib/data/candidates.ts` – Add `cacheTag("candidates")` to getCandidatesByPosition and related
-3. `lib/data/dashboard.ts` – Add `cacheTag("dashboard")` for reuse across pages
 
 **Missing `updateTag()` in mutations:**
 
@@ -452,9 +451,8 @@ The current implementation is **solid and compliant**. The use of `useTransition
 
 1. `lib/data/quiz-data.ts` – Add `cacheTag("quizzes")` to all queries
 2. `lib/data/candidates.ts` – Add `cacheTag("candidates")` to all queries
-3. `lib/data/dashboard.ts` – Add `cacheTag("dashboard")` to dashboard queries
-4. `lib/actions/candidates.ts` – Add `updateTag("candidates")` to update/delete functions
-5. `lib/actions/quizzes.ts` – Verify all mutations have `updateTag("quizzes")`
+3. `lib/actions/candidates.ts` – Add `updateTag("candidates")` to update/delete functions
+4. `lib/actions/quizzes.ts` – Verify all mutations have `updateTag("quizzes")`
 
 **Effort:** Low (few hours)
 

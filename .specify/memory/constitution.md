@@ -137,7 +137,6 @@ export async function createPosition(values: PositionFormData) {
   const position = await prisma.position.create({ ... });
 
   updateTag("positions"); // Invalidate cached list immediately
-  revalidateTag("dashboard"); // Mark dashboard stats for revalidation
 
   return position;
 }

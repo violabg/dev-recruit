@@ -2,13 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -23,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 type CandidateNewFormProps = {
   positions: { id: string; title: string }[];
@@ -72,70 +70,74 @@ export const CandidateNewForm = ({
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome candidato" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="Email candidato" type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="position_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Posizione</FormLabel>
-              <FormControl>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona posizione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map((position) => (
-                      <SelectItem key={position.id} value={position.id}>
-                        {position.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {error && <div className="text-red-500 text-sm">{error}</div>}
-        <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-              Creazione in corso...
-            </>
-          ) : (
-            "Crea candidato"
-          )}
-        </Button>
-      </form>
-    </Form>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <Controller
+        control={form.control}
+        name="name"
+        render={({ field, fieldState }) => (
+          <Field>
+            <FieldLabel>Nome</FieldLabel>
+            <FieldContent>
+              <Input placeholder="Nome candidato" {...field} />
+            </FieldContent>
+            <FieldError
+              errors={fieldState.error ? [fieldState.error] : undefined}
+            />
+          </Field>
+        )}
+      />
+      <Controller
+        control={form.control}
+        name="email"
+        render={({ field, fieldState }) => (
+          <Field>
+            <FieldLabel>Email</FieldLabel>
+            <FieldContent>
+              <Input placeholder="Email candidato" type="email" {...field} />
+            </FieldContent>
+            <FieldError
+              errors={fieldState.error ? [fieldState.error] : undefined}
+            />
+          </Field>
+        )}
+      />
+      <Controller
+        control={form.control}
+        name="position_id"
+        render={({ field, fieldState }) => (
+          <Field>
+            <FieldLabel>Posizione</FieldLabel>
+            <FieldContent>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona posizione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {positions.map((position) => (
+                    <SelectItem key={position.id} value={position.id}>
+                      {position.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FieldContent>
+            <FieldError
+              errors={fieldState.error ? [fieldState.error] : undefined}
+            />
+          </Field>
+        )}
+      />
+      {error && <div className="text-red-500 text-sm">{error}</div>}
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? (
+          <>
+            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+            Creazione in corso...
+          </>
+        ) : (
+          "Crea candidato"
+        )}
+      </Button>
+    </form>
   );
 };

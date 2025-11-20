@@ -9,13 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import PasswordInput from "@/components/ui/password-input";
 import { updatePassword } from "@/lib/actions/profile";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
@@ -23,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 type PasswordFormProps = {
@@ -76,69 +74,73 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="current_password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password Attuale</FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder="Inserisci la password attuale"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-4">
+              <Controller
+                control={form.control}
+                name="current_password"
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Password Attuale</FieldLabel>
+                    <FieldContent>
+                      <PasswordInput
+                        placeholder="Inserisci la password attuale"
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FieldContent>
+                    <FieldError
+                      errors={fieldState.error ? [fieldState.error] : undefined}
+                    />
+                  </Field>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="new_password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nuova Password</FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder="Inserisci la nuova password"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Controller
+                control={form.control}
+                name="new_password"
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Nuova Password</FieldLabel>
+                    <FieldContent>
+                      <PasswordInput
+                        placeholder="Inserisci la nuova password"
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FieldContent>
+                    <FieldError
+                      errors={fieldState.error ? [fieldState.error] : undefined}
+                    />
+                  </Field>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="confirm_password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Conferma Nuova Password</FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder="Conferma la nuova password"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <Controller
+                control={form.control}
+                name="confirm_password"
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Conferma Nuova Password</FieldLabel>
+                    <FieldContent>
+                      <PasswordInput
+                        placeholder="Conferma la nuova password"
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FieldContent>
+                    <FieldError
+                      errors={fieldState.error ? [fieldState.error] : undefined}
+                    />
+                  </Field>
+                )}
+              />
+            </div>
 
-              <Button type="submit" disabled={isPending} className="w-full">
-                {isPending ? "Aggiornamento..." : "Aggiorna Password"}
-              </Button>
-            </form>
-          </Form>
+            <Button type="submit" disabled={isPending} className="w-full">
+              {isPending ? "Aggiornamento..." : "Aggiorna Password"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
