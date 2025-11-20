@@ -140,7 +140,6 @@ export function CandidateSelectionForm({
                 name="candidateIds"
                 render={({ field }) => (
                   <MultiSelect
-                    id={candidateIdsId}
                     options={candidateOptions}
                     selected={field.value}
                     onChange={field.onChange}
