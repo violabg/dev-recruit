@@ -1,7 +1,8 @@
 import prisma from "@/lib/prisma";
 import { cacheLife, cacheTag } from "next/cache";
+import { Position } from "../prisma/client";
 
-export const getPositions = async (search?: string) => {
+export const getPositions = async (search?: string): Promise<Position[]> => {
   "use cache";
   cacheLife("hours");
   cacheTag("positions");
@@ -22,7 +23,9 @@ export const getPositions = async (search?: string) => {
   });
 };
 
-export const getPositionById = async (positionId: string) => {
+export const getPositionById = async (
+  positionId: string
+): Promise<Position | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag(`positions-${positionId}`);
