@@ -2,8 +2,21 @@ import { EditQuizForm } from "@/app/dashboard/quizzes/[id]/edit/components/edit-
 import { getQuizData } from "@/lib/data/quiz-data";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { EditQuizSkeleton } from "./fallbacks";
 
 export default async function EditQuizPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<EditQuizSkeleton />}>
+      <EditQuizContent params={params} />
+    </Suspense>
+  );
+}
+
+async function EditQuizContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -15,9 +28,5 @@ export default async function EditQuizPage({
 
   const { quiz, position } = data;
 
-  return (
-    <Suspense fallback={<div>Caricamento...</div>}>
-      <EditQuizForm quiz={quiz} position={position} />
-    </Suspense>
-  );
+  return <EditQuizForm quiz={quiz} position={position} />;
 }

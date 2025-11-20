@@ -9,12 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getPositions } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import PositionsSkeleton from "./fallback";
+import { CachedPositionsContent } from "./positions-actions";
 
 // Server component for positions page
 export default async function PositionsPage({
@@ -46,7 +46,14 @@ const PositionsTable = async ({
   searchParams: Promise<{ q: string | undefined }>;
 }) => {
   const { q: query } = await searchParams;
-  const positions = await getPositions(query);
+  const allPositions = await CachedPositionsContent();
+
+  // Filter positions client-side based on query
+  const positions = query
+    ? allPositions.filter((pos) =>
+        pos.title.toLowerCase().includes(query.toLowerCase())
+      )
+    : allPositions;
   return (
     <>
       <div className="flex items-center gap-4">

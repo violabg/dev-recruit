@@ -21,6 +21,7 @@ import { LLMModelSelect } from "@/components/ui/llm-model-select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { generateNewQuizAction, saveQuizAction } from "@/lib/actions/quizzes";
 import { quizGenerationConfigSchema } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { toast } from "sonner";
@@ -70,57 +71,38 @@ export const QuizForm = ({ position }: QuizFormProps) => {
   async function onSubmit(values: FormData) {
     setGenerating(true);
     try {
-      // Generate quiz using API route
-      const generateResponse = await fetch("/api/quiz-edit/generate-quiz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies for authentication
-        body: JSON.stringify({
-          positionId: position.id,
-          quizTitle: values.quizTitle,
-          questionCount: values.questionCount,
-          difficulty: values.difficulty,
-          includeMultipleChoice: values.includeMultipleChoice,
-          includeOpenQuestions: values.includeOpenQuestions,
-          includeCodeSnippets: values.includeCodeSnippets,
-          instructions: values.instructions || "",
-          specificModel: values.specificModel,
-        }),
+      // Generate quiz using server action
+      const quizData = await generateNewQuizAction({
+        positionId: position.id,
+        quizTitle: values.quizTitle,
+        questionCount: values.questionCount,
+        difficulty: values.difficulty,
+        includeMultipleChoice: values.includeMultipleChoice,
+        includeOpenQuestions: values.includeOpenQuestions,
+        includeCodeSnippets: values.includeCodeSnippets,
+        instructions: values.instructions || undefined,
+        specificModel: values.specificModel,
       });
 
-      if (!generateResponse.ok) {
-        const errorData = await generateResponse.json();
-        throw new Error(
-          errorData.error ||
-            `HTTP ${generateResponse.status}: ${generateResponse.statusText}`
-        );
+      if (!quizData || !quizData.questions) {
+        throw new Error("No quiz generated");
       }
 
-      const quizData = await generateResponse.json();
+      // Save quiz to database using server action
+      const formData = new FormData();
+      formData.append("title", values.quizTitle);
+      formData.append("position_id", position.id);
+      formData.append("questions", JSON.stringify(quizData.questions));
+      formData.append(
+        "time_limit",
+        values.enableTimeLimit ? values.timeLimit.toString() : ""
+      );
 
-      // Save quiz to database using new API route
-      const saveResponse = await fetch("/api/quiz/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies for authentication
-        body: JSON.stringify({
-          title: values.quizTitle,
-          position_id: position.id,
-          questions: quizData.questions,
-          time_limit: values.enableTimeLimit ? values.timeLimit : null,
-        }),
-      });
+      const saveResult = await saveQuizAction(formData);
 
-      if (!saveResponse.ok) {
-        const errorData = await saveResponse.json();
-        throw new Error(errorData.error || "Failed to save quiz to database");
+      if (!saveResult || !saveResult.id) {
+        throw new Error("Failed to save quiz");
       }
-
-      const saveResult = await saveResponse.json();
 
       toast.success("Quiz generato con successo!");
       router.push(`/dashboard/quizzes/${saveResult.id}`);

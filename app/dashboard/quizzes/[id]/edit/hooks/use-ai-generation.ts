@@ -7,7 +7,10 @@
 
 "use client";
 
-import { GenerateQuizResponse } from "@/app/api/quiz-edit/generate-quiz/route";
+import {
+  generateNewQuestionAction,
+  generateNewQuizAction,
+} from "@/lib/actions/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { GenerateQuestionParams } from "@/lib/services/ai-service";
 import {
@@ -138,22 +141,7 @@ export const useAIGeneration = ({
         params.specificModel = options.llmModel;
       }
 
-      const response = await fetch("/api/quiz-edit/generate-question", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP ${response.status}: ${response.statusText}`
-        );
-      }
-
-      const newQuestion = await response.json();
+      const newQuestion = await generateNewQuestionAction(params);
       const newQuestionWithId = {
         ...newQuestion,
         id: generateId(),
@@ -233,22 +221,7 @@ export const useAIGeneration = ({
     setAiLoading(true);
 
     try {
-      const response = await fetch("/api/quiz-edit/generate-question", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP ${response.status}: ${response.statusText}`
-        );
-      }
-
-      const newQuestion = await response.json();
+      const newQuestion = await generateNewQuestionAction(params);
       const newQuestionWithId = {
         ...newQuestion,
         id: generateId(),
@@ -340,22 +313,7 @@ export const useAIGeneration = ({
         params.specificModel = options.llmModel;
       }
 
-      const response = await fetch("/api/quiz-edit/generate-question", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP ${response.status}: ${response.statusText}`
-        );
-      }
-
-      const newQuestion = await response.json();
+      const newQuestion = await generateNewQuestionAction(params);
 
       // Update the question at the specific index
       update(regeneratingQuestionIndex, {
@@ -392,46 +350,35 @@ export const useAIGeneration = ({
     setAiLoading(true);
 
     try {
-      const response = await fetch("/api/quiz-edit/generate-quiz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          positionId: position.id,
-          quizTitle: form.getValues("title"),
-          questionCount: fields.length || 5,
-          difficulty: data.difficulty || 3,
-          includeMultipleChoice: true,
-          includeOpenQuestions: true,
-          includeCodeSnippets: true,
-          specificModel: data.llmModel,
-          instructions: data.instructions || "",
-        }),
+      const newQuiz = await generateNewQuizAction({
+        positionId: position.id,
+        quizTitle: form.getValues("title"),
+        questionCount: fields.length || 5,
+        difficulty: data.difficulty || 3,
+        includeMultipleChoice: true,
+        includeOpenQuestions: true,
+        includeCodeSnippets: true,
+        specificModel: data.llmModel,
+        instructions: data.instructions || undefined,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP ${response.status}: ${response.statusText}`
-        );
+      if (!newQuiz || !newQuiz.questions) {
+        throw new Error("No quiz generated");
       }
 
-      const newQuiz = (await response.json()) as GenerateQuizResponse;
-
       // Replace all questions with new ones
-      const newQuestions = newQuiz.questions.map((q) => ({
+      const newQuestions = newQuiz.questions.map((q: FlexibleQuestion) => ({
         ...q,
         id: generateId(),
       }));
 
       // Clear current questions and add new ones
       fields.forEach(() => remove(0));
-      newQuestions.forEach((question) => append(question));
+      newQuestions.forEach((question: FlexibleQuestion) => append(question));
 
       // Set all new questions as expanded
       const newQuestionIds = new Set<string>(
-        newQuestions.map((q) => q.id as string)
+        newQuestions.map((q: FlexibleQuestion) => q.id as string)
       );
       setExpandedQuestions(newQuestionIds);
 

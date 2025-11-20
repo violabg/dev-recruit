@@ -1304,12 +1304,10 @@ This project includes comprehensive documentation to help developers understand 
 
 ### 📋 Documentation Navigation
 
-| Topic              | File                                                                                 | Description                                                                      |
-| ------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| **AI System**      | [`docs/QUIZ_AI_GENERATION_SYSTEM.md`](docs/QUIZ_AI_GENERATION_SYSTEM.md)             | Complete AI quiz generation system with visual flows, API docs, and architecture |
-| **Schema & Types** | [`docs/SCHEMA_TYPE_SAFETY_IMPROVEMENTS.md`](docs/SCHEMA_TYPE_SAFETY_IMPROVEMENTS.md) | Schema consolidation, type safety enhancements, and maintainability improvements |
-| **Performance**    | [`docs/CACHE_IMPLEMENTATION.md`](docs/CACHE_IMPLEMENTATION.md)                       | Caching strategies and performance optimization                                  |
-| **Design System**  | [`docs/VISION_PRO_STYLE_GUIDE.md`](docs/VISION_PRO_STYLE_GUIDE.md)                   | UI components and design guidelines                                              |
+| Topic             | File                                                               | Description                                     |
+| ----------------- | ------------------------------------------------------------------ | ----------------------------------------------- |
+| **Performance**   | [`docs/CACHE_IMPLEMENTATION.md`](docs/CACHE_IMPLEMENTATION.md)     | Caching strategies and performance optimization |
+| **Design System** | [`docs/VISION_PRO_STYLE_GUIDE.md`](docs/VISION_PRO_STYLE_GUIDE.md) | UI components and design guidelines             |
 
 ### 🎯 Key Implementation Features
 

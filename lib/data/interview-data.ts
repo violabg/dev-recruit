@@ -7,7 +7,7 @@ import type {
   CandidateQuizData,
   QuizAssignmentData,
 } from "@/lib/types/interview";
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 
 const mapAssignedInterview = (interview: {
   id: string;
@@ -39,97 +39,99 @@ const mapAssignedInterview = (interview: {
   quizTitle: interview.quiz?.title ?? "",
 });
 
-const getQuizAssignmentDataCached = cache(
-  async (
-    quizId: string,
-    userId: string
-  ): Promise<QuizAssignmentData | null> => {
-    const quiz = await prisma.quiz.findFirst({
-      where: {
-        id: quizId,
-        createdBy: userId,
-      },
-      include: {
-        position: {
-          select: {
-            id: true,
-            title: true,
-          },
+const getQuizAssignmentDataCached = async (
+  quizId: string,
+  userId: string
+): Promise<QuizAssignmentData | null> => {
+  "use cache";
+  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheTag("interviews");
+
+  const quiz = await prisma.quiz.findFirst({
+    where: {
+      id: quizId,
+      createdBy: userId,
+    },
+    include: {
+      position: {
+        select: {
+          id: true,
+          title: true,
         },
       },
-    });
+    },
+  });
 
-    if (!quiz) {
-      return null;
-    }
-
-    const interviews = await prisma.interview.findMany({
-      where: {
-        quizId: quiz.id,
-      },
-      include: {
-        candidate: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        quiz: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    const assignedInterviews = interviews.map(mapAssignedInterview);
-    const assignedCandidateIds = assignedInterviews
-      .map((interview) => interview.candidateId)
-      .filter(Boolean);
-
-    const unassignedCandidates = await prisma.candidate.findMany({
-      where: {
-        positionId: quiz.positionId,
-        createdBy: userId,
-        id: {
-          notIn: assignedCandidateIds,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        status: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
-
-    return {
-      quiz: {
-        id: quiz.id,
-        title: quiz.title,
-        positionId: quiz.positionId,
-        timeLimit: quiz.timeLimit,
-        createdBy: quiz.createdBy,
-      },
-      position: quiz.position
-        ? {
-            id: quiz.position.id,
-            title: quiz.position.title,
-          }
-        : null,
-      assignedInterviews,
-      unassignedCandidates,
-    };
+  if (!quiz) {
+    return null;
   }
-);
+
+  const interviews = await prisma.interview.findMany({
+    where: {
+      quizId: quiz.id,
+    },
+    include: {
+      candidate: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      quiz: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const assignedInterviews = interviews.map(mapAssignedInterview);
+  const assignedCandidateIds = assignedInterviews
+    .map((interview) => interview.candidateId)
+    .filter(Boolean);
+
+  const unassignedCandidates = await prisma.candidate.findMany({
+    where: {
+      positionId: quiz.positionId,
+      createdBy: userId,
+      id: {
+        notIn: assignedCandidateIds,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      status: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  return {
+    quiz: {
+      id: quiz.id,
+      title: quiz.title,
+      positionId: quiz.positionId,
+      timeLimit: quiz.timeLimit,
+      createdBy: quiz.createdBy,
+    },
+    position: quiz.position
+      ? {
+          id: quiz.position.id,
+          title: quiz.position.title,
+        }
+      : null,
+    assignedInterviews,
+    unassignedCandidates,
+  };
+};
 
 export const getQuizAssignmentData = async (
   quizId: string
@@ -138,113 +140,115 @@ export const getQuizAssignmentData = async (
   return getQuizAssignmentDataCached(quizId, user.id);
 };
 
-const getCandidateQuizDataCached = cache(
-  async (
-    candidateId: string,
-    userId: string
-  ): Promise<CandidateQuizData | null> => {
-    const candidate = await prisma.candidate.findFirst({
-      where: {
-        id: candidateId,
-        createdBy: userId,
-      },
-      include: {
-        position: {
-          select: {
-            id: true,
-            title: true,
-          },
+const getCandidateQuizDataCached = async (
+  candidateId: string,
+  userId: string
+): Promise<CandidateQuizData | null> => {
+  "use cache";
+  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheTag("interviews");
+
+  const candidate = await prisma.candidate.findFirst({
+    where: {
+      id: candidateId,
+      createdBy: userId,
+    },
+    include: {
+      position: {
+        select: {
+          id: true,
+          title: true,
         },
       },
-    });
+    },
+  });
 
-    if (!candidate) {
-      return null;
-    }
-
-    const interviews = await prisma.interview.findMany({
-      where: {
-        candidateId: candidate.id,
-      },
-      include: {
-        quiz: {
-          select: {
-            id: true,
-            title: true,
-            createdAt: true,
-            timeLimit: true,
-            positionId: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    const assignedInterviews = interviews.map((interview) => ({
-      id: interview.id,
-      token: interview.token,
-      status: interview.status,
-      createdAt: interview.createdAt.toISOString(),
-      startedAt: interview.startedAt?.toISOString() ?? null,
-      completedAt: interview.completedAt?.toISOString() ?? null,
-      candidateId: interview.candidateId,
-      candidateName: candidate.name,
-      candidateEmail: candidate.email,
-      quizId: interview.quiz?.id ?? "",
-      quizTitle: interview.quiz?.title ?? "",
-    }));
-
-    const assignedQuizIds = assignedInterviews
-      .map((interview) => interview.quizId)
-      .filter(Boolean);
-
-    const availableQuizzes = await prisma.quiz.findMany({
-      where: {
-        positionId: candidate.positionId,
-        createdBy: userId,
-        id: {
-          notIn: assignedQuizIds,
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        createdAt: true,
-        timeLimit: true,
-        positionId: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return {
-      candidate: {
-        id: candidate.id,
-        name: candidate.name,
-        email: candidate.email,
-        status: candidate.status,
-        positionId: candidate.positionId,
-      },
-      position: candidate.position
-        ? {
-            id: candidate.position.id,
-            title: candidate.position.title,
-          }
-        : null,
-      availableQuizzes: availableQuizzes.map((quiz) => ({
-        id: quiz.id,
-        title: quiz.title,
-        createdAt: quiz.createdAt.toISOString(),
-        timeLimit: quiz.timeLimit,
-        positionId: quiz.positionId,
-      })),
-      assignedInterviews,
-    };
+  if (!candidate) {
+    return null;
   }
-);
+
+  const interviews = await prisma.interview.findMany({
+    where: {
+      candidateId: candidate.id,
+    },
+    include: {
+      quiz: {
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          timeLimit: true,
+          positionId: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const assignedInterviews = interviews.map((interview) => ({
+    id: interview.id,
+    token: interview.token,
+    status: interview.status,
+    createdAt: interview.createdAt.toISOString(),
+    startedAt: interview.startedAt?.toISOString() ?? null,
+    completedAt: interview.completedAt?.toISOString() ?? null,
+    candidateId: interview.candidateId,
+    candidateName: candidate.name,
+    candidateEmail: candidate.email,
+    quizId: interview.quiz?.id ?? "",
+    quizTitle: interview.quiz?.title ?? "",
+  }));
+
+  const assignedQuizIds = assignedInterviews
+    .map((interview) => interview.quizId)
+    .filter(Boolean);
+
+  const availableQuizzes = await prisma.quiz.findMany({
+    where: {
+      positionId: candidate.positionId,
+      createdBy: userId,
+      id: {
+        notIn: assignedQuizIds,
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+      timeLimit: true,
+      positionId: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return {
+    candidate: {
+      id: candidate.id,
+      name: candidate.name,
+      email: candidate.email,
+      status: candidate.status,
+      positionId: candidate.positionId,
+    },
+    position: candidate.position
+      ? {
+          id: candidate.position.id,
+          title: candidate.position.title,
+        }
+      : null,
+    availableQuizzes: availableQuizzes.map((quiz) => ({
+      id: quiz.id,
+      title: quiz.title,
+      createdAt: quiz.createdAt.toISOString(),
+      timeLimit: quiz.timeLimit,
+      positionId: quiz.positionId,
+    })),
+    assignedInterviews,
+  };
+};
 
 export const getCandidateQuizData = async (
   candidateId: string
@@ -272,6 +276,10 @@ export type InterviewByTokenResult = {
 export const getInterviewByToken = async (
   token: string
 ): Promise<InterviewByTokenResult | null> => {
+  "use cache";
+  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheTag("interviews");
+
   const interview = await prisma.interview.findUnique({
     where: { token },
     include: {
@@ -365,6 +373,10 @@ export type InterviewDetailResult = {
 export const getInterviewDetail = async (
   id: string
 ): Promise<InterviewDetailResult | null> => {
+  "use cache";
+  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheTag("interviews");
+
   const user = await requireUser();
 
   const interview = await prisma.interview.findFirst({

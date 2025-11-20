@@ -1,5 +1,7 @@
 import { CandidateNewForm } from "@/components/candidates/candidate-new-form";
 import prisma from "@/lib/prisma";
+import { Suspense } from "react";
+import { CandidateFormSkeleton } from "./fallbacks";
 
 type NewCandidatePageProps = {
   searchParams: Promise<{ positionId?: string }>;
@@ -8,6 +10,14 @@ type NewCandidatePageProps = {
 export default async function NewCandidatePage({
   searchParams,
 }: NewCandidatePageProps) {
+  return (
+    <Suspense fallback={<CandidateFormSkeleton />}>
+      <CandidateFormContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
   const params = await searchParams;
   const positionId = params.positionId;
 

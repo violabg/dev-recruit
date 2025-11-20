@@ -2,12 +2,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getPositionById } from "@/lib/data/positions";
 import { BrainCircuit } from "lucide-react";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { QuizForm } from "./QuizForm";
+import { QuizGeneratorSkeleton } from "./fallbacks";
 
 export default async function GenerateQuizPage({
   params: incomingParams,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<QuizGeneratorSkeleton />}>
+      <QuizGeneratorContent params={incomingParams} />
+    </Suspense>
+  );
+}
+
+async function QuizGeneratorContent({
+  params: incomingParams,
+}: {
+  params: Promise<{ id: string }>;
 }) {
   // await new Promise((resolve) => setTimeout(resolve, 10000));
   const { id } = await incomingParams;

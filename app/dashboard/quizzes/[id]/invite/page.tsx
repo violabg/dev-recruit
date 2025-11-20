@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { CandidateSelectionForm } from "@/components/interview/candidate-selection-form";
 import { InvitesList } from "@/components/interview/invites-list"; // Import AssignedInterview type
@@ -13,11 +14,24 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getQuizAssignmentData } from "@/lib/data/interview-data";
+import { InviteCandidatesSkeleton } from "./fallbacks";
 
 export default async function InviteCandidatesPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<InviteCandidatesSkeleton />}>
+      <InviteCandidatesContent params={params} />
+    </Suspense>
+  );
+}
+
+async function InviteCandidatesContent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
 }) {
   const { id: quizId } = await params; // Destructure and rename id to quizId for clarity
 

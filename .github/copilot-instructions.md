@@ -31,7 +31,6 @@
 ## Essential References
 
 - `README.md` – features, architecture, and commands overview.
-- `docs/QUIZ_AI_GENERATION_SYSTEM.md` – prompt design, validation, and error handling for AI generation.
 - `lib/services/ai-service.ts` + `lib/schemas/` – model selection, retries, and Zod guards.
 - `app/dashboard/layout.tsx` + `components/dashboard/` – layout, navigation, and theme wiring.
 - `prisma/schema.prisma` + `schema.sql` – data model, migrations, and SQL helpers.

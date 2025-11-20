@@ -817,10 +817,6 @@ export class AIQuizService {
         for (const fallbackModel of this.config.fallbackModels) {
           if (fallbackModel !== params.specificModel) {
             try {
-              console.log(
-                "🚀 ~ AIQuizService ~ generateQuiz ~ fallbackModel:",
-                fallbackModel
-              );
               return await this.generateQuiz({
                 ...params,
                 specificModel: fallbackModel,
@@ -930,10 +926,6 @@ export class AIQuizService {
       if (params.specificModel && this.config.fallbackModels.length > 0) {
         console.log("Attempting fallback models...");
         for (const fallbackModel of this.config.fallbackModels) {
-          console.log(
-            "🚀 ~ AIQuizService ~ generateQuestion ~ fallbackModel:",
-            fallbackModel
-          );
           if (fallbackModel !== params.specificModel) {
             try {
               return await this.generateQuestion({
