@@ -1,12 +1,16 @@
 import prisma from "@/lib/prisma";
 import { Question, quizSchema } from "@/lib/schemas";
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 
 /**
  * Cached function to fetch quiz data
- * Uses React's cache() for request-level deduplication
+ * Tagged with 'quizzes' for cache invalidation after mutations
  */
-const getQuizDataCached = cache(async (quizId: string) => {
+const getQuizDataCached = async (quizId: string) => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("quizzes");
+
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
     include: {
@@ -37,10 +41,8 @@ const getQuizDataCached = cache(async (quizId: string) => {
     created_at: quiz.createdAt.toISOString(),
     created_by: quiz.createdBy,
   } as const;
-  console.log("🚀 ~ hydratedQuiz:", hydratedQuiz);
 
   const parsedQuiz = quizSchema.safeParse(hydratedQuiz);
-  console.log("🚀 ~ parsedQuiz:", parsedQuiz);
   if (!parsedQuiz.success) {
     return null;
   }
@@ -54,7 +56,7 @@ const getQuizDataCached = cache(async (quizId: string) => {
   };
 
   return { quiz: parsedQuiz.data, position };
-});
+};
 
 export const getQuizData = async (quizId: string) => {
   return getQuizDataCached(quizId);
@@ -62,8 +64,13 @@ export const getQuizData = async (quizId: string) => {
 
 /**
  * Cached function to fetch position data
+ * Tagged with 'positions' for cache invalidation
  */
-const getPositionDataCached = cache(async (positionId: string) => {
+const getPositionDataCached = async (positionId: string) => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("positions");
+
   const position = await prisma.position.findFirst({
     where: { id: positionId },
     select: {
@@ -86,7 +93,7 @@ const getPositionDataCached = cache(async (positionId: string) => {
     skills: position.skills,
     description: position.description,
   };
-});
+};
 
 export const getPositionData = async (positionId: string) => {
   return getPositionDataCached(positionId);
@@ -94,8 +101,13 @@ export const getPositionData = async (positionId: string) => {
 
 /**
  * Cached function to fetch all quizzes for a position
+ * Tagged with 'quizzes' for cache invalidation
  */
-const getQuizzesForPositionCached = cache(async (positionId: string) => {
+const getQuizzesForPositionCached = async (positionId: string) => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("quizzes");
+
   const quizzes = await prisma.quiz.findMany({
     where: {
       positionId,
@@ -119,7 +131,7 @@ const getQuizzesForPositionCached = cache(async (positionId: string) => {
       ? (quiz.questions as Question[])
       : [],
   }));
-});
+};
 
 export const getQuizzesForPosition = async (positionId: string) => {
   return getQuizzesForPositionCached(positionId);

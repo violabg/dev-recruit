@@ -8,14 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { updateProfile, type Profile } from "@/lib/actions/profile";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
@@ -25,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { InputField } from "@/components/rhf-inputs";
 
 type ProfileFormValues = ProfileFormData;
 
@@ -83,63 +76,37 @@ export const ProfileForm = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="font-medium text-sm">Email</label>
-                  <Input
-                    value={userEmail || ""}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    L&apos;email non può essere modificata
-                  </p>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="full_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Il tuo nome completo"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="user_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Utente</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Il tuo nome utente"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="font-medium text-sm">Email</label>
+                <Input value={userEmail || ""} disabled className="bg-muted" />
+                <p className="text-muted-foreground text-xs">
+                  L&apos;email non può essere modificata
+                </p>
               </div>
 
-              <Button type="submit" disabled={isPending} className="w-full">
-                {isPending ? "Aggiornamento..." : "Aggiorna Profilo"}
-              </Button>
-            </form>
-          </Form>
+              <InputField
+                control={form.control}
+                name="full_name"
+                label="Nome Completo"
+                placeholder="Il tuo nome completo"
+                disabled={isPending}
+              />
+
+              <InputField
+                control={form.control}
+                name="user_name"
+                label="Nome Utente"
+                placeholder="Il tuo nome utente"
+                disabled={isPending}
+              />
+            </div>
+
+            <Button type="submit" disabled={isPending} className="w-full">
+              {isPending ? "Aggiornamento..." : "Aggiorna Profilo"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

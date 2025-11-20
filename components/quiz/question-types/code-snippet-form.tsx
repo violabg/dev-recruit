@@ -2,12 +2,11 @@
 
 import { programmingLanguages } from "@/components/positions/data";
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -18,6 +17,7 @@ import {
 import { Question } from "@/lib/schemas";
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
+import { Controller, useFormContext } from "react-hook-form";
 import { getLanguageCode } from ".";
 
 const CodeEditor = dynamic(
@@ -32,6 +32,12 @@ type CodeSnippetFormProps = {
 
 export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
   const { resolvedTheme } = useTheme();
+  const form = useFormContext();
+
+  const questionsErrors = form.formState.errors.questions;
+  const questionErrors = Array.isArray(questionsErrors)
+    ? questionsErrors[index]
+    : undefined;
 
   // Type guard to safely access code snippet properties
   const getLanguage = () => {
@@ -43,47 +49,59 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
 
   return (
     <div className="space-y-4">
-      <FormField
-        name={`questions.${index}.language`}
-        render={({ field: formField }) => {
-          return (
-            <FormItem>
-              <FormLabel>Linguaggio di programmazione</FormLabel>
-              <FormControl>
-                <Select
-                  value={formField.value?.toLowerCase() || getLanguage()}
-                  onValueChange={(value) => {
-                    formField.onChange(value);
-                  }}
+      <Field>
+        <FieldLabel htmlFor={`questions-${index}-language`}>
+          Linguaggio di programmazione
+        </FieldLabel>
+        <FieldContent>
+          <Controller
+            control={form.control}
+            name={`questions.${index}.language`}
+            render={({ field: languageField }) => (
+              <Select
+                value={languageField.value?.toLowerCase() || getLanguage()}
+                onValueChange={(value) => {
+                  languageField.onChange(value);
+                }}
+              >
+                <SelectTrigger
+                  className="w-48"
+                  id={`questions-${index}-language`}
                 >
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Seleziona linguaggio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {programmingLanguages.map((lang) => (
-                      <SelectItem key={lang} value={lang.toLowerCase()}>
-                        {lang}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
-      />
-      <FormField
-        name={`questions.${index}.codeSnippet`}
-        render={({ field: formField }) => (
-          <FormItem>
-            <FormLabel>Snippet di codice</FormLabel>
-            <FormControl>
+                  <SelectValue placeholder="Seleziona linguaggio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {programmingLanguages.map((lang) => (
+                    <SelectItem key={lang} value={lang.toLowerCase()}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </FieldContent>
+        <FieldError
+          errors={
+            questionErrors?.language ? [questionErrors.language] : undefined
+          }
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`questions-${index}-code`}>
+          Snippet di codice
+        </FieldLabel>
+        <FieldContent>
+          <Controller
+            control={form.control}
+            name={`questions.${index}.codeSnippet`}
+            render={({ field: codeField }) => (
               <CodeEditor
-                value={formField.value || ""}
+                id={`questions-${index}-code`}
+                value={codeField.value || ""}
                 language={getLanguageCode(getLanguage())}
                 placeholder="Inserisci il codice qui..."
-                onChange={(evn) => formField.onChange(evn.target.value)}
+                onChange={(evn) => codeField.onChange(evn.target.value)}
                 padding={15}
                 data-color-mode={resolvedTheme === "dark" ? "dark" : "light"}
                 style={{
@@ -97,22 +115,32 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
                   borderColor: resolvedTheme === "dark" ? "#374151" : "#d1d5db",
                 }}
               />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        name={`questions.${index}.sampleSolution`}
-        render={({ field: formField }) => (
-          <FormItem>
-            <FormLabel>Soluzione di esempio</FormLabel>
-            <FormControl>
+            )}
+          />
+        </FieldContent>
+        <FieldError
+          errors={
+            questionErrors?.codeSnippet
+              ? [questionErrors.codeSnippet]
+              : undefined
+          }
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`questions-${index}-solution`}>
+          Soluzione di esempio
+        </FieldLabel>
+        <FieldContent>
+          <Controller
+            control={form.control}
+            name={`questions.${index}.sampleSolution`}
+            render={({ field: solutionField }) => (
               <CodeEditor
-                value={formField.value || ""}
+                id={`questions-${index}-solution`}
+                value={solutionField.value || ""}
                 language={getLanguageCode(getLanguage())}
                 placeholder="Inserisci la soluzione qui..."
-                onChange={(evn) => formField.onChange(evn.target.value)}
+                onChange={(evn) => solutionField.onChange(evn.target.value)}
                 padding={15}
                 data-color-mode={resolvedTheme === "dark" ? "dark" : "light"}
                 style={{
@@ -126,11 +154,17 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
                   borderColor: resolvedTheme === "dark" ? "#374151" : "#d1d5db",
                 }}
               />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+            )}
+          />
+        </FieldContent>
+        <FieldError
+          errors={
+            questionErrors?.sampleSolution
+              ? [questionErrors.sampleSolution]
+              : undefined
+          }
+        />
+      </Field>
     </div>
   );
 };

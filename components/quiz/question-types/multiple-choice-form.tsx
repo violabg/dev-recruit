@@ -1,15 +1,6 @@
 "use client";
-
+import { InputField, TextareaField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useEffect } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
@@ -45,42 +36,28 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
           </span>
         </div>
         <div className="flex flex-col items-start gap-4">
-          {fields.map((field, optIdx) => (
-            <div key={field.id} className="flex items-start gap-2 w-full">
-              <FormField
-                name={`questions.${index}.options.${optIdx}`}
-                render={({ field }) => {
-                  const errorMessage = (
-                    form.formState.errors?.questions as any[] | undefined
-                  )?.[index]?.options?.[optIdx]?.message;
-                  return (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            placeholder={`Opzione ${optIdx + 1}`}
-                            {...field}
-                            minLength={3}
-                            className={errorMessage ? "border-red-500" : ""}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
-              />
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => remove(optIdx)}
-                disabled={fields.length <= 4} // Prevent removing below minimum of 4 options
-              >
-                &times;
-              </Button>
-            </div>
-          ))}
+          {fields.map((field, optIdx) => {
+            return (
+              <div key={field.id} className="flex items-start gap-2 w-full">
+                <InputField
+                  control={form.control}
+                  name={`questions.${index}.options.${optIdx}`}
+                  placeholder={`Opzione ${optIdx + 1}`}
+                  minLength={3}
+                />
+
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => remove(optIdx)}
+                  disabled={fields.length <= 4}
+                >
+                  &times;
+                </Button>
+              </div>
+            );
+          })}
           <Button
             type="button"
             size="sm"
@@ -92,47 +69,23 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
           </Button>
         </div>
       </div>
-      <FormField
+      <InputField
+        control={form.control}
         name={`questions.${index}.correctAnswer`}
-        render={({ field }) => {
-          return (
-            <FormItem>
-              <FormLabel>Risposta corretta (indice)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="0, 1, 2..."
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                  value={field.value}
-                  min={0}
-                  max={Math.max(0, fields.length - 1)}
-                />
-              </FormControl>
-              <div className="text-muted-foreground text-sm">
-                Inserisci l&apos;indice dell&apos;opzione corretta (0 = prima
-                opzione, 1 = seconda, ecc.)
-                {fields.length > 0 && ` - Range valido: 0-${fields.length - 1}`}
-              </div>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+        label="Risposta corretta (indice)"
+        type="number"
+        placeholder="0, 1, 2..."
+        min={0}
+        max={Math.max(0, fields.length - 1)}
+        description={`Inserisci l'indice dell'opzione corretta (0 = prima opzione, 1 = seconda, ecc.)${
+          fields.length > 0 ? ` - Range valido: 0-${fields.length - 1}` : ""
+        }`}
       />
-      <FormField
+      <TextareaField
+        control={form.control}
         name={`questions.${index}.explanation`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Spiegazione</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Spiega perché questa è la risposta corretta..."
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        label="Spiegazione"
+        placeholder="Spiega perché questa è la risposta corretta..."
       />
     </div>
   );

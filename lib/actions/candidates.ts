@@ -143,9 +143,6 @@ export async function updateCandidate(
     data: updateData,
   });
 
-  revalidatePath("/dashboard/candidates");
-  revalidatePath(`/dashboard/candidates/${id}`);
-
   if (newPositionId || candidate.positionId) {
     const positionToRefresh = newPositionId ?? candidate.positionId;
     revalidatePath(`/dashboard/positions/${positionToRefresh}`);
@@ -163,9 +160,6 @@ export async function deleteCandidate(id: string) {
   const candidate = await ensureCandidateOwnership(id, user.id);
 
   await prisma.candidate.delete({ where: { id } });
-
-  revalidatePath("/dashboard/candidates");
-  revalidatePath(`/dashboard/candidates/${id}`);
 
   if (candidate.positionId) {
     revalidatePath(`/dashboard/positions/${candidate.positionId}`);

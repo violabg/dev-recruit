@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,16 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-// Removed unused Label import
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { authClient } from "@/lib/auth-client";
 import { SignUpFormData, signUpSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -26,7 +15,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import PasswordInput from "../ui/password-input";
+import { InputField } from "../rhf-inputs/input-field";
+import { PasswordField } from "../rhf-inputs/password-field";
 
 export function SignUpForm({
   className,
@@ -63,11 +53,6 @@ export function SignUpForm({
         );
       }
 
-      if (result.data?.redirect && result.data.url) {
-        window.location.href = result.data.url;
-        return;
-      }
-
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError("email", {
@@ -89,121 +74,62 @@ export function SignUpForm({
           <CardDescription>Crea un nuovo account</CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={handleSubmit(handleSignUp)}
-              className="space-y-4"
-              autoComplete="off"
-            >
-              <FormField
-                name="first_name"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Mario"
-                        autoComplete="given-name"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="last_name"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cognome</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Rossi"
-                        autoComplete="family-name"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="email"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="m@example.com"
-                        autoComplete="email"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="password"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        autoComplete="new-password"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="repeatPassword"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ripeti Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        autoComplete="new-password"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !form.formState.isValid}
-              >
-                {isLoading ? "Creazione account..." : "Registrati"}
-              </Button>
-              <div className="mt-4 text-sm text-center">
-                Hai già un account?{" "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4"
-                >
-                  Accedi
-                </Link>
-              </div>
-            </form>
-          </Form>
+          <form
+            onSubmit={handleSubmit(handleSignUp)}
+            className="space-y-4"
+            autoComplete="off"
+          >
+            <InputField<SignUpFormData>
+              name="first_name"
+              control={form.control}
+              label="Nome"
+              type="text"
+              placeholder="Mario"
+              autoComplete="given-name"
+              disabled={isLoading}
+            />
+            <InputField<SignUpFormData>
+              name="last_name"
+              control={form.control}
+              label="Cognome"
+              type="text"
+              placeholder="Rossi"
+              autoComplete="family-name"
+              disabled={isLoading}
+            />
+            <InputField<SignUpFormData>
+              name="email"
+              control={form.control}
+              label="Email"
+              type="email"
+              placeholder="m@example.com"
+              autoComplete="email"
+              disabled={isLoading}
+            />
+            <PasswordField<SignUpFormData>
+              name="password"
+              label="Password"
+              control={form.control}
+              autoComplete="new-password"
+              disabled={isLoading}
+            />
+            <PasswordField<SignUpFormData>
+              name="repeatPassword"
+              label="Ripeti Password"
+              control={form.control}
+              autoComplete="new-password"
+              disabled={isLoading}
+            />
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creazione account..." : "Registrati"}
+            </Button>
+            <div className="mt-4 text-sm text-center">
+              Hai già un account?{" "}
+              <Link href="/auth/login" className="underline underline-offset-4">
+                Accedi
+              </Link>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

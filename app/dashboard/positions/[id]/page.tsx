@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getPositionById } from "@/lib/data/positions";
+import { getPositionById, getPositions } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Edit } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
@@ -11,6 +11,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import Candidates from "./components/candidates";
 import Quizes from "./components/quizes";
+
+export async function generateStaticParams() {
+  const positions = await getPositions();
+
+  return positions.map((position) => ({
+    id: position.id,
+  }));
+}
 
 export default async function PositionDetailPage({
   params,

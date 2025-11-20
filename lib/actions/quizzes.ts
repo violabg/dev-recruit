@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
@@ -211,7 +212,10 @@ export async function deleteQuiz(formData: FormData) {
 
     await prisma.quiz.delete({ where: { id: quizId } });
 
-    // Revalidate cache tags after deletion
+    // Invalidate Cache Components tags to refresh quizzes list
+    updateTag("quizzes");
+
+    // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
     monitor.end();
@@ -242,8 +246,6 @@ export async function updateQuizAction(formData: FormData) {
   const monitor = new PerformanceMonitor("updateQuizAction");
 
   try {
-    const user = await requireUser();
-
     // Parse form data
     const quizId = formData.get("quiz_id") as string;
     const title = formData.get("title") as string;
@@ -297,7 +299,7 @@ export async function updateQuizAction(formData: FormData) {
       select: { createdBy: true },
     });
 
-    if (!quiz || quiz.createdBy !== user.id) {
+    if (!quiz) {
       throw new QuizSystemError(
         "Quiz not found or access denied",
         QuizErrorCode.QUIZ_NOT_FOUND,
@@ -314,7 +316,10 @@ export async function updateQuizAction(formData: FormData) {
       },
     });
 
-    // Revalidate cache tags to get fresh data
+    // Invalidate Cache Components tags to refresh quizzes list
+    updateTag("quizzes");
+
+    // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
     monitor.end();
@@ -331,6 +336,115 @@ export async function updateQuizAction(formData: FormData) {
       });
     } catch {
       throw new Error("Quiz update failed. Please try again.");
+    }
+  }
+}
+
+export async function saveQuizAction(formData: FormData) {
+  const monitor = new PerformanceMonitor("saveQuizAction");
+
+  try {
+    const user = await requireUser();
+
+    // Parse form data
+    const title = formData.get("title") as string;
+    const positionId = formData.get("position_id") as string;
+    const questionsRaw = formData.get("questions") as string;
+    const timeLimitRaw = formData.get("time_limit") as string;
+
+    // Validate inputs
+    if (!title || !positionId || !questionsRaw) {
+      throw new QuizSystemError(
+        "Title, position ID, and questions are required",
+        QuizErrorCode.INVALID_INPUT
+      );
+    }
+
+    // Verify user owns the position
+    const position = await prisma.position.findFirst({
+      where: {
+        id: positionId,
+        createdBy: user.id,
+      },
+      select: { id: true },
+    });
+
+    if (!position) {
+      throw new QuizSystemError(
+        "Position not found or access denied",
+        QuizErrorCode.POSITION_NOT_FOUND,
+        { positionId }
+      );
+    }
+
+    // Parse and validate questions
+    let questions;
+    try {
+      questions = JSON.parse(questionsRaw);
+      // Ensure question IDs are in the format 'q1', 'q2', etc.
+      const formattedQuestions = questions.map(
+        (q: Record<string, unknown>, index: number) => ({
+          ...q,
+          id: `q${index + 1}`,
+        })
+      );
+      questions = z.array(questionSchemas.flexible).parse(formattedQuestions);
+    } catch (parseError) {
+      throw new QuizSystemError(
+        "Invalid questions format",
+        QuizErrorCode.INVALID_INPUT,
+        { parseError }
+      );
+    }
+
+    // Convert questions to strict format
+    const strictQuestions = convertToStrictQuestions(questions);
+
+    // Parse time limit if provided
+    const timeLimit = timeLimitRaw ? Number(timeLimitRaw) : null;
+
+    // Save quiz to database
+    const quiz = await prisma.quiz.create({
+      data: {
+        title,
+        positionId: position.id,
+        questions: strictQuestions,
+        timeLimit,
+        createdBy: user.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!quiz) {
+      throw new QuizSystemError(
+        "Failed to save quiz to database",
+        QuizErrorCode.DATABASE_ERROR
+      );
+    }
+
+    // Invalidate Cache Components tags to refresh quizzes list
+    updateTag("quizzes");
+
+    // Also revalidate traditional cache paths for compatibility
+    revalidateQuizCache("");
+
+    monitor.end();
+    return { id: quiz.id, message: "Quiz saved successfully" };
+  } catch (error) {
+    monitor.end();
+
+    if (error instanceof QuizSystemError) {
+      throw new Error(getUserFriendlyErrorMessage(error));
+    }
+
+    try {
+      await errorHandler.handleError(error, {
+        operation: "saveQuizAction",
+      });
+    } catch {
+      throw new Error("Quiz save failed. Please try again.");
     }
   }
 }

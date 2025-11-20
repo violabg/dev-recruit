@@ -24,6 +24,8 @@ import { Question } from "@/lib/schemas";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Clock, Edit, Link2, Send, Trash } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { QuizDetailSkeleton } from "./fallbacks";
 
 type Position = {
   id: string;
@@ -34,9 +36,21 @@ type Position = {
 export default async function QuizDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = await Promise.resolve(params);
+  return (
+    <Suspense fallback={<QuizDetailSkeleton />}>
+      <QuizDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+async function QuizDetailContent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
   const quizRecord = await prisma.quiz.findFirst({
     where: { id },

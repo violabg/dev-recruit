@@ -1,24 +1,15 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { LoginFormData, loginSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
-import { GithubIcon } from "../icons/github";
+import { InputField } from "../rhf-inputs/input-field";
+import { PasswordField } from "../rhf-inputs/password-field";
 import {
   Card,
   CardContent,
@@ -26,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import PasswordInput from "../ui/password-input";
+import { FieldLabel } from "../ui/field";
 import { Separator } from "../ui/separator";
 
 export function LoginForm({
@@ -41,6 +32,7 @@ export function LoginForm({
     mode: "onChange",
   });
   const { handleSubmit, setError } = form;
+  const passwordId = useId();
 
   const handleLogin = async (values: LoginFormData) => {
     setIsLoading(true);
@@ -73,14 +65,6 @@ export function LoginForm({
     }
   };
 
-  const handleSocialSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "github",
-      callbackURL: `${window.location.origin}/dashboard`,
-      errorCallbackURL: `${window.location.origin}/auth/error`,
-    });
-  };
-
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -91,80 +75,41 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={handleSubmit(handleLogin)}
-              className="space-y-4"
-              autoComplete="off"
-            >
-              <FormField
-                name="email"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="m@example.com"
-                        autoComplete="email"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
+          <form
+            onSubmit={handleSubmit(handleLogin)}
+            className="space-y-4"
+            autoComplete="off"
+          >
+            <InputField<LoginFormData>
+              type="email"
+              label="Email"
+              name="email"
+              placeholder="m@example.com"
+              autoComplete="email"
+              control={form.control}
+              disabled={isLoading}
+            />
+            <>
+              <div className="flex items-center gap-2">
+                <FieldLabel htmlFor={passwordId}>Password</FieldLabel>
+                <Link
+                  href="/auth/forgot-password"
+                  className="inline-block ml-auto text-sm hover:underline underline-offset-4"
+                >
+                  Password dimenticata?
+                </Link>
+              </div>
+              <PasswordField<LoginFormData>
                 name="password"
                 control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        href="/auth/forgot-password"
-                        className="inline-block ml-auto text-sm hover:underline underline-offset-4"
-                      >
-                        Password dimenticata?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <PasswordInput
-                        autoComplete="current-password"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !form.formState.isValid}
-              >
-                {isLoading ? "Accesso in corso..." : "Accedi"}
-              </Button>
-            </form>
-          </Form>
-          <Separator className="my-4" />
-          <form onSubmit={handleSocialSignIn}>
-            <div className="flex flex-col gap-6">
-              {/* {error && <p className=\"text-destructive-500 text-sm\">{error}</p>} */}
-              <Button
-                type="submit"
-                className="flex justify-center items-center gap-2 bg-background border-input w-full"
+                placeholder="Password"
+                autoComplete="current-password"
                 disabled={isLoading}
-              >
-                <GithubIcon className="w-5 h-5" />
-                <span className="font-medium">
-                  {isLoading ? "Logging in..." : "Login con GitHub"}
-                </span>
-              </Button>
-            </div>
+              />
+            </>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Accesso in corso..." : "Accedi"}
+            </Button>
           </form>
           <Separator className="my-4" />
           <div className="mt-4 text-sm text-center">

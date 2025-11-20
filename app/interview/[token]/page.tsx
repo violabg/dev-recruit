@@ -1,9 +1,23 @@
 import { Quiz } from "@/app/dashboard/quizzes/quizzes-actions";
 import { InterviewClient } from "@/components/interview/interview-client";
 import { getInterviewByToken } from "@/lib/data/interview-data";
+import { Suspense } from "react";
+import { InterviewSkeleton } from "./fallbacks";
 
 // Server component for interview page
 export default async function InterviewPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  return (
+    <Suspense fallback={<InterviewSkeleton />}>
+      <InterviewContent params={params} />
+    </Suspense>
+  );
+}
+
+async function InterviewContent({
   params,
 }: {
   params: Promise<{ token: string }>;

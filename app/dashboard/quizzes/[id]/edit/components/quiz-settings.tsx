@@ -9,14 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
   getSaveButtonContent,
   getSaveButtonVariant,
   SaveStatus,
@@ -25,6 +17,7 @@ import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UseFormReturn } from "react-hook-form";
 import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
+import { InputField } from "@/components/rhf-inputs";
 
 type QuizSettingsProps = {
   form: UseFormReturn<EditQuizFormData>;
@@ -61,47 +54,21 @@ export const QuizSettings = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <FormField
+        <InputField
           control={form.control}
           name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Titolo del Quiz</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Inserisci il titolo del quiz"
-                  {...field}
-                  maxLength={200}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Titolo del Quiz"
+          placeholder="Inserisci il titolo del quiz"
+          maxLength={200}
         />
-        <FormField
+        <InputField
           control={form.control}
           name="time_limit"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Limite di Tempo (minuti)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Lascia vuoto per nessun limite"
-                  {...field}
-                  value={field.value || ""}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  min={1}
-                  max={180}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Limite di Tempo (minuti)"
+          placeholder="Lascia vuoto per nessun limite"
+          type="number"
+          min={1}
+          max={180}
         />
         <CardFooter className="px-0 pt-2">
           <div className="flex space-x-4">

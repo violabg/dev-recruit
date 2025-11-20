@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { Question } from "@/lib/schemas";
+import { cacheLife, cacheTag } from "next/cache";
 
 type Position = {
   id: string;
@@ -141,4 +142,29 @@ export async function fetchQuizzesData({
     uniqueLevels,
     positionCounts,
   };
+}
+
+/**
+ * CachedQuizzesContent - Server component that caches quiz data with Cache Components
+ * - Uses "use cache" directive to cache quiz results
+ * - Tagged with "quizzes" for manual revalidation
+ * - Revalidates every hour with cacheLife("hours")
+ * - Dynamic search/sort/filter handled by parent with params
+ */
+export async function CachedQuizzesContent({
+  search,
+  sort,
+  filter,
+}: {
+  search: string;
+  sort: string;
+  filter: string;
+}) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("quizzes");
+
+  // Note: This component caches the full result set.
+  // Client-side filtering via SearchAndFilterQuizzes handles search/sort/filter dynamically
+  return await fetchQuizzesData({ search, sort, filter });
 }

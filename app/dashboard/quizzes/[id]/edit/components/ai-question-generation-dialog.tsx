@@ -2,7 +2,6 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -12,34 +11,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LLMModelSelect } from "@/components/ui/llm-model-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
 import { QuestionType } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod/v4";
+import {
+  CheckboxField,
+  SelectField,
+  SliderField,
+  TextareaField,
+} from "@/components/rhf-inputs";
 
 const getDifficultyLabel = (value: number) => {
   const labels = {
@@ -114,7 +109,6 @@ export const AIQuestionGenerationDialog = ({
     },
   });
 
-  // Reset form when dialog opens/closes or question type changes
   useEffect(() => {
     if (open && questionType) {
       form.reset({
@@ -201,411 +195,259 @@ export const AIQuestionGenerationDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
-          >
-            {/* Basic Settings */}
-            <div className="space-y-4">
-              <h3 className="font-medium text-sm">Impostazioni di Base</h3>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="font-medium text-sm">Impostazioni di Base</h3>
 
-              <FormField
-                control={form.control}
-                name="llmModel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Modello AI</FormLabel>
+            <Controller
+              control={form.control}
+              name="llmModel"
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>Modello AI</FieldLabel>
+                  <FieldContent>
                     <LLMModelSelect
                       value={field.value}
                       onValueChange={field.onChange}
                     />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FieldContent>
+                  <FieldError
+                    errors={fieldState.error ? [fieldState.error] : undefined}
+                  />
+                </Field>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="difficulty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Livello di Difficoltà:{" "}
-                      {field.value ? getDifficultyLabel(field.value) : "Medio"}
-                    </FormLabel>
-                    <FormControl>
-                      <div className="px-3">
-                        <Slider
-                          min={1}
-                          max={5}
-                          step={1}
-                          value={[field.value || defaultDifficulty]}
-                          onValueChange={(values) => field.onChange(values[0])}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between mt-2 text-muted-foreground text-xs">
-                          <span>Molto Facile</span>
-                          <span>Facile</span>
-                          <span>Medio</span>
-                          <span>Difficile</span>
-                          <span>Molto Difficile</span>
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Seleziona il livello di difficoltà per la generazione
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="instructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Istruzioni Aggiuntive</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Eventuali requisiti specifici o contesto per la domanda..."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <SliderField
+              control={form.control}
+              name="difficulty"
+              label={`Livello di Difficoltà: ${
+                form.watch("difficulty")
+                  ? getDifficultyLabel(form.watch("difficulty")!)
+                  : "Medio"
+              }`}
+              min={1}
+              max={5}
+              step={1}
+              description="Seleziona il livello di difficoltà per la generazione"
+            />
 
-            {/* Type-specific settings */}
-            {questionType === "multiple_choice" && (
+            <TextareaField
+              control={form.control}
+              name="instructions"
+              label="Istruzioni Aggiuntive"
+              placeholder="Eventuali requisiti specifici o contesto per la domanda..."
+            />
+          </div>
+
+          {questionType === "multiple_choice" && (
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm">
+                Impostazioni Scelta Multipla
+              </h3>
+              <Separator className="my-4" />
               <div className="space-y-4">
-                <h3 className="font-medium text-sm">
-                  Impostazioni Scelta Multipla
-                </h3>
-                <Separator className="my-4" />
-                <div className="space-y-4">
-                  <Label>Aree di Focus</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="es. React Hooks, TypeScript"
-                      value={focusAreaInput}
-                      onChange={(e) => setFocusAreaInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addFocusArea();
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={addFocusArea}
-                      variant="outline"
+                <Label>Aree di Focus</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="es. React Hooks, TypeScript"
+                    value={focusAreaInput}
+                    onChange={(e) => setFocusAreaInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addFocusArea();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={addFocusArea}
+                    variant="outline"
+                  >
+                    Aggiungi
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(form.watch("focusAreas") || []).map((area, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center gap-1"
                     >
-                      Aggiungi
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {(form.watch("focusAreas") || []).map((area, index) => (
+                      {area}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-4 hover:text-destructive"
+                        onClick={() => removeFocusArea(index)}
+                      >
+                        <X size={12} />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <SelectField
+                control={form.control}
+                name="distractorComplexity"
+                label="Complessità dei Distrattori"
+                description="Quanto dovrebbero essere difficili da distinguere le opzioni sbagliate"
+              >
+                <SelectItem value="simple">Semplice</SelectItem>
+                <SelectItem value="moderate">Moderata</SelectItem>
+                <SelectItem value="complex">Complessa</SelectItem>
+              </SelectField>
+            </div>
+          )}
+
+          {questionType === "open_question" && (
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm">
+                Impostazioni Domanda Aperta
+              </h3>
+              <Separator className="my-4" />
+              <CheckboxField
+                control={form.control}
+                name="requireCodeExample"
+                label="Richiedi Esempio di Codice"
+                description="Includi esempi di codice nella domanda"
+                orientation="horizontal"
+              />
+
+              <SelectField
+                control={form.control}
+                name="expectedResponseLength"
+                label="Lunghezza Risposta Attesa"
+              >
+                <SelectItem value="short">Breve (1-2 frasi)</SelectItem>
+                <SelectItem value="medium">Media (1-2 paragrafi)</SelectItem>
+                <SelectItem value="long">
+                  Lunga (spiegazione dettagliata)
+                </SelectItem>
+              </SelectField>
+
+              <div className="space-y-4">
+                <Label>Criteri di Valutazione</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="es. Qualità del codice, Best practices"
+                    value={evaluationCriteriaInput}
+                    onChange={(e) => setEvaluationCriteriaInput(e.target.value)}
+                    onKeyUp={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addEvaluationCriteria();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={addEvaluationCriteria}
+                    variant="outline"
+                  >
+                    Aggiungi
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(form.watch("evaluationCriteria") || []).map(
+                    (criteria, index) => (
                       <Badge
                         key={index}
                         variant="secondary"
                         className="flex items-center gap-1"
                       >
-                        {area}
+                        {criteria}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="size-4 hover:text-destructive"
-                          onClick={() => removeFocusArea(index)}
+                          onClick={() => removeEvaluationCriteria(index)}
                         >
                           <X size={12} />
                         </Button>
                       </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="distractorComplexity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Complessità dei Distrattori</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="simple">Semplice</SelectItem>
-                          <SelectItem value="moderate">Moderata</SelectItem>
-                          <SelectItem value="complex">Complessa</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Quanto dovrebbero essere difficili da distinguere le
-                        opzioni sbagliate
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
+                    )
                   )}
-                />
-              </div>
-            )}
-
-            {questionType === "open_question" && (
-              <div className="space-y-4">
-                <h3 className="font-medium text-sm">
-                  Impostazioni Domanda Aperta
-                </h3>
-                <Separator className="my-4" />
-                <FormField
-                  control={form.control}
-                  name="requireCodeExample"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Richiedi Esempio di Codice</FormLabel>
-                        <FormDescription>
-                          Includi esempi di codice nella domanda
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="expectedResponseLength"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lunghezza Risposta Attesa</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="short">
-                            Breve (1-2 frasi)
-                          </SelectItem>
-                          <SelectItem value="medium">
-                            Media (1-2 paragrafi)
-                          </SelectItem>
-                          <SelectItem value="long">
-                            Lunga (spiegazione dettagliata)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-4">
-                  <Label>Criteri di Valutazione</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="es. Qualità del codice, Best practices"
-                      value={evaluationCriteriaInput}
-                      onChange={(e) =>
-                        setEvaluationCriteriaInput(e.target.value)
-                      }
-                      onKeyUp={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addEvaluationCriteria();
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={addEvaluationCriteria}
-                      variant="outline"
-                    >
-                      Aggiungi
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {(form.watch("evaluationCriteria") || []).map(
-                      (criteria, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="flex items-center gap-1"
-                        >
-                          {criteria}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-4 hover:text-destructive"
-                            onClick={() => removeEvaluationCriteria(index)}
-                          >
-                            <X size={12} />
-                          </Button>
-                        </Badge>
-                      )
-                    )}
-                  </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {questionType === "code_snippet" && (
-              <div className="space-y-4">
-                <h3 className="font-medium text-sm">
-                  Impostazioni Snippet di Codice
-                </h3>
-                <Separator className="my-4" />
-                <FormField
-                  control={form.control}
-                  name="language"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Linguaggio di Programmazione</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleziona linguaggio" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="javascript">JavaScript</SelectItem>
-                          <SelectItem value="typescript">TypeScript</SelectItem>
-                          <SelectItem value="python">Python</SelectItem>
-                          <SelectItem value="java">Java</SelectItem>
-                          <SelectItem value="csharp">C#</SelectItem>
-                          <SelectItem value="php">PHP</SelectItem>
-                          <SelectItem value="go">Go</SelectItem>
-                          <SelectItem value="rust">Rust</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="bugType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo di Bug/Problema</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleziona tipo di bug" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="syntax">
-                            Errore di Sintassi
-                          </SelectItem>
-                          <SelectItem value="logic">
-                            Errore di Logica
-                          </SelectItem>
-                          <SelectItem value="performance">
-                            Problema di Performance
-                          </SelectItem>
-                          <SelectItem value="security">
-                            Vulnerabilità di Sicurezza
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="codeComplexity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Complessità del Codice</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="basic">Base</SelectItem>
-                          <SelectItem value="intermediate">
-                            Intermedio
-                          </SelectItem>
-                          <SelectItem value="advanced">Avanzato</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="includeComments"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Includi Commenti</FormLabel>
-                        <FormDescription>
-                          Aggiungi commenti utili al codice
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
+          {questionType === "code_snippet" && (
+            <div className="space-y-4">
+              <h3 className="font-medium text-sm">
+                Impostazioni Snippet di Codice
+              </h3>
+              <Separator className="my-4" />
+              <SelectField
+                control={form.control}
+                name="language"
+                label="Linguaggio di Programmazione"
+                placeholder="Seleziona linguaggio"
               >
-                Annulla
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
-                Genera Domanda
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                <SelectItem value="javascript">JavaScript</SelectItem>
+                <SelectItem value="typescript">TypeScript</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="csharp">C#</SelectItem>
+                <SelectItem value="php">PHP</SelectItem>
+                <SelectItem value="go">Go</SelectItem>
+                <SelectItem value="rust">Rust</SelectItem>
+              </SelectField>
+
+              <SelectField
+                control={form.control}
+                name="bugType"
+                label="Tipo di Bug/Problema"
+                placeholder="Seleziona tipo di bug"
+              >
+                <SelectItem value="syntax">Errore di Sintassi</SelectItem>
+                <SelectItem value="logic">Errore di Logica</SelectItem>
+                <SelectItem value="performance">
+                  Problema di Performance
+                </SelectItem>
+                <SelectItem value="security">
+                  Vulnerabilità di Sicurezza
+                </SelectItem>
+              </SelectField>
+
+              <SelectField
+                control={form.control}
+                name="codeComplexity"
+                label="Complessità del Codice"
+              >
+                <SelectItem value="basic">Base</SelectItem>
+                <SelectItem value="intermediate">Intermedio</SelectItem>
+                <SelectItem value="advanced">Avanzato</SelectItem>
+              </SelectField>
+
+              <CheckboxField
+                control={form.control}
+                name="includeComments"
+                label="Includi Commenti"
+                description="Aggiungi commenti utili al codice"
+                orientation="horizontal"
+              />
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Annulla
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
+              Genera Domanda
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

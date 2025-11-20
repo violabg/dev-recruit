@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,16 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-// Removed unused Label import
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { authClient } from "@/lib/auth-client";
 import { ForgotPasswordFormData, forgotPasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -25,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { InputField } from "../rhf-inputs/input-field";
 
 export function ForgotPasswordForm({
   className,
@@ -91,49 +81,33 @@ export function ForgotPasswordForm({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={handleSubmit(handleForgotPassword)}
-                className="space-y-4"
-                autoComplete="off"
-              >
-                <FormField
-                  name="email"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="m@example.com"
-                          autoComplete="email"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading || !form.formState.isValid}
+            <form
+              onSubmit={handleSubmit(handleForgotPassword)}
+              className="space-y-4"
+              autoComplete="off"
+            >
+              <InputField<ForgotPasswordFormData>
+                name="email"
+                label="Email"
+                control={form.control}
+                type="email"
+                placeholder="m@example.com"
+                autoComplete="email"
+                disabled={isLoading}
+              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Invio in corso..." : "Invia email di reset"}
+              </Button>
+              <div className="mt-4 text-sm text-center">
+                Hai già un account?{" "}
+                <Link
+                  href="/auth/login"
+                  className="underline underline-offset-4"
                 >
-                  {isLoading ? "Invio in corso..." : "Invia email di reset"}
-                </Button>
-                <div className="mt-4 text-sm text-center">
-                  Hai già un account?{" "}
-                  <Link
-                    href="/auth/login"
-                    className="underline underline-offset-4"
-                  >
-                    Accedi
-                  </Link>
-                </div>
-              </form>
-            </Form>
+                  Accedi
+                </Link>
+              </div>
+            </form>
           </CardContent>
         </Card>
       )}

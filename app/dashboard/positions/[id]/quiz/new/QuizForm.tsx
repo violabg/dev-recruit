@@ -4,27 +4,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { BrainCircuit, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { LLMModelSelect } from "@/components/ui/llm-model-select";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { generateNewQuizAction, saveQuizAction } from "@/lib/actions/quizzes";
 import { quizGenerationConfigSchema } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { toast } from "sonner";
 import { z } from "zod/v4";
+import {
+  InputField,
+  TextareaField,
+  SliderField,
+  SwitchField,
+} from "@/components/rhf-inputs";
 
 type Position = {
   id: string;
@@ -43,7 +44,6 @@ export const QuizForm = ({ position }: QuizFormProps) => {
   const router = useRouter();
   const [generating, setGenerating] = useState(false);
 
-  // Create form schema with additional frontend fields
   const formSchema = quizGenerationConfigSchema.extend({
     enableTimeLimit: z.boolean(),
     timeLimit: z.number().min(5).max(120),
@@ -67,60 +67,43 @@ export const QuizForm = ({ position }: QuizFormProps) => {
     },
   });
 
+  const { control, handleSubmit, watch } = form;
+
+  const enableTimeLimit = watch("enableTimeLimit");
+
   async function onSubmit(values: FormData) {
     setGenerating(true);
     try {
-      // Generate quiz using API route
-      const generateResponse = await fetch("/api/quiz-edit/generate-quiz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies for authentication
-        body: JSON.stringify({
-          positionId: position.id,
-          quizTitle: values.quizTitle,
-          questionCount: values.questionCount,
-          difficulty: values.difficulty,
-          includeMultipleChoice: values.includeMultipleChoice,
-          includeOpenQuestions: values.includeOpenQuestions,
-          includeCodeSnippets: values.includeCodeSnippets,
-          instructions: values.instructions || "",
-          specificModel: values.specificModel,
-        }),
+      const quizData = await generateNewQuizAction({
+        positionId: position.id,
+        quizTitle: values.quizTitle,
+        questionCount: values.questionCount,
+        difficulty: values.difficulty,
+        includeMultipleChoice: values.includeMultipleChoice,
+        includeOpenQuestions: values.includeOpenQuestions,
+        includeCodeSnippets: values.includeCodeSnippets,
+        instructions: values.instructions || undefined,
+        specificModel: values.specificModel,
       });
 
-      if (!generateResponse.ok) {
-        const errorData = await generateResponse.json();
-        throw new Error(
-          errorData.error ||
-            `HTTP ${generateResponse.status}: ${generateResponse.statusText}`
-        );
+      if (!quizData || !quizData.questions) {
+        throw new Error("No quiz generated");
       }
 
-      const quizData = await generateResponse.json();
+      const formData = new FormData();
+      formData.append("title", values.quizTitle);
+      formData.append("position_id", position.id);
+      formData.append("questions", JSON.stringify(quizData.questions));
+      formData.append(
+        "time_limit",
+        values.enableTimeLimit ? values.timeLimit.toString() : ""
+      );
 
-      // Save quiz to database using new API route
-      const saveResponse = await fetch("/api/quiz/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies for authentication
-        body: JSON.stringify({
-          title: values.quizTitle,
-          position_id: position.id,
-          questions: quizData.questions,
-          time_limit: values.enableTimeLimit ? values.timeLimit : null,
-        }),
-      });
+      const saveResult = await saveQuizAction(formData);
 
-      if (!saveResponse.ok) {
-        const errorData = await saveResponse.json();
-        throw new Error(errorData.error || "Failed to save quiz to database");
+      if (!saveResult || !saveResult.id) {
+        throw new Error("Failed to save quiz");
       }
-
-      const saveResult = await saveResponse.json();
 
       toast.success("Quiz generato con successo!");
       router.push(`/dashboard/quizzes/${saveResult.id}`);
@@ -138,258 +121,141 @@ export const QuizForm = ({ position }: QuizFormProps) => {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="quizTitle"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Titolo del quiz</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormDescription>
-                Un titolo descrittivo per il quiz
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <InputField
+        control={control}
+        name="quizTitle"
+        label="Titolo del quiz"
+        description="Un titolo descrittivo per il quiz"
+      />
+
+      <TextareaField
+        control={control}
+        name="instructions"
+        label="Istruzioni aggiuntive (opzionale)"
+        placeholder="Inserisci istruzioni specifiche per la generazione del quiz..."
+        className="min-h-20"
+        description="Istruzioni specifiche per l'AI che genera il quiz"
+      />
+
+      <div className="gap-4 grid md:grid-cols-2">
+        <SliderField
+          control={control}
+          name="questionCount"
+          label={`Numero di domande: ${watch("questionCount")}`}
+          min={3}
+          max={20}
+          step={1}
+          description="Seleziona il numero di domande (3-20)"
         />
 
-        <FormField
-          control={form.control}
-          name="instructions"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Istruzioni aggiuntive (opzionale)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Inserisci istruzioni specifiche per la generazione del quiz..."
-                  className="min-h-20"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Istruzioni specifiche per l&apos;AI che genera il quiz
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+        <SliderField
+          control={control}
+          name="difficulty"
+          label={`Difficoltà: ${
+            [
+              "Molto facile",
+              "Facile",
+              "Media",
+              "Difficile",
+              "Molto difficile",
+            ][watch("difficulty") - 1]
+          }`}
+          min={1}
+          max={5}
+          step={1}
+          description="Seleziona il livello di difficoltà (1-5)"
         />
+      </div>
 
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg">Tipi di domande</h3>
         <div className="gap-4 grid md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="questionCount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Numero di domande: {field.value}</FormLabel>
-                <FormControl>
-                  <Slider
-                    min={3}
-                    max={20}
-                    step={1}
-                    defaultValue={[field.value]}
-                    onValueChange={(value) => field.onChange(value[0])}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Seleziona il numero di domande (3-20)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+          <SwitchField
+            control={control}
+            name="includeMultipleChoice"
+            label="Domande a risposta multipla"
+            description="Domande con opzioni predefinite"
           />
 
-          <FormField
-            control={form.control}
-            name="difficulty"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Difficoltà:{" "}
-                  {
-                    [
-                      "Molto facile",
-                      "Facile",
-                      "Media",
-                      "Difficile",
-                      "Molto difficile",
-                    ][field.value - 1]
-                  }
-                </FormLabel>
-                <FormControl>
-                  <Slider
-                    min={1}
-                    max={5}
-                    step={1}
-                    defaultValue={[field.value]}
-                    onValueChange={(value) => field.onChange(value[0])}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Seleziona il livello di difficoltà (1-5)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+          <SwitchField
+            control={control}
+            name="includeOpenQuestions"
+            label="Domande aperte"
+            description="Domande che richiedono risposte testuali"
+          />
+
+          <SwitchField
+            control={control}
+            name="includeCodeSnippets"
+            label="Snippet di codice"
+            description="Sfide di programmazione e analisi di codice"
           />
         </div>
+      </div>
 
-        <div className="space-y-4">
-          <h3 className="font-medium text-lg">Tipi di domande</h3>
-          <div className="gap-4 grid md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="includeMultipleChoice"
-              render={({ field }) => (
-                <FormItem className="flex flex-row justify-between items-center p-3 border rounded-lg">
-                  <div className="space-y-0.5">
-                    <FormLabel>Domande a risposta multipla</FormLabel>
-                    <FormDescription>
-                      Domande con opzioni predefinite
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="includeOpenQuestions"
-              render={({ field }) => (
-                <FormItem className="flex flex-row justify-between items-center p-3 border rounded-lg">
-                  <div className="space-y-0.5">
-                    <FormLabel>Domande aperte</FormLabel>
-                    <FormDescription>
-                      Domande che richiedono risposte testuali
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="includeCodeSnippets"
-              render={({ field }) => (
-                <FormItem className="flex flex-row justify-between items-center p-3 border rounded-lg">
-                  <div className="space-y-0.5">
-                    <FormLabel>Snippet di codice</FormLabel>
-                    <FormDescription>
-                      Sfide di programmazione e analisi di codice
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+      <SwitchField
+        control={control}
+        name="enableTimeLimit"
+        label="Limite di tempo"
+        description="Imposta un limite di tempo per il completamento del quiz"
+      />
 
-        <FormField
-          control={form.control}
-          name="enableTimeLimit"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Limite di tempo</FormLabel>
-                <FormDescription>
-                  Imposta un limite di tempo per il completamento del quiz
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
+      {enableTimeLimit && (
+        <SliderField
+          control={control}
+          name="timeLimit"
+          label={`Limite di tempo: ${watch("timeLimit")} minuti`}
+          min={5}
+          max={120}
+          step={5}
+          description="Seleziona il limite di tempo in minuti"
         />
+      )}
 
-        {form.watch("enableTimeLimit") && (
-          <FormField
-            control={form.control}
-            name="timeLimit"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Limite di tempo: {field.value} minuti</FormLabel>
-                <FormControl>
-                  <Slider
-                    min={5}
-                    max={120}
-                    step={5}
-                    defaultValue={[field.value]}
-                    onValueChange={(value) => field.onChange(value[0])}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Seleziona il limite di tempo in minuti
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        <FormField
-          control={form.control}
-          name="specificModel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Modello LLM</FormLabel>
-              <FormControl>
+      <Field>
+        <FieldLabel>Modello LLM</FieldLabel>
+        <FieldContent>
+          <Controller
+            control={control}
+            name="specificModel"
+            render={({ field, fieldState }) => (
+              <>
                 <LLMModelSelect
                   value={field.value || LLM_MODELS.KIMI}
                   onValueChange={field.onChange}
                 />
-              </FormControl>
-              <FormDescription>
-                Seleziona il modello LLM per la generazione del quiz.
-                <strong>Versatile</strong> è raccomandato per la qualità
-                migliore.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex gap-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            Annulla
-          </Button>
-          <Button type="submit" disabled={generating}>
-            {generating ? (
-              <>
-                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                Generazione in corso...
-              </>
-            ) : (
-              <>
-                <BrainCircuit className="mr-2 w-4 h-4" />
-                Genera Quiz
+                {fieldState.error && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </>
             )}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          />
+        </FieldContent>
+        <FieldDescription>
+          Seleziona il modello LLM per la generazione del quiz.
+          <strong> Versatile</strong> è raccomandato per la qualità migliore.
+        </FieldDescription>
+      </Field>
+
+      <div className="flex gap-4">
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Annulla
+        </Button>
+        <Button type="submit" disabled={generating}>
+          {generating ? (
+            <>
+              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+              Generazione in corso...
+            </>
+          ) : (
+            <>
+              <BrainCircuit className="mr-2 w-4 h-4" />
+              Genera Quiz
+            </>
+          )}
+        </Button>
+      </div>
+    </form>
   );
 };

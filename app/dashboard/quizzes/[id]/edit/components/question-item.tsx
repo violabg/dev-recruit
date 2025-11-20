@@ -5,6 +5,7 @@ import {
   MultipleChoiceForm,
   OpenQuestionForm,
 } from "@/components/quiz/question-types";
+import { InputField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,14 +13,6 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import {
   getQuestionTypeLabel,
@@ -118,22 +111,12 @@ export const QuestionItem = ({
       {isExpanded && (
         <CardContent className="pt-0">
           <div className="space-y-4">
-            <FormField
+            <InputField
               control={form.control}
               name={`questions.${actualIndex}.question`}
-              render={({ field: questionField }) => (
-                <FormItem>
-                  <FormLabel>Testo della domanda</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Inserisci il testo della domanda"
-                      {...questionField}
-                      maxLength={500}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Testo della domanda"
+              placeholder="Inserisci il testo della domanda"
+              maxLength={500}
             />
 
             {field.type === "multiple_choice" && (

@@ -136,12 +136,83 @@ sequenceDiagram
 
 ## 🔁 Cache Components Strategy
 
-- `next.config.mjs` enables `cacheComponents: true`, which prerenders a static shell while streaming request-specific subtrees inside `<Suspense>` boundaries.
-- Runtime APIs such as `cookies()`, `headers()`, `searchParams`, and dynamic `params` drive the Suspense subtree so they never block the static shell or live inside `'use cache'` scopes. Fallback UI keeps the layout responsive while those values resolve.
-- Repeated data queries stay inside `'use cache'` + `cacheLife(...)` profiles, and mutations refresh `cacheTag`/`revalidateTag` to keep cached shells aligned with Prisma updates. See `docs/CACHE_IMPLEMENTATION.md` for the full caching reference.
+✅ **Phase 2 & 3 Complete** - Full cache components implementation achieved.
 
-- Suspense fallbacks reuse the shared `components/ui/skeleton` primitives so every loading state matches the shadcn component structure documented in `docs/VISION_PRO_STYLE_GUIDE.md`.
-- Server actions should call `updateTag` after writes when they touch `positions`, `candidates`, `quizes`, or `interviews` data so the cached cards and lists revalidate immediately and the shell stays accurate.
+### Data Layer Caching (Phase 2 ✅)
+
+All data queries in `lib/data/` implement proper cache management:
+
+```typescript
+export async function getQuizzesForPosition(positionId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("quizzes");
+
+  return prisma.quiz.findMany({ where: { positionId } });
+}
+```
+
+**Cache Strategy:**
+
+- `cacheTag()` tags all queries by entity type: `quizzes`, `candidates`, `positions`, `interviews`, `dashboard`
+- `cacheLife()` sets optimal stale/revalidate times:
+  - **High-volatility** (candidates, interviews): stale 30min, revalidate 12hr
+  - **Low-volatility** (quizzes, positions, dashboard): stale 1hr, revalidate 1day
+- All mutations in `lib/actions/` call `updateTag()` to invalidate cached data immediately
+
+### Suspense Boundaries with Streaming (Phase 3 ✅)
+
+All async routes converted from `loading.tsx` to inline `<Suspense>` boundaries with skeleton fallbacks:
+
+```typescript
+export default async function PageComponent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <PageContent params={params} />
+    </Suspense>
+  );
+}
+
+async function PageContent({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  // Fetch data and render
+}
+```
+
+**Converted Routes (6/6):**
+
+- ✅ `/dashboard/quizzes/[id]` → QuizDetailSkeleton
+- ✅ `/dashboard/quizzes/[id]/invite` → InviteCandidatesSkeleton
+- ✅ `/dashboard/quizzes/[id]/edit` → EditQuizSkeleton
+- ✅ `/interview/[token]` → InterviewSkeleton
+- ✅ `/dashboard/candidates/new` → CandidateFormSkeleton
+- ✅ `/dashboard/positions/[id]/quiz/new` → QuizGeneratorSkeleton
+
+**Benefits:**
+
+- `next.config.mjs` enables `cacheComponents: true`, which prerenders a static shell while streaming request-specific subtrees inside `<Suspense>` boundaries
+- Runtime APIs (`cookies()`, `headers()`, `searchParams`, `params`) drive the Suspense subtree and never block the static shell
+- Skeleton fallbacks reuse `components/ui/skeleton` primitives matching shadcn component structure from `docs/VISION_PRO_STYLE_GUIDE.md`
+- Partial hydration enables better perceived performance and UX with granular control over loading states
+
+### Cache Invalidation
+
+Server actions automatically invalidate cache after mutations:
+
+```typescript
+export async function createQuiz(...) {
+  // ... mutation logic
+  updateTag("quizzes", "positions", "dashboard");
+  revalidateTag("quizzes");
+  return newQuiz;
+}
+```
+
+This ensures cached cards, lists, and dashboard stats stay in sync with database updates.
 
 ## 🚀 Quick Start
 
@@ -849,6 +920,22 @@ const breakpoints = {
 
 ## 🛠️ Development
 
+### Constitutional Governance
+
+This project follows a strict architectural constitution documented in `.specify/memory/`. All new features and code changes must adhere to:
+
+- **Principle 1:** Server Actions over API routes
+- **Principle 2:** Entity-separated actions & data
+- **Principle 3:** Cache components with tagged revalidation (✅ Implemented)
+- **Principle 4:** Suspense boundaries with skeleton fallbacks (✅ Implemented)
+- **Principle 5:** useActionState & useTransition hooks
+
+For detailed guidance, refer to:
+
+- `.specify/memory/constitution.md` - Governance & principles
+- `.specify/memory/QUICK_REFERENCE.md` - Templates & checklists
+- `.specify/memory/IMPLEMENTATION_GUIDE.md` - Step-by-step guides
+
 ### Development Workflow
 
 1. **Start Development Server**
@@ -870,6 +957,7 @@ const breakpoints = {
    ```
 
 4. **Start Storybook**
+
    ```bash
    pnpm storybook
    ```
@@ -1304,12 +1392,10 @@ This project includes comprehensive documentation to help developers understand 
 
 ### 📋 Documentation Navigation
 
-| Topic              | File                                                                                 | Description                                                                      |
-| ------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| **AI System**      | [`docs/QUIZ_AI_GENERATION_SYSTEM.md`](docs/QUIZ_AI_GENERATION_SYSTEM.md)             | Complete AI quiz generation system with visual flows, API docs, and architecture |
-| **Schema & Types** | [`docs/SCHEMA_TYPE_SAFETY_IMPROVEMENTS.md`](docs/SCHEMA_TYPE_SAFETY_IMPROVEMENTS.md) | Schema consolidation, type safety enhancements, and maintainability improvements |
-| **Performance**    | [`docs/CACHE_IMPLEMENTATION.md`](docs/CACHE_IMPLEMENTATION.md)                       | Caching strategies and performance optimization                                  |
-| **Design System**  | [`docs/VISION_PRO_STYLE_GUIDE.md`](docs/VISION_PRO_STYLE_GUIDE.md)                   | UI components and design guidelines                                              |
+| Topic             | File                                                               | Description                                     |
+| ----------------- | ------------------------------------------------------------------ | ----------------------------------------------- |
+| **Performance**   | [`docs/CACHE_IMPLEMENTATION.md`](docs/CACHE_IMPLEMENTATION.md)     | Caching strategies and performance optimization |
+| **Design System** | [`docs/VISION_PRO_STYLE_GUIDE.md`](docs/VISION_PRO_STYLE_GUIDE.md) | UI components and design guidelines             |
 
 ### 🎯 Key Implementation Features
 

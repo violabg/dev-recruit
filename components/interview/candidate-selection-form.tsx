@@ -8,19 +8,11 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { MultiSelect } from "@/components/ui/multi-select"; // Assuming MultiSelect is a custom component
-import {
   assignCandidatesToQuiz,
   AssignCandidatesToQuizState,
 } from "@/lib/actions/interviews";
 import { CandidateSelection, candidateSelectionSchema } from "@/lib/schemas";
+import { MultiSelectField } from "@/components/rhf-inputs";
 
 type CandidateSelectionValues = CandidateSelection;
 
@@ -66,6 +58,8 @@ export function CandidateSelectionForm({
       candidateIds: [],
     },
   });
+
+  const { control, watch } = form;
 
   useEffect(() => {
     if (formState.success) {
@@ -120,52 +114,39 @@ export function CandidateSelectionForm({
           </p>
         </div>
       ) : (
-        <Form {...form}>
-          <form action={formAction} className="space-y-6">
-            <input type="hidden" name="quizId" value={quizId} />
-            {form.watch("candidateIds").map((candidateId) => (
-              <input
-                key={candidateId}
-                type="hidden"
-                name="candidateIds"
-                value={candidateId}
-              />
-            ))}
-
-            <FormField
-              control={form.control}
+        <form action={formAction} className="space-y-6">
+          <input type="hidden" name="quizId" value={quizId} />
+          {watch("candidateIds").map((candidateId) => (
+            <input
+              key={candidateId}
+              type="hidden"
               name="candidateIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select candidates</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={candidateOptions}
-                      onChange={field.onChange}
-                      selected={field.value}
-                      placeholder="Select candidates to assign this quiz"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              value={candidateId}
             />
+          ))}
 
-            <Button type="submit" disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                  Creating interviews...
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 w-4 h-4" />
-                  Create interview links
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
+          <MultiSelectField
+            control={control}
+            name="candidateIds"
+            label="Select candidates"
+            options={candidateOptions}
+            placeholder="Select candidates to assign this quiz"
+          />
+
+          <Button type="submit" disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                Creating interviews...
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 w-4 h-4" />
+                Create interview links
+              </>
+            )}
+          </Button>
+        </form>
       )}
 
       {/* Display created links */}

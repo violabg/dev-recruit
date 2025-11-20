@@ -22,7 +22,7 @@ const multipleChoiceQuestionSchema = baseQuestionSchema.extend({
   options: z
     .array(z.string().min(3, "Each option must be at least 3 characters long"))
     .min(4, "Must be at least 4 options"),
-  correctAnswer: z.int().min(0).max(3),
+  correctAnswer: z.coerce.number<number>().int().min(0).max(3),
 });
 
 const openQuestionSchema = baseQuestionSchema.extend({
@@ -58,7 +58,7 @@ export const questionSchemas = {
       type: baseSchemas.questionType,
       question: z.string().min(1, "Question text required"),
       options: z.array(z.string()).optional(),
-      correctAnswer: z.number().optional(),
+      correctAnswer: z.coerce.number<number>().optional(),
       explanation: z.string().optional(),
       sampleAnswer: z.string().optional(),
       keywords: z.array(z.string()).optional(),

@@ -1,22 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem } from "@/components/ui/select";
 import { createCandidate } from "@/lib/actions/candidates";
 import { CandidateFormData, candidateFormSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { InputField, SelectField } from "@/components/rhf-inputs";
 
 type CandidateNewFormProps = {
   positions: { id: string; title: string }[];
@@ -72,70 +58,43 @@ export const CandidateNewForm = ({
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome candidato" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="Email candidato" type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="position_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Posizione</FormLabel>
-              <FormControl>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona posizione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map((position) => (
-                      <SelectItem key={position.id} value={position.id}>
-                        {position.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {error && <div className="text-red-500 text-sm">{error}</div>}
-        <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-              Creazione in corso...
-            </>
-          ) : (
-            "Crea candidato"
-          )}
-        </Button>
-      </form>
-    </Form>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <InputField
+        control={form.control}
+        name="name"
+        label="Nome"
+        placeholder="Nome candidato"
+      />
+      <InputField
+        control={form.control}
+        name="email"
+        label="Email"
+        placeholder="Email candidato"
+        type="email"
+      />
+      <SelectField
+        control={form.control}
+        name="position_id"
+        label="Posizione"
+        placeholder="Seleziona posizione"
+      >
+        {positions.map((position) => (
+          <SelectItem key={position.id} value={position.id}>
+            {position.title}
+          </SelectItem>
+        ))}
+      </SelectField>
+      {error && <div className="text-red-500 text-sm">{error}</div>}
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? (
+          <>
+            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+            Creazione in corso...
+          </>
+        ) : (
+          "Crea candidato"
+        )}
+      </Button>
+    </form>
   );
 };

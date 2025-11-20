@@ -8,15 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import PasswordInput from "@/components/ui/password-input";
 import { updatePassword } from "@/lib/actions/profile";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -25,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { PasswordField } from "@/components/rhf-inputs";
 
 type PasswordFormProps = {
   className?: string;
@@ -76,69 +68,37 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="current_password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password Attuale</FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder="Inserisci la password attuale"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-4">
+              <PasswordField
+                control={form.control}
+                name="current_password"
+                label="Password Attuale"
+                placeholder="Inserisci la password attuale"
+                disabled={isPending}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="new_password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nuova Password</FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder="Inserisci la nuova password"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <PasswordField
+                control={form.control}
+                name="new_password"
+                label="Nuova Password"
+                placeholder="Inserisci la nuova password"
+                disabled={isPending}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="confirm_password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Conferma Nuova Password</FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder="Conferma la nuova password"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <PasswordField
+                control={form.control}
+                name="confirm_password"
+                label="Conferma Nuova Password"
+                placeholder="Conferma la nuova password"
+                disabled={isPending}
+              />
+            </div>
 
-              <Button type="submit" disabled={isPending} className="w-full">
-                {isPending ? "Aggiornamento..." : "Aggiorna Password"}
-              </Button>
-            </form>
-          </Form>
+            <Button type="submit" disabled={isPending} className="w-full">
+              {isPending ? "Aggiornamento..." : "Aggiorna Password"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

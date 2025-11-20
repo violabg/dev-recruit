@@ -9,23 +9,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { LLMModelSelect } from "@/components/ui/llm-model-select";
-import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
 import { AIGenerationFormData, aiGenerationSchema } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Sparkles } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { SliderField, TextareaField } from "@/components/rhf-inputs";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 
 type AIGenerationDialogProps = {
   open: boolean;
@@ -36,6 +33,17 @@ type AIGenerationDialogProps = {
   loading?: boolean;
   showDifficulty?: boolean;
   defaultDifficulty?: number;
+};
+
+const getDifficultyLabel = (value: number) => {
+  const labels = {
+    1: "Molto Facile",
+    2: "Facile",
+    3: "Medio",
+    4: "Difficile",
+    5: "Molto Difficile",
+  };
+  return labels[value as keyof typeof labels] || "Medio";
 };
 
 export const AIQuizGenerationDialog = ({
@@ -67,20 +75,8 @@ export const AIQuizGenerationDialog = ({
         difficulty: showDifficulty ? defaultDifficulty : undefined,
       });
     } catch (error) {
-      // Error handling is done by the parent component
       console.error("Generation error:", error);
     }
-  };
-
-  const getDifficultyLabel = (value: number) => {
-    const labels = {
-      1: "Molto Facile",
-      2: "Facile",
-      3: "Medio",
-      4: "Difficile",
-      5: "Molto Difficile",
-    };
-    return labels[value as keyof typeof labels] || "Medio";
   };
 
   return (
@@ -90,115 +86,77 @@ export const AIQuizGenerationDialog = ({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
-            {showDifficulty && (
-              <FormField
-                control={form.control}
-                name="difficulty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Livello di Difficoltà:{" "}
-                      {field.value ? getDifficultyLabel(field.value) : "Medio"}
-                    </FormLabel>
-                    <FormControl>
-                      <div className="px-3">
-                        <Slider
-                          min={1}
-                          max={5}
-                          step={1}
-                          value={[field.value || defaultDifficulty]}
-                          onValueChange={(values) => field.onChange(values[0])}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between mt-2 text-muted-foreground text-xs">
-                          <span>Molto Facile</span>
-                          <span>Facile</span>
-                          <span>Medio</span>
-                          <span>Difficile</span>
-                          <span>Molto Difficile</span>
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Seleziona il livello di difficoltà per la generazione
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          {showDifficulty && (
+            <SliderField
+              control={form.control}
+              name="difficulty"
+              label={`Livello di Difficoltà: ${
+                form.watch("difficulty")
+                  ? getDifficultyLabel(form.watch("difficulty")!)
+                  : "Medio"
+              }`}
+              min={1}
+              max={5}
+              step={1}
+              description="Seleziona il livello di difficoltà per la generazione"
+            />
+          )}
+          <TextareaField
+            control={form.control}
+            name="instructions"
+            label="Istruzioni aggiuntive (opzionale)"
+            placeholder="Inserisci istruzioni specifiche per l'AI..."
+            className="min-h-20"
+            description="Fornisci istruzioni specifiche per guidare la generazione dell'AI"
+          />
+          <Controller
+            control={form.control}
+            name="llmModel"
+            render={({ field, fieldState }) => (
+              <Field>
+                <FieldLabel>Modello LLM</FieldLabel>
+                <FieldContent>
+                  <LLMModelSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                </FieldContent>
+                <FieldDescription>
+                  Seleziona il modello LLM per la generazione.
+                  <strong> Versatile</strong> è raccomandato per la qualità
+                  migliore.
+                </FieldDescription>
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : undefined}
+                />
+              </Field>
             )}
-            <FormField
-              control={form.control}
-              name="instructions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Istruzioni aggiuntive (opzionale)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Inserisci istruzioni specifiche per l'AI..."
-                      className="min-h-20"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Fornisci istruzioni specifiche per guidare la generazione
-                    dell&apos;AI
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+          />
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Annulla
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  Generazione...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 w-4 h-4" />
+                  Genera
+                </>
               )}
-            />
-            <FormField
-              control={form.control}
-              name="llmModel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Modello LLM</FormLabel>
-                  <FormControl>
-                    <LLMModelSelect
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Seleziona il modello LLM per la generazione.
-                    <strong> Versatile</strong> è raccomandato per la qualità
-                    migliore.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={loading}
-              >
-                Annulla
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                    Generazione...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 w-4 h-4" />
-                    Genera
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -46,7 +46,14 @@ const PositionsTable = async ({
   searchParams: Promise<{ q: string | undefined }>;
 }) => {
   const { q: query } = await searchParams;
-  const positions = await getPositions(query);
+  const allPositions = await getPositions();
+
+  // Filter positions client-side based on query
+  const positions = query
+    ? allPositions.filter((pos) =>
+        pos.title.toLowerCase().includes(query.toLowerCase())
+      )
+    : allPositions;
   return (
     <>
       <div className="flex items-center gap-4">
