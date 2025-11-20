@@ -79,7 +79,7 @@ export const quizApiSchemas = {
     questions: z
       .array(questionSchemas.flexible)
       .min(1, "At least one question required"),
-    time_limit: z.number().nullable(),
+    time_limit: baseSchemas.timeLimit,
     instructions: baseSchemas.instructions.optional(),
   }),
 
@@ -142,9 +142,7 @@ export const quizFormSchemas = {
     include_code_snippets: formTransformers.stringToBoolean,
     instructions: z.string().max(2000).optional(),
     enable_time_limit: formTransformers.stringToBoolean.optional(),
-    time_limit: formTransformers.coerceInt
-      .pipe(baseSchemas.timeLimit)
-      .optional(),
+    time_limit: baseSchemas.timeLimit.optional(),
     llm_model: z.string().optional(),
   }),
 

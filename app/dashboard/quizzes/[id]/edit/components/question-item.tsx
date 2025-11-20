@@ -5,6 +5,7 @@ import {
   MultipleChoiceForm,
   OpenQuestionForm,
 } from "@/components/quiz/question-types";
+import { InputField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +24,6 @@ import { ChevronDown, ChevronUp, RefreshCw, Trash2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod/v4";
 import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
-import { InputField } from "@/components/rhf-inputs";
 
 type Question = z.infer<typeof questionSchemas.flexible>;
 
@@ -55,10 +55,6 @@ export const QuestionItem = ({
   onSaveQuestion,
   questionSaveStatus,
 }: QuestionItemProps) => {
-  const questionsErrors = form.formState.errors.questions;
-  const questionErrors = Array.isArray(questionsErrors)
-    ? questionsErrors[actualIndex]
-    : undefined;
   return (
     <Card key={field.id} className="relative">
       <CardHeader className="pb-3">

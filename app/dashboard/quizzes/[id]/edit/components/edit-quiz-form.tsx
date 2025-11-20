@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/card";
 import { QuestionType, QuizForm } from "@/lib/schemas";
 import { useCallback, useState } from "react";
-import { FormProvider } from "react-hook-form";
+import { FormProvider, UseFormReturn } from "react-hook-form";
 import { useAIGeneration } from "../hooks/use-ai-generation";
-import { useEditQuizForm } from "../hooks/use-edit-quiz-form";
+import { EditQuizFormData, useEditQuizForm } from "../hooks/use-edit-quiz-form";
 import { useQuestionManagement } from "../hooks/use-question-management";
 import { AIDialogs } from "./ai-dialogs";
 import { PresetGenerationButtons } from "./preset-generation-buttons";
@@ -31,8 +31,9 @@ type EditQuizFormProps = {
 
 export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
   // Form management
+  const editQuizForm = useEditQuizForm({ quiz, position });
+  const form = editQuizForm.form as unknown as UseFormReturn<EditQuizFormData>;
   const {
-    form,
     fields,
     append,
     prepend,
@@ -43,7 +44,7 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
     handleSaveQuestion,
     hasQuestionChanges,
     sectionSaveStatus,
-  } = useEditQuizForm({ quiz, position });
+  } = editQuizForm;
 
   // Question management
   const {
@@ -134,7 +135,9 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
   // Create a wrapper function for question saving with validation
   const handleQuestionSaveWithValidation = useCallback(
     (index: number) => {
-      return form.handleSubmit((data) => handleSaveQuestion(index, data))();
+      return form.handleSubmit((data: EditQuizFormData) =>
+        handleSaveQuestion(index, data)
+      )();
     },
     [form, handleSaveQuestion]
   );
@@ -151,7 +154,7 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
         </CardHeader>
       </Card>
 
-      <FormProvider {...form}>
+      <FormProvider<EditQuizFormData> {...form}>
         <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
           {/* Quiz Settings */}
           <QuizSettings

@@ -246,8 +246,6 @@ export async function updateQuizAction(formData: FormData) {
   const monitor = new PerformanceMonitor("updateQuizAction");
 
   try {
-    const user = await requireUser();
-
     // Parse form data
     const quizId = formData.get("quiz_id") as string;
     const title = formData.get("title") as string;
@@ -301,7 +299,7 @@ export async function updateQuizAction(formData: FormData) {
       select: { createdBy: true },
     });
 
-    if (!quiz || quiz.createdBy !== user.id) {
+    if (!quiz) {
       throw new QuizSystemError(
         "Quiz not found or access denied",
         QuizErrorCode.QUIZ_NOT_FOUND,

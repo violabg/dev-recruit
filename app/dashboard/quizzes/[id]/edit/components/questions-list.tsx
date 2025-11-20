@@ -44,6 +44,7 @@ export const QuestionsList = ({
   onSaveQuestion,
   sectionSaveStatus,
 }: QuestionsListProps) => {
+  form.watch("questions");
   // Create stable callback for saving questions
   const handleSaveQuestion = useCallback(
     (index: number) => () => onSaveQuestion(index),
