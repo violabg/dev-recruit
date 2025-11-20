@@ -8,7 +8,7 @@ import { cacheLife, cacheTag } from "next/cache";
  */
 const getQuizDataCached = async (quizId: string) => {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("quizzes");
 
   const quiz = await prisma.quiz.findFirst({
@@ -68,7 +68,7 @@ export const getQuizData = async (quizId: string) => {
  */
 const getPositionDataCached = async (positionId: string) => {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("positions");
 
   const position = await prisma.position.findFirst({
@@ -105,7 +105,7 @@ export const getPositionData = async (positionId: string) => {
  */
 const getQuizzesForPositionCached = async (positionId: string) => {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("quizzes");
 
   const quizzes = await prisma.quiz.findMany({

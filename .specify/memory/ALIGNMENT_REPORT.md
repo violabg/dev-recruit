@@ -203,7 +203,7 @@ lib/actions/interviews.ts:
 // lib/data/quiz-data.ts - Add cacheTag to all functions
 export async function getQuizzes() {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("quizzes"); // ← ADD THIS
   return prisma.quiz.findMany();
 }
@@ -211,7 +211,7 @@ export async function getQuizzes() {
 // lib/data/candidates.ts - Add cacheTag to all functions
 export async function getCandidatesByPosition(positionId: string) {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("candidates"); // ← ADD THIS
   return prisma.candidate.findMany({ where: { position_id: positionId } });
 }

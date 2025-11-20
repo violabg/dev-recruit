@@ -101,7 +101,7 @@ lib/actions/delete/candidates.ts
 // Data query (in lib/data/)
 export async function getPositions() {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 }); // Cache for 1 hour
+  cacheLife("hours"); // Cache for 1 hour
   cacheTag("positions"); // Tag this as "positions" cache
   return prisma.position.findMany();
 }
@@ -400,7 +400,7 @@ lib/actions/candidates.ts:
 // ❌ Wrong
 export async function getPositions() {
   "use cache";
-  cacheLife({ stale: 3600 });
+  cacheLife("hours");
   // Missing: cacheTag("positions")
   return prisma.position.findMany();
 }
@@ -408,7 +408,7 @@ export async function getPositions() {
 // ✅ Right
 export async function getPositions() {
   "use cache";
-  cacheLife({ stale: 3600 });
+  cacheLife("hours");
   cacheTag("positions"); // ← Added
   return prisma.position.findMany();
 }

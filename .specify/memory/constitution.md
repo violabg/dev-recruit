@@ -122,7 +122,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 export async function getAllPositions() {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 }); // 1h fresh, 24h stale
+  cacheLife("hours"); // 1h fresh, 24h stale
   cacheTag("positions");
 
   return prisma.position.findMany();

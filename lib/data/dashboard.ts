@@ -3,7 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 
 export const getPositionsCount = async () => {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("dashboard");
 
   return prisma.position.count();
@@ -11,7 +11,7 @@ export const getPositionsCount = async () => {
 
 export const getCandidatesCount = async () => {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("dashboard");
 
   return prisma.candidate.count();
@@ -19,7 +19,7 @@ export const getCandidatesCount = async () => {
 
 export const getCompletedInterviewsCount = async () => {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("dashboard");
 
   return prisma.interview.count({
@@ -31,7 +31,7 @@ export const getCompletedInterviewsCount = async () => {
 
 export const getRecentPositions = async (limit = 5) => {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("dashboard");
 
   return prisma.position.findMany({

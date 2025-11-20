@@ -104,7 +104,7 @@ import prisma from "@/lib/prisma";
 
 export async function getEntities() {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 }); // 1h fresh, 24h stale
+  cacheLife("hours"); //  stale:      300 seconds (5 minutes)   revalidate: 3600 seconds (1 hour)   expire:     86400 seconds (1 day)
   cacheTag("entities");
 
   return prisma.entity.findMany();
@@ -112,7 +112,7 @@ export async function getEntities() {
 
 export async function getEntityById(id: string) {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag(`entities-${id}`);
 
   return prisma.entity.findUnique({ where: { id } });
@@ -243,16 +243,16 @@ interviews        # All interviews
 
 ```typescript
 // Fast, frequently changing (real-time)
-cacheLife({ stale: 60, revalidate: 300 }); // 1m fresh, 5m stale
+cacheLife("minutes"); // stale:      300 seconds (5 minutes)  revalidate: 60 seconds (1 minute)  expire:     3600 seconds (1 hour)
 
 // Standard, changing hourly
-cacheLife({ stale: 3600, revalidate: 86400 }); // 1h fresh, 24h stale
+cacheLife("hours"); //  stale:      300 seconds (5 minutes)   revalidate: 3600 seconds (1 hour)   expire:     86400 seconds (1 day)
 
 // Slow, changing daily
-cacheLife({ stale: 86400, revalidate: 604800 }); // 1d fresh, 7d stale
+cacheLife("days"); // stale:      300 seconds (5 minutes)   revalidate: 86400 seconds (1 day)   expire:     604800 seconds (1 week)
 
 // Static, almost never changes
-cacheLife({ stale: 604800, revalidate: 2592000 }); // 7d fresh, 30d stale
+cacheLife("max"); // stale:      300 seconds (5 minutes)   revalidate: 2592000 seconds (1 month)   expire:     31536000 seconds (365 days)
 
 // Dynamic, always fresh (no caching)
 // Don't use 'use cache' at all, wrap in Suspense instead

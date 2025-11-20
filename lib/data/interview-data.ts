@@ -44,7 +44,7 @@ const getQuizAssignmentDataCached = async (
   userId: string
 ): Promise<QuizAssignmentData | null> => {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("interviews");
 
   const quiz = await prisma.quiz.findFirst({
@@ -145,7 +145,7 @@ const getCandidateQuizDataCached = async (
   userId: string
 ): Promise<CandidateQuizData | null> => {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("interviews");
 
   const candidate = await prisma.candidate.findFirst({
@@ -277,7 +277,7 @@ export const getInterviewByToken = async (
   token: string
 ): Promise<InterviewByTokenResult | null> => {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("interviews");
 
   const interview = await prisma.interview.findUnique({
@@ -374,7 +374,7 @@ export const getInterviewDetail = async (
   id: string
 ): Promise<InterviewDetailResult | null> => {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("interviews");
 
   const user = await requireUser();

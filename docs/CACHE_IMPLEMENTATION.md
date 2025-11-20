@@ -266,11 +266,7 @@ import { cacheLife } from "next/cache";
 
 export default async function Page() {
   "use cache";
-  cacheLife({
-    stale: 3600, // 1 hour until considered stale
-    revalidate: 7200, // 2 hours until revalidated
-    expire: 86400, // 1 day until expired
-  });
+  cacheLife("hours");
 
   const users = await db.query("SELECT * FROM users");
 

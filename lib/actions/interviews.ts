@@ -81,11 +81,7 @@ const generateInterviewToken = async (): Promise<string> => {
 
 export async function fetchInterviewsData(filters: InterviewsFilters = {}) {
   "use cache";
-  cacheLife({
-    stale: 600,
-    revalidate: 600,
-    expire: 600,
-  });
+  cacheLife("hours");
   cacheTag("interviews");
 
   const {

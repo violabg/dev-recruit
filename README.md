@@ -145,7 +145,7 @@ All data queries in `lib/data/` implement proper cache management:
 ```typescript
 export async function getQuizzesForPosition(positionId: string) {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("quizzes");
 
   return prisma.quiz.findMany({ where: { positionId } });

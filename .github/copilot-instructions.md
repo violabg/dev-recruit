@@ -53,7 +53,7 @@ All data queries in `lib/data/` follow this pattern:
 
 ```typescript
 "use cache";
-cacheLife({ stale: 3600, revalidate: 86400 });
+cacheLife("hours");
 cacheTag("entity-type"); // quizzes, candidates, positions, interviews, dashboard
 ```
 

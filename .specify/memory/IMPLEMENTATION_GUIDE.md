@@ -204,7 +204,7 @@ Example fix (apply to all query functions):
 // Before
 export async function getQuizzes() {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
 
   return prisma.quiz.findMany();
 }
@@ -212,7 +212,7 @@ export async function getQuizzes() {
 // After
 export async function getQuizzes() {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("quizzes"); // ← ADD THIS LINE
 
   return prisma.quiz.findMany();
@@ -233,7 +233,7 @@ export async function getQuizzes() {
 ```typescript
 export async function getCandidatesByPosition(positionId: string) {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("candidates"); // ← ADD THIS LINE
 
   return prisma.candidate.findMany({
@@ -249,7 +249,7 @@ export async function getCandidatesByPosition(positionId: string) {
 ```typescript
 export async function getPositionsCount() {
   "use cache";
-  cacheLife({ stale: 3600, revalidate: 86400 });
+  cacheLife("hours");
   cacheTag("dashboard"); // ← ADD THIS LINE
 
   return prisma.position.count();
@@ -257,7 +257,7 @@ export async function getPositionsCount() {
 
 export async function getCandidatesCount() {
   "use cache";
-  cacheLife({ stale: 1800, revalidate: 43200 });
+  cacheLife("hours");
   cacheTag("dashboard"); // ← ADD THIS LINE
 
   return prisma.candidate.count();
