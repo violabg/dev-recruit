@@ -39,10 +39,55 @@
 
 ## Handling Requests
 
-1. Inspect the affected route (`layout.tsx`, `page.tsx`, `loading.tsx`, `error.tsx`) before editing.
+1. Inspect the affected route (`layout.tsx`, `page.tsx`, `error.tsx`) before editing.
 2. Keep Prisma/AI calls inside `'use cache'` scopes and wrap runtime APIs with Suspense + skeleton fallbacks.
 3. Reuse UI primitives from `components/ui` or existing dashboard components before building new ones.
 4. Document substantial behavior changes in `docs/` (e.g., caching, AI flows, layout shifts).
+5. Follow the constitutional governance in `.specify/memory/constitution.md` for all architectural decisions.
+
+## Cache & Streaming Patterns
+
+### Data Layer Caching
+
+All data queries in `lib/data/` follow this pattern:
+
+```typescript
+"use cache";
+cacheLife({ stale: 3600, revalidate: 86400 });
+cacheTag("entity-type"); // quizzes, candidates, positions, interviews, dashboard
+```
+
+**Cache timing strategy:**
+
+- High-volatility data (candidates, interviews): stale 30min, revalidate 12hr
+- Low-volatility data (quizzes, positions, dashboard): stale 1hr, revalidate 1day
+
+### Suspense Boundaries
+
+All async server components use Suspense + fallback pattern:
+
+```typescript
+export default async function PageComponent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<SkeletonComponent />}>
+      <AsyncContent params={params} />
+    </Suspense>
+  );
+}
+
+async function AsyncContent({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  // Fetch data here
+}
+```
+
+### Skeleton Fallbacks
+
+All skeleton components live in `fallbacks.tsx` and use `<Skeleton />` primitives from `components/ui/skeleton` to match actual page layouts.
 
 Let me know if any section needs clarification or more examples.# Copilot Instructions
 
