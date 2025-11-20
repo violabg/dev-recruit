@@ -1,17 +1,8 @@
 "use client";
-
+import { InputField, TextareaField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
-import { InputField, TextareaField } from "@/components/rhf-inputs";
 
 type MultipleChoiceFormProps = {
   index: number;
@@ -24,11 +15,6 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
     control: form.control,
     name: `questions.${index}.options`,
   });
-
-  const questionsErrors = form.formState.errors.questions;
-  const questionErrors = Array.isArray(questionsErrors)
-    ? questionsErrors[index]
-    : undefined;
 
   // Ensure minimum 4 options on mount
   useEffect(() => {
@@ -51,28 +37,15 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
         </div>
         <div className="flex flex-col items-start gap-4">
           {fields.map((field, optIdx) => {
-            const optionError = questionErrors?.options?.[optIdx]?.message;
-            const optionId = `questions-${index}-option-${optIdx}`;
-
             return (
               <div key={field.id} className="flex items-start gap-2 w-full">
-                <Field className="flex-1">
-                  <FieldLabel htmlFor={optionId} className="sr-only">
-                    Opzione {optIdx + 1}
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      placeholder={`Opzione ${optIdx + 1}`}
-                      {...field}
-                      minLength={3}
-                    />
-                  </FieldContent>
-                  <FieldError
-                    errors={
-                      optionError ? [{ message: optionError }] : undefined
-                    }
-                  />
-                </Field>
+                <InputField
+                  control={form.control}
+                  name={`questions.${index}.options.${optIdx}`}
+                  placeholder={`Opzione ${optIdx + 1}`}
+                  minLength={3}
+                />
+
                 <Button
                   type="button"
                   size="icon"

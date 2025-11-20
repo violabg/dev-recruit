@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { QuestionType, QuizForm } from "@/lib/schemas";
 import { useCallback, useState } from "react";
+import { FormProvider } from "react-hook-form";
 import { useAIGeneration } from "../hooks/use-ai-generation";
 import { useEditQuizForm } from "../hooks/use-edit-quiz-form";
 import { useQuestionManagement } from "../hooks/use-question-management";
@@ -150,52 +151,54 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
         </CardHeader>
       </Card>
 
-      <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
-        {/* Quiz Settings */}
-        <QuizSettings
-          form={form}
-          saveStatus={saveStatus}
-          onGenerateFullQuiz={() => setFullQuizDialogOpen(true)}
-          aiLoading={aiLoading}
-        />
+      <FormProvider {...form}>
+        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
+          {/* Quiz Settings */}
+          <QuizSettings
+            form={form}
+            saveStatus={saveStatus}
+            onGenerateFullQuiz={() => setFullQuizDialogOpen(true)}
+            aiLoading={aiLoading}
+          />
 
-        {/* Smart Question Presets */}
-        <PresetGenerationButtons
-          onGeneratePreset={handleGeneratePreset}
-          loading={aiLoading}
-          position={position}
-        />
+          {/* Smart Question Presets */}
+          <PresetGenerationButtons
+            onGeneratePreset={handleGeneratePreset}
+            loading={aiLoading}
+            position={position}
+          />
 
-        {/* Questions Management */}
-        <QuestionsHeader
-          fieldsLength={fields.length}
-          questionTypeFilter={questionTypeFilter}
-          setQuestionTypeFilter={setQuestionTypeFilter}
-          expandAllQuestions={expandAllQuestions}
-          collapseAllQuestions={collapseAllQuestions}
-          onGenerateQuestion={handleGenerateNewQuestion}
-        />
+          {/* Questions Management */}
+          <QuestionsHeader
+            fieldsLength={fields.length}
+            questionTypeFilter={questionTypeFilter}
+            setQuestionTypeFilter={setQuestionTypeFilter}
+            expandAllQuestions={expandAllQuestions}
+            collapseAllQuestions={collapseAllQuestions}
+            onGenerateQuestion={handleGenerateNewQuestion}
+          />
 
-        {/* Questions List */}
-        <Card>
-          <CardContent className="space-y-4">
-            <QuestionsList
-              filteredQuestions={filteredQuestions}
-              fields={fields}
-              expandedQuestions={expandedQuestions}
-              questionTypeFilter={questionTypeFilter}
-              form={form}
-              onToggleExpansion={toggleQuestionExpansion}
-              onRegenerate={handleRegenerate}
-              onRemove={remove}
-              aiLoading={aiLoading}
-              hasQuestionChanges={hasQuestionChanges}
-              onSaveQuestion={handleQuestionSaveWithValidation}
-              sectionSaveStatus={sectionSaveStatus}
-            />
-          </CardContent>
-        </Card>
-      </form>
+          {/* Questions List */}
+          <Card>
+            <CardContent className="space-y-4">
+              <QuestionsList
+                filteredQuestions={filteredQuestions}
+                fields={fields}
+                expandedQuestions={expandedQuestions}
+                questionTypeFilter={questionTypeFilter}
+                form={form}
+                onToggleExpansion={toggleQuestionExpansion}
+                onRegenerate={handleRegenerate}
+                onRemove={remove}
+                aiLoading={aiLoading}
+                hasQuestionChanges={hasQuestionChanges}
+                onSaveQuestion={handleQuestionSaveWithValidation}
+                sectionSaveStatus={sectionSaveStatus}
+              />
+            </CardContent>
+          </Card>
+        </form>
+      </FormProvider>
 
       {/* AI Generation Dialogs */}
       <AIDialogs

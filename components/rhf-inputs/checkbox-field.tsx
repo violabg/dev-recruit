@@ -1,4 +1,4 @@
-import { FieldValues } from "react-hook-form";
+import { Controller, FieldValues } from "react-hook-form";
 import { Checkbox } from "../ui/checkbox";
 import {
   Field,
@@ -7,19 +7,15 @@ import {
   FieldError,
   FieldLabel,
 } from "../ui/field";
-import { Controller, Control, FieldPath } from "react-hook-form";
+import { BaseControllerProps } from "./base-controller";
 
 type FieldCheckboxProps<T extends FieldValues> = Omit<
   React.ComponentProps<typeof Checkbox>,
   "checked" | "onCheckedChange"
-> & {
-  control: Control<T>;
-  name: FieldPath<T>;
-  label?: string;
-  description?: string;
-  disableFieldError?: boolean;
-  orientation?: "vertical" | "horizontal";
-};
+> &
+  Omit<BaseControllerProps<T>, "children"> & {
+    orientation?: "vertical" | "horizontal";
+  };
 
 export function CheckboxField<T extends FieldValues>({
   control,
