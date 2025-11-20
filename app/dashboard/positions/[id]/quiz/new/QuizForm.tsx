@@ -214,27 +214,28 @@ export const QuizForm = ({ position }: QuizFormProps) => {
       )}
 
       <Field>
-        <FieldLabel htmlFor={specificModelId}>Modello LLM</FieldLabel>
+        <FieldLabel>Modello LLM</FieldLabel>
         <FieldContent>
           <Controller
             control={control}
             name="specificModel"
-            render={({ field }) => (
-              <LLMModelSelect
-                value={field.value || LLM_MODELS.KIMI}
-                onValueChange={field.onChange}
-              />
+            render={({ field, fieldState }) => (
+              <>
+                <LLMModelSelect
+                  value={field.value || LLM_MODELS.KIMI}
+                  onValueChange={field.onChange}
+                />
+                {fieldState.error && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </>
             )}
           />
         </FieldContent>
         <FieldDescription>
           Seleziona il modello LLM per la generazione del quiz.
-          <strong>Versatile</strong> è raccomandato per la qualità migliore.
+          <strong> Versatile</strong> è raccomandato per la qualità migliore.
         </FieldDescription>
-        <FieldError
-          id={`${specificModelId}-error`}
-          errors={errors.specificModel ? [errors.specificModel] : undefined}
-        />
       </Field>
 
       <div className="flex gap-4">
