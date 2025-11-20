@@ -8,15 +8,27 @@ import { Highlight, themes } from "prism-react-renderer";
 import { Suspense } from "react";
 
 async function StartButton() {
-  const user = await getCurrentUser();
-  return (
-    <Link href={user ? "/dashboard" : "/auth/login"}>
-      <Button size="lg" className="gap-1.5">
-        Inizia ora
-        <ArrowRight className="w-4 h-4" />
-      </Button>
-    </Link>
-  );
+  try {
+    const user = await getCurrentUser();
+    return (
+      <Link href={user ? "/dashboard" : "/auth/login"}>
+        <Button size="lg" className="gap-1.5">
+          Inizia ora
+          <ArrowRight className="w-4 h-4" />
+        </Button>
+      </Link>
+    );
+  } catch {
+    // Fallback during prerendering or when headers() is not available
+    return (
+      <Link href="/auth/login">
+        <Button size="lg" className="gap-1.5">
+          Inizia ora
+          <ArrowRight className="w-4 h-4" />
+        </Button>
+      </Link>
+    );
+  }
 }
 
 export default async function Home() {
