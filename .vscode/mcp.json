@@ -1,12 +1,11 @@
 {
   "servers": {
-    "plate": {
-      "type": "stdio",
+    "shadcn": {
       "command": "npx",
-      "args": ["-y", "shadcn@canary", "registry:mcp"],
-      "env": {
-        "REGISTRY_URL": "https://platejs.org/r/registry.json"
-      }
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
     }
   },
   "inputs": []

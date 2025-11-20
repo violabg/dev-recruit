@@ -371,22 +371,21 @@ export type InterviewDetailResult = {
 };
 
 export const getInterviewDetail = async (
-  id: string
+  id: string,
+  userId: string
 ): Promise<InterviewDetailResult | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag("interviews");
 
-  const user = await requireUser();
-
   const interview = await prisma.interview.findFirst({
     where: {
       id,
       quiz: {
-        createdBy: user.id,
+        createdBy: userId,
       },
       candidate: {
-        createdBy: user.id,
+        createdBy: userId,
       },
     },
     include: {

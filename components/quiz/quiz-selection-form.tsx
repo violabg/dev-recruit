@@ -2,25 +2,18 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, Loader2, Plus } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useActionState, useEffect, useId, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { MultiSelect } from "@/components/ui/multi-select";
 import {
   assignQuizzesToCandidate,
   AssignQuizzesToCandidateState,
 } from "@/lib/actions/candidate-quiz-assignment";
 import { QuizSelection, quizSelectionSchema } from "@/lib/schemas";
+import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
 
 type QuizSelectionValues = QuizSelection;
 
@@ -64,6 +57,14 @@ export function QuizSelectionForm({
       quizIds: [],
     },
   });
+
+  const {
+    control,
+    watch,
+    formState: { errors },
+  } = form;
+
+  const quizIdsId = useId();
 
   useEffect(() => {
     if (formState.success) {
@@ -116,47 +117,48 @@ export function QuizSelectionForm({
           </p>
         </div>
       ) : (
-        <Form {...form}>
-          <form action={formAction} className="space-y-6">
-            <input type="hidden" name="candidateId" value={candidateId} />
-            {form.watch("quizIds").map((quizId) => (
-              <input key={quizId} type="hidden" name="quizIds" value={quizId} />
-            ))}
+        <form action={formAction} className="space-y-6">
+          <input type="hidden" name="candidateId" value={candidateId} />
+          {watch("quizIds").map((quizId) => (
+            <input key={quizId} type="hidden" name="quizIds" value={quizId} />
+          ))}
 
-            <FormField
-              control={form.control}
-              name="quizIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select quizzes</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={quizOptions}
-                      onChange={field.onChange}
-                      selected={field.value}
-                      placeholder="Select quizzes to assign to this candidate"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <Field>
+            <FieldLabel htmlFor={quizIdsId}>Select quizzes</FieldLabel>
+            <FieldContent>
+              <Controller
+                control={control}
+                name="quizIds"
+                render={({ field }) => (
+                  <MultiSelect
+                    options={quizOptions}
+                    selected={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select quizzes to assign to this candidate"
+                  />
+                )}
+              />
+            </FieldContent>
+            <FieldError
+              id={`${quizIdsId}-error`}
+              errors={errors.quizIds ? [errors.quizIds] : undefined}
             />
+          </Field>
 
-            <Button type="submit" disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                  Creating interviews...
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 w-4 h-4" />
-                  Create interview links
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                Creating interviews...
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 w-4 h-4" />
+                Create interview links
+              </>
+            )}
+          </Button>
+        </form>
       )}
 
       {/* Display created links */}

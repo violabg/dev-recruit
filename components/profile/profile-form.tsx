@@ -9,13 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { updateProfile, type Profile } from "@/lib/actions/profile";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
@@ -23,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 type ProfileFormValues = ProfileFormData;
@@ -83,63 +81,61 @@ export const ProfileForm = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="font-medium text-sm">Email</label>
-                  <Input
-                    value={userEmail || ""}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    L&apos;email non può essere modificata
-                  </p>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="full_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Il tuo nome completo"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="user_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Utente</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Il tuo nome utente"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="font-medium text-sm">Email</label>
+                <Input value={userEmail || ""} disabled className="bg-muted" />
+                <p className="text-muted-foreground text-xs">
+                  L&apos;email non può essere modificata
+                </p>
               </div>
 
-              <Button type="submit" disabled={isPending} className="w-full">
-                {isPending ? "Aggiornamento..." : "Aggiorna Profilo"}
-              </Button>
-            </form>
-          </Form>
+              <Controller
+                control={form.control}
+                name="full_name"
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Nome Completo</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        placeholder="Il tuo nome completo"
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FieldContent>
+                    <FieldError
+                      errors={fieldState.error ? [fieldState.error] : undefined}
+                    />
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="user_name"
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Nome Utente</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        placeholder="Il tuo nome utente"
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FieldContent>
+                    <FieldError
+                      errors={fieldState.error ? [fieldState.error] : undefined}
+                    />
+                  </Field>
+                )}
+              />
+            </div>
+
+            <Button type="submit" disabled={isPending} className="w-full">
+              {isPending ? "Aggiornamento..." : "Aggiorna Profilo"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

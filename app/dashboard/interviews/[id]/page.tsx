@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { requireUser } from "@/lib/auth-server";
 import { getInterviewDetail } from "@/lib/data/interview-data";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
@@ -32,7 +33,8 @@ export default async function InterviewDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const unwrappedParams = await params;
-  const interviewData = await getInterviewDetail(unwrappedParams.id);
+  const user = await requireUser();
+  const interviewData = await getInterviewDetail(unwrappedParams.id, user.id);
 
   if (!interviewData) {
     return (

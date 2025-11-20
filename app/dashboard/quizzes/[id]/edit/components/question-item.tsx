@@ -13,12 +13,11 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import {
@@ -28,7 +27,7 @@ import {
   SaveStatus,
 } from "@/lib/utils/quiz-form-utils";
 import { ChevronDown, ChevronUp, RefreshCw, Trash2 } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
+import { Controller, UseFormReturn } from "react-hook-form";
 import * as z from "zod/v4";
 import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
 
@@ -62,6 +61,10 @@ export const QuestionItem = ({
   onSaveQuestion,
   questionSaveStatus,
 }: QuestionItemProps) => {
+  const questionsErrors = form.formState.errors.questions;
+  const questionErrors = Array.isArray(questionsErrors)
+    ? questionsErrors[actualIndex]
+    : undefined;
   return (
     <Card key={field.id} className="relative">
       <CardHeader className="pb-3">
@@ -118,23 +121,32 @@ export const QuestionItem = ({
       {isExpanded && (
         <CardContent className="pt-0">
           <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name={`questions.${actualIndex}.question`}
-              render={({ field: questionField }) => (
-                <FormItem>
-                  <FormLabel>Testo della domanda</FormLabel>
-                  <FormControl>
+            <Field>
+              <FieldLabel htmlFor={`questions-${actualIndex}-text`}>
+                Testo della domanda
+              </FieldLabel>
+              <FieldContent>
+                <Controller
+                  control={form.control}
+                  name={`questions.${actualIndex}.question`}
+                  render={({ field: questionField }) => (
                     <Input
+                      id={`questions-${actualIndex}-text`}
                       placeholder="Inserisci il testo della domanda"
                       {...questionField}
                       maxLength={500}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  )}
+                />
+              </FieldContent>
+              <FieldError
+                errors={
+                  questionErrors?.question
+                    ? [questionErrors.question]
+                    : undefined
+                }
+              />
+            </Field>
 
             {field.type === "multiple_choice" && (
               <MultipleChoiceForm index={actualIndex} />

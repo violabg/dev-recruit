@@ -250,7 +250,7 @@ export async function getCandidatesByPosition(positionId: string) {
 export async function getPositionsCount() {
   "use cache";
   cacheLife("hours");
-  cacheTag("dashboard"); // ← ADD THIS LINE
+  cacheTag("positions"); // ← ADD THIS LINE
 
   return prisma.position.count();
 }
@@ -258,7 +258,7 @@ export async function getPositionsCount() {
 export async function getCandidatesCount() {
   "use cache";
   cacheLife("hours");
-  cacheTag("dashboard"); // ← ADD THIS LINE
+  cacheTag("candidates"); // ← ADD THIS LINE
 
   return prisma.candidate.count();
 }

@@ -1,14 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { LoginFormData, loginSchema } from "@/lib/schemas";
@@ -16,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { GithubIcon } from "../icons/github";
 import {
@@ -26,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
 import PasswordInput from "../ui/password-input";
 import { Separator } from "../ui/separator";
 
@@ -40,7 +33,14 @@ export function LoginForm({
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
-  const { handleSubmit, setError } = form;
+  const {
+    handleSubmit,
+    register,
+    setError,
+    formState: { errors, isValid },
+  } = form;
+  const emailId = useId();
+  const passwordId = useId();
 
   const handleLogin = async (values: LoginFormData) => {
     setIsLoading(true);
@@ -91,65 +91,67 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={handleSubmit(handleLogin)}
-              className="space-y-4"
-              autoComplete="off"
+          <form
+            onSubmit={handleSubmit(handleLogin)}
+            className="space-y-4"
+            autoComplete="off"
+          >
+            <Field>
+              <FieldLabel htmlFor={emailId}>Email</FieldLabel>
+              <FieldContent>
+                <Input
+                  id={emailId}
+                  type="email"
+                  placeholder="m@example.com"
+                  autoComplete="email"
+                  disabled={isLoading}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={
+                    errors.email ? `${emailId}-error` : undefined
+                  }
+                  {...register("email")}
+                />
+              </FieldContent>
+              <FieldError
+                id={`${emailId}-error`}
+                errors={errors.email ? [errors.email] : undefined}
+              />
+            </Field>
+            <Field>
+              <div className="flex items-center gap-2">
+                <FieldLabel htmlFor={passwordId}>Password</FieldLabel>
+                <Link
+                  href="/auth/forgot-password"
+                  className="inline-block ml-auto text-sm hover:underline underline-offset-4"
+                >
+                  Password dimenticata?
+                </Link>
+              </div>
+              <FieldContent>
+                <PasswordInput
+                  id={passwordId}
+                  autoComplete="current-password"
+                  disabled={isLoading}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={
+                    errors.password ? `${passwordId}-error` : undefined
+                  }
+                  {...register("password")}
+                />
+              </FieldContent>
+              <FieldError
+                id={`${passwordId}-error`}
+                errors={errors.password ? [errors.password] : undefined}
+              />
+            </Field>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || !isValid}
             >
-              <FormField
-                name="email"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="m@example.com"
-                        autoComplete="email"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                name="password"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        href="/auth/forgot-password"
-                        className="inline-block ml-auto text-sm hover:underline underline-offset-4"
-                      >
-                        Password dimenticata?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <PasswordInput
-                        autoComplete="current-password"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !form.formState.isValid}
-              >
-                {isLoading ? "Accesso in corso..." : "Accedi"}
-              </Button>
-            </form>
-          </Form>
+              {isLoading ? "Accesso in corso..." : "Accedi"}
+            </Button>
+          </form>
           <Separator className="my-4" />
           <form onSubmit={handleSocialSignIn}>
             <div className="flex flex-col gap-6">

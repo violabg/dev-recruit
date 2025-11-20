@@ -9,22 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-// Removed unused Label import
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { authClient } from "@/lib/auth-client";
 import { ForgotPasswordFormData, forgotPasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
+import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
 
 export function ForgotPasswordForm({
   className,
@@ -37,7 +29,13 @@ export function ForgotPasswordForm({
     defaultValues: { email: "" },
     mode: "onChange",
   });
-  const { handleSubmit, setError } = form;
+  const {
+    handleSubmit,
+    register,
+    setError,
+    formState: { errors, isValid },
+  } = form;
+  const emailId = useId();
 
   const handleForgotPassword = async (values: ForgotPasswordFormData) => {
     setIsLoading(true);
@@ -91,49 +89,49 @@ export function ForgotPasswordForm({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={handleSubmit(handleForgotPassword)}
-                className="space-y-4"
-                autoComplete="off"
-              >
-                <FormField
-                  name="email"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="m@example.com"
-                          autoComplete="email"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+            <form
+              onSubmit={handleSubmit(handleForgotPassword)}
+              className="space-y-4"
+              autoComplete="off"
+            >
+              <Field>
+                <FieldLabel htmlFor={emailId}>Email</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id={emailId}
+                    type="email"
+                    placeholder="m@example.com"
+                    autoComplete="email"
+                    disabled={isLoading}
+                    aria-invalid={!!errors.email}
+                    aria-describedby={
+                      errors.email ? `${emailId}-error` : undefined
+                    }
+                    {...register("email")}
+                  />
+                </FieldContent>
+                <FieldError
+                  id={`${emailId}-error`}
+                  errors={errors.email ? [errors.email] : undefined}
                 />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading || !form.formState.isValid}
+              </Field>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || !isValid}
+              >
+                {isLoading ? "Invio in corso..." : "Invia email di reset"}
+              </Button>
+              <div className="mt-4 text-sm text-center">
+                Hai già un account?{" "}
+                <Link
+                  href="/auth/login"
+                  className="underline underline-offset-4"
                 >
-                  {isLoading ? "Invio in corso..." : "Invia email di reset"}
-                </Button>
-                <div className="mt-4 text-sm text-center">
-                  Hai già un account?{" "}
-                  <Link
-                    href="/auth/login"
-                    className="underline underline-offset-4"
-                  >
-                    Accedi
-                  </Link>
-                </div>
-              </form>
-            </Form>
+                  Accedi
+                </Link>
+              </div>
+            </form>
           </CardContent>
         </Card>
       )}

@@ -8,22 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// Removed unused Label import
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { authClient } from "@/lib/auth-client";
 import { UpdatePasswordFormData, updatePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
+import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
 import PasswordInput from "../ui/password-input";
 
 export function UpdatePasswordForm({
@@ -37,13 +29,19 @@ export function UpdatePasswordForm({
     defaultValues: { password: "" },
     mode: "onChange",
   });
-  const { handleSubmit, setError } = form;
+  const {
+    handleSubmit,
+    register,
+    setError,
+    formState: { errors, isValid },
+  } = form;
+  const passwordId = useId();
 
   const handleUpdatePassword = async (values: UpdatePasswordFormData) => {
     setIsLoading(true);
     try {
       const result = await authClient.resetPassword({
-        password: values.password,
+        newPassword: values.password,
       });
 
       if (result.error) {
@@ -73,39 +71,39 @@ export function UpdatePasswordForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={handleSubmit(handleUpdatePassword)}
-              className="space-y-4"
-              autoComplete="off"
-            >
-              <FormField
-                name="password"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nuova password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder="New password"
-                        autoComplete="new-password"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <form
+            onSubmit={handleSubmit(handleUpdatePassword)}
+            className="space-y-4"
+            autoComplete="off"
+          >
+            <Field>
+              <FieldLabel htmlFor={passwordId}>Nuova password</FieldLabel>
+              <FieldContent>
+                <PasswordInput
+                  id={passwordId}
+                  placeholder="New password"
+                  autoComplete="new-password"
+                  disabled={isLoading}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={
+                    errors.password ? `${passwordId}-error` : undefined
+                  }
+                  {...register("password")}
+                />
+              </FieldContent>
+              <FieldError
+                id={`${passwordId}-error`}
+                errors={errors.password ? [errors.password] : undefined}
               />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !form.formState.isValid}
-              >
-                {isLoading ? "Salvataggio..." : "Salva nuova password"}
-              </Button>
-            </form>
-          </Form>
+            </Field>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || !isValid}
+            >
+              {isLoading ? "Salvataggio..." : "Salva nuova password"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
