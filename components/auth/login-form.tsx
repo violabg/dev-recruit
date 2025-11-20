@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
@@ -10,7 +9,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
-import { GithubIcon } from "../icons/github";
 import {
   Card,
   CardContent,
@@ -71,14 +69,6 @@ export function LoginForm({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSocialSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "github",
-      callbackURL: `${window.location.origin}/dashboard`,
-      errorCallbackURL: `${window.location.origin}/auth/error`,
-    });
   };
 
   return (
@@ -151,22 +141,6 @@ export function LoginForm({
             >
               {isLoading ? "Accesso in corso..." : "Accedi"}
             </Button>
-          </form>
-          <Separator className="my-4" />
-          <form onSubmit={handleSocialSignIn}>
-            <div className="flex flex-col gap-6">
-              {/* {error && <p className=\"text-destructive-500 text-sm\">{error}</p>} */}
-              <Button
-                type="submit"
-                className="flex justify-center items-center gap-2 bg-background border-input w-full"
-                disabled={isLoading}
-              >
-                <GithubIcon className="w-5 h-5" />
-                <span className="font-medium">
-                  {isLoading ? "Logging in..." : "Login con GitHub"}
-                </span>
-              </Button>
-            </div>
           </form>
           <Separator className="my-4" />
           <div className="mt-4 text-sm text-center">
