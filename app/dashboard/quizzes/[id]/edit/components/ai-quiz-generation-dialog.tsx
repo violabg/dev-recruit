@@ -9,6 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { LLMModelSelect } from "@/components/ui/llm-model-select";
+import { AIGenerationFormData, aiGenerationSchema } from "@/lib/schemas";
+import { LLM_MODELS } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Sparkles } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { SliderField, TextareaField } from "@/components/rhf-inputs";
 import {
   Field,
   FieldContent,
@@ -16,14 +23,6 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { LLMModelSelect } from "@/components/ui/llm-model-select";
-import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
-import { AIGenerationFormData, aiGenerationSchema } from "@/lib/schemas";
-import { LLM_MODELS } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Sparkles } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
 
 type AIGenerationDialogProps = {
   open: boolean;
@@ -89,66 +88,27 @@ export const AIQuizGenerationDialog = ({
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           {showDifficulty && (
-            <Controller
+            <SliderField
               control={form.control}
               name="difficulty"
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel>
-                    Livello di Difficoltà:{" "}
-                    {field.value ? getDifficultyLabel(field.value) : "Medio"}
-                  </FieldLabel>
-                  <FieldContent>
-                    <div className="px-3">
-                      <Slider
-                        min={1}
-                        max={5}
-                        step={1}
-                        value={[field.value || defaultDifficulty]}
-                        onValueChange={(values) => field.onChange(values[0])}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between mt-2 text-muted-foreground text-xs">
-                        <span>Molto Facile</span>
-                        <span>Facile</span>
-                        <span>Medio</span>
-                        <span>Difficile</span>
-                        <span>Molto Difficile</span>
-                      </div>
-                    </div>
-                  </FieldContent>
-                  <FieldDescription>
-                    Seleziona il livello di difficoltà per la generazione
-                  </FieldDescription>
-                  <FieldError
-                    errors={fieldState.error ? [fieldState.error] : undefined}
-                  />
-                </Field>
-              )}
+              label={`Livello di Difficoltà: ${
+                form.watch("difficulty")
+                  ? getDifficultyLabel(form.watch("difficulty")!)
+                  : "Medio"
+              }`}
+              min={1}
+              max={5}
+              step={1}
+              description="Seleziona il livello di difficoltà per la generazione"
             />
           )}
-          <Controller
+          <TextareaField
             control={form.control}
             name="instructions"
-            render={({ field, fieldState }) => (
-              <Field>
-                <FieldLabel>Istruzioni aggiuntive (opzionale)</FieldLabel>
-                <FieldContent>
-                  <Textarea
-                    placeholder="Inserisci istruzioni specifiche per l'AI..."
-                    className="min-h-20"
-                    {...field}
-                  />
-                </FieldContent>
-                <FieldDescription>
-                  Fornisci istruzioni specifiche per guidare la generazione
-                  dell&apos;AI
-                </FieldDescription>
-                <FieldError
-                  errors={fieldState.error ? [fieldState.error] : undefined}
-                />
-              </Field>
-            )}
+            label="Istruzioni aggiuntive (opzionale)"
+            placeholder="Inserisci istruzioni specifiche per l'AI..."
+            className="min-h-20"
+            description="Fornisci istruzioni specifiche per guidare la generazione dell'AI"
           />
           <Controller
             control={form.control}

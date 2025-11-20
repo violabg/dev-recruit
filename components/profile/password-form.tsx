@@ -8,21 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
-import PasswordInput from "@/components/ui/password-input";
 import { updatePassword } from "@/lib/actions/profile";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { PasswordField } from "@/components/rhf-inputs";
 
 type PasswordFormProps = {
   className?: string;
@@ -76,64 +70,28 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
-              <Controller
+              <PasswordField
                 control={form.control}
                 name="current_password"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Password Attuale</FieldLabel>
-                    <FieldContent>
-                      <PasswordInput
-                        placeholder="Inserisci la password attuale"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
+                label="Password Attuale"
+                placeholder="Inserisci la password attuale"
+                disabled={isPending}
               />
 
-              <Controller
+              <PasswordField
                 control={form.control}
                 name="new_password"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Nuova Password</FieldLabel>
-                    <FieldContent>
-                      <PasswordInput
-                        placeholder="Inserisci la nuova password"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
+                label="Nuova Password"
+                placeholder="Inserisci la nuova password"
+                disabled={isPending}
               />
 
-              <Controller
+              <PasswordField
                 control={form.control}
                 name="confirm_password"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Conferma Nuova Password</FieldLabel>
-                    <FieldContent>
-                      <PasswordInput
-                        placeholder="Conferma la nuova password"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
+                label="Conferma Nuova Password"
+                placeholder="Conferma la nuova password"
+                disabled={isPending}
               />
             </div>
 

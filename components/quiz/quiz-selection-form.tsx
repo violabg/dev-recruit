@@ -2,18 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, Loader2, Plus } from "lucide-react";
-import { useActionState, useEffect, useId, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useActionState, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { MultiSelect } from "@/components/ui/multi-select";
 import {
   assignQuizzesToCandidate,
   AssignQuizzesToCandidateState,
 } from "@/lib/actions/candidate-quiz-assignment";
 import { QuizSelection, quizSelectionSchema } from "@/lib/schemas";
-import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
+import { MultiSelectField } from "@/components/rhf-inputs";
 
 type QuizSelectionValues = QuizSelection;
 
@@ -58,13 +57,7 @@ export function QuizSelectionForm({
     },
   });
 
-  const {
-    control,
-    watch,
-    formState: { errors },
-  } = form;
-
-  const quizIdsId = useId();
+  const { control, watch } = form;
 
   useEffect(() => {
     if (formState.success) {
@@ -123,27 +116,13 @@ export function QuizSelectionForm({
             <input key={quizId} type="hidden" name="quizIds" value={quizId} />
           ))}
 
-          <Field>
-            <FieldLabel htmlFor={quizIdsId}>Select quizzes</FieldLabel>
-            <FieldContent>
-              <Controller
-                control={control}
-                name="quizIds"
-                render={({ field }) => (
-                  <MultiSelect
-                    options={quizOptions}
-                    selected={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select quizzes to assign to this candidate"
-                  />
-                )}
-              />
-            </FieldContent>
-            <FieldError
-              id={`${quizIdsId}-error`}
-              errors={errors.quizIds ? [errors.quizIds] : undefined}
-            />
-          </Field>
+          <MultiSelectField
+            control={control}
+            name="quizIds"
+            label="Select quizzes"
+            options={quizOptions}
+            placeholder="Select quizzes to assign to this candidate"
+          />
 
           <Button type="submit" disabled={isPending}>
             {isPending ? (

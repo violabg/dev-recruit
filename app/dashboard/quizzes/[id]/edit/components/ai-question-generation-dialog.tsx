@@ -2,7 +2,6 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -21,16 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LLMModelSelect } from "@/components/ui/llm-model-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
 import { QuestionType } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,6 +29,12 @@ import { Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod/v4";
+import {
+  CheckboxField,
+  SelectField,
+  SliderField,
+  TextareaField,
+} from "@/components/rhf-inputs";
 
 const getDifficultyLabel = (value: number) => {
   const labels = {
@@ -221,61 +218,25 @@ export const AIQuestionGenerationDialog = ({
               )}
             />
 
-            <Controller
+            <SliderField
               control={form.control}
               name="difficulty"
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel>
-                    Livello di Difficoltà:{" "}
-                    {field.value ? getDifficultyLabel(field.value) : "Medio"}
-                  </FieldLabel>
-                  <FieldContent>
-                    <div className="px-3">
-                      <Slider
-                        min={1}
-                        max={5}
-                        step={1}
-                        value={[field.value || defaultDifficulty]}
-                        onValueChange={(values) => field.onChange(values[0])}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between mt-2 text-muted-foreground text-xs">
-                        <span>Molto Facile</span>
-                        <span>Facile</span>
-                        <span>Medio</span>
-                        <span>Difficile</span>
-                        <span>Molto Difficile</span>
-                      </div>
-                    </div>
-                  </FieldContent>
-                  <FieldDescription>
-                    Seleziona il livello di difficoltà per la generazione
-                  </FieldDescription>
-                  <FieldError
-                    errors={fieldState.error ? [fieldState.error] : undefined}
-                  />
-                </Field>
-              )}
+              label={`Livello di Difficoltà: ${
+                form.watch("difficulty")
+                  ? getDifficultyLabel(form.watch("difficulty")!)
+                  : "Medio"
+              }`}
+              min={1}
+              max={5}
+              step={1}
+              description="Seleziona il livello di difficoltà per la generazione"
             />
 
-            <Controller
+            <TextareaField
               control={form.control}
               name="instructions"
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel>Istruzioni Aggiuntive</FieldLabel>
-                  <FieldContent>
-                    <Textarea
-                      placeholder="Eventuali requisiti specifici o contesto per la domanda..."
-                      {...field}
-                    />
-                  </FieldContent>
-                  <FieldError
-                    errors={fieldState.error ? [fieldState.error] : undefined}
-                  />
-                </Field>
-              )}
+              label="Istruzioni Aggiuntive"
+              placeholder="Eventuali requisiti specifici o contesto per la domanda..."
             />
           </div>
 
@@ -328,37 +289,16 @@ export const AIQuestionGenerationDialog = ({
                 </div>
               </div>
 
-              <Controller
+              <SelectField
                 control={form.control}
                 name="distractorComplexity"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Complessità dei Distrattori</FieldLabel>
-                    <FieldContent>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="simple">Semplice</SelectItem>
-                          <SelectItem value="moderate">Moderata</SelectItem>
-                          <SelectItem value="complex">Complessa</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FieldContent>
-                    <FieldDescription>
-                      Quanto dovrebbero essere difficili da distinguere le
-                      opzioni sbagliate
-                    </FieldDescription>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
-              />
+                label="Complessità dei Distrattori"
+                description="Quanto dovrebbero essere difficili da distinguere le opzioni sbagliate"
+              >
+                <SelectItem value="simple">Semplice</SelectItem>
+                <SelectItem value="moderate">Moderata</SelectItem>
+                <SelectItem value="complex">Complessa</SelectItem>
+              </SelectField>
             </div>
           )}
 
@@ -368,65 +308,25 @@ export const AIQuestionGenerationDialog = ({
                 Impostazioni Domanda Aperta
               </h3>
               <Separator className="my-4" />
-              <Controller
+              <CheckboxField
                 control={form.control}
                 name="requireCodeExample"
-                render={({ field, fieldState }) => (
-                  <Field orientation="horizontal">
-                    <FieldContent>
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                        <div className="space-y-1 leading-none">
-                          <FieldLabel>Richiedi Esempio di Codice</FieldLabel>
-                          <FieldDescription>
-                            Includi esempi di codice nella domanda
-                          </FieldDescription>
-                        </div>
-                      </div>
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
+                label="Richiedi Esempio di Codice"
+                description="Includi esempi di codice nella domanda"
+                orientation="horizontal"
               />
 
-              <Controller
+              <SelectField
                 control={form.control}
                 name="expectedResponseLength"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Lunghezza Risposta Attesa</FieldLabel>
-                    <FieldContent>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="short">
-                            Breve (1-2 frasi)
-                          </SelectItem>
-                          <SelectItem value="medium">
-                            Media (1-2 paragrafi)
-                          </SelectItem>
-                          <SelectItem value="long">
-                            Lunga (spiegazione dettagliata)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
-              />
+                label="Lunghezza Risposta Attesa"
+              >
+                <SelectItem value="short">Breve (1-2 frasi)</SelectItem>
+                <SelectItem value="medium">Media (1-2 paragrafi)</SelectItem>
+                <SelectItem value="long">
+                  Lunga (spiegazione dettagliata)
+                </SelectItem>
+              </SelectField>
 
               <div className="space-y-4">
                 <Label>Criteri di Valutazione</Label>
@@ -481,130 +381,54 @@ export const AIQuestionGenerationDialog = ({
                 Impostazioni Snippet di Codice
               </h3>
               <Separator className="my-4" />
-              <Controller
+              <SelectField
                 control={form.control}
                 name="language"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Linguaggio di Programmazione</FieldLabel>
-                    <FieldContent>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona linguaggio" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="javascript">JavaScript</SelectItem>
-                          <SelectItem value="typescript">TypeScript</SelectItem>
-                          <SelectItem value="python">Python</SelectItem>
-                          <SelectItem value="java">Java</SelectItem>
-                          <SelectItem value="csharp">C#</SelectItem>
-                          <SelectItem value="php">PHP</SelectItem>
-                          <SelectItem value="go">Go</SelectItem>
-                          <SelectItem value="rust">Rust</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
-              />
+                label="Linguaggio di Programmazione"
+                placeholder="Seleziona linguaggio"
+              >
+                <SelectItem value="javascript">JavaScript</SelectItem>
+                <SelectItem value="typescript">TypeScript</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="csharp">C#</SelectItem>
+                <SelectItem value="php">PHP</SelectItem>
+                <SelectItem value="go">Go</SelectItem>
+                <SelectItem value="rust">Rust</SelectItem>
+              </SelectField>
 
-              <Controller
+              <SelectField
                 control={form.control}
                 name="bugType"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Tipo di Bug/Problema</FieldLabel>
-                    <FieldContent>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona tipo di bug" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="syntax">
-                            Errore di Sintassi
-                          </SelectItem>
-                          <SelectItem value="logic">
-                            Errore di Logica
-                          </SelectItem>
-                          <SelectItem value="performance">
-                            Problema di Performance
-                          </SelectItem>
-                          <SelectItem value="security">
-                            Vulnerabilità di Sicurezza
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
-              />
+                label="Tipo di Bug/Problema"
+                placeholder="Seleziona tipo di bug"
+              >
+                <SelectItem value="syntax">Errore di Sintassi</SelectItem>
+                <SelectItem value="logic">Errore di Logica</SelectItem>
+                <SelectItem value="performance">
+                  Problema di Performance
+                </SelectItem>
+                <SelectItem value="security">
+                  Vulnerabilità di Sicurezza
+                </SelectItem>
+              </SelectField>
 
-              <Controller
+              <SelectField
                 control={form.control}
                 name="codeComplexity"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Complessità del Codice</FieldLabel>
-                    <FieldContent>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="basic">Base</SelectItem>
-                          <SelectItem value="intermediate">
-                            Intermedio
-                          </SelectItem>
-                          <SelectItem value="advanced">Avanzato</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
-              />
+                label="Complessità del Codice"
+              >
+                <SelectItem value="basic">Base</SelectItem>
+                <SelectItem value="intermediate">Intermedio</SelectItem>
+                <SelectItem value="advanced">Avanzato</SelectItem>
+              </SelectField>
 
-              <Controller
+              <CheckboxField
                 control={form.control}
                 name="includeComments"
-                render={({ field, fieldState }) => (
-                  <Field orientation="horizontal">
-                    <FieldContent>
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                        <div className="space-y-1 leading-none">
-                          <FieldLabel>Includi Commenti</FieldLabel>
-                          <FieldDescription>
-                            Aggiungi commenti utili al codice
-                          </FieldDescription>
-                        </div>
-                      </div>
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
+                label="Includi Commenti"
+                description="Aggiungi commenti utili al codice"
+                orientation="horizontal"
               />
             </div>
           )}

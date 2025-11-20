@@ -1,27 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem } from "@/components/ui/select";
 import { createCandidate } from "@/lib/actions/candidates";
 import { CandidateFormData, candidateFormSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { InputField, SelectField } from "@/components/rhf-inputs";
 
 type CandidateNewFormProps = {
   positions: { id: string; title: string }[];
@@ -71,62 +59,31 @@ export const CandidateNewForm = ({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <Controller
+      <InputField
         control={form.control}
         name="name"
-        render={({ field, fieldState }) => (
-          <Field>
-            <FieldLabel>Nome</FieldLabel>
-            <FieldContent>
-              <Input placeholder="Nome candidato" {...field} />
-            </FieldContent>
-            <FieldError
-              errors={fieldState.error ? [fieldState.error] : undefined}
-            />
-          </Field>
-        )}
+        label="Nome"
+        placeholder="Nome candidato"
       />
-      <Controller
+      <InputField
         control={form.control}
         name="email"
-        render={({ field, fieldState }) => (
-          <Field>
-            <FieldLabel>Email</FieldLabel>
-            <FieldContent>
-              <Input placeholder="Email candidato" type="email" {...field} />
-            </FieldContent>
-            <FieldError
-              errors={fieldState.error ? [fieldState.error] : undefined}
-            />
-          </Field>
-        )}
+        label="Email"
+        placeholder="Email candidato"
+        type="email"
       />
-      <Controller
+      <SelectField
         control={form.control}
         name="position_id"
-        render={({ field, fieldState }) => (
-          <Field>
-            <FieldLabel>Posizione</FieldLabel>
-            <FieldContent>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona posizione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {positions.map((position) => (
-                    <SelectItem key={position.id} value={position.id}>
-                      {position.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FieldContent>
-            <FieldError
-              errors={fieldState.error ? [fieldState.error] : undefined}
-            />
-          </Field>
-        )}
-      />
+        label="Posizione"
+        placeholder="Seleziona posizione"
+      >
+        {positions.map((position) => (
+          <SelectItem key={position.id} value={position.id}>
+            {position.title}
+          </SelectItem>
+        ))}
+      </SelectField>
       {error && <div className="text-red-500 text-sm">{error}</div>}
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? (

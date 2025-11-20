@@ -8,12 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { updateProfile, type Profile } from "@/lib/actions/profile";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
@@ -21,8 +15,9 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { InputField } from "@/components/rhf-inputs";
 
 type ProfileFormValues = ProfileFormData;
 
@@ -91,44 +86,20 @@ export const ProfileForm = ({
                 </p>
               </div>
 
-              <Controller
+              <InputField
                 control={form.control}
                 name="full_name"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Nome Completo</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        placeholder="Il tuo nome completo"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
+                label="Nome Completo"
+                placeholder="Il tuo nome completo"
+                disabled={isPending}
               />
 
-              <Controller
+              <InputField
                 control={form.control}
                 name="user_name"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Nome Utente</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        placeholder="Il tuo nome utente"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FieldContent>
-                    <FieldError
-                      errors={fieldState.error ? [fieldState.error] : undefined}
-                    />
-                  </Field>
-                )}
+                label="Nome Utente"
+                placeholder="Il tuo nome utente"
+                disabled={isPending}
               />
             </div>
 
