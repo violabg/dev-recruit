@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,10 +12,9 @@ import { UpdatePasswordFormData, updatePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
-import PasswordInput from "../ui/password-input";
+import { PasswordField } from "../rhf-inputs/password-field";
 
 export function UpdatePasswordForm({
   className,
@@ -29,13 +27,7 @@ export function UpdatePasswordForm({
     defaultValues: { password: "" },
     mode: "onChange",
   });
-  const {
-    handleSubmit,
-    register,
-    setError,
-    formState: { errors, isValid },
-  } = form;
-  const passwordId = useId();
+  const { handleSubmit, setError } = form;
 
   const handleUpdatePassword = async (values: UpdatePasswordFormData) => {
     setIsLoading(true);
@@ -76,31 +68,15 @@ export function UpdatePasswordForm({
             className="space-y-4"
             autoComplete="off"
           >
-            <Field>
-              <FieldLabel htmlFor={passwordId}>Nuova password</FieldLabel>
-              <FieldContent>
-                <PasswordInput
-                  id={passwordId}
-                  placeholder="New password"
-                  autoComplete="new-password"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.password}
-                  aria-describedby={
-                    errors.password ? `${passwordId}-error` : undefined
-                  }
-                  {...register("password")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${passwordId}-error`}
-                errors={errors.password ? [errors.password] : undefined}
-              />
-            </Field>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !isValid}
-            >
+            <PasswordField<UpdatePasswordFormData>
+              control={form.control}
+              name="password"
+              label="Nuova password"
+              placeholder="New password"
+              autoComplete="new-password"
+              disabled={isLoading}
+            />
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Salvataggio..." : "Salva nuova password"}
             </Button>
           </form>

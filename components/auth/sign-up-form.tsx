@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,17 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { SignUpFormData, signUpSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
-import PasswordInput from "../ui/password-input";
+import { InputField } from "../rhf-inputs/input-field";
+import { PasswordField } from "../rhf-inputs/password-field";
 
 export function SignUpForm({
   className,
@@ -37,17 +35,7 @@ export function SignUpForm({
     },
     mode: "onChange",
   });
-  const {
-    handleSubmit,
-    register,
-    setError,
-    formState: { errors, isValid },
-  } = form;
-  const firstNameId = useId();
-  const lastNameId = useId();
-  const emailId = useId();
-  const passwordId = useId();
-  const repeatPasswordId = useId();
+  const { handleSubmit, setError } = form;
 
   const handleSignUp = async (values: SignUpFormData) => {
     setIsLoading(true);
@@ -91,118 +79,48 @@ export function SignUpForm({
             className="space-y-4"
             autoComplete="off"
           >
-            <Field>
-              <FieldLabel htmlFor={firstNameId}>Nome</FieldLabel>
-              <FieldContent>
-                <Input
-                  id={firstNameId}
-                  type="text"
-                  placeholder="Mario"
-                  autoComplete="given-name"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.first_name}
-                  aria-describedby={
-                    errors.first_name ? `${firstNameId}-error` : undefined
-                  }
-                  {...register("first_name")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${firstNameId}-error`}
-                errors={errors.first_name ? [errors.first_name] : undefined}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={lastNameId}>Cognome</FieldLabel>
-              <FieldContent>
-                <Input
-                  id={lastNameId}
-                  type="text"
-                  placeholder="Rossi"
-                  autoComplete="family-name"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.last_name}
-                  aria-describedby={
-                    errors.last_name ? `${lastNameId}-error` : undefined
-                  }
-                  {...register("last_name")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${lastNameId}-error`}
-                errors={errors.last_name ? [errors.last_name] : undefined}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={emailId}>Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  id={emailId}
-                  type="email"
-                  placeholder="m@example.com"
-                  autoComplete="email"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={
-                    errors.email ? `${emailId}-error` : undefined
-                  }
-                  {...register("email")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${emailId}-error`}
-                errors={errors.email ? [errors.email] : undefined}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={passwordId}>Password</FieldLabel>
-              <FieldContent>
-                <PasswordInput
-                  id={passwordId}
-                  autoComplete="new-password"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.password}
-                  aria-describedby={
-                    errors.password ? `${passwordId}-error` : undefined
-                  }
-                  {...register("password")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${passwordId}-error`}
-                errors={errors.password ? [errors.password] : undefined}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={repeatPasswordId}>
-                Ripeti Password
-              </FieldLabel>
-              <FieldContent>
-                <PasswordInput
-                  id={repeatPasswordId}
-                  autoComplete="new-password"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.repeatPassword}
-                  aria-describedby={
-                    errors.repeatPassword
-                      ? `${repeatPasswordId}-error`
-                      : undefined
-                  }
-                  {...register("repeatPassword")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${repeatPasswordId}-error`}
-                errors={
-                  errors.repeatPassword ? [errors.repeatPassword] : undefined
-                }
-              />
-            </Field>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !isValid}
-            >
+            <InputField<SignUpFormData>
+              name="first_name"
+              control={form.control}
+              label="Nome"
+              type="text"
+              placeholder="Mario"
+              autoComplete="given-name"
+              disabled={isLoading}
+            />
+            <InputField<SignUpFormData>
+              name="last_name"
+              control={form.control}
+              label="Cognome"
+              type="text"
+              placeholder="Rossi"
+              autoComplete="family-name"
+              disabled={isLoading}
+            />
+            <InputField<SignUpFormData>
+              name="email"
+              control={form.control}
+              label="Email"
+              type="email"
+              placeholder="m@example.com"
+              autoComplete="email"
+              disabled={isLoading}
+            />
+            <PasswordField<SignUpFormData>
+              name="password"
+              label="Password"
+              control={form.control}
+              autoComplete="new-password"
+              disabled={isLoading}
+            />
+            <PasswordField<SignUpFormData>
+              name="repeatPassword"
+              label="Ripeti Password"
+              control={form.control}
+              autoComplete="new-password"
+              disabled={isLoading}
+            />
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creazione account..." : "Registrati"}
             </Button>
             <div className="mt-4 text-sm text-center">

@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { LoginFormData, loginSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -9,6 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
+import { InputField } from "../rhf-inputs/input-field";
+import { PasswordField } from "../rhf-inputs/password-field";
 import {
   Card,
   CardContent,
@@ -16,8 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field";
-import PasswordInput from "../ui/password-input";
+import { FieldLabel } from "../ui/field";
 import { Separator } from "../ui/separator";
 
 export function LoginForm({
@@ -31,13 +31,7 @@ export function LoginForm({
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
-  const {
-    handleSubmit,
-    register,
-    setError,
-    formState: { errors, isValid },
-  } = form;
-  const emailId = useId();
+  const { handleSubmit, setError } = form;
   const passwordId = useId();
 
   const handleLogin = async (values: LoginFormData) => {
@@ -86,28 +80,16 @@ export function LoginForm({
             className="space-y-4"
             autoComplete="off"
           >
-            <Field>
-              <FieldLabel htmlFor={emailId}>Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  id={emailId}
-                  type="email"
-                  placeholder="m@example.com"
-                  autoComplete="email"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={
-                    errors.email ? `${emailId}-error` : undefined
-                  }
-                  {...register("email")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${emailId}-error`}
-                errors={errors.email ? [errors.email] : undefined}
-              />
-            </Field>
-            <Field>
+            <InputField<LoginFormData>
+              type="email"
+              label="Email"
+              name="email"
+              placeholder="m@example.com"
+              autoComplete="email"
+              control={form.control}
+              disabled={isLoading}
+            />
+            <>
               <div className="flex items-center gap-2">
                 <FieldLabel htmlFor={passwordId}>Password</FieldLabel>
                 <Link
@@ -117,28 +99,15 @@ export function LoginForm({
                   Password dimenticata?
                 </Link>
               </div>
-              <FieldContent>
-                <PasswordInput
-                  id={passwordId}
-                  autoComplete="current-password"
-                  disabled={isLoading}
-                  aria-invalid={!!errors.password}
-                  aria-describedby={
-                    errors.password ? `${passwordId}-error` : undefined
-                  }
-                  {...register("password")}
-                />
-              </FieldContent>
-              <FieldError
-                id={`${passwordId}-error`}
-                errors={errors.password ? [errors.password] : undefined}
+              <PasswordField<LoginFormData>
+                name="password"
+                control={form.control}
+                placeholder="Password"
+                autoComplete="current-password"
+                disabled={isLoading}
               />
-            </Field>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !isValid}
-            >
+            </>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Accesso in corso..." : "Accedi"}
             </Button>
           </form>
