@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ZodSchema } from "zod/v4";
+import { z } from "zod/v4";
 import {
   ApiResponse,
   ValidatedRequestData,
@@ -122,7 +122,7 @@ export function withValidation<T extends ValidationConfig>(
               error: {
                 message: "Invalid request body",
                 code: "VALIDATION_ERROR",
-                details: result.error.errors,
+                details: result.error.issues,
               },
               meta: {
                 timestamp: new Date().toISOString(),
@@ -163,7 +163,7 @@ export function withValidation<T extends ValidationConfig>(
             error: {
               message: "Invalid query parameters",
               code: "VALIDATION_ERROR",
-              details: result.error.errors,
+              details: result.error.issues,
             },
             meta: {
               timestamp: new Date().toISOString(),
@@ -187,7 +187,7 @@ export function withValidation<T extends ValidationConfig>(
             error: {
               message: "Invalid path parameters",
               code: "VALIDATION_ERROR",
-              details: result.error.errors,
+              details: result.error.issues,
             },
             meta: {
               timestamp: new Date().toISOString(),
@@ -212,7 +212,7 @@ export function withValidation<T extends ValidationConfig>(
             error: {
               message: "Invalid headers",
               code: "VALIDATION_ERROR",
-              details: result.error.errors,
+              details: result.error.issues,
             },
             meta: {
               timestamp: new Date().toISOString(),
@@ -326,7 +326,7 @@ export function createApiError(
 
 // Additional helper for simple JSON validation
 export function validateJson<T>(
-  schema: ZodSchema<T>,
+  schema: z.ZodType<T>,
   data: unknown
 ): { success: true; data: T } | { success: false; error: unknown } {
   try {
@@ -341,7 +341,7 @@ export function validateJson<T>(
 
 // Alternative: More specific error typing for better error messages
 export function validateJsonWithErrors<T>(
-  schema: ZodSchema<T>,
+  schema: z.ZodType<T>,
   data: unknown
 ): { success: true; data: T } | { success: false; error: string } {
   try {
@@ -350,7 +350,9 @@ export function validateJsonWithErrors<T>(
       ? { success: true, data: result.data }
       : {
           success: false,
-          error: result.error.errors.map((e) => e.message).join(", "),
+          error: result.error.issues
+            .map((e: z.core.$ZodIssue) => e.message)
+            .join(", "),
         };
   } catch (error) {
     return {
