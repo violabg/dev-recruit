@@ -11,6 +11,9 @@ export const candidateFormSchema = z.object({
   position_id: z.string().min(1, {
     error: "Seleziona una posizione.",
   }),
+  resume_url: z
+    .union([z.url({ message: "Inserisci un URL valido" }), z.literal("")])
+    .optional(),
 });
 
 export const candidateUpdateSchema = z
@@ -30,7 +33,7 @@ export const candidateUpdateSchema = z
       .optional(),
     resume_url: z
       .union([
-        z.string().url({ message: "Inserisci un URL valido" }),
+        z.url({ message: "Inserisci un URL valido" }),
         z.literal(""),
         z.null(),
       ])

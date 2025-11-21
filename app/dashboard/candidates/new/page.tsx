@@ -1,4 +1,4 @@
-import { CandidateNewForm } from "@/components/candidates/candidate-new-form";
+import { CandidateForm } from "@/components/candidates/candidate-form";
 import prisma from "@/lib/prisma";
 import { Suspense } from "react";
 import { CandidateFormSkeleton } from "./fallbacks";
@@ -43,8 +43,9 @@ async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
       <div className="max-w-xl">
         <div className="p-6 border rounded-md">
           <h2 className="mb-4 font-semibold text-xl">Crea candidato</h2>
-          <CandidateNewForm
-            positions={positions || []}
+          <CandidateForm
+            mode="new"
+            positions={positions}
             defaultPositionId={validPositionId}
           />
         </div>

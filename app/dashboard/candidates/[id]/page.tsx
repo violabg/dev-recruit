@@ -2,7 +2,8 @@ import { CandidateStatusBadge } from "@/components/candidates/candidate-status-b
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import prisma from "@/lib/prisma";
+import { getCandidateWithDetails } from "@/lib/data/candidates";
+import type { Route } from "next";
 import Link from "next/link";
 
 export default async function CandidateDetailPage({
@@ -12,27 +13,7 @@ export default async function CandidateDetailPage({
 }) {
   const { id } = await params;
 
-  const candidate = await prisma.candidate.findFirst({
-    where: { id },
-    include: {
-      position: {
-        select: {
-          id: true,
-          title: true,
-          experienceLevel: true,
-        },
-      },
-      interviews: {
-        select: {
-          id: true,
-          status: true,
-          score: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
+  const candidate = await getCandidateWithDetails(id);
 
   if (!candidate) {
     return (
@@ -60,9 +41,20 @@ export default async function CandidateDetailPage({
             </span>
           </div>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/dashboard/candidates">Torna ai candidati</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost">
+            <Link
+              href={
+                `/dashboard/candidates/${candidate.id}/edit` as Route<`/dashboard/candidates/${string}/edit`>
+              }
+            >
+              Modifica
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard/candidates">Torna ai candidati</Link>
+          </Button>
+        </div>
       </div>
       <Card>
         <CardHeader>
