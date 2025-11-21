@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Card,
   CardContent,
@@ -9,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { QuestionType, QuizForm } from "@/lib/schemas";
 import { useCallback, useState } from "react";
-import { FormProvider, UseFormReturn } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
 import { useAIGeneration } from "../hooks/use-ai-generation";
 import { EditQuizFormData, useEditQuizForm } from "../hooks/use-edit-quiz-form";
 import { useQuestionManagement } from "../hooks/use-question-management";
@@ -31,9 +30,8 @@ type EditQuizFormProps = {
 
 export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
   // Form management
-  const editQuizForm = useEditQuizForm({ quiz, position });
-  const form = editQuizForm.form as unknown as UseFormReturn<EditQuizFormData>;
   const {
+    form,
     fields,
     append,
     prepend,
@@ -44,7 +42,7 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
     handleSaveQuestion,
     hasQuestionChanges,
     sectionSaveStatus,
-  } = editQuizForm;
+  } = useEditQuizForm({ quiz, position });
 
   // Question management
   const {

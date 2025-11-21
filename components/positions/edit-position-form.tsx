@@ -7,7 +7,7 @@ import { PositionFormData, positionFormSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { InputField } from "../rhf-inputs/input-field";
 import { MultiSelectField } from "../rhf-inputs/multi-select-field";
@@ -87,19 +87,7 @@ export function EditPositionForm({ position }: EditPositionFormProps) {
     }
   }
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    register,
-  } = form;
-
-  const titleId = useId();
-  const descriptionId = useId();
-  const experienceLevelId = useId();
-  const skillsId = useId();
-  const softSkillsId = useId();
-  const contractTypeId = useId();
+  const { control, handleSubmit } = form;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
