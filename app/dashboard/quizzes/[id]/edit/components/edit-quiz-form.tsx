@@ -82,7 +82,6 @@ export function EditQuizForm({
 
   const {
     aiLoading,
-    generateNewQuestion,
     setRegeneratingQuestionIndex,
     generatingQuestionType,
     handleGenerateQuestion,
@@ -125,14 +124,6 @@ export function EditQuizForm({
       }
     );
   };
-
-  const handleGenerateNewQuestion = useCallback(
-    (type: QuestionType) => {
-      generateNewQuestion(type);
-      setAiDialogOpen(true);
-    },
-    [generateNewQuestion]
-  );
 
   const handleRegenerate = useCallback(
     (index: number) => {
