@@ -1,5 +1,4 @@
 "use client";
-import { CandidateWithRelations } from "@/app/dashboard/candidates/candidates-actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { deleteCandidate } from "@/lib/actions/candidates";
+import { CandidateWithRelations } from "@/lib/data/candidates";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import {

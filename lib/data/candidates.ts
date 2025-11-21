@@ -2,7 +2,8 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { cacheLife, cacheTag } from "next/cache";
 
-type PrismaCandidateWithRelations = Prisma.CandidateGetPayload<{
+// Prisma type for candidate with position and interviews
+export type CandidateWithRelations = Prisma.CandidateGetPayload<{
   include: {
     position: {
       select: {
@@ -22,33 +23,31 @@ type PrismaCandidateWithRelations = Prisma.CandidateGetPayload<{
   };
 }>;
 
-export type CandidateWithRelations = {
-  id: string;
-  name: string;
-  email: string;
-  status: string;
-  resumeUrl: string | null;
-  positionId: string;
-  createdAt: string;
-  position: {
-    id: string;
-    title: string;
-    experienceLevel: string | null;
-  } | null;
-  interviews: {
-    id: string;
-    status: string;
-    score: number | null;
-    createdAt: string | null;
-  }[];
-};
-
 export type CandidateStatusSummary = {
   status: string;
   count: number;
 };
 
 export type CandidatePositionOption = { id: string; title: string };
+
+// Reusable include pattern for candidate queries
+const CANDIDATE_INCLUDE = {
+  position: {
+    select: {
+      id: true,
+      title: true,
+      experienceLevel: true,
+    },
+  },
+  interviews: {
+    select: {
+      id: true,
+      status: true,
+      score: true,
+      createdAt: true,
+    },
+  },
+} as const;
 
 export type FetchCandidatesParams = {
   search: string;
@@ -63,31 +62,6 @@ const ORDER_BY_MAP: Record<string, Prisma.CandidateOrderByWithRelationInput> = {
   name: { name: "asc" },
   status: { status: "asc" },
 };
-
-const mapCandidate = (
-  candidate: PrismaCandidateWithRelations
-): CandidateWithRelations => ({
-  id: candidate.id,
-  name: candidate.name,
-  email: candidate.email,
-  status: candidate.status,
-  resumeUrl: candidate.resumeUrl,
-  positionId: candidate.positionId,
-  createdAt: candidate.createdAt.toISOString(),
-  position: candidate.position
-    ? {
-        id: candidate.position.id,
-        title: candidate.position.title,
-        experienceLevel: candidate.position.experienceLevel,
-      }
-    : null,
-  interviews: candidate.interviews.map((interview) => ({
-    id: interview.id,
-    status: interview.status,
-    score: interview.score,
-    createdAt: interview.createdAt ? interview.createdAt.toISOString() : null,
-  })),
-});
 
 const buildCandidateWhere = ({
   search,
@@ -164,50 +138,11 @@ export async function fetchFilteredCandidates({
   const candidates = await prisma.candidate.findMany({
     where: buildCandidateWhere({ search, status, positionId }),
     orderBy: ORDER_BY_MAP[sort] ?? ORDER_BY_MAP.newest,
-    include: {
-      position: {
-        select: {
-          id: true,
-          title: true,
-          experienceLevel: true,
-        },
-      },
-      interviews: {
-        select: {
-          id: true,
-          status: true,
-          score: true,
-          createdAt: true,
-        },
-      },
-    },
+    include: CANDIDATE_INCLUDE,
   });
 
-  return candidates.map(mapCandidate);
+  return candidates;
 }
-
-type CandidateWithDetails = Prisma.CandidateGetPayload<{
-  include: {
-    position: {
-      select: {
-        id: true;
-        title: true;
-        experienceLevel: true;
-      };
-    };
-    interviews: {
-      select: {
-        id: true;
-        status: true;
-        score: true;
-        createdAt: true;
-      };
-      orderBy: {
-        createdAt: "desc";
-      };
-    };
-  };
-}>;
 
 export const getCandidatesByPosition = async (positionId: string) => {
   "use cache";
@@ -224,7 +159,7 @@ export const getCandidatesByPosition = async (positionId: string) => {
 
 export const getCandidateWithDetails = async (
   id: string
-): Promise<CandidateWithDetails | null> => {
+): Promise<CandidateWithRelations | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag("candidates");
@@ -232,20 +167,9 @@ export const getCandidateWithDetails = async (
   return prisma.candidate.findFirst({
     where: { id },
     include: {
-      position: {
-        select: {
-          id: true,
-          title: true,
-          experienceLevel: true,
-        },
-      },
+      ...CANDIDATE_INCLUDE,
       interviews: {
-        select: {
-          id: true,
-          status: true,
-          score: true,
-          createdAt: true,
-        },
+        ...CANDIDATE_INCLUDE.interviews,
         orderBy: { createdAt: "desc" },
       },
     },

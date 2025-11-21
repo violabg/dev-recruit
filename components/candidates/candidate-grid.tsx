@@ -1,6 +1,5 @@
 "use client";
 
-import { CandidateWithRelations } from "@/app/dashboard/candidates/candidates-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { deleteCandidate } from "@/lib/actions/candidates";
+import { CandidateWithRelations } from "@/lib/data/candidates";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import {
