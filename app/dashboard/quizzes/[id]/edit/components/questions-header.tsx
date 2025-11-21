@@ -1,5 +1,4 @@
 "use client";
-
 import { QuestionTypeFilter } from "@/app/dashboard/quizzes/[id]/edit/hooks/use-question-management";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +20,7 @@ import {
   getQuestionTypeLabel,
   questionTypes,
 } from "@/lib/utils/quiz-form-utils";
-import { ChevronDown, ChevronUp, Plus, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 type QuestionsHeaderProps = {
   fieldsLength: number;
@@ -100,9 +99,8 @@ export const QuestionsHeader = ({
                 onClick={() => onAddQuestion(type.value as QuestionType)}
                 className="gap-2"
               >
-                <Sparkles className="w-4 h-4 text-primary" />
                 {getQuestionTypeLabel(type.value as QuestionType)}
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 text-primary" />
               </Button>
             ))}
           </div>

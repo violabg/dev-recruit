@@ -1,5 +1,6 @@
 "use client";
 
+import { InputField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +18,6 @@ import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UseFormReturn } from "react-hook-form";
 import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
-import { InputField } from "@/components/rhf-inputs";
 
 type QuizSettingsProps = {
   form: UseFormReturn<EditQuizFormData>;
@@ -48,7 +48,7 @@ export const QuizSettings = ({
             onClick={onGenerateFullQuiz}
             disabled={aiLoading}
           >
-            <Sparkles className="mr-2 w-4 h-4" />
+            <Sparkles className="mr-2 w-4 h-4 text-primary" />
             Genera nuovo quiz con AI
           </Button>
         </div>

@@ -1,5 +1,4 @@
 "use client";
-
 import {
   CodeSnippetForm,
   MultipleChoiceForm,
@@ -20,7 +19,7 @@ import {
   getSaveButtonVariant,
   SaveStatus,
 } from "@/lib/utils/quiz-form-utils";
-import { ChevronDown, ChevronUp, RefreshCw, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Sparkles, Trash2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod/v4";
 import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
@@ -88,7 +87,7 @@ export const QuestionItem = ({
               disabled={aiLoading}
               title="Rigenera domanda con AI"
             >
-              <RefreshCw className="w-4 h-4" />
+              <Sparkles className="w-4 h-4 text-primary" />
             </Button>
             <Button
               type="button"
