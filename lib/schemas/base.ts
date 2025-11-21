@@ -58,7 +58,8 @@ export const baseSchemas = {
     .min(1, "At least 1 question required")
     .max(50, "Maximum 50 questions allowed"),
 
-  timeLimit: z
+  timeLimit: z.coerce
+    .number<number>()
     .int()
     .min(5, "Minimum time limit is 5 minutes")
     .max(120, "Maximum time limit is 120 minutes")

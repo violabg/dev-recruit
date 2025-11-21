@@ -1,17 +1,8 @@
 "use client";
-
+import { InputField, TextareaField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useEffect } from "react";
-import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
 type MultipleChoiceFormProps = {
   index: number;
@@ -24,11 +15,6 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
     control: form.control,
     name: `questions.${index}.options`,
   });
-
-  const questionsErrors = form.formState.errors.questions;
-  const questionErrors = Array.isArray(questionsErrors)
-    ? questionsErrors[index]
-    : undefined;
 
   // Ensure minimum 4 options on mount
   useEffect(() => {
@@ -51,28 +37,15 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
         </div>
         <div className="flex flex-col items-start gap-4">
           {fields.map((field, optIdx) => {
-            const optionError = questionErrors?.options?.[optIdx]?.message;
-            const optionId = `questions-${index}-option-${optIdx}`;
-
             return (
               <div key={field.id} className="flex items-start gap-2 w-full">
-                <Field className="flex-1">
-                  <FieldLabel htmlFor={optionId} className="sr-only">
-                    Opzione {optIdx + 1}
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      placeholder={`Opzione ${optIdx + 1}`}
-                      {...field}
-                      minLength={3}
-                    />
-                  </FieldContent>
-                  <FieldError
-                    errors={
-                      optionError ? [{ message: optionError }] : undefined
-                    }
-                  />
-                </Field>
+                <InputField
+                  control={form.control}
+                  name={`questions.${index}.options.${optIdx}`}
+                  placeholder={`Opzione ${optIdx + 1}`}
+                  minLength={3}
+                />
+
                 <Button
                   type="button"
                   size="icon"
@@ -96,67 +69,24 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
           </Button>
         </div>
       </div>
-      <Field>
-        <FieldLabel htmlFor={`questions-${index}-correct`}>
-          Risposta corretta (indice)
-        </FieldLabel>
-        <FieldContent>
-          <Controller
-            control={form.control}
-            name={`questions.${index}.correctAnswer`}
-            render={({ field: correctField }) => (
-              <Input
-                id={`questions-${index}-correct`}
-                type="number"
-                placeholder="0, 1, 2..."
-                {...correctField}
-                min={0}
-                max={Math.max(0, fields.length - 1)}
-                onChange={(event) =>
-                  correctField.onChange(event.target.valueAsNumber)
-                }
-              />
-            )}
-          />
-        </FieldContent>
-        <FieldDescription className="text-muted-foreground text-sm">
-          Inserisci l&apos;indice dell&apos;opzione corretta (0 = prima opzione,
-          1 = seconda, ecc.)
-          {fields.length > 0 && ` - Range valido: 0-${fields.length - 1}`}
-        </FieldDescription>
-        <FieldError
-          errors={
-            questionErrors?.correctAnswer
-              ? [questionErrors.correctAnswer]
-              : undefined
-          }
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor={`questions-${index}-explanation`}>
-          Spiegazione
-        </FieldLabel>
-        <FieldContent>
-          <Controller
-            control={form.control}
-            name={`questions.${index}.explanation`}
-            render={({ field: explanationField }) => (
-              <Textarea
-                id={`questions-${index}-explanation`}
-                placeholder="Spiega perché questa è la risposta corretta..."
-                {...explanationField}
-              />
-            )}
-          />
-        </FieldContent>
-        <FieldError
-          errors={
-            questionErrors?.explanation
-              ? [questionErrors.explanation]
-              : undefined
-          }
-        />
-      </Field>
+      <InputField
+        control={form.control}
+        name={`questions.${index}.correctAnswer`}
+        label="Risposta corretta (indice)"
+        type="number"
+        placeholder="0, 1, 2..."
+        min={0}
+        max={Math.max(0, fields.length - 1)}
+        description={`Inserisci l'indice dell'opzione corretta (0 = prima opzione, 1 = seconda, ecc.)${
+          fields.length > 0 ? ` - Range valido: 0-${fields.length - 1}` : ""
+        }`}
+      />
+      <TextareaField
+        control={form.control}
+        name={`questions.${index}.explanation`}
+        label="Spiegazione"
+        placeholder="Spiega perché questa è la risposta corretta..."
+      />
     </div>
   );
 };

@@ -9,21 +9,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
   getSaveButtonContent,
   getSaveButtonVariant,
   SaveStatus,
 } from "@/lib/utils/quiz-form-utils";
 import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
+import { InputField } from "@/components/rhf-inputs";
 
 type QuizSettingsProps = {
   form: UseFormReturn<EditQuizFormData>;
@@ -39,8 +33,6 @@ export const QuizSettings = ({
   aiLoading,
 }: QuizSettingsProps) => {
   const router = useRouter();
-  const titleError = form.formState.errors.title;
-  const timeLimitError = form.formState.errors.time_limit;
 
   return (
     <Card>
@@ -62,52 +54,22 @@ export const QuizSettings = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Field>
-          <FieldLabel htmlFor="quiz-title">Titolo del Quiz</FieldLabel>
-          <FieldContent>
-            <Controller
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <Input
-                  id="quiz-title"
-                  placeholder="Inserisci il titolo del quiz"
-                  {...field}
-                  maxLength={200}
-                />
-              )}
-            />
-          </FieldContent>
-          <FieldError errors={titleError ? [titleError] : undefined} />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="quiz-time-limit">
-            Limite di Tempo (minuti)
-          </FieldLabel>
-          <FieldContent>
-            <Controller
-              control={form.control}
-              name="time_limit"
-              render={({ field: timeLimitField }) => (
-                <Input
-                  id="quiz-time-limit"
-                  type="number"
-                  placeholder="Lascia vuoto per nessun limite"
-                  {...timeLimitField}
-                  value={timeLimitField.value || ""}
-                  onChange={(e) =>
-                    timeLimitField.onChange(
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
-                  min={1}
-                  max={180}
-                />
-              )}
-            />
-          </FieldContent>
-          <FieldError errors={timeLimitError ? [timeLimitError] : undefined} />
-        </Field>
+        <InputField
+          control={form.control}
+          name="title"
+          label="Titolo del Quiz"
+          placeholder="Inserisci il titolo del quiz"
+          maxLength={200}
+        />
+        <InputField
+          control={form.control}
+          name="time_limit"
+          label="Limite di Tempo (minuti)"
+          placeholder="Lascia vuoto per nessun limite"
+          type="number"
+          min={1}
+          max={180}
+        />
         <CardFooter className="px-0 pt-2">
           <div className="flex space-x-4">
             <Button

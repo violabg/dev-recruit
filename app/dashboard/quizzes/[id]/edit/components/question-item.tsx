@@ -5,6 +5,7 @@ import {
   MultipleChoiceForm,
   OpenQuestionForm,
 } from "@/components/quiz/question-types";
+import { InputField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,13 +13,6 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import {
   getQuestionTypeLabel,
@@ -27,7 +21,7 @@ import {
   SaveStatus,
 } from "@/lib/utils/quiz-form-utils";
 import { ChevronDown, ChevronUp, RefreshCw, Trash2 } from "lucide-react";
-import { Controller, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import * as z from "zod/v4";
 import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
 
@@ -61,10 +55,6 @@ export const QuestionItem = ({
   onSaveQuestion,
   questionSaveStatus,
 }: QuestionItemProps) => {
-  const questionsErrors = form.formState.errors.questions;
-  const questionErrors = Array.isArray(questionsErrors)
-    ? questionsErrors[actualIndex]
-    : undefined;
   return (
     <Card key={field.id} className="relative">
       <CardHeader className="pb-3">
@@ -121,32 +111,13 @@ export const QuestionItem = ({
       {isExpanded && (
         <CardContent className="pt-0">
           <div className="space-y-4">
-            <Field>
-              <FieldLabel htmlFor={`questions-${actualIndex}-text`}>
-                Testo della domanda
-              </FieldLabel>
-              <FieldContent>
-                <Controller
-                  control={form.control}
-                  name={`questions.${actualIndex}.question`}
-                  render={({ field: questionField }) => (
-                    <Input
-                      id={`questions-${actualIndex}-text`}
-                      placeholder="Inserisci il testo della domanda"
-                      {...questionField}
-                      maxLength={500}
-                    />
-                  )}
-                />
-              </FieldContent>
-              <FieldError
-                errors={
-                  questionErrors?.question
-                    ? [questionErrors.question]
-                    : undefined
-                }
-              />
-            </Field>
+            <InputField
+              control={form.control}
+              name={`questions.${actualIndex}.question`}
+              label="Testo della domanda"
+              placeholder="Inserisci il testo della domanda"
+              maxLength={500}
+            />
 
             {field.type === "multiple_choice" && (
               <MultipleChoiceForm index={actualIndex} />
