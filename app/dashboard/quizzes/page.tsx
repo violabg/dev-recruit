@@ -1,6 +1,7 @@
 import { QuizCard } from "@/components/quiz/quiz-card";
 import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { QuizCardsSkeleton, QuizzesStatisticsSkeleton } from "./fallbacks";
@@ -51,6 +52,12 @@ export default async function QuizzesPage({
       <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-2">
         <h1 className="font-bold text-3xl">Quiz</h1>
         <div className="flex items-center gap-2">
+          <Button variant="default" size="sm" asChild>
+            <Link href="/dashboard/quizzes/new">
+              Nuovo quiz
+              <Plus className="w-4 h-4" />
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard/positions">Posizioni</Link>
           </Button>

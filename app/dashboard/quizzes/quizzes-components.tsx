@@ -1,6 +1,4 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 import { Quiz } from "./quizzes-actions";
 
 /**
@@ -62,22 +60,6 @@ export async function QuizzesStatisticsSection({
               Nessun dato disponibile
             </p>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Azioni rapide</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Button className="justify-start w-full" variant="outline" asChild>
-              <Link href="/dashboard/positions">Crea nuovo quiz</Link>
-            </Button>
-            <Button className="justify-start w-full" variant="outline" asChild>
-              <Link href="/dashboard/candidates">Gestisci candidati</Link>
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>

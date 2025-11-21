@@ -42,6 +42,7 @@ export function InputField<T extends FieldValues>({
               fieldState.error ? `${field.name}-error` : undefined
             }
             {...field}
+            value={field.value ?? ""}
             {...inputProps}
             className={`${maxLength ? "pr-16" : ""} ${
               inputProps.className || ""

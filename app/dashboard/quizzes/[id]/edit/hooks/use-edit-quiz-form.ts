@@ -1,6 +1,6 @@
 "use client";
 
-import { updateQuizAction } from "@/lib/actions/quizzes";
+import { saveQuizAction, updateQuizAction } from "@/lib/actions/quizzes";
 import {
   FlexibleQuestion,
   questionSchemas,
@@ -33,9 +33,19 @@ type UseEditQuizFormProps = {
     experience_level: string;
     skills: string[];
   };
+  mode?: "edit" | "create";
+  onSaveSuccess?: (result?: SaveQuizResult) => void;
 };
 
-export const useEditQuizForm = ({ quiz, position }: UseEditQuizFormProps) => {
+export type SaveQuizResult = Awaited<ReturnType<typeof saveQuizAction>>;
+
+export const useEditQuizForm = ({
+  quiz,
+  position,
+  mode = "edit",
+  onSaveSuccess,
+}: UseEditQuizFormProps) => {
+  const isCreateMode = mode === "create";
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "success" | "error"
   >("idle");
@@ -77,7 +87,7 @@ export const useEditQuizForm = ({ quiz, position }: UseEditQuizFormProps) => {
       case "multiple_choice":
         return {
           ...base,
-          options: [""],
+          options: ["Opzione 1", "Opzione 2", "Opzione 3", "Opzione 4"],
           correctAnswer: 0,
         };
       case "open_question":
@@ -105,27 +115,41 @@ export const useEditQuizForm = ({ quiz, position }: UseEditQuizFormProps) => {
 
   const save = async (data: EditQuizFormData) => {
     const formData = new FormData();
-    formData.append("quiz_id", quiz.id);
+    if (!isCreateMode) {
+      formData.append("quiz_id", quiz.id);
+    }
     formData.append("title", data.title);
     if (data.time_limit !== null) {
       formData.append("time_limit", data.time_limit.toString());
     }
     formData.append("questions", JSON.stringify(data.questions));
+    if (isCreateMode) {
+      const positionId = data.position_id ?? position.id;
+      if (!positionId) {
+        throw new Error("Position ID is required for quiz creation");
+      }
 
-    await updateQuizAction(formData);
+      formData.append("position_id", positionId);
+    }
+
+    const action = isCreateMode ? saveQuizAction : updateQuizAction;
+    return await action(formData);
   };
 
   const handleSave = async (data: EditQuizFormData) => {
     setSaveStatus("saving");
 
     try {
-      await save(data);
+      const result = await save(data);
 
       setSaveStatus("success");
       toast.success("Quiz salvato con successo");
 
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus("idle"), 2000);
+      if (onSaveSuccess && result) {
+        onSaveSuccess(result);
+      }
     } catch (error) {
       setSaveStatus("error");
       console.error("Errore salvataggio:", error);
