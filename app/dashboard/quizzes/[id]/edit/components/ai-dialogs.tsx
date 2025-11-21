@@ -63,6 +63,7 @@ type AIDialogsProps = {
     skills: string[];
     description?: string | null;
   };
+  quizId?: string;
 };
 
 export const AIDialogs = ({
@@ -78,6 +79,7 @@ export const AIDialogs = ({
   aiLoading,
   defaultDifficulty = 3,
   position,
+  quizId,
 }: AIDialogsProps) => {
   return (
     <>
@@ -110,6 +112,7 @@ export const AIDialogs = ({
         title="Genera Nuovo Quiz con AI"
         description="Sostituisci completamente tutte le domande del quiz con nuove generate dall'AI"
         position={position}
+        quizId={quizId}
       />
     </>
   );

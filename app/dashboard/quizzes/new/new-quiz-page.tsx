@@ -84,41 +84,25 @@ export const NewQuizCreationPage = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3">
-        <div>
-          <h1 className="font-bold text-3xl">Crea un nuovo quiz</h1>
-          <p className="text-muted-foreground text-sm">
-            Seleziona una posizione e costruisci il quiz o lascia che l'AI
-            completi la generazione per te.
-          </p>
-        </div>
-        {!fixedPosition && (
-          <div className="flex flex-col sm:items-end gap-2">
-            <Select
-              value={selectedPositionId}
-              onValueChange={setSelectedPositionId}
-              disabled={availablePositions.length === 0}
-            >
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Seleziona posizione" />
-              </SelectTrigger>
-              <SelectContent>
-                {availablePositions.map((position) => (
-                  <SelectItem key={position.id} value={position.id}>
-                    {position.title} ({position.experience_level})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {shouldShowSelectPrompt && (
-              <p className="text-destructive text-xs">
-                Seleziona una posizione prima di creare il quiz.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+    <>
+      {!fixedPosition && (
+        <Select
+          value={selectedPositionId}
+          onValueChange={setSelectedPositionId}
+          disabled={availablePositions.length === 0}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Seleziona posizione" />
+          </SelectTrigger>
+          <SelectContent>
+            {availablePositions.map((position) => (
+              <SelectItem key={position.id} value={position.id}>
+                {position.title} ({position.experience_level})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {noPositionsAvailable ? (
         <div className="p-6 border border-muted/50 border-dashed rounded-xl text-center">
@@ -143,6 +127,6 @@ export const NewQuizCreationPage = ({
           onSaveSuccess={handleSaveSuccess}
         />
       )}
-    </div>
+    </>
   );
 };

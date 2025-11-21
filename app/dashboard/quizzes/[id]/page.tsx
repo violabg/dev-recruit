@@ -112,7 +112,7 @@ async function QuizDetailContent({
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/dashboard/positions/${position.id}`}>
             <ArrowLeft className="mr-1 w-4 h-4" />
-            Torna alla posizione
+            Vai alla posizione
           </Link>
         </Button>
       </div>

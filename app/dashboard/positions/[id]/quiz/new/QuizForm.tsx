@@ -21,7 +21,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { LLMModelSelect } from "@/components/ui/llm-model-select";
-import { generateNewQuizAction, saveQuizAction } from "@/lib/actions/quizzes";
+import {
+  generateNewQuizAction,
+  regenerateQuizAction,
+  upsertQuizAction,
+} from "@/lib/actions/quizzes";
 import { quizGenerationConfigSchema } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { toast } from "sonner";
@@ -36,15 +40,21 @@ export type Position = {
   softSkills?: string[];
 };
 
-export type SaveQuizResult = Awaited<ReturnType<typeof saveQuizAction>>;
+export type SaveQuizResult = Awaited<ReturnType<typeof upsertQuizAction>>;
 
 type QuizFormProps = {
   position: Position;
   onCancel?: () => void;
   onSuccess?: (result: SaveQuizResult) => void;
+  quizId?: string;
 };
 
-export const QuizForm = ({ position, onCancel, onSuccess }: QuizFormProps) => {
+export const QuizForm = ({
+  position,
+  onCancel,
+  onSuccess,
+  quizId,
+}: QuizFormProps) => {
   const router = useRouter();
   const [generating, setGenerating] = useState(false);
 
@@ -78,42 +88,64 @@ export const QuizForm = ({ position, onCancel, onSuccess }: QuizFormProps) => {
   async function onSubmit(values: FormData) {
     setGenerating(true);
     try {
-      const quizData = await generateNewQuizAction({
-        positionId: position.id,
-        quizTitle: values.quizTitle,
-        questionCount: values.questionCount,
-        difficulty: values.difficulty,
-        includeMultipleChoice: values.includeMultipleChoice,
-        includeOpenQuestions: values.includeOpenQuestions,
-        includeCodeSnippets: values.includeCodeSnippets,
-        instructions: values.instructions || undefined,
-        specificModel: values.specificModel,
-      });
+      // If editing existing quiz, use regenerateQuizAction
+      if (quizId) {
+        const result = await regenerateQuizAction({
+          quizId,
+          positionId: position.id,
+          quizTitle: values.quizTitle,
+          questionCount: values.questionCount,
+          difficulty: values.difficulty,
+          includeMultipleChoice: values.includeMultipleChoice,
+          includeOpenQuestions: values.includeOpenQuestions,
+          includeCodeSnippets: values.includeCodeSnippets,
+          instructions: values.instructions || undefined,
+          specificModel: values.specificModel,
+        });
 
-      if (!quizData || !quizData.questions) {
-        throw new Error("No quiz generated");
-      }
-
-      const formData = new FormData();
-      formData.append("title", values.quizTitle);
-      formData.append("position_id", position.id);
-      formData.append("questions", JSON.stringify(quizData.questions));
-      formData.append(
-        "time_limit",
-        values.enableTimeLimit ? values.timeLimit.toString() : ""
-      );
-
-      const saveResult = await saveQuizAction(formData);
-
-      if (!saveResult || !saveResult.id) {
-        throw new Error("Failed to save quiz");
-      }
-
-      toast.success("Quiz generato con successo!");
-      if (onSuccess) {
-        onSuccess(saveResult);
+        toast.success("Quiz rigenerato con successo!");
+        if (onSuccess) {
+          onSuccess(result);
+        }
       } else {
-        router.push(`/dashboard/quizzes/${saveResult.id}`);
+        // Creating new quiz
+        const quizData = await generateNewQuizAction({
+          positionId: position.id,
+          quizTitle: values.quizTitle,
+          questionCount: values.questionCount,
+          difficulty: values.difficulty,
+          includeMultipleChoice: values.includeMultipleChoice,
+          includeOpenQuestions: values.includeOpenQuestions,
+          includeCodeSnippets: values.includeCodeSnippets,
+          instructions: values.instructions || undefined,
+          specificModel: values.specificModel,
+        });
+
+        if (!quizData || !quizData.questions) {
+          throw new Error("No quiz generated");
+        }
+
+        const formData = new FormData();
+        formData.append("title", values.quizTitle);
+        formData.append("position_id", position.id);
+        formData.append("questions", JSON.stringify(quizData.questions));
+        formData.append(
+          "time_limit",
+          values.enableTimeLimit ? values.timeLimit.toString() : ""
+        );
+
+        const saveResult = await upsertQuizAction(formData);
+
+        if (!saveResult || !saveResult.id) {
+          throw new Error("Failed to save quiz");
+        }
+
+        toast.success("Quiz generato con successo!");
+        if (onSuccess) {
+          onSuccess(saveResult);
+        } else {
+          router.push(`/dashboard/quizzes/${saveResult.id}`);
+        }
       }
     } catch (error: unknown) {
       console.error("Error generating quiz:", error);

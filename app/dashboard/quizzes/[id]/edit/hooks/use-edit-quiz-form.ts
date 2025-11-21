@@ -1,6 +1,6 @@
 "use client";
 
-import { saveQuizAction, updateQuizAction } from "@/lib/actions/quizzes";
+import { upsertQuizAction } from "@/lib/actions/quizzes";
 import {
   FlexibleQuestion,
   questionSchemas,
@@ -37,7 +37,7 @@ type UseEditQuizFormProps = {
   onSaveSuccess?: (result?: SaveQuizResult) => void;
 };
 
-export type SaveQuizResult = Awaited<ReturnType<typeof saveQuizAction>>;
+export type SaveQuizResult = Awaited<ReturnType<typeof upsertQuizAction>>;
 
 export const useEditQuizForm = ({
   quiz,
@@ -115,25 +115,23 @@ export const useEditQuizForm = ({
 
   const save = async (data: EditQuizFormData) => {
     const formData = new FormData();
-    if (!isCreateMode) {
-      formData.append("quiz_id", quiz.id);
-    }
     formData.append("title", data.title);
     if (data.time_limit !== null) {
       formData.append("time_limit", data.time_limit.toString());
     }
     formData.append("questions", JSON.stringify(data.questions));
+
     if (isCreateMode) {
       const positionId = data.position_id ?? position.id;
       if (!positionId) {
         throw new Error("Position ID is required for quiz creation");
       }
-
       formData.append("position_id", positionId);
+    } else {
+      formData.append("quiz_id", quiz.id);
     }
 
-    const action = isCreateMode ? saveQuizAction : updateQuizAction;
-    return await action(formData);
+    return await upsertQuizAction(formData);
   };
 
   const handleSave = async (data: EditQuizFormData) => {

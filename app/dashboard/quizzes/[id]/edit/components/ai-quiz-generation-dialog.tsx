@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Position,
   QuizForm,
@@ -31,6 +30,7 @@ type AIGenerationDialogProps = {
   title: string;
   description: string;
   position: DialogPosition;
+  quizId?: string;
 };
 
 export const AIQuizGenerationDialog = ({
@@ -39,6 +39,7 @@ export const AIQuizGenerationDialog = ({
   title,
   description,
   position,
+  quizId,
 }: AIGenerationDialogProps) => {
   const router = useRouter();
 
@@ -75,6 +76,7 @@ export const AIQuizGenerationDialog = ({
                 position={quizFormPosition}
                 onCancel={() => onOpenChange(false)}
                 onSuccess={handleSuccess}
+                quizId={quizId}
               />
             </div>
             <Card>

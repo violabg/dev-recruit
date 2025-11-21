@@ -13,9 +13,11 @@ export default async function GenerateQuizPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <Suspense fallback={<QuizGeneratorSkeleton />}>
-      <QuizGeneratorContent params={incomingParams} />
-    </Suspense>
+    <div className="space-y-6">
+      <Suspense fallback={<QuizGeneratorSkeleton />}>
+        <QuizGeneratorContent params={incomingParams} />
+      </Suspense>
+    </div>
   );
 }
 

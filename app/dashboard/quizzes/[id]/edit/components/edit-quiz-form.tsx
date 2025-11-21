@@ -215,6 +215,7 @@ export function EditQuizForm({
         setFullQuizDialogOpen={setFullQuizDialogOpen}
         aiLoading={aiLoading}
         position={position}
+        quizId={mode === "edit" ? quiz.id : undefined}
       />
     </div>
   );
