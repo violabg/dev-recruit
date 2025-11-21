@@ -580,13 +580,3 @@ export async function regenerateQuizAction({
     }
   }
 }
-
-// DEPRECATED: Use upsertQuizAction instead
-export async function saveQuizAction(formData: FormData) {
-  return upsertQuizAction(formData);
-}
-
-// DEPRECATED: Use upsertQuizAction instead
-export async function updateQuizAction(formData: FormData) {
-  return upsertQuizAction(formData);
-}
