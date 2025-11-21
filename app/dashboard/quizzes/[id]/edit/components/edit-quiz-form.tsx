@@ -169,19 +169,18 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
             position={position}
           />
 
-          {/* Questions Management */}
-          <QuestionsHeader
-            fieldsLength={fields.length}
-            questionTypeFilter={questionTypeFilter}
-            setQuestionTypeFilter={setQuestionTypeFilter}
-            expandAllQuestions={expandAllQuestions}
-            collapseAllQuestions={collapseAllQuestions}
-            onGenerateQuestion={handleGenerateNewQuestion}
-          />
-
-          {/* Questions List */}
           <Card>
             <CardContent className="space-y-4">
+              {/* Questions Management */}
+              <QuestionsHeader
+                fieldsLength={fields.length}
+                questionTypeFilter={questionTypeFilter}
+                setQuestionTypeFilter={setQuestionTypeFilter}
+                expandAllQuestions={expandAllQuestions}
+                collapseAllQuestions={collapseAllQuestions}
+                onGenerateQuestion={handleGenerateNewQuestion}
+              />
+              {/* Questions List */}
               <QuestionsList
                 filteredQuestions={filteredQuestions}
                 fields={fields}
