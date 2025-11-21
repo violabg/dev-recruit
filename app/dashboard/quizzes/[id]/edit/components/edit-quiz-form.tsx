@@ -42,6 +42,7 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
     handleSaveQuestion,
     hasQuestionChanges,
     sectionSaveStatus,
+    addBlankQuestion,
   } = useEditQuizForm({ quiz, position });
 
   // Question management
@@ -178,7 +179,7 @@ export function EditQuizForm({ quiz, position }: EditQuizFormProps) {
                 setQuestionTypeFilter={setQuestionTypeFilter}
                 expandAllQuestions={expandAllQuestions}
                 collapseAllQuestions={collapseAllQuestions}
-                onGenerateQuestion={handleGenerateNewQuestion}
+                onAddQuestion={addBlankQuestion}
               />
               {/* Questions List */}
               <QuestionsList

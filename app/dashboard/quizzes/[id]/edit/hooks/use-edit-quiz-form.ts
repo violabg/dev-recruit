@@ -2,7 +2,9 @@
 
 import { updateQuizAction } from "@/lib/actions/quizzes";
 import {
+  FlexibleQuestion,
   questionSchemas,
+  QuestionType,
   QuizForm,
   saveQuizRequestSchema,
 } from "@/lib/schemas";
@@ -61,6 +63,45 @@ export const useEditQuizForm = ({ quiz, position }: UseEditQuizFormProps) => {
     control: form.control,
     name: "questions",
   });
+
+  const createEmptyQuestion = (type: QuestionType): FlexibleQuestion => {
+    const base = {
+      id: generateId(),
+      type,
+      question: "",
+      keywords: [],
+      explanation: "",
+    };
+
+    switch (type) {
+      case "multiple_choice":
+        return {
+          ...base,
+          options: [""],
+          correctAnswer: 0,
+        };
+      case "open_question":
+        return {
+          ...base,
+          sampleAnswer: "Sample answer to be provided",
+          sampleSolution: "",
+          codeSnippet: "",
+        };
+      case "code_snippet":
+        return {
+          ...base,
+          codeSnippet: "// TODO: add code",
+          sampleSolution: "// TODO: add solution",
+          language: "javascript",
+        };
+      default:
+        return base;
+    }
+  };
+
+  const addBlankQuestion = (type: QuestionType) => {
+    prepend(createEmptyQuestion(type));
+  };
 
   const save = async (data: EditQuizFormData) => {
     const formData = new FormData();
@@ -212,6 +253,7 @@ export const useEditQuizForm = ({ quiz, position }: UseEditQuizFormProps) => {
     handleSave,
     saveStatus,
     generateId,
+    addBlankQuestion,
     handleSaveQuestion,
     hasSettingsChanges,
     hasQuestionChanges,

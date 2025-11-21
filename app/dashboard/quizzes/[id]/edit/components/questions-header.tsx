@@ -29,7 +29,7 @@ type QuestionsHeaderProps = {
   setQuestionTypeFilter: (filter: QuestionTypeFilter) => void;
   expandAllQuestions: () => void;
   collapseAllQuestions: () => void;
-  onGenerateQuestion: (type: QuestionType) => void;
+  onAddQuestion: (type: QuestionType) => void;
 };
 
 export const QuestionsHeader = ({
@@ -38,7 +38,7 @@ export const QuestionsHeader = ({
   setQuestionTypeFilter,
   expandAllQuestions,
   collapseAllQuestions,
-  onGenerateQuestion,
+  onAddQuestion,
 }: QuestionsHeaderProps) => {
   return (
     <Card>
@@ -97,7 +97,7 @@ export const QuestionsHeader = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => onGenerateQuestion(type.value as QuestionType)}
+                onClick={() => onAddQuestion(type.value as QuestionType)}
                 className="gap-2"
               >
                 <Sparkles className="w-4 h-4 text-primary" />
