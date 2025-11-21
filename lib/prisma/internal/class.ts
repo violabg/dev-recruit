@@ -23,7 +23,7 @@ const config: runtime.GetPrismaClientConfig = {
       "value": "prisma-client"
     },
     "output": {
-      "value": "/Users/paolo.bernardini/Sites/dev-recruit/lib/prisma",
+      "value": "/Users/paolo/Sites/ai/dev-recruit/lib/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -37,7 +37,7 @@ const config: runtime.GetPrismaClientConfig = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/paolo.bernardini/Sites/dev-recruit/prisma/schema.prisma",
+    "sourceFilePath": "/Users/paolo/Sites/ai/dev-recruit/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativePath": "../../prisma",
