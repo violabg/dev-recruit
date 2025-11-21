@@ -13,7 +13,7 @@ import {
 import { QuizForm } from "@/lib/schemas";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type PositionOption = {
   id: string;
@@ -23,18 +23,33 @@ export type PositionOption = {
 };
 
 type NewQuizPageProps = {
-  positions: PositionOption[];
+  positions?: PositionOption[];
+  fixedPosition?: PositionOption;
 };
 
-export const NewQuizCreationPage = ({ positions }: NewQuizPageProps) => {
-  const [selectedPositionId, setSelectedPositionId] = useState("");
+export const NewQuizCreationPage = ({
+  positions = [],
+  fixedPosition,
+}: NewQuizPageProps) => {
+  const [selectedPositionId, setSelectedPositionId] = useState(
+    fixedPosition?.id ?? ""
+  );
   const router = useRouter();
 
-  const selectedPosition = useMemo(
-    () =>
-      positions.find((position) => position.id === selectedPositionId) || null,
-    [positions, selectedPositionId]
-  );
+  useEffect(() => {
+    if (fixedPosition) {
+      setSelectedPositionId(fixedPosition.id);
+    }
+  }, [fixedPosition]);
+
+  const selectedPosition = useMemo(() => {
+    if (fixedPosition) {
+      return fixedPosition;
+    }
+    return (
+      positions.find((position) => position.id === selectedPositionId) || null
+    );
+  }, [fixedPosition, positions, selectedPositionId]);
 
   const blankQuiz = useMemo<QuizForm | null>(() => {
     if (!selectedPosition) {
@@ -56,7 +71,11 @@ export const NewQuizCreationPage = ({ positions }: NewQuizPageProps) => {
     } as QuizForm;
   }, [selectedPosition]);
 
-  const shouldShowSelectPrompt = positions.length > 0 && !selectedPositionId;
+  const availablePositions = fixedPosition ? [fixedPosition] : positions;
+  const shouldShowSelectPrompt =
+    !fixedPosition && availablePositions.length > 0 && !selectedPositionId;
+  const noPositionsAvailable =
+    !fixedPosition && availablePositions.length === 0;
 
   const handleSaveSuccess = (result?: SaveQuizResult) => {
     if (result?.id) {
@@ -65,31 +84,43 @@ export const NewQuizCreationPage = ({ positions }: NewQuizPageProps) => {
   };
 
   return (
-    <>
-      <div className="flex flex-col items-start gap-2">
-        <Select
-          value={selectedPositionId}
-          onValueChange={setSelectedPositionId}
-          disabled={!positions.length}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Seleziona posizione" />
-          </SelectTrigger>
-          <SelectContent>
-            {positions.map((position) => (
-              <SelectItem key={position.id} value={position.id}>
-                {position.title} ({position.experience_level})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {shouldShowSelectPrompt && (
-          <p className="text-destructive text-xs">
-            Seleziona una posizione prima di creare il quiz.
+    <div className="space-y-6">
+      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3">
+        <div>
+          <h1 className="font-bold text-3xl">Crea un nuovo quiz</h1>
+          <p className="text-muted-foreground text-sm">
+            Seleziona una posizione e costruisci il quiz o lascia che l'AI
+            completi la generazione per te.
           </p>
+        </div>
+        {!fixedPosition && (
+          <div className="flex flex-col sm:items-end gap-2">
+            <Select
+              value={selectedPositionId}
+              onValueChange={setSelectedPositionId}
+              disabled={availablePositions.length === 0}
+            >
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Seleziona posizione" />
+              </SelectTrigger>
+              <SelectContent>
+                {availablePositions.map((position) => (
+                  <SelectItem key={position.id} value={position.id}>
+                    {position.title} ({position.experience_level})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {shouldShowSelectPrompt && (
+              <p className="text-destructive text-xs">
+                Seleziona una posizione prima di creare il quiz.
+              </p>
+            )}
+          </div>
         )}
       </div>
-      {positions.length === 0 ? (
+
+      {noPositionsAvailable ? (
         <div className="p-6 border border-muted/50 border-dashed rounded-xl text-center">
           <p className="text-muted-foreground">
             Non ci sono ancora posizioni disponibili. Crea una posizione prima
@@ -112,6 +143,6 @@ export const NewQuizCreationPage = ({ positions }: NewQuizPageProps) => {
           onSaveSuccess={handleSaveSuccess}
         />
       )}
-    </>
+    </div>
   );
 };

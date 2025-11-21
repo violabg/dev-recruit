@@ -7,10 +7,7 @@
 
 "use client";
 
-import {
-  generateNewQuestionAction,
-  generateNewQuizAction,
-} from "@/lib/actions/quizzes";
+import { generateNewQuestionAction } from "@/lib/actions/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { GenerateQuestionParams } from "@/lib/services/ai-service";
 import {
@@ -340,66 +337,6 @@ export const useAIGeneration = ({
   };
 
   /**
-   * Generate full quiz replacement (backward compatibility)
-   */
-  const handleGenerateFullQuiz = async (data: {
-    instructions?: string;
-    llmModel: string;
-    difficulty?: number;
-  }) => {
-    setAiLoading(true);
-
-    try {
-      const newQuiz = await generateNewQuizAction({
-        positionId: position.id,
-        quizTitle: form.getValues("title"),
-        questionCount: fields.length || 5,
-        difficulty: data.difficulty || 3,
-        includeMultipleChoice: true,
-        includeOpenQuestions: true,
-        includeCodeSnippets: true,
-        specificModel: data.llmModel,
-        instructions: data.instructions || undefined,
-      });
-
-      if (!newQuiz || !newQuiz.questions) {
-        throw new Error("No quiz generated");
-      }
-
-      // Replace all questions with new ones
-      const newQuestions = newQuiz.questions.map((q: FlexibleQuestion) => ({
-        ...q,
-        id: generateId(),
-      }));
-
-      // Clear current questions and add new ones
-      fields.forEach(() => remove(0));
-      newQuestions.forEach((question: FlexibleQuestion) => append(question));
-
-      // Set all new questions as expanded
-      const newQuestionIds = new Set<string>(
-        newQuestions.map((q: FlexibleQuestion) => q.id as string)
-      );
-      setExpandedQuestions(newQuestionIds);
-
-      toast.success("Full quiz regenerated successfully!");
-    } catch (error) {
-      console.error("Full quiz regeneration error:", error);
-
-      let errorMessage = "Error during full quiz regeneration";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      toast.error("Regeneration Error", {
-        description: errorMessage,
-      });
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  /**
    * Infer programming language from position skills
    */
   const inferLanguageFromSkills = (): string => {
@@ -464,7 +401,6 @@ export const useAIGeneration = ({
     generateFrontendQuestion,
     generateBackendQuestion,
     generateQuestionWithParams,
-    handleGenerateFullQuiz,
   };
 };
 

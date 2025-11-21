@@ -86,7 +86,6 @@ export function EditQuizForm({
     generatingQuestionType,
     handleGenerateQuestion,
     handleRegenerateQuestion,
-    handleGenerateFullQuiz,
   } = AIGeneration;
 
   // AI Generation states
@@ -214,9 +213,8 @@ export function EditQuizForm({
         onRegenerateQuestion={handleRegenerateQuestion}
         fullQuizDialogOpen={fullQuizDialogOpen}
         setFullQuizDialogOpen={setFullQuizDialogOpen}
-        onGenerateFullQuiz={handleGenerateFullQuiz}
         aiLoading={aiLoading}
-        defaultDifficulty={quiz.difficulty || 3}
+        position={position}
       />
     </div>
   );

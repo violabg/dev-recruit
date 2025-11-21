@@ -50,17 +50,19 @@ type AIDialogsProps = {
     }
   ) => Promise<void>;
 
-  // Full Quiz Regeneration Dialog (legacy)
   fullQuizDialogOpen: boolean;
   setFullQuizDialogOpen: (open: boolean) => void;
-  onGenerateFullQuiz: (data: {
-    instructions?: string;
-    llmModel: string;
-    difficulty?: number;
-  }) => Promise<void>;
 
   aiLoading: boolean;
   defaultDifficulty?: number;
+  position: {
+    id: string;
+    title: string;
+    experience_level?: string;
+    experienceLevel?: string;
+    skills: string[];
+    description?: string | null;
+  };
 };
 
 export const AIDialogs = ({
@@ -73,9 +75,9 @@ export const AIDialogs = ({
   onRegenerateQuestion,
   fullQuizDialogOpen,
   setFullQuizDialogOpen,
-  onGenerateFullQuiz,
   aiLoading,
   defaultDifficulty = 3,
+  position,
 }: AIDialogsProps) => {
   return (
     <>
@@ -102,16 +104,12 @@ export const AIDialogs = ({
         defaultDifficulty={defaultDifficulty}
       />
 
-      {/* Full Quiz Regeneration Dialog - Keep legacy for now */}
       <AIQuizGenerationDialog
         open={fullQuizDialogOpen}
         onOpenChange={setFullQuizDialogOpen}
         title="Genera Nuovo Quiz con AI"
         description="Sostituisci completamente tutte le domande del quiz con nuove generate dall'AI"
-        onGenerate={onGenerateFullQuiz}
-        loading={aiLoading}
-        showDifficulty={true}
-        defaultDifficulty={defaultDifficulty}
+        position={position}
       />
     </>
   );

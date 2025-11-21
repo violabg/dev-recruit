@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import {
+  InputField,
+  SliderField,
+  SwitchField,
+  TextareaField,
+} from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -20,27 +26,25 @@ import { quizGenerationConfigSchema } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { toast } from "sonner";
 import { z } from "zod/v4";
-import {
-  InputField,
-  TextareaField,
-  SliderField,
-  SwitchField,
-} from "@/components/rhf-inputs";
 
-type Position = {
+export type Position = {
   id: string;
   title: string;
   description: string | null;
   experienceLevel: string;
   skills: string[];
-  softSkills: string[];
+  softSkills?: string[];
 };
+
+export type SaveQuizResult = Awaited<ReturnType<typeof saveQuizAction>>;
 
 type QuizFormProps = {
   position: Position;
+  onCancel?: () => void;
+  onSuccess?: (result: SaveQuizResult) => void;
 };
 
-export const QuizForm = ({ position }: QuizFormProps) => {
+export const QuizForm = ({ position, onCancel, onSuccess }: QuizFormProps) => {
   const router = useRouter();
   const [generating, setGenerating] = useState(false);
 
@@ -106,7 +110,11 @@ export const QuizForm = ({ position }: QuizFormProps) => {
       }
 
       toast.success("Quiz generato con successo!");
-      router.push(`/dashboard/quizzes/${saveResult.id}`);
+      if (onSuccess) {
+        onSuccess(saveResult);
+      } else {
+        router.push(`/dashboard/quizzes/${saveResult.id}`);
+      }
     } catch (error: unknown) {
       console.error("Error generating quiz:", error);
       toast.error("Errore", {
@@ -153,13 +161,9 @@ export const QuizForm = ({ position }: QuizFormProps) => {
           control={control}
           name="difficulty"
           label={`Difficoltà: ${
-            [
-              "Molto facile",
-              "Facile",
-              "Media",
-              "Difficile",
-              "Molto difficile",
-            ][watch("difficulty") - 1]
+            ["Molto facile", "Facile", "Media", "Difficile", "Molto difficile"][
+              watch("difficulty") - 1
+            ]
           }`}
           min={1}
           max={5}
@@ -225,9 +229,7 @@ export const QuizForm = ({ position }: QuizFormProps) => {
                   value={field.value || LLM_MODELS.KIMI}
                   onValueChange={field.onChange}
                 />
-                {fieldState.error && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                {fieldState.error && <FieldError errors={[fieldState.error]} />}
               </>
             )}
           />
@@ -239,7 +241,17 @@ export const QuizForm = ({ position }: QuizFormProps) => {
       </Field>
 
       <div className="flex gap-4">
-        <Button type="button" variant="outline" onClick={() => router.back()}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            if (onCancel) {
+              onCancel();
+            } else {
+              router.back();
+            }
+          }}
+        >
           Annulla
         </Button>
         <Button type="submit" disabled={generating}>
