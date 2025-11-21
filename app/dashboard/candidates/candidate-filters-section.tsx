@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { fetchCandidatePositions } from "./candidates-actions";
+import { fetchCandidatePositions } from "@/lib/data/candidates";
 
 export const CandidateFiltersSection = async () => {
   const positions = await fetchCandidatePositions();

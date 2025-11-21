@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CandidateStatusSummary,
   fetchCandidateStats,
-} from "./candidates-actions";
+} from "@/lib/data/candidates";
 
 const capitalize = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1);

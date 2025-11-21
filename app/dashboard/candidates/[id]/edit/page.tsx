@@ -2,11 +2,13 @@ import {
   CandidateForm,
   EditableCandidate,
 } from "@/components/candidates/candidate-form";
-import { getCandidateWithDetails } from "@/lib/data/candidates";
+import {
+  fetchCandidatePositions,
+  getCandidateWithDetails,
+} from "@/lib/data/candidates";
 import type { Route } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { fetchCandidatePositions } from "../../candidates-actions";
 import { CandidateFormSkeleton } from "../../new/fallbacks";
 
 type CandidateEditPageProps = {
