@@ -46,14 +46,11 @@ export function NavMain({
                   asChild
                   size="default"
                   className={cn(
-                    "group relative overflow-hidden transition-all duration-300 ease-vision",
-                    "hover:bg-sidebar-accent/60 hover: hover:shadow-vision-sm",
-                    "rounded-xl border border-transparent hover:border-sidebar-border/30",
-                    isActive && [
-                      "bg-linear-to-r from-primary/50 to-gradient-secondary/30",
-                      "border-primary/30 shadow-vision text-primary-foreground",
-                      "",
-                    ]
+                    "group relative rounded-md overflow-hidden transition-all duration-200",
+                    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
+                      : "text-muted-foreground"
                   )}
                 >
                   <span
@@ -69,27 +66,22 @@ export function NavMain({
                         handleNavigation(route.href);
                       }
                     }}
-                    className="relative flex items-center px-4 py-3 w-full cursor-pointer"
+                    className="relative flex items-center px-2 py-2 w-full cursor-pointer"
                   >
-                    <div className="relative">
-                      <route.icon
-                        className={cn(
-                          "w-5 h-5 group-hover:scale-110 transition-all duration-300",
-                          isActive
-                            ? "text-foreground"
-                            : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                        )}
-                      />
-                      {isActive && (
-                        <div className="absolute inset-0 bg-primary/20 blur-sm rounded-full" />
+                    <route.icon
+                      className={cn(
+                        "mr-2 w-4 h-4 transition-colors",
+                        isActive
+                          ? "text-primary"
+                          : "text-muted-foreground group-hover:text-foreground"
                       )}
-                    </div>
+                    />
                     <span
                       className={cn(
-                        "flex-1 ml-3 font-medium text-vision-sm tracking-tight transition-colors duration-300",
+                        "flex-1 text-sm transition-colors",
                         isActive
                           ? "text-foreground"
-                          : "text-sidebar-foreground/80 group-hover:text-sidebar-foreground"
+                          : "text-muted-foreground group-hover:text-foreground"
                       )}
                     >
                       {route.label}
@@ -98,11 +90,6 @@ export function NavMain({
                     {isLoading && (
                       <Loader2 className="ml-2 w-4 h-4 text-primary animate-spin" />
                     )}
-
-                    {/* Glass shimmer effect on hover */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent skew-x-12 transition-transform -translate-x-full group-hover:translate-x-full duration-1000 ease-out" />
-                    </div>
                   </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>

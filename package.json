@@ -7,8 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "prebuild": "npm run db:generate"
@@ -66,10 +64,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@next/eslint-plugin-next": "16.0.3",
-    "@storybook/addon-docs": "^10.0.7",
-    "@storybook/addon-onboarding": "^10.0.7",
-    "@storybook/addon-themes": "^10.0.7",
-    "@storybook/nextjs": "^10.0.7",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^22.19.1",
     "@types/react": "19.2.6",
@@ -78,11 +72,9 @@
     "eslint": "^9.39.1",
     "eslint-config-next": "16.0.3",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-storybook": "^10.0.7",
     "postcss": "^8.5.6",
     "prisma": "^6.19.0",
     "shadcn": "^3.5.0",
-    "storybook": "^10.0.7",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"
   },

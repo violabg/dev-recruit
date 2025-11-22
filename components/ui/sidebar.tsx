@@ -244,7 +244,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="flex flex-col bg-glass-bg rounded-xl w-full h-full"
+          className="flex flex-col bg-sidebar w-full h-full"
         >
           {children}
         </div>

@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
-import Breadcrumbs from "@/components/dashboard/Breadcumbs";
+import Breadcrumbs from "@/components/dashboard/Breadcrumbs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -19,13 +19,10 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="overflow-hidden">
-        <header className="top-0 z-30 sticky flex items-center gap-2 bg-glass-bg/60 supports-backdrop-filter:bg-glass-bg/40 border-glass-border border-b rounded-t-xl h-16 shrink-0">
-          <div className="flex items-center gap-2 px-4 w-full">
+        <header className="top-0 z-30 sticky flex items-center gap-2 bg-background/95 supports-backdrop-filter:bg-background/60 backdrop-blur px-4 border-b h-16 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 transition-[width,height] ease-linear shrink-0">
+          <div className="flex items-center gap-2 w-full">
             <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+            <Separator orientation="vertical" className="mr-2 h-4" />
             <Suspense>
               <Breadcrumbs />
             </Suspense>

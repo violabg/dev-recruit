@@ -7,13 +7,13 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const toggleVariants = cva(
-  "inline-flex justify-center items-center gap-2 hover:bg-glass-bg data-[state=on]:bg-gradient-to-br data-[state=on]:from-primary/20 data-[state=on]:to-primary/10 disabled:opacity-50 data-[state=on]:shadow-vision-sm data-[state=on]:border-primary/30 aria-invalid:border-destructive hover:border-glass-border/60 focus-visible:border-ring rounded-lg outline-none aria-invalid:ring-destructive/20 focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:aria-invalid:ring-destructive/40 [&_svg:not([class*='size-'])]:size-4 font-medium data-[state=on]:text-primary hover:text-foreground text-sm whitespace-nowrap transition-all duration-300 ease-vision [&_svg]:pointer-events-none disabled:pointer-events-none [&_svg]:shrink-0 vision-interactive",
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-transparent border border-transparent",
+        default: "bg-transparent",
         outline:
-          "border border-glass-border/60 bg-glass-bg/50 shadow-vision-xs hover:bg-glass-bg hover:text-foreground hover:border-glass-border",
+          "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         default: "h-9 px-2 min-w-9",

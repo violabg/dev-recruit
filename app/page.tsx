@@ -57,15 +57,14 @@ export default async function Home() {
                 </div>
               </div>
               <div className="relative mx-auto lg:mx-0">
-                <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-500 opacity-20 blur-3xl rounded-lg" />
-                <div className="relative shadow-vision-lg p-6 border border-glass-border rounded-xl glass-card vision-elevated">
+                <div className="relative bg-card shadow-lg p-6 border rounded-xl">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 font-semibold text-lg">
                       <BrainCircuit className="w-5 h-5 text-primary" />
                       <span>Quiz generato dall&apos;AI</span>
                     </div>
                     <div className="space-y-3 text-sm">
-                      <div className="p-3 border border-glass-border rounded-lg glass-bg">
+                      <div className="bg-muted/50 p-3 border rounded-lg">
                         <p className="font-medium">
                           Domanda 1: Cosa è un closure in JavaScript?
                         </p>
@@ -88,7 +87,7 @@ export default async function Home() {
                           </div>
                         </div>
                       </div>
-                      <div className="p-3 border border-glass-border rounded-lg glass-bg">
+                      <div className="bg-muted/50 p-3 border rounded-lg">
                         <p className="font-medium">
                           Domanda 2: Identifica l&apos;errore nel seguente
                           codice:
@@ -161,8 +160,8 @@ export default async function Home() {
               </p>
             </div>
             <div className="gap-8 grid md:grid-cols-3">
-              <div className="flex flex-col items-center space-y-4 shadow-vision-sm hover:shadow-vision p-6 border border-glass-border rounded-xl text-center transition-all duration-300 ease-vision glass-card vision-elevated vision-interactive">
-                <div className="bg-linear-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
+              <div className="flex flex-col items-center space-y-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
+                <div className="bg-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <BrainCircuit className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="font-bold text-xl">
@@ -173,8 +172,8 @@ export default async function Home() {
                   posizione e livello di esperienza.
                 </p>
               </div>
-              <div className="flex flex-col items-center space-y-4 shadow-vision-sm hover:shadow-vision p-6 border border-glass-border rounded-xl text-center transition-all duration-300 ease-vision glass-card vision-elevated vision-interactive">
-                <div className="bg-linear-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
+              <div className="flex flex-col items-center space-y-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
+                <div className="bg-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <Users className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="font-bold text-xl">Colloqui in tempo reale</h3>
@@ -183,8 +182,8 @@ export default async function Home() {
                   colloqui tecnici.
                 </p>
               </div>
-              <div className="flex flex-col items-center space-y-4 shadow-vision-sm hover:shadow-vision p-6 border border-glass-border rounded-xl text-center transition-all duration-300 ease-vision glass-card vision-elevated vision-interactive">
-                <div className="bg-linear-to-br from-primary/20 to-primary/10 p-4 border border-primary/20 rounded-2xl">
+              <div className="flex flex-col items-center space-y-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
+                <div className="bg-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <CheckCircle className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="font-bold text-xl">Valutazione oggettiva</h3>
@@ -197,7 +196,7 @@ export default async function Home() {
           </div>
         </section>
       </main>
-      <footer className="bg-glass-bg/30 py-8 md:py-12 border-glass-border border-t">
+      <footer className="py-8 md:py-12 border-t">
         <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-4 container">
           <div className="flex items-center gap-2 text-sm">
             <BrainCircuit className="w-4 h-4" />

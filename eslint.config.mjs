@@ -9,7 +9,6 @@ export default [
       ".next/",
       "dist/",
       "coverage/",
-      "storybook-static/",
       ".pnpm-store/",
       ".vscode/",
       ".DS_Store",
