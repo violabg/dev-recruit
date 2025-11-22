@@ -27,18 +27,22 @@ async function OpenPositions() {
   const positionsCount = await getPositionsCount();
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row justify-between items-center pb-2">
-        <CardTitle className="font-medium text-sm">Posizioni Aperte</CardTitle>
-        <Briefcase className="w-4 h-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="font-bold text-2xl">{positionsCount || 0}</div>
-        <p className="text-muted-foreground text-xs">
-          Posizioni attualmente aperte
-        </p>
-      </CardContent>
-    </Card>
+    <Link href="/dashboard/positions">
+      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <CardHeader className="flex flex-row justify-between items-center pb-2">
+          <CardTitle className="font-medium text-sm">
+            Posizioni Aperte
+          </CardTitle>
+          <Briefcase className="w-4 h-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="font-bold text-2xl">{positionsCount || 0}</div>
+          <p className="text-muted-foreground text-xs">
+            Posizioni attualmente aperte
+          </p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 async function Candidates() {
@@ -48,18 +52,20 @@ async function Candidates() {
   const candidatesCount = await getCandidatesCount();
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row justify-between items-center pb-2">
-        <CardTitle className="font-medium text-sm">Candidati</CardTitle>
-        <Users className="w-4 h-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="font-bold text-2xl">{candidatesCount || 0}</div>
-        <p className="text-muted-foreground text-xs">
-          Candidati totali nel sistema
-        </p>
-      </CardContent>
-    </Card>
+    <Link href="/dashboard/candidates">
+      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <CardHeader className="flex flex-row justify-between items-center pb-2">
+          <CardTitle className="font-medium text-sm">Candidati</CardTitle>
+          <Users className="w-4 h-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="font-bold text-2xl">{candidatesCount || 0}</div>
+          <p className="text-muted-foreground text-xs">
+            Candidati totali nel sistema
+          </p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 async function Interviews() {
@@ -69,20 +75,22 @@ async function Interviews() {
   const interviewsCount = await getCompletedInterviewsCount();
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row justify-between items-center pb-2">
-        <CardTitle className="font-medium text-sm">
-          Colloqui Completati
-        </CardTitle>
-        <BarChart3 className="w-4 h-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="font-bold text-2xl">{interviewsCount || 0}</div>
-        <p className="text-muted-foreground text-xs">
-          Colloqui completati con successo
-        </p>
-      </CardContent>
-    </Card>
+    <Link href="/dashboard/interviews?status=completed">
+      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <CardHeader className="flex flex-row justify-between items-center pb-2">
+          <CardTitle className="font-medium text-sm">
+            Colloqui Completati
+          </CardTitle>
+          <BarChart3 className="w-4 h-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="font-bold text-2xl">{interviewsCount || 0}</div>
+          <p className="text-muted-foreground text-xs">
+            Colloqui completati con successo
+          </p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
@@ -178,24 +186,6 @@ export default async function DashboardPage() {
         <Suspense fallback={<RecentPositionsSkeleton />}>
           <RecentPositions />
         </Suspense>
-
-        {/* <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Attività Recenti</CardTitle>
-            <CardDescription>
-              Le ultime attività sulla piattaforma
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[140px]">
-              <div className="text-center">
-                <p className="text-muted-foreground text-sm">
-                  Nessuna attività recente
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card> */}
       </div>
     </div>
   );
