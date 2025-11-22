@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { fetchInterviewsData } from "@/lib/actions/interviews";
+import { getInterviews } from "@/lib/actions/interviews";
 import { CheckCircle, Clock, MessageSquare, XCircle } from "lucide-react";
 
 export type InterviewsSearchParams = {
@@ -91,7 +91,7 @@ export const InterviewsRuntimeSection = async ({
     totalPages,
     hasNextPage,
     hasPrevPage,
-  } = await fetchInterviewsData({
+  } = await getInterviews({
     search,
     status,
     positionId,

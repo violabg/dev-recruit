@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  getFilteredInterviews,
-  getInterviewsByQuiz as getInterviewsByQuizData,
-} from "@/lib/data/interviews";
+import { getFilteredInterviews } from "@/lib/data/interviews";
 import { candidateQuizSelectionSchema } from "@/lib/schemas";
 import { generateInterviewToken } from "@/lib/utils/token";
 import { revalidatePath, updateTag } from "next/cache";
@@ -15,7 +12,7 @@ import { Prisma } from "../prisma/client";
  * Legacy wrapper for backward compatibility
  * Delegates to getFilteredInterviews in data layer
  */
-export async function fetchInterviewsData(
+export async function getInterviews(
   filters: {
     search?: string;
     status?: string;
@@ -120,16 +117,6 @@ export async function completeInterview(token: string) {
 
   return { success: true };
 }
-
-/**
- * Wrapper for getting interviews by quiz ID
- * Delegates to data layer function
- */
-export async function getInterviewsByQuiz(quizId: string) {
-  return getInterviewsByQuizData(quizId);
-}
-
-export type InterviewsByQuiz = Awaited<ReturnType<typeof getInterviewsByQuiz>>;
 
 export async function deleteInterview(id: string) {
   const interview = await prisma.interview.findUnique({

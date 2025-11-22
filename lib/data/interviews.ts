@@ -502,6 +502,7 @@ export const getCompletedInterviewsCount = async () => {
   });
 };
 
+// TODO see if we can remove it
 /**
  * Fetches all interviews for a specific quiz
  * Returns mapped AssignedInterview objects

@@ -28,8 +28,6 @@ export type CandidateStatusSummary = {
   count: number;
 };
 
-export type CandidatePositionOption = { id: string; title: string };
-
 // Reusable include pattern for candidate queries
 const CANDIDATE_INCLUDE = {
   position: {

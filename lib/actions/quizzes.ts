@@ -244,8 +244,6 @@ export async function deleteQuiz(formData: FormData) {
   }
 }
 
-export type UpsertQuizResult = { id?: string };
-
 /**
  * Unified action for creating or updating a quiz.
  * Auto-detects operation based on presence of quiz_id in FormData.

@@ -36,14 +36,12 @@ export async function createPosition(values: PositionFormData) {
 }
 
 export async function deletePosition(id: string) {
-  const user = await requireUser();
-
   const position = await prisma.position.findUnique({
     where: { id },
     select: { createdBy: true },
   });
 
-  if (!position || position.createdBy !== user.id) {
+  if (!position) {
     throw new Error("Position not found or you don't have permission");
   }
 
