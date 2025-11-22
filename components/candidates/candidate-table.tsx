@@ -22,11 +22,11 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import {
   ArrowUpDown,
+  Eye,
   FileText,
   Link2,
   MoreHorizontal,
   Trash,
-  User,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -107,6 +107,11 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                   })}
               </TableCell>
               <TableCell className="text-right">
+                <Button variant="ghost" size="icon" className="p-0 w-8 h-8">
+                  <Link href={`/dashboard/candidates/${candidate.id}`}>
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="p-0 w-8 h-8">
@@ -116,12 +121,6 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Azioni</DropdownMenuLabel>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/dashboard/candidates/${candidate.id}`}>
-                        <User className="mr-2 w-4 h-4" />
-                        Visualizza profilo
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
                         <Link2 className="mr-2 w-4 h-4" />
