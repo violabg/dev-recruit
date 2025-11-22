@@ -48,8 +48,9 @@ export function NavMain({
                   className={cn(
                     "group relative rounded-md overflow-hidden transition-all duration-200",
                     "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    isActive &&
-                      "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
+                      : "text-muted-foreground"
                   )}
                 >
                   <span
@@ -69,9 +70,9 @@ export function NavMain({
                   >
                     <route.icon
                       className={cn(
-                        "mr-2 w-4 h-4",
+                        "mr-2 w-4 h-4 transition-colors",
                         isActive
-                          ? "text-foreground"
+                          ? "text-primary"
                           : "text-muted-foreground group-hover:text-foreground"
                       )}
                     />

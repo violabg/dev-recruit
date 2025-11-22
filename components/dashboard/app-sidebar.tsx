@@ -54,22 +54,23 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props} className="border-r-0">
-      <SidebarHeader className="border-b-1">
+    <Sidebar variant="inset" {...props} className="bg-sidebar border-r-0">
+      <SidebarHeader className="p-4 border-sidebar-border/50 border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
               asChild
-              className="group font-semibold text-xl"
+              className="group data-[state=open]:bg-sidebar-accent hover:bg-transparent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Link href="/dashboard" className="flex items-center gap-3">
-                <div className="relative">
-                  <BrainCircuit className="size-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <div className="flex justify-center items-center bg-primary shadow-sm rounded-lg size-8 aspect-square text-primary-foreground">
+                  <BrainCircuit className="size-5" />
                 </div>
-                <div className="flex-1 grid leading-tight">
-                  <span className="font-bold tracking-tight">
-                    DevRecruit AI
+                <div className="flex-1 grid text-sm text-left leading-tight">
+                  <span className="font-semibold truncate">DevRecruit AI</span>
+                  <span className="text-muted-foreground text-xs truncate">
+                    Enterprise
                   </span>
                 </div>
               </Link>
@@ -77,12 +78,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="px-3">
-        <Suspense fallback={<div>Loading...</div>}>
+      <SidebarContent className="px-2 py-2">
+        <Suspense
+          fallback={
+            <div className="p-4 text-muted-foreground text-sm">
+              Caricamento menu...
+            </div>
+          }
+        >
           <NavMain items={data.navSecondary} />
         </Suspense>
       </SidebarContent>
-      <SidebarFooter className="bg-sidebar m-2 border rounded-xl">
+      <SidebarFooter className="p-4 border-sidebar-border/50 border-t">
         <NavUser />
       </SidebarFooter>
     </Sidebar>
