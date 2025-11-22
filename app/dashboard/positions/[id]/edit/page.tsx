@@ -1,4 +1,4 @@
-import { EditPositionForm } from "@/components/positions/edit-position-form";
+import { PositionForm } from "@/components/positions/position-form";
 import { Button } from "@/components/ui/button";
 import { getPositionById } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
@@ -43,7 +43,7 @@ export default async function EditPositionPage({
       <div className="max-w-2xl">
         <div className="p-6 border rounded-md">
           <h2 className="mb-4 font-semibold text-xl">Dettagli posizione</h2>
-          <EditPositionForm position={position} />
+          <PositionForm position={position} />
         </div>
       </div>
     </div>

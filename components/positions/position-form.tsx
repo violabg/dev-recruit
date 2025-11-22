@@ -1,11 +1,13 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { SelectItem } from "@/components/ui/select";
-import { createPosition } from "@/lib/actions/positions";
+import { createPosition, updatePosition } from "@/lib/actions/positions";
+import { Position } from "@/lib/prisma/client";
 import { PositionFormData, positionFormSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { InputField } from "../rhf-inputs/input-field";
 import { MultiSelectField } from "../rhf-inputs/multi-select-field";
@@ -46,32 +48,72 @@ const allSoftSkills = softSkills.map((skill) => ({
   value: skill,
 }));
 
-export function NewPositionForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+type PositionFormProps = {
+  position?: Position;
+  onCancel?: () => void;
+};
+
+export function PositionForm({ position, onCancel }: PositionFormProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const isEditing = !!position;
 
   const form = useForm<PositionFormData>({
     resolver: zodResolver(positionFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      experience_level: "",
-      skills: [],
-      soft_skills: [],
-      contract_type: "",
-    },
+    defaultValues: isEditing
+      ? {
+          title: position.title,
+          description: position.description || "",
+          experience_level: position.experienceLevel,
+          skills: position.skills || [],
+          soft_skills: position.softSkills || [],
+          contract_type: position.contractType || "",
+        }
+      : {
+          title: "",
+          description: "",
+          experience_level: "",
+          skills: [],
+          soft_skills: [],
+          contract_type: "",
+        },
   });
-  const { handleSubmit, control } = form;
+
+  const { control, handleSubmit } = form;
 
   async function onSubmit(values: PositionFormData) {
-    setIsSubmitting(true);
+    startTransition(async () => {
+      try {
+        if (isEditing) {
+          const formData = new FormData();
+          formData.append("title", values.title);
+          formData.append("description", values.description || "");
+          formData.append("experience_level", values.experience_level);
+          formData.append("skills", JSON.stringify(values.skills));
+          formData.append(
+            "soft_skills",
+            JSON.stringify(values.soft_skills || [])
+          );
+          formData.append("contract_type", values.contract_type || "");
 
-    try {
-      await createPosition(values);
-    } catch (error) {
-      console.error("Error creating position:", error);
-      setIsSubmitting(false);
-    }
+          await updatePosition(position!.id, formData);
+        } else {
+          await createPosition(values);
+        }
+      } catch (error) {
+        console.error("Error submitting position:", error);
+      }
+    });
   }
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -139,16 +181,30 @@ export function NewPositionForm() {
         ))}
       </SelectField>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-            Creazione in corso...
-          </>
-        ) : (
-          "Crea posizione"
-        )}
-      </Button>
+      <div className="flex gap-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          disabled={isPending}
+        >
+          Annulla
+        </Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+              {isEditing
+                ? "Aggiornamento in corso..."
+                : "Creazione in corso..."}
+            </>
+          ) : isEditing ? (
+            "Aggiorna posizione"
+          ) : (
+            "Crea posizione"
+          )}
+        </Button>
+      </div>
     </form>
   );
 }
