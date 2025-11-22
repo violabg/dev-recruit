@@ -16,7 +16,7 @@
 ## Workflows & Commands
 
 - Dev server: `pnpm dev` (Next.js MCP enabled).
-- Build/lint/test/storybook: `pnpm build`, `pnpm lint`, `pnpm test` (if available), `pnpm storybook`.
+- Build/lint/test: `pnpm build`, `pnpm lint`, `pnpm test` (if available).
 - Database migrations: `pnpm prisma migrate deploy` (prod) or `pnpm prisma db push` (local dev).
 - Cache updates should use `cacheLife(...)` and tagged scopes (`cacheTag`/`revalidateTag`) as described in `docs/CACHE_IMPLEMENTATION.md`.
 
@@ -75,7 +75,7 @@ All data queries in `lib/data/` follow this pattern:
 ## Developer workflows & commands (run these)
 
 - **Dev server (MCP enabled):** `pnpm dev` (Next 16 MCP; fast feedback).
-- **Build / lint / tests / storybook:** `pnpm build`, `pnpm lint`, `pnpm test` (if present), `pnpm storybook`.
+- **Build / lint / tests:** `pnpm build`, `pnpm lint`, `pnpm test` (if present).
 - **DB (local vs prod):** local: `pnpm prisma db push`; prod migrations: `pnpm prisma migrate deploy`.
 - **Environment:** ensure `DATABASE_URL` and AI credentials are set in env before running server actions that touch DB/AI.
 
@@ -100,7 +100,7 @@ This file gives an agent the minimal, actionable knowledge to be productive in t
 **Key Developer Workflows**
 
 - **Run dev**: `pnpm dev` (Next 16 with MCP enabled for fast runtime diagnostics).
-- **Build / lint / storybook**: `pnpm build`, `pnpm lint`, `pnpm storybook`.
+- **Build / lint / tests:** `pnpm build`, `pnpm lint`, `pnpm test` (if present).
 - **Database**: local iterative schema: `pnpm prisma db push`. Production migrations: `pnpm prisma migrate deploy`.
 - **Env**: set `DATABASE_URL` and AI credentials before running server actions that call DB/AI.
 

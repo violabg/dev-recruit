@@ -109,7 +109,7 @@ UI primitives in `components/ui/` and dashboard components in `components/dashbo
 ## Development Workflow
 
 - **Dev server**: `pnpm dev` (Next.js MCP enabled for runtime diagnostics and fast feedback).
-- **Build, lint, storybook**: `pnpm build`, `pnpm lint`, `pnpm storybook`.
+- **Build, lint**: `pnpm build`, `pnpm lint`.
 - **Database**: local iterative schema with `pnpm prisma db push`; production migrations via `pnpm prisma migrate deploy`.
 - **Environment**: `DATABASE_URL` and Groq AI credentials MUST be set before running server actions involving DB/AI.
 
