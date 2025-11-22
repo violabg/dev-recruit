@@ -86,63 +86,45 @@ All data queries in `lib/data/` follow this pattern:
 - Reuse UI primitives from `components/ui/` and existing dashboard components in `components/dashboard/` — avoid creating new low-level primitives.
 - When mutating data: call `updateTag(...)` for cache components and the repo helper `revalidateQuizCache(...)` for legacy revalidation (see `lib/actions/quizzes.ts`).
 
-## Key files to inspect (first stop when editing)
+# Copilot instructions — dev-recruit (concise)
 
-- `lib/services/ai-service.ts` — AI prompt builders, sanitization, retries, model fallbacks.
-- `lib/actions/*.ts` — server actions for domain logic (quizzes, positions, interviews).
-- `lib/prisma.ts` — Prisma client setup (Neon adapter).
-- `lib/schemas/*` — Zod schemas that validate AI and form data.
-- `app/globals.css` — OKLCH color tokens and Tailwind utilities (CSS rules are required to use OKLCH values).
-- `docs/CACHE_IMPLEMENTATION.md` — caching guidelines and `cacheLife` timings.
+This file gives an agent the minimal, actionable knowledge to be productive in this repo.
 
-## Integrations & external requirements
+**Architecture Snapshot**
 
-- AI SDKs: `@ai-sdk/groq`, `@ai-sdk/react`, `ai` — used via `generateObject` and Groq model selection.
-- DB: Neon/Postgres via Prisma (`PrismaPg` adapter). `DATABASE_URL` required.
-- Auth: `better-auth` / `@better-auth/next-js` and helpers in `lib/auth-server.ts` / `lib/auth.ts`.
+- **App Router (Next.js App)**: every route under `app/` is a server component by default. Inspect `layout.tsx`, `page.tsx`, and `error.tsx` for the route's surface before editing.
+- **Cache Components**: code uses `"use cache"`, `cacheLife(...)`, `cacheTag(...)` and Suspense boundaries. See `docs/CACHE_IMPLEMENTATION.md` and `app/dashboard/candidates/page.tsx` for examples.
+- **Server actions & DB**: mutations live in `lib/actions/` (use `"use server"`). Use `requireUser()` from `lib/auth-server.ts` for auth checks. Prisma is centralized in `lib/prisma.ts` (Neon/Postgres).
+- **AI layer**: `lib/services/ai-service.ts` (exported as `aiQuizService`) builds prompts, picks models via `getOptimalModel`, retries/fallbacks and validates outputs against Zod schemas in `lib/schemas/`.
 
-If anything in these points is unclear or you want me to expand a section (examples, exact schema fields, or automation steps like a pre-commit lint hook), tell me which part to deepen and I’ll iterate.
+**Key Developer Workflows**
 
-## Styling
+- **Run dev**: `pnpm dev` (Next 16 with MCP enabled for fast runtime diagnostics).
+- **Build / lint / storybook**: `pnpm build`, `pnpm lint`, `pnpm storybook`.
+- **Database**: local iterative schema: `pnpm prisma db push`. Production migrations: `pnpm prisma migrate deploy`.
+- **Env**: set `DATABASE_URL` and AI credentials before running server actions that call DB/AI.
 
-- All colors must be specified in OKLCH format in css files (e.g., `oklch(0.7 0.1 200)`), but you can use Tailwind defauts colors in the code, lihe `bg-blue-500`, `text-red`.
-- Use Tailwind CSS utility classes wherever possible.
-- Do not use deprecated or removed Tailwind features from earlier versions.
+**Project-Specific Conventions**
 
-## General
+- **Cache-first edits**: Keep Prisma/AI calls inside `'use cache'` or server actions. Wrap runtime APIs (`cookies()`, `headers()`) in Suspense with skeletons for client-visible routes.
+- **Zod validation**: AI and form payloads must match schemas in `lib/schemas/`. Example: `aiQuizGenerationSchema` and `questionSchemas` validate `aiQuizService` outputs.
+- **AI language rule**: quiz content is generated in Italian — prompts and system messages enforce this in `lib/services/ai-service.ts`.
+- **Form contracts**: server action `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `time_limit`, and `position_id` — see `lib/actions/quizzes.ts`.
+- **Cache invalidation**: after mutations update cache tags (e.g., `updateTag('quizzes')`) and call `utils/revalidateQuizCache()` when needed.
+- **Styling**: CSS files must use OKLCH color values (see `app/globals.css`). In code, prefer Tailwind v4 utilities and UI primitives in `components/ui/`.
 
-- Prefer functional React components.
-- Use Zod for schema validation.
-- Use React Hook Form for form management.
-- Use Radix UI components.
-- Use Prisma (via `lib/prisma.ts`) for database interactions backed by Neon.
-- Use arrow functions for methods and new components.
-- Use types over interface# Copilot Instructions
+**Files to Inspect First (examples)**
 
-## Project Context
+- `app/dashboard/layout.tsx` — dashboard shell, Suspense usage, sidebar wiring.
+- `lib/services/ai-service.ts` — prompt construction, model selection, retries.
+- `lib/actions/quizzes.ts` — server action contracts and cache invalidation.
+- `lib/prisma.ts` — Prisma client and DB conventions.
+- `lib/schemas/` — Zod schemas for AI and forms.
 
-- **Frameworks & Languages:**
-  - Next.js (v16.0.3), React (v19.2.0), TypeScript (v5.8.3)
-- **Styling:**
-  - Tailwind CSS v4.x (use only v4 features and syntax)
-- **Core Libraries:**
-  - AI: `@ai-sdk/groq`, `@ai-sdk/react`, `ai`
-  - Forms: `react-hook-form`, `@hookform/resolvers`
-  - UI: `@radix-ui/react-*` (dialog, dropdown-menu, label, popover, select, slot), `lucide-react`, `shadcn/ui`
-  - Auth: `better-auth`, `@better-auth/next-js`
-  - Database: `@prisma/client`, `@neondatabase/serverless`
-  - Utilities: `class-variance-authority`, `clsx`, `next-themes`, `sonner`, `tailwind-merge`, `tw-animate-css`, `zod`
+**Editing Guidance (practical rules)**
 
-## Styling Guidelines
+- Always run the dev server (`pnpm dev`) and use Next.js MCP runtime when changing routes or debugging hydration/runtime errors.
+- Reuse existing UI primitives in `components/ui/` and `components/dashboard/` instead of creating new low-level components.
+- When adding or modifying server actions: validate inputs with Zod, call `requireUser()`, update cache tags, and document the change in `docs/`.
 
-- **Colors:**
-  - In CSS files, specify all colors in OKLCH format (e.g., `oklch(0.7 0.1 200)`).
-  - In code, use Tailwind default color classes (e.g., `bg-blue-500`, `text-red`).
-- **Utilities:**
-  - Use Tailwind CSS utility classes wherever possible.
-  - Do **not** use deprecated or removed Tailwind features.
-- **Gradients:**
-  - Apply border and text gradients for a modern look.
-- **Themes:**
-  - Support both light and dark themes.
-  - Use CSS custom properties (`--var`) for OKLCH colors.
+If a section is unclear or you want examples (exact schema fields, sample prompts, or a pre-commit lint hook), say which area to expand and I will iterate.
