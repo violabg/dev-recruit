@@ -124,10 +124,12 @@ export async function getQuizzes({
   search,
   sort,
   filter,
+  positionId,
 }: {
   search: string;
   sort: string;
   filter: string;
+  positionId?: string;
 }) {
   let quizzes: QuizResponse[] = [];
   let fetchError: string | null = null;
@@ -147,6 +149,10 @@ export async function getQuizzes({
       where.position = {
         experienceLevel: filter,
       };
+    }
+
+    if (positionId && positionId !== "all") {
+      where.positionId = positionId;
     }
 
     const orderByMap: Record<string, Prisma.QuizOrderByWithRelationInput> = {
@@ -196,16 +202,18 @@ export async function CachedQuizzesContent({
   search,
   sort,
   filter,
+  positionId,
 }: {
   search: string;
   sort: string;
   filter: string;
+  positionId?: string;
 }) {
   "use cache";
   cacheLife("hours");
   cacheTag("quizzes");
 
-  return await getQuizzes({ search, sort, filter });
+  return await getQuizzes({ search, sort, filter, positionId });
 }
 
 /**

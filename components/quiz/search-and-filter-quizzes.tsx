@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowUpDown,
+  Briefcase,
   Filter,
   Loader2,
   Search as SearchIcon,
@@ -20,12 +21,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
+type PositionFilterOption = {
+  id: string;
+  title: string;
+};
+
 type SearchAndFilterQuizzesProps = {
   uniqueLevels: string[];
+  positions: PositionFilterOption[];
 };
 
 export const SearchAndFilterQuizzes = ({
   uniqueLevels,
+  positions,
 }: SearchAndFilterQuizzesProps) => {
   const searchParams = useSearchParams();
   const { replace } = useRouter();
@@ -73,6 +81,19 @@ export const SearchAndFilterQuizzes = ({
     });
   };
 
+  const handlePosition = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", "1");
+    if (value && value !== "all") {
+      params.set("positionId", value);
+    } else {
+      params.delete("positionId");
+    }
+    startTransition(() => {
+      replace(`/dashboard/quizzes?${params.toString()}`);
+    });
+  };
+
   useEffect(() => {
     setInputValue(searchParams.get("search") || "");
   }, [searchParams]);
@@ -80,6 +101,7 @@ export const SearchAndFilterQuizzes = ({
   const currentSearch = searchParams.get("search") || "";
   const currentSort = searchParams.get("sort") || "newest";
   const currentFilter = searchParams.get("filter") || "all";
+  const currentPosition = searchParams.get("positionId") || "all";
 
   return (
     <div className="flex sm:flex-row flex-col gap-4">
@@ -143,7 +165,30 @@ export const SearchAndFilterQuizzes = ({
             ))}
           </SelectContent>
         </Select>
-        {(currentSearch || currentFilter !== "all") && (
+        <Select
+          name="position"
+          value={currentPosition}
+          onValueChange={handlePosition}
+          disabled={isPending || positions.length === 0}
+        >
+          <SelectTrigger>
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              <SelectValue placeholder="Posizione" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte le posizioni</SelectItem>
+            {positions.map((position) => (
+              <SelectItem key={position.id} value={position.id}>
+                {position.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(currentSearch ||
+          currentFilter !== "all" ||
+          currentPosition !== "all") && (
           <Button variant="outlineDestructive" asChild disabled={isPending}>
             <Link href="/dashboard/quizzes">Resetta</Link>
           </Button>

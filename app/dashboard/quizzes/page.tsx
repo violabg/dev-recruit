@@ -1,6 +1,7 @@
 import { QuizCard } from "@/components/quiz/quiz-card";
 import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
 import { Button } from "@/components/ui/button";
+import { getPositions } from "@/lib/data/positions";
 import { CachedQuizzesContent, getQuizzes } from "@/lib/data/quizzes";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -38,13 +39,16 @@ export default async function QuizzesPage({
   const search = params?.search || "";
   const sort = params?.sort || "newest";
   const filter = params?.filter || "all";
+  const positionId = params?.positionId || "all";
 
   // Fetch unique levels and initial data for filter options
   const { uniqueLevels } = await getQuizzes({
     search: "",
     sort: "newest",
     filter: "all",
+    positionId: "all",
   });
+  const positions = await getPositions();
 
   return (
     <div className="space-y-6">
@@ -62,10 +66,21 @@ export default async function QuizzesPage({
 
       <div className="@container">
         <div className="space-y-4">
-          <SearchAndFilterQuizzes uniqueLevels={uniqueLevels} />
+          <SearchAndFilterQuizzes
+            uniqueLevels={uniqueLevels}
+            positions={positions.map((position) => ({
+              id: position.id,
+              title: position.title,
+            }))}
+          />
 
           <Suspense fallback={<QuizCardsSkeleton />}>
-            <QuizzesListContent search={search} sort={sort} filter={filter} />
+            <QuizzesListContent
+              search={search}
+              sort={sort}
+              filter={filter}
+              positionId={positionId}
+            />
           </Suspense>
         </div>
       </div>
@@ -81,15 +96,18 @@ async function QuizzesListContent({
   search,
   sort,
   filter,
+  positionId,
 }: {
   search: string;
   sort: string;
   filter: string;
+  positionId: string;
 }) {
   const { quizzes, fetchError } = await CachedQuizzesContent({
     search,
     sort,
     filter,
+    positionId,
   });
 
   if (fetchError) {
@@ -105,7 +123,7 @@ async function QuizzesListContent({
       <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[300px]">
         <div className="text-center">
           <p className="text-muted-foreground text-sm">
-            {search || filter !== "all"
+            {search || filter !== "all" || positionId !== "all"
               ? "Nessun quiz trovato con i criteri di ricerca specificati."
               : "Nessun quiz creato. Crea un quiz per una posizione."}
           </p>
