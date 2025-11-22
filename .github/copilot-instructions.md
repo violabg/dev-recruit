@@ -12,7 +12,6 @@
 - **Server actions + Prisma:** mutate state inside `lib/actions/*`, typically calling `requireUser()` from `lib/auth-server.ts`. Reuse helpers from `lib/data/` when filtering/aggregating dashboard data (e.g., `lib/data/dashboard.ts`).
 - **AI prompts:** `AIQuizService` builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Refer to `docs/QUIZ_AI_GENERATION_SYSTEM.md` for the full flow and error-handling knobs.
 - **Dashboard pages:** split UI into Suspense-backed sections that fetch data independently so cached parts stay in the static shell while runtime segments stream separately.
-- **SQL helpers:** custom functions from `schema.sql` (like `search_interviews` or `get_candidates_for_quiz_assignment`) live close to the calling logic via Prisma raw queries.
 
 ## Workflows & Commands
 
@@ -30,7 +29,6 @@
 
 ## Essential References
 
-- `README.md` – features, architecture, and commands overview.
 - `lib/services/ai-service.ts` + `lib/schemas/` – model selection, retries, and Zod guards.
 - `app/dashboard/layout.tsx` + `components/dashboard/` – layout, navigation, and theme wiring.
 - `prisma/schema.prisma` + `schema.sql` – data model, migrations, and SQL helpers.
@@ -51,57 +49,59 @@
 
 All data queries in `lib/data/` follow this pattern:
 
-```typescript
-"use cache";
-cacheLife("hours");
-cacheTag("entity-type"); // quizzes, candidates, positions, interviews, dashboard
-```
+# Copilot Instructions (Concise, repo-specific)
 
-**Cache timing strategy:**
+## Quick Orientation
 
-- High-volatility data (candidates, interviews): stale 30min, revalidate 12hr
-- Low-volatility data (quizzes, positions, dashboard): stale 1hr, revalidate 1day
+- **Repo type:** Next.js App Router (Next 16), server components by default. Heavy use of Prisma (Neon) and AI services under `lib/services`.
+- **Primary goal for agents:** Make safe, cached server-side changes (keep AI/DB calls in `"use cache"` scopes), follow Zod schemas in `lib/schemas`, and preserve UI primitives from `components/ui/`.
 
-### Suspense Boundaries
+## Architecture Snapshot (what matters)
 
-All async server components use Suspense + fallback pattern:
+- **Routes & rendering:** every page under `app/` is a server component; interactive pieces use `use client` sparingly (see `app/dashboard/layout.tsx`).
+- **Cache Components:** code uses `"use cache"`, `cacheLife(...)`, and `cacheTag(...)` patterns (see `lib/data/` and `docs/CACHE_IMPLEMENTATION.md`).
+- **Server actions:** mutation logic lives in `lib/actions/*` and is invoked from forms (`"use server"`). Use `requireUser()` from `lib/auth-server.ts` to guard actions (example: `lib/actions/quizzes.ts`).
+- **AI layer:** `lib/services/ai-service.ts` (exported `aiQuizService`) builds prompts, applies `sanitizeInput`, retries (`withRetry`), timeouts, model selection (`getOptimalModel`) and validates via Zod schemas. Questions are expected in Italian and strict JSON structure.
+- **DB:** `lib/prisma.ts` builds a Prisma client with `PrismaPg` adapter (expects `DATABASE_URL`); Neon/Postgres-backed.
 
-```typescript
-export default async function PageComponent({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  return (
-    <Suspense fallback={<SkeletonComponent />}>
-      <AsyncContent params={params} />
-    </Suspense>
-  );
-}
+## Project-specific patterns (concrete)
 
-async function AsyncContent({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  // Fetch data here
-}
-```
+- **AI outputs:** Generated quiz JSON must match the schemas in `lib/schemas` (see `aiQuizGenerationSchema` and `questionSchemas.flexible`). Example enforcement: `aiQuizService.generateQuiz` validates presence of `title` and `questions`.
+- **Language rule:** quiz/question text must be in Italian (system prompts in `lib/services/ai-service.ts`).
+- **Form-server contract:** `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `time_limit`, and `position_id` for creation — see `lib/actions/quizzes.ts` for exact behavior.
+- **Cache invalidation:** after mutations update cache tags (e.g., `updateTag("quizzes")`) and call helper revalidation (`utils/revalidateQuizCache`) to support both Cache Components and legacy paths.
+- **Validation:** prefer Zod strict parsing in server actions (see `lib/actions/quizzes.ts` usage of `questionSchemas.strict`).
 
-### Skeleton Fallbacks
+## Developer workflows & commands (run these)
 
-All skeleton components live in `fallbacks.tsx` and use `<Skeleton />` primitives from `components/ui/skeleton` to match actual page layouts.
+- **Dev server (MCP enabled):** `pnpm dev` (Next 16 MCP; fast feedback).
+- **Build / lint / tests / storybook:** `pnpm build`, `pnpm lint`, `pnpm test` (if present), `pnpm storybook`.
+- **DB (local vs prod):** local: `pnpm prisma db push`; prod migrations: `pnpm prisma migrate deploy`.
+- **Environment:** ensure `DATABASE_URL` and AI credentials are set in env before running server actions that touch DB/AI.
 
-Let me know if any section needs clarification or more examples.# Copilot Instructions
+## Editing guidance (practical rules for agents)
 
-## Project Context
+- Inspect the route's `layout.tsx`, `page.tsx`, and `error.tsx` before changing behavior. Example: `app/dashboard/layout.tsx` uses `SidebarProvider` and `Suspense` for `Breadcrumbs`.
+- Keep Prisma/AI calls inside `'use cache'` or server actions and wrap runtime APIs (`cookies()`, `headers()`) in Suspense boundaries when used in server components.
+- Reuse UI primitives from `components/ui/` and existing dashboard components in `components/dashboard/` — avoid creating new low-level primitives.
+- When mutating data: call `updateTag(...)` for cache components and the repo helper `revalidateQuizCache(...)` for legacy revalidation (see `lib/actions/quizzes.ts`).
 
-- This project uses Next.js (v16.0.3), React (v19.2.0), and TypeScript (v5.8.3).
-- Tailwind CSS is version 4.x. Use only Tailwind v4 features and syntax.
-- The following libraries are used:
-  - @ai-sdk/groq, @ai-sdk/react, ai
-  - @hookform/resolvers, react-hook-form
-  - @radix-ui/react-\* (dialog, dropdown-menu, label, popover, select, slot)
-  - better-auth, @better-auth/next-js
-  - @prisma/client
-  - class-variance-authority, clsx, lucide-react, next-themes, sonner, tailwind-merge, tw-animate-css, zod
+## Key files to inspect (first stop when editing)
+
+- `lib/services/ai-service.ts` — AI prompt builders, sanitization, retries, model fallbacks.
+- `lib/actions/*.ts` — server actions for domain logic (quizzes, positions, interviews).
+- `lib/prisma.ts` — Prisma client setup (Neon adapter).
+- `lib/schemas/*` — Zod schemas that validate AI and form data.
+- `app/globals.css` — OKLCH color tokens and Tailwind utilities (CSS rules are required to use OKLCH values).
+- `docs/CACHE_IMPLEMENTATION.md` — caching guidelines and `cacheLife` timings.
+
+## Integrations & external requirements
+
+- AI SDKs: `@ai-sdk/groq`, `@ai-sdk/react`, `ai` — used via `generateObject` and Groq model selection.
+- DB: Neon/Postgres via Prisma (`PrismaPg` adapter). `DATABASE_URL` required.
+- Auth: `better-auth` / `@better-auth/next-js` and helpers in `lib/auth-server.ts` / `lib/auth.ts`.
+
+If anything in these points is unclear or you want me to expand a section (examples, exact schema fields, or automation steps like a pre-commit lint hook), tell me which part to deepen and I’ll iterate.
 
 ## Styling
 
@@ -146,48 +146,3 @@ Let me know if any section needs clarification or more examples.# Copilot Instru
 - **Themes:**
   - Support both light and dark themes.
   - Use CSS custom properties (`--var`) for OKLCH colors.
-
-## General Coding Practices
-
-- Use **functional React components** exclusively.
-- Use **arrow functions** for all methods and components.
-- Prefer **types** over interfaces in TypeScript.
-- Use **Zod** for all schema validation.
-- Use **React Hook Form** for form management.
-- Use **Radix UI** components for UI primitives.
-- Use **Prisma** with Neon for backend/database interactions.
-- Use **server components** and **server actions** wherever possible.
-- In server pages, **always `await` params before using them**.
-
-## UI/UX Expectations
-
-- Ensure a **modern, visually engaging, and accessible** design.
-- Use **responsive layouts**.
-- Style with **Tailwind CSS v4 utility classes** and **shadcn/ui** components.
-- All color customizations must use OKLCH format via CSS variables.
-- Prioritize accessibility in all components.
-
----
-
-**Note:**  
-If any instruction conflicts with system or security requirements, follow thes.
-
-- Must use server components and server actions as much as possible.
-- Must in server pages always await for params before using them.
-
-### UI/UX Expectations
-
-- Use a modern look with border and text gradients.
-- Support both light and dark themes.
-- All colors must use OKLCH format for css props (--var).
-- Use Tailwind CSS v4 utility classes and shadcn/ui components for styling.
-- Ensure responsive, accessible, and visually engaging design.
-
-## Active Technologies
-
-- TypeScript 5.8.3, Next.js 16.0.3 + Prisma, @prisma/client, @better-auth/next-js, @neondatabase/serverless (001-backend-migration)
-- Neon (PostgreSQL) (001-backend-migration)
-
-## Recent Changes
-
-- 001-backend-migration: Added TypeScript 5.8.3, Next.js 16.0.3 + Prisma, @prisma/client, @better-auth/next-js, @neondatabase/serverless
