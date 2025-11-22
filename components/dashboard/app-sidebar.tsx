@@ -61,12 +61,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton
               size="lg"
               asChild
-              className="group hover:bg-sidebar-accent/50 font-semibold text-xl transition-all duration-300 ease-vision"
+              className="group font-semibold text-xl"
             >
               <Link href="/dashboard" className="flex items-center gap-3">
                 <div className="relative">
                   <BrainCircuit className="size-6 text-primary group-hover:scale-110 transition-transform duration-300" />
-                  <div className="absolute inset-0 bg-gradient-primary/20 opacity-0 group-hover:opacity-100 blur-lg rounded-full transition-opacity duration-300" />
                 </div>
                 <div className="flex-1 grid leading-tight">
                   <span className="font-bold tracking-tight">
@@ -83,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <NavMain items={data.navSecondary} />
         </Suspense>
       </SidebarContent>
-      <SidebarFooter className="bg-sidebar/60 m-2 border-0 rounded-xl glass-card">
+      <SidebarFooter className="bg-sidebar m-2 border rounded-xl">
         <NavUser />
       </SidebarFooter>
     </Sidebar>

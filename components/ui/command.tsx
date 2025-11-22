@@ -21,7 +21,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "bg-glass-bg text-foreground flex h-full w-full flex-col overflow-hidden rounded-xl  border border-glass-border shadow-vision vision-elevated",
+        "flex flex-col bg-popover border rounded-xl w-full h-full overflow-hidden text-popover-foreground",
         className
       )}
       {...props}
@@ -60,13 +60,13 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex items-center gap-2 bg-glass-bg/50 px-3 border-glass-border/60 border-b h-9"
+      className="flex items-center gap-2 px-3 border-b h-9"
     >
       <SearchIcon className="opacity-50 size-4 shrink-0" />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(
-          "placeholder:text-muted-foreground flex h-10 w-full rounded-lg bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 focus:bg-glass-bg/80 transition-colors duration-200",
+          "flex bg-transparent disabled:opacity-50 py-3 rounded-lg outline-hidden w-full h-10 placeholder:text-muted-foreground text-sm transition-colors duration-200 disabled:cursor-not-allowed",
           className
         )}
         {...props}
@@ -83,7 +83,7 @@ function CommandList({
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
+        "max-h-[300px] overflow-x-hidden overflow-y-auto scroll-py-1",
         className
       )}
       {...props}
@@ -111,7 +111,7 @@ function CommandGroup({
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
+        "p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 overflow-hidden [&_[cmdk-group-heading]]:font-medium text-foreground [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:text-xs",
         className
       )}
       {...props}
@@ -126,7 +126,7 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
-      className={cn("bg-glass-border/60 -mx-1 h-px", className)}
+      className={cn("-mx-1 bg-border h-px", className)}
       {...props}
     />
   );
@@ -140,7 +140,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-glass-bg data-[selected=true]:text-foreground data-[selected=true]: [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 transition-all duration-200 ease-vision hover:bg-glass-bg/80 data-[selected=true]:shadow-vision-sm data-[selected=true]:border data-[selected=true]:border-glass-border/60",
+        "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 transition-all duration-200",
         className
       )}
       {...props}
@@ -156,7 +156,7 @@ function CommandShortcut({
     <span
       data-slot="command-shortcut"
       className={cn(
-        "text-muted-foreground ml-auto text-xs tracking-widest",
+        "ml-auto text-muted-foreground text-xs tracking-widest",
         className
       )}
       {...props}

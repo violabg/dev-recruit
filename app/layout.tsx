@@ -34,19 +34,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="relative min-h-dvh">{children}</div>
-          <Toaster
-            richColors
-            position="top-right"
-            toastOptions={{
-              className: "glass-card border-0 ",
-              style: {
-                background: "var(--glass-bg)",
-                backdropFilter: "blur(20px) saturate(1.8)",
-                border: "1px solid var(--glass-border)",
-                boxShadow: "var(--glass-shadow)",
-              },
-            }}
-          />
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>

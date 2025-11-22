@@ -5,7 +5,7 @@
 - **App Router + cache components:** every route under `app/` renders as a server component. Keep Prisma/AI calls in `'use cache'` scopes, use `cacheLife`, and wrap any runtime data (`cookies()`, `headers()`, etc.) inside Suspense boundaries (see `app/dashboard/candidates/page.tsx`).
 - **Dashboard shell:** `app/dashboard/layout.tsx` wires the sidebar, breadcrumbs, theme toggle, and content surface. Shared navigation and helpers live under `components/dashboard/`.
 - **Lib layer:** `lib/actions/` contains server actions for quiz generation, candidate management, and interviews. `lib/services/ai-service.ts` orchestrates Groq AI requests with retries/fallbacks and Zod validation. `lib/prisma.ts` exposes the Neon-backed Prisma client used everywhere.
-- **UI/design system:** base primitives in `components/ui/` power buttons, cards, tabs, skeletons, etc. Styling relies on Tailwind v4 utilities, OKLCH tokens in `app/globals.css`, and Vision Pro gradients from `docs/VISION_PRO_STYLE_GUIDE.md`.
+- **UI/design system:** base primitives in `components/ui/` power buttons, cards, tabs, skeletons, etc. Styling relies on Tailwind v4 utilities, OKLCH tokens in `app/globals.css`.
 
 ## Data & Flow Patterns
 
@@ -22,7 +22,7 @@
 
 ## Project-Specific Conventions
 
-- **Styling:** favor Tailwind v4 utilities, gradients, and Vision Pro glass tokens. CSS files must declare colors in OKLCH format (`oklch(...)`). Compose classes with `clsx`, `cn`, or `tailwind-merge` helpers.
+- **Styling:** favor Tailwind v4 utilities. CSS files must declare colors in OKLCH format (`oklch(...)`). Compose classes with `clsx`, `cn`, or `tailwind-merge` helpers.
 - **Forms:** always pair `react-hook-form` with Zod resolvers using schemas from `lib/schemas/`; validate before invoking server actions. Use rhf-input components from `components/` when using forms, create new components there as needed.
 - **Data fetching:** keep Prisma queries in server components. Only mark components `use client` when necessary for interactivity, and wrap runtime APIs inside Suspense with skeleton fallbacks.
 - **Authentication:** Better Auth config lives in `lib/auth.ts`; prefer `getCurrentUser()`/`requireUser()` helpers to enforce row-level security in server actions and routes.
@@ -33,7 +33,7 @@
 - `app/dashboard/layout.tsx` + `components/dashboard/` – layout, navigation, and theme wiring.
 - `prisma/schema.prisma` + `schema.sql` – data model, migrations, and SQL helpers.
 - `lib/data/` + `lib/actions/` – shared helpers to reuse instead of duplicating logic.
-- `app/globals.css` & `docs/VISION_PRO_STYLE_GUIDE.md` – color tokens, gradients, and animation utilities.
+- `app/globals.css` – color tokens.
 
 ## Handling Requests
 
