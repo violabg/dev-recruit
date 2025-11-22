@@ -2,7 +2,6 @@ import { Suspense } from "react";
 
 import { CandidateFiltersSection } from "./candidate-filters-section";
 import { CandidateListSection } from "./candidate-list-section";
-import { CandidateStatsSection } from "./candidate-stats-section";
 import {
   CandidatesListSkeleton,
   FiltersSkeleton,
@@ -84,10 +83,6 @@ export const CandidatesRuntimeSection = async ({
 
   return (
     <>
-      <Suspense fallback={<StatsSkeleton />}>
-        <CandidateStatsSection />
-      </Suspense>
-
       <Suspense fallback={<FiltersSkeleton />}>
         <CandidateFiltersSection />
       </Suspense>

@@ -132,11 +132,6 @@ export async function getQuizzes({
   let quizzes: QuizResponse[] = [];
   let fetchError: string | null = null;
   let uniqueLevels: string[] = [];
-  let positionCounts: {
-    position_id: string;
-    position_title: string;
-    count: number;
-  }[] = [];
 
   try {
     const where: Prisma.QuizWhereInput = {};
@@ -183,41 +178,17 @@ export async function getQuizzes({
           .filter((level): level is string => Boolean(level))
       )
     );
-
-    const quizCounts = await prisma.quiz.groupBy({
-      by: ["positionId"],
-      _count: { _all: true },
-    });
-
-    const positions = await prisma.position.findMany({
-      select: {
-        id: true,
-        title: true,
-      },
-    });
-
-    positionCounts = positions
-      .map((position) => ({
-        position_id: position.id,
-        position_title: position.title,
-        count:
-          quizCounts.find((count) => count.positionId === position.id)?._count
-            ._all ?? 0,
-      }))
-      .sort((a, b) => b.count - a.count);
   } catch (error) {
     fetchError =
       error instanceof Error ? error.message : "An unexpected error occurred.";
     quizzes = [];
     uniqueLevels = [];
-    positionCounts = [];
   }
 
   return {
     quizzes,
     fetchError,
     uniqueLevels,
-    positionCounts,
   };
 }
 

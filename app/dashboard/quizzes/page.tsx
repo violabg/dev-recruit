@@ -5,8 +5,7 @@ import { CachedQuizzesContent, getQuizzes } from "@/lib/data/quizzes";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { QuizCardsSkeleton, QuizzesStatisticsSkeleton } from "./fallbacks";
-import { QuizzesStatisticsSection } from "./quizzes-components";
+import { QuizCardsSkeleton } from "./fallbacks";
 
 /**
  * CACHE COMPONENTS ARCHITECTURE:
@@ -41,7 +40,7 @@ export default async function QuizzesPage({
   const filter = params?.filter || "all";
 
   // Fetch unique levels and initial data for filter options
-  const { uniqueLevels, positionCounts } = await getQuizzes({
+  const { uniqueLevels } = await getQuizzes({
     search: "",
     sort: "newest",
     filter: "all",
@@ -58,37 +57,15 @@ export default async function QuizzesPage({
               <Plus className="w-4 h-4" />
             </Link>
           </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/positions">Posizioni</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/candidates">Candidati</Link>
-          </Button>
         </div>
       </div>
 
-      {/* Outer container for the main two-column layout. Enables container queries for its children. */}
       <div className="@container">
-        {/* Main grid: 1 column by default, 2 columns when container width is >= 700px. */}
-        {/* The second column (stats/actions) will flow below the first on narrower container widths. */}
-        <div className="gap-4 grid grid-cols-1 @[700px]:grid-cols-[1fr_250px]">
-          <div className="space-y-4">
-            {/* Search/Filter - Client Component (always rendered) */}
-            <SearchAndFilterQuizzes uniqueLevels={uniqueLevels} />
+        <div className="space-y-4">
+          <SearchAndFilterQuizzes uniqueLevels={uniqueLevels} />
 
-            {/* Quiz Cards - Cached with Suspense boundary */}
-            <Suspense fallback={<QuizCardsSkeleton />}>
-              <QuizzesListContent search={search} sort={sort} filter={filter} />
-            </Suspense>
-          </div>
-
-          {/* Statistics Sidebar - Cached with Suspense boundary */}
-          <Suspense fallback={<QuizzesStatisticsSkeleton />}>
-            <QuizzesStatisticsSidebarContent
-              search={search}
-              sort={sort}
-              filter={filter}
-            />
+          <Suspense fallback={<QuizCardsSkeleton />}>
+            <QuizzesListContent search={search} sort={sort} filter={filter} />
           </Suspense>
         </div>
       </div>
@@ -150,32 +127,5 @@ async function QuizzesListContent({
         <QuizCard key={quiz.id} quiz={quiz} />
       ))}
     </div>
-  );
-}
-
-/**
- * QuizzesStatisticsSidebarContent - Cached statistics sidebar
- * Fetches and displays cached quiz statistics
- */
-async function QuizzesStatisticsSidebarContent({
-  search,
-  sort,
-  filter,
-}: {
-  search: string;
-  sort: string;
-  filter: string;
-}) {
-  const { quizzes, positionCounts } = await CachedQuizzesContent({
-    search,
-    sort,
-    filter,
-  });
-
-  return (
-    <QuizzesStatisticsSection
-      quizzes={quizzes}
-      positionCounts={positionCounts}
-    />
   );
 }
