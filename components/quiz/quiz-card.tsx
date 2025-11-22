@@ -1,4 +1,3 @@
-import { Quiz } from "@/app/dashboard/quizzes/quizzes-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Quiz } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
 import { Clock, Eye, Link2 } from "lucide-react";
 import Link from "next/link";

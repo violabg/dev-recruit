@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Quiz } from "./quizzes-actions";
+import { Quiz } from "@/lib/data/quizzes";
 
 /**
  * QuizzesStatisticsSection - Cached statistics display

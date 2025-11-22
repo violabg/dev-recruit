@@ -1,15 +1,20 @@
-import type { Quiz } from "@/app/dashboard/quizzes/quizzes-actions";
 import { requireUser } from "@/lib/auth-server";
+import { mapQuizFromPrismaDetails, Quiz } from "@/lib/data/quizzes";
 import prisma from "@/lib/prisma";
-import type { Question } from "@/lib/schemas";
+import { Prisma } from "@/lib/prisma/client";
 import type {
   AssignedInterview,
   CandidateQuizData,
+  InterviewListItem,
   QuizAssignmentData,
 } from "@/lib/types/interview";
 import { cacheLife, cacheTag } from "next/cache";
 
-const mapAssignedInterview = (interview: {
+/**
+ * Maps interview with relations to AssignedInterview type
+ * Used across data layer for consistent interview representation
+ */
+export const mapAssignedInterview = (interview: {
   id: string;
   token: string;
   status: string;
@@ -38,6 +43,53 @@ const mapAssignedInterview = (interview: {
   quizId: interview.quiz?.id ?? "",
   quizTitle: interview.quiz?.title ?? "",
 });
+
+/**
+ * Maps interview record to InterviewListItem type
+ * Used in interviews listing to include position information
+ */
+export const mapInterviewListItem = (record: {
+  id: string;
+  token: string;
+  status: string;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  createdAt: Date;
+  score: number | null;
+  candidateId: string;
+  candidate: {
+    name: string | null;
+    email: string | null;
+  } | null;
+  quizId: string;
+  quiz: {
+    title: string;
+    positionId: string;
+    position: {
+      id: string;
+      title: string;
+      skills: string[];
+    } | null;
+  } | null;
+}): InterviewListItem => {
+  return {
+    id: record.id,
+    token: record.token,
+    status: record.status,
+    startedAt: record.startedAt?.toISOString() ?? null,
+    completedAt: record.completedAt?.toISOString() ?? null,
+    createdAt: record.createdAt.toISOString(),
+    score: record.score ?? null,
+    candidateId: record.candidateId,
+    candidateName: record.candidate?.name ?? "",
+    candidateEmail: record.candidate?.email ?? "",
+    quizId: record.quizId,
+    quizTitle: record.quiz?.title ?? "",
+    positionId: record.quiz?.position?.id ?? null,
+    positionTitle: record.quiz?.position?.title ?? null,
+    positionSkills: record.quiz?.position?.skills ?? [],
+  };
+};
 
 const getQuizAssignmentDataCached = async (
   quizId: string,
@@ -290,6 +342,8 @@ export const getInterviewByToken = async (
               id: true,
               title: true,
               experienceLevel: true,
+              description: true,
+              skills: true,
             },
           },
         },
@@ -308,23 +362,8 @@ export const getInterviewByToken = async (
     return null;
   }
 
-  const quiz: Quiz = {
-    id: interview.quiz.id,
-    title: interview.quiz.title,
-    created_at: interview.quiz.createdAt.toISOString(),
-    position_id: interview.quiz.positionId,
-    positions: interview.quiz.position
-      ? {
-          id: interview.quiz.position.id,
-          title: interview.quiz.position.title,
-          experience_level: interview.quiz.position.experienceLevel,
-        }
-      : null,
-    time_limit: interview.quiz.timeLimit,
-    questions: Array.isArray(interview.quiz.questions)
-      ? (interview.quiz.questions as Question[])
-      : [],
-  };
+  // Use consolidated mapping from quizzes data layer
+  const quiz = mapQuizFromPrismaDetails(interview.quiz);
 
   const interviewAnswers =
     (interview.answers as Record<string, InterviewAnswer> | null) ?? null;
@@ -396,6 +435,8 @@ export const getInterviewDetail = async (
               id: true,
               title: true,
               experienceLevel: true,
+              description: true,
+              skills: true,
             },
           },
         },
@@ -414,23 +455,8 @@ export const getInterviewDetail = async (
     return null;
   }
 
-  const quiz: Quiz = {
-    id: interview.quiz.id,
-    title: interview.quiz.title,
-    created_at: interview.quiz.createdAt.toISOString(),
-    position_id: interview.quiz.positionId,
-    positions: interview.quiz.position
-      ? {
-          id: interview.quiz.position.id,
-          title: interview.quiz.position.title,
-          experience_level: interview.quiz.position.experienceLevel,
-        }
-      : null,
-    time_limit: interview.quiz.timeLimit,
-    questions: Array.isArray(interview.quiz.questions)
-      ? (interview.quiz.questions as Question[])
-      : [],
-  };
+  // Use consolidated mapping from quizzes data layer
+  const quiz = mapQuizFromPrismaDetails(interview.quiz);
 
   const answers =
     (interview.answers as Record<string, InterviewAnswer> | null) ?? null;
@@ -463,3 +489,226 @@ export const getInterviewDetail = async (
     },
   };
 };
+
+export const getCompletedInterviewsCount = async () => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("interviews");
+
+  return prisma.interview.count({
+    where: {
+      status: "completed",
+    },
+  });
+};
+
+/**
+ * Fetches all interviews for a specific quiz
+ * Returns mapped AssignedInterview objects
+ */
+export const getInterviewsByQuiz = async (
+  quizId: string
+): Promise<AssignedInterview[]> => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("interviews");
+
+  const interviews = await prisma.interview.findMany({
+    where: { quizId },
+    include: {
+      candidate: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      quiz: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return interviews.map(mapAssignedInterview);
+};
+
+/**
+ * Fetches filtered and paginated interviews list
+ * Used in interviews dashboard
+ */
+export async function getFilteredInterviews(filters: {
+  search?: string;
+  status?: string;
+  positionId?: string;
+  programmingLanguage?: string;
+  page?: number;
+  limit?: number;
+}) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("interviews");
+
+  const {
+    search = "",
+    status = "all",
+    positionId = "all",
+    programmingLanguage = "all",
+    page = 1,
+    limit = 10,
+  } = filters;
+
+  const normalizedPage = Math.max(page ?? 1, 1);
+  const normalizedLimit = Math.max(limit ?? 10, 1);
+  const searchTerm = search.trim();
+
+  const whereClauses: Prisma.InterviewWhereInput[] = [
+    {
+      candidate: {},
+    },
+  ];
+
+  if (status !== "all") {
+    whereClauses.push({ status });
+  }
+
+  if (positionId !== "all") {
+    whereClauses.push({ quiz: { positionId } });
+  }
+
+  if (programmingLanguage !== "all") {
+    whereClauses.push({
+      quiz: {
+        position: {
+          skills: {
+            has: programmingLanguage,
+          },
+        },
+      },
+    });
+  }
+
+  if (searchTerm) {
+    const searchFilter: Prisma.InterviewWhereInput = {
+      OR: [
+        {
+          candidate: {
+            name: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          candidate: {
+            email: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          quiz: {
+            title: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          quiz: {
+            position: {
+              title: {
+                contains: searchTerm,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      ],
+    };
+
+    whereClauses.push(searchFilter);
+  }
+
+  const where: Prisma.InterviewWhereInput = whereClauses.length
+    ? { AND: whereClauses }
+    : {};
+
+  const interviewRecords = await prisma.interview.findMany({
+    where,
+    include: {
+      candidate: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      quiz: {
+        select: {
+          id: true,
+          title: true,
+          positionId: true,
+          position: {
+            select: {
+              id: true,
+              title: true,
+              skills: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    skip: (normalizedPage - 1) * normalizedLimit,
+    take: normalizedLimit,
+  });
+
+  const interviews = interviewRecords.map(mapInterviewListItem);
+
+  const statusCounts = interviews.reduce<Record<string, number>>(
+    (acc, item) => {
+      acc[item.status] = (acc[item.status] ?? 0) + 1;
+      return acc;
+    },
+    {}
+  );
+
+  const totalCount = await prisma.interview.count({ where });
+  const totalPages = Math.max(1, Math.ceil(totalCount / normalizedLimit));
+
+  const positions = await prisma.position.findMany({
+    select: {
+      id: true,
+      title: true,
+      skills: true,
+    },
+    orderBy: {
+      title: "asc",
+    },
+  });
+
+  const programmingLanguages = Array.from(
+    new Set(positions.flatMap((position) => position.skills ?? []))
+  ).sort((a, b) => a.localeCompare(b));
+
+  return {
+    interviews,
+    positions,
+    programmingLanguages,
+    statusCounts,
+    totalCount,
+    currentPage: normalizedPage,
+    totalPages,
+    hasNextPage: normalizedPage < totalPages,
+    hasPrevPage: normalizedPage > 1,
+  };
+}

@@ -1,48 +1,16 @@
-import prisma from "@/lib/prisma";
-import { cacheLife, cacheTag } from "next/cache";
+import { getCandidatesCount } from "./candidates";
+import { getCompletedInterviewsCount } from "./interviews";
+import { getPositionsCount, getRecentPositions } from "./positions";
 
-export const getPositionsCount = async () => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("positions");
+/**
+ * Dashboard data layer
+ * Re-exports count and aggregation functions from entity-specific data layers
+ * for convenience in dashboard pages
+ */
 
-  return prisma.position.count();
-};
-
-export const getCandidatesCount = async () => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("candidates");
-
-  return prisma.candidate.count();
-};
-
-export const getCompletedInterviewsCount = async () => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("interviews");
-
-  return prisma.interview.count({
-    where: {
-      status: "completed",
-    },
-  });
-};
-
-export const getRecentPositions = async (limit = 5) => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("positions");
-
-  return prisma.position.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: limit,
-    select: {
-      id: true,
-      title: true,
-      experienceLevel: true,
-    },
-  });
+export {
+  getCandidatesCount,
+  getCompletedInterviewsCount,
+  getPositionsCount,
+  getRecentPositions,
 };

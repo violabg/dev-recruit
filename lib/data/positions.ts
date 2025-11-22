@@ -35,3 +35,29 @@ export const getPositionById = async (
     },
   });
 };
+
+export const getPositionsCount = async () => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("positions");
+
+  return prisma.position.count();
+};
+
+export const getRecentPositions = async (limit = 5) => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("positions");
+
+  return prisma.position.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      experienceLevel: true,
+    },
+  });
+};

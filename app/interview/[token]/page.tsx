@@ -1,6 +1,6 @@
-import { Quiz } from "@/app/dashboard/quizzes/quizzes-actions";
 import { InterviewClient } from "@/components/interview/interview-client";
-import { getInterviewByToken } from "@/lib/data/interview-data";
+import { getInterviewByToken } from "@/lib/data/interviews";
+import { Quiz } from "@/lib/data/quizzes";
 import { Suspense } from "react";
 import { InterviewSkeleton } from "./fallbacks";
 

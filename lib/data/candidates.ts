@@ -175,3 +175,11 @@ export const getCandidateWithDetails = async (
     },
   });
 };
+
+export const getCandidatesCount = async () => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("candidates");
+
+  return prisma.candidate.count();
+};

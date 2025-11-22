@@ -1,6 +1,5 @@
 "use client";
 
-import { Quiz } from "@/app/dashboard/quizzes/quizzes-actions";
 import { InterviewComplete } from "@/components/interview/interview-complete";
 import { InterviewQuestion } from "@/components/interview/interview-question";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
   startInterview,
   submitAnswer,
 } from "@/lib/actions/interviews";
+import { Quiz } from "@/lib/data/quizzes";
 import { BrainCircuit, Clock } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";

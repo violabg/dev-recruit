@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requireUser } from "@/lib/auth-server";
-import { getInterviewDetail } from "@/lib/data/interview-data";
+import { getInterviewDetail } from "@/lib/data/interviews";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";

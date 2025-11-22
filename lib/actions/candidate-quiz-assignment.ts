@@ -1,10 +1,8 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
-
 import { candidateQuizAssignmentSchema } from "@/lib/schemas";
+import { generateInterviewToken } from "@/lib/utils/token";
 import { revalidatePath } from "next/cache";
-
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 
@@ -21,21 +19,6 @@ export type AssignQuizzesToCandidateState = {
     quizTitle: string;
   }[];
   success?: boolean;
-};
-
-const generateInterviewToken = async (): Promise<string> => {
-  while (true) {
-    const token = randomUUID().replace(/-/g, "");
-
-    const existing = await prisma.interview.findUnique({
-      where: { token },
-      select: { id: true },
-    });
-
-    if (!existing) {
-      return token;
-    }
-  }
 };
 
 export async function assignQuizzesToCandidate(

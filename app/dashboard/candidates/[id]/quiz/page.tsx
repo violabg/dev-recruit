@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCandidateQuizData } from "@/lib/data/interview-data";
+import { getCandidateQuizData } from "@/lib/data/interviews";
 
 export default async function CandidateQuizPage({
   params,

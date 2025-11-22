@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getQuizAssignmentData } from "@/lib/data/interview-data";
+import { getQuizAssignmentData } from "@/lib/data/interviews";
 import { InviteCandidatesSkeleton } from "./fallbacks";
 
 export default async function InviteCandidatesPage({

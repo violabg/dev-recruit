@@ -30,22 +30,23 @@ type QuizWithPositionDetails = Prisma.QuizGetPayload<{
   };
 }>;
 
-// Exported DTO types for API consistency
-type Position = {
-  id: string;
-  title: string;
-  experience_level: string;
-};
-
-export type Quiz = {
+// API response DTO - for client/API contracts
+export type QuizResponse = {
   id: string;
   title: string;
   created_at: string;
   position_id: string;
-  positions: Position | null;
+  positions: {
+    id: string;
+    title: string;
+    experience_level: string;
+  } | null;
   time_limit: number | null;
   questions: Question[];
 };
+
+// Backward compatibility alias
+export type Quiz = QuizResponse;
 
 // Reusable include patterns for quiz queries
 const QUIZ_INCLUDE_WITH_POSITION = {
@@ -70,7 +71,31 @@ const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
   },
 } as const;
 
-const mapQuizFromPrisma = (quiz: QuizWithPosition): Quiz => ({
+const mapQuizFromPrisma = (quiz: QuizWithPosition): QuizResponse => ({
+  id: quiz.id,
+  title: quiz.title,
+  created_at: quiz.createdAt.toISOString(),
+  position_id: quiz.positionId,
+  positions: quiz.position
+    ? {
+        id: quiz.position.id,
+        title: quiz.position.title,
+        experience_level: quiz.position.experienceLevel,
+      }
+    : null,
+  time_limit: quiz.timeLimit,
+  questions: Array.isArray(quiz.questions)
+    ? (quiz.questions as Question[])
+    : [],
+});
+
+/**
+ * Maps quiz data for positions relationship (interview context)
+ * Used in interview-data.ts to maintain consistent API response format
+ */
+export const mapQuizFromPrismaDetails = (
+  quiz: QuizWithPositionDetails
+): QuizResponse => ({
   id: quiz.id,
   title: quiz.title,
   created_at: quiz.createdAt.toISOString(),
@@ -97,7 +122,7 @@ export async function getQuizzes({
   sort: string;
   filter: string;
 }) {
-  let quizzes: Quiz[] = [];
+  let quizzes: QuizResponse[] = [];
   let fetchError: string | null = null;
   let uniqueLevels: string[] = [];
   let positionCounts: {
