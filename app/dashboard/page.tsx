@@ -27,7 +27,7 @@ async function OpenPositions() {
   const positionsCount = await getPositionsCount();
 
   return (
-    <Card className="hover:shadow-md transition-all">
+    <Card>
       <CardHeader className="flex flex-row justify-between items-center pb-2">
         <CardTitle className="font-medium text-sm">Posizioni Aperte</CardTitle>
         <Briefcase className="w-4 h-4 text-muted-foreground" />
@@ -48,7 +48,7 @@ async function Candidates() {
   const candidatesCount = await getCandidatesCount();
 
   return (
-    <Card className="hover:shadow-md transition-all">
+    <Card>
       <CardHeader className="flex flex-row justify-between items-center pb-2">
         <CardTitle className="font-medium text-sm">Candidati</CardTitle>
         <Users className="w-4 h-4 text-muted-foreground" />
@@ -69,7 +69,7 @@ async function Interviews() {
   const interviewsCount = await getCompletedInterviewsCount();
 
   return (
-    <Card className="hover:shadow-md transition-all">
+    <Card>
       <CardHeader className="flex flex-row justify-between items-center pb-2">
         <CardTitle className="font-medium text-sm">
           Colloqui Completati
@@ -94,7 +94,7 @@ async function RecentPositions() {
   const positions = await getRecentPositions(5);
 
   return (
-    <Card className="col-span-1 hover:shadow-md transition-all">
+    <Card className="col-span-1">
       <CardHeader>
         <CardTitle>Posizioni Recenti</CardTitle>
         <CardDescription>Le ultime posizioni create</CardDescription>
