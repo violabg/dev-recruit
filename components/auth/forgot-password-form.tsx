@@ -47,7 +47,9 @@ export function ForgotPasswordForm({
       } catch (error: unknown) {
         setError("email", {
           message:
-            error instanceof Error ? error.message : "Si è verificato un errore",
+            error instanceof Error
+              ? error.message
+              : "Si è verificato un errore",
         });
       }
     });

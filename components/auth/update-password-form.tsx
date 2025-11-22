@@ -46,7 +46,9 @@ export function UpdatePasswordForm({
       } catch (error: unknown) {
         setError("password", {
           message:
-            error instanceof Error ? error.message : "Si è verificato un errore",
+            error instanceof Error
+              ? error.message
+              : "Si è verificato un errore",
         });
       }
     });

@@ -3,13 +3,13 @@
 import { InputField, SelectField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import { createCandidate, updateCandidate } from "@/lib/actions/candidates";
+import { Candidate } from "@/lib/prisma/client";
 import {
   CandidateFormData,
   CandidateUpdateData,
   candidateFormSchema,
   candidateUpdateSchema,
 } from "@/lib/schemas/candidate";
-import { Candidate } from "@/lib/prisma/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";

@@ -41,14 +41,14 @@ type QuizWithPositionDetails = Prisma.QuizGetPayload<{
 export type QuizResponse = {
   id: string;
   title: string;
-  created_at: string;  // ISO string from Prisma createdAt
-  position_id: string;  // from Prisma positionId
+  created_at: string; // ISO string from Prisma createdAt
+  position_id: string; // from Prisma positionId
   positions: {
     id: string;
     title: string;
-    experience_level: string;  // from Prisma experienceLevel
+    experience_level: string; // from Prisma experienceLevel
   } | null;
-  time_limit: number | null;  // from Prisma timeLimit
+  time_limit: number | null; // from Prisma timeLimit
   questions: Question[];
 };
 
