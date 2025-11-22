@@ -1,15 +1,20 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { deleteCandidate } from "@/lib/actions/candidates";
-import { Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Loader2, Trash } from "lucide-react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 
 export function DeleteCandidateButton({
@@ -17,66 +22,60 @@ export function DeleteCandidateButton({
 }: {
   candidateId: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const handleDelete = async () => {
-    setIsLoading(true);
-    try {
-      const result = await deleteCandidate(candidateId);
-      if (result.success) {
-        toast.success("Candidato eliminato con successo");
-        router.push("/dashboard/candidates");
+  const handleDelete = () => {
+    startTransition(async () => {
+      try {
+        await deleteCandidate(candidateId);
+      } catch (error) {
+        // Ignore redirect errors (Next.js uses Error to redirect)
+        if (
+          error instanceof Error &&
+          error.message?.includes("NEXT_REDIRECT")
+        ) {
+          return;
+        }
+        console.error("Error deleting candidate:", error);
+        toast.error("Errore durante l'eliminazione del candidato");
       }
-    } catch (error) {
-      console.error("Error deleting candidate:", error);
-      toast.error("Errore durante l'eliminazione del candidato");
-    } finally {
-      setIsLoading(false);
-      setOpen(false);
-    }
+    });
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="destructive" size="sm">
-          <Trash2 className="mr-2 w-4 h-4" />
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive">
+          <Trash className="mr-2 w-4 h-4" />
           Elimina candidato
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-72">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="font-medium leading-none">
-              Confermare l'eliminazione?
-            </h4>
-            <p className="text-muted-foreground text-sm">
-              Questa azione non può essere annullata. Il candidato e tutti i
-              dati associati verranno eliminati permanentemente.
-            </p>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setOpen(false)}
-              disabled={isLoading}
-            >
-              Annulla
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDelete}
-              disabled={isLoading}
-            >
-              {isLoading ? "Eliminando..." : "Elimina"}
-            </Button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Questa azione non può essere annullata. Il candidato e tutti i dati
+            associati verranno eliminati permanentemente.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>Annulla</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isPending}
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                Eliminazione...
+              </>
+            ) : (
+              "Elimina"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

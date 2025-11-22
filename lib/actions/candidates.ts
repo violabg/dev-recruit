@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, updateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
@@ -164,7 +165,8 @@ export async function deleteCandidate(id: string) {
   if (candidate.positionId) {
     revalidatePath(`/dashboard/positions/${candidate.positionId}`);
   }
+  revalidatePath("/dashboard/candidates");
   updateTag("candidates");
 
-  return { success: true as const };
+  redirect("/dashboard/candidates");
 }
