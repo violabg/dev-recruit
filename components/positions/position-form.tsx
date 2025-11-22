@@ -13,7 +13,7 @@ import {
   type PositionDescriptionInput,
 } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -235,7 +235,10 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
                 Generazione in corso...
               </>
             ) : (
-              "Genera descrizione"
+              <>
+                <Sparkles className="ml-2 w-4 h-4 text-primary" />
+                Genera descrizione
+              </>
             )}
           </Button>
         </div>
