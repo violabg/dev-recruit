@@ -1,5 +1,5 @@
 import { EditQuizForm } from "@/app/dashboard/quizzes/[id]/edit/components/edit-quiz-form";
-import { getQuizData } from "@/lib/data/quiz-data";
+import { getQuizData } from "@/lib/data/quizzes";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EditQuizSkeleton } from "./fallbacks";

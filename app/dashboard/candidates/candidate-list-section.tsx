@@ -3,7 +3,7 @@ import { CandidateTable } from "@/components/candidates/candidate-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { fetchFilteredCandidates } from "@/lib/data/candidates";
+import { getFilteredCandidates } from "@/lib/data/candidates";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -22,7 +22,7 @@ export const CandidateListSection = async ({
   sort,
   view,
 }: CandidateListSectionProps) => {
-  const candidates = await fetchFilteredCandidates({
+  const candidates = await getFilteredCandidates({
     search,
     status,
     positionId,

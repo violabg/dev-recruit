@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getQuizzesForPosition } from "@/lib/data/quiz-data";
+import { getQuizzesForPosition } from "@/lib/data/quizzes";
 import { Plus, Sparkles } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";

@@ -3,7 +3,7 @@ import {
   EditableCandidate,
 } from "@/components/candidates/candidate-form";
 import {
-  fetchCandidatePositions,
+  getCandidatePositions,
   getCandidateWithDetails,
 } from "@/lib/data/candidates";
 import type { Route } from "next";
@@ -29,7 +29,7 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
   const { id } = await params;
   const [candidate, positions] = await Promise.all([
     getCandidateWithDetails(id),
-    fetchCandidatePositions(),
+    getCandidatePositions(),
   ]);
 
   if (!candidate) {

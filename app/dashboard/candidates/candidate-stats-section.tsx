@@ -1,14 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CandidateStatusSummary,
-  fetchCandidateStats,
+  getCandidateStats,
 } from "@/lib/data/candidates";
 
 const capitalize = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1);
 
 export const CandidateStatsSection = async () => {
-  const { statusCounts, totalCandidates } = await fetchCandidateStats();
+  const { statusCounts, totalCandidates } = await getCandidateStats();
 
   return (
     <div className="gap-4 grid md:grid-cols-4">

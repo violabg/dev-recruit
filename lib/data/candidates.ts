@@ -91,7 +91,7 @@ const buildCandidateWhere = ({
   return where;
 };
 
-export async function fetchCandidateStats() {
+export async function getCandidateStats() {
   "use cache";
   cacheLife("hours");
   cacheTag("candidates");
@@ -114,7 +114,7 @@ export async function fetchCandidateStats() {
   return { statusCounts, totalCandidates };
 }
 
-export async function fetchCandidatePositions() {
+export async function getCandidatePositions() {
   "use cache";
   cacheLife("hours");
   cacheTag("positions");
@@ -125,7 +125,7 @@ export async function fetchCandidatePositions() {
   });
 }
 
-export async function fetchFilteredCandidates({
+export async function getFilteredCandidates({
   search,
   status,
   positionId,

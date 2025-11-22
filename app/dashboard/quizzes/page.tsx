@@ -1,11 +1,11 @@
 import { QuizCard } from "@/components/quiz/quiz-card";
 import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
 import { Button } from "@/components/ui/button";
+import { CachedQuizzesContent, getQuizzes } from "@/lib/data/quizzes";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { QuizCardsSkeleton, QuizzesStatisticsSkeleton } from "./fallbacks";
-import { CachedQuizzesContent, fetchQuizzesData } from "./quizzes-actions";
 import { QuizzesStatisticsSection } from "./quizzes-components";
 
 /**
@@ -41,7 +41,7 @@ export default async function QuizzesPage({
   const filter = params?.filter || "all";
 
   // Fetch unique levels and initial data for filter options
-  const { uniqueLevels, positionCounts } = await fetchQuizzesData({
+  const { uniqueLevels, positionCounts } = await getQuizzes({
     search: "",
     sort: "newest",
     filter: "all",
