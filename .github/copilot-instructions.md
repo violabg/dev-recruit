@@ -24,7 +24,7 @@
 ## Project-Specific Conventions
 
 - **Styling:** favor Tailwind v4 utilities, gradients, and Vision Pro glass tokens. CSS files must declare colors in OKLCH format (`oklch(...)`). Compose classes with `clsx`, `cn`, or `tailwind-merge` helpers.
-- **Forms:** always pair `react-hook-form` with Zod resolvers using schemas from `lib/schemas/`; validate before invoking server actions.
+- **Forms:** always pair `react-hook-form` with Zod resolvers using schemas from `lib/schemas/`; validate before invoking server actions. Use rhf-input components from `components/` when using forms, create new components there as needed.
 - **Data fetching:** keep Prisma queries in server components. Only mark components `use client` when necessary for interactivity, and wrap runtime APIs inside Suspense with skeleton fallbacks.
 - **Authentication:** Better Auth config lives in `lib/auth.ts`; prefer `getCurrentUser()`/`requireUser()` helpers to enforce row-level security in server actions and routes.
 
