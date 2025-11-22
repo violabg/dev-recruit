@@ -15,7 +15,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { InputField } from "../rhf-inputs/input-field";
@@ -64,7 +64,8 @@ type PositionFormProps = {
 
 export function PositionForm({ position, onCancel }: PositionFormProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, startTransition] = useTransition();
+  const [isGeneratingDescription, startDescriptionGeneration] = useTransition();
 
   const isEditing = !!position;
 
@@ -90,7 +91,6 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
   });
 
   const { control, handleSubmit, getValues, setValue } = form;
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   async function onSubmit(values: PositionFormData) {
     startTransition(async () => {
@@ -126,33 +126,32 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
   };
 
   async function handleGenerateDescription() {
-    setIsGeneratingDescription(true);
-    try {
-      const descriptionPayload: PositionDescriptionInput = {
-        title: getValues("title"),
-        experience_level: getValues("experience_level"),
-        skills: getValues("skills"),
-        soft_skills: getValues("soft_skills"),
-        contract_type: getValues("contract_type"),
-        current_description: getValues("description"),
-      };
+    startDescriptionGeneration(async () => {
+      try {
+        const descriptionPayload: PositionDescriptionInput = {
+          title: getValues("title"),
+          experience_level: getValues("experience_level"),
+          skills: getValues("skills"),
+          soft_skills: getValues("soft_skills"),
+          contract_type: getValues("contract_type"),
+          current_description: getValues("description"),
+        };
 
-      const description = await generatePositionDescriptionAction(
-        descriptionPayload
-      );
+        const description = await generatePositionDescriptionAction(
+          descriptionPayload
+        );
 
-      setValue("description", description);
-      toast.success("Descrizione generata con successo");
-    } catch (error) {
-      console.error("Errore generazione descrizione:", error);
-      const message =
-        error instanceof Error ? error.message : "Errore sconosciuto";
-      toast.error("Impossibile generare la descrizione", {
-        description: message,
-      });
-    } finally {
-      setIsGeneratingDescription(false);
-    }
+        setValue("description", description);
+        toast.success("Descrizione generata con successo");
+      } catch (error) {
+        console.error("Errore generazione descrizione:", error);
+        const message =
+          error instanceof Error ? error.message : "Errore sconosciuto";
+        toast.error("Impossibile generare la descrizione", {
+          description: message,
+        });
+      }
+    });
   }
 
   return (
@@ -227,7 +226,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
             type="button"
             variant="outline"
             onClick={handleGenerateDescription}
-            disabled={isGeneratingDescription || isPending}
+            disabled={isGeneratingDescription || isSubmitting}
           >
             {isGeneratingDescription ? (
               <>
@@ -249,12 +248,12 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
           type="button"
           variant="outline"
           onClick={handleCancel}
-          disabled={isPending}
+          disabled={isSubmitting}
         >
           Annulla
         </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending ? (
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
             <>
               <Loader2 className="mr-2 w-4 h-4 animate-spin" />
               {isEditing
