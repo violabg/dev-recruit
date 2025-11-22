@@ -31,17 +31,24 @@ type QuizWithPositionDetails = Prisma.QuizGetPayload<{
 }>;
 
 // API response DTO - for client/API contracts
+/**
+ * Quiz API response DTO
+ * Transforms Prisma camelCase to snake_case for API contracts
+ * This is a composite view type, not a duplicate of Prisma fields
+ *
+ * @see Principle VII: Acceptable as API contract type extending Prisma model
+ */
 export type QuizResponse = {
   id: string;
   title: string;
-  created_at: string;
-  position_id: string;
+  created_at: string;  // ISO string from Prisma createdAt
+  position_id: string;  // from Prisma positionId
   positions: {
     id: string;
     title: string;
-    experience_level: string;
+    experience_level: string;  // from Prisma experienceLevel
   } | null;
-  time_limit: number | null;
+  time_limit: number | null;  // from Prisma timeLimit
   questions: Question[];
 };
 

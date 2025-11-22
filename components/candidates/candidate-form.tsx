@@ -9,6 +9,7 @@ import {
   candidateFormSchema,
   candidateUpdateSchema,
 } from "@/lib/schemas/candidate";
+import { Candidate } from "@/lib/prisma/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -23,15 +24,6 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "rejected", label: "Rifiutato" },
 ];
 
-export type EditableCandidate = {
-  id: string;
-  name: string;
-  email: string;
-  positionId: string;
-  status: NonNullable<CandidateUpdateData["status"]>;
-  resumeUrl: string | null;
-};
-
 type CandidateFormProps =
   | {
       mode: "new";
@@ -41,7 +33,10 @@ type CandidateFormProps =
   | {
       mode: "edit";
       positions: { id: string; title: string }[];
-      candidate: EditableCandidate;
+      candidate: Pick<
+        Candidate,
+        "id" | "name" | "email" | "positionId" | "status" | "resumeUrl"
+      >;
     };
 
 export const CandidateForm = (props: CandidateFormProps) => {
@@ -59,7 +54,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
           name: props.candidate.name,
           email: props.candidate.email,
           position_id: props.candidate.positionId,
-          status: props.candidate.status,
+          status: props.candidate.status as any,
           resume_url: props.candidate.resumeUrl ?? "",
         }
       : {
