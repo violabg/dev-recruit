@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuizzesForPosition } from "@/lib/data/quizzes";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
@@ -67,8 +67,8 @@ export default async function Quizes({ id }: { id: string }) {
             </p>
             <Button className="mt-2" size="sm" asChild>
               <Link href={`/dashboard/positions/${id}/quiz/new`}>
-                <Sparkles className="mr-2 w-4 h-4 text-primary" />
-                Genera Quiz AI
+                New Quiz
+                <Plus className="ml-2 w-4 h-4" />
               </Link>
             </Button>
           </div>

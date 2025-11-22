@@ -113,12 +113,12 @@ export const getOptimalModel = (
   switch (taskType) {
     case "quiz_generation":
       // Complex multi-question generation needs high capability and large output
-      return LLM_MODELS.GPT_OSS_20B;
+      return LLM_MODELS.KIMI;
     // return LLM_MODELS.VERSATILE;
 
     case "question_generation":
       // Single question generation can use faster model
-      return LLM_MODELS.GPT_OSS_20B;
+      return LLM_MODELS.KIMI;
     // return LLM_MODELS.INSTANT;
 
     case "overall_evaluation":
@@ -130,11 +130,11 @@ export const getOptimalModel = (
 
     case "simple_task":
       // Basic tasks use fastest model
-      return LLM_MODELS.INSTANT;
+      return LLM_MODELS.KIMI;
 
     default:
       // Default to versatile model for unknown tasks
-      return LLM_MODELS.VERSATILE;
+      return LLM_MODELS.KIMI;
   }
 };
 

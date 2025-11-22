@@ -5,6 +5,11 @@ import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { PositionFormData, positionFormSchema } from "../schemas";
+import {
+  PositionDescriptionInput,
+  positionDescriptionSchema,
+} from "../schemas/position";
+import { generatePositionDescription } from "../services/ai-service";
 
 // Position actions
 export async function createPosition(values: PositionFormData) {
@@ -104,4 +109,23 @@ export async function updatePosition(id: string, formData: FormData) {
   updateTag(`positions-${id}`);
 
   redirect(`/dashboard/positions/${id}`);
+}
+
+export async function generatePositionDescriptionAction(
+  values: PositionDescriptionInput
+) {
+  await requireUser();
+
+  const validated = positionDescriptionSchema.parse(values);
+
+  const description = await generatePositionDescription({
+    title: validated.title,
+    experienceLevel: validated.experience_level,
+    skills: validated.skills,
+    softSkills: validated.soft_skills,
+    contractType: validated.contract_type,
+    currentDescription: validated.current_description,
+  });
+
+  return description;
 }

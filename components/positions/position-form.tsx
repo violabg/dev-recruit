@@ -1,14 +1,23 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { SelectItem } from "@/components/ui/select";
-import { createPosition, updatePosition } from "@/lib/actions/positions";
+import {
+  createPosition,
+  generatePositionDescriptionAction,
+  updatePosition,
+} from "@/lib/actions/positions";
 import { Position } from "@/lib/prisma/client";
-import { PositionFormData, positionFormSchema } from "@/lib/schemas";
+import {
+  PositionFormData,
+  positionFormSchema,
+  type PositionDescriptionInput,
+} from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { InputField } from "../rhf-inputs/input-field";
 import { MultiSelectField } from "../rhf-inputs/multi-select-field";
 import { SelectField } from "../rhf-inputs/select-field";
@@ -80,7 +89,8 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
         },
   });
 
-  const { control, handleSubmit } = form;
+  const { control, handleSubmit, getValues, setValue } = form;
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   async function onSubmit(values: PositionFormData) {
     startTransition(async () => {
@@ -115,6 +125,36 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
     }
   };
 
+  async function handleGenerateDescription() {
+    setIsGeneratingDescription(true);
+    try {
+      const descriptionPayload: PositionDescriptionInput = {
+        title: getValues("title"),
+        experience_level: getValues("experience_level"),
+        skills: getValues("skills"),
+        soft_skills: getValues("soft_skills"),
+        contract_type: getValues("contract_type"),
+        current_description: getValues("description"),
+      };
+
+      const description = await generatePositionDescriptionAction(
+        descriptionPayload
+      );
+
+      setValue("description", description);
+      toast.success("Descrizione generata con successo");
+    } catch (error) {
+      console.error("Errore generazione descrizione:", error);
+      const message =
+        error instanceof Error ? error.message : "Errore sconosciuto";
+      toast.error("Impossibile generare la descrizione", {
+        description: message,
+      });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <InputField<PositionFormData>
@@ -123,14 +163,6 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
         label="Titolo della posizione"
         placeholder="es. Sviluppatore Frontend React"
         description="Inserisci un titolo chiaro e descrittivo"
-      />
-      <TextareaField<PositionFormData>
-        control={control}
-        name="description"
-        label="Descrizione"
-        description="Forinisci dettagli sulla posizione e sulle responsabilità"
-        placeholder="Descrivi la posizione, le responsabilità e i requisiti"
-        className="min-h-32"
       />
       <SelectField<PositionFormData>
         control={control}
@@ -180,6 +212,34 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
           </SelectItem>
         ))}
       </SelectField>
+
+      <div className="space-y-2">
+        <TextareaField<PositionFormData>
+          control={control}
+          name="description"
+          label="Descrizione"
+          description="Forinisci dettagli sulla posizione e sulle responsabilità"
+          placeholder="Descrivi la posizione, le responsabilità e i requisiti"
+          className="min-h-32"
+        />
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGenerateDescription}
+            disabled={isGeneratingDescription || isPending}
+          >
+            {isGeneratingDescription ? (
+              <>
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                Generazione in corso...
+              </>
+            ) : (
+              "Genera descrizione"
+            )}
+          </Button>
+        </div>
+      </div>
 
       <div className="flex gap-4">
         <Button

@@ -1,5 +1,6 @@
 import { groq } from "@ai-sdk/groq";
 import { generateObject, NoObjectGeneratedError } from "ai";
+import { z } from "zod/v4";
 import {
   aiQuizGenerationSchema,
   convertToStrictQuestions,
@@ -51,8 +52,15 @@ const DEFAULT_CONFIG: AIGenerationConfig = {
   ],
 };
 
+const positionDescriptionResponseSchema = z.object({
+  description: z
+    .string()
+    .min(40, "La descrizione generata è troppo breve")
+    .max(1200, "La descrizione generata è troppo lunga"),
+});
+
 // Input sanitization to prevent prompt injection
-function sanitizeInput(input: string): string {
+export function sanitizeInput(input: string): string {
   if (!input || typeof input !== "string") return "";
 
   // Remove potential prompt injection patterns
@@ -79,7 +87,7 @@ function sanitizeInput(input: string): string {
 }
 
 // Retry mechanism with exponential backoff
-async function withRetry<T>(
+export async function withRetry<T>(
   fn: () => Promise<T>,
   config: AIGenerationConfig
 ): Promise<T> {
@@ -111,7 +119,10 @@ async function withRetry<T>(
 }
 
 // Timeout wrapper
-function withTimeout<T>(promise: Promise<T>, timeout: number): Promise<T> {
+export function withTimeout<T>(
+  promise: Promise<T>,
+  timeout: number
+): Promise<T> {
   return Promise.race([
     promise,
     new Promise<never>((_, reject) =>
@@ -948,6 +959,156 @@ export class AIQuizService {
         }
       );
     }
+  }
+}
+
+export interface GeneratePositionDescriptionParams {
+  title: string;
+  experienceLevel: string;
+  skills: string[];
+  softSkills?: string[];
+  contractType?: string;
+  currentDescription?: string;
+  instructions?: string;
+  specificModel?: string;
+}
+
+const descriptionSystemPrompt = `
+You are a senior technical recruiter writing concise Italian job descriptions for a modern tech team.
+Generate a short summary that highlights responsibilities, required experience, and why the role is compelling.
+Return a single JSON object with only the field "description" containing Italian text between 2 and 4 sentences. Do not include any commentary or extra keys.
+`;
+
+const buildPositionDescriptionPrompt = (
+  params: GeneratePositionDescriptionParams
+): string => {
+  const sanitizedTitle = sanitizeInput(params.title);
+  const sanitizedSkills = params.skills.map(sanitizeInput).join(", ");
+  const sanitizedSoftSkills = params.softSkills
+    ? params.softSkills.map(sanitizeInput).join(", ")
+    : "Non specificate";
+  const sanitizedContract = params.contractType
+    ? sanitizeInput(params.contractType)
+    : "Non specificato";
+  const sanitizedCurrentDescription = params.currentDescription
+    ? sanitizeInput(params.currentDescription)
+    : "";
+  const sanitizedInstructions = params.instructions
+    ? sanitizeInput(params.instructions)
+    : "";
+
+  return `
+  Posizione:
+  - Titolo: ${sanitizedTitle}
+  - Livello di esperienza: ${params.experienceLevel}
+  - Competenze tecniche: ${sanitizedSkills}
+  - Soft skills: ${sanitizedSoftSkills}
+  - Tipo di contratto: ${sanitizedContract}
+  ${
+    sanitizedCurrentDescription
+      ? `\n  - Descrizione attuale: ${sanitizedCurrentDescription}`
+      : ""
+  }
+  ${
+    sanitizedInstructions
+      ? `\n  - Istruzioni aggiuntive: ${sanitizedInstructions}`
+      : ""
+  }
+
+  Scrivi una breve descrizione (2-4 frasi) in italiano che sintetizzi responsabilità, impatto atteso e aspetti distintivi della posizione. Rispondi esclusivamente con un oggetto JSON contenente il campo "description" e la stringa italiana richiesta.
+  `;
+};
+
+export async function generatePositionDescription(
+  params: GeneratePositionDescriptionParams
+): Promise<string> {
+  const startTime = performance.now();
+
+  try {
+    const model = getOptimalModel("simple_task", params.specificModel);
+    const prompt = buildPositionDescriptionPrompt(params);
+
+    const result = await withTimeout(
+      withRetry(async () => {
+        try {
+          const response = await generateObject({
+            model: groq(model),
+            prompt,
+            system: descriptionSystemPrompt,
+            schema: positionDescriptionResponseSchema,
+            temperature: 0.7,
+            mode: "json",
+            providerOptions: {
+              groq: {
+                structuredOutputs: false,
+              },
+            },
+          });
+
+          if (!response.object?.description) {
+            throw new AIGenerationError(
+              "Invalid description structure",
+              AIErrorCode.INVALID_RESPONSE,
+              { response }
+            );
+          }
+
+          return response.object;
+        } catch (error) {
+          if (error instanceof NoObjectGeneratedError) {
+            throw new AIGenerationError(
+              "AI model failed to generate a description",
+              AIErrorCode.GENERATION_FAILED,
+              { originalError: error.message }
+            );
+          }
+          throw error;
+        }
+      }, DEFAULT_CONFIG),
+      DEFAULT_CONFIG.timeout
+    );
+
+    const duration = performance.now() - startTime;
+    console.log(`Description generation completed in ${duration.toFixed(2)}ms`);
+
+    return result.description.trim();
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    console.error(
+      `Description generation failed after ${duration.toFixed(2)}ms:`,
+      error
+    );
+
+    if (error instanceof AIGenerationError) {
+      throw error;
+    }
+
+    if (params.specificModel && DEFAULT_CONFIG.fallbackModels.length > 0) {
+      console.log("Attempting fallback models for description...");
+      for (const fallbackModel of DEFAULT_CONFIG.fallbackModels) {
+        if (fallbackModel !== params.specificModel) {
+          try {
+            return await generatePositionDescription({
+              ...params,
+              specificModel: fallbackModel,
+            });
+          } catch {
+            console.log(
+              `Fallback model ${fallbackModel} also failed for description`
+            );
+            continue;
+          }
+        }
+      }
+    }
+
+    throw new AIGenerationError(
+      "All description generation attempts failed",
+      AIErrorCode.GENERATION_FAILED,
+      {
+        originalError: error instanceof Error ? error.message : String(error),
+      }
+    );
   }
 }
 
