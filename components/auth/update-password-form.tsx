@@ -12,7 +12,7 @@ import { UpdatePasswordFormData, updatePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { PasswordField } from "../rhf-inputs/password-field";
 
@@ -20,7 +20,7 @@ export function UpdatePasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const form = useForm<UpdatePasswordFormData>({
     resolver: zodResolver(updatePasswordSchema),
@@ -30,27 +30,26 @@ export function UpdatePasswordForm({
   const { handleSubmit, setError } = form;
 
   const handleUpdatePassword = async (values: UpdatePasswordFormData) => {
-    setIsLoading(true);
-    try {
-      const result = await authClient.resetPassword({
-        newPassword: values.password,
-      });
+    startTransition(async () => {
+      try {
+        const result = await authClient.resetPassword({
+          newPassword: values.password,
+        });
 
-      if (result.error) {
-        throw new Error(
-          result.error.message ?? "Errore nell'aggiornamento della password"
-        );
+        if (result.error) {
+          throw new Error(
+            result.error.message ?? "Errore nell'aggiornamento della password"
+          );
+        }
+
+        router.push("/dashboard");
+      } catch (error: unknown) {
+        setError("password", {
+          message:
+            error instanceof Error ? error.message : "Si è verificato un errore",
+        });
       }
-
-      router.push("/dashboard");
-    } catch (error: unknown) {
-      setError("password", {
-        message:
-          error instanceof Error ? error.message : "Si è verificato un errore",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -74,10 +73,10 @@ export function UpdatePasswordForm({
               label="Nuova password"
               placeholder="New password"
               autoComplete="new-password"
-              disabled={isLoading}
+              disabled={isPending}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Salvataggio..." : "Salva nuova password"}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Salvataggio..." : "Salva nuova password"}
             </Button>
           </form>
         </CardContent>

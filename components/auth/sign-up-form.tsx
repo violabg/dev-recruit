@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { InputField } from "../rhf-inputs/input-field";
 import { PasswordField } from "../rhf-inputs/password-field";
@@ -22,7 +22,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -38,32 +38,31 @@ export function SignUpForm({
   const { handleSubmit, setError } = form;
 
   const handleSignUp = async (values: SignUpFormData) => {
-    setIsLoading(true);
-    try {
-      const result = await authClient.signUp.email({
-        email: values.email,
-        password: values.password,
-        name: `${values.first_name} ${values.last_name}`,
-        callbackURL: `${window.location.origin}/dashboard`,
-      });
+    startTransition(async () => {
+      try {
+        const result = await authClient.signUp.email({
+          email: values.email,
+          password: values.password,
+          name: `${values.first_name} ${values.last_name}`,
+          callbackURL: `${window.location.origin}/dashboard`,
+        });
 
-      if (result.error) {
-        throw new Error(
-          result.error.message ?? "Errore durante la registrazione"
-        );
+        if (result.error) {
+          throw new Error(
+            result.error.message ?? "Errore durante la registrazione"
+          );
+        }
+
+        router.push("/auth/sign-up-success");
+      } catch (error: unknown) {
+        setError("email", {
+          message:
+            error instanceof Error
+              ? error.message
+              : "Si è verificato un errore durante la registrazione",
+        });
       }
-
-      router.push("/auth/sign-up-success");
-    } catch (error: unknown) {
-      setError("email", {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Si è verificato un errore durante la registrazione",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -86,7 +85,7 @@ export function SignUpForm({
               type="text"
               placeholder="Mario"
               autoComplete="given-name"
-              disabled={isLoading}
+              disabled={isPending}
             />
             <InputField<SignUpFormData>
               name="last_name"
@@ -95,7 +94,7 @@ export function SignUpForm({
               type="text"
               placeholder="Rossi"
               autoComplete="family-name"
-              disabled={isLoading}
+              disabled={isPending}
             />
             <InputField<SignUpFormData>
               name="email"
@@ -104,24 +103,24 @@ export function SignUpForm({
               type="email"
               placeholder="m@example.com"
               autoComplete="email"
-              disabled={isLoading}
+              disabled={isPending}
             />
             <PasswordField<SignUpFormData>
               name="password"
               label="Password"
               control={form.control}
               autoComplete="new-password"
-              disabled={isLoading}
+              disabled={isPending}
             />
             <PasswordField<SignUpFormData>
               name="repeatPassword"
               label="Ripeti Password"
               control={form.control}
               autoComplete="new-password"
-              disabled={isLoading}
+              disabled={isPending}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creazione account..." : "Registrati"}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Creazione account..." : "Registrati"}
             </Button>
             <div className="mt-4 text-sm text-center">
               Hai già un account?{" "}

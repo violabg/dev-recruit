@@ -12,7 +12,7 @@ import { ForgotPasswordFormData, forgotPasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { InputField } from "../rhf-inputs/input-field";
 
@@ -21,7 +21,7 @@ export function ForgotPasswordForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
@@ -30,28 +30,27 @@ export function ForgotPasswordForm({
   const { handleSubmit, setError } = form;
 
   const handleForgotPassword = async (values: ForgotPasswordFormData) => {
-    setIsLoading(true);
-    try {
-      const result = await authClient.forgetPassword({
-        email: values.email,
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
+    startTransition(async () => {
+      try {
+        const result = await authClient.forgetPassword({
+          email: values.email,
+          redirectTo: `${window.location.origin}/auth/update-password`,
+        });
 
-      if (result.error) {
-        throw new Error(
-          result.error.message ?? "Errore durante l'invio dell'email"
-        );
+        if (result.error) {
+          throw new Error(
+            result.error.message ?? "Errore durante l'invio dell'email"
+          );
+        }
+
+        setSuccess(true);
+      } catch (error: unknown) {
+        setError("email", {
+          message:
+            error instanceof Error ? error.message : "Si è verificato un errore",
+        });
       }
-
-      setSuccess(true);
-    } catch (error: unknown) {
-      setError("email", {
-        message:
-          error instanceof Error ? error.message : "Si è verificato un errore",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -93,10 +92,10 @@ export function ForgotPasswordForm({
                 type="email"
                 placeholder="m@example.com"
                 autoComplete="email"
-                disabled={isLoading}
+                disabled={isPending}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Invio in corso..." : "Invia email di reset"}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "Invio in corso..." : "Invia email di reset"}
               </Button>
               <div className="mt-4 text-sm text-center">
                 Hai già un account?{" "}

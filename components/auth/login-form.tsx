@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useId, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { InputField } from "../rhf-inputs/input-field";
 import { PasswordField } from "../rhf-inputs/password-field";
@@ -24,7 +24,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -35,34 +35,33 @@ export function LoginForm({
   const passwordId = useId();
 
   const handleLogin = async (values: LoginFormData) => {
-    setIsLoading(true);
-    try {
-      const result = await authClient.signIn.email({
-        email: values.email,
-        password: values.password,
-        callbackURL: `${window.location.origin}/dashboard`,
-      });
+    startTransition(async () => {
+      try {
+        const result = await authClient.signIn.email({
+          email: values.email,
+          password: values.password,
+          callbackURL: `${window.location.origin}/dashboard`,
+        });
 
-      if (result.error) {
-        throw new Error(result.error.message ?? "Credenziali non valide");
+        if (result.error) {
+          throw new Error(result.error.message ?? "Credenziali non valide");
+        }
+
+        if (result.data?.redirect && result.data.url) {
+          window.location.href = result.data.url;
+          return;
+        }
+
+        router.push("/dashboard");
+      } catch (error: unknown) {
+        setError("email", {
+          message:
+            error instanceof Error
+              ? error.message
+              : "Si è verificato un errore durante l'accesso",
+        });
       }
-
-      if (result.data?.redirect && result.data.url) {
-        window.location.href = result.data.url;
-        return;
-      }
-
-      router.push("/dashboard");
-    } catch (error: unknown) {
-      setError("email", {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Si è verificato un errore durante l'accesso",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -87,7 +86,7 @@ export function LoginForm({
               placeholder="m@example.com"
               autoComplete="email"
               control={form.control}
-              disabled={isLoading}
+              disabled={isPending}
             />
             <>
               <div className="flex items-center gap-2">
@@ -104,11 +103,11 @@ export function LoginForm({
                 control={form.control}
                 placeholder="Password"
                 autoComplete="current-password"
-                disabled={isLoading}
+                disabled={isPending}
               />
             </>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Accesso in corso..." : "Accedi"}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Accesso in corso..." : "Accedi"}
             </Button>
           </form>
           <Separator className="my-4" />
