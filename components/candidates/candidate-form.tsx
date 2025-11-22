@@ -13,7 +13,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -64,6 +64,18 @@ export const CandidateForm = (props: CandidateFormProps) => {
           resume_url: "",
         },
   });
+
+  // Reset form when mode changes or when defaultPositionId changes
+  useEffect(() => {
+    if (!isEditMode && "defaultPositionId" in props) {
+      form.reset({
+        name: "",
+        email: "",
+        position_id: props.defaultPositionId || props.positions[0]?.id || "",
+        resume_url: "",
+      });
+    }
+  }, [isEditMode, props.positions, form]);
 
   const handleFormSubmission = (
     values: CandidateFormData | CandidateUpdateData
