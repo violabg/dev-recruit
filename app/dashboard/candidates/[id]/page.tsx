@@ -1,4 +1,5 @@
 import { CandidateStatusBadge } from "@/components/candidates/candidate-status-badge";
+import { DeleteCandidateButton } from "@/components/candidates/delete-candidate-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,9 +52,7 @@ export default async function CandidateDetailPage({
               Modifica
             </Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/candidates">Torna ai candidati</Link>
-          </Button>
+          <DeleteCandidateButton candidateId={candidate.id} />
         </div>
       </div>
       <Card>
