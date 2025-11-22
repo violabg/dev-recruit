@@ -29,17 +29,14 @@ const sanitizeResumeUrl = (value?: string | null) => {
   return value.trim();
 };
 
-const ensureCandidateOwnership = async (
-  candidateId: string,
-  userId: string
-) => {
+const getCandidateById = async (id: string) => {
   const candidate = await prisma.candidate.findUnique({
-    where: { id: candidateId },
-    select: { createdBy: true, positionId: true },
+    where: { id },
+    select: { positionId: true },
   });
 
-  if (!candidate || candidate.createdBy !== userId) {
-    throw new Error("Candidate not found or you don't have permission");
+  if (!candidate) {
+    throw new Error("Candidate not found");
   }
 
   return candidate;
@@ -98,7 +95,7 @@ export async function updateCandidate(
 
   const payload: CandidateUpdateData = candidateUpdateSchema.parse(rawPayload);
 
-  const candidate = await ensureCandidateOwnership(id, user.id);
+  const candidate = await getCandidateById(id);
 
   const updateData: Prisma.CandidateUpdateInput = {};
   let newPositionId: string | undefined;
@@ -158,7 +155,7 @@ export async function updateCandidate(
 export async function deleteCandidate(id: string) {
   const user = await requireUser();
 
-  const candidate = await ensureCandidateOwnership(id, user.id);
+  const candidate = await getCandidateById(id);
 
   await prisma.candidate.delete({ where: { id } });
 
