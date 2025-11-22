@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BrainCircuit, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import {
@@ -56,7 +56,7 @@ export const QuizForm = ({
   quizId,
 }: QuizFormProps) => {
   const router = useRouter();
-  const [generating, setGenerating] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const formSchema = quizGenerationConfigSchema.extend({
     enableTimeLimit: z.boolean(),
@@ -86,78 +86,77 @@ export const QuizForm = ({
   const enableTimeLimit = watch("enableTimeLimit");
 
   async function onSubmit(values: FormData) {
-    setGenerating(true);
-    try {
-      // If editing existing quiz, use regenerateQuizAction
-      if (quizId) {
-        const result = await regenerateQuizAction({
-          quizId,
-          positionId: position.id,
-          quizTitle: values.quizTitle,
-          questionCount: values.questionCount,
-          difficulty: values.difficulty,
-          includeMultipleChoice: values.includeMultipleChoice,
-          includeOpenQuestions: values.includeOpenQuestions,
-          includeCodeSnippets: values.includeCodeSnippets,
-          instructions: values.instructions || undefined,
-          specificModel: values.specificModel,
-        });
+    startTransition(async () => {
+      try {
+        // If editing existing quiz, use regenerateQuizAction
+        if (quizId) {
+          const result = await regenerateQuizAction({
+            quizId,
+            positionId: position.id,
+            quizTitle: values.quizTitle,
+            questionCount: values.questionCount,
+            difficulty: values.difficulty,
+            includeMultipleChoice: values.includeMultipleChoice,
+            includeOpenQuestions: values.includeOpenQuestions,
+            includeCodeSnippets: values.includeCodeSnippets,
+            instructions: values.instructions || undefined,
+            specificModel: values.specificModel,
+          });
 
-        toast.success("Quiz rigenerato con successo!");
-        if (onSuccess) {
-          onSuccess(result);
-        }
-      } else {
-        // Creating new quiz
-        const quizData = await generateNewQuizAction({
-          positionId: position.id,
-          quizTitle: values.quizTitle,
-          questionCount: values.questionCount,
-          difficulty: values.difficulty,
-          includeMultipleChoice: values.includeMultipleChoice,
-          includeOpenQuestions: values.includeOpenQuestions,
-          includeCodeSnippets: values.includeCodeSnippets,
-          instructions: values.instructions || undefined,
-          specificModel: values.specificModel,
-        });
-
-        if (!quizData || !quizData.questions) {
-          throw new Error("No quiz generated");
-        }
-
-        const formData = new FormData();
-        formData.append("title", values.quizTitle);
-        formData.append("position_id", position.id);
-        formData.append("questions", JSON.stringify(quizData.questions));
-        formData.append(
-          "time_limit",
-          values.enableTimeLimit ? values.timeLimit.toString() : ""
-        );
-
-        const saveResult = await upsertQuizAction(formData);
-
-        if (!saveResult || !saveResult.id) {
-          throw new Error("Failed to save quiz");
-        }
-
-        toast.success("Quiz generato con successo!");
-        if (onSuccess) {
-          onSuccess(saveResult);
+          toast.success("Quiz rigenerato con successo!");
+          if (onSuccess) {
+            onSuccess(result);
+          }
         } else {
-          router.push(`/dashboard/quizzes/${saveResult.id}`);
+          // Creating new quiz
+          const quizData = await generateNewQuizAction({
+            positionId: position.id,
+            quizTitle: values.quizTitle,
+            questionCount: values.questionCount,
+            difficulty: values.difficulty,
+            includeMultipleChoice: values.includeMultipleChoice,
+            includeOpenQuestions: values.includeOpenQuestions,
+            includeCodeSnippets: values.includeCodeSnippets,
+            instructions: values.instructions || undefined,
+            specificModel: values.specificModel,
+          });
+
+          if (!quizData || !quizData.questions) {
+            throw new Error("No quiz generated");
+          }
+
+          const formData = new FormData();
+          formData.append("title", values.quizTitle);
+          formData.append("position_id", position.id);
+          formData.append("questions", JSON.stringify(quizData.questions));
+          formData.append(
+            "time_limit",
+            values.enableTimeLimit ? values.timeLimit.toString() : ""
+          );
+
+          const saveResult = await upsertQuizAction(formData);
+
+          if (!saveResult || !saveResult.id) {
+            throw new Error("Failed to save quiz");
+          }
+
+          toast.success("Quiz generato con successo!");
+          if (onSuccess) {
+            onSuccess(saveResult);
+          } else {
+            router.push(`/dashboard/quizzes/${saveResult.id}`);
+          }
         }
+      } catch (error: unknown) {
+        console.error("Error generating quiz:", error);
+        toast.error("Errore", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Si è verificato un errore durante la generazione del quiz",
+        });
       }
-    } catch (error: unknown) {
-      console.error("Error generating quiz:", error);
-      toast.error("Errore", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "Si è verificato un errore durante la generazione del quiz",
-      });
-    } finally {
-      setGenerating(false);
-    }
+    });
   }
 
   return (
@@ -286,8 +285,8 @@ export const QuizForm = ({
         >
           Annulla
         </Button>
-        <Button type="submit" disabled={generating}>
-          {generating ? (
+        <Button type="submit" disabled={isPending}>
+          {isPending ? (
             <>
               <Loader2 className="mr-2 w-4 h-4 animate-spin" />
               Generazione in corso...
