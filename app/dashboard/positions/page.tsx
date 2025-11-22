@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { getPositions } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import PositionsSkeleton from "./fallback";
@@ -98,9 +98,14 @@ const PositionsTable = async ({
                     {formatDate(position.createdAt.toISOString())}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="default" size="sm" asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      title="Vai al dettaglio"
+                    >
                       <Link href={`/dashboard/positions/${position.id}`}>
-                        Dettagli
+                        <Eye className="mr-1 w-4 h-4 text-primary" />
                       </Link>
                     </Button>
                   </TableCell>

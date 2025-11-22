@@ -12,7 +12,7 @@ import {
   getPositionsCount,
   getRecentPositions,
 } from "@/lib/data/dashboard";
-import { BarChart3, Briefcase, Plus, Users } from "lucide-react";
+import { BarChart3, Briefcase, Eye, Plus, Users } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -113,9 +113,14 @@ async function RecentPositions() {
                     {position.experienceLevel ?? "Esperienza non indicata"}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  title="Vai al dettaglio"
+                >
                   <Link href={`/dashboard/positions/${position.id}`}>
-                    Dettagli
+                    <Eye className="mr-1 w-4 h-4 text-primary" />
                   </Link>
                 </Button>
               </div>

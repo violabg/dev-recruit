@@ -52,7 +52,7 @@ export function QuizCard({
         <div className="flex justify-between gap-2 w-full">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/quizzes/${id}`}>
-              <Eye className="mr-1 w-4 h-4" />
+              <Eye className="mr-1 w-4 h-4 text-primary" />
               Visualizza
             </Link>
           </Button>

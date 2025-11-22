@@ -23,6 +23,7 @@ import { it } from "date-fns/locale";
 import {
   Briefcase,
   Calendar,
+  Eye,
   FileText,
   Link2,
   Mail,
@@ -170,6 +171,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             <CandidateStatusBadge status={candidate.status} />
             <Button asChild variant="outline" size="sm">
               <Link href={`/dashboard/candidates/${candidate.id}`}>
+                <Eye className="mr-1 w-4 h-4 text-primary" />
                 Visualizza
               </Link>
             </Button>

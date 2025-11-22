@@ -107,9 +107,14 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                   })}
               </TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon" className="p-0 w-8 h-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="p-0 w-8 h-8"
+                  title="Vai al dettaglio"
+                >
                   <Link href={`/dashboard/candidates/${candidate.id}`}>
-                    <Eye className="w-4 h-4" />
+                    <Eye className="mr-1 w-4 h-4 text-primary" />
                   </Link>
                 </Button>
                 <DropdownMenu>
