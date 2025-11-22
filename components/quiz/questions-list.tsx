@@ -5,8 +5,8 @@ import { SaveStatus } from "@/lib/utils/quiz-form-utils";
 import { useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod/v4";
-import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
-import { QuestionTypeFilter } from "../hooks/use-question-management";
+import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
+import { QuestionTypeFilter } from "../../hooks/use-question-management";
 import { QuestionItem } from "./question-item";
 
 type Question = z.infer<typeof questionSchemas.flexible>;

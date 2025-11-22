@@ -22,7 +22,7 @@ import {
 import { ChevronDown, ChevronUp, Sparkles, Trash2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod/v4";
-import { EditQuizFormData } from "../hooks/use-edit-quiz-form";
+import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
 
 type Question = z.infer<typeof questionSchemas.flexible>;
 

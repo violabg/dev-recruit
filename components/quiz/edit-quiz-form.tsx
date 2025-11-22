@@ -9,13 +9,13 @@ import {
 import { QuestionType, QuizForm } from "@/lib/schemas";
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
-import { useAIGeneration } from "../hooks/use-ai-generation";
+import { useAIGeneration } from "../../hooks/use-ai-generation";
 import {
   EditQuizFormData,
   SaveQuizResult,
   useEditQuizForm,
-} from "../hooks/use-edit-quiz-form";
-import { useQuestionManagement } from "../hooks/use-question-management";
+} from "../../hooks/use-edit-quiz-form";
+import { useQuestionManagement } from "../../hooks/use-question-management";
 import { AIDialogs } from "./ai-dialogs";
 import { PresetGenerationButtons } from "./preset-generation-buttons";
 import { QuestionsHeader } from "./questions-header";

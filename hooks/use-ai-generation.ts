@@ -22,7 +22,6 @@ import { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { EditQuizFormData } from "./use-edit-quiz-form";
-
 type Question = FlexibleQuestion;
 
 type UseAIGenerationProps = {

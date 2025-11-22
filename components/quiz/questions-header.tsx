@@ -1,5 +1,4 @@
 "use client";
-import { QuestionTypeFilter } from "@/app/dashboard/quizzes/[id]/edit/hooks/use-question-management";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { QuestionTypeFilter } from "@/hooks/use-question-management";
 import { QuestionType } from "@/lib/schemas";
 import {
   getQuestionTypeLabel,

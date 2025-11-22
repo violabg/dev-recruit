@@ -1,7 +1,6 @@
 "use client";
 
-import { EditQuizForm } from "@/app/dashboard/quizzes/[id]/edit/components/edit-quiz-form";
-import { SaveQuizResult } from "@/app/dashboard/quizzes/[id]/edit/hooks/use-edit-quiz-form";
+import { EditQuizForm } from "@/components/quiz/edit-quiz-form";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SaveQuizResult } from "@/hooks/use-edit-quiz-form";
 import { QuizForm } from "@/lib/schemas";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

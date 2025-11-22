@@ -1,6 +1,6 @@
 "use client";
 
-import { AIQuizGenerationDialog } from "@/app/dashboard/quizzes/[id]/edit/components/ai-quiz-generation-dialog";
+import { AIQuizGenerationDialog } from "@/components/quiz/ai-quiz-generation-dialog";
 import { QuestionType } from "@/lib/schemas";
 import { AIQuestionGenerationDialog } from "./ai-question-generation-dialog";
 
