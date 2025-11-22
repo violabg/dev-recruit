@@ -2,11 +2,7 @@ import { Suspense } from "react";
 
 import { CandidateFiltersSection } from "./candidate-filters-section";
 import { CandidateListSection } from "./candidate-list-section";
-import {
-  CandidatesListSkeleton,
-  FiltersSkeleton,
-  StatsSkeleton,
-} from "./fallbacks";
+import { CandidatesListSkeleton, FiltersSkeleton } from "./fallbacks";
 
 export type CandidatesSearchParams = {
   search?: string;
@@ -66,7 +62,6 @@ const normalizeSearchParams = (params: CandidatesSearchParams) => ({
 
 export const CandidatesRuntimeFallback = () => (
   <div className="space-y-6">
-    <StatsSkeleton />
     <FiltersSkeleton />
     <CandidatesListSkeleton />
   </div>
