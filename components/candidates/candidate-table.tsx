@@ -128,7 +128,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                     <DropdownMenuLabel>Azioni</DropdownMenuLabel>
                     <DropdownMenuItem asChild>
                       <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-                        <Link2 className="mr-2 w-4 h-4" />
+                        <Link2 className="mr-1 w-4 h-4" />
                         Associa quiz
                       </Link>
                     </DropdownMenuItem>
@@ -138,7 +138,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                           <Link
                             href={`/dashboard/interviews/${candidate.interviews[0].id}`}
                           >
-                            <FileText className="mr-2 w-4 h-4" />
+                            <FileText className="mr-1 w-4 h-4" />
                             Visualizza risultati
                           </Link>
                         </DropdownMenuItem>
@@ -149,7 +149,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                       disabled={isDeleting === candidate.id}
                       className="text-red-600"
                     >
-                      <Trash className="mr-2 w-4 h-4" />
+                      <Trash className="mr-1 w-4 h-4" />
                       {isDeleting === candidate.id
                         ? "Eliminazione..."
                         : "Elimina candidato"}

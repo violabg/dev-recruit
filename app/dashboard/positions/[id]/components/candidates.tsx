@@ -80,7 +80,7 @@ export default async function Candidates({ id }: { id: string }) {
             </p>
             <Button className="mt-2" size="sm" asChild>
               <Link href={`/dashboard/candidates/new?positionId=${id}`}>
-                <Users className="mr-2 w-4 h-4" />
+                <Users className="mr-1 w-4 h-4" />
                 Aggiungi candidato
               </Link>
             </Button>

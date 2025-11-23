@@ -46,7 +46,7 @@ export function DeleteCandidateButton({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
-          <Trash className="mr-2 w-4 h-4" />
+          <Trash className="mr-1 w-4 h-4" />
           Elimina candidato
         </Button>
       </AlertDialogTrigger>

@@ -258,12 +258,13 @@ export function InterviewResultsClient({
             <div className="space-y-4">
               <Button
                 onClick={evaluateAnswers}
+                size="sm"
                 disabled={loading || getAnsweredQuestionsCount() === 0}
               >
                 {loading ? (
                   <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 ) : (
-                  <Sparkles className="mr-2 w-4 h-4" />
+                  <Sparkles className="mr-1 w-4 h-4" />
                 )}
                 Valuta risposte con AI
               </Button>

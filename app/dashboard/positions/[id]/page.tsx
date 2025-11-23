@@ -71,7 +71,7 @@ async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
         <div className="flex gap-2">
           <Button variant="outline" asChild size="sm">
             <Link href={`/dashboard/positions/${position.id}/edit`}>
-              <Edit className="mr-2 w-4 h-4" />
+              <Edit className="mr-1 w-4 h-4" />
               Modifica
             </Link>
           </Button>

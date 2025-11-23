@@ -77,7 +77,7 @@ export const QuestionsHeader = ({
             size="sm"
             onClick={expandAllQuestions}
           >
-            <ChevronDown className="mr-2 w-4 h-4" />
+            <ChevronDown className="mr-1 w-4 h-4" />
             Expand All
           </Button>
           <Button
@@ -86,7 +86,7 @@ export const QuestionsHeader = ({
             size="sm"
             onClick={collapseAllQuestions}
           >
-            <ChevronUp className="mr-2 w-4 h-4" />
+            <ChevronUp className="mr-1 w-4 h-4" />
             Collapse All
           </Button>
           <div className="flex gap-2 ml-auto">

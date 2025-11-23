@@ -252,7 +252,7 @@ async function QuizResultsContent({ quizId }: { quizId: string }) {
           </p>
           <Button className="mt-2" size="sm" asChild>
             <Link href={`/dashboard/quizzes/${quizId}/invite`}>
-              <Link2 className="mr-2 w-4 h-4" />
+              <Link2 className="mr-1 w-4 h-4" />
               Associa a candidati
             </Link>
           </Button>

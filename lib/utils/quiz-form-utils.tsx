@@ -19,21 +19,21 @@ export const getSaveButtonContent = (saveStatus: SaveStatus) => {
     case "success":
       return (
         <>
-          <CheckCircle className="mr-2 w-4 h-4" />
+          <CheckCircle className="mr-1 w-4 h-4" />
           Salvato!
         </>
       );
     case "error":
       return (
         <>
-          <AlertCircle className="mr-2 w-4 h-4" />
+          <AlertCircle className="mr-1 w-4 h-4" />
           Errore
         </>
       );
     default:
       return (
         <>
-          <Save className="mr-2 w-4 h-4" />
+          <Save className="mr-1 w-4 h-4" />
           Salva Quiz
         </>
       );
