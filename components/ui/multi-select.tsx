@@ -33,6 +33,7 @@ interface MultiSelectProps {
   placeholder?: string;
   className?: string;
   grouped?: boolean;
+  invalid?: boolean;
 }
 
 export function MultiSelect({
@@ -42,6 +43,7 @@ export function MultiSelect({
   placeholder = "Seleziona opzioni",
   className,
   grouped = false,
+  invalid = false,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -77,8 +79,10 @@ export function MultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-invalid={invalid}
           className={cn(
-            "min-h-10 h-auto w-full justify-between",
+            "justify-between w-full h-auto min-h-10",
+            "aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]",
             selected.length > 0 ? "px-3 py-2" : "",
             className
           )}
@@ -127,10 +131,10 @@ export function MultiSelect({
           <ChevronsUpDown className="opacity-50 w-4 h-4 shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-full">
-        <Command>
+      <PopoverContent className="p-0 w-full" align="start">
+        <Command className="w-full">
           <CommandInput placeholder="Cerca opzione..." />
-          <CommandList>
+          <CommandList className="w-full">
             <CommandEmpty>Nessuna opzione trovata.</CommandEmpty>
             {Object.entries(groupedOptions).map(
               ([category, categoryOptions]) => (
@@ -147,7 +151,7 @@ export function MultiSelect({
                           >
                             <div
                               className={cn(
-                                "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                "flex justify-center items-center border border-primary rounded-sm w-4 h-4",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "opacity-50 [&_svg]:invisible"
@@ -173,7 +177,7 @@ export function MultiSelect({
                           >
                             <div
                               className={cn(
-                                "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                "flex justify-center items-center border border-primary rounded-sm w-4 h-4",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "opacity-50 [&_svg]:invisible"

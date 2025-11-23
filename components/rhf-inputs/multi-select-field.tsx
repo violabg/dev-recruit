@@ -24,12 +24,13 @@ export function MultiSelectField<T extends FieldValues>({
       description={description}
       disableFieldError={disableFieldError}
     >
-      {({ field }) => (
+      {({ field, fieldState }) => (
         <MultiSelect
           options={options}
           selected={field.value || []}
           onChange={field.onChange}
           placeholder={placeholder}
+          invalid={!!fieldState.error}
         />
       )}
     </BaseController>
