@@ -5,6 +5,7 @@ import {
   Briefcase,
   FileQuestion,
   MessageSquareMore,
+  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -43,6 +44,11 @@ const data = {
       href: "/dashboard/quizzes",
       label: "Quiz",
       icon: FileQuestion,
+    },
+    {
+      href: "/dashboard/presets",
+      label: "Preset",
+      icon: Sparkles,
     },
     {
       href: "/dashboard/interviews",

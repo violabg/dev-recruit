@@ -398,7 +398,8 @@ export const ModelName = {
   Position: 'Position',
   Candidate: 'Candidate',
   Quiz: 'Quiz',
-  Interview: 'Interview'
+  Interview: 'Interview',
+  Preset: 'Preset'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -414,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "profile" | "position" | "candidate" | "quiz" | "interview"
+    modelProps: "user" | "session" | "account" | "verification" | "profile" | "position" | "candidate" | "quiz" | "interview" | "preset"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1084,6 +1085,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Preset: {
+      payload: Prisma.$PresetPayload<ExtArgs>
+      fields: Prisma.PresetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PresetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PresetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>
+        }
+        findFirst: {
+          args: Prisma.PresetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PresetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>
+        }
+        findMany: {
+          args: Prisma.PresetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>[]
+        }
+        create: {
+          args: Prisma.PresetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>
+        }
+        createMany: {
+          args: Prisma.PresetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PresetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>[]
+        }
+        delete: {
+          args: Prisma.PresetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>
+        }
+        update: {
+          args: Prisma.PresetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>
+        }
+        deleteMany: {
+          args: Prisma.PresetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PresetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PresetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>[]
+        }
+        upsert: {
+          args: Prisma.PresetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PresetPayload>
+        }
+        aggregate: {
+          args: Prisma.PresetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreset>
+        }
+        groupBy: {
+          args: Prisma.PresetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PresetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PresetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PresetCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1258,6 +1333,24 @@ export const InterviewScalarFieldEnum = {
 } as const
 
 export type InterviewScalarFieldEnum = (typeof InterviewScalarFieldEnum)[keyof typeof InterviewScalarFieldEnum]
+
+
+export const PresetScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  label: 'label',
+  description: 'description',
+  icon: 'icon',
+  questionType: 'questionType',
+  options: 'options',
+  tags: 'tags',
+  difficulty: 'difficulty',
+  isDefault: 'isDefault',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PresetScalarFieldEnum = (typeof PresetScalarFieldEnum)[keyof typeof PresetScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1486,6 +1579,7 @@ export type GlobalOmitConfig = {
   candidate?: Prisma.CandidateOmit
   quiz?: Prisma.QuizOmit
   interview?: Prisma.InterviewOmit
+  preset?: Prisma.PresetOmit
 }
 
 /* Types for Logging */

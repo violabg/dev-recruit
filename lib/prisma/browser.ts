@@ -62,3 +62,8 @@ export type Quiz = Prisma.QuizModel
  * 
  */
 export type Interview = Prisma.InterviewModel
+/**
+ * Model Preset
+ * 
+ */
+export type Preset = Prisma.PresetModel

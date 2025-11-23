@@ -40,6 +40,9 @@ export * from "./assignment";
 // Re-export evaluation schemas and types
 export * from "./evaluation";
 
+// Re-export preset schemas and types
+export * from "./preset";
+
 // ====================
 // UTILITY EXPORTS
 // ====================

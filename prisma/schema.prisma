@@ -178,3 +178,21 @@ model Interview {
 
   @@map("interviews")
 }
+
+model Preset {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  label        String
+  description  String?
+  icon         String   // Icon name from lucide-react
+  questionType String   // multiple_choice, code_snippet, open_question
+  options      Json     // Configuration options for the preset
+  tags         String[] // e.g., ["React", "Hooks", "Advanced"]
+  difficulty   Int      @default(3) // 1-5 scale
+  isDefault    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("presets")
+}
+
