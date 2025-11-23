@@ -6,11 +6,7 @@ import { Loader2, Zap } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
-type SeedPresetsButtonProps = {
-  onSuccess?: () => void;
-};
-
-export function SeedPresetsButton({ onSuccess }: SeedPresetsButtonProps) {
+export function SeedPresetsButton() {
   const [isPending, startTransition] = useTransition();
 
   const handleSeed = () => {
@@ -21,7 +17,6 @@ export function SeedPresetsButton({ onSuccess }: SeedPresetsButtonProps) {
         toast.success(result.message, {
           description: `${result.count} presets loaded`,
         });
-        onSuccess?.();
       } else {
         toast.error(result.error || "Failed to seed presets");
       }

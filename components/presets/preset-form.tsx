@@ -21,26 +21,11 @@ import {
   type CreatePresetInput,
   type Preset,
 } from "@/lib/schemas";
+import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-
-// Available icons from lucide-react
-const AVAILABLE_ICONS = [
-  { value: "Code", label: "Code" },
-  { value: "Brain", label: "Brain" },
-  { value: "Database", label: "Database" },
-  { value: "Layers", label: "Layers" },
-  { value: "Lightbulb", label: "Lightbulb" },
-  { value: "Settings", label: "Settings" },
-  { value: "Shield", label: "Shield" },
-  { value: "Target", label: "Target" },
-  { value: "Zap", label: "Zap" },
-  { value: "CheckCircle", label: "Check Circle" },
-  { value: "AlertCircle", label: "Alert Circle" },
-  { value: "Rocket", label: "Rocket" },
-];
 
 const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple Choice" },
@@ -165,7 +150,16 @@ export function PresetForm({ preset }: PresetFormProps) {
               control={form.control}
               name="icon"
               label="Icon"
-              options={AVAILABLE_ICONS}
+              options={PRESET_ICON_OPTIONS.map((icon) => ({
+                value: icon.value,
+                label: icon.label,
+                leading: (
+                  <icon.icon
+                    className="size-4 text-primary"
+                    aria-hidden="true"
+                  />
+                ),
+              }))}
               description="Choose an icon from lucide-react"
             />
 

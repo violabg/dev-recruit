@@ -9,6 +9,12 @@ import {
 } from "../ui/select";
 import { BaseController, BaseControllerProps } from "./base-controller";
 
+type SelectOption = {
+  value: string;
+  label: string;
+  leading?: ReactNode;
+};
+
 type FieldSelectProps<T extends FieldValues> = {
   placeholder?: string;
   onValueChange?: (value: string | number) => void;
@@ -20,7 +26,7 @@ type FieldSelectProps<T extends FieldValues> = {
 } & Omit<BaseControllerProps<T>, "children"> &
   (
     | {
-        options: { value: string; label: string }[];
+        options: SelectOption[];
         children?: never;
       }
     | {
@@ -68,7 +74,14 @@ export function SelectField<T extends FieldValues>({
             {options
               ? options.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {option.leading ? (
+                      <span className="flex items-center gap-2">
+                        {option.leading}
+                        <span>{option.label}</span>
+                      </span>
+                    ) : (
+                      option.label
+                    )}
                   </SelectItem>
                 ))
               : children}
