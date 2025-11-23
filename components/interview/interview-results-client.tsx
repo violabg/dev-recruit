@@ -16,7 +16,7 @@ import {
 } from "@/lib/actions/evaluations";
 import { Question } from "@/lib/schemas";
 import { prismLanguage } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { Highlight, themes } from "prism-react-renderer";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -260,7 +260,11 @@ export function InterviewResultsClient({
                 onClick={evaluateAnswers}
                 disabled={loading || getAnsweredQuestionsCount() === 0}
               >
-                {loading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
+                {loading ? (
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 w-4 h-4" />
+                )}
                 Valuta risposte con AI
               </Button>
 

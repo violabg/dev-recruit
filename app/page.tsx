@@ -178,8 +178,7 @@ export default async function Home() {
                 </div>
                 <h3 className="font-bold text-xl">Colloqui in tempo reale</h3>
                 <p className="text-muted-foreground">
-                  Monitora le risposte dei candidati in tempo reale durante i
-                  colloqui tecnici.
+                  Visualizza e valuta le risposte dei candidati.
                 </p>
               </div>
               <div className="flex flex-col items-center space-y-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">

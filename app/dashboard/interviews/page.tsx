@@ -17,7 +17,7 @@ export default function InterviewsPage({
         <div>
           <h1 className="font-semibold text-2xl tracking-tight">Colloqui</h1>
           <p className="text-muted-foreground text-sm">
-            Gestisci e monitora tutti i colloqui tecnici
+            Gestisci tutti i colloqui tecnici
           </p>
         </div>
       </div>

@@ -19,27 +19,7 @@ import {
 } from "../services/error-handler";
 import { revalidateQuizCache } from "../utils/cache";
 
-// Performance monitoring
-class PerformanceMonitor {
-  private startTime: number;
-
-  constructor(private operationName: string) {
-    this.startTime = performance.now();
-  }
-
-  end(): void {
-    const duration = performance.now() - this.startTime;
-    console.log(`${this.operationName} completed in ${duration.toFixed(2)}ms`);
-
-    if (process.env.NODE_ENV === "production" && duration > 10000) {
-      console.warn(
-        `Slow operation detected: ${this.operationName} took ${duration.toFixed(
-          2
-        )}ms`
-      );
-    }
-  }
-}
+// Note: performance monitoring removed — keep simple debug logs instead
 
 type GenerateNewQuizActionParams = {
   positionId: string;
@@ -66,7 +46,7 @@ export async function generateNewQuizAction({
   previousQuestions,
   specificModel,
 }: GenerateNewQuizActionParams) {
-  const monitor = new PerformanceMonitor("generateNewQuizAction");
+  console.debug("generateNewQuizAction started");
 
   try {
     // Validate user authentication
@@ -112,10 +92,10 @@ export async function generateNewQuizAction({
       specificModel,
     });
 
-    monitor.end();
+    console.debug("generateNewQuizAction completed");
     return quizData;
   } catch (error) {
-    monitor.end();
+    console.debug("generateNewQuizAction failed");
 
     // Enhanced error handling
     if (
@@ -139,7 +119,7 @@ export async function generateNewQuizAction({
 export async function generateNewQuestionAction(
   params: GenerateQuestionParams
 ) {
-  const monitor = new PerformanceMonitor("generateNewQuestionAction");
+  console.debug("generateNewQuestionAction started");
 
   try {
     // Generate question using AI service with the new parameter structure
@@ -148,10 +128,10 @@ export async function generateNewQuestionAction(
     // Validate generated question
     const validatedQuestion = questionSchemas.strict.parse(question);
 
-    monitor.end();
+    console.debug("generateNewQuestionAction completed");
     return validatedQuestion;
   } catch (error) {
-    monitor.end();
+    console.debug("generateNewQuestionAction failed");
 
     // Enhanced error handling
     if (
@@ -185,7 +165,7 @@ export async function generateNewQuestionAction(
 }
 
 export async function deleteQuiz(formData: FormData) {
-  const monitor = new PerformanceMonitor("deleteQuiz");
+  console.debug("deleteQuiz started");
 
   try {
     const quizId = formData.get("quiz_id") as string;
@@ -220,10 +200,10 @@ export async function deleteQuiz(formData: FormData) {
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
-    monitor.end();
+    console.debug("deleteQuiz completed");
     redirect("/dashboard/quizzes");
   } catch (error) {
-    monitor.end();
+    console.debug("deleteQuiz failed");
 
     // Check if this is a redirect (Next.js throws special errors for redirects)
     if (error && typeof error === "object" && "digest" in error) {
@@ -255,7 +235,7 @@ export async function deleteQuiz(formData: FormData) {
  * - position_id?: string (required for create, ignored for update)
  */
 export async function upsertQuizAction(formData: FormData) {
-  const monitor = new PerformanceMonitor("upsertQuizAction");
+  console.debug("upsertQuizAction started");
 
   try {
     const user = await requireUser();
@@ -365,7 +345,7 @@ export async function upsertQuizAction(formData: FormData) {
       // Also revalidate traditional cache paths for compatibility
       revalidateQuizCache("");
 
-      monitor.end();
+      console.debug("upsertQuizAction completed");
       return { id: quiz.id };
     } else {
       // UPDATE MODE
@@ -405,11 +385,11 @@ export async function upsertQuizAction(formData: FormData) {
       // Also revalidate traditional cache paths for compatibility
       revalidateQuizCache(quizId);
 
-      monitor.end();
+      console.debug("upsertQuizAction completed");
       return {};
     }
   } catch (error) {
-    monitor.end();
+    console.debug("upsertQuizAction failed");
 
     if (error instanceof QuizSystemError) {
       throw new Error(getUserFriendlyErrorMessage(error));
@@ -457,7 +437,7 @@ export async function regenerateQuizAction({
   previousQuestions,
   specificModel,
 }: RegenerateQuizActionParams) {
-  const monitor = new PerformanceMonitor("regenerateQuizAction");
+  console.debug("regenerateQuizAction started");
 
   try {
     const user = await requireUser();
@@ -555,10 +535,10 @@ export async function regenerateQuizAction({
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
-    monitor.end();
+    console.debug("regenerateQuizAction completed");
     return { id: quizId };
   } catch (error) {
-    monitor.end();
+    console.debug("regenerateQuizAction failed");
 
     // Enhanced error handling
     if (

@@ -1,4 +1,3 @@
-import { InterviewMonitor } from "@/components/interview/interview-monitor";
 import { InterviewResults } from "@/components/interview/interview-results";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Tabs removed — rendering results directly
 import { requireUser } from "@/lib/auth-server";
 import { getInterviewDetail } from "@/lib/data/interviews";
 import { formatDate } from "@/lib/utils";
@@ -48,9 +47,6 @@ export default async function InterviewDetailPage({
   }
 
   const { interview, quiz, candidate } = interviewData;
-
-  // Set active tab based on interview status
-  const activeTab = interview.status === "completed" ? "results" : "monitor";
 
   return (
     <div className="space-y-6">
@@ -142,50 +138,31 @@ export default async function InterviewDetailPage({
         </Card>
       </div>
 
-      <Tabs defaultValue={activeTab}>
-        <TabsList>
-          <TabsTrigger value="monitor">Monitoraggio</TabsTrigger>
-          <TabsTrigger
-            value="results"
-            disabled={interview.status !== "completed"}
-          >
-            Risultati
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="monitor" className="space-y-4 pt-4">
-          <InterviewMonitor
+      <div className="space-y-4 pt-4">
+        {interview.status === "completed" ? (
+          <InterviewResults
             interviewId={interview.id}
             quizQuestions={quiz.questions}
             answers={interview.answers || {}}
-            status={interview.status}
+            candidateName={candidate.name ?? ""}
           />
-        </TabsContent>
-        <TabsContent value="results" className="space-y-4 pt-4">
-          {interview.status === "completed" ? (
-            <InterviewResults
-              interviewId={interview.id}
-              quizQuestions={quiz.questions}
-              answers={interview.answers || {}}
-              candidateName={candidate.name ?? ""}
-            />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Risultati non disponibili</CardTitle>
-                <CardDescription>
-                  L&apos;intervista non è ancora stata completata
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  I risultati saranno disponibili una volta che il candidato
-                  avrà completato il quiz.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Risultati non disponibili</CardTitle>
+              <CardDescription>
+                L&apos;intervista non è ancora stata completata
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>
+                I risultati saranno disponibili una volta che il candidato avrà
+                completato il quiz.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

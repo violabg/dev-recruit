@@ -121,22 +121,7 @@ export class ErrorHandler {
       console.error(JSON.stringify(logEntry));
     }
 
-    // In a real application, you would also:
-    // - Send to error monitoring service (Sentry, Rollbar, etc.)
-    // - Store in database for analysis
-    // - Send alerts for critical errors
-    // - Update metrics/dashboards
-
-    try {
-      // Example: Send to monitoring service
-      await this.sendToMonitoringService(logEntry);
-    } catch (monitoringError) {
-      // Don't let monitoring failures break the application
-      console.error(
-        "Failed to send error to monitoring service:",
-        monitoringError
-      );
-    }
+    // In a real application, you would also store logs or send alerts.
   }
 
   /**
@@ -171,67 +156,7 @@ export class ErrorHandler {
     };
   }
 
-  /**
-   * Send error information to monitoring service
-   * In a real application, this would integrate with your monitoring solution
-   */
-  private async sendToMonitoringService(logEntry: any): Promise<void> {
-    // Placeholder for monitoring service integration
-    // Examples: Sentry, Rollbar, DataDog, New Relic, etc.
-
-    if (this.isDevelopment) {
-      // In development, just log that we would send to monitoring
-      console.log("Would send to monitoring service:", {
-        service: "error-monitoring",
-        severity: this.getSeverityLevel(logEntry.code),
-        error: logEntry.message,
-        context: logEntry.context,
-      });
-    }
-
-    // In production, you would make actual API calls:
-    /*
-    try {
-      await fetch('https://your-monitoring-service/api/errors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logEntry)
-      });
-    } catch (error) {
-      // Handle monitoring service errors
-    }
-    */
-  }
-
-  /**
-   * Determine severity level for monitoring
-   */
-  private getSeverityLevel(
-    code?: string
-  ): "low" | "medium" | "high" | "critical" {
-    if (!code) return "medium";
-
-    switch (code) {
-      case QuizErrorCode.INVALID_INPUT:
-      case QuizErrorCode.INVALID_QUIZ_PARAMS:
-        return "low";
-
-      case QuizErrorCode.UNAUTHORIZED:
-      case QuizErrorCode.POSITION_NOT_FOUND:
-      case QuizErrorCode.QUIZ_NOT_FOUND:
-        return "medium";
-
-      case QuizErrorCode.DATABASE_ERROR:
-      case QuizErrorCode.SERVICE_UNAVAILABLE:
-        return "high";
-
-      case QuizErrorCode.INTERNAL_ERROR:
-        return "critical";
-
-      default:
-        return "medium";
-    }
-  }
+  // No external monitoring integration in this project.
 
   /**
    * Create a QuizSystemError from an AI error
