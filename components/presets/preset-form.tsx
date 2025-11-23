@@ -70,10 +70,9 @@ const COMMON_TAGS = [
 
 type PresetFormProps = {
   preset?: Preset;
-  onSuccess?: () => void;
 };
 
-export function PresetForm({ preset, onSuccess }: PresetFormProps) {
+export function PresetForm({ preset }: PresetFormProps) {
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<CreatePresetInput>({
@@ -103,18 +102,22 @@ export function PresetForm({ preset, onSuccess }: PresetFormProps) {
 
   const onSubmit = (data: CreatePresetInput) => {
     startTransition(async () => {
-      const result = preset
-        ? await updatePresetAction(preset.id!, data)
-        : await createPresetAction(data);
+      try {
+        const result = preset
+          ? await updatePresetAction(preset.id!, data)
+          : await createPresetAction(data);
 
-      if (result.success) {
-        toast.success(
-          preset ? "Preset updated successfully" : "Preset created successfully"
+        if (result && !result.success) {
+          toast.error(result.error || "Something went wrong");
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === "Redirect") {
+          throw error;
+        }
+
+        toast.error(
+          error instanceof Error ? error.message : "Something went wrong"
         );
-        form.reset();
-        onSuccess?.();
-      } else {
-        toast.error(result.error || "Something went wrong");
       }
     });
   };

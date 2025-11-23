@@ -1,15 +1,11 @@
 "use client";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -27,17 +23,12 @@ import { toast } from "sonner";
 
 type PresetsTableProps = {
   presets: Preset[];
-  onEdit: (preset: Preset) => void;
   onRefresh: () => void;
 };
 
-export function PresetsTable({
-  presets,
-  onEdit,
-  onRefresh,
-}: PresetsTableProps) {
+export function PresetsTable({ presets, onRefresh }: PresetsTableProps) {
   const [isPending, startTransition] = useTransition();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleDelete = (presetId: string) => {
     startTransition(async () => {
@@ -45,7 +36,7 @@ export function PresetsTable({
 
       if (result.success) {
         toast.success("Preset deleted successfully");
-        setDeleteId(null);
+        setConfirmDeleteId(null);
         onRefresh();
       } else {
         toast.error(result.error || "Failed to delete preset");
@@ -124,20 +115,57 @@ export function PresetsTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onEdit(preset)}
                         title="Edit preset"
+                        asChild
                       >
-                        <Edit className="w-4 h-4" />
+                        <Link href={`/dashboard/presets/${preset.id}/edit`}>
+                          <Edit className="w-4 h-4" />
+                        </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteId(preset.id!)}
-                        disabled={isPending}
-                        title="Delete preset"
+                      <Popover
+                        open={confirmDeleteId === preset.id}
+                        onOpenChange={(open) =>
+                          open
+                            ? setConfirmDeleteId(preset.id!)
+                            : setConfirmDeleteId(null)
+                        }
                       >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Delete preset"
+                            disabled={isPending}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64">
+                          <p className="text-muted-foreground text-sm">
+                            Are you sure you want to delete this preset? This is
+                            irreversible.
+                          </p>
+                          <div className="flex justify-end gap-2 mt-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setConfirmDeleteId(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={isPending}
+                              onClick={() =>
+                                preset.id && handleDelete(preset.id)
+                              }
+                            >
+                              {isPending ? "Deleting..." : "Delete"}
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -146,31 +174,6 @@ export function PresetsTable({
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Preset</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this preset? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex justify-end gap-3">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId && handleDelete(deleteId)}
-              disabled={isPending}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-            >
-              {isPending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

@@ -3,7 +3,7 @@ import { baseSchemas } from "./base";
 
 // Preset schema for CRUD operations
 export const presetSchema = z.object({
-  id: z.string().cuid().optional(),
+  id: z.string().cuid(),
   name: z.string().min(1, "Preset name is required").max(100),
   label: z.string().min(1, "Label is required").max(100),
   description: z.string().max(500).optional().nullable(),

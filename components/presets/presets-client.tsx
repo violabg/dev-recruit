@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 
-import { PresetForm } from "@/components/presets/preset-form";
 import { PresetsTable } from "@/components/presets/presets-table";
 import { SeedPresetsButton } from "@/components/presets/seed-presets-button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,67 +14,42 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Preset } from "@/lib/schemas";
-
-const CREATE_TAB_SELECTOR = '[value="create"]';
 
 type PresetsClientProps = {
   presets: Preset[];
 };
 
 export function PresetsClient({ presets }: PresetsClientProps) {
-  const [editingPreset, setEditingPreset] = useState<Preset | undefined>();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
-    setEditingPreset(undefined);
+    startTransition(() => router.refresh());
   };
 
   return (
-    <Tabs defaultValue="list" className="w-full" key={refreshKey}>
-      <TabsList>
-        <TabsTrigger value="list">All Presets ({presets.length})</TabsTrigger>
-        <TabsTrigger value="create">
-          {editingPreset ? "Edit Preset" : "Create New"}
-        </TabsTrigger>
-      </TabsList>
+    <Card className="w-full">
+      <CardHeader className="flex sm:flex-row flex-col sm:justify-between sm:items-start gap-4">
+        <div>
+          <CardTitle>Question Generation Presets</CardTitle>
+          <CardDescription>
+            Manage your preset configurations for automated question generation
+          </CardDescription>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {presets.length === 0 && (
+            <SeedPresetsButton onSuccess={handleRefresh} />
+          )}
+          <Button asChild disabled={isPending} variant="secondary" size="sm">
+            <Link href="/dashboard/presets/new">Create preset</Link>
+          </Button>
+        </div>
+      </CardHeader>
 
-      <TabsContent value="list">
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <div>
-              <CardTitle>Question Generation Presets</CardTitle>
-              <CardDescription>
-                Manage your preset configurations for automated question
-                generation
-              </CardDescription>
-            </div>
-            {presets.length === 0 && (
-              <SeedPresetsButton onSuccess={handleRefresh} />
-            )}
-          </CardHeader>
-          <CardContent>
-            <PresetsTable
-              presets={presets}
-              onEdit={(preset) => {
-                setEditingPreset(preset);
-                setTimeout(() => {
-                  document
-                    .querySelector(CREATE_TAB_SELECTOR)
-                    ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-                }, 100);
-              }}
-              onRefresh={handleRefresh}
-            />
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="create">
-        <PresetForm preset={editingPreset} onSuccess={handleRefresh} />
-      </TabsContent>
-    </Tabs>
+      <CardContent>
+        <PresetsTable presets={presets} onRefresh={handleRefresh} />
+      </CardContent>
+    </Card>
   );
 }

@@ -1,10 +1,12 @@
 "use server";
 
 import { cacheLife, cacheTag, updateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import prisma from "../prisma";
 import {
   createPresetSchema,
+  presetSchema,
   updatePresetSchema,
   type CreatePresetInput,
   type UpdatePresetInput,
@@ -42,7 +44,9 @@ export async function getPresetAction(presetId: string) {
       return { success: false, error: "Preset not found" };
     }
 
-    return { success: true, preset };
+    const validatedPreset = presetSchema.parse(preset);
+
+    return { success: true, preset: validatedPreset };
   } catch (error) {
     console.error("Error fetching preset:", error);
     return {
@@ -65,7 +69,7 @@ export async function createPresetAction(data: CreatePresetInput) {
     // Invalidate cache
     updateTag("presets");
 
-    return { success: true, preset };
+    redirect(`/dashboard/presets/${preset.id}`);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -112,7 +116,7 @@ export async function updatePresetAction(
     // Invalidate cache
     updateTag("presets");
 
-    return { success: true, preset };
+    redirect(`/dashboard/presets/${preset.id}`);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
