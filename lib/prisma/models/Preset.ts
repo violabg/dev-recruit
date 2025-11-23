@@ -41,6 +41,14 @@ export type PresetMinAggregateOutputType = {
   description: string | null
   icon: string | null
   questionType: string | null
+  instructions: string | null
+  distractorComplexity: string | null
+  requireCodeExample: boolean | null
+  expectedResponseLength: $Enums.ExpectedResponseLength | null
+  language: string | null
+  bugType: string | null
+  codeComplexity: string | null
+  includeComments: boolean | null
   difficulty: number | null
   isDefault: boolean | null
   createdAt: Date | null
@@ -54,6 +62,14 @@ export type PresetMaxAggregateOutputType = {
   description: string | null
   icon: string | null
   questionType: string | null
+  instructions: string | null
+  distractorComplexity: string | null
+  requireCodeExample: boolean | null
+  expectedResponseLength: $Enums.ExpectedResponseLength | null
+  language: string | null
+  bugType: string | null
+  codeComplexity: string | null
+  includeComments: boolean | null
   difficulty: number | null
   isDefault: boolean | null
   createdAt: Date | null
@@ -67,7 +83,16 @@ export type PresetCountAggregateOutputType = {
   description: number
   icon: number
   questionType: number
-  options: number
+  instructions: number
+  focusAreas: number
+  distractorComplexity: number
+  requireCodeExample: number
+  expectedResponseLength: number
+  evaluationCriteria: number
+  language: number
+  bugType: number
+  codeComplexity: number
+  includeComments: number
   tags: number
   difficulty: number
   isDefault: number
@@ -92,6 +117,14 @@ export type PresetMinAggregateInputType = {
   description?: true
   icon?: true
   questionType?: true
+  instructions?: true
+  distractorComplexity?: true
+  requireCodeExample?: true
+  expectedResponseLength?: true
+  language?: true
+  bugType?: true
+  codeComplexity?: true
+  includeComments?: true
   difficulty?: true
   isDefault?: true
   createdAt?: true
@@ -105,6 +138,14 @@ export type PresetMaxAggregateInputType = {
   description?: true
   icon?: true
   questionType?: true
+  instructions?: true
+  distractorComplexity?: true
+  requireCodeExample?: true
+  expectedResponseLength?: true
+  language?: true
+  bugType?: true
+  codeComplexity?: true
+  includeComments?: true
   difficulty?: true
   isDefault?: true
   createdAt?: true
@@ -118,7 +159,16 @@ export type PresetCountAggregateInputType = {
   description?: true
   icon?: true
   questionType?: true
-  options?: true
+  instructions?: true
+  focusAreas?: true
+  distractorComplexity?: true
+  requireCodeExample?: true
+  expectedResponseLength?: true
+  evaluationCriteria?: true
+  language?: true
+  bugType?: true
+  codeComplexity?: true
+  includeComments?: true
   tags?: true
   difficulty?: true
   isDefault?: true
@@ -220,7 +270,16 @@ export type PresetGroupByOutputType = {
   description: string | null
   icon: string
   questionType: string
-  options: runtime.JsonValue
+  instructions: string | null
+  focusAreas: string[]
+  distractorComplexity: string | null
+  requireCodeExample: boolean | null
+  expectedResponseLength: $Enums.ExpectedResponseLength | null
+  evaluationCriteria: string[]
+  language: string | null
+  bugType: string | null
+  codeComplexity: string | null
+  includeComments: boolean | null
   tags: string[]
   difficulty: number
   isDefault: boolean
@@ -258,7 +317,16 @@ export type PresetWhereInput = {
   description?: Prisma.StringNullableFilter<"Preset"> | string | null
   icon?: Prisma.StringFilter<"Preset"> | string
   questionType?: Prisma.StringFilter<"Preset"> | string
-  options?: Prisma.JsonFilter<"Preset">
+  instructions?: Prisma.StringNullableFilter<"Preset"> | string | null
+  focusAreas?: Prisma.StringNullableListFilter<"Preset">
+  distractorComplexity?: Prisma.StringNullableFilter<"Preset"> | string | null
+  requireCodeExample?: Prisma.BoolNullableFilter<"Preset"> | boolean | null
+  expectedResponseLength?: Prisma.EnumExpectedResponseLengthNullableFilter<"Preset"> | $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.StringNullableListFilter<"Preset">
+  language?: Prisma.StringNullableFilter<"Preset"> | string | null
+  bugType?: Prisma.StringNullableFilter<"Preset"> | string | null
+  codeComplexity?: Prisma.StringNullableFilter<"Preset"> | string | null
+  includeComments?: Prisma.BoolNullableFilter<"Preset"> | boolean | null
   tags?: Prisma.StringNullableListFilter<"Preset">
   difficulty?: Prisma.IntFilter<"Preset"> | number
   isDefault?: Prisma.BoolFilter<"Preset"> | boolean
@@ -273,7 +341,16 @@ export type PresetOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   icon?: Prisma.SortOrder
   questionType?: Prisma.SortOrder
-  options?: Prisma.SortOrder
+  instructions?: Prisma.SortOrderInput | Prisma.SortOrder
+  focusAreas?: Prisma.SortOrder
+  distractorComplexity?: Prisma.SortOrderInput | Prisma.SortOrder
+  requireCodeExample?: Prisma.SortOrderInput | Prisma.SortOrder
+  expectedResponseLength?: Prisma.SortOrderInput | Prisma.SortOrder
+  evaluationCriteria?: Prisma.SortOrder
+  language?: Prisma.SortOrderInput | Prisma.SortOrder
+  bugType?: Prisma.SortOrderInput | Prisma.SortOrder
+  codeComplexity?: Prisma.SortOrderInput | Prisma.SortOrder
+  includeComments?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
@@ -291,7 +368,16 @@ export type PresetWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Preset"> | string | null
   icon?: Prisma.StringFilter<"Preset"> | string
   questionType?: Prisma.StringFilter<"Preset"> | string
-  options?: Prisma.JsonFilter<"Preset">
+  instructions?: Prisma.StringNullableFilter<"Preset"> | string | null
+  focusAreas?: Prisma.StringNullableListFilter<"Preset">
+  distractorComplexity?: Prisma.StringNullableFilter<"Preset"> | string | null
+  requireCodeExample?: Prisma.BoolNullableFilter<"Preset"> | boolean | null
+  expectedResponseLength?: Prisma.EnumExpectedResponseLengthNullableFilter<"Preset"> | $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.StringNullableListFilter<"Preset">
+  language?: Prisma.StringNullableFilter<"Preset"> | string | null
+  bugType?: Prisma.StringNullableFilter<"Preset"> | string | null
+  codeComplexity?: Prisma.StringNullableFilter<"Preset"> | string | null
+  includeComments?: Prisma.BoolNullableFilter<"Preset"> | boolean | null
   tags?: Prisma.StringNullableListFilter<"Preset">
   difficulty?: Prisma.IntFilter<"Preset"> | number
   isDefault?: Prisma.BoolFilter<"Preset"> | boolean
@@ -306,7 +392,16 @@ export type PresetOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   icon?: Prisma.SortOrder
   questionType?: Prisma.SortOrder
-  options?: Prisma.SortOrder
+  instructions?: Prisma.SortOrderInput | Prisma.SortOrder
+  focusAreas?: Prisma.SortOrder
+  distractorComplexity?: Prisma.SortOrderInput | Prisma.SortOrder
+  requireCodeExample?: Prisma.SortOrderInput | Prisma.SortOrder
+  expectedResponseLength?: Prisma.SortOrderInput | Prisma.SortOrder
+  evaluationCriteria?: Prisma.SortOrder
+  language?: Prisma.SortOrderInput | Prisma.SortOrder
+  bugType?: Prisma.SortOrderInput | Prisma.SortOrder
+  codeComplexity?: Prisma.SortOrderInput | Prisma.SortOrder
+  includeComments?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
@@ -329,7 +424,16 @@ export type PresetScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"Preset"> | string | null
   icon?: Prisma.StringWithAggregatesFilter<"Preset"> | string
   questionType?: Prisma.StringWithAggregatesFilter<"Preset"> | string
-  options?: Prisma.JsonWithAggregatesFilter<"Preset">
+  instructions?: Prisma.StringNullableWithAggregatesFilter<"Preset"> | string | null
+  focusAreas?: Prisma.StringNullableListFilter<"Preset">
+  distractorComplexity?: Prisma.StringNullableWithAggregatesFilter<"Preset"> | string | null
+  requireCodeExample?: Prisma.BoolNullableWithAggregatesFilter<"Preset"> | boolean | null
+  expectedResponseLength?: Prisma.EnumExpectedResponseLengthNullableWithAggregatesFilter<"Preset"> | $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.StringNullableListFilter<"Preset">
+  language?: Prisma.StringNullableWithAggregatesFilter<"Preset"> | string | null
+  bugType?: Prisma.StringNullableWithAggregatesFilter<"Preset"> | string | null
+  codeComplexity?: Prisma.StringNullableWithAggregatesFilter<"Preset"> | string | null
+  includeComments?: Prisma.BoolNullableWithAggregatesFilter<"Preset"> | boolean | null
   tags?: Prisma.StringNullableListFilter<"Preset">
   difficulty?: Prisma.IntWithAggregatesFilter<"Preset"> | number
   isDefault?: Prisma.BoolWithAggregatesFilter<"Preset"> | boolean
@@ -344,7 +448,16 @@ export type PresetCreateInput = {
   description?: string | null
   icon: string
   questionType: string
-  options: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  instructions?: string | null
+  focusAreas?: Prisma.PresetCreatefocusAreasInput | string[]
+  distractorComplexity?: string | null
+  requireCodeExample?: boolean | null
+  expectedResponseLength?: $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.PresetCreateevaluationCriteriaInput | string[]
+  language?: string | null
+  bugType?: string | null
+  codeComplexity?: string | null
+  includeComments?: boolean | null
   tags?: Prisma.PresetCreatetagsInput | string[]
   difficulty?: number
   isDefault?: boolean
@@ -359,7 +472,16 @@ export type PresetUncheckedCreateInput = {
   description?: string | null
   icon: string
   questionType: string
-  options: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  instructions?: string | null
+  focusAreas?: Prisma.PresetCreatefocusAreasInput | string[]
+  distractorComplexity?: string | null
+  requireCodeExample?: boolean | null
+  expectedResponseLength?: $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.PresetCreateevaluationCriteriaInput | string[]
+  language?: string | null
+  bugType?: string | null
+  codeComplexity?: string | null
+  includeComments?: boolean | null
   tags?: Prisma.PresetCreatetagsInput | string[]
   difficulty?: number
   isDefault?: boolean
@@ -374,7 +496,16 @@ export type PresetUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   icon?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.StringFieldUpdateOperationsInput | string
-  options?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  instructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focusAreas?: Prisma.PresetUpdatefocusAreasInput | string[]
+  distractorComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCodeExample?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  expectedResponseLength?: Prisma.NullableEnumExpectedResponseLengthFieldUpdateOperationsInput | $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.PresetUpdateevaluationCriteriaInput | string[]
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bugType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  codeComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  includeComments?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   tags?: Prisma.PresetUpdatetagsInput | string[]
   difficulty?: Prisma.IntFieldUpdateOperationsInput | number
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -389,7 +520,16 @@ export type PresetUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   icon?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.StringFieldUpdateOperationsInput | string
-  options?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  instructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focusAreas?: Prisma.PresetUpdatefocusAreasInput | string[]
+  distractorComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCodeExample?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  expectedResponseLength?: Prisma.NullableEnumExpectedResponseLengthFieldUpdateOperationsInput | $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.PresetUpdateevaluationCriteriaInput | string[]
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bugType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  codeComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  includeComments?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   tags?: Prisma.PresetUpdatetagsInput | string[]
   difficulty?: Prisma.IntFieldUpdateOperationsInput | number
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -404,7 +544,16 @@ export type PresetCreateManyInput = {
   description?: string | null
   icon: string
   questionType: string
-  options: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  instructions?: string | null
+  focusAreas?: Prisma.PresetCreatefocusAreasInput | string[]
+  distractorComplexity?: string | null
+  requireCodeExample?: boolean | null
+  expectedResponseLength?: $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.PresetCreateevaluationCriteriaInput | string[]
+  language?: string | null
+  bugType?: string | null
+  codeComplexity?: string | null
+  includeComments?: boolean | null
   tags?: Prisma.PresetCreatetagsInput | string[]
   difficulty?: number
   isDefault?: boolean
@@ -419,7 +568,16 @@ export type PresetUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   icon?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.StringFieldUpdateOperationsInput | string
-  options?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  instructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focusAreas?: Prisma.PresetUpdatefocusAreasInput | string[]
+  distractorComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCodeExample?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  expectedResponseLength?: Prisma.NullableEnumExpectedResponseLengthFieldUpdateOperationsInput | $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.PresetUpdateevaluationCriteriaInput | string[]
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bugType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  codeComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  includeComments?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   tags?: Prisma.PresetUpdatetagsInput | string[]
   difficulty?: Prisma.IntFieldUpdateOperationsInput | number
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -434,7 +592,16 @@ export type PresetUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   icon?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.StringFieldUpdateOperationsInput | string
-  options?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  instructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focusAreas?: Prisma.PresetUpdatefocusAreasInput | string[]
+  distractorComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCodeExample?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  expectedResponseLength?: Prisma.NullableEnumExpectedResponseLengthFieldUpdateOperationsInput | $Enums.ExpectedResponseLength | null
+  evaluationCriteria?: Prisma.PresetUpdateevaluationCriteriaInput | string[]
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bugType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  codeComplexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  includeComments?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   tags?: Prisma.PresetUpdatetagsInput | string[]
   difficulty?: Prisma.IntFieldUpdateOperationsInput | number
   isDefault?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -449,7 +616,16 @@ export type PresetCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   icon?: Prisma.SortOrder
   questionType?: Prisma.SortOrder
-  options?: Prisma.SortOrder
+  instructions?: Prisma.SortOrder
+  focusAreas?: Prisma.SortOrder
+  distractorComplexity?: Prisma.SortOrder
+  requireCodeExample?: Prisma.SortOrder
+  expectedResponseLength?: Prisma.SortOrder
+  evaluationCriteria?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  bugType?: Prisma.SortOrder
+  codeComplexity?: Prisma.SortOrder
+  includeComments?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
@@ -468,6 +644,14 @@ export type PresetMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   icon?: Prisma.SortOrder
   questionType?: Prisma.SortOrder
+  instructions?: Prisma.SortOrder
+  distractorComplexity?: Prisma.SortOrder
+  requireCodeExample?: Prisma.SortOrder
+  expectedResponseLength?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  bugType?: Prisma.SortOrder
+  codeComplexity?: Prisma.SortOrder
+  includeComments?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -481,6 +665,14 @@ export type PresetMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   icon?: Prisma.SortOrder
   questionType?: Prisma.SortOrder
+  instructions?: Prisma.SortOrder
+  distractorComplexity?: Prisma.SortOrder
+  requireCodeExample?: Prisma.SortOrder
+  expectedResponseLength?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  bugType?: Prisma.SortOrder
+  codeComplexity?: Prisma.SortOrder
+  includeComments?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   isDefault?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -491,8 +683,30 @@ export type PresetSumOrderByAggregateInput = {
   difficulty?: Prisma.SortOrder
 }
 
+export type PresetCreatefocusAreasInput = {
+  set: string[]
+}
+
+export type PresetCreateevaluationCriteriaInput = {
+  set: string[]
+}
+
 export type PresetCreatetagsInput = {
   set: string[]
+}
+
+export type PresetUpdatefocusAreasInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type NullableEnumExpectedResponseLengthFieldUpdateOperationsInput = {
+  set?: $Enums.ExpectedResponseLength | null
+}
+
+export type PresetUpdateevaluationCriteriaInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type PresetUpdatetagsInput = {
@@ -517,7 +731,16 @@ export type PresetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   description?: boolean
   icon?: boolean
   questionType?: boolean
-  options?: boolean
+  instructions?: boolean
+  focusAreas?: boolean
+  distractorComplexity?: boolean
+  requireCodeExample?: boolean
+  expectedResponseLength?: boolean
+  evaluationCriteria?: boolean
+  language?: boolean
+  bugType?: boolean
+  codeComplexity?: boolean
+  includeComments?: boolean
   tags?: boolean
   difficulty?: boolean
   isDefault?: boolean
@@ -532,7 +755,16 @@ export type PresetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   description?: boolean
   icon?: boolean
   questionType?: boolean
-  options?: boolean
+  instructions?: boolean
+  focusAreas?: boolean
+  distractorComplexity?: boolean
+  requireCodeExample?: boolean
+  expectedResponseLength?: boolean
+  evaluationCriteria?: boolean
+  language?: boolean
+  bugType?: boolean
+  codeComplexity?: boolean
+  includeComments?: boolean
   tags?: boolean
   difficulty?: boolean
   isDefault?: boolean
@@ -547,7 +779,16 @@ export type PresetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   description?: boolean
   icon?: boolean
   questionType?: boolean
-  options?: boolean
+  instructions?: boolean
+  focusAreas?: boolean
+  distractorComplexity?: boolean
+  requireCodeExample?: boolean
+  expectedResponseLength?: boolean
+  evaluationCriteria?: boolean
+  language?: boolean
+  bugType?: boolean
+  codeComplexity?: boolean
+  includeComments?: boolean
   tags?: boolean
   difficulty?: boolean
   isDefault?: boolean
@@ -562,7 +803,16 @@ export type PresetSelectScalar = {
   description?: boolean
   icon?: boolean
   questionType?: boolean
-  options?: boolean
+  instructions?: boolean
+  focusAreas?: boolean
+  distractorComplexity?: boolean
+  requireCodeExample?: boolean
+  expectedResponseLength?: boolean
+  evaluationCriteria?: boolean
+  language?: boolean
+  bugType?: boolean
+  codeComplexity?: boolean
+  includeComments?: boolean
   tags?: boolean
   difficulty?: boolean
   isDefault?: boolean
@@ -570,7 +820,7 @@ export type PresetSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PresetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "label" | "description" | "icon" | "questionType" | "options" | "tags" | "difficulty" | "isDefault" | "createdAt" | "updatedAt", ExtArgs["result"]["preset"]>
+export type PresetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "label" | "description" | "icon" | "questionType" | "instructions" | "focusAreas" | "distractorComplexity" | "requireCodeExample" | "expectedResponseLength" | "evaluationCriteria" | "language" | "bugType" | "codeComplexity" | "includeComments" | "tags" | "difficulty" | "isDefault" | "createdAt" | "updatedAt", ExtArgs["result"]["preset"]>
 
 export type $PresetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Preset"
@@ -582,7 +832,16 @@ export type $PresetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     description: string | null
     icon: string
     questionType: string
-    options: runtime.JsonValue
+    instructions: string | null
+    focusAreas: string[]
+    distractorComplexity: string | null
+    requireCodeExample: boolean | null
+    expectedResponseLength: $Enums.ExpectedResponseLength | null
+    evaluationCriteria: string[]
+    language: string | null
+    bugType: string | null
+    codeComplexity: string | null
+    includeComments: boolean | null
     tags: string[]
     difficulty: number
     isDefault: boolean
@@ -1017,7 +1276,16 @@ export interface PresetFieldRefs {
   readonly description: Prisma.FieldRef<"Preset", 'String'>
   readonly icon: Prisma.FieldRef<"Preset", 'String'>
   readonly questionType: Prisma.FieldRef<"Preset", 'String'>
-  readonly options: Prisma.FieldRef<"Preset", 'Json'>
+  readonly instructions: Prisma.FieldRef<"Preset", 'String'>
+  readonly focusAreas: Prisma.FieldRef<"Preset", 'String[]'>
+  readonly distractorComplexity: Prisma.FieldRef<"Preset", 'String'>
+  readonly requireCodeExample: Prisma.FieldRef<"Preset", 'Boolean'>
+  readonly expectedResponseLength: Prisma.FieldRef<"Preset", 'ExpectedResponseLength'>
+  readonly evaluationCriteria: Prisma.FieldRef<"Preset", 'String[]'>
+  readonly language: Prisma.FieldRef<"Preset", 'String'>
+  readonly bugType: Prisma.FieldRef<"Preset", 'String'>
+  readonly codeComplexity: Prisma.FieldRef<"Preset", 'String'>
+  readonly includeComments: Prisma.FieldRef<"Preset", 'Boolean'>
   readonly tags: Prisma.FieldRef<"Preset", 'String[]'>
   readonly difficulty: Prisma.FieldRef<"Preset", 'Int'>
   readonly isDefault: Prisma.FieldRef<"Preset", 'Boolean'>

@@ -5,6 +5,7 @@ import {
   MultiSelectField,
   SelectField,
   SliderField,
+  SwitchField,
   TextareaField,
 } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ import {
 import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 const QUESTION_TYPES = [
@@ -53,44 +54,107 @@ const COMMON_TAGS = [
   "Best Practices",
 ];
 
+const DISTRACTOR_COMPLEXITY_OPTIONS = [
+  { value: "", label: "Not specified" },
+  { value: "simple", label: "Simple" },
+  { value: "moderate", label: "Moderate" },
+  { value: "complex", label: "Complex" },
+];
+
+const EXPECTED_RESPONSE_LENGTH_OPTIONS = [
+  { value: "", label: "Not specified" },
+  { value: "short", label: "Short" },
+  { value: "medium", label: "Medium" },
+  { value: "long", label: "Long" },
+];
+
+const BUG_TYPE_OPTIONS = [
+  { value: "", label: "Not specified" },
+  { value: "syntax", label: "Syntax" },
+  { value: "logic", label: "Logic" },
+  { value: "performance", label: "Performance" },
+  { value: "security", label: "Security" },
+];
+
+const CODE_COMPLEXITY_OPTIONS = [
+  { value: "", label: "Not specified" },
+  { value: "basic", label: "Basic" },
+  { value: "intermediate", label: "Intermediate" },
+  { value: "advanced", label: "Advanced" },
+];
+
 type PresetFormProps = {
   preset?: Preset;
+};
+
+type PresetFormValues = CreatePresetInput & {
+  focusAreas: string[];
+  evaluationCriteria: string[];
 };
 
 export function PresetForm({ preset }: PresetFormProps) {
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<CreatePresetInput>({
-    resolver: zodResolver(createPresetSchema),
-    defaultValues: preset
-      ? {
-          name: preset.name,
-          label: preset.label,
-          description: preset.description || "",
-          icon: preset.icon,
-          questionType: preset.questionType as any,
-          tags: preset.tags,
-          difficulty: preset.difficulty,
-          options: preset.options,
-        }
-      : {
-          name: "",
-          label: "",
-          description: "",
-          icon: "Code",
-          questionType: "multiple_choice",
-          tags: [],
-          difficulty: 3,
-          options: {},
-        },
+  const parseListField = (value: string) =>
+    value
+      .split(/\n|,/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
+  const defaultValues: PresetFormValues = {
+    name: preset?.name ?? "",
+    label: preset?.label ?? "",
+    description: preset?.description ?? "",
+    icon: preset?.icon ?? "Code",
+    questionType:
+      (preset?.questionType as CreatePresetInput["questionType"]) ??
+      "multiple_choice",
+    tags: preset?.tags ?? [],
+    difficulty: preset?.difficulty ?? 3,
+    instructions: preset?.instructions ?? "",
+    focusAreas: preset?.focusAreas ?? [],
+    evaluationCriteria: preset?.evaluationCriteria ?? [],
+    language: preset?.language ?? "",
+    requireCodeExample: preset?.requireCodeExample ?? false,
+    includeComments: preset?.includeComments ?? true,
+    distractorComplexity: preset?.distractorComplexity ?? undefined,
+    expectedResponseLength: preset?.expectedResponseLength ?? undefined,
+    bugType: preset?.bugType ?? undefined,
+    codeComplexity: preset?.codeComplexity ?? undefined,
+  };
+
+  const form = useForm<PresetFormValues>({
+    resolver: zodResolver(createPresetSchema) as Resolver<PresetFormValues>,
+    defaultValues,
   });
 
-  const onSubmit = (data: CreatePresetInput) => {
+  const questionType = form.watch("questionType");
+  const focusAreasValue = (form.watch("focusAreas") ?? []).join("\n");
+  const evaluationCriteriaValue = (form.watch("evaluationCriteria") ?? []).join(
+    "\n"
+  );
+
+  const onSubmit = (data: PresetFormValues) => {
     startTransition(async () => {
       try {
+        const normalizedData: CreatePresetInput = {
+          ...data,
+          description: data.description?.trim() || undefined,
+          instructions: data.instructions?.trim() || undefined,
+          focusAreas: data.focusAreas.length ? data.focusAreas : undefined,
+          distractorComplexity: data.distractorComplexity || undefined,
+          expectedResponseLength: data.expectedResponseLength || undefined,
+          evaluationCriteria: data.evaluationCriteria.length
+            ? data.evaluationCriteria
+            : undefined,
+          language: data.language?.trim() || undefined,
+          bugType: data.bugType || undefined,
+          codeComplexity: data.codeComplexity || undefined,
+        } as CreatePresetInput;
+
         const result = preset
-          ? await updatePresetAction(preset.id!, data)
-          : await createPresetAction(data);
+          ? await updatePresetAction(preset.id!, normalizedData)
+          : await createPresetAction(normalizedData);
 
         if (result && !result.success) {
           toast.error(result.error || "Something went wrong");
@@ -145,6 +209,14 @@ export function PresetForm({ preset }: PresetFormProps) {
             description="Optional description of the preset"
           />
 
+          <TextareaField
+            control={form.control}
+            name="instructions"
+            label="AI Instructions"
+            placeholder="Additional guidance for the AI when generating questions"
+            description="Helps the AI focus on specific requirements or patterns"
+          />
+
           <div className="gap-6 grid grid-cols-1 md:grid-cols-3">
             <SelectField
               control={form.control}
@@ -193,25 +265,114 @@ export function PresetForm({ preset }: PresetFormProps) {
             description="Select relevant tags for this preset"
           />
 
-          <div>
-            <label className="font-medium text-sm">Options (JSON)</label>
-            <textarea
-              className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-[100px] placeholder:text-muted-foreground text-base disabled:cursor-not-allowed"
-              value={JSON.stringify(form.watch("options"), null, 2)}
-              onChange={(e) => {
-                try {
-                  const parsed = JSON.parse(e.target.value);
-                  form.setValue("options", parsed);
-                } catch {
-                  // Invalid JSON, let user continue typing
-                }
-              }}
-              placeholder='{"focusAreas": ["React"], "difficulty": "advanced"}'
-            />
-            <p className="mt-2 text-muted-foreground text-sm">
-              Configuration options for this preset (JSON format)
-            </p>
-          </div>
+          {questionType === "multiple_choice" && (
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="font-medium text-base">Multiple Choice Options</h3>
+              <div>
+                <label className="font-medium text-sm">Focus Areas</label>
+                <textarea
+                  className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-20 placeholder:text-muted-foreground text-base"
+                  value={focusAreasValue}
+                  onChange={(event) =>
+                    form.setValue(
+                      "focusAreas",
+                      parseListField(event.target.value),
+                      { shouldDirty: true, shouldValidate: true }
+                    )
+                  }
+                  placeholder={"React Hooks\nState Management\nPerformance"}
+                />
+                <p className="mt-2 text-muted-foreground text-sm">
+                  Enter one topic per line to help the AI focus the question.
+                </p>
+              </div>
+
+              <SelectField
+                control={form.control}
+                name="distractorComplexity"
+                label="Distractor Complexity"
+                options={DISTRACTOR_COMPLEXITY_OPTIONS}
+                description="How nuanced the incorrect answers should be"
+              />
+            </div>
+          )}
+
+          {questionType === "open_question" && (
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="font-medium text-base">Open Question Options</h3>
+              <SwitchField
+                control={form.control}
+                name="requireCodeExample"
+                label="Require Code Example"
+                description="If enabled, candidates must include a code sample"
+              />
+
+              <SelectField
+                control={form.control}
+                name="expectedResponseLength"
+                label="Expected Response Length"
+                options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
+                description="Let the AI know how detailed the answer should be"
+              />
+
+              <div>
+                <label className="font-medium text-sm">
+                  Evaluation Criteria
+                </label>
+                <textarea
+                  className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-20 placeholder:text-muted-foreground text-base"
+                  value={evaluationCriteriaValue}
+                  onChange={(event) =>
+                    form.setValue(
+                      "evaluationCriteria",
+                      parseListField(event.target.value),
+                      { shouldDirty: true, shouldValidate: true }
+                    )
+                  }
+                  placeholder={"scalability\ntrade-offs\nsecurity"}
+                />
+                <p className="mt-2 text-muted-foreground text-sm">
+                  One criterion per line. These will guide the scoring rubric.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {questionType === "code_snippet" && (
+            <div className="space-y-4 p-4 border rounded-lg">
+              <h3 className="font-medium text-base">Code Snippet Options</h3>
+              <InputField
+                control={form.control}
+                name="language"
+                label="Primary Language"
+                placeholder="e.g., typescript"
+                description="Language the buggy snippet should use"
+              />
+
+              <SelectField
+                control={form.control}
+                name="bugType"
+                label="Bug Type"
+                options={BUG_TYPE_OPTIONS}
+                description="What kind of issue should the snippet include"
+              />
+
+              <SelectField
+                control={form.control}
+                name="codeComplexity"
+                label="Code Complexity"
+                options={CODE_COMPLEXITY_OPTIONS}
+                description="Helps tune the length and difficulty of the snippet"
+              />
+
+              <SwitchField
+                control={form.control}
+                name="includeComments"
+                label="Include Comments"
+                description="Whether the snippet should contain inline comments"
+              />
+            </div>
+          )}
 
           <Button type="submit" disabled={isPending} className="w-full">
             {isPending

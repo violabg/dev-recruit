@@ -9,6 +9,8 @@ import {
 } from "../ui/select";
 import { BaseController, BaseControllerProps } from "./base-controller";
 
+const EMPTY_SELECT_VALUE = "__select_empty__";
+
 type SelectOption = {
   value: string;
   label: string;
@@ -58,12 +60,33 @@ export function SelectField<T extends FieldValues>({
     >
       {({ field }) => (
         <Select
-          value={String(field.value)}
+          value={
+            field.value === undefined || field.value === null
+              ? ""
+              : String(field.value)
+          }
           onValueChange={(value) => {
+            if (value === EMPTY_SELECT_VALUE) {
+              field.onChange(undefined);
+              onValueChange?.("");
+              return;
+            }
+
+            if (value === "") {
+              field.onChange(undefined);
+              onValueChange?.(value);
+              return;
+            }
+
             // Try to parse as number, otherwise keep as string
             const numValue = parseInt(value);
-            field.onChange(isNaN(numValue) ? value : numValue);
-            onValueChange?.(numValue || value);
+            if (isNaN(numValue)) {
+              field.onChange(value);
+              onValueChange?.(value);
+            } else {
+              field.onChange(numValue);
+              onValueChange?.(numValue);
+            }
           }}
           {...selectProps}
         >
@@ -72,18 +95,23 @@ export function SelectField<T extends FieldValues>({
           </SelectTrigger>
           <SelectContent>
             {options
-              ? options.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.leading ? (
-                      <span className="flex items-center gap-2">
-                        {option.leading}
-                        <span>{option.label}</span>
-                      </span>
-                    ) : (
-                      option.label
-                    )}
-                  </SelectItem>
-                ))
+              ? options.map((option) => {
+                  const optionValue =
+                    option.value === "" ? EMPTY_SELECT_VALUE : option.value;
+
+                  return (
+                    <SelectItem key={optionValue} value={optionValue}>
+                      {option.leading ? (
+                        <span className="flex items-center gap-2">
+                          {option.leading}
+                          <span>{option.label}</span>
+                        </span>
+                      ) : (
+                        option.label
+                      )}
+                    </SelectItem>
+                  );
+                })
               : children}
           </SelectContent>
         </Select>

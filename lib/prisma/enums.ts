@@ -9,7 +9,10 @@
 * 🟢 You can import this file directly.
 */
 
+export const ExpectedResponseLength = {
+  short: 'short',
+  medium: 'medium',
+  long: 'long'
+} as const
 
-
-// This file is empty because there are no enums in the schema.
-export {}
+export type ExpectedResponseLength = (typeof ExpectedResponseLength)[keyof typeof ExpectedResponseLength]

@@ -1,6 +1,40 @@
 import { z } from "zod/v4";
 import { baseSchemas } from "./base";
 
+const optionalTrimmedString = (max = 255) =>
+  z
+    .string()
+    .max(max)
+    .optional()
+    .nullable()
+    .transform((value) => {
+      if (!value) return undefined;
+      const trimmed = value.trim();
+      return trimmed.length ? trimmed : undefined;
+    });
+
+const optionalStringArray = z
+  .array(z.string().trim().min(1))
+  .optional()
+  .transform((value) => (value && value.length ? value : undefined));
+
+const optionalBoolean = z
+  .boolean()
+  .optional()
+  .nullable()
+  .transform((value) => (typeof value === "boolean" ? value : undefined));
+
+const optionalEnum = <T extends string>(schema: z.ZodType<T, any, any>) =>
+  schema
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : undefined));
+
+const distractorComplexitySchema = z.enum(["simple", "moderate", "complex"]);
+const expectedResponseLengthSchema = z.enum(["short", "medium", "long"]);
+const bugTypeSchema = z.enum(["syntax", "logic", "performance", "security"]);
+const codeComplexitySchema = z.enum(["basic", "intermediate", "advanced"]);
+
 // Preset schema for CRUD operations
 export const presetSchema = z.object({
   id: z.string().cuid(),
@@ -9,7 +43,16 @@ export const presetSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   icon: z.string().min(1, "Icon name is required"),
   questionType: baseSchemas.questionType,
-  options: z.record(z.string(), z.unknown()),
+  instructions: optionalTrimmedString(1000),
+  focusAreas: optionalStringArray,
+  distractorComplexity: optionalEnum(distractorComplexitySchema),
+  requireCodeExample: optionalBoolean,
+  expectedResponseLength: optionalEnum(expectedResponseLengthSchema),
+  evaluationCriteria: optionalStringArray,
+  language: optionalTrimmedString(100),
+  bugType: optionalEnum(bugTypeSchema),
+  codeComplexity: optionalEnum(codeComplexitySchema),
+  includeComments: optionalBoolean,
   tags: z.array(z.string().min(1).max(50)).min(1, "At least one tag required"),
   difficulty: z.number().int().min(1).max(5),
   isDefault: z.boolean().optional(),
@@ -25,3 +68,7 @@ export const updatePresetSchema = presetSchema.partial();
 export type Preset = z.infer<typeof presetSchema>;
 export type CreatePresetInput = z.infer<typeof createPresetSchema>;
 export type UpdatePresetInput = z.infer<typeof updatePresetSchema>;
+
+export type ExpectedResponseLength = z.infer<
+  typeof expectedResponseLengthSchema
+>;

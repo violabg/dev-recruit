@@ -1342,7 +1342,16 @@ export const PresetScalarFieldEnum = {
   description: 'description',
   icon: 'icon',
   questionType: 'questionType',
-  options: 'options',
+  instructions: 'instructions',
+  focusAreas: 'focusAreas',
+  distractorComplexity: 'distractorComplexity',
+  requireCodeExample: 'requireCodeExample',
+  expectedResponseLength: 'expectedResponseLength',
+  evaluationCriteria: 'evaluationCriteria',
+  language: 'language',
+  bugType: 'bugType',
+  codeComplexity: 'codeComplexity',
+  includeComments: 'includeComments',
   tags: 'tags',
   difficulty: 'difficulty',
   isDefault: 'isDefault',
@@ -1481,6 +1490,20 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ExpectedResponseLength'
+ */
+export type EnumExpectedResponseLengthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExpectedResponseLength'>
+    
+
+
+/**
+ * Reference to a field of type 'ExpectedResponseLength[]'
+ */
+export type ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExpectedResponseLength[]'>
     
 
 /**

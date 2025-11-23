@@ -317,6 +317,13 @@ export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
   _max?: Prisma.NestedJsonNullableFilter<$PrismaModel>
 }
 
+export type EnumExpectedResponseLengthNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExpectedResponseLength | Prisma.EnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExpectedResponseLengthNullableFilter<$PrismaModel> | $Enums.ExpectedResponseLength | null
+}
+
 export type IntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -326,6 +333,16 @@ export type IntFilter<$PrismaModel = never> = {
   gt?: number | Prisma.IntFieldRefInput<$PrismaModel>
   gte?: number | Prisma.IntFieldRefInput<$PrismaModel>
   not?: Prisma.NestedIntFilter<$PrismaModel> | number
+}
+
+export type EnumExpectedResponseLengthNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExpectedResponseLength | Prisma.EnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExpectedResponseLengthNullableWithAggregatesFilter<$PrismaModel> | $Enums.ExpectedResponseLength | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumExpectedResponseLengthNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumExpectedResponseLengthNullableFilter<$PrismaModel>
 }
 
 export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -593,6 +610,23 @@ export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
   gt?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   gte?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   not?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel> | Prisma.JsonNullValueFilter
+}
+
+export type NestedEnumExpectedResponseLengthNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExpectedResponseLength | Prisma.EnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExpectedResponseLengthNullableFilter<$PrismaModel> | $Enums.ExpectedResponseLength | null
+}
+
+export type NestedEnumExpectedResponseLengthNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExpectedResponseLength | Prisma.EnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  in?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.ExpectedResponseLength[] | Prisma.ListEnumExpectedResponseLengthFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumExpectedResponseLengthNullableWithAggregatesFilter<$PrismaModel> | $Enums.ExpectedResponseLength | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumExpectedResponseLengthNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumExpectedResponseLengthNullableFilter<$PrismaModel>
 }
 
 export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {

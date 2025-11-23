@@ -186,7 +186,16 @@ model Preset {
   description  String?
   icon         String   // Icon name from lucide-react
   questionType String   // multiple_choice, code_snippet, open_question
-  options      Json     // Configuration options for the preset
+  instructions String?
+  focusAreas   String[] @default([])
+  distractorComplexity String?
+  requireCodeExample  Boolean?
+  expectedResponseLength ExpectedResponseLength?
+  evaluationCriteria String[] @default([])
+  language     String?
+  bugType      String?
+  codeComplexity String?
+  includeComments Boolean?
   tags         String[] // e.g., ["React", "Hooks", "Advanced"]
   difficulty   Int      @default(3) // 1-5 scale
   isDefault    Boolean  @default(true)
@@ -194,5 +203,11 @@ model Preset {
   updatedAt    DateTime @updatedAt
 
   @@map("presets")
+}
+
+enum ExpectedResponseLength {
+  short
+  medium
+  long
 }
 
