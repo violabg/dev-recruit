@@ -36,13 +36,13 @@ export function QuizDetailActionsClient({
   return (
     <>
       <div className="flex gap-2">
-        <Button variant="outline" asChild>
+        <Button variant="outline" size="sm" asChild>
           <Link href={`/dashboard/quizzes/${quizId}/edit`}>
             <Edit className="mr-2 w-4 h-4" />
             Modifica
           </Link>
         </Button>
-        <Button variant="default" asChild>
+        <Button variant="default" size="sm" asChild>
           <Link href={`/dashboard/quizzes/${quizId}/invite`}>
             <Send className="mr-2 w-4 h-4" />
             Assicia a candidati
@@ -50,6 +50,7 @@ export function QuizDetailActionsClient({
         </Button>
         <Button
           variant="secondary"
+          size="sm"
           onClick={() => setIsDuplicateDialogOpen(true)}
         >
           <Copy className="mr-2 w-4 h-4" />
@@ -58,7 +59,7 @@ export function QuizDetailActionsClient({
         {/* Delete button uses server action */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive">
+            <Button variant="destructive" size="sm">
               <Trash className="mr-2 w-4 h-4" />
               Elimina
             </Button>

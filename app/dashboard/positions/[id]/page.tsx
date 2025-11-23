@@ -46,7 +46,7 @@ async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
     return (
       <div className="flex flex-col justify-center items-center h-[400px]">
         <p className="font-medium text-lg">Posizione non trovata</p>
-        <Button className="mt-4" asChild>
+        <Button className="mt-4" asChild size="sm">
           <Link href="/dashboard/positions">Torna alle posizioni</Link>
         </Button>
       </div>
@@ -69,7 +69,7 @@ async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild size="sm">
             <Link href={`/dashboard/positions/${position.id}/edit`}>
               <Edit className="mr-2 w-4 h-4" />
               Modifica

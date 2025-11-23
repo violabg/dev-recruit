@@ -1,8 +1,5 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Loader2, Trash } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,27 +10,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { deletePosition } from "@/lib/actions/positions"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { deletePosition } from "@/lib/actions/positions";
+import { Loader2, Trash } from "lucide-react";
+import { useState } from "react";
 
 export function DeletePositionButton({ id }: { id: string }) {
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     try {
-      setIsDeleting(true)
-      await deletePosition(id)
+      setIsDeleting(true);
+      await deletePosition(id);
     } catch (error) {
-      console.error("Error deleting position:", error)
-      setIsDeleting(false)
+      console.error("Error deleting position:", error);
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">
-          <Trash className="mr-2 h-4 w-4" />
+        <Button variant="destructive" size="sm">
+          <Trash className="mr-2 w-4 h-4" />
           Elimina
         </Button>
       </AlertDialogTrigger>
@@ -41,8 +41,8 @@ export function DeletePositionButton({ id }: { id: string }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
           <AlertDialogDescription>
-            Questa azione non può essere annullata. Verranno eliminati anche tutti i quiz e i candidati associati a
-            questa posizione.
+            Questa azione non può essere annullata. Verranno eliminati anche
+            tutti i quiz e i candidati associati a questa posizione.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -50,11 +50,11 @@ export function DeletePositionButton({ id }: { id: string }) {
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
           >
             {isDeleting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 Eliminazione...
               </>
             ) : (
@@ -64,5 +64,5 @@ export function DeletePositionButton({ id }: { id: string }) {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

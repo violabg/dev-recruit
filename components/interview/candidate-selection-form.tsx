@@ -133,7 +133,7 @@ export function CandidateSelectionForm({
             placeholder="Select candidates to assign this quiz"
           />
 
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" size="sm" disabled={isPending}>
             {isPending ? (
               <>
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />

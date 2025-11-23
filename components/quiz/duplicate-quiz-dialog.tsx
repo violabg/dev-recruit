@@ -114,12 +114,13 @@ export function DuplicateQuizDialog({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => onOpenChange(false)}
                 disabled={isPending}
               >
                 Annulla
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" size="sm" disabled={isPending}>
                 {isPending ? "Duplicazione..." : "Duplica"}
               </Button>
             </div>

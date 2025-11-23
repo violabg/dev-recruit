@@ -76,6 +76,7 @@ export const QuizSettings = ({
               type="button"
               variant="outline"
               onClick={() => router.back()}
+              size="sm"
               disabled={saveStatus === "saving"}
             >
               Annulla
@@ -83,6 +84,7 @@ export const QuizSettings = ({
             <Button
               type="submit"
               disabled={saveStatus === "saving"}
+              size="sm"
               variant={getSaveButtonVariant(saveStatus)}
             >
               {getSaveButtonContent(saveStatus)}

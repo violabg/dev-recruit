@@ -138,6 +138,7 @@ export const QuestionItem = ({
                 type="button"
                 onClick={onSaveQuestion}
                 disabled={questionSaveStatus === "saving"}
+                size="sm"
                 variant={getSaveButtonVariant(questionSaveStatus)}
               >
                 {getSaveButtonContent(questionSaveStatus)}

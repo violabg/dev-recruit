@@ -247,12 +247,13 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
         <Button
           type="button"
           variant="outline"
+          size="sm"
           onClick={handleCancel}
           disabled={isSubmitting}
         >
           Annulla
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" size="sm" disabled={isSubmitting}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 w-4 h-4 animate-spin" />
