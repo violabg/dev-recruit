@@ -1,7 +1,6 @@
 "use server";
 
 import { cacheLife, cacheTag, updateTag } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import prisma from "../prisma";
 import {
@@ -69,7 +68,8 @@ export async function createPresetAction(data: CreatePresetInput) {
     // Invalidate cache
     updateTag("presets");
 
-    redirect(`/dashboard/presets/${preset.id}`);
+    // Return success before redirecting
+    return { success: true, presetId: preset.id };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -116,7 +116,8 @@ export async function updatePresetAction(
     // Invalidate cache
     updateTag("presets");
 
-    redirect(`/dashboard/presets/${preset.id}`);
+    // Return success before redirecting
+    return { success: true, presetId: preset.id };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {

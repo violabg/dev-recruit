@@ -1,6 +1,7 @@
 "use client";
 import {
   InputField,
+  InputWithTagField,
   MultiSelectField,
   SelectField,
   SliderField,
@@ -23,6 +24,7 @@ import {
 } from "@/lib/schemas";
 import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -91,6 +93,7 @@ type PresetFormValues = z.input<typeof createPresetSchema>;
 
 export function PresetForm({ preset }: PresetFormProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const parseListField = (value: string) =>
     value
@@ -159,12 +162,11 @@ export function PresetForm({ preset }: PresetFormProps) {
 
         if (result && !result.success) {
           toast.error(result.error || "Something went wrong");
+        } else if (result && result.success && result.presetId) {
+          // Redirect on success
+          router.push(`/dashboard/presets/${result.presetId}`);
         }
       } catch (error) {
-        if (error instanceof Error && error.name === "Redirect") {
-          throw error;
-        }
-
         toast.error(
           error instanceof Error ? error.message : "Something went wrong"
         );
@@ -270,22 +272,13 @@ export function PresetForm({ preset }: PresetFormProps) {
             <div className="space-y-4 p-4 border rounded-lg">
               <h3 className="font-medium text-base">Multiple Choice Options</h3>
               <div>
-                <label className="font-medium text-sm">Focus Areas</label>
-                <textarea
-                  className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-20 placeholder:text-muted-foreground text-base"
-                  value={focusAreasValue}
-                  onChange={(event) =>
-                    form.setValue(
-                      "focusAreas",
-                      parseListField(event.target.value),
-                      { shouldDirty: true, shouldValidate: true }
-                    )
-                  }
-                  placeholder={"React Hooks\nState Management\nPerformance"}
+                <InputWithTagField
+                  control={form.control}
+                  name="focusAreas"
+                  label="Focus Areas"
+                  placeholder="Aggiungi una focus area"
+                  description="Premi enter dopo aver digitato un'area di interesse."
                 />
-                <p className="mt-2 text-muted-foreground text-sm">
-                  Enter one topic per line to help the AI focus the question.
-                </p>
               </div>
 
               <SelectField
