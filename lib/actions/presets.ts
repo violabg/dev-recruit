@@ -1,11 +1,11 @@
 "use server";
-
 import { cacheLife, cacheTag, updateTag } from "next/cache";
 import { z } from "zod/v4";
+import { requireUser } from "../auth-server";
+import { getPresetData, getPresetsData } from "../data/presets";
 import prisma from "../prisma";
 import {
   createPresetSchema,
-  presetSchema,
   updatePresetSchema,
   type CreatePresetInput,
   type UpdatePresetInput,
@@ -13,15 +13,10 @@ import {
 
 // Get all presets
 export async function getPresetsAction() {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("presets");
+  const user = await requireUser();
 
   try {
-    const presets = await prisma.preset.findMany({
-      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
-    });
-
+    const presets = await getPresetsData();
     return { success: true, presets };
   } catch (error) {
     console.error("Error fetching presets:", error);
@@ -34,18 +29,19 @@ export async function getPresetsAction() {
 
 // Get a single preset by ID
 export async function getPresetAction(presetId: string) {
+  const user = await requireUser();
+  ("use cache");
+  cacheLife("minutes");
+  cacheTag("presets", presetId);
+
   try {
-    const preset = await prisma.preset.findUnique({
-      where: { id: presetId },
-    });
+    const preset = await getPresetData(presetId);
 
     if (!preset) {
       return { success: false, error: "Preset not found" };
     }
 
-    const validatedPreset = presetSchema.parse(preset);
-
-    return { success: true, preset: validatedPreset };
+    return { success: true, preset };
   } catch (error) {
     console.error("Error fetching preset:", error);
     return {
@@ -57,6 +53,8 @@ export async function getPresetAction(presetId: string) {
 
 // Create a new preset
 export async function createPresetAction(data: CreatePresetInput) {
+  const user = await requireUser();
+
   try {
     // Validate input
     const validatedData = createPresetSchema.parse(data);
@@ -92,6 +90,8 @@ export async function updatePresetAction(
   presetId: string,
   data: UpdatePresetInput
 ) {
+  const user = await requireUser();
+
   try {
     // Verify preset exists
     const existingPreset = await prisma.preset.findUnique({
@@ -137,6 +137,8 @@ export async function updatePresetAction(
 
 // Delete a preset
 export async function deletePresetAction(presetId: string) {
+  const user = await requireUser();
+
   try {
     const preset = await prisma.preset.findUnique({
       where: { id: presetId },
@@ -168,6 +170,8 @@ export async function deletePresetAction(presetId: string) {
 
 // Bulk create presets (for seeding)
 export async function bulkCreatePresetsAction(presets: CreatePresetInput[]) {
+  const user = await requireUser();
+
   try {
     const created = await Promise.all(
       presets.map((preset) =>
