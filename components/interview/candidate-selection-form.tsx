@@ -141,8 +141,8 @@ export function CandidateSelectionForm({
               </>
             ) : (
               <>
+                <Plus className="mr-1 w-4 h-4" />
                 Create interview links
-                <Plus className="ml-1 w-4 h-4" />
               </>
             )}
           </Button>

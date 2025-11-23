@@ -24,8 +24,8 @@ export default async function CandidatesPage({
         </div>
         <Button asChild size="sm" variant="default">
           <Link href="/dashboard/candidates/new">
+            <Plus className="mr-1 w-4 h-4" />
             Nuovo Candidato
-            <Plus className="ml-1 w-4 h-4" />
           </Link>
         </Button>
       </div>

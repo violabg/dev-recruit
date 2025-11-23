@@ -48,8 +48,8 @@ export const CandidateListSection = async ({
               </p>
               <Button asChild size="sm">
                 <Link href="/dashboard/candidates/new">
+                  <Plus className="mr-1 w-4 h-4" />
                   Nuovo Candidato
-                  <Plus className="ml-1 w-4 h-4" />
                 </Link>
               </Button>
             </div>

@@ -99,8 +99,8 @@ export const QuestionsHeader = ({
                 onClick={() => onAddQuestion(type.value as QuestionType)}
                 className="gap-2"
               >
+                <Plus className="mr-1 w-4 h-4 text-primary" />
                 {getQuestionTypeLabel(type.value as QuestionType)}
-                <Plus className="ml-1 w-4 h-4 text-primary" />
               </Button>
             ))}
           </div>
