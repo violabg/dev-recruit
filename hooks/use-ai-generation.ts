@@ -63,8 +63,6 @@ export const useAIGeneration = ({
   fields,
   position,
   prepend,
-  append,
-  remove,
   update,
   setExpandedQuestions,
 }: UseAIGenerationProps) => {

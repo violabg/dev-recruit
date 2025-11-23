@@ -168,7 +168,6 @@ export function EditQuizForm({
           <PresetGenerationButtons
             onGeneratePreset={handleGeneratePreset}
             loading={aiLoading}
-            position={position}
           />
 
           <Card>

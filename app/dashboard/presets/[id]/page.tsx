@@ -89,20 +89,6 @@ export default async function PresetDetailPage({
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Options</CardTitle>
-            <CardDescription>
-              JSON configuration passed to the AI generation worker.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <pre className="bg-background/50 p-4 border border-input rounded-md max-h-80 overflow-auto font-mono text-muted-foreground text-sm">
-              {JSON.stringify(preset.options ?? {}, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

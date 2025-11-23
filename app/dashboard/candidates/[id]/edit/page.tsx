@@ -1,7 +1,4 @@
-import {
-  CandidateForm,
-  EditableCandidate,
-} from "@/components/candidates/candidate-form";
+import { CandidateForm } from "@/components/candidates/candidate-form";
 import {
   getCandidatePositions,
   getCandidateWithDetails,
@@ -86,7 +83,7 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
               name: candidate.name,
               email: candidate.email,
               positionId: candidate.positionId,
-              status: candidate.status as EditableCandidate["status"],
+              status: candidate.status,
               resumeUrl: candidate.resumeUrl,
             }}
           />

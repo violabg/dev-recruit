@@ -1,5 +1,4 @@
 "use client";
-
 import {
   InputField,
   MultiSelectField,
@@ -25,8 +24,9 @@ import {
 import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { type z } from "zod/v4";
 
 const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple Choice" },
@@ -87,10 +87,7 @@ type PresetFormProps = {
   preset?: Preset;
 };
 
-type PresetFormValues = CreatePresetInput & {
-  focusAreas: string[];
-  evaluationCriteria: string[];
-};
+type PresetFormValues = z.input<typeof createPresetSchema>;
 
 export function PresetForm({ preset }: PresetFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -124,7 +121,7 @@ export function PresetForm({ preset }: PresetFormProps) {
   };
 
   const form = useForm<PresetFormValues>({
-    resolver: zodResolver(createPresetSchema) as Resolver<PresetFormValues>,
+    resolver: zodResolver(createPresetSchema),
     defaultValues,
   });
 
@@ -141,12 +138,16 @@ export function PresetForm({ preset }: PresetFormProps) {
           ...data,
           description: data.description?.trim() || undefined,
           instructions: data.instructions?.trim() || undefined,
-          focusAreas: data.focusAreas.length ? data.focusAreas : undefined,
+          focusAreas:
+            data.focusAreas && data.focusAreas.length
+              ? data.focusAreas
+              : undefined,
           distractorComplexity: data.distractorComplexity || undefined,
           expectedResponseLength: data.expectedResponseLength || undefined,
-          evaluationCriteria: data.evaluationCriteria.length
-            ? data.evaluationCriteria
-            : undefined,
+          evaluationCriteria:
+            data.evaluationCriteria && data.evaluationCriteria.length
+              ? data.evaluationCriteria
+              : undefined,
           language: data.language?.trim() || undefined,
           bugType: data.bugType || undefined,
           codeComplexity: data.codeComplexity || undefined,
