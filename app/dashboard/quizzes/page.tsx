@@ -58,7 +58,7 @@ export default async function QuizzesPage({
           <Button variant="default" size="sm" asChild>
             <Link href="/dashboard/quizzes/new">
               Nuovo quiz
-              <Plus className="w-4 h-4" />
+              <Plus className="ml-1 w-4 h-4" />
             </Link>
           </Button>
         </div>

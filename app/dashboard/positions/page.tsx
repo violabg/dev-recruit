@@ -26,10 +26,10 @@ export default async function PositionsPage({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="font-bold text-3xl">Posizioni</h1>
-        <Button asChild>
+        <Button asChild size="sm" variant={"default"}>
           <Link href="/dashboard/positions/new">
-            <Plus className="mr-2 w-4 h-4" />
             Nuova Posizione
+            <Plus className="ml-1 w-4 h-4" />
           </Link>
         </Button>
       </div>
@@ -123,8 +123,8 @@ const PositionsTable = async ({
             {!query && (
               <Button className="mt-2" size="sm" asChild>
                 <Link href="/dashboard/positions/new">
-                  <Plus className="mr-2 w-4 h-4" />
                   Crea posizione
+                  <Plus className="ml-1 w-4 h-4" />
                 </Link>
               </Button>
             )}

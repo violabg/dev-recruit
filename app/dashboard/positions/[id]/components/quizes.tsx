@@ -15,10 +15,10 @@ export default async function Quizes({ id }: { id: string }) {
     <>
       <div className="flex justify-between">
         <h2 className="font-semibold text-xl">Quiz</h2>
-        <Button asChild>
+        <Button asChild size="sm" variant="default">
           <Link href={`/dashboard/positions/${id}/quiz/new`}>
             New Quiz
-            <Plus className="ml-2 w-4 h-4" />
+            <Plus className="ml-1 w-4 h-4" />
           </Link>
         </Button>
       </div>
@@ -68,7 +68,7 @@ export default async function Quizes({ id }: { id: string }) {
             <Button className="mt-2" size="sm" asChild>
               <Link href={`/dashboard/positions/${id}/quiz/new`}>
                 New Quiz
-                <Plus className="ml-2 w-4 h-4" />
+                <Plus className="ml-1 w-4 h-4" />
               </Link>
             </Button>
           </div>

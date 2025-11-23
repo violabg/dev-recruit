@@ -46,10 +46,10 @@ export const CandidateListSection = async ({
                   ? `Nessun candidato trovato per "${search}". Prova a modificare i filtri.`
                   : "Non hai ancora aggiunto candidati. Aggiungi il tuo primo candidato per iniziare."}
               </p>
-              <Button asChild>
+              <Button asChild size="sm">
                 <Link href="/dashboard/candidates/new">
                   Nuovo Candidato
-                  <Plus className="mr-2 w-4 h-4" />
+                  <Plus className="ml-1 w-4 h-4" />
                 </Link>
               </Button>
             </div>

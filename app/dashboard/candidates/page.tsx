@@ -22,10 +22,10 @@ export default async function CandidatesPage({
             Gestisci i candidati per le tue posizioni aperte
           </p>
         </div>
-        <Button asChild>
+        <Button asChild size="sm" variant="default">
           <Link href="/dashboard/candidates/new">
             Nuovo Candidato
-            <Plus className="mr-2 w-4 h-4" />
+            <Plus className="ml-1 w-4 h-4" />
           </Link>
         </Button>
       </div>

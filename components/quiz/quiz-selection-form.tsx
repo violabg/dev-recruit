@@ -6,13 +6,13 @@ import { useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { MultiSelectField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   assignQuizzesToCandidate,
   AssignQuizzesToCandidateState,
 } from "@/lib/actions/candidate-quiz-assignment";
 import { QuizSelection, quizSelectionSchema } from "@/lib/schemas";
-import { MultiSelectField } from "@/components/rhf-inputs";
 
 type QuizSelectionValues = QuizSelection;
 
@@ -132,8 +132,8 @@ export function QuizSelectionForm({
               </>
             ) : (
               <>
-                <Plus className="mr-2 w-4 h-4" />
                 Create interview links
+                <Plus className="ml-1 w-4 h-4" />
               </>
             )}
           </Button>

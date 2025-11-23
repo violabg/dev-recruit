@@ -1,5 +1,4 @@
 "use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +22,7 @@ import {
   ChevronRight,
   Clock,
   Copy,
-  ExternalLink,
+  Eye,
   MessageSquare,
   XCircle,
 } from "lucide-react";
@@ -193,7 +192,7 @@ export function InterviewsTable({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
-                                size="sm"
+                                size="icon"
                                 variant="outline"
                                 onClick={() =>
                                   copyInterviewLink(interview.token)
@@ -218,11 +217,11 @@ export function InterviewsTable({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="sm" variant="outline" asChild>
+                              <Button size="icon" variant="outline" asChild>
                                 <Link
                                   href={`/dashboard/interviews/${interview.id}`}
                                 >
-                                  <ExternalLink className="size-4" />
+                                  <Eye className="w-4 h-4 text-primary" />
                                 </Link>
                               </Button>
                             </TooltipTrigger>

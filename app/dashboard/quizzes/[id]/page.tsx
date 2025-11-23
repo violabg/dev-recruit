@@ -12,7 +12,7 @@ import { getPositions } from "@/lib/data/positions";
 import prisma from "@/lib/prisma";
 import { Question } from "@/lib/schemas";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, Clock, Link2 } from "lucide-react";
+import { ArrowLeft, Clock, Eye, Link2 } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { QuizDetailSkeleton } from "./fallbacks";
@@ -275,6 +275,7 @@ async function QuizResultsContent({ quizId }: { quizId: string }) {
               <th className="p-2 font-semibold text-left">
                 Data Completamento
               </th>
+              <th className="p-2 font-semibold text-center">Azioni</th>
             </tr>
           </thead>
           <tbody>
@@ -321,6 +322,15 @@ async function QuizResultsContent({ quizId }: { quizId: string }) {
                   {interview.completedAt
                     ? formatDate(interview.completedAt)
                     : "—"}
+                </td>
+                <td className="p-2 text-center">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link
+                      href={`/dashboard/candidates/${interview.candidateId}`}
+                    >
+                      <Eye className="w-4 h-4 text-primary" />
+                    </Link>
+                  </Button>
                 </td>
               </tr>
             ))}

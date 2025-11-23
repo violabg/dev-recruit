@@ -100,7 +100,7 @@ export const QuestionsHeader = ({
                 className="gap-2"
               >
                 {getQuestionTypeLabel(type.value as QuestionType)}
-                <Plus className="w-4 h-4 text-primary" />
+                <Plus className="ml-1 w-4 h-4 text-primary" />
               </Button>
             ))}
           </div>
