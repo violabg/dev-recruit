@@ -3,13 +3,14 @@ import { getPresetAction } from "@/lib/actions/presets";
 import { notFound } from "next/navigation";
 
 type EditPresetPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export default async function EditPresetPage({ params }: EditPresetPageProps) {
-  const result = await getPresetAction(params.id);
+  const { id } = await params;
+  const result = await getPresetAction(id);
 
   if (!result.success || !result.preset) {
     notFound();
