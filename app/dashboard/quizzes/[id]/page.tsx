@@ -3,29 +3,20 @@ import {
   MultipleChoiceDisplay,
   OpenQuestionDisplay,
 } from "@/components/quiz/question-display";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { deleteQuiz } from "@/lib/actions/quizzes";
+import { getInterviewsByQuiz } from "@/lib/data/interviews";
+import { getPositions } from "@/lib/data/positions";
 import prisma from "@/lib/prisma";
 import { Question } from "@/lib/schemas";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, Clock, Edit, Link2, Send, Trash } from "lucide-react";
+import { ArrowLeft, Clock, Link2 } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { QuizDetailSkeleton } from "./fallbacks";
+import { QuizDetailActionsClient } from "./quiz-detail-actions-client";
 
 type Position = {
   id: string;
@@ -106,6 +97,15 @@ async function QuizDetailContent({
     );
   }
 
+  // Fetch all positions for duplicate dialog, excluding current position
+  const allPositions = await getPositions();
+  const positionsForDialog = allPositions
+    .filter((pos) => pos.id !== position.id)
+    .map((pos) => ({
+      id: pos.id,
+      title: pos.title,
+    }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -134,50 +134,11 @@ async function QuizDetailContent({
             </span>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/dashboard/quizzes/${quiz.id}/edit`}>
-              <Edit className="mr-2 w-4 h-4" />
-              Modifica
-            </Link>
-          </Button>
-          <Button variant="default" asChild>
-            <Link href={`/dashboard/quizzes/${quiz.id}/invite`}>
-              <Send className="mr-2 w-4 h-4" />
-              Assicia a candidati
-            </Link>
-          </Button>
-          {/* Delete button uses server action */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash className="mr-2 w-4 h-4" />
-                Elimina
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Questa azione non può essere annullata. Il quiz verrà
-                  eliminato permanentemente.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annulla</AlertDialogCancel>
-                <form action={deleteQuiz}>
-                  <input type="hidden" name="quiz_id" value={quiz.id} />
-                  <AlertDialogAction
-                    type="submit"
-                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                  >
-                    Elimina
-                  </AlertDialogAction>
-                </form>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+        <QuizDetailActionsClient
+          quizId={quiz.id}
+          quizTitle={quiz.title}
+          positions={positionsForDialog}
+        />
       </div>
 
       <Tabs defaultValue="questions">
@@ -270,23 +231,102 @@ async function QuizDetailContent({
               <CardTitle>Risultati</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
-                <div className="text-center">
-                  <p className="text-muted-foreground text-sm">
-                    Nessun candidato ha ancora completato questo quiz
-                  </p>
-                  <Button className="mt-2" size="sm" asChild>
-                    <Link href={`/dashboard/quizzes/${quiz.id}/invite`}>
-                      <Link2 className="mr-2 w-4 h-4" />
-                      Associa a candidati
-                    </Link>
-                  </Button>
-                </div>
-              </div>
+              <QuizResultsContent quizId={quiz.id} />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+async function QuizResultsContent({ quizId }: { quizId: string }) {
+  const interviews = await getInterviewsByQuiz(quizId);
+
+  if (interviews.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
+        <div className="text-center">
+          <p className="text-muted-foreground text-sm">
+            Nessun candidato ha ancora completato questo quiz
+          </p>
+          <Button className="mt-2" size="sm" asChild>
+            <Link href={`/dashboard/quizzes/${quizId}/invite`}>
+              <Link2 className="mr-2 w-4 h-4" />
+              Associa a candidati
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="border-b">
+            <tr>
+              <th className="p-2 font-semibold text-left">Candidato</th>
+              <th className="p-2 font-semibold text-left">Email</th>
+              <th className="p-2 font-semibold text-left">Stato</th>
+              <th className="p-2 font-semibold text-left">Data Creazione</th>
+              <th className="p-2 font-semibold text-left">Data Inizio</th>
+              <th className="p-2 font-semibold text-left">
+                Data Completamento
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {interviews.map((interview) => (
+              <tr
+                key={interview.id}
+                className="hover:bg-muted/50 border-b transition-colors"
+              >
+                <td className="p-2">
+                  <Link
+                    href={`/dashboard/interviews/${interview.id}`}
+                    className="text-primary hover:underline"
+                  >
+                    {interview.candidateName}
+                  </Link>
+                </td>
+                <td className="p-2 text-muted-foreground">
+                  {interview.candidateEmail}
+                </td>
+                <td className="p-2">
+                  <Badge
+                    variant={
+                      interview.status === "completed"
+                        ? "default"
+                        : interview.status === "started"
+                        ? "secondary"
+                        : "outline"
+                    }
+                  >
+                    {interview.status === "completed"
+                      ? "Completato"
+                      : interview.status === "started"
+                      ? "Iniziato"
+                      : "Assegnato"}
+                  </Badge>
+                </td>
+                <td className="p-2 text-muted-foreground text-xs">
+                  {formatDate(interview.createdAt)}
+                </td>
+                <td className="p-2 text-muted-foreground text-xs">
+                  {interview.startedAt ? formatDate(interview.startedAt) : "—"}
+                </td>
+                <td className="p-2 text-muted-foreground text-xs">
+                  {interview.completedAt
+                    ? formatDate(interview.completedAt)
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

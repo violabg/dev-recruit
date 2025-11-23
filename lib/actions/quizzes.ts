@@ -558,3 +558,105 @@ export async function regenerateQuizAction({
     }
   }
 }
+
+/**
+ * Duplicates an existing quiz to a new position.
+ * Creates a new quiz with the same questions but different title and position.
+ * Doesn't check for user ownership - can duplicate any quiz.
+ */
+export async function duplicateQuizAction(formData: FormData) {
+  console.debug("duplicateQuizAction started");
+
+  try {
+    const user = await requireUser();
+
+    // Parse form data
+    const quizId = formData.get("quiz_id") as string;
+    const newPositionId = formData.get("new_position_id") as string;
+    const newTitle = formData.get("new_title") as string;
+
+    if (!quizId || !newPositionId || !newTitle) {
+      throw new QuizSystemError(
+        "Quiz ID, position ID, and title are required",
+        QuizErrorCode.INVALID_INPUT
+      );
+    }
+
+    // Get the original quiz
+    const originalQuiz = await prisma.quiz.findUnique({
+      where: { id: quizId },
+      select: {
+        title: true,
+        questions: true,
+        timeLimit: true,
+      },
+    });
+
+    if (!originalQuiz) {
+      throw new QuizSystemError(
+        "Quiz not found",
+        QuizErrorCode.QUIZ_NOT_FOUND,
+        { quizId }
+      );
+    }
+
+    // Verify the new position exists (no ownership check)
+    const position = await prisma.position.findUnique({
+      where: { id: newPositionId },
+      select: { id: true },
+    });
+
+    if (!position) {
+      throw new QuizSystemError(
+        "Position not found",
+        QuizErrorCode.POSITION_NOT_FOUND,
+        { newPositionId }
+      );
+    }
+
+    // Create the duplicated quiz
+    const newQuiz = await prisma.quiz.create({
+      data: {
+        title: newTitle,
+        positionId: newPositionId,
+        questions: originalQuiz.questions as any,
+        timeLimit: originalQuiz.timeLimit,
+        createdBy: user.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!newQuiz) {
+      throw new QuizSystemError(
+        "Failed to create duplicated quiz",
+        QuizErrorCode.DATABASE_ERROR
+      );
+    }
+
+    // Invalidate Cache Components tags to refresh quizzes list
+    updateTag("quizzes");
+
+    // Also revalidate traditional cache paths for compatibility
+    revalidateQuizCache("");
+
+    console.debug("duplicateQuizAction completed");
+    return { id: newQuiz.id };
+  } catch (error) {
+    console.debug("duplicateQuizAction failed");
+
+    if (error instanceof QuizSystemError) {
+      throw new Error(getUserFriendlyErrorMessage(error));
+    }
+
+    try {
+      await errorHandler.handleError(error, {
+        operation: "duplicateQuizAction",
+        quizId: (formData.get("quiz_id") as string) || undefined,
+      });
+    } catch {
+      throw new Error("Quiz duplication failed. Please try again.");
+    }
+  }
+}
