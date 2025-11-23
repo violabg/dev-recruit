@@ -13,8 +13,9 @@ import {
 
 // Get all presets
 export async function getPresetsAction() {
-  const user = await requireUser();
-
+  "use cache";
+  cacheLife("hours");
+  cacheTag("presets");
   try {
     const presets = await getPresetsData();
     return { success: true, presets };
@@ -29,9 +30,8 @@ export async function getPresetsAction() {
 
 // Get a single preset by ID
 export async function getPresetAction(presetId: string) {
-  const user = await requireUser();
-  ("use cache");
-  cacheLife("minutes");
+  "use cache";
+  cacheLife("hours");
   cacheTag("presets", presetId);
 
   try {

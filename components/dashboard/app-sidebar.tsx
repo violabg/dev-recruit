@@ -47,7 +47,7 @@ const data = {
     },
     {
       href: "/dashboard/presets",
-      label: "Preset",
+      label: "Presets",
       icon: Sparkles,
     },
     {
