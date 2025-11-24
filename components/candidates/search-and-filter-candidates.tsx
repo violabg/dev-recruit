@@ -1,5 +1,4 @@
 "use client";
-
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -8,7 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search as SearchIcon } from "lucide-react";
+import {
+  ArrowUpDown,
+  Briefcase,
+  ClockFading,
+  Loader2,
+  Search as SearchIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -138,6 +143,7 @@ export const SearchAndFilterCandidates = ({
           disabled={isPending}
         >
           <SelectTrigger className="w-auto @[800px]w-full">
+            <ClockFading className="w-4 h-4" />
             <SelectValue placeholder="Stato" />
           </SelectTrigger>
           <SelectContent>
@@ -155,6 +161,7 @@ export const SearchAndFilterCandidates = ({
           disabled={isPending}
         >
           <SelectTrigger className="w-auto @[800px]w-full">
+            <Briefcase className="w-4 h-4" />
             <SelectValue placeholder="Posizione" />
           </SelectTrigger>
           <SelectContent>
@@ -173,6 +180,7 @@ export const SearchAndFilterCandidates = ({
           disabled={isPending}
         >
           <SelectTrigger className="w-auto @[800px]w-full">
+            <ArrowUpDown className="w-4 h-4" />
             <SelectValue placeholder="Ordinamento" />
           </SelectTrigger>
           <SelectContent>

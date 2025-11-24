@@ -9,9 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X } from "lucide-react";
+import { Briefcase, ClockFading, Code, Loader2, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 type Position = {
   id: string;
@@ -45,6 +46,18 @@ export function SearchAndFilterInterviews({
   const [position, setPosition] = useState(initialPosition);
   const [language, setLanguage] = useState(initialLanguage);
 
+  const handleSearch = useDebouncedCallback((term: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set("search", term);
+    } else {
+      params.delete("search");
+    }
+    startTransition(() => {
+      router.replace(`/dashboard/interviews?${params.toString()}`);
+    });
+  }, 800);
+
   const updateFilters = useCallback(
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -61,7 +74,7 @@ export function SearchAndFilterInterviews({
       params.delete("page");
 
       startTransition(() => {
-        router.push(`/dashboard/interviews?${params.toString()}`);
+        router.replace(`/dashboard/interviews?${params.toString()}`);
       });
     },
     [router, searchParams]
@@ -79,7 +92,7 @@ export function SearchAndFilterInterviews({
     setLanguage("all");
 
     startTransition(() => {
-      router.push("/dashboard/interviews");
+      router.replace("/dashboard/interviews");
     });
   };
 
@@ -87,34 +100,24 @@ export function SearchAndFilterInterviews({
     search || status !== "all" || position !== "all" || language !== "all";
 
   return (
-    <div className="space-y-4">
-      {/* Search Form */}
-      <form onSubmit={handleSearchSubmit} className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="top-1/2 left-3 absolute size-4 text-muted-foreground -translate-y-1/2" />
-          <Input
-            placeholder="Cerca per candidato, email, quiz o posizione..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button type="submit" disabled={isPending}>
-          Cerca
-        </Button>
-        {hasActiveFilters && (
-          <Button
-            type="button"
-            variant="outlineDestructive"
-            onClick={clearAllFilters}
-            disabled={isPending}
-          >
-            <X className="mr-2 size-4" />
-            Pulisci filtri
-          </Button>
+    <div className="flex sm:flex-row flex-col gap-4">
+      <div className="relative flex-1">
+        {isPending ? (
+          <Loader2 className="top-2.5 left-2.5 absolute w-4 h-4 animate-spin" />
+        ) : (
+          <Search className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
         )}
-      </form>
-
+        <Input
+          type="search"
+          placeholder="Cerca per candidato, email, quiz o posizione..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            handleSearch(e.target.value);
+          }}
+          className="pl-10"
+        />
+      </div>
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
         <Select
@@ -125,6 +128,7 @@ export function SearchAndFilterInterviews({
           }}
         >
           <SelectTrigger>
+            <ClockFading className="w-4 h-4" />
             <SelectValue placeholder="Stato" />
           </SelectTrigger>
           <SelectContent>
@@ -143,6 +147,7 @@ export function SearchAndFilterInterviews({
           }}
         >
           <SelectTrigger>
+            <Briefcase className="w-4 h-4" />
             <SelectValue placeholder="Posizione" />
           </SelectTrigger>
           <SelectContent>
@@ -162,6 +167,7 @@ export function SearchAndFilterInterviews({
           }}
         >
           <SelectTrigger>
+            <Code className="w-4 h-4" />
             <SelectValue placeholder="Linguaggio" />
           </SelectTrigger>
           <SelectContent>
@@ -174,6 +180,18 @@ export function SearchAndFilterInterviews({
           </SelectContent>
         </Select>
       </div>
+
+      {hasActiveFilters && (
+        <Button
+          type="button"
+          variant="outlineDestructive"
+          onClick={clearAllFilters}
+          disabled={isPending}
+        >
+          <X className="mr-2 size-4" />
+          Reset
+        </Button>
+      )}
     </div>
   );
 }

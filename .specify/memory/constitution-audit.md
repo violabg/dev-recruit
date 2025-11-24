@@ -284,7 +284,6 @@ const [formState, formAction, isPending] = useActionState(
 - ✅ All UI primitives from `components/ui/` (button, card, input, select, etc.)
 - ✅ Dashboard components reused from `components/dashboard/` (sidebar, breadcrumbs, nav)
 - ✅ Tailwind v4 utilities + OKLCH tokens in `app/globals.css`
-- ✅ Vision Pro glass gradients applied consistently
 - ✅ No low-level custom primitives created without justification
 
 **Files**: `components/ui/`, `components/dashboard/`, `app/globals.css`

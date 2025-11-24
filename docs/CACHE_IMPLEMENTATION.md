@@ -317,7 +317,7 @@ async function CachedContent({ sessionId }: { sessionId: string }) {
 
 At request time, `CachedContent` executes if no matching cache entry is found, and stores the result for future requests.
 
-> **Design tip**: Wrap Suspense fallbacks in shared `components/ui/skeleton` primitives so loading states visually match the components they are replacing, keeping the dashboard consistent with the Vision Pro style guide.
+> **Design tip**: Wrap Suspense fallbacks in shared `components/ui/skeleton` primitives so loading states visually match the components they are replacing.
 
 ### With non-deterministic operations
 

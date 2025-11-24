@@ -21,11 +21,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         success: "bg-green-500 text-white shadow-sm hover:bg-green-600",
         outlineDestructive:
-          "border border-destructive text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground",
-        glass:
-          "border border-input/50 bg-background/50 backdrop-blur-sm shadow-sm hover:bg-accent/50 hover:text-accent-foreground",
-        gradient:
-          "bg-gradient-to-r from-primary to-violet-600 text-primary-foreground shadow hover:opacity-90",
+          "border border-destructive text-destructive shadow-sm hover:bg-destructive hover:text-destructive-foreground text-white",
       },
       size: {
         default: "h-9 px-4 py-2",

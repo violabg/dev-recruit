@@ -102,7 +102,7 @@ All form components MUST use React's `useTransition` hook (from `'react'`) to ma
 
 ### X. Component Reuse Before Creation
 
-UI primitives in `components/ui/` and dashboard components in `components/dashboard/` MUST be reused or extended before creating new low-level components. Styling uses Tailwind v4 utilities, OKLCH tokens (`app/globals.css`), and Vision Pro gradients. Forms use `rhf-input` components or extend them as needed. No custom primitives unless justified by design system standards.
+UI primitives in `components/ui/` and dashboard components in `components/dashboard/` MUST be reused or extended before creating new low-level components. Styling uses Tailwind v4 utilities, OKLCH tokens (`app/globals.css`). Forms use `rhf-input` components or extend them as needed. No custom primitives unless justified by design system standards.
 
 **Rationale**: Reuse reduces code bloat, maintains visual consistency, and lowers maintenance burden across routes.
 
