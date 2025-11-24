@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { deletePresetAction } from "@/lib/actions/presets";
+import { Edit, Trash } from "lucide-react";
 import { toast } from "sonner";
 
 type PresetDetailsActionsProps = {
@@ -43,27 +44,31 @@ export function PresetDetailsActions({ presetId }: PresetDetailsActionsProps) {
   return (
     <div className="flex flex-wrap gap-2">
       <Button asChild size="sm" variant="outline">
-        <Link href={`/dashboard/presets/${presetId}/edit`}>Edit preset</Link>
+        <Link href={`/dashboard/presets/${presetId}/edit`}>
+          <Edit className="mr-1 w-4 h-4" />
+          Modifica
+        </Link>
       </Button>
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button size="sm" variant="destructive" disabled={isPending}>
-            Delete preset
+            <Trash className="mr-1 w-4 h-4" />
+            Elimina
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Preset</AlertDialogTitle>
+            <AlertDialogTitle>Elimina</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The preset will be removed for all
-              positions that rely on it.
+              Questa azione non può essere annullata. Il preset verrà rimosso da
+              tutte le posizioni che ne dipendono.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-              {isPending ? "Deleting..." : "Delete"}
+              {isPending ? "Eliminazione in corso..." : "Elimina"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

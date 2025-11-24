@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
+import { Edit } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
@@ -49,6 +50,7 @@ export default async function CandidateDetailPage({
                 `/dashboard/candidates/${candidate.id}/edit` as Route<`/dashboard/candidates/${string}/edit`>
               }
             >
+              <Edit className="mr-1 w-4 h-4" />
               Modifica
             </Link>
           </Button>

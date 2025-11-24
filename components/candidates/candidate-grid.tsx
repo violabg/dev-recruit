@@ -128,7 +128,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                     <Trash className="mr-1 w-4 h-4" />
                     {isDeleting === candidate.id
                       ? "Eliminazione..."
-                      : "Elimina candidato"}
+                      : "Elimina"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

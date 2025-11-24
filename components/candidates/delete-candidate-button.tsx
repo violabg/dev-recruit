@@ -47,7 +47,7 @@ export function DeleteCandidateButton({
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
           <Trash className="mr-1 w-4 h-4" />
-          Elimina candidato
+          Elimina
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -71,7 +71,10 @@ export function DeleteCandidateButton({
                 Eliminazione...
               </>
             ) : (
-              "Elimina"
+              <>
+                <Trash className="mr-1 w-4 h-4" />
+                Elimina
+              </>
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
