@@ -181,7 +181,7 @@ export async function deleteQuiz(formData: FormData) {
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
-      select: { createdBy: true },
+      select: { createdBy: true, positionId: true },
     });
 
     if (!quiz || quiz.createdBy !== user.id) {
@@ -192,10 +192,15 @@ export async function deleteQuiz(formData: FormData) {
       );
     }
 
+    const positionTag = quiz.positionId ? `positions-${quiz.positionId}` : null;
+
     await prisma.quiz.delete({ where: { id: quizId } });
 
     // Invalidate Cache Components tags to refresh quizzes list
     updateTag("quizzes");
+    if (positionTag) {
+      updateTag(positionTag);
+    }
 
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
@@ -341,6 +346,7 @@ export async function upsertQuizAction(formData: FormData) {
 
       // Invalidate Cache Components tags to refresh quizzes list
       updateTag("quizzes");
+      updateTag(`positions-${position.id}`);
 
       // Also revalidate traditional cache paths for compatibility
       revalidateQuizCache("");
@@ -351,7 +357,7 @@ export async function upsertQuizAction(formData: FormData) {
       // UPDATE MODE
       const quiz = await prisma.quiz.findUnique({
         where: { id: quizId },
-        select: { createdBy: true },
+        select: { createdBy: true, positionId: true },
       });
 
       if (!quiz) {
@@ -381,6 +387,9 @@ export async function upsertQuizAction(formData: FormData) {
 
       // Invalidate Cache Components tags to refresh quizzes list
       updateTag("quizzes");
+      if (quiz.positionId) {
+        updateTag(`positions-${quiz.positionId}`);
+      }
 
       // Also revalidate traditional cache paths for compatibility
       revalidateQuizCache(quizId);
@@ -531,6 +540,7 @@ export async function regenerateQuizAction({
 
     // Invalidate Cache Components tags to refresh quizzes list
     updateTag("quizzes");
+    updateTag(`positions-${position.id}`);
 
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
@@ -637,6 +647,7 @@ export async function duplicateQuizAction(formData: FormData) {
 
     // Invalidate Cache Components tags to refresh quizzes list
     updateTag("quizzes");
+    updateTag(`positions-${newPositionId}`);
 
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache("");

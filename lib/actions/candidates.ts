@@ -75,6 +75,7 @@ export async function createCandidate(formData: FormData) {
   revalidatePath(`/dashboard/positions/${candidate.positionId}`);
   revalidatePath("/dashboard/candidates");
   updateTag("candidates");
+  updateTag(`positions-${candidate.positionId}`);
 
   return { success: true as const, candidateId: candidate.id };
 }
@@ -96,6 +97,10 @@ export async function updateCandidate(
   const payload: CandidateUpdateData = candidateUpdateSchema.parse(rawPayload);
 
   const candidate = await getCandidateById(id);
+  const positionsToInvalidate = new Set<string>();
+  if (candidate.positionId) {
+    positionsToInvalidate.add(candidate.positionId);
+  }
 
   const updateData: Prisma.CandidateUpdateInput = {};
   let newPositionId: string | undefined;
@@ -130,6 +135,7 @@ export async function updateCandidate(
       connect: { id: position.id },
     };
     newPositionId = position.id;
+    positionsToInvalidate.add(position.id);
   }
 
   if (Object.keys(updateData).length === 0) {
@@ -147,6 +153,9 @@ export async function updateCandidate(
   }
 
   updateTag("candidates");
+  for (const positionId of positionsToInvalidate) {
+    updateTag(`positions-${positionId}`);
+  }
 
   return { success: true };
 }
@@ -161,6 +170,7 @@ export async function deleteCandidate(id: string) {
 
   if (candidate.positionId) {
     revalidatePath(`/dashboard/positions/${candidate.positionId}`);
+    updateTag(`positions-${candidate.positionId}`);
   }
   revalidatePath("/dashboard/candidates");
   updateTag("candidates");
