@@ -52,9 +52,10 @@ const Breadcrumbs = () => {
   const items = segments.map((segment, idx) => {
     href += "/" + segment;
     const isLast = idx === segments.length - 1;
+    const isNewQuiz = segment === "quiz" && idx === 3;
     return (
       <BreadcrumbItem key={href}>
-        {isLast ? (
+        {isLast || isNewQuiz ? (
           <BreadcrumbPage>{getBreadcrumbLabel(segment)}</BreadcrumbPage>
         ) : (
           <BreadcrumbLink href={href}>
