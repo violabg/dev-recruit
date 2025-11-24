@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,9 +10,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { transcribeAudioAction } from "@/lib/actions/transcription";
 import { Question } from "@/lib/schemas";
 import { prismLanguage } from "@/lib/utils";
 import Editor from "@monaco-editor/react";
+import { Loader2, Speech, Square } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Highlight, themes } from "prism-react-renderer";
 import { useEffect, useState } from "react";
@@ -46,6 +47,11 @@ export function InterviewQuestion({
     typeof currentAnswer === "string" ? currentAnswer : null
   );
   const [code, setCode] = useState<string>("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+  const [isTranscribing, setIsTranscribing] = useState(false);
   // Reset state when question changes
   useEffect(() => {
     if (typeof currentAnswer === "string") {
@@ -63,6 +69,64 @@ export function InterviewQuestion({
       setCode("");
     }
   }, [question, currentAnswer]);
+
+  // Audio recording and transcription logic
+  const handleStartRecording = async () => {
+    setIsRecording(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new window.MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      setMediaRecorder(recorder);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      recorder.onstop = async () => {
+        setIsRecording(false);
+        setIsTranscribing(true);
+
+        // Stop all tracks to release the microphone
+        stream.getTracks().forEach((track) => track.stop());
+
+        const audioBlob = new Blob(chunks, { type: "audio/webm" });
+        console.log("🚀 ~ audioBlob size:", audioBlob.size);
+
+        // Convert Blob to Uint8Array for server action
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        // Convert to regular array for server action serialization
+        const audioArray = Array.from(uint8Array);
+
+        try {
+          const result = await transcribeAudioAction(audioArray);
+          if (result.success && result.text) {
+            setAnswer(result.text);
+          } else {
+            console.error("Trascrizione fallita:", result.error);
+          }
+        } catch (err) {
+          console.log("🚀 ~ errore registrazione:", err);
+          // Gestione errore opzionale
+        }
+        setIsTranscribing(false);
+      };
+      recorder.start();
+    } catch (err) {
+      setIsRecording(false);
+      console.error("Impossibile avviare la registrazione:", err);
+      // Gestione errore opzionale
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      // mediaRecorder will be cleaned up in the onstop handler
+    }
+  };
 
   const handleSubmitAnswer = () => {
     if (question.type === "multiple_choice") {
@@ -111,12 +175,43 @@ export function InterviewQuestion({
         )}
 
         {question.type === "open_question" && (
-          <Textarea
-            placeholder="Scrivi la tua risposta qui..."
-            className="min-h-32"
-            value={answer || ""}
-            onChange={(e) => setAnswer(e.target.value)}
-          />
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Scrivi la tua risposta qui..."
+              className="min-h-32"
+              value={answer || ""}
+              onChange={(e) => setAnswer(e.target.value)}
+              disabled={isTranscribing}
+            />
+            <div className="flex items-center gap-2">
+              {!isRecording && !isTranscribing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleStartRecording}
+                >
+                  <Speech className="mr-2 w-4 h-4" />
+                  Registra risposta
+                </Button>
+              )}
+              {isRecording && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleStopRecording}
+                >
+                  <Square className="mr-2 w-4 h-4" />
+                  Ferma registrazione
+                </Button>
+              )}
+              {isTranscribing && (
+                <span className="text-muted-foreground text-sm">
+                  <Loader2 className="inline-block mr-2 w-4 h-4 animate-spin" />
+                  Trascrizione in corso...
+                </span>
+              )}
+            </div>
+          </div>
         )}
 
         {question.type === "code_snippet" && (
@@ -143,7 +238,7 @@ export function InterviewQuestion({
                       }
                       style={style}
                     >
-                      <code className="break-words whitespace-pre-wrap">
+                      <code className="wrap-break-word whitespace-pre-wrap">
                         {tokens.map((line, i) => {
                           const { key: lineKey, ...lineProps } = getLineProps({
                             line,
