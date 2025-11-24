@@ -1,5 +1,5 @@
 import { groq } from "@ai-sdk/groq";
-import { generateObject, NoObjectGeneratedError } from "ai";
+import { generateObject, NoObjectGeneratedError, streamText } from "ai";
 import { z } from "zod/v4";
 import {
   aiQuizGenerationSchema,
@@ -973,12 +973,6 @@ export interface GeneratePositionDescriptionParams {
   specificModel?: string;
 }
 
-const descriptionSystemPrompt = `
-You are a senior technical recruiter writing concise Italian job descriptions for a modern tech team.
-Generate a short summary that highlights responsibilities, required experience, and why the role is compelling.
-Return a single JSON object with only the field "description" containing Italian text between 2 and 4 sentences. Do not include any commentary or extra keys.
-`;
-
 const buildPositionDescriptionPrompt = (
   params: GeneratePositionDescriptionParams
 ): string => {
@@ -986,10 +980,10 @@ const buildPositionDescriptionPrompt = (
   const sanitizedSkills = params.skills.map(sanitizeInput).join(", ");
   const sanitizedSoftSkills = params.softSkills
     ? params.softSkills.map(sanitizeInput).join(", ")
-    : "Non specificate";
+    : "Not specified";
   const sanitizedContract = params.contractType
     ? sanitizeInput(params.contractType)
-    : "Non specificato";
+    : "Not specified";
   const sanitizedCurrentDescription = params.currentDescription
     ? sanitizeInput(params.currentDescription)
     : "";
@@ -998,112 +992,47 @@ const buildPositionDescriptionPrompt = (
     : "";
 
   return `
-  Posizione:
-  - Titolo: ${sanitizedTitle}
-  - Livello di esperienza: ${params.experienceLevel}
-  - Competenze tecniche: ${sanitizedSkills}
-  - Soft skills: ${sanitizedSoftSkills}
-  - Tipo di contratto: ${sanitizedContract}
-  ${
-    sanitizedCurrentDescription
-      ? `\n  - Descrizione attuale: ${sanitizedCurrentDescription}`
-      : ""
-  }
-  ${
-    sanitizedInstructions
-      ? `\n  - Istruzioni aggiuntive: ${sanitizedInstructions}`
-      : ""
-  }
+Position:
+- Title: ${sanitizedTitle}
+- Experience level: ${params.experienceLevel}
+- Technical skills: ${sanitizedSkills}
+- Soft skills: ${sanitizedSoftSkills}
+- Contract type: ${sanitizedContract}
+${
+  sanitizedCurrentDescription
+    ? `\n- Current description: ${sanitizedCurrentDescription}`
+    : ""
+}
+${
+  sanitizedInstructions
+    ? `\n- Additional instructions: ${sanitizedInstructions}`
+    : ""
+}
 
-  Scrivi una breve descrizione (2-4 frasi) in italiano che sintetizzi responsabilità, impatto atteso e aspetti distintivi della posizione. Rispondi esclusivamente con un oggetto JSON contenente il campo "description" e la stringa italiana richiesta.
-  `;
+You are a senior technical recruiter writing concise Italian job descriptions for a modern tech team.
+Generate a short summary that highlights responsibilities, required experience.
+Write only the description text in Italian (4-8 sentences). Do not include JSON, markdown, or any formatting - just the plain description text.
+`;
 };
 
-export async function generatePositionDescription(
+export async function streamPositionDescription(
   params: GeneratePositionDescriptionParams
-): Promise<string> {
-  const startTime = performance.now();
-
+) {
   try {
     const model = getOptimalModel("simple_task", params.specificModel);
     const prompt = buildPositionDescriptionPrompt(params);
 
-    const result = await withTimeout(
-      withRetry(async () => {
-        try {
-          const response = await generateObject({
-            model: groq(model),
-            prompt,
-            system: descriptionSystemPrompt,
-            schema: positionDescriptionResponseSchema,
-            temperature: 0.7,
-            mode: "json",
-            providerOptions: {
-              groq: {
-                structuredOutputs: false,
-              },
-            },
-          });
+    const result = streamText({
+      model: groq(model),
+      prompt,
+      temperature: 0.7,
+    });
 
-          if (!response.object?.description) {
-            throw new AIGenerationError(
-              "Invalid description structure",
-              AIErrorCode.INVALID_RESPONSE,
-              { response }
-            );
-          }
-
-          return response.object;
-        } catch (error) {
-          if (error instanceof NoObjectGeneratedError) {
-            throw new AIGenerationError(
-              "AI model failed to generate a description",
-              AIErrorCode.GENERATION_FAILED,
-              { originalError: error.message }
-            );
-          }
-          throw error;
-        }
-      }, DEFAULT_CONFIG),
-      DEFAULT_CONFIG.timeout
-    );
-
-    const duration = performance.now() - startTime;
-    console.log(`Description generation completed in ${duration.toFixed(2)}ms`);
-
-    return result.description.trim();
+    return result;
   } catch (error) {
-    const duration = performance.now() - startTime;
-    console.error(
-      `Description generation failed after ${duration.toFixed(2)}ms:`,
-      error
-    );
-
-    if (error instanceof AIGenerationError) {
-      throw error;
-    }
-
-    if (params.specificModel && DEFAULT_CONFIG.fallbackModels.length > 0) {
-      console.log("Attempting fallback models for description...");
-      for (const fallbackModel of DEFAULT_CONFIG.fallbackModels) {
-        if (fallbackModel !== params.specificModel) {
-          try {
-            return await generatePositionDescription({
-              ...params,
-              specificModel: fallbackModel,
-            });
-          } catch {
-            console.log(
-              `Fallback model ${fallbackModel} also failed for description`
-            );
-            continue;
-          }
-        }
-      }
-    }
-
+    console.error("Stream position description failed:", error);
     throw new AIGenerationError(
-      "All description generation attempts failed",
+      "Failed to stream position description",
       AIErrorCode.GENERATION_FAILED,
       {
         originalError: error instanceof Error ? error.message : String(error),

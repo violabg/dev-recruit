@@ -1,11 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { SelectItem } from "@/components/ui/select";
-import {
-  createPosition,
-  generatePositionDescriptionAction,
-  updatePosition,
-} from "@/lib/actions/positions";
+import { createPosition, updatePosition } from "@/lib/actions/positions";
 import { Position } from "@/lib/prisma/client";
 import {
   PositionFormData,
@@ -137,11 +133,38 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
           current_description: getValues("description"),
         };
 
-        const description = await generatePositionDescriptionAction(
-          descriptionPayload
-        );
+        // Clear current description before streaming
+        setValue("description", "");
 
-        setValue("description", description);
+        const response = await fetch("/api/positions/generate-description", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(descriptionPayload),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to generate description");
+        }
+
+        if (!response.body) {
+          throw new Error("No response body");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedText = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedText += chunk;
+          setValue("description", accumulatedText);
+        }
+
         toast.success("Descrizione generata con successo");
       } catch (error) {
         console.error("Errore generazione descrizione:", error);
