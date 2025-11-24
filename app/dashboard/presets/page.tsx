@@ -27,11 +27,10 @@ export default async function PresetsPage() {
     <div className="space-y-6 w-full">
       <div className="flex flex-wrap items-center gap-2 w-full">
         <div className="flex-1">
-          <h1 className="font-bold text-3xl tracking-tight">
-            Preset Management
-          </h1>
+          <h1 className="font-bold text-3xl tracking-tight">Gestione Preset</h1>
           <p className="mt-2 text-muted-foreground">
-            Create and manage question generation presets for your positions
+            Crea e gestisci preset per la generazione di domande per le tue
+            posizioni
           </p>
         </div>
         <Button asChild variant="default" size="sm">

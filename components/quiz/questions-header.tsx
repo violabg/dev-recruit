@@ -44,9 +44,9 @@ export const QuestionsHeader = ({
       <CardHeader>
         <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <div>
-            <CardTitle>Questions ({fieldsLength})</CardTitle>
+            <CardTitle>Domande ({fieldsLength})</CardTitle>
             <CardDescription>
-              Manage and generate quiz questions using AI
+              Gestisci e genera domande del quiz utilizzando l'AI
             </CardDescription>
           </div>
           <div className="flex items-center space-x-2">
@@ -55,10 +55,10 @@ export const QuestionsHeader = ({
               onValueChange={setQuestionTypeFilter}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by type" />
+                <SelectValue placeholder="Filtra per tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="all">Tutti i tipi</SelectItem>
                 {questionTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
@@ -78,7 +78,7 @@ export const QuestionsHeader = ({
             onClick={expandAllQuestions}
           >
             <ChevronDown className="mr-1 w-4 h-4" />
-            Expand All
+            Espandi tutto
           </Button>
           <Button
             type="button"
@@ -87,7 +87,7 @@ export const QuestionsHeader = ({
             onClick={collapseAllQuestions}
           >
             <ChevronUp className="mr-1 w-4 h-4" />
-            Collapse All
+            Comprimi tutto
           </Button>
           <div className="flex gap-2 ml-auto">
             {questionTypes.map((type) => (

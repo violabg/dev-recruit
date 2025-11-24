@@ -33,10 +33,10 @@ export function PresetDetailsActions({ presetId }: PresetDetailsActionsProps) {
       const result = await deletePresetAction(presetId);
 
       if (result.success) {
-        toast.success("Preset deleted successfully");
+        toast.success("Preset eliminato con successo");
         router.push("/dashboard/presets");
       } else {
-        toast.error(result.error || "Failed to delete preset");
+        toast.error(result.error || "Errore nell'eliminazione del preset");
       }
     });
   };

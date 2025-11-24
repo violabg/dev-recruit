@@ -35,10 +35,10 @@ export function PresetsTable({ presets }: PresetsTableProps) {
       const result = await deletePresetAction(presetId);
 
       if (result.success) {
-        toast.success("Preset deleted successfully");
+        toast.success("Preset eliminato con successo");
         setConfirmDeleteId(null);
       } else {
-        toast.error(result.error || "Failed to delete preset");
+        toast.error(result.error || "Errore nell'eliminazione del preset");
       }
     });
   };
@@ -49,11 +49,11 @@ export function PresetsTable({ presets }: PresetsTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Difficulty</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Difficoltà</TableHead>
+              <TableHead>Tag</TableHead>
+              <TableHead className="text-right">Azioni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -63,7 +63,7 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                   colSpan={5}
                   className="py-8 text-muted-foreground text-center"
                 >
-                  No presets yet. Create your first preset!
+                  Nessun preset ancora. Crea il tuo primo preset!
                 </TableCell>
               </TableRow>
             ) : (
@@ -92,7 +92,7 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        Level {preset.difficulty}
+                        Livello {preset.difficulty}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -128,7 +128,7 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          title="Edit preset"
+                          title="Modifica preset"
                           asChild
                         >
                           <Link href={`/dashboard/presets/${preset.id}/edit`}>
@@ -147,7 +147,7 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                             <Button
                               variant="ghost"
                               size="icon"
-                              title="Delete preset"
+                              title="Elimina preset"
                               disabled={isPending}
                             >
                               <Trash2 className="w-4 h-4 text-destructive" />
@@ -155,8 +155,8 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                           </PopoverTrigger>
                           <PopoverContent className="w-64">
                             <p className="text-muted-foreground text-sm">
-                              Are you sure you want to delete this preset? This
-                              is irreversible.
+                              Sei sicuro di voler eliminare questo preset?
+                              Questa azione è irreversibile.
                             </p>
                             <div className="flex justify-end gap-2 mt-3">
                               <Button
@@ -164,7 +164,7 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                                 size="sm"
                                 onClick={() => setConfirmDeleteId(null)}
                               >
-                                Cancel
+                                Annulla
                               </Button>
                               <Button
                                 variant="destructive"
@@ -174,7 +174,7 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                                   preset.id && handleDelete(preset.id)
                                 }
                               >
-                                {isPending ? "Deleting..." : "Delete"}
+                                {isPending ? "Eliminazione..." : "Elimina"}
                               </Button>
                             </div>
                           </PopoverContent>

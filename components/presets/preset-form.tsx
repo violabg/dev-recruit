@@ -31,9 +31,9 @@ import { toast } from "sonner";
 import { type z } from "zod/v4";
 
 const QUESTION_TYPES = [
-  { value: "multiple_choice", label: "Multiple Choice" },
-  { value: "code_snippet", label: "Code Snippet" },
-  { value: "open_question", label: "Open Question" },
+  { value: "multiple_choice", label: "Scelta multipla" },
+  { value: "code_snippet", label: "Snippet di codice" },
+  { value: "open_question", label: "Domanda aperta" },
 ];
 
 const COMMON_TAGS = [
@@ -57,32 +57,32 @@ const COMMON_TAGS = [
 ];
 
 const DISTRACTOR_COMPLEXITY_OPTIONS = [
-  { value: "", label: "Not specified" },
-  { value: "simple", label: "Simple" },
-  { value: "moderate", label: "Moderate" },
-  { value: "complex", label: "Complex" },
+  { value: "", label: "Non specificato" },
+  { value: "simple", label: "Semplice" },
+  { value: "moderate", label: "Moderato" },
+  { value: "complex", label: "Complesso" },
 ];
 
 const EXPECTED_RESPONSE_LENGTH_OPTIONS = [
-  { value: "", label: "Not specified" },
-  { value: "short", label: "Short" },
-  { value: "medium", label: "Medium" },
-  { value: "long", label: "Long" },
+  { value: "", label: "Non specificato" },
+  { value: "short", label: "Breve" },
+  { value: "medium", label: "Media" },
+  { value: "long", label: "Lunga" },
 ];
 
 const BUG_TYPE_OPTIONS = [
-  { value: "", label: "Not specified" },
-  { value: "syntax", label: "Syntax" },
-  { value: "logic", label: "Logic" },
+  { value: "", label: "Non specificato" },
+  { value: "syntax", label: "Sintassi" },
+  { value: "logic", label: "Logica" },
   { value: "performance", label: "Performance" },
-  { value: "security", label: "Security" },
+  { value: "security", label: "Sicurezza" },
 ];
 
 const CODE_COMPLEXITY_OPTIONS = [
-  { value: "", label: "Not specified" },
-  { value: "basic", label: "Basic" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
+  { value: "", label: "Non specificato" },
+  { value: "basic", label: "Base" },
+  { value: "intermediate", label: "Intermedio" },
+  { value: "advanced", label: "Avanzato" },
 ];
 
 type PresetFormProps = {
@@ -177,11 +177,13 @@ export function PresetForm({ preset }: PresetFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{preset ? "Edit Preset" : "Create New Preset"}</CardTitle>
+        <CardTitle>
+          {preset ? "Modifica preset" : "Crea nuovo preset"}
+        </CardTitle>
         <CardDescription>
           {preset
-            ? "Update the preset configuration"
-            : "Create a new question generation preset"}
+            ? "Aggiorna la configurazione del preset"
+            : "Crea un nuovo preset per la generazione di domande"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -190,41 +192,41 @@ export function PresetForm({ preset }: PresetFormProps) {
             <InputField
               control={form.control}
               name="name"
-              label="Preset Name"
-              placeholder="e.g., react-hooks"
-              description="Unique identifier for the preset"
+              label="Nome preset"
+              placeholder="es. react-hooks"
+              description="Identificatore univoco per il preset"
             />
 
             <InputField
               control={form.control}
               name="label"
-              label="Display Label"
-              placeholder="e.g., React Hooks Expert"
-              description="Human-readable name"
+              label="Etichetta visualizzata"
+              placeholder="es. Esperto React Hooks"
+              description="Nome leggibile dall'uomo"
             />
           </div>
 
           <TextareaField
             control={form.control}
             name="description"
-            label="Description"
-            placeholder="Describe what this preset is for..."
-            description="Optional description of the preset"
+            label="Descrizione"
+            placeholder="Descrivi a cosa serve questo preset..."
+            description="Descrizione opzionale del preset"
           />
 
           <TextareaField
             control={form.control}
             name="instructions"
-            label="AI Instructions"
-            placeholder="Additional guidance for the AI when generating questions"
-            description="Helps the AI focus on specific requirements or patterns"
+            label="Istruzioni AI"
+            placeholder="Ulteriori indicazioni per l'AI durante la generazione delle domande"
+            description="Aiuta l'AI a concentrarsi su requisiti o pattern specifici"
           />
 
           <div className="gap-6 grid grid-cols-1 md:grid-cols-3">
             <SelectField
               control={form.control}
               name="icon"
-              label="Icon"
+              label="Icona"
               options={PRESET_ICON_OPTIONS.map((icon) => ({
                 value: icon.value,
                 label: icon.label,
@@ -235,48 +237,48 @@ export function PresetForm({ preset }: PresetFormProps) {
                   />
                 ),
               }))}
-              description="Choose an icon from lucide-react"
+              description="Scegli un'icona da lucide-react"
             />
 
             <SelectField
               control={form.control}
               name="questionType"
-              label="Question Type"
+              label="Tipo di domanda"
               options={QUESTION_TYPES}
-              description="Type of questions this preset generates"
+              description="Tipo di domande generate da questo preset"
             />
 
             <SliderField
               control={form.control}
               name="difficulty"
-              label="Difficulty Level"
+              label="Livello difficoltà"
               min={1}
               max={5}
               step={1}
-              description="1 = Beginner, 5 = Expert"
+              description="1 = Principiante, 5 = Esperto"
             />
           </div>
 
           <MultiSelectField
             control={form.control}
             name="tags"
-            label="Tags"
+            label="Tag"
             options={COMMON_TAGS.map((tag) => ({
               value: tag,
               label: tag,
             }))}
-            description="Select relevant tags for this preset"
+            description="Seleziona tag rilevanti per questo preset"
           />
 
           {questionType === "multiple_choice" && (
             <div className="space-y-4 p-4 border rounded-lg">
-              <h3 className="font-medium text-base">Multiple Choice Options</h3>
+              <h3 className="font-medium text-base">Opzioni scelta multipla</h3>
               <div>
                 <InputWithTagField
                   control={form.control}
                   name="focusAreas"
-                  label="Focus Areas"
-                  placeholder="Aggiungi una focus area"
+                  label="Aree di focus"
+                  placeholder="Aggiungi un'area di focus"
                   description="Premi enter dopo aver digitato un'area di interesse."
                 />
               </div>
@@ -284,34 +286,34 @@ export function PresetForm({ preset }: PresetFormProps) {
               <SelectField
                 control={form.control}
                 name="distractorComplexity"
-                label="Distractor Complexity"
+                label="Complessità distrattori"
                 options={DISTRACTOR_COMPLEXITY_OPTIONS}
-                description="How nuanced the incorrect answers should be"
+                description="Quanto sfumate dovrebbero essere le risposte errate"
               />
             </div>
           )}
 
           {questionType === "open_question" && (
             <div className="space-y-4 p-4 border rounded-lg">
-              <h3 className="font-medium text-base">Open Question Options</h3>
+              <h3 className="font-medium text-base">Opzioni domanda aperta</h3>
               <SwitchField
                 control={form.control}
                 name="requireCodeExample"
-                label="Require Code Example"
-                description="If enabled, candidates must include a code sample"
+                label="Richiedi esempio codice"
+                description="Se abilitato, i candidati devono includere un campione di codice"
               />
 
               <SelectField
                 control={form.control}
                 name="expectedResponseLength"
-                label="Expected Response Length"
+                label="Lunghezza risposta attesa"
                 options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
-                description="Let the AI know how detailed the answer should be"
+                description="Lascia che l'AI sappia quanto dettagliata dovrebbe essere la risposta"
               />
 
               <div>
                 <label className="font-medium text-sm">
-                  Evaluation Criteria
+                  Criteri di valutazione
                 </label>
                 <textarea
                   className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-20 placeholder:text-muted-foreground text-base"
@@ -323,10 +325,11 @@ export function PresetForm({ preset }: PresetFormProps) {
                       { shouldDirty: true, shouldValidate: true }
                     )
                   }
-                  placeholder={"scalability\ntrade-offs\nsecurity"}
+                  placeholder={"scalabilità\ntrade-offs\nsicurezza"}
                 />
                 <p className="mt-2 text-muted-foreground text-sm">
-                  One criterion per line. These will guide the scoring rubric.
+                  Un criterio per riga. Questi guideranno il rubric di
+                  punteggio.
                 </p>
               </div>
             </div>
@@ -334,46 +337,48 @@ export function PresetForm({ preset }: PresetFormProps) {
 
           {questionType === "code_snippet" && (
             <div className="space-y-4 p-4 border rounded-lg">
-              <h3 className="font-medium text-base">Code Snippet Options</h3>
+              <h3 className="font-medium text-base">
+                Opzioni snippet di codice
+              </h3>
               <InputField
                 control={form.control}
                 name="language"
-                label="Primary Language"
-                placeholder="e.g., typescript"
-                description="Language the buggy snippet should use"
+                label="Linguaggio primario"
+                placeholder="es. typescript"
+                description="Linguaggio che lo snippet buggy dovrebbe usare"
               />
 
               <SelectField
                 control={form.control}
                 name="bugType"
-                label="Bug Type"
+                label="Tipo di bug"
                 options={BUG_TYPE_OPTIONS}
-                description="What kind of issue should the snippet include"
+                description="Che tipo di problema dovrebbe includere lo snippet"
               />
 
               <SelectField
                 control={form.control}
                 name="codeComplexity"
-                label="Code Complexity"
+                label="Complessità codice"
                 options={CODE_COMPLEXITY_OPTIONS}
-                description="Helps tune the length and difficulty of the snippet"
+                description="Aiuta a regolare la lunghezza e la difficoltà dello snippet"
               />
 
               <SwitchField
                 control={form.control}
                 name="includeComments"
-                label="Include Comments"
-                description="Whether the snippet should contain inline comments"
+                label="Includi commenti"
+                description="Se lo snippet dovrebbe contenere commenti inline"
               />
             </div>
           )}
 
           <Button type="submit" disabled={isPending} className="w-full">
             {isPending
-              ? "Saving..."
+              ? "Salvataggio..."
               : preset
-              ? "Update Preset"
-              : "Create Preset"}
+              ? "Aggiorna preset"
+              : "Crea preset"}
           </Button>
         </form>
       </CardContent>

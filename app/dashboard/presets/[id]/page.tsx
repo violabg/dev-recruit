@@ -20,14 +20,14 @@ const toTitleCase = (value: string) =>
   value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
 const formatEnum = (value?: string | null) =>
-  value ? toTitleCase(value) : "Not specified";
+  value ? toTitleCase(value) : "Non specificato";
 
 const formatBoolean = (value?: boolean | null) => {
   if (value === undefined || value === null) {
-    return "Not specified";
+    return "Non specificato";
   }
 
-  return value ? "Yes" : "No";
+  return value ? "Sì" : "No";
 };
 
 export default async function PresetDetailPage({
@@ -44,47 +44,47 @@ export default async function PresetDetailPage({
   const behaviorByType: Record<string, { label: string; value: string }[]> = {
     multiple_choice: [
       {
-        label: "Distractor Complexity",
+        label: "Complessità distrattori",
         value: formatEnum(preset.distractorComplexity),
       },
       {
-        label: "Focus Areas",
+        label: "Aree di focus",
         value: preset.focusAreas?.length
-          ? `${preset.focusAreas.length} configured`
-          : "Not specified",
+          ? `${preset.focusAreas.length} configurati`
+          : "Non specificato",
       },
     ],
     open_question: [
       {
-        label: "Require Code Example",
+        label: "Richiedi esempio codice",
         value: formatBoolean(preset.requireCodeExample),
       },
       {
-        label: "Expected Response Length",
+        label: "Lunghezza risposta attesa",
         value: formatEnum(preset.expectedResponseLength),
       },
       {
-        label: "Evaluation Criteria",
+        label: "Criteri di valutazione",
         value: preset.evaluationCriteria?.length
-          ? `${preset.evaluationCriteria.length} configured`
-          : "Not specified",
+          ? `${preset.evaluationCriteria.length} configurati`
+          : "Non specificato",
       },
     ],
     code_snippet: [
       {
-        label: "Language",
-        value: preset.language?.trim() || "Not specified",
+        label: "Linguaggio",
+        value: preset.language?.trim() || "Non specificato",
       },
       {
-        label: "Bug Type",
+        label: "Tipo bug",
         value: formatEnum(preset.bugType),
       },
       {
-        label: "Code Complexity",
+        label: "Complessità codice",
         value: formatEnum(preset.codeComplexity),
       },
       {
-        label: "Include Comments",
+        label: "Includi commenti",
         value: formatBoolean(preset.includeComments),
       },
     ],
@@ -98,11 +98,11 @@ export default async function PresetDetailPage({
       <div className="flex sm:flex-row flex-col sm:justify-between sm:items-start gap-4">
         <div>
           <p className="text-muted-foreground text-xs uppercase tracking-wide">
-            Preset details
+            Dettagli preset
           </p>
           <h1 className="font-bold text-3xl tracking-tight">{preset.label}</h1>
           <p className="mt-2 text-muted-foreground">
-            {preset.description || "No description provided."}
+            {preset.description || "Nessuna descrizione fornita."}
           </p>
         </div>
         <PresetDetailsActions presetId={preset.id} />
@@ -111,9 +111,9 @@ export default async function PresetDetailPage({
       <div className="space-y-4">
         <Card>
           <CardHeader className="flex flex-col gap-1">
-            <CardTitle>Configuration</CardTitle>
+            <CardTitle>Configurazione</CardTitle>
             <CardDescription>
-              Essential metadata captured inside this preset.
+              Metadati essenziali catturati in questo preset.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -121,26 +121,26 @@ export default async function PresetDetailPage({
               <Badge variant="outline" className="capitalize">
                 {preset.questionType.replace(/_/g, " ")}
               </Badge>
-              <Badge variant="secondary">Level {preset.difficulty}</Badge>
-              {preset.isDefault && <Badge variant="default">Default</Badge>}
+              <Badge variant="secondary">Livello {preset.difficulty}</Badge>
+              {preset.isDefault && <Badge variant="default">Predefinito</Badge>}
             </div>
 
             <div className="gap-4 grid sm:grid-cols-2">
               <div>
-                <p className="text-muted-foreground text-sm">Identifier</p>
+                <p className="text-muted-foreground text-sm">Identificatore</p>
                 <p className="font-medium">{preset.name}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-sm">Icon</p>
+                <p className="text-muted-foreground text-sm">Icona</p>
                 <p className="font-medium">{preset.icon}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-muted-foreground text-sm">Tags</p>
+              <p className="text-muted-foreground text-sm">Tag</p>
               {preset.tags.length === 0 ? (
                 <p className="mt-2 text-muted-foreground text-sm">
-                  No tags configured for this preset.
+                  Nessun tag configurato per questo preset.
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -157,28 +157,29 @@ export default async function PresetDetailPage({
 
         <Card>
           <CardHeader className="flex flex-col gap-1">
-            <CardTitle>AI Guidance</CardTitle>
+            <CardTitle>Guida AI</CardTitle>
             <CardDescription>
-              Only the instructions relevant to this question type are shown.
+              Vengono mostrate solo le istruzioni rilevanti per questo tipo di
+              domanda.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <p className="text-muted-foreground text-sm">Instructions</p>
+              <p className="text-muted-foreground text-sm">Istruzioni</p>
               {preset.instructions ? (
                 <p className="mt-2 text-sm whitespace-pre-line">
                   {preset.instructions}
                 </p>
               ) : (
                 <p className="mt-2 text-muted-foreground text-sm">
-                  No additional instructions provided.
+                  Nessuna istruzione aggiuntiva fornita.
                 </p>
               )}
             </div>
 
             {isMultipleChoice && (
               <div>
-                <p className="text-muted-foreground text-sm">Focus Areas</p>
+                <p className="text-muted-foreground text-sm">Aree di focus</p>
                 {preset.focusAreas?.length ? (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {preset.focusAreas.map((area) => (
@@ -189,7 +190,7 @@ export default async function PresetDetailPage({
                   </div>
                 ) : (
                   <p className="mt-2 text-muted-foreground text-sm">
-                    No focus areas configured.
+                    Nessuna area di focus configurata.
                   </p>
                 )}
               </div>
@@ -198,7 +199,7 @@ export default async function PresetDetailPage({
             {isOpenQuestion && (
               <div>
                 <p className="text-muted-foreground text-sm">
-                  Evaluation Criteria
+                  Criteri di valutazione
                 </p>
                 {preset.evaluationCriteria?.length ? (
                   <ul className="space-y-1 mt-2 text-sm">
@@ -211,7 +212,7 @@ export default async function PresetDetailPage({
                   </ul>
                 ) : (
                   <p className="mt-2 text-muted-foreground text-sm">
-                    No evaluation criteria defined.
+                    Nessun criterio di valutazione definito.
                   </p>
                 )}
               </div>
@@ -222,9 +223,9 @@ export default async function PresetDetailPage({
         {questionBehaviorItems.length > 0 && (
           <Card>
             <CardHeader className="flex flex-col gap-1">
-              <CardTitle>Question Behavior</CardTitle>
+              <CardTitle>Comportamento domanda</CardTitle>
               <CardDescription>
-                Fine-grained options specific to the{" "}
+                Opzioni dettagliate specifiche per il{" "}
                 {toTitleCase(preset.questionType)} preset.
               </CardDescription>
             </CardHeader>

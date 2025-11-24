@@ -15,10 +15,10 @@ export function SeedPresetsButton() {
 
       if (result.success) {
         toast.success(result.message, {
-          description: `${result.count} presets loaded`,
+          description: `${result.count} preset caricati`,
         });
       } else {
-        toast.error(result.error || "Failed to seed presets");
+        toast.error(result.error || "Errore nel caricamento dei preset");
       }
     });
   };
@@ -34,12 +34,12 @@ export function SeedPresetsButton() {
       {isPending ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" />
-          Loading...
+          Caricamento...
         </>
       ) : (
         <>
           <Zap className="w-4 h-4" />
-          Load Default Presets
+          Carica preset predefiniti
         </>
       )}
     </Button>
