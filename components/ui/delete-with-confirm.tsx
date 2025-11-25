@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trash } from "lucide-react";
-import { useTransition } from "react";
+import { ReactNode, useTransition } from "react";
 import { toast } from "sonner";
 
 type DeleteWithConfirmProps = {
@@ -45,6 +45,12 @@ type DeleteWithConfirmProps = {
     | "link";
   /** Whether the button is disabled */
   disabled?: boolean;
+  /** Custom trigger element (overrides default button) */
+  children?: ReactNode;
+  /** Control open state externally */
+  open?: boolean;
+  /** Callback when open state changes */
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function DeleteWithConfirm({
@@ -59,6 +65,9 @@ export function DeleteWithConfirm({
   size = "sm",
   variant = "destructive",
   disabled = false,
+  children,
+  open,
+  onOpenChange,
 }: DeleteWithConfirmProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -98,18 +107,24 @@ export function DeleteWithConfirm({
     });
   };
 
+  const defaultTrigger = (
+    <Button
+      variant={variant}
+      size={iconOnly ? "icon" : size}
+      disabled={disabled || isPending}
+    >
+      <Trash className={iconOnly ? "w-4 h-4" : "mr-1 w-4 h-4"} />
+      {!iconOnly && label}
+    </Button>
+  );
+
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant={variant}
-          size={iconOnly ? "icon" : size}
-          disabled={disabled || isPending}
-        >
-          <Trash className={iconOnly ? "w-4 h-4" : "mr-1 w-4 h-4"} />
-          {!iconOnly && label}
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      {children !== undefined ? (
+        children
+      ) : (
+        <AlertDialogTrigger asChild>{defaultTrigger}</AlertDialogTrigger>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

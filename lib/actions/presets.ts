@@ -1,5 +1,6 @@
 "use server";
 import { cacheLife, cacheTag, updateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
 import { getPresetData, getPresetsData } from "../data/presets";
@@ -157,8 +158,6 @@ export async function deletePresetAction(presetId: string) {
 
     // Invalidate cache
     updateTag("presets");
-
-    return { success: true };
   } catch (error) {
     console.error("Error deleting preset:", error);
     return {
@@ -166,6 +165,8 @@ export async function deletePresetAction(presetId: string) {
       error: error instanceof Error ? error.message : "Failed to delete preset",
     };
   }
+
+  redirect("/dashboard/presets");
 }
 
 // Bulk create presets (for seeding)

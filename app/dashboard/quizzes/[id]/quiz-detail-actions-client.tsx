@@ -1,19 +1,9 @@
 "use client";
 import { DuplicateQuizDialog } from "@/components/quiz/duplicate-quiz-dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteQuiz } from "@/lib/actions/quizzes";
-import { Copy, Edit, Send, Trash } from "lucide-react";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
+import { deleteQuizById } from "@/lib/actions/quizzes";
+import { Copy, Edit, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -56,36 +46,11 @@ export function QuizDetailActionsClient({
           <Copy className="mr-1 w-4 h-4" />
           Duplica
         </Button>
-        {/* Delete button uses server action */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Trash className="mr-1 w-4 h-4" />
-              Elimina
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Questa azione non può essere annullata. Il quiz verrà eliminato
-                permanentemente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annulla</AlertDialogCancel>
-              <form action={deleteQuiz}>
-                <input type="hidden" name="quizId" value={quizId} />
-                <AlertDialogAction
-                  type="submit"
-                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                >
-                  Elimina
-                </AlertDialogAction>
-              </form>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <DeleteWithConfirm
+          deleteAction={deleteQuizById.bind(null, quizId)}
+          description="Questa azione non può essere annullata. Il quiz verrà eliminato permanentemente."
+          errorMessage="Errore durante l'eliminazione del quiz"
+        />
       </div>
 
       <DuplicateQuizDialog

@@ -133,11 +133,14 @@ export async function generateNewQuestionAction(
 }
 
 export async function deleteQuiz(formData: FormData) {
-  console.debug("deleteQuiz started");
+  const quizId = formData.get("quizId") as string;
+  return deleteQuizById(quizId);
+}
+
+export async function deleteQuizById(quizId: string) {
+  console.debug("deleteQuizById started");
 
   try {
-    const quizId = formData.get("quizId") as string;
-
     if (!quizId) {
       throw new QuizSystemError(
         "Quiz ID is required",
@@ -173,7 +176,7 @@ export async function deleteQuiz(formData: FormData) {
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
-    console.debug("deleteQuiz completed");
+    console.debug("deleteQuizById completed");
     redirect("/dashboard/quizzes");
   } catch (error) {
     // Re-throw redirect responses (Next.js uses special errors for redirects)
@@ -182,7 +185,7 @@ export async function deleteQuiz(formData: FormData) {
     }
 
     handleActionError(error, {
-      operation: "deleteQuiz",
+      operation: "deleteQuizById",
       fallbackMessage: "Quiz deletion failed. Please try again.",
     });
   }

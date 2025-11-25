@@ -1,14 +1,6 @@
 "use client";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,8 +30,7 @@ import {
   Trash,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { CandidateStatusBadge } from "./candidate-status-badge";
 
 // Props for the candidate table
@@ -49,29 +40,7 @@ interface CandidateTableProps {
 
 // Candidate table component
 export function CandidateTable({ candidates }: CandidateTableProps) {
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  // Handle delete candidate
-  async function handleConfirmDelete() {
-    if (!deleteDialogOpen) return;
-
-    startTransition(async () => {
-      setIsDeleting(deleteDialogOpen);
-      try {
-        await deleteCandidate(deleteDialogOpen);
-      } catch (error: any) {
-        console.error("Error deleting candidate:", error);
-        if (error instanceof Error && error.message?.includes("NEXT_REDIRECT"))
-          return;
-        toast.error("Errore durante l'eliminazione del candidato");
-      } finally {
-        setIsDeleting(null);
-        setDeleteDialogOpen(null);
-      }
-    });
-  }
 
   return (
     <>
@@ -164,13 +133,10 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => setDeleteDialogOpen(candidate.id)}
-                        disabled={isDeleting === candidate.id || isPending}
                         className="text-red-600"
                       >
                         <Trash className="mr-1 w-4 h-4" />
-                        {isDeleting === candidate.id
-                          ? "Eliminazione..."
-                          : "Elimina"}
+                        Elimina
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -181,32 +147,18 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
         </Table>
       </div>
 
-      <AlertDialog
-        open={deleteDialogOpen !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteDialogOpen(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Elimina candidato</AlertDialogTitle>
-            <AlertDialogDescription>
-              Sei sicuro di voler eliminare questo candidato? Questa azione non
-              può essere annullata.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex justify-end gap-3">
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={isDeleting !== null || isPending}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isDeleting || isPending ? "Eliminazione..." : "Elimina"}
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleteDialogOpen && (
+        <DeleteWithConfirm
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setDeleteDialogOpen(null);
+          }}
+          deleteAction={deleteCandidate.bind(null, deleteDialogOpen)}
+          title="Elimina candidato"
+          description="Sei sicuro di voler eliminare questo candidato? Questa azione non può essere annullata."
+          errorMessage="Errore durante l'eliminazione del candidato"
+        />
+      )}
     </>
   );
 }
