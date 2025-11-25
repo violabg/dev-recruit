@@ -2,23 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deletePresetAction } from "@/lib/actions/presets";
-import { Edit, Trash } from "lucide-react";
-import { toast } from "sonner";
+import { Edit } from "lucide-react";
 
 type PresetDetailsActionsProps = {
   presetId: string;
@@ -26,20 +14,6 @@ type PresetDetailsActionsProps = {
 
 export function PresetDetailsActions({ presetId }: PresetDetailsActionsProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  const handleDelete = () => {
-    startTransition(async () => {
-      const result = await deletePresetAction(presetId);
-
-      if (result.success) {
-        toast.success("Preset eliminato con successo");
-        router.push("/dashboard/presets");
-      } else {
-        toast.error(result.error || "Errore nell'eliminazione del preset");
-      }
-    });
-  };
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -50,29 +24,13 @@ export function PresetDetailsActions({ presetId }: PresetDetailsActionsProps) {
         </Link>
       </Button>
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button size="sm" variant="destructive" disabled={isPending}>
-            <Trash className="mr-1 w-4 h-4" />
-            Elimina
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Elimina</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione non può essere annullata. Il preset verrà rimosso da
-              tutte le posizioni che ne dipendono.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-              {isPending ? "Eliminazione in corso..." : "Elimina"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteWithConfirm
+        deleteAction={() => deletePresetAction(presetId)}
+        description="Questa azione non può essere annullata. Il preset verrà rimosso da tutte le posizioni che ne dipendono."
+        successMessage="Preset eliminato con successo"
+        errorMessage="Errore nell'eliminazione del preset"
+        onSuccess={() => router.push("/dashboard/presets")}
+      />
     </div>
   );
 }

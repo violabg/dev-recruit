@@ -1,9 +1,10 @@
-import { DeletePositionButton } from "@/components/positions/delete-position-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { deletePosition } from "@/lib/actions/positions";
 import { getPositionById, getPositions } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Edit } from "lucide-react";
@@ -76,7 +77,11 @@ async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
               Modifica
             </Link>
           </Button>
-          <DeletePositionButton id={position.id} />
+          <DeleteWithConfirm
+            deleteAction={deletePosition.bind(null, position.id)}
+            description="Questa azione non può essere annullata. Verranno eliminati anche tutti i quiz e i candidati associati a questa posizione."
+            errorMessage="Errore durante l'eliminazione della posizione"
+          />
         </div>
       </div>
 

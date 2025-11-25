@@ -1,8 +1,9 @@
 import { CandidateStatusBadge } from "@/components/candidates/candidate-status-badge";
-import { DeleteCandidateButton } from "@/components/candidates/delete-candidate-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
+import { deleteCandidate } from "@/lib/actions/candidates";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { Edit } from "lucide-react";
 import type { Route } from "next";
@@ -54,7 +55,11 @@ export default async function CandidateDetailPage({
               Modifica
             </Link>
           </Button>
-          <DeleteCandidateButton candidateId={candidate.id} />
+          <DeleteWithConfirm
+            deleteAction={deleteCandidate.bind(null, candidate.id)}
+            description="Questa azione non può essere annullata. Il candidato e tutti i dati associati verranno eliminati permanentemente."
+            errorMessage="Errore durante l'eliminazione del candidato"
+          />
         </div>
       </div>
       <Card>

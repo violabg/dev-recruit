@@ -1,5 +1,5 @@
-import { PresetDetailsActions } from "@/components/presets/preset-details-actions";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,7 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getPresetAction } from "@/lib/actions/presets";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
+import { deletePresetAction, getPresetAction } from "@/lib/actions/presets";
+import { Edit } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 type PresetDetailPageProps = {
@@ -105,7 +108,20 @@ export default async function PresetDetailPage({
             {preset.description || "Nessuna descrizione fornita."}
           </p>
         </div>
-        <PresetDetailsActions presetId={preset.id} />
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/dashboard/presets/${preset.id}/edit`}>
+              <Edit className="mr-1 w-4 h-4" />
+              Modifica
+            </Link>
+          </Button>
+          <DeleteWithConfirm
+            deleteAction={deletePresetAction.bind(null, preset.id)}
+            description="Questa azione non può essere annullata. Il preset verrà rimosso da tutte le posizioni che ne dipendono."
+            successMessage="Preset eliminato con successo"
+            errorMessage="Errore nell'eliminazione del preset"
+          />
+        </div>
       </div>
 
       <div className="space-y-4">
