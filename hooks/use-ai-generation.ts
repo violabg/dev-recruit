@@ -30,7 +30,7 @@ type UseAIGenerationProps = {
   position: {
     id: string;
     title: string;
-    experience_level: string;
+    experienceLevel: string;
     skills: string[];
   };
   prepend: (value: Question) => void;
@@ -77,7 +77,7 @@ export const useAIGeneration = ({
   const createBaseConfig = () => ({
     quizTitle: form.getValues("title"),
     positionTitle: position.title,
-    experienceLevel: position.experience_level,
+    experienceLevel: position.experienceLevel,
     skills: position.skills,
     previousQuestions: fields.map((field) => ({
       question: field.question,

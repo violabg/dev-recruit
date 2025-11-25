@@ -17,7 +17,7 @@ import * as z from "zod/v4";
 
 // Use the consolidated schemas with form-specific validation
 const editQuizFormSchema = saveQuizRequestSchema.extend({
-  position_id: z.string().optional(), // Make position_id optional for updates
+  positionId: z.string().optional(), // Make positionId optional for updates
   questions: z
     .array(questionSchemas.flexible)
     .min(1, "Almeno una domanda è obbligatoria"),
@@ -30,7 +30,7 @@ type UseEditQuizFormProps = {
   position: {
     id: string;
     title: string;
-    experience_level: string;
+    experienceLevel: string;
     skills: string[];
   };
   mode?: "edit" | "create";
@@ -63,8 +63,8 @@ export const useEditQuizForm = ({
     resolver: zodResolver(editQuizFormSchema),
     defaultValues: {
       title: quiz.title,
-      position_id: position.id,
-      time_limit: quiz.time_limit,
+      positionId: position.id,
+      timeLimit: quiz.timeLimit,
       questions: quiz.questions,
     },
   });
@@ -116,19 +116,19 @@ export const useEditQuizForm = ({
   const save = async (data: EditQuizFormData) => {
     const formData = new FormData();
     formData.append("title", data.title);
-    if (data.time_limit !== null) {
-      formData.append("time_limit", data.time_limit.toString());
+    if (data.timeLimit !== null) {
+      formData.append("timeLimit", data.timeLimit.toString());
     }
     formData.append("questions", JSON.stringify(data.questions));
 
     if (isCreateMode) {
-      const positionId = data.position_id ?? position.id;
+      const positionId = data.positionId ?? position.id;
       if (!positionId) {
         throw new Error("Position ID is required for quiz creation");
       }
-      formData.append("position_id", positionId);
+      formData.append("positionId", positionId);
     } else {
-      formData.append("quiz_id", quiz.id);
+      formData.append("quizId", quiz.id);
     }
 
     return await upsertQuizAction(formData);
@@ -171,7 +171,7 @@ export const useEditQuizForm = ({
     const currentValues = form.getValues();
     return (
       currentValues.title !== quiz.title ||
-      currentValues.time_limit !== quiz.time_limit
+      currentValues.timeLimit !== quiz.timeLimit
     );
   };
 

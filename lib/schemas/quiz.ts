@@ -17,7 +17,7 @@ import { questionSchemas } from "./question";
 export const aiQuizGenerationSchema = z.object({
   title: baseSchemas.title,
   questions: z.array(questionSchemas.flexible),
-  time_limit: z.number().nullable().optional(),
+  timeLimit: z.number().nullable().optional(),
   difficulty: baseSchemas.difficulty.optional(),
   instructions: baseSchemas.instructions.optional(),
 });
@@ -54,22 +54,22 @@ export const quizApiSchemas = {
 
   // Quiz update request (unified schema)
   update: z.object({
-    quiz_id: baseSchemas.id,
+    quizId: baseSchemas.id,
     title: baseSchemas.title,
-    time_limit: baseSchemas.timeLimit,
+    timeLimit: baseSchemas.timeLimit,
     questions: z.array(questionSchemas.flexible),
     instructions: baseSchemas.instructions.optional(),
-    updated_by: baseSchemas.id.optional(),
+    updatedBy: baseSchemas.id.optional(),
   }),
 
   // Quiz save request
   save: z.object({
     title: baseSchemas.title,
-    position_id: baseSchemas.id,
+    positionId: baseSchemas.id,
     questions: z
       .array(questionSchemas.flexible)
       .min(1, "At least one question required"),
-    time_limit: baseSchemas.timeLimit,
+    timeLimit: baseSchemas.timeLimit,
     instructions: baseSchemas.instructions.optional(),
   }),
 
@@ -123,17 +123,17 @@ export const quizFormSchemas = {
 
   // FormData schema (server actions) with transformations
   formData: z.object({
-    position_id: baseSchemas.id,
+    positionId: baseSchemas.id,
     title: baseSchemas.title,
-    question_count: formTransformers.coerceInt.pipe(baseSchemas.questionCount),
+    questionCount: formTransformers.coerceInt.pipe(baseSchemas.questionCount),
     difficulty: formTransformers.coerceInt.pipe(baseSchemas.difficulty),
-    include_multiple_choice: formTransformers.stringToBoolean,
-    include_open_questions: formTransformers.stringToBoolean,
-    include_code_snippets: formTransformers.stringToBoolean,
+    includeMultipleChoice: formTransformers.stringToBoolean,
+    includeOpenQuestions: formTransformers.stringToBoolean,
+    includeCodeSnippets: formTransformers.stringToBoolean,
     instructions: z.string().max(2000).optional(),
-    enable_time_limit: formTransformers.stringToBoolean.optional(),
-    time_limit: baseSchemas.timeLimit.optional(),
-    llm_model: z.string().optional(),
+    enableTimeLimit: formTransformers.stringToBoolean.optional(),
+    timeLimit: baseSchemas.timeLimit.optional(),
+    llmModel: z.string().optional(),
   }),
 
   // Simplified quiz form for basic editing
@@ -156,14 +156,14 @@ export const quizFormSchemas = {
 export const quizSchema = z.object({
   id: baseSchemas.id,
   title: baseSchemas.title,
-  position_id: baseSchemas.id,
+  positionId: baseSchemas.id,
   questions: z.array(questionSchemas.flexible),
-  time_limit: z.number().nullable(),
+  timeLimit: z.number().nullable(),
   difficulty: baseSchemas.difficulty.optional(),
-  created_at: z.string(),
-  created_by: baseSchemas.id,
-  updated_at: z.string().optional(),
-  updated_by: baseSchemas.id.optional(),
+  createdAt: z.string(),
+  createdBy: baseSchemas.id,
+  updatedAt: z.string().optional(),
+  updatedBy: baseSchemas.id.optional(),
 });
 
 // Type exports with consistent naming

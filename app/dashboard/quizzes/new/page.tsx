@@ -40,7 +40,7 @@ async function PositionsContent({
   const serializedPositions: PositionOption[] = positions.map((position) => ({
     id: position.id,
     title: position.title,
-    experience_level: position.experienceLevel,
+    experienceLevel: position.experienceLevel,
     skills: position.skills,
   }));
 

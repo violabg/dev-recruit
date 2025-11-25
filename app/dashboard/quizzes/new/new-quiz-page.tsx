@@ -18,7 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 export type PositionOption = {
   id: string;
   title: string;
-  experience_level: string;
+  experienceLevel: string;
   skills: string[];
 };
 
@@ -59,15 +59,15 @@ export const NewQuizCreationPage = ({
     return {
       id: `new-${selectedPosition.id}`,
       title: "",
-      position_id: selectedPosition.id,
+      positionId: selectedPosition.id,
       questions: [],
-      time_limit: null,
+      timeLimit: null,
       difficulty: 3,
       instructions: "",
-      created_at: new Date().toISOString(),
-      created_by: "",
-      updated_at: undefined,
-      updated_by: undefined,
+      createdAt: new Date().toISOString(),
+      createdBy: "",
+      updatedAt: undefined,
+      updatedBy: undefined,
     } as QuizForm;
   }, [selectedPosition]);
 
@@ -97,7 +97,7 @@ export const NewQuizCreationPage = ({
           <SelectContent>
             {availablePositions.map((position) => (
               <SelectItem key={position.id} value={position.id}>
-                {position.title} ({position.experience_level})
+                {position.title} ({position.experienceLevel})
               </SelectItem>
             ))}
           </SelectContent>

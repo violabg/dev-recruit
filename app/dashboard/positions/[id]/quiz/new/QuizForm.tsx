@@ -127,10 +127,10 @@ export const QuizForm = ({
 
           const formData = new FormData();
           formData.append("title", values.quizTitle);
-          formData.append("position_id", position.id);
+          formData.append("positionId", position.id);
           formData.append("questions", JSON.stringify(quizData.questions));
           formData.append(
-            "time_limit",
+            "timeLimit",
             values.enableTimeLimit ? values.timeLimit.toString() : ""
           );
 

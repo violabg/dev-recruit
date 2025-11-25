@@ -51,7 +51,7 @@ export function InterviewClient({
     interview.answers ? { ...interview.answers } : {}
   );
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
-    quiz.time_limit ? quiz.time_limit * 60 : null
+    quiz.timeLimit ? quiz.timeLimit * 60 : null
   );
   const [isCompleted, setIsCompleted] = useState(
     interview.status === "completed"
@@ -170,12 +170,10 @@ export function InterviewClient({
                   <span>Numero di domande:</span>
                   <span className="font-medium">{quiz.questions.length}</span>
                 </div>
-                {quiz.time_limit && (
+                {quiz.timeLimit && (
                   <div className="flex justify-between">
                     <span>Limite di tempo:</span>
-                    <span className="font-medium">
-                      {quiz.time_limit} minuti
-                    </span>
+                    <span className="font-medium">{quiz.timeLimit} minuti</span>
                   </div>
                 )}
               </div>
@@ -190,9 +188,9 @@ export function InterviewClient({
                   avanti/indietro
                 </li>
                 <li>• Le tue risposte vengono salvate automaticamente</li>
-                {quiz.time_limit && (
+                {quiz.timeLimit && (
                   <li>
-                    • Hai {quiz.time_limit} minuti per completare il quiz,
+                    • Hai {quiz.timeLimit} minuti per completare il quiz,
                     dopodiché verrà inviato automaticamente
                   </li>
                 )}

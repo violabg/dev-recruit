@@ -71,18 +71,18 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
       ? {
           title: position.title,
           description: position.description || "",
-          experience_level: position.experienceLevel,
+          experienceLevel: position.experienceLevel,
           skills: position.skills || [],
-          soft_skills: position.softSkills || [],
-          contract_type: position.contractType || "",
+          softSkills: position.softSkills || [],
+          contractType: position.contractType || "",
         }
       : {
           title: "",
           description: "",
-          experience_level: "",
+          experienceLevel: "",
           skills: [],
-          soft_skills: [],
-          contract_type: "",
+          softSkills: [],
+          contractType: "",
         },
   });
 
@@ -95,13 +95,13 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
           const formData = new FormData();
           formData.append("title", values.title);
           formData.append("description", values.description || "");
-          formData.append("experience_level", values.experience_level);
+          formData.append("experienceLevel", values.experienceLevel);
           formData.append("skills", JSON.stringify(values.skills));
           formData.append(
-            "soft_skills",
-            JSON.stringify(values.soft_skills || [])
+            "softSkills",
+            JSON.stringify(values.softSkills || [])
           );
-          formData.append("contract_type", values.contract_type || "");
+          formData.append("contractType", values.contractType || "");
 
           await updatePosition(position!.id, formData);
         } else {
@@ -126,11 +126,11 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
       try {
         const descriptionPayload: PositionDescriptionInput = {
           title: getValues("title"),
-          experience_level: getValues("experience_level"),
+          experienceLevel: getValues("experienceLevel"),
           skills: getValues("skills"),
-          soft_skills: getValues("soft_skills"),
-          contract_type: getValues("contract_type"),
-          current_description: getValues("description"),
+          softSkills: getValues("softSkills"),
+          contractType: getValues("contractType"),
+          currentDescription: getValues("description"),
         };
 
         // Clear current description before streaming
@@ -188,7 +188,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
       />
       <SelectField<PositionFormData>
         control={control}
-        name="experience_level"
+        name="experienceLevel"
         label="Livello di esperienza"
         description="Indica il livello di esperienza richiesto"
         placeholder="Seleziona un livello"
@@ -212,7 +212,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
       />
       <MultiSelectField<PositionFormData>
         control={control}
-        name="soft_skills"
+        name="softSkills"
         label="Soft skills"
         description="Seleziona le soft skills richieste per questa posizione"
         options={allSoftSkills}
@@ -220,7 +220,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
       />
       <SelectField<PositionFormData>
         control={control}
-        name="contract_type"
+        name="contractType"
         label="Tipo di contratto"
         description="Indica il tipo di contratto previsto"
         placeholder="Seleziona un contratto"

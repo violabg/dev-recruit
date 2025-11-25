@@ -15,10 +15,10 @@ export async function createPosition(values: PositionFormData) {
     data: {
       title: payload.title,
       description: payload.description || null,
-      experienceLevel: payload.experience_level,
+      experienceLevel: payload.experienceLevel,
       skills: payload.skills,
-      softSkills: payload.soft_skills ?? [],
-      contractType: payload.contract_type ?? null,
+      softSkills: payload.softSkills ?? [],
+      contractType: payload.contractType ?? null,
       createdBy: user.id,
     },
     select: { id: true },
@@ -74,16 +74,16 @@ export async function updatePosition(id: string, formData: FormData) {
   };
 
   const rawSkills = formData.get("skills");
-  const rawSoftSkills = formData.get("soft_skills");
+  const rawSoftSkills = formData.get("softSkills");
 
   const payload = positionFormSchema.parse({
     title: formData.get("title"),
     description: formData.get("description") ?? undefined,
-    experience_level: formData.get("experience_level"),
+    experienceLevel: formData.get("experienceLevel"),
     skills: parseJsonArray(rawSkills, "skills"),
-    soft_skills: parseJsonArray(rawSoftSkills, "soft_skills"),
-    contract_type:
-      (formData.get("contract_type") as string | null)?.trim() || undefined,
+    softSkills: parseJsonArray(rawSoftSkills, "softSkills"),
+    contractType:
+      (formData.get("contractType") as string | null)?.trim() || undefined,
   });
 
   await prisma.position.update({
@@ -91,10 +91,10 @@ export async function updatePosition(id: string, formData: FormData) {
     data: {
       title: payload.title,
       description: payload.description?.trim() || null,
-      experienceLevel: payload.experience_level,
+      experienceLevel: payload.experienceLevel,
       skills: payload.skills,
-      softSkills: payload.soft_skills ?? [],
-      contractType: payload.contract_type ?? null,
+      softSkills: payload.softSkills ?? [],
+      contractType: payload.contractType ?? null,
     },
   });
 

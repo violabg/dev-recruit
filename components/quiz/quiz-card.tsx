@@ -17,7 +17,7 @@ type Props = {
 };
 
 export function QuizCard({
-  quiz: { id, title, positions, time_limit, questions, created_at },
+  quiz: { id, title, positions, timeLimit, questions, createdAt },
 }: Props) {
   return (
     <Card className="flex flex-col">
@@ -29,12 +29,12 @@ export function QuizCard({
           <div className="flex flex-wrap gap-2">
             {positions && <Badge variant="outline">{positions?.title}</Badge>}
             {positions && (
-              <Badge variant="outline">{positions.experience_level}</Badge>
+              <Badge variant="outline">{positions.experienceLevel}</Badge>
             )}
-            {time_limit && (
+            {timeLimit && (
               <Badge variant="secondary">
                 <Clock className="mr-1 w-3 h-3" />
-                {time_limit} minuti
+                {timeLimit} minuti
               </Badge>
             )}
           </div>
@@ -43,7 +43,7 @@ export function QuizCard({
               {questions.length} domande
             </span>
             <span className="text-muted-foreground">
-              {formatDate(created_at)}
+              {formatDate(createdAt)}
             </span>
           </div>
         </div>

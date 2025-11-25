@@ -97,29 +97,71 @@ Other action files (`candidates.ts`, `interviews.ts`, `positions.ts`, `presets.t
 
 ### A. Field Naming Convention
 
-**Current state:** Mixing camelCase (Prisma) and snake_case (API/Zod schemas).
+**Current state:** Previously mixed camelCase (Prisma) and snake_case (API/Zod schemas).
 
-**Options:**
+**Decision:** ✅ **Option A** — Standardized on camelCase throughout the codebase.
 
-- [ ] **Option A:** Standardize on camelCase internally, add transformation layer only at API boundaries
-- [ ] **Option B:** Keep snake_case for external API responses only, use camelCase everywhere else
-- [ ] **Option C:** Keep current mixed approach (no change)
+**Implementation:**
 
-**Decision:** _TBD_
+- [x] Created `lib/utils/case-transform.ts` with transformation utilities:
+  - `snakeToCamel()` / `camelToSnake()` - string transformers
+  - `transformKeysToCamel()` / `transformKeysToSnake()` - object transformers
+  - `FIELD_MAPPINGS` / `REVERSE_FIELD_MAPPINGS` - common field mappings
+- [x] Converted all Zod schemas to use camelCase field names:
+  - `lib/schemas/position.ts` - experienceLevel, softSkills, contractType, currentDescription
+  - `lib/schemas/candidate.ts` - positionId, resumeUrl
+  - `lib/schemas/base.ts` - createdAt, updatedAt
+  - `lib/schemas/quiz.ts` - timeLimit, quizId, positionId, createdAt, etc.
+- [x] Updated server actions to use camelCase FormData keys:
+  - `lib/actions/quizzes.ts` - quizId, positionId, timeLimit, newPositionId, newTitle
+  - `lib/actions/candidates.ts` - positionId, resumeUrl
+  - `lib/actions/positions.ts` - experienceLevel, softSkills, contractType
+- [x] Updated data layer mappers:
+  - `lib/data/quizzes.ts` - QuizResponse type and mapQuizFromPrisma use camelCase
+- [x] Updated hooks to use camelCase:
+  - `hooks/use-edit-quiz-form.ts` - positionId, timeLimit
+  - `hooks/use-ai-generation.ts` - experienceLevel
+- [x] Updated components to use camelCase:
+  - `components/positions/position-form.tsx`
+  - `components/candidates/candidate-form.tsx`
+  - `components/quiz/quiz-card.tsx`, `quiz-settings.tsx`, `ai-dialogs.tsx`
+  - `components/quiz/duplicate-quiz-dialog.tsx`, `edit-quiz-form.tsx`, `ai-quiz-generation-dialog.tsx`
+  - `components/interview/interview-client.tsx`
+- [x] Updated app routes to use camelCase:
+  - `app/api/positions/generate-description/route.ts`
+  - `app/dashboard/quizzes/quizzes-components.tsx`
+  - `app/dashboard/quizzes/new/new-quiz-page.tsx`, `page.tsx`
+  - `app/dashboard/quizzes/[id]/page.tsx`, `quiz-detail-actions-client.tsx`
+  - `app/dashboard/positions/[id]/quiz/new/page.tsx`, `QuizForm.tsx`
+  - `app/dashboard/positions/[id]/components/quizes.tsx`
+- [x] Updated documentation:
+  - `.github/copilot-instructions.md` - Updated FormData field references
+
+**Result:** Full codebase now uses consistent camelCase naming for all TypeScript types, Zod schemas, FormData keys, and component props. Build passes with zero TypeScript errors.
 
 ---
 
 ### B. Audit Utility Types
 
-**Current state:** `lib/types/utilities.ts` contains ~10 generic utility types (`DeepPartial`, `RequireAtLeastOne`, etc.).
+**Current state:** `lib/types/utilities.ts` contained ~15 generic utility types, most unused.
 
-**Options:**
+**Decision:** ✅ **Option A** — Audited usage and removed unused types.
 
-- [ ] **Option A:** Audit for actual usage and remove unused types
-- [ ] **Option B:** Keep all as a utility library for future use
-- [ ] **Option C:** Move unused to a separate `utilities.deprecated.ts` for gradual removal
+**Implementation:**
 
-**Decision:** _TBD_
+- [x] Audited all utility types for actual usage
+- [x] Kept only 3 types that are actually used:
+  - `ApiResponse<T>` - used by API middleware
+  - `ValidationConfig` - used by validation middleware
+  - `ValidatedRequestData<T>` - used by validation middleware
+- [x] Removed 12 unused types:
+  - `FormDataType`, `DatabaseEntity`, `PartialUpdate`, `FormState`
+  - `PaginatedResponse`, `DiscriminatedUnion`, `ZodShape`
+  - `WithRequired`, `WithOptional`, `ServerActionResponse`
+  - `ValidationResult`, `AsyncState`, `ArrayElement`
+  - `OptionalFields`, `RequiredFields`
+
+**Result:** Reduced `lib/types/utilities.ts` from ~130 lines to ~50 lines.
 
 ---
 
@@ -127,15 +169,7 @@ Other action files (`candidates.ts`, `interviews.ts`, `positions.ts`, `presets.t
 
 **Current state:** Zod schemas used for both input validation and entity representation.
 
-**Proposed change:** Use Prisma types for entities, Zod only for form/API input validation.
-
-**Risks to verify:**
-
-- [ ] Check `react-hook-form` resolvers don't depend on entity schemas
-- [ ] Verify runtime validation doesn't require schema introspection
-- [ ] Ensure type inference still works correctly in components
-
-**Decision:** _TBD_
+**Decision:** ⏭️ Skipped for now — requires deeper analysis of react-hook-form integration.
 
 ---
 

@@ -30,8 +30,8 @@ type DuplicateQuizDialogProps = {
 };
 
 const duplicateFormSchema = z.object({
-  new_title: z.string().min(2, "Il titolo deve contenere almeno 2 caratteri."),
-  new_position_id: z.string().min(1, "Seleziona una posizione."),
+  newTitle: z.string().min(2, "Il titolo deve contenere almeno 2 caratteri."),
+  newPositionId: z.string().min(1, "Seleziona una posizione."),
 });
 
 type DuplicateFormData = z.infer<typeof duplicateFormSchema>;
@@ -49,8 +49,8 @@ export function DuplicateQuizDialog({
   const form = useForm<DuplicateFormData>({
     resolver: zodResolver(duplicateFormSchema),
     defaultValues: {
-      new_title: `${quizTitle} - Copia`,
-      new_position_id: "",
+      newTitle: `${quizTitle} - Copia`,
+      newPositionId: "",
     },
   });
 
@@ -58,9 +58,9 @@ export function DuplicateQuizDialog({
     startTransition(async () => {
       try {
         const formData = new FormData();
-        formData.append("quiz_id", quizId);
-        formData.append("new_position_id", data.new_position_id);
-        formData.append("new_title", data.new_title);
+        formData.append("quizId", quizId);
+        formData.append("newPositionId", data.newPositionId);
+        formData.append("newTitle", data.newTitle);
 
         const result = await duplicateQuizAction(formData);
 
@@ -94,14 +94,14 @@ export function DuplicateQuizDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <InputField<DuplicateFormData>
               control={form.control}
-              name="new_title"
+              name="newTitle"
               label="Titolo del Quiz"
               placeholder="Es: Quiz Sviluppatore - Copia"
             />
 
             <SelectField<DuplicateFormData>
               control={form.control}
-              name="new_position_id"
+              name="newPositionId"
               label="Posizione"
               placeholder="Seleziona una posizione"
               options={positions.map((pos) => ({

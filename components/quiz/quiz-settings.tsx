@@ -63,7 +63,7 @@ export const QuizSettings = ({
         />
         <InputField
           control={form.control}
-          name="time_limit"
+          name="timeLimit"
           label="Limite di Tempo (minuti)"
           placeholder="Lascia vuoto per nessun limite"
           type="number"

@@ -8,10 +8,10 @@ import { baseSchemas } from "./base";
 export const candidateFormSchema = z.object({
   name: baseSchemas.name,
   email: baseSchemas.email,
-  position_id: z.string().min(1, {
+  positionId: z.string().min(1, {
     error: "Seleziona una posizione.",
   }),
-  resume_url: z
+  resumeUrl: z
     .union([z.url({ message: "Inserisci un URL valido" }), z.literal("")])
     .optional(),
 });
@@ -20,7 +20,7 @@ export const candidateUpdateSchema = z
   .object({
     name: baseSchemas.name.optional(),
     email: baseSchemas.email.optional(),
-    position_id: z
+    positionId: z
       .string()
       .min(1, {
         error: "Seleziona una posizione valida.",
@@ -31,7 +31,7 @@ export const candidateUpdateSchema = z
         error: "Stato candidato non valido",
       })
       .optional(),
-    resume_url: z
+    resumeUrl: z
       .union([
         z.url({ message: "Inserisci un URL valido" }),
         z.literal(""),

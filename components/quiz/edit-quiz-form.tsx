@@ -27,7 +27,7 @@ type EditQuizFormProps = {
   position: {
     id: string;
     title: string;
-    experience_level: string;
+    experienceLevel: string;
     skills: string[];
   };
   mode?: "edit" | "create";

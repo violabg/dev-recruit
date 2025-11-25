@@ -75,7 +75,7 @@ export function QuizDetailActionsClient({
             <AlertDialogFooter>
               <AlertDialogCancel>Annulla</AlertDialogCancel>
               <form action={deleteQuiz}>
-                <input type="hidden" name="quiz_id" value={quizId} />
+                <input type="hidden" name="quizId" value={quizId} />
                 <AlertDialogAction
                   type="submit"
                   className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"

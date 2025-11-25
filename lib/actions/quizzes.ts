@@ -136,7 +136,7 @@ export async function deleteQuiz(formData: FormData) {
   console.debug("deleteQuiz started");
 
   try {
-    const quizId = formData.get("quiz_id") as string;
+    const quizId = formData.get("quizId") as string;
 
     if (!quizId) {
       throw new QuizSystemError(
@@ -190,13 +190,13 @@ export async function deleteQuiz(formData: FormData) {
 
 /**
  * Unified action for creating or updating a quiz.
- * Auto-detects operation based on presence of quiz_id in FormData.
+ * Auto-detects operation based on presence of quizId in FormData.
  * FormData expects:
  * - title: string (required)
  * - questions: JSON stringified array (required)
- * - time_limit?: string (optional)
- * - quiz_id?: string (if provided, updates; otherwise creates)
- * - position_id?: string (required for create, ignored for update)
+ * - timeLimit?: string (optional)
+ * - quizId?: string (if provided, updates; otherwise creates)
+ * - positionId?: string (required for create, ignored for update)
  */
 export async function upsertQuizAction(formData: FormData) {
   console.debug("upsertQuizAction started");
@@ -205,10 +205,10 @@ export async function upsertQuizAction(formData: FormData) {
     const user = await requireUser();
 
     // Parse form data
-    const quizId = formData.get("quiz_id") as string | null;
+    const quizId = formData.get("quizId") as string | null;
     const title = formData.get("title") as string;
     const questionsRaw = formData.get("questions") as string;
-    const timeLimitRaw = formData.get("time_limit") as string;
+    const timeLimitRaw = formData.get("timeLimit") as string;
 
     const isCreate = !quizId;
 
@@ -256,7 +256,7 @@ export async function upsertQuizAction(formData: FormData) {
 
     if (isCreate) {
       // CREATE MODE
-      const positionId = formData.get("position_id") as string;
+      const positionId = formData.get("positionId") as string;
 
       if (!positionId) {
         throw new QuizSystemError(
@@ -519,9 +519,9 @@ export async function duplicateQuizAction(formData: FormData) {
     const user = await requireUser();
 
     // Parse form data
-    const quizId = formData.get("quiz_id") as string;
-    const newPositionId = formData.get("new_position_id") as string;
-    const newTitle = formData.get("new_title") as string;
+    const quizId = formData.get("quizId") as string;
+    const newPositionId = formData.get("newPositionId") as string;
+    const newTitle = formData.get("newTitle") as string;
 
     if (!quizId || !newPositionId || !newTitle) {
       throw new QuizSystemError(
@@ -595,7 +595,7 @@ export async function duplicateQuizAction(formData: FormData) {
   } catch (error) {
     handleActionError(error, {
       operation: "duplicateQuizAction",
-      context: { quizId: (formData.get("quiz_id") as string) || undefined },
+      context: { quizId: (formData.get("quizId") as string) || undefined },
       fallbackMessage: "Quiz duplication failed. Please try again.",
     });
   }

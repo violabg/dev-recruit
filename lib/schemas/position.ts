@@ -10,7 +10,7 @@ export const positionFormSchema = z.object({
     error: "Il titolo deve contenere almeno 2 caratteri.",
   }),
   description: baseSchemas.description,
-  experience_level: z.string({
+  experienceLevel: z.string({
     error: (issue) =>
       issue.input === undefined
         ? "Seleziona un livello di esperienza."
@@ -19,17 +19,17 @@ export const positionFormSchema = z.object({
   skills: z.array(z.string()).min(1, {
     error: "Seleziona almeno una competenza.",
   }),
-  soft_skills: z.array(z.string()).optional(),
-  contract_type: z.string().optional(),
+  softSkills: z.array(z.string()).optional(),
+  contractType: z.string().optional(),
 });
 
 export const positionDescriptionSchema = z.object({
   title: baseSchemas.title,
-  experience_level: z.string().min(1, "Il livello di esperienza è richiesto."),
+  experienceLevel: z.string().min(1, "Il livello di esperienza è richiesto."),
   skills: baseSchemas.skills,
-  soft_skills: z.array(z.string()).optional(),
-  contract_type: z.string().optional(),
-  current_description: baseSchemas.description,
+  softSkills: z.array(z.string()).optional(),
+  contractType: z.string().optional(),
+  currentDescription: baseSchemas.description,
 });
 
 // ====================

@@ -21,7 +21,7 @@ type QuizWithPosition = Prisma.QuizGetPayload<{
 // API response DTO - for client/API contracts
 /**
  * Quiz API response DTO
- * Transforms Prisma camelCase to snake_case for API contracts
+ * Uses camelCase consistently with Prisma models
  * This is a composite view type, not a duplicate of Prisma fields
  *
  * @see Principle VII: Acceptable as API contract type extending Prisma model
@@ -29,14 +29,14 @@ type QuizWithPosition = Prisma.QuizGetPayload<{
 export type QuizResponse = {
   id: string;
   title: string;
-  created_at: string; // ISO string from Prisma createdAt
-  position_id: string; // from Prisma positionId
+  createdAt: string; // ISO string from Prisma createdAt
+  positionId: string; // from Prisma positionId
   positions: {
     id: string;
     title: string;
-    experience_level: string; // from Prisma experienceLevel
+    experienceLevel: string; // from Prisma experienceLevel
   } | null;
-  time_limit: number | null; // from Prisma timeLimit
+  timeLimit: number | null; // from Prisma timeLimit
   questions: Question[];
 };
 
@@ -70,21 +70,21 @@ const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
  * Maps quiz data from Prisma to API response format.
  * Handles both basic position and detailed position includes.
  * Additional position fields (skills, description) are ignored in this mapping
- * as the QuizResponse type only needs id, title, and experience_level.
+ * as the QuizResponse type only needs id, title, and experienceLevel.
  */
 export const mapQuizFromPrisma = (quiz: QuizWithPosition): QuizResponse => ({
   id: quiz.id,
   title: quiz.title,
-  created_at: quiz.createdAt.toISOString(),
-  position_id: quiz.positionId,
+  createdAt: quiz.createdAt.toISOString(),
+  positionId: quiz.positionId,
   positions: quiz.position
     ? {
         id: quiz.position.id,
         title: quiz.position.title,
-        experience_level: quiz.position.experienceLevel,
+        experienceLevel: quiz.position.experienceLevel,
       }
     : null,
-  time_limit: quiz.timeLimit,
+  timeLimit: quiz.timeLimit,
   questions: Array.isArray(quiz.questions)
     ? (quiz.questions as Question[])
     : [],
@@ -209,13 +209,13 @@ export const getQuizData = async (
   const hydratedQuiz = {
     id: quiz.id,
     title: quiz.title,
-    position_id: quiz.positionId,
+    positionId: quiz.positionId,
     questions: Array.isArray(quiz.questions)
       ? (quiz.questions as Question[])
       : [],
-    time_limit: quiz.timeLimit,
-    created_at: quiz.createdAt.toISOString(),
-    created_by: quiz.createdBy,
+    timeLimit: quiz.timeLimit,
+    createdAt: quiz.createdAt.toISOString(),
+    createdBy: quiz.createdBy,
   } as const;
 
   const parsedQuiz = quizSchema.safeParse(hydratedQuiz);
@@ -226,7 +226,7 @@ export const getQuizData = async (
   const position = {
     id: quiz.position.id,
     title: quiz.position.title,
-    experience_level: quiz.position.experienceLevel,
+    experienceLevel: quiz.position.experienceLevel,
     skills: quiz.position.skills,
     description: quiz.position.description,
   };
@@ -244,8 +244,8 @@ export const getQuizzesForPosition = async (
   Array<{
     id: string;
     title: string;
-    created_at: string;
-    time_limit: number | null;
+    createdAt: string;
+    timeLimit: number | null;
     questions: Question[];
   }>
 > => {
@@ -270,8 +270,8 @@ export const getQuizzesForPosition = async (
   return quizzes.map((quiz) => ({
     id: quiz.id,
     title: quiz.title,
-    created_at: quiz.createdAt.toISOString(),
-    time_limit: quiz.timeLimit,
+    createdAt: quiz.createdAt.toISOString(),
+    timeLimit: quiz.timeLimit,
     questions: Array.isArray(quiz.questions)
       ? (quiz.questions as Question[])
       : [],

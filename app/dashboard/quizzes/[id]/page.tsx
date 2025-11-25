@@ -21,7 +21,7 @@ import { QuizDetailActionsClient } from "./quiz-detail-actions-client";
 type Position = {
   id: string;
   title: string;
-  experience_level: string;
+  experienceLevel: string;
 };
 
 export default async function QuizDetailPage({
@@ -70,19 +70,19 @@ async function QuizDetailContent({
   const quiz = {
     id: quizRecord.id,
     title: quizRecord.title,
-    position_id: quizRecord.positionId,
-    time_limit: quizRecord.timeLimit,
+    positionId: quizRecord.positionId,
+    timeLimit: quizRecord.timeLimit,
     questions: Array.isArray(quizRecord.questions)
       ? (quizRecord.questions as Question[])
       : [],
-    created_at: quizRecord.createdAt.toISOString(),
+    createdAt: quizRecord.createdAt.toISOString(),
   };
 
   const position: Position | null = quizRecord.position
     ? {
         id: quizRecord.position.id,
         title: quizRecord.position.title,
-        experience_level: quizRecord.position.experienceLevel,
+        experienceLevel: quizRecord.position.experienceLevel,
       }
     : null;
 
@@ -122,15 +122,15 @@ async function QuizDetailContent({
           <h1 className="font-bold text-3xl">{quiz.title}</h1>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline">{position.title}</Badge>
-            <Badge variant="outline">{position.experience_level}</Badge>
-            {quiz.time_limit && (
+            <Badge variant="outline">{position.experienceLevel}</Badge>
+            {quiz.timeLimit && (
               <Badge variant="secondary">
                 <Clock className="mr-1 w-3 h-3" />
-                {quiz.time_limit} minuti
+                {quiz.timeLimit} minuti
               </Badge>
             )}
             <span className="text-muted-foreground text-sm">
-              Creato il {formatDate(quiz.created_at)}
+              Creato il {formatDate(quiz.createdAt)}
             </span>
           </div>
         </div>
@@ -204,8 +204,8 @@ async function QuizDetailContent({
                 <div>
                   <h3 className="font-medium">Limite di tempo</h3>
                   <p className="text-muted-foreground text-sm">
-                    {quiz.time_limit
-                      ? `${quiz.time_limit} minuti`
+                    {quiz.timeLimit
+                      ? `${quiz.timeLimit} minuti`
                       : "Nessun limite"}
                   </p>
                 </div>
@@ -218,7 +218,7 @@ async function QuizDetailContent({
                 <div>
                   <h3 className="font-medium">Posizione</h3>
                   <p className="text-muted-foreground text-sm">
-                    {position.title} ({position.experience_level})
+                    {position.title} ({position.experienceLevel})
                   </p>
                 </div>
               </div>
