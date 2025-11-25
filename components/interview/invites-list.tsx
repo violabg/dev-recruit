@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { deleteInterview } from "@/lib/actions/interviews";
-import type { AssignedInterview } from "@/lib/types/interview";
+import type { AssignedInterview } from "@/lib/data/interviews";
 import { toast } from "sonner";
 
 interface InvitesListProps {

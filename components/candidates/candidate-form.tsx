@@ -53,15 +53,15 @@ export const CandidateForm = (props: CandidateFormProps) => {
       ? {
           name: props.candidate.name,
           email: props.candidate.email,
-          position_id: props.candidate.positionId,
+          positionId: props.candidate.positionId,
           status: props.candidate.status as any,
-          resume_url: props.candidate.resumeUrl ?? "",
+          resumeUrl: props.candidate.resumeUrl ?? "",
         }
       : {
           name: "",
           email: "",
-          position_id: props.defaultPositionId || props.positions[0]?.id || "",
-          resume_url: "",
+          positionId: props.defaultPositionId || props.positions[0]?.id || "",
+          resumeUrl: "",
         },
   });
 
@@ -71,8 +71,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
       form.reset({
         name: "",
         email: "",
-        position_id: props.defaultPositionId || props.positions[0]?.id || "",
-        resume_url: "",
+        positionId: props.defaultPositionId || props.positions[0]?.id || "",
+        resumeUrl: "",
       });
     }
   }, [isEditMode, props.positions, form]);
@@ -91,8 +91,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
       formData.append("email", values.email);
     }
 
-    if (values.position_id !== undefined) {
-      formData.append("position_id", values.position_id);
+    if (values.positionId !== undefined) {
+      formData.append("positionId", values.positionId);
     }
 
     if (isEditMode) {
@@ -102,8 +102,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
         formData.append("status", updateValues.status);
       }
 
-      if (updateValues.resume_url !== undefined) {
-        formData.append("resume_url", updateValues.resume_url ?? "");
+      if (updateValues.resumeUrl !== undefined) {
+        formData.append("resumeUrl", updateValues.resumeUrl ?? "");
       }
 
       startTransition(async () => {
@@ -129,8 +129,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
 
     startTransition(async () => {
       try {
-        if (createValues.resume_url !== undefined) {
-          formData.append("resume_url", createValues.resume_url ?? "");
+        if (createValues.resumeUrl !== undefined) {
+          formData.append("resumeUrl", createValues.resumeUrl ?? "");
         }
 
         const response = await createCandidate(formData);
@@ -169,7 +169,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
       />
       <SelectField
         control={form.control}
-        name="position_id"
+        name="positionId"
         label="Posizione"
         placeholder="Seleziona posizione"
         options={props.positions.map((position) => ({
@@ -179,7 +179,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
       />
       <InputField
         control={form.control}
-        name="resume_url"
+        name="resumeUrl"
         label="URL curriculum"
         placeholder="https://"
         type="url"

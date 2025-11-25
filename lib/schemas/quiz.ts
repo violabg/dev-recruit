@@ -5,31 +5,21 @@ import { questionSchemas } from "./question";
 // ====================
 // UNIFIED QUIZ SCHEMAS
 // ====================
-// Consolidated quiz schemas eliminating duplication and providing single source of truth
+// Consolidated quiz schemas providing a single source of truth.
+// Schemas are organized by their purpose:
+// - AI Generation: aiQuizGenerationSchema
+// - Form Input: quizFormSchemas (frontend, formData, basic)
+// - API Contracts: quizApiSchemas (generateQuiz, update, save, generateQuestion)
+// - Entity Validation: quizSchema (validates DB entity structure)
 
 // AI Generation schema - only includes fields that the AI should generate
 // This schema excludes backend-managed fields like IDs, timestamps, etc.
 export const aiQuizGenerationSchema = z.object({
   title: baseSchemas.title,
   questions: z.array(questionSchemas.flexible),
-  time_limit: z.number().nullable().optional(),
+  timeLimit: z.number().nullable().optional(),
   difficulty: baseSchemas.difficulty.optional(),
   instructions: baseSchemas.instructions.optional(),
-});
-
-// Core quiz data schema - the single source of truth
-export const quizDataSchema = z.object({
-  id: baseSchemas.id.optional(), // Optional for creation
-  title: baseSchemas.title,
-  position_id: baseSchemas.id,
-  questions: z.array(questionSchemas.flexible),
-  time_limit: baseSchemas.timeLimit,
-  difficulty: baseSchemas.difficulty.optional(),
-  instructions: baseSchemas.instructions,
-  created_at: z.iso.datetime(),
-  updated_at: z.iso.datetime().optional(),
-  created_by: baseSchemas.id,
-  updated_by: baseSchemas.id.optional(),
 });
 
 // Generation configuration - shared across all generation contexts
@@ -64,22 +54,22 @@ export const quizApiSchemas = {
 
   // Quiz update request (unified schema)
   update: z.object({
-    quiz_id: baseSchemas.id,
+    quizId: baseSchemas.id,
     title: baseSchemas.title,
-    time_limit: baseSchemas.timeLimit,
+    timeLimit: baseSchemas.timeLimit,
     questions: z.array(questionSchemas.flexible),
     instructions: baseSchemas.instructions.optional(),
-    updated_by: baseSchemas.id.optional(),
+    updatedBy: baseSchemas.id.optional(),
   }),
 
   // Quiz save request
   save: z.object({
     title: baseSchemas.title,
-    position_id: baseSchemas.id,
+    positionId: baseSchemas.id,
     questions: z
       .array(questionSchemas.flexible)
       .min(1, "At least one question required"),
-    time_limit: baseSchemas.timeLimit,
+    timeLimit: baseSchemas.timeLimit,
     instructions: baseSchemas.instructions.optional(),
   }),
 
@@ -133,17 +123,17 @@ export const quizFormSchemas = {
 
   // FormData schema (server actions) with transformations
   formData: z.object({
-    position_id: baseSchemas.id,
+    positionId: baseSchemas.id,
     title: baseSchemas.title,
-    question_count: formTransformers.coerceInt.pipe(baseSchemas.questionCount),
+    questionCount: formTransformers.coerceInt.pipe(baseSchemas.questionCount),
     difficulty: formTransformers.coerceInt.pipe(baseSchemas.difficulty),
-    include_multiple_choice: formTransformers.stringToBoolean,
-    include_open_questions: formTransformers.stringToBoolean,
-    include_code_snippets: formTransformers.stringToBoolean,
+    includeMultipleChoice: formTransformers.stringToBoolean,
+    includeOpenQuestions: formTransformers.stringToBoolean,
+    includeCodeSnippets: formTransformers.stringToBoolean,
     instructions: z.string().max(2000).optional(),
-    enable_time_limit: formTransformers.stringToBoolean.optional(),
-    time_limit: baseSchemas.timeLimit.optional(),
-    llm_model: z.string().optional(),
+    enableTimeLimit: formTransformers.stringToBoolean.optional(),
+    timeLimit: baseSchemas.timeLimit.optional(),
+    llmModel: z.string().optional(),
   }),
 
   // Simplified quiz form for basic editing
@@ -161,42 +151,16 @@ export const quizFormSchemas = {
   }),
 } as const;
 
-// Database entity schemas
-export const quizEntitySchemas = {
-  // Complete quiz entity from database
-  complete: z.object({
-    id: baseSchemas.id,
-    title: baseSchemas.title,
-    position_id: baseSchemas.id,
-    questions: z.array(questionSchemas.flexible),
-    time_limit: z.number().nullable(),
-    difficulty: baseSchemas.difficulty.optional(),
-    created_at: z.string(),
-    created_by: baseSchemas.id,
-    updated_at: z.string().optional(),
-    updated_by: baseSchemas.id.optional(),
-  }),
-
-  // Minimal quiz for listing
-  summary: z.object({
-    id: baseSchemas.id,
-    title: baseSchemas.title,
-    position_id: baseSchemas.id,
-    difficulty: baseSchemas.difficulty.optional(),
-    created_at: z.string(),
-    question_count: z.int().min(0),
-  }),
-} as const;
+// NOTE: Entity types are defined in lib/data/quizzes.ts as QuizResponse
+// This file contains ONLY validation schemas, not entity definitions.
+// Use Prisma-derived types from the data layer for entity representation.
 
 // Type exports with consistent naming
-export type QuizData = z.infer<typeof quizDataSchema>;
 export type QuizGenerationConfig = z.infer<typeof quizGenerationConfigSchema>;
 export type QuizApiRequest = z.infer<typeof quizApiSchemas.generateQuiz>;
 export type QuizFormData = z.infer<typeof quizFormSchemas.frontend>;
 export type QuizFormDataRaw = z.infer<typeof quizFormSchemas.formData>;
 export type QuizBasicForm = z.infer<typeof quizFormSchemas.basic>;
-export type Quiz = z.infer<typeof quizEntitySchemas.complete>;
-export type QuizSummary = z.infer<typeof quizEntitySchemas.summary>;
 export type AIQuizGeneration = z.infer<typeof aiQuizGenerationSchema>;
 
 // API request types
@@ -207,12 +171,10 @@ export type GenerateQuestionRequest = z.infer<
 export type SaveQuizRequest = z.infer<typeof quizApiSchemas.save>;
 export type UpdateQuizRequest = z.infer<typeof quizApiSchemas.update>;
 
-// Legacy aliases for backward compatibility
-export type QuizForm = Quiz;
+// Legacy alias - prefer importing QuizResponse from @/lib/data/quizzes
 export type GenerateQuizFormData = QuizFormDataRaw;
 
-// Schema exports for direct usage
-export const quizSchema = quizEntitySchemas.complete;
+// Schema exports for direct usage (aliases for cleaner imports)
 export const generateQuizRequestSchema = quizApiSchemas.generateQuiz;
 export const generateQuestionRequestSchema = quizApiSchemas.generateQuestion;
 export const saveQuizRequestSchema = quizApiSchemas.save;

@@ -68,7 +68,7 @@ All data queries in `lib/data/` follow this pattern:
 
 - **AI outputs:** Generated quiz JSON must match the schemas in `lib/schemas` (see `aiQuizGenerationSchema` and `questionSchemas.flexible`). Example enforcement: `aiQuizService.generateQuiz` validates presence of `title` and `questions`.
 - **Language rule:** quiz/question text must be in Italian (system prompts in `lib/services/ai-service.ts`).
-- **Form-server contract:** `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `time_limit`, and `position_id` for creation — see `lib/actions/quizzes.ts` for exact behavior.
+- **Form-server contract:** `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `timeLimit`, and `positionId` for creation — see `lib/actions/quizzes.ts` for exact behavior.
 - **Cache invalidation:** after mutations update cache tags (e.g., `updateTag("quizzes")`) and call helper revalidation (`utils/revalidateQuizCache`) to support both Cache Components and legacy paths.
 - **Validation:** prefer Zod strict parsing in server actions (see `lib/actions/quizzes.ts` usage of `questionSchemas.strict`).
 
@@ -109,7 +109,7 @@ This file gives an agent the minimal, actionable knowledge to be productive in t
 - **Cache-first edits**: Keep Prisma/AI calls inside `'use cache'` or server actions. Wrap runtime APIs (`cookies()`, `headers()`) in Suspense with skeletons for client-visible routes.
 - **Zod validation**: AI and form payloads must match schemas in `lib/schemas/`. Example: `aiQuizGenerationSchema` and `questionSchemas` validate `aiQuizService` outputs.
 - **AI language rule**: quiz content is generated in Italian — prompts and system messages enforce this in `lib/services/ai-service.ts`.
-- **Form contracts**: server action `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `time_limit`, and `position_id` — see `lib/actions/quizzes.ts`.
+- **Form contracts**: server action `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `timeLimit`, and `positionId` — see `lib/actions/quizzes.ts`.
 - **Cache invalidation**: after mutations update cache tags (e.g., `updateTag('quizzes')`) and call `utils/revalidateQuizCache()` when needed.
 - **Styling**: CSS files must use OKLCH color values (see `app/globals.css`). In code, prefer Tailwind v4 utilities and UI primitives in `components/ui/`.
 

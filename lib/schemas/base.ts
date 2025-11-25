@@ -120,13 +120,13 @@ export const commonSchemas = {
   }),
 
   timestamps: z.object({
-    created_at: z.iso.datetime(),
-    updated_at: z.iso.datetime().optional(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime().optional(),
   }),
 
   userReference: z.object({
-    created_by: baseSchemas.id,
-    updated_by: baseSchemas.id.optional(),
+    createdBy: baseSchemas.id,
+    updatedBy: baseSchemas.id.optional(),
   }),
 } as const;
 

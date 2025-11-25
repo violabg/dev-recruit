@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
 
     const stream = await streamPositionDescription({
       title: validated.title,
-      experienceLevel: validated.experience_level,
+      experienceLevel: validated.experienceLevel,
       skills: validated.skills,
-      softSkills: validated.soft_skills,
-      contractType: validated.contract_type,
-      currentDescription: validated.current_description,
+      softSkills: validated.softSkills,
+      contractType: validated.contractType,
+      currentDescription: validated.currentDescription,
     });
 
     return stream.toTextStreamResponse();

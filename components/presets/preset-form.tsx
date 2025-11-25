@@ -17,11 +17,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createPresetAction, updatePresetAction } from "@/lib/actions/presets";
-import {
-  createPresetSchema,
-  type CreatePresetInput,
-  type Preset,
-} from "@/lib/schemas";
+import { type Preset } from "@/lib/data/presets";
+import { createPresetSchema, type CreatePresetInput } from "@/lib/schemas";
 import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";

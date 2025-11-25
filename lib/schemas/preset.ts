@@ -58,14 +58,16 @@ export const presetSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
-// Schema for creating a new preset
+// NOTE: Entity type `Preset` is defined in lib/data/presets.ts (re-exported from Prisma).
+// This file contains ONLY validation schemas for form inputs and API requests.
+
+// Schema for creating a new preset (form validation)
 export const createPresetSchema = presetSchema.omit({ id: true });
 
-// Schema for updating a preset
+// Schema for updating a preset (partial validation)
 export const updatePresetSchema = presetSchema.partial();
 
-// Type exports
-export type Preset = z.infer<typeof presetSchema>;
+// Type exports - validation input types only
 export type CreatePresetInput = z.infer<typeof createPresetSchema>;
 export type UpdatePresetInput = z.infer<typeof updatePresetSchema>;
 

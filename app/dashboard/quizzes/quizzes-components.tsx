@@ -12,8 +12,8 @@ export async function QuizzesStatisticsSection({
 }: {
   quizzes: Quiz[];
   positionCounts: {
-    position_id: string;
-    position_title: string;
+    positionId: string;
+    positionTitle: string;
     count: number;
   }[];
 }) {
@@ -49,8 +49,8 @@ export async function QuizzesStatisticsSection({
           {positionCounts && positionCounts.length > 0 ? (
             <div className="space-y-2">
               {positionCounts.map((item) => (
-                <div key={item.position_id} className="flex justify-between">
-                  <span className="truncate">{item.position_title}</span>
+                <div key={item.positionId} className="flex justify-between">
+                  <span className="truncate">{item.positionTitle}</span>
                   <span className="font-medium">{item.count}</span>
                 </div>
               ))}

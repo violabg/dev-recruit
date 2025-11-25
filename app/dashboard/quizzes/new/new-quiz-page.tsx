@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SaveQuizResult } from "@/hooks/use-edit-quiz-form";
-import { QuizForm } from "@/lib/schemas";
+import { QuizForEdit } from "@/lib/data/quizzes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -18,7 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 export type PositionOption = {
   id: string;
   title: string;
-  experience_level: string;
+  experienceLevel: string;
   skills: string[];
 };
 
@@ -51,7 +51,7 @@ export const NewQuizCreationPage = ({
     );
   }, [fixedPosition, positions, selectedPositionId]);
 
-  const blankQuiz = useMemo<QuizForm | null>(() => {
+  const blankQuiz = useMemo<QuizForEdit | null>(() => {
     if (!selectedPosition) {
       return null;
     }
@@ -59,16 +59,10 @@ export const NewQuizCreationPage = ({
     return {
       id: `new-${selectedPosition.id}`,
       title: "",
-      position_id: selectedPosition.id,
+      positionId: selectedPosition.id,
       questions: [],
-      time_limit: null,
-      difficulty: 3,
-      instructions: "",
-      created_at: new Date().toISOString(),
-      created_by: "",
-      updated_at: undefined,
-      updated_by: undefined,
-    } as QuizForm;
+      timeLimit: null,
+    };
   }, [selectedPosition]);
 
   const availablePositions = fixedPosition ? [fixedPosition] : positions;
@@ -97,7 +91,7 @@ export const NewQuizCreationPage = ({
           <SelectContent>
             {availablePositions.map((position) => (
               <SelectItem key={position.id} value={position.id}>
-                {position.title} ({position.experience_level})
+                {position.title} ({position.experienceLevel})
               </SelectItem>
             ))}
           </SelectContent>

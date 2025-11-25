@@ -36,7 +36,7 @@ async function QuizGeneratorContent({
   const positionOption: PositionOption = {
     id: position.id,
     title: position.title,
-    experience_level: position.experienceLevel,
+    experienceLevel: position.experienceLevel,
     skills: position.skills,
   };
 

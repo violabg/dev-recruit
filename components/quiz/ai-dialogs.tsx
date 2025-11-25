@@ -58,7 +58,6 @@ type AIDialogsProps = {
   position: {
     id: string;
     title: string;
-    experience_level?: string;
     experienceLevel?: string;
     skills: string[];
     description?: string | null;

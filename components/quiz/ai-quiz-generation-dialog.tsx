@@ -18,7 +18,6 @@ import { useRouter } from "next/navigation";
 type DialogPosition = {
   id: string;
   title: string;
-  experience_level?: string;
   experienceLevel?: string;
   skills: string[];
   description?: string | null;
@@ -43,8 +42,7 @@ export const AIQuizGenerationDialog = ({
 }: AIGenerationDialogProps) => {
   const router = useRouter();
 
-  const experienceLabel =
-    position.experienceLevel ?? position.experience_level ?? "—";
+  const experienceLabel = position.experienceLevel ?? "—";
 
   const quizFormPosition: Position = {
     id: position.id,

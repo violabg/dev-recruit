@@ -37,8 +37,8 @@ export default async function Quizes({ id }: { id: string }) {
                       {quiz.questions.length} domande
                     </span>
                     <span className="text-muted-foreground">
-                      {quiz.time_limit
-                        ? `${quiz.time_limit} minuti`
+                      {quiz.timeLimit
+                        ? `${quiz.timeLimit} minuti`
                         : "Nessun limite di tempo"}
                     </span>
                   </div>

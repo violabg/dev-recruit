@@ -1,5 +1,5 @@
 import { PresetsTable } from "@/components/presets/presets-table";
-import type { Preset } from "@/lib/schemas";
+import type { Preset } from "@/lib/data/presets";
 
 type PresetsClientProps = {
   presets: Preset[];

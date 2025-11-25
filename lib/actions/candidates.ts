@@ -49,11 +49,11 @@ export async function createCandidate(formData: FormData) {
   const payload: CandidateFormData = candidateFormSchema.parse({
     name: readFormValue(formData, "name"),
     email: readFormValue(formData, "email"),
-    position_id: readFormValue(formData, "position_id"),
+    positionId: readFormValue(formData, "positionId"),
   });
 
   const position = await prisma.position.findUnique({
-    where: { id: payload.position_id },
+    where: { id: payload.positionId },
     select: { id: true, createdBy: true },
   });
 
@@ -89,9 +89,9 @@ export async function updateCandidate(
   const rawPayload = {
     name: readFormValue(formData, "name"),
     email: readFormValue(formData, "email"),
-    position_id: readFormValue(formData, "position_id"),
+    positionId: readFormValue(formData, "positionId"),
     status: readFormValue(formData, "status"),
-    resume_url: readFormValue(formData, "resume_url"),
+    resumeUrl: readFormValue(formData, "resumeUrl"),
   };
 
   const payload: CandidateUpdateData = candidateUpdateSchema.parse(rawPayload);
@@ -117,13 +117,13 @@ export async function updateCandidate(
     updateData.status = payload.status;
   }
 
-  if (payload.resume_url !== undefined) {
-    updateData.resumeUrl = sanitizeResumeUrl(payload.resume_url);
+  if (payload.resumeUrl !== undefined) {
+    updateData.resumeUrl = sanitizeResumeUrl(payload.resumeUrl);
   }
 
-  if (payload.position_id) {
+  if (payload.positionId) {
     const position = await prisma.position.findUnique({
-      where: { id: payload.position_id },
+      where: { id: payload.positionId },
       select: { id: true, createdBy: true },
     });
 

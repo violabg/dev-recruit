@@ -1,22 +1,16 @@
 "use server";
-
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { convertToStrictQuestions, questionSchemas } from "../schemas";
+import { aiQuizService, GenerateQuestionParams } from "../services/ai-service";
+import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
 import {
-  AIGenerationError,
-  aiQuizService,
-  GenerateQuestionParams,
-} from "../services/ai-service";
-import {
-  errorHandler,
-  getUserFriendlyErrorMessage,
-  QuizErrorCode,
-  QuizSystemError,
-} from "../services/error-handler";
+  handleActionError,
+  isRedirectError,
+} from "../utils/action-error-handler";
 import { revalidateQuizCache } from "../utils/cache";
 
 // Note: performance monitoring removed — keep simple debug logs instead
@@ -95,24 +89,12 @@ export async function generateNewQuizAction({
     console.debug("generateNewQuizAction completed");
     return quizData;
   } catch (error) {
-    console.debug("generateNewQuizAction failed");
-
-    // Enhanced error handling
-    if (
-      error instanceof QuizSystemError ||
-      error instanceof AIGenerationError
-    ) {
-      throw error;
-    }
-
-    try {
-      await errorHandler.handleError(error, {
-        operation: "generateNewQuizAction",
-        positionId,
-      });
-    } catch {
-      throw new Error("AI generation failed. Please try again.");
-    }
+    handleActionError(error, {
+      operation: "generateNewQuizAction",
+      context: { positionId },
+      fallbackMessage: "AI generation failed. Please try again.",
+      rethrowKnownErrors: true,
+    });
   }
 }
 
@@ -131,25 +113,7 @@ export async function generateNewQuestionAction(
     console.debug("generateNewQuestionAction completed");
     return validatedQuestion;
   } catch (error) {
-    console.debug("generateNewQuestionAction failed");
-
-    // Enhanced error handling
-    if (
-      error instanceof QuizSystemError ||
-      error instanceof AIGenerationError
-    ) {
-      throw error;
-    }
-
-    try {
-      await errorHandler.handleError(error, {
-        operation: "generateNewQuestionAction",
-        questionType: params.type,
-      });
-    } catch {
-      // If error handling fails, continue with original error
-    }
-
+    // Handle Zod validation errors specially
     if (error instanceof z.ZodError) {
       console.error("Question validation failed:", error.issues);
       throw new QuizSystemError(
@@ -157,10 +121,14 @@ export async function generateNewQuestionAction(
         QuizErrorCode.INVALID_INPUT,
         { zodErrors: error.issues }
       );
-    } else {
-      console.error("Unknown error in generateNewQuestionAction:", error);
-      throw new Error("Question generation failed. Please try again.");
     }
+
+    handleActionError(error, {
+      operation: "generateNewQuestionAction",
+      context: { questionType: params.type },
+      fallbackMessage: "Question generation failed. Please try again.",
+      rethrowKnownErrors: true,
+    });
   }
 }
 
@@ -168,7 +136,7 @@ export async function deleteQuiz(formData: FormData) {
   console.debug("deleteQuiz started");
 
   try {
-    const quizId = formData.get("quiz_id") as string;
+    const quizId = formData.get("quizId") as string;
 
     if (!quizId) {
       throw new QuizSystemError(
@@ -208,36 +176,27 @@ export async function deleteQuiz(formData: FormData) {
     console.debug("deleteQuiz completed");
     redirect("/dashboard/quizzes");
   } catch (error) {
-    console.debug("deleteQuiz failed");
-
-    // Check if this is a redirect (Next.js throws special errors for redirects)
-    if (error && typeof error === "object" && "digest" in error) {
-      throw error; // Re-throw redirect responses
+    // Re-throw redirect responses (Next.js uses special errors for redirects)
+    if (isRedirectError(error)) {
+      throw error;
     }
 
-    if (error instanceof QuizSystemError) {
-      throw new Error(getUserFriendlyErrorMessage(error));
-    }
-
-    try {
-      await errorHandler.handleError(error, {
-        operation: "deleteQuiz",
-      });
-    } catch {
-      throw new Error("Quiz deletion failed. Please try again.");
-    }
+    handleActionError(error, {
+      operation: "deleteQuiz",
+      fallbackMessage: "Quiz deletion failed. Please try again.",
+    });
   }
 }
 
 /**
  * Unified action for creating or updating a quiz.
- * Auto-detects operation based on presence of quiz_id in FormData.
+ * Auto-detects operation based on presence of quizId in FormData.
  * FormData expects:
  * - title: string (required)
  * - questions: JSON stringified array (required)
- * - time_limit?: string (optional)
- * - quiz_id?: string (if provided, updates; otherwise creates)
- * - position_id?: string (required for create, ignored for update)
+ * - timeLimit?: string (optional)
+ * - quizId?: string (if provided, updates; otherwise creates)
+ * - positionId?: string (required for create, ignored for update)
  */
 export async function upsertQuizAction(formData: FormData) {
   console.debug("upsertQuizAction started");
@@ -246,10 +205,10 @@ export async function upsertQuizAction(formData: FormData) {
     const user = await requireUser();
 
     // Parse form data
-    const quizId = formData.get("quiz_id") as string | null;
+    const quizId = formData.get("quizId") as string | null;
     const title = formData.get("title") as string;
     const questionsRaw = formData.get("questions") as string;
-    const timeLimitRaw = formData.get("time_limit") as string;
+    const timeLimitRaw = formData.get("timeLimit") as string;
 
     const isCreate = !quizId;
 
@@ -297,7 +256,7 @@ export async function upsertQuizAction(formData: FormData) {
 
     if (isCreate) {
       // CREATE MODE
-      const positionId = formData.get("position_id") as string;
+      const positionId = formData.get("positionId") as string;
 
       if (!positionId) {
         throw new QuizSystemError(
@@ -398,19 +357,10 @@ export async function upsertQuizAction(formData: FormData) {
       return {};
     }
   } catch (error) {
-    console.debug("upsertQuizAction failed");
-
-    if (error instanceof QuizSystemError) {
-      throw new Error(getUserFriendlyErrorMessage(error));
-    }
-
-    try {
-      await errorHandler.handleError(error, {
-        operation: "upsertQuizAction",
-      });
-    } catch {
-      throw new Error("Quiz operation failed. Please try again.");
-    }
+    handleActionError(error, {
+      operation: "upsertQuizAction",
+      fallbackMessage: "Quiz operation failed. Please try again.",
+    });
   }
 }
 
@@ -548,24 +498,12 @@ export async function regenerateQuizAction({
     console.debug("regenerateQuizAction completed");
     return { id: quizId };
   } catch (error) {
-    console.debug("regenerateQuizAction failed");
-
-    // Enhanced error handling
-    if (
-      error instanceof QuizSystemError ||
-      error instanceof AIGenerationError
-    ) {
-      throw error;
-    }
-
-    try {
-      await errorHandler.handleError(error, {
-        operation: "regenerateQuizAction",
-        quizId,
-      });
-    } catch {
-      throw new Error("Quiz regeneration failed. Please try again.");
-    }
+    handleActionError(error, {
+      operation: "regenerateQuizAction",
+      context: { quizId },
+      fallbackMessage: "Quiz regeneration failed. Please try again.",
+      rethrowKnownErrors: true,
+    });
   }
 }
 
@@ -581,9 +519,9 @@ export async function duplicateQuizAction(formData: FormData) {
     const user = await requireUser();
 
     // Parse form data
-    const quizId = formData.get("quiz_id") as string;
-    const newPositionId = formData.get("new_position_id") as string;
-    const newTitle = formData.get("new_title") as string;
+    const quizId = formData.get("quizId") as string;
+    const newPositionId = formData.get("newPositionId") as string;
+    const newTitle = formData.get("newTitle") as string;
 
     if (!quizId || !newPositionId || !newTitle) {
       throw new QuizSystemError(
@@ -655,19 +593,10 @@ export async function duplicateQuizAction(formData: FormData) {
     console.debug("duplicateQuizAction completed");
     return { id: newQuiz.id };
   } catch (error) {
-    console.debug("duplicateQuizAction failed");
-
-    if (error instanceof QuizSystemError) {
-      throw new Error(getUserFriendlyErrorMessage(error));
-    }
-
-    try {
-      await errorHandler.handleError(error, {
-        operation: "duplicateQuizAction",
-        quizId: (formData.get("quiz_id") as string) || undefined,
-      });
-    } catch {
-      throw new Error("Quiz duplication failed. Please try again.");
-    }
+    handleActionError(error, {
+      operation: "duplicateQuizAction",
+      context: { quizId: (formData.get("quizId") as string) || undefined },
+      fallbackMessage: "Quiz duplication failed. Please try again.",
+    });
   }
 }
