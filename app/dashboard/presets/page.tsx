@@ -2,14 +2,36 @@ import { PresetsClient } from "@/components/presets/presets-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DEFAULT_PAGE_SIZE,
+  UrlPagination,
+} from "@/components/ui/url-pagination";
 import { getPresetsAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { SearchPresets } from "./search-presets";
 
-async function PresetsContent() {
-  const result = await getPresetsAction();
+type PresetsSearchParams = Promise<{
+  search?: string;
+  page?: string;
+}>;
+
+async function PresetsContent({
+  searchParams,
+}: {
+  searchParams: PresetsSearchParams;
+}) {
+  const params = await searchParams;
+  const search = params.search?.trim();
+  const page = Math.max(1, Math.floor(Number(params.page)) || 1);
+
+  const result = await getPresetsAction({
+    search,
+    page,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
 
   if (!result.success) {
     return (
@@ -19,10 +41,61 @@ async function PresetsContent() {
     );
   }
 
-  return <PresetsClient presets={result.presets as Preset[]} />;
+  const {
+    presets,
+    totalCount,
+    currentPage,
+    totalPages,
+    hasNextPage,
+    hasPrevPage,
+  } = result;
+
+  return (
+    <div className="space-y-4">
+      <SearchPresets defaultValue={search} />
+      {presets.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col justify-center items-center py-12">
+            <p className="text-muted-foreground">
+              {search
+                ? `Nessun preset trovato per "${search}"`
+                : "Nessun preset ancora. Crea il tuo primo preset!"}
+            </p>
+            {!search && (
+              <Button asChild variant="default" size="sm" className="mt-4">
+                <Link href="/dashboard/presets/new">
+                  <Plus className="mr-1 w-4 h-4" />
+                  Nuovo preset
+                </Link>
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <PresetsClient presets={presets as Preset[]} />
+          <UrlPagination
+            pagination={{
+              currentPage,
+              totalPages,
+              totalCount,
+              hasNextPage,
+              hasPrevPage,
+            }}
+            itemLabel="preset"
+            itemLabelPlural="preset"
+          />
+        </>
+      )}
+    </div>
+  );
 }
 
-export default async function PresetsPage() {
+export default async function PresetsPage({
+  searchParams,
+}: {
+  searchParams: PresetsSearchParams;
+}) {
   return (
     <div className="space-y-6 w-full">
       <div className="flex flex-wrap items-center gap-2 w-full">
@@ -52,7 +125,7 @@ export default async function PresetsPage() {
           </Card>
         }
       >
-        <PresetsContent />
+        <PresetsContent searchParams={searchParams} />
       </Suspense>
     </div>
   );

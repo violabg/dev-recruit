@@ -13,9 +13,10 @@ import {
   ClockFading,
   Loader2,
   Search as SearchIcon,
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "../ui/button";
@@ -47,6 +48,7 @@ export const SearchAndFilterCandidates = ({
   positions,
 }: SearchAndFilterCandidatesProps) => {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
   const [inputValue, setInputValue] = useState(
@@ -54,54 +56,58 @@ export const SearchAndFilterCandidates = ({
   );
 
   const handleSearch = useDebouncedCallback((term: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", "1");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
     if (term) {
       params.set("search", term);
     } else {
       params.delete("search");
     }
     startTransition(() => {
-      replace(`/dashboard/candidates?${params.toString()}`);
+      const queryString = params.toString();
+      replace(queryString ? `${pathname}?${queryString}` : pathname);
     });
   }, 800);
 
   const handleStatus = (value: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", "1");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
     if (value && value !== "all") {
       params.set("status", value);
     } else {
       params.delete("status");
     }
     startTransition(() => {
-      replace(`/dashboard/candidates?${params.toString()}`);
+      const queryString = params.toString();
+      replace(queryString ? `${pathname}?${queryString}` : pathname);
     });
   };
 
   const handlePosition = (value: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", "1");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
     if (value && value !== "all") {
       params.set("position", value);
     } else {
       params.delete("position");
     }
     startTransition(() => {
-      replace(`/dashboard/candidates?${params.toString()}`);
+      const queryString = params.toString();
+      replace(queryString ? `${pathname}?${queryString}` : pathname);
     });
   };
 
   const handleSort = (value: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", "1");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
     if (value) {
       params.set("sort", value);
     } else {
       params.delete("sort");
     }
     startTransition(() => {
-      replace(`/dashboard/candidates?${params.toString()}`);
+      const queryString = params.toString();
+      replace(queryString ? `${pathname}?${queryString}` : pathname);
     });
   };
 
@@ -113,6 +119,12 @@ export const SearchAndFilterCandidates = ({
   const currentStatus = searchParams.get("status") || "all";
   const currentPosition = searchParams.get("position") || "all";
   const currentSort = searchParams.get("sort") || "newest";
+
+  const hasActiveFilters =
+    currentSearch ||
+    currentStatus !== "all" ||
+    currentPosition !== "all" ||
+    currentSort !== "newest";
 
   return (
     <div className="@container">
@@ -190,12 +202,12 @@ export const SearchAndFilterCandidates = ({
             <SelectItem value="status">Stato</SelectItem>
           </SelectContent>
         </Select>
-        {(currentSearch ||
-          currentStatus !== "all" ||
-          currentPosition !== "all" ||
-          currentSort !== "newest") && (
+        {hasActiveFilters && (
           <Button variant="outlineDestructive" asChild disabled={isPending}>
-            <Link href="/dashboard/candidates">Resetta</Link>
+            <Link href={pathname}>
+              <X className="mr-1 size-4" />
+              Reset
+            </Link>
           </Button>
         )}
       </div>

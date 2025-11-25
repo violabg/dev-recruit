@@ -32,7 +32,7 @@ export function ForgotPasswordForm({
   const handleForgotPassword = async (values: ForgotPasswordFormData) => {
     startTransition(async () => {
       try {
-        const result = await authClient.forgetPassword({
+        const result = await authClient.requestPasswordReset({
           email: values.email,
           redirectTo: `${window.location.origin}/auth/update-password`,
         });

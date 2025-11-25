@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { DEFAULT_PAGE_SIZE } from "@/components/ui/url-pagination";
 import { FiltersSkeleton, QuizListSkeleton } from "./fallbacks";
 import { QuizFiltersSection } from "./quiz-filters-section";
 import { QuizListSection } from "./quiz-list-section";
@@ -70,7 +71,7 @@ export const normalizeSearchParams = (params: {
   positionId: params.positionId?.trim() || "all",
   view: normalizeView(params.view),
   page: normalizePageValue(params.page, 1),
-  pageSize: normalizePageValue(params.pageSize, 15),
+  pageSize: normalizePageValue(params.pageSize, DEFAULT_PAGE_SIZE),
 });
 
 export type NormalizedQuizzesParams = ReturnType<typeof normalizeSearchParams>;

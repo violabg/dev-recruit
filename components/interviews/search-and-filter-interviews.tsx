@@ -10,7 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Briefcase, ClockFading, Code, Loader2, Search, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -38,6 +39,7 @@ export function SearchAndFilterInterviews({
   initialLanguage,
 }: SearchAndFilterInterviewsProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
@@ -47,14 +49,17 @@ export function SearchAndFilterInterviews({
   const [language, setLanguage] = useState(initialLanguage);
 
   const handleSearch = useDebouncedCallback((term: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
+    // Reset to page 1 when searching
+    params.delete("page");
     if (term) {
       params.set("search", term);
     } else {
       params.delete("search");
     }
     startTransition(() => {
-      router.replace(`/dashboard/interviews?${params.toString()}`);
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname);
     });
   }, 800);
 
@@ -74,26 +79,18 @@ export function SearchAndFilterInterviews({
       params.delete("page");
 
       startTransition(() => {
-        router.replace(`/dashboard/interviews?${params.toString()}`);
+        const queryString = params.toString();
+        router.replace(queryString ? `${pathname}?${queryString}` : pathname);
       });
     },
-    [router, searchParams]
+    [router, pathname, searchParams]
   );
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateFilters({ search, status, position, language });
-  };
 
   const clearAllFilters = () => {
     setSearch("");
     setStatus("all");
     setPosition("all");
     setLanguage("all");
-
-    startTransition(() => {
-      router.replace("/dashboard/interviews");
-    });
   };
 
   const hasActiveFilters =
@@ -187,9 +184,12 @@ export function SearchAndFilterInterviews({
           variant="outlineDestructive"
           onClick={clearAllFilters}
           disabled={isPending}
+          asChild
         >
-          <X className="mr-2 size-4" />
-          Reset
+          <Link href={pathname}>
+            <X className="mr-2 size-4" />
+            Reset
+          </Link>
         </Button>
       )}
     </div>

@@ -100,7 +100,6 @@ export async function withRetry<T>(
       if (attempt < config.maxRetries) {
         // Exponential backoff: 1s, 2s, 4s
         const delay = config.retryDelay * Math.pow(2, attempt);
-        console.log(`Retry attempt ${attempt + 1} after ${delay}ms`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
@@ -712,13 +711,9 @@ export class AIQuizService {
   async generateQuiz(
     params: GenerateQuizParams
   ): Promise<{ questions: Question[] }> {
-    const startTime = performance.now();
-
     try {
       const model = getOptimalModel("quiz_generation", params.specificModel);
       const prompt = this.buildQuizPrompt(params);
-
-      console.log(`Starting quiz generation with model: ${model}`);
 
       const result = await withTimeout(
         withRetry(async () => {
@@ -764,26 +759,16 @@ export class AIQuizService {
         this.config.timeout
       );
 
-      const duration = performance.now() - startTime;
-      console.log(`Quiz generation completed in ${duration.toFixed(2)}ms`);
-
       return {
         questions: convertToStrictQuestions(result.questions),
       };
     } catch (error) {
-      const duration = performance.now() - startTime;
-      console.error(
-        `Quiz generation failed after ${duration.toFixed(2)}ms:`,
-        error
-      );
-
       if (error instanceof AIGenerationError) {
         throw error;
       }
 
       // Try fallback models if available
       if (params.specificModel && this.config.fallbackModels.length > 0) {
-        console.log("Attempting fallback models...");
         for (const fallbackModel of this.config.fallbackModels) {
           if (fallbackModel !== params.specificModel) {
             try {
@@ -792,7 +777,6 @@ export class AIQuizService {
                 specificModel: fallbackModel,
               });
             } catch {
-              console.log(`Fallback model ${fallbackModel} also failed`);
               continue;
             }
           }
@@ -810,8 +794,6 @@ export class AIQuizService {
   }
 
   async generateQuestion(params: GenerateQuestionParams): Promise<Question> {
-    const startTime = performance.now();
-
     try {
       const model = getOptimalModel(
         "question_generation",
@@ -861,9 +843,6 @@ export class AIQuizService {
         this.config.timeout
       );
 
-      const duration = performance.now() - startTime;
-      console.log(`Question generation completed in ${duration.toFixed(2)}ms`);
-
       // Convert the single question result to strict type
       if (!result || !result.question) {
         throw new AIGenerationError(
@@ -876,19 +855,12 @@ export class AIQuizService {
       const strictQuestions = convertToStrictQuestions([result]);
       return strictQuestions[0];
     } catch (error) {
-      const duration = performance.now() - startTime;
-      console.error(
-        `Question generation failed after ${duration.toFixed(2)}ms:`,
-        error
-      );
-
       if (error instanceof AIGenerationError) {
         throw error;
       }
 
       // Try fallback models if available
       if (params.specificModel && this.config.fallbackModels.length > 0) {
-        console.log("Attempting fallback models...");
         for (const fallbackModel of this.config.fallbackModels) {
           if (fallbackModel !== params.specificModel) {
             try {
@@ -897,7 +869,6 @@ export class AIQuizService {
                 specificModel: fallbackModel,
               });
             } catch {
-              console.log(`Fallback model ${fallbackModel} also failed`);
               continue;
             }
           }
@@ -983,7 +954,6 @@ export async function streamPositionDescription(
 
     return result;
   } catch (error) {
-    console.error("Stream position description failed:", error);
     throw new AIGenerationError(
       "Failed to stream position description",
       AIErrorCode.GENERATION_FAILED,

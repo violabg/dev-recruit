@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getInterviewsByQuiz } from "@/lib/data/interviews";
-import { getPositions } from "@/lib/data/positions";
+import { getAllPositions } from "@/lib/data/positions";
 import prisma from "@/lib/prisma";
 import { Question } from "@/lib/schemas";
 import { formatDate } from "@/lib/utils";
@@ -98,7 +98,7 @@ async function QuizDetailContent({
   }
 
   // Fetch all positions for duplicate dialog, excluding current position
-  const allPositions = await getPositions();
+  const allPositions = await getAllPositions();
   const positionsForDialog = allPositions
     .filter((pos) => pos.id !== position.id)
     .map((pos) => ({

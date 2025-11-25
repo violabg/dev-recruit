@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth-server";
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { mapQuizFromPrisma, Quiz } from "@/lib/data/quizzes";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
@@ -648,7 +649,7 @@ export async function getFilteredInterviews(filters: {
   positionId?: string;
   programmingLanguage?: string;
   page?: number;
-  limit?: number;
+  pageSize?: number;
 }) {
   "use cache";
   cacheLife("hours");
@@ -660,11 +661,13 @@ export async function getFilteredInterviews(filters: {
     positionId = "all",
     programmingLanguage = "all",
     page = 1,
-    limit = 10,
+    pageSize = DEFAULT_PAGE_SIZE,
   } = filters;
 
-  const normalizedPage = Math.max(page ?? 1, 1);
-  const normalizedLimit = Math.max(limit ?? 10, 1);
+  // Avoid Math.max() which calls .valueOf() and fails with temporary client references
+  const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
+  const normalizedPageSize =
+    typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
   const searchTerm = search.trim();
 
   const whereClauses: Prisma.InterviewWhereInput[] = [
@@ -768,8 +771,8 @@ export async function getFilteredInterviews(filters: {
     orderBy: {
       createdAt: "desc",
     },
-    skip: (normalizedPage - 1) * normalizedLimit,
-    take: normalizedLimit,
+    skip: (normalizedPage - 1) * normalizedPageSize,
+    take: normalizedPageSize,
   });
 
   const interviews = interviewRecords.map(mapInterviewListItem);
@@ -783,7 +786,7 @@ export async function getFilteredInterviews(filters: {
   );
 
   const totalCount = await prisma.interview.count({ where });
-  const totalPages = Math.max(1, Math.ceil(totalCount / normalizedLimit));
+  const totalPages = Math.max(1, Math.ceil(totalCount / normalizedPageSize));
 
   const positions = await prisma.position.findMany({
     select: {

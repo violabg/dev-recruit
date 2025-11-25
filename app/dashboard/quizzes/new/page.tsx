@@ -1,4 +1,4 @@
-import { getPositions } from "@/lib/data/positions";
+import { getAllPositions } from "@/lib/data/positions";
 import type { Position } from "@/lib/prisma/client";
 import { Suspense } from "react";
 import { NewQuizCreationPage, PositionOption } from "./new-quiz-page";
@@ -10,7 +10,7 @@ const positionsLoaderFallback = (
 );
 
 export default function NewQuizPage() {
-  const positionsPromise = getPositions();
+  const positionsPromise = getAllPositions();
 
   return (
     <div className="space-y-6">

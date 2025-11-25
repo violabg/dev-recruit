@@ -2,9 +2,16 @@
 
 import { updateTag } from "next/cache";
 import prisma from "../prisma";
+import { Prisma } from "../prisma/client";
+
+// Type for preset seed data (subset of PresetCreateInput)
+type PresetSeedData = Omit<
+  Prisma.PresetCreateInput,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 // Preset data to seed
-export const DEFAULT_PRESETS = [
+export const DEFAULT_PRESETS: PresetSeedData[] = [
   // Frontend Presets
   {
     name: "react-hooks",
@@ -147,7 +154,7 @@ export async function seedDefaultPresetsAction() {
     const created = await Promise.all(
       DEFAULT_PRESETS.map((preset) =>
         prisma.preset.create({
-          data: preset as any,
+          data: preset,
         })
       )
     );

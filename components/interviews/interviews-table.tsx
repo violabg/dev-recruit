@@ -16,25 +16,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { InterviewListItem } from "@/lib/data/interviews";
-import {
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Copy,
-  MessageSquare,
-  XCircle,
-} from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle, Clock, Copy, MessageSquare, XCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 type InterviewsTableProps = {
   interviews: InterviewListItem[];
-  currentPage: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
 };
 
 // Status configuration for badges and icons
@@ -65,15 +53,8 @@ const statusConfig = {
   },
 };
 
-export function InterviewsTable({
-  interviews,
-  currentPage,
-  totalPages,
-  hasNextPage,
-  hasPrevPage,
-}: InterviewsTableProps) {
+export function InterviewsTable({ interviews }: InterviewsTableProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const copyInterviewLink = async (token: string) => {
@@ -89,12 +70,6 @@ export function InterviewsTable({
     } catch {
       toast.error("Errore nel copiare il link");
     }
-  };
-
-  const navigateToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-    router.push(`/dashboard/interviews?${params.toString()}`);
   };
 
   return (
@@ -225,35 +200,6 @@ export function InterviewsTable({
           </TableBody>
         </Table>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center">
-          <div className="text-muted-foreground text-sm">
-            Pagina {currentPage} di {totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateToPage(currentPage - 1)}
-              disabled={!hasPrevPage}
-            >
-              <ChevronLeft className="size-4" />
-              Precedente
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateToPage(currentPage + 1)}
-              disabled={!hasNextPage}
-            >
-              Successiva
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

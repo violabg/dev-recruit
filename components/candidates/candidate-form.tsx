@@ -54,7 +54,12 @@ export const CandidateForm = (props: CandidateFormProps) => {
           name: props.candidate.name,
           email: props.candidate.email,
           positionId: props.candidate.positionId,
-          status: props.candidate.status as any,
+          status: props.candidate.status as
+            | "pending"
+            | "contacted"
+            | "interviewing"
+            | "hired"
+            | "rejected",
           resumeUrl: props.candidate.resumeUrl ?? "",
         }
       : {

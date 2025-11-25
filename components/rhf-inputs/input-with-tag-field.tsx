@@ -25,12 +25,10 @@ export function InputWithTagField<T extends FieldValues>({
       {({ field }) => (
         <InputWithTags
           id={field.name}
-          // the TagInput component expects an array of tags; we store it on the form field
-          // keep compatibility: if value is undefined, pass []
-          // when TagInput calls setTags, we forward to field.onChange
-          // Tag type is not strictly typed here; we keep it as any for form storage
-          value={(field.value as any) || []}
-          onChange={(newTags: any) => field.onChange(newTags)}
+          // The TagInput component expects an array of tags
+          // Ensure we always pass an array, defaulting to empty if undefined
+          value={(field.value as string[] | undefined) || []}
+          onChange={(newTags: string[]) => field.onChange(newTags)}
         />
       )}
     </BaseController>

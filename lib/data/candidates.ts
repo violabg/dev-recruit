@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { cacheLife, cacheTag } from "next/cache";
@@ -48,10 +49,21 @@ const CANDIDATE_INCLUDE = {
 } as const;
 
 export type FetchCandidatesParams = {
-  search: string;
-  status: string;
-  positionId: string;
-  sort: string;
+  search?: string;
+  status?: string;
+  positionId?: string;
+  sort?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type PaginatedCandidates = {
+  candidates: CandidateWithRelations[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 };
 
 const ORDER_BY_MAP: Record<string, Prisma.CandidateOrderByWithRelationInput> = {
@@ -123,23 +135,50 @@ export async function getCandidatePositions() {
   });
 }
 
-export async function getFilteredCandidates({
-  search,
-  status,
-  positionId,
-  sort,
-}: FetchCandidatesParams) {
+export async function getFilteredCandidates(
+  params?: FetchCandidatesParams
+): Promise<PaginatedCandidates> {
   "use cache";
   cacheLife("hours");
   cacheTag("candidates");
 
-  const candidates = await prisma.candidate.findMany({
-    where: buildCandidateWhere({ search, status, positionId }),
-    orderBy: ORDER_BY_MAP[sort] ?? ORDER_BY_MAP.newest,
-    include: CANDIDATE_INCLUDE,
-  });
+  const {
+    search = "",
+    status = "all",
+    positionId = "all",
+    sort = "newest",
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+  } = params ?? {};
 
-  return candidates;
+  // Ensure page and pageSize are valid positive numbers
+  const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
+  const normalizedPageSize =
+    typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
+  const where = buildCandidateWhere({ search, status, positionId });
+
+  const [candidates, totalCount] = await Promise.all([
+    prisma.candidate.findMany({
+      where,
+      orderBy: ORDER_BY_MAP[sort] ?? ORDER_BY_MAP.newest,
+      include: CANDIDATE_INCLUDE,
+      skip: (normalizedPage - 1) * normalizedPageSize,
+      take: normalizedPageSize,
+    }),
+    prisma.candidate.count({ where }),
+  ]);
+
+  const totalPages =
+    totalCount > 0 ? Math.ceil(totalCount / normalizedPageSize) : 1;
+
+  return {
+    candidates,
+    totalCount,
+    currentPage: normalizedPage,
+    totalPages,
+    hasNextPage: normalizedPage < totalPages,
+    hasPrevPage: normalizedPage > 1,
+  };
 }
 
 export const getCandidatesByPosition = async (positionId: string) => {

@@ -92,7 +92,6 @@ export function InterviewQuestion({
           stream.getTracks().forEach((track) => track.stop());
 
           const audioBlob = new Blob(chunks, { type: "audio/webm" });
-          console.log("🚀 ~ audioBlob size:", audioBlob.size);
 
           // Convert Blob to Uint8Array for server action
           const arrayBuffer = await audioBlob.arrayBuffer();
@@ -104,12 +103,9 @@ export function InterviewQuestion({
             const result = await transcribeAudioAction(audioArray);
             if (result.success && result.text) {
               setAnswer(result.text);
-            } else {
-              console.error("Trascrizione fallita:", result.error);
             }
-          } catch (err) {
-            console.log("🚀 ~ errore registrazione:", err);
-            // Gestione errore opzionale
+          } catch {
+            // Transcription error is handled silently - user sees no transcription text
           }
         });
       };

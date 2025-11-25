@@ -1,14 +1,14 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { Button } from "../ui/button";
 
-export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
+export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -22,9 +22,9 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
     params.delete("page");
 
     if (term) {
-      params.set("q", term);
+      params.set("search", term);
     } else {
-      params.delete("q");
+      params.delete("search");
     }
 
     startTransition(() => {
@@ -35,10 +35,10 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
 
   // Sync input value with URL params
   useEffect(() => {
-    setInputValue(searchParams.get("q") || "");
+    setInputValue(searchParams.get("search") || "");
   }, [searchParams]);
 
-  const hasFilters = searchParams.get("q");
+  const hasFilters = searchParams.get("search");
 
   return (
     <div className="flex flex-1 gap-2">
@@ -50,7 +50,7 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
         )}
         <Input
           type="search"
-          placeholder="Cerca posizioni..."
+          placeholder="Cerca preset per nome, etichetta o tag..."
           className="pl-8"
           value={inputValue}
           onChange={(e) => {

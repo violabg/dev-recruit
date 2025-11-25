@@ -5,8 +5,17 @@ import { Suspense } from "react";
 import {
   CandidatesRuntimeFallback,
   CandidatesRuntimeSection,
-  type CandidatesSearchParams,
 } from "./runtime-section";
+
+export type CandidatesSearchParams = Promise<{
+  search?: string;
+  status?: string;
+  position?: string;
+  sort?: string;
+  view?: string;
+  page?: string;
+  pageSize?: string;
+}>;
 
 export default async function CandidatesPage({
   searchParams,

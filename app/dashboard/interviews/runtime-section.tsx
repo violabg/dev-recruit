@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import type { ComponentType, SVGProps } from "react";
 
 import { InterviewsTable } from "@/components/interviews/interviews-table";
@@ -10,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { UrlPagination } from "@/components/ui/url-pagination";
 import { getInterviews } from "@/lib/actions/interviews";
 import { CheckCircle, Clock, MessageSquare, XCircle } from "lucide-react";
 
@@ -97,7 +99,7 @@ export const InterviewsRuntimeSection = async ({
     positionId,
     programmingLanguage,
     page,
-    limit: 10,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
 
   return (
@@ -155,9 +157,6 @@ export const InterviewsRuntimeSection = async ({
             <Badge variant="outline">{programmingLanguage}</Badge>
           )}
         </div>
-        <div className="text-muted-foreground text-sm">
-          Pagina {currentPage} di {totalPages}
-        </div>
       </div>
 
       <Card>
@@ -168,13 +167,18 @@ export const InterviewsRuntimeSection = async ({
             i link di invito
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-4">
-          <InterviewsTable
-            interviews={interviews}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            hasNextPage={hasNextPage}
-            hasPrevPage={hasPrevPage}
+        <CardContent className="space-y-4 px-4">
+          <InterviewsTable interviews={interviews} />
+          <UrlPagination
+            pagination={{
+              currentPage,
+              totalPages,
+              totalCount,
+              hasNextPage,
+              hasPrevPage,
+            }}
+            itemLabel="colloquio"
+            itemLabelPlural="colloqui"
           />
         </CardContent>
       </Card>

@@ -19,7 +19,7 @@ export async function getInterviews(
     positionId?: string;
     programmingLanguage?: string;
     page?: number;
-    limit?: number;
+    pageSize?: number;
   } = {}
 ) {
   return getFilteredInterviews(filters);

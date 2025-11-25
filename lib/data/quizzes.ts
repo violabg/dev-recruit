@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { Question } from "@/lib/schemas";
@@ -70,6 +71,20 @@ export type PositionDetails = {
 // Backward compatibility alias
 export type Quiz = QuizResponse;
 
+/**
+ * Paginated quizzes result type
+ */
+export type PaginatedQuizzes = {
+  quizzes: QuizResponse[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  fetchError: string | null;
+  uniqueLevels: string[];
+};
+
 // Reusable include patterns for quiz queries
 const QUIZ_INCLUDE_WITH_POSITION = {
   position: {
@@ -122,15 +137,25 @@ export async function getQuizzes({
   sort,
   filter,
   positionId,
+  page = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
 }: {
   search: string;
   sort: string;
   filter: string;
   positionId?: string;
-}) {
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedQuizzes> {
   let quizzes: QuizResponse[] = [];
   let fetchError: string | null = null;
   let uniqueLevels: string[] = [];
+  let totalCount = 0;
+
+  // Avoid Math.max() which calls .valueOf() and fails with temporary client references
+  const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
+  const normalizedPageSize =
+    typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
 
   try {
     const where: Prisma.QuizWhereInput = {};
@@ -161,13 +186,19 @@ export async function getQuizzes({
 
     const orderBy = orderByMap[sort] ?? orderByMap.newest;
 
-    const quizRecords = await prisma.quiz.findMany({
-      where,
-      orderBy,
-      include: QUIZ_INCLUDE_WITH_POSITION,
-    });
+    const [quizRecords, count] = await Promise.all([
+      prisma.quiz.findMany({
+        where,
+        orderBy,
+        include: QUIZ_INCLUDE_WITH_POSITION,
+        skip: (normalizedPage - 1) * normalizedPageSize,
+        take: normalizedPageSize,
+      }),
+      prisma.quiz.count({ where }),
+    ]);
 
     quizzes = quizRecords.map(mapQuizFromPrisma);
+    totalCount = count;
 
     const experienceLevels = await prisma.position.findMany({
       where: {},
@@ -188,10 +219,17 @@ export async function getQuizzes({
     uniqueLevels = [];
   }
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / normalizedPageSize));
+
   return {
     quizzes,
     fetchError,
     uniqueLevels,
+    totalCount,
+    currentPage: normalizedPage,
+    totalPages,
+    hasNextPage: normalizedPage < totalPages,
+    hasPrevPage: normalizedPage > 1,
   };
 }
 
@@ -200,17 +238,21 @@ export async function CachedQuizzesContent({
   sort,
   filter,
   positionId,
+  page,
+  pageSize,
 }: {
   search: string;
   sort: string;
   filter: string;
   positionId?: string;
-}) {
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedQuizzes> {
   "use cache";
   cacheLife("hours");
   cacheTag("quizzes");
 
-  return await getQuizzes({ search, sort, filter, positionId });
+  return await getQuizzes({ search, sort, filter, positionId, page, pageSize });
 }
 
 /**

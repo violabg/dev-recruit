@@ -5,7 +5,7 @@ import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { deletePosition } from "@/lib/actions/positions";
-import { getPositionById, getPositions } from "@/lib/data/positions";
+import { getAllPositions, getPositionById } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Edit } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
@@ -15,7 +15,7 @@ import Candidates from "./components/candidates";
 import Quizes from "./components/quizes";
 
 export async function generateStaticParams() {
-  const positions = await getPositions();
+  const positions = await getAllPositions();
 
   return positions.map((position) => ({
     id: position.id,

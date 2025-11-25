@@ -1,14 +1,13 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
 type ViewTabsProps = {
   defaultValue: "table" | "grid";
   tableContent: React.ReactNode;
   gridContent: React.ReactNode;
-  quizCount: number;
 };
 
 /**
@@ -19,22 +18,23 @@ export function QuizViewTabs({
   defaultValue,
   tableContent,
   gridContent,
-  quizCount,
 }: ViewTabsProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const handleViewChange = useCallback(
     (value: string) => {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(searchParams.toString());
       if (value === "table") {
         params.delete("view");
       } else {
         params.set("view", value);
       }
-      router.replace(`/dashboard/quizzes?${params.toString()}`);
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname);
     },
-    [router, searchParams]
+    [router, pathname, searchParams]
   );
 
   return (
@@ -48,9 +48,6 @@ export function QuizViewTabs({
           <TabsTrigger value="table">Tabella</TabsTrigger>
           <TabsTrigger value="grid">Griglia</TabsTrigger>
         </TabsList>
-        <div className="text-muted-foreground text-sm">
-          {quizCount} quiz trovati
-        </div>
       </div>
       <TabsContent value="table" className="pt-4">
         {tableContent}

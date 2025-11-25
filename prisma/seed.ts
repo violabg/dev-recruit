@@ -1,9 +1,16 @@
 import "dotenv/config";
 
 import prisma from "@/lib/prisma";
+import { Prisma } from "@/lib/prisma/client";
+
+// Type for preset seed data (subset of PresetCreateInput)
+type PresetSeedData = Omit<
+  Prisma.PresetCreateInput,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 // Current presets from preset-generation-buttons.tsx
-const PRESETS = [
+const PRESETS: PresetSeedData[] = [
   // Frontend Presets
   {
     name: "react-hooks",
@@ -157,7 +164,7 @@ async function seedPresets() {
     const createdPresets = await Promise.all(
       PRESETS.map((preset) =>
         prisma.preset.create({
-          data: preset as any,
+          data: preset,
         })
       )
     );
@@ -166,7 +173,7 @@ async function seedPresets() {
 
     // Print summary
     console.log("\nSeeded presets:");
-    createdPresets.forEach((preset: any) => {
+    createdPresets.forEach((preset) => {
       console.log(`  - ${preset.label} (${preset.name})`);
     });
   } catch (error) {

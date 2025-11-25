@@ -40,8 +40,6 @@ export async function generateNewQuizAction({
   previousQuestions,
   specificModel,
 }: GenerateNewQuizActionParams) {
-  console.debug("generateNewQuizAction started");
-
   try {
     // Validate user authentication
     const user = await requireUser();
@@ -86,7 +84,6 @@ export async function generateNewQuizAction({
       specificModel,
     });
 
-    console.debug("generateNewQuizAction completed");
     return quizData;
   } catch (error) {
     handleActionError(error, {
@@ -101,8 +98,6 @@ export async function generateNewQuizAction({
 export async function generateNewQuestionAction(
   params: GenerateQuestionParams
 ) {
-  console.debug("generateNewQuestionAction started");
-
   try {
     // Generate question using AI service with the new parameter structure
     const question = await aiQuizService.generateQuestion(params);
@@ -110,7 +105,6 @@ export async function generateNewQuestionAction(
     // Validate generated question
     const validatedQuestion = questionSchemas.strict.parse(question);
 
-    console.debug("generateNewQuestionAction completed");
     return validatedQuestion;
   } catch (error) {
     // Handle Zod validation errors specially
@@ -138,8 +132,6 @@ export async function deleteQuiz(formData: FormData) {
 }
 
 export async function deleteQuizById(quizId: string) {
-  console.debug("deleteQuizById started");
-
   try {
     if (!quizId) {
       throw new QuizSystemError(
@@ -176,7 +168,6 @@ export async function deleteQuizById(quizId: string) {
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
-    console.debug("deleteQuizById completed");
     redirect("/dashboard/quizzes");
   } catch (error) {
     // Re-throw redirect responses (Next.js uses special errors for redirects)
@@ -202,8 +193,6 @@ export async function deleteQuizById(quizId: string) {
  * - positionId?: string (required for create, ignored for update)
  */
 export async function upsertQuizAction(formData: FormData) {
-  console.debug("upsertQuizAction started");
-
   try {
     const user = await requireUser();
 
@@ -313,7 +302,6 @@ export async function upsertQuizAction(formData: FormData) {
       // Also revalidate traditional cache paths for compatibility
       revalidateQuizCache("");
 
-      console.debug("upsertQuizAction completed");
       return { id: quiz.id };
     } else {
       // UPDATE MODE
@@ -356,7 +344,6 @@ export async function upsertQuizAction(formData: FormData) {
       // Also revalidate traditional cache paths for compatibility
       revalidateQuizCache(quizId);
 
-      console.debug("upsertQuizAction completed");
       return {};
     }
   } catch (error) {
@@ -399,8 +386,6 @@ export async function regenerateQuizAction({
   previousQuestions,
   specificModel,
 }: RegenerateQuizActionParams) {
-  console.debug("regenerateQuizAction started");
-
   try {
     const user = await requireUser();
 
@@ -498,7 +483,6 @@ export async function regenerateQuizAction({
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache(quizId);
 
-    console.debug("regenerateQuizAction completed");
     return { id: quizId };
   } catch (error) {
     handleActionError(error, {
@@ -516,8 +500,6 @@ export async function regenerateQuizAction({
  * Doesn't check for user ownership - can duplicate any quiz.
  */
 export async function duplicateQuizAction(formData: FormData) {
-  console.debug("duplicateQuizAction started");
-
   try {
     const user = await requireUser();
 
@@ -570,7 +552,7 @@ export async function duplicateQuizAction(formData: FormData) {
       data: {
         title: newTitle,
         positionId: newPositionId,
-        questions: originalQuiz.questions as any,
+        questions: originalQuiz.questions ?? [],
         timeLimit: originalQuiz.timeLimit,
         createdBy: user.id,
       },
@@ -593,7 +575,6 @@ export async function duplicateQuizAction(formData: FormData) {
     // Also revalidate traditional cache paths for compatibility
     revalidateQuizCache("");
 
-    console.debug("duplicateQuizAction completed");
     return { id: newQuiz.id };
   } catch (error) {
     handleActionError(error, {

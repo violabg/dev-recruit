@@ -1,26 +1,62 @@
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { cacheLife, cacheTag } from "next/cache";
 import { Position } from "../prisma/client";
 
-export const getPositions = async (search?: string): Promise<Position[]> => {
+export type PaginatedPositions = {
+  positions: Position[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+};
+
+export const getPositions = async (params?: {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedPositions> => {
   "use cache";
   cacheLife("hours");
   cacheTag("positions");
-  const filter = search?.trim();
 
-  return prisma.position.findMany({
-    where: {
-      ...(filter
-        ? {
-            title: {
-              contains: filter,
-              mode: "insensitive",
-            },
-          }
-        : {}),
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const { search, page = 1, pageSize = DEFAULT_PAGE_SIZE } = params ?? {};
+  const filter = search?.trim();
+  // Avoid Math.max() which calls .valueOf() and fails with temporary client references
+  const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
+  const normalizedPageSize =
+    typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
+
+  const where = filter
+    ? {
+        title: {
+          contains: filter,
+          mode: "insensitive" as const,
+        },
+      }
+    : {};
+
+  const [positions, totalCount] = await Promise.all([
+    prisma.position.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (normalizedPage - 1) * normalizedPageSize,
+      take: normalizedPageSize,
+    }),
+    prisma.position.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / normalizedPageSize));
+
+  return {
+    positions,
+    totalCount,
+    currentPage: normalizedPage,
+    totalPages,
+    hasNextPage: normalizedPage < totalPages,
+    hasPrevPage: normalizedPage > 1,
+  };
 };
 
 export const getPositionById = async (
@@ -42,6 +78,20 @@ export const getPositionsCount = async () => {
   cacheTag("positions");
 
   return prisma.position.count();
+};
+
+/**
+ * Returns all positions without pagination.
+ * Use for dropdowns, static params, or other cases where you need the full list.
+ */
+export const getAllPositions = async (): Promise<Position[]> => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("positions");
+
+  return prisma.position.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 };
 
 export const getRecentPositions = async (limit = 5) => {

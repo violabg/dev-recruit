@@ -1,6 +1,7 @@
 import { QuizGrid } from "@/components/quiz/quiz-grid";
 import { QuizTable } from "@/components/quiz/quiz-table";
 import { Card, CardContent } from "@/components/ui/card";
+import { UrlPagination } from "@/components/ui/url-pagination";
 import { CachedQuizzesContent } from "@/lib/data/quizzes";
 
 import { NewQuizButton } from "./new-quiz-button";
@@ -19,12 +20,24 @@ export async function QuizListSection({
   filter,
   positionId,
   view,
+  page,
+  pageSize,
 }: QuizListSectionProps) {
-  const { quizzes, fetchError } = await CachedQuizzesContent({
+  const {
+    quizzes,
+    fetchError,
+    totalCount,
+    currentPage,
+    totalPages,
+    hasNextPage,
+    hasPrevPage,
+  } = await CachedQuizzesContent({
     search,
     sort,
     filter,
     positionId,
+    page,
+    pageSize,
   });
 
   if (fetchError) {
@@ -47,12 +60,24 @@ export async function QuizListSection({
             }
           />
         ) : (
-          <QuizViewTabs
-            defaultValue={view}
-            quizCount={quizzes.length}
-            tableContent={<QuizTable quizzes={quizzes} />}
-            gridContent={<QuizGrid quizzes={quizzes} />}
-          />
+          <div className="space-y-4">
+            <QuizViewTabs
+              defaultValue={view}
+              tableContent={<QuizTable quizzes={quizzes} />}
+              gridContent={<QuizGrid quizzes={quizzes} />}
+            />
+            <UrlPagination
+              pagination={{
+                currentPage,
+                totalPages,
+                totalCount,
+                hasNextPage,
+                hasPrevPage,
+              }}
+              itemLabel="quiz"
+              itemLabelPlural="quiz"
+            />
+          </div>
         )}
       </CardContent>
     </Card>
