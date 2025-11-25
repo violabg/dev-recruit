@@ -126,6 +126,11 @@ Before editing a route or component:
 7. Ensure new server actions call `requireUser()` and update cache tags.
 8. Reuse `components/ui/` and `components/dashboard/` primitives; justify any new low-level components.
 9. Run `pnpm dev` and use Next.js MCP to catch hydration and runtime errors early.
+10. **Update documentation for all architectural or major changes**. Documentation files MUST be updated when changing:
+    - AI service logic, prompts, or model selection → `docs/AI_QUIZ_GENERATION.md`
+    - Caching strategies or patterns → `docs/CACHE_IMPLEMENTATION.md`
+    - Question schemas or validation logic → `docs/QUESTION_SCHEMAS.md`
+    - Core features, setup, or dependencies → `README.md`
 
 ## Governance
 
@@ -135,7 +140,21 @@ This constitution supersedes all prior practices and guides all architectural de
 - Update to CONSTITUTION_VERSION following semantic versioning (MAJOR for backward incompatibilities, MINOR for new principles, PATCH for clarifications).
 - Validation that dependent templates (`.specify/templates/`) align with amended principles.
 - Commit message summarizing the change.
+- **Update relevant documentation in `docs/`** when principles affect documented systems (AI generation, caching, schemas).
 
 All PRs must verify compliance with these principles. Complexity introducing exceptions MUST be justified in comments or docs/. Runtime guidance for developers lives in `.github/copilot-instructions.md`; when that conflicts with this constitution, escalate for amendment.
+
+### Documentation Requirements
+
+Architectural or major changes MUST be reflected in the project documentation:
+
+| Change Type                   | Documentation File             |
+| ----------------------------- | ------------------------------ |
+| AI service, prompts, models   | `docs/AI_QUIZ_GENERATION.md`   |
+| Caching strategies, patterns  | `docs/CACHE_IMPLEMENTATION.md` |
+| Question schemas, validation  | `docs/QUESTION_SCHEMAS.md`     |
+| Features, setup, dependencies | `README.md`                    |
+
+Documentation updates are considered part of the implementation and MUST be completed before a change is considered done.
 
 **Version**: 1.2.0 | **Ratified**: 2025-11-22 | **Last Amended**: 2025-11-22

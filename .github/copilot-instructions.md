@@ -42,6 +42,7 @@
 3. Reuse UI primitives from `components/ui` or existing dashboard components before building new ones.
 4. Document substantial behavior changes in `docs/` (e.g., caching, AI flows, layout shifts).
 5. Follow the constitutional governance in `.specify/memory/constitution.md` for all architectural decisions.
+6. **Update documentation for architectural changes**: Any major or architectural changes MUST be reflected in the relevant documentation files under `docs/` (see `docs/AI_QUIZ_GENERATION.md`, `docs/CACHE_IMPLEMENTATION.md`, `docs/QUESTION_SCHEMAS.md`).
 
 ## Cache & Streaming Patterns
 
@@ -126,5 +127,10 @@ This file gives an agent the minimal, actionable knowledge to be productive in t
 - Always run the dev server (`pnpm dev`) and use Next.js MCP runtime when changing routes or debugging hydration/runtime errors.
 - Reuse existing UI primitives in `components/ui/` and `components/dashboard/` instead of creating new low-level components.
 - When adding or modifying server actions: validate inputs with Zod, call `requireUser()`, update cache tags, and document the change in `docs/`.
+- **Documentation updates are mandatory** for architectural or major changes. Update the relevant docs:
+  - `docs/AI_QUIZ_GENERATION.md` — AI service changes, prompt modifications, model updates
+  - `docs/CACHE_IMPLEMENTATION.md` — Caching strategy changes, new cache patterns
+  - `docs/QUESTION_SCHEMAS.md` — Schema changes, new question types, validation updates
+  - `README.md` — New features, setup changes, dependency updates
 
 If a section is unclear or you want examples (exact schema fields, sample prompts, or a pre-commit lint hook), say which area to expand and I will iterate.
