@@ -2,6 +2,7 @@ import { DeletePositionButton } from "@/components/positions/delete-position-but
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPositionById, getPositions } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
@@ -27,7 +28,7 @@ export default async function PositionDetailPage({
 }) {
   return (
     <div className="space-y-6">
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<Skeleton className="w-full h-10" />}>
         <PositionDetail params={params} />
       </Suspense>
     </div>
@@ -137,13 +138,13 @@ async function PositionDetail({ params }: { params: Promise<{ id: string }> }) {
         </TabsContent>
 
         <TabsContent value="quizzes" className="space-y-4 pt-4">
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<Skeleton className="w-full h-8" />}>
             <Quizes id={position.id} />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="candidates" className="space-y-4 pt-4">
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<Skeleton className="w-full h-8" />}>
             <Candidates id={position.id} />
           </Suspense>
         </TabsContent>

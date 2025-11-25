@@ -54,12 +54,12 @@ All data queries in `lib/data/` follow this pattern:
 ## Quick Orientation
 
 - **Repo type:** Next.js App Router (Next 16), server components by default. Heavy use of Prisma (Neon) and AI services under `lib/services`.
-- **Primary goal for agents:** Make safe, cached server-side changes (keep AI/DB calls in `"use cache"` scopes), follow Zod schemas in `lib/schemas`, and preserve UI primitives from `components/ui/`.
+- **Primary goal for agents:** Make safe, cached server-side changes (keep AI/DB calls in `"use cache"` scopes), follow Zod (v4) schemas in `lib/schemas`, and preserve UI primitives from `components/ui/`.
 
 ## Architecture Snapshot (what matters)
 
 - **Routes & rendering:** every page under `app/` is a server component; interactive pieces use `use client` sparingly (see `app/dashboard/layout.tsx`).
-- **Cache Components:** code uses `"use cache"`, `cacheLife(...)`, and `cacheTag(...)` patterns (see `lib/data/` and `docs/CACHE_IMPLEMENTATION.md`).
+- **Cache Components:** code uses `"use cache"`, `cacheLife(...)`, and `cacheTag(...)` patterns (see `lib/data/`).
 - **Server actions:** mutation logic lives in `lib/actions/*` and is invoked from forms (`"use server"`). Use `requireUser()` from `lib/auth-server.ts` to guard actions (example: `lib/actions/quizzes.ts`).
 - **AI layer:** `lib/services/ai-service.ts` (exported `aiQuizService`) builds prompts, applies `sanitizeInput`, retries (`withRetry`), timeouts, model selection (`getOptimalModel`) and validates via Zod schemas. Questions are expected in Italian and strict JSON structure.
 - **DB:** `lib/prisma.ts` builds a Prisma client with `PrismaPg` adapter (expects `DATABASE_URL`); Neon/Postgres-backed.

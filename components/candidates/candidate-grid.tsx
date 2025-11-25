@@ -32,7 +32,7 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { CandidateStatusBadge } from "./candidate-status-badge";
 
 interface CandidateGridProps {
@@ -52,10 +52,13 @@ function getInitials(name: string): string {
 // Candidate grid component
 export function CandidateGrid({ candidates }: CandidateGridProps) {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   // Handle delete candidate
   async function handleDelete(id: string) {
-    if (confirm("Sei sicuro di voler eliminare questo candidato?")) {
+    if (!confirm("Sei sicuro di voler eliminare questo candidato?")) return;
+
+    startTransition(async () => {
       setIsDeleting(id);
       try {
         await deleteCandidate(id);
@@ -67,7 +70,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
       } finally {
         setIsDeleting(null);
       }
-    }
+    });
   }
 
   return (
@@ -122,11 +125,11 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => handleDelete(candidate.id)}
-                    disabled={isDeleting === candidate.id}
+                    disabled={isDeleting === candidate.id || isPending}
                     className="text-red-600"
                   >
                     <Trash className="mr-1 w-4 h-4" />
-                    {isDeleting === candidate.id
+                    {isDeleting === candidate.id || isPending
                       ? "Eliminazione..."
                       : "Elimina"}
                   </DropdownMenuItem>

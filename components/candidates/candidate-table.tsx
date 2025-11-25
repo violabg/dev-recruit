@@ -38,7 +38,7 @@ import {
   Trash,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CandidateStatusBadge } from "./candidate-status-badge";
 
@@ -51,23 +51,26 @@ interface CandidateTableProps {
 export function CandidateTable({ candidates }: CandidateTableProps) {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   // Handle delete candidate
   async function handleConfirmDelete() {
     if (!deleteDialogOpen) return;
 
-    setIsDeleting(deleteDialogOpen);
-    try {
-      await deleteCandidate(deleteDialogOpen);
-    } catch (error: any) {
-      console.error("Error deleting candidate:", error);
-      if (error instanceof Error && error.message?.includes("NEXT_REDIRECT"))
-        return;
-      toast.error("Errore durante l'eliminazione del candidato");
-    } finally {
-      setIsDeleting(null);
-      setDeleteDialogOpen(null);
-    }
+    startTransition(async () => {
+      setIsDeleting(deleteDialogOpen);
+      try {
+        await deleteCandidate(deleteDialogOpen);
+      } catch (error: any) {
+        console.error("Error deleting candidate:", error);
+        if (error instanceof Error && error.message?.includes("NEXT_REDIRECT"))
+          return;
+        toast.error("Errore durante l'eliminazione del candidato");
+      } finally {
+        setIsDeleting(null);
+        setDeleteDialogOpen(null);
+      }
+    });
   }
 
   return (
@@ -161,7 +164,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => setDeleteDialogOpen(candidate.id)}
-                        disabled={isDeleting === candidate.id}
+                        disabled={isDeleting === candidate.id || isPending}
                         className="text-red-600"
                       >
                         <Trash className="mr-1 w-4 h-4" />
@@ -196,10 +199,10 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
-              disabled={isDeleting !== null}
+              disabled={isDeleting !== null || isPending}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? "Eliminazione..." : "Elimina"}
+              {isDeleting || isPending ? "Eliminazione..." : "Elimina"}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

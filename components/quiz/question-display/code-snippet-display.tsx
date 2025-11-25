@@ -36,7 +36,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
                 }
                 style={style}
               >
-                <code className="break-words whitespace-pre-wrap">
+                <code className="wrap-break-word whitespace-pre-wrap">
                   {tokens.map((line, i) => {
                     const { key: lineKey, ...lineProps } = getLineProps({
                       line,
@@ -83,7 +83,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
                 }
                 style={style}
               >
-                <code className="break-words whitespace-pre-wrap">
+                <code className="wrap-break-word whitespace-pre-wrap">
                   {tokens.map((line, i) => {
                     const { key: lineKey, ...lineProps } = getLineProps({
                       line,

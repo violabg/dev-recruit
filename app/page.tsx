@@ -1,5 +1,6 @@
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/lib/auth-server";
 import { prismLanguage } from "@/lib/utils";
 import { ArrowRight, BrainCircuit, CheckCircle, Users } from "lucide-react";
@@ -51,7 +52,7 @@ export default async function Home() {
                 </div>
                 <div className="flex min-[400px]:flex-row flex-col items-center gap-2">
                   <ThemeToggle />
-                  <Suspense fallback={<div>Loading...</div>}>
+                  <Suspense fallback={<Skeleton className="w-32 h-10" />}>
                     <StartButton />
                   </Suspense>
                 </div>
