@@ -297,3 +297,52 @@ export const getQuizzesForPosition = async (
       : [],
   }));
 };
+
+// ===================
+// FILTER OPTIONS
+// ===================
+
+export type QuizFilterOptions = {
+  uniqueLevels: string[];
+  positions: Array<{ id: string; title: string }>;
+};
+
+/**
+ * Cached filter options for quiz list page
+ * Returns unique experience levels and positions for filter dropdowns
+ * Tagged with both "quizzes" and "positions" for proper revalidation
+ */
+export async function CachedQuizFilterOptions(): Promise<QuizFilterOptions> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("quizzes", "positions");
+
+  try {
+    const [experienceLevels, positions] = await Promise.all([
+      prisma.position.findMany({
+        where: {},
+        select: { experienceLevel: true },
+      }),
+      prisma.position.findMany({
+        select: { id: true, title: true },
+        orderBy: { title: "asc" },
+      }),
+    ]);
+
+    const uniqueLevels = Array.from(
+      new Set(
+        experienceLevels
+          .map((item) => item.experienceLevel)
+          .filter((level): level is string => Boolean(level))
+      )
+    );
+
+    return {
+      uniqueLevels,
+      positions: positions.map((p) => ({ id: p.id, title: p.title })),
+    };
+  } catch (error) {
+    console.error("Failed to fetch filter options:", error);
+    return { uniqueLevels: [], positions: [] };
+  }
+}

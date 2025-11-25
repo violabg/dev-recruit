@@ -1,6 +1,23 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export function FiltersSkeleton() {
+  return (
+    <div className="flex sm:flex-row flex-col gap-4">
+      {/* Search input skeleton */}
+      <div className="relative flex-1">
+        <Skeleton className="w-full h-9" />
+      </div>
+      {/* Filter selects skeleton */}
+      <div className="flex gap-2">
+        <Skeleton className="w-[140px] h-9" />
+        <Skeleton className="w-[140px] h-9" />
+        <Skeleton className="w-40 h-9" />
+      </div>
+    </div>
+  );
+}
+
 export function QuizCardsSkeleton() {
   return (
     <div className="gap-4 grid grid-cols-1 @[1060px]:grid-cols-2 @[1470px]:grid-cols-3">
@@ -128,3 +145,14 @@ export function QuizzesStatisticsSkeleton() {
     </div>
   );
 }
+
+// ===================
+// RUNTIME FALLBACK
+// ===================
+
+export const QuizzesRuntimeFallback = () => (
+  <div className="space-y-4">
+    <FiltersSkeleton />
+    <QuizListSkeleton />
+  </div>
+);
