@@ -214,7 +214,11 @@ export function InterviewClient({
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" onClick={handleStartInterview} disabled={isPending}>
+            <Button
+              className="w-full"
+              onClick={handleStartInterview}
+              disabled={isPending}
+            >
               Inizia il quiz
             </Button>
           </CardFooter>

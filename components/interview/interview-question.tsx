@@ -85,21 +85,20 @@ export function InterviewQuestion({
         }
       };
       recorder.onstop = async () => {
-      setIsRecording(false);
-      // Use transition to indicate pending state for transcription
-      startTransition(async () => {
+        setIsRecording(false);
+        // Use transition to indicate pending state for transcription
+        startTransition(async () => {
+          // Stop all tracks to release the microphone
+          stream.getTracks().forEach((track) => track.stop());
 
-        // Stop all tracks to release the microphone
-        stream.getTracks().forEach((track) => track.stop());
+          const audioBlob = new Blob(chunks, { type: "audio/webm" });
+          console.log("🚀 ~ audioBlob size:", audioBlob.size);
 
-        const audioBlob = new Blob(chunks, { type: "audio/webm" });
-        console.log("🚀 ~ audioBlob size:", audioBlob.size);
-
-        // Convert Blob to Uint8Array for server action
-        const arrayBuffer = await audioBlob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        // Convert to regular array for server action serialization
-        const audioArray = Array.from(uint8Array);
+          // Convert Blob to Uint8Array for server action
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          // Convert to regular array for server action serialization
+          const audioArray = Array.from(uint8Array);
 
           try {
             const result = await transcribeAudioAction(audioArray);
