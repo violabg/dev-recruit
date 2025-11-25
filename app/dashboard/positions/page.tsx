@@ -1,20 +1,18 @@
 import { SearchPositions } from "@/components/positions/search-positions";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { getPositions } from "@/lib/data/positions";
-import { formatDate } from "@/lib/utils";
-import { Eye, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import PositionsSkeleton from "./fallback";
+import { PositionsTableClient } from "./positions-table-client";
 
 // Server component for positions page
 export default async function PositionsPage({
@@ -72,45 +70,12 @@ const PositionsTable = async ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {positions.map((position) => (
-                <TableRow key={position.id}>
-                  <TableCell className="font-medium">
-                    {position.title}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{position.experienceLevel}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {position.skills.slice(0, 3).map((skill, index) => (
-                        <Badge key={index} variant="secondary">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {position.skills.length > 3 && (
-                        <Badge variant="secondary">
-                          +{position.skills.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {formatDate(position.createdAt.toISOString())}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      asChild
-                      title="Vai al dettaglio"
-                    >
-                      <Link href={`/dashboard/positions/${position.id}`}>
-                        <Eye className="mr-1 w-4 h-4 text-primary" />
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              <PositionsTableClient
+                positions={positions.map((p) => ({
+                  ...p,
+                  createdAt: p.createdAt.toISOString(),
+                }))}
+              />
             </TableBody>
           </Table>
         </div>

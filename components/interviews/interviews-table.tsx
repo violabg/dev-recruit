@@ -22,11 +22,9 @@ import {
   ChevronRight,
   Clock,
   Copy,
-  Eye,
   MessageSquare,
   XCircle,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -130,7 +128,13 @@ export function InterviewsTable({
                 const StatusIcon = statusInfo?.icon || Clock;
 
                 return (
-                  <TableRow key={interview.id}>
+                  <TableRow
+                    key={interview.id}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      router.push(`/dashboard/interviews/${interview.id}`)
+                    }
+                  >
                     <TableCell className="font-medium">
                       {interview.candidateName || "N/A"}
                     </TableCell>
@@ -186,51 +190,33 @@ export function InterviewsTable({
                         {statusInfo?.label || interview.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end items-center gap-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() =>
-                                  copyInterviewLink(interview.token)
-                                }
-                                className={
-                                  copiedToken === interview.token
-                                    ? "bg-green-50 border-green-200"
-                                    : ""
-                                }
-                              >
-                                <Copy className="size-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {copiedToken === interview.token
-                                ? "Copiato!"
-                                : "Copia link colloquio"}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline" asChild>
-                                <Link
-                                  href={`/dashboard/interviews/${interview.id}`}
-                                >
-                                  <Eye className="w-4 h-4 text-primary" />
-                                </Link>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Apri colloquio in nuova scheda
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => copyInterviewLink(interview.token)}
+                              className={
+                                copiedToken === interview.token
+                                  ? "bg-green-50 border-green-200"
+                                  : ""
+                              }
+                            >
+                              <Copy className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {copiedToken === interview.token
+                              ? "Copiato!"
+                              : "Copia link colloquio"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                   </TableRow>
                 );

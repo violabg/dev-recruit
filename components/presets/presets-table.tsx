@@ -1,7 +1,6 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
+import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
 import {
   Table,
   TableBody,
@@ -13,14 +12,19 @@ import {
 import { deletePresetAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
-import { Edit, Eye } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type PresetsTableProps = {
   presets: Preset[];
 };
 
 export function PresetsTable({ presets }: PresetsTableProps) {
+  const router = useRouter();
+
+  const handleRowClick = (id: string) => {
+    router.push(`/dashboard/presets/${id}`);
+  };
+
   return (
     <>
       <div className="border rounded-lg">
@@ -48,7 +52,11 @@ export function PresetsTable({ presets }: PresetsTableProps) {
               presets.map((preset) => {
                 const Icon = getPresetIcon(preset.icon);
                 return (
-                  <TableRow key={preset.id}>
+                  <TableRow
+                    key={preset.id}
+                    className="cursor-pointer"
+                    onClick={() => handleRowClick(preset.id!)}
+                  >
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Icon
@@ -91,40 +99,18 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Vai al dettaglio"
-                          asChild
-                        >
-                          <Link href={`/dashboard/presets/${preset.id}`}>
-                            <Eye className="w-4 h-4 text-primary" />
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Modifica preset"
-                          asChild
-                        >
-                          <Link href={`/dashboard/presets/${preset.id}/edit`}>
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        <DeleteWithConfirm
-                          deleteAction={deletePresetAction.bind(
-                            null,
-                            preset.id!
-                          )}
-                          iconOnly
-                          variant="ghost"
-                          successMessage="Preset eliminato con successo"
-                          errorMessage="Errore nell'eliminazione del preset"
-                          description="Sei sicuro di voler eliminare questo preset? Questa azione è irreversibile."
-                        />
-                      </div>
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <EntityActionsMenu
+                        entityId={preset.id!}
+                        editHref={`/dashboard/presets/${preset.id}/edit`}
+                        deleteAction={deletePresetAction.bind(null, preset.id!)}
+                        deleteSuccessMessage="Preset eliminato con successo"
+                        deleteErrorMessage="Errore nell'eliminazione del preset"
+                        deleteDescription="Sei sicuro di voler eliminare questo preset? Questa azione è irreversibile."
+                      />
                     </TableCell>
                   </TableRow>
                 );
