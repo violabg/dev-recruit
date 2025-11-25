@@ -1,3 +1,4 @@
+"use client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
+import { deleteQuizById } from "@/lib/actions/quizzes";
 import { Quiz } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
 import { Clock, Eye, Link2 } from "lucide-react";
@@ -22,7 +25,17 @@ export function QuizCard({
   return (
     <Card className="flex flex-col">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
+          <EntityActionsMenu
+            entityId={id}
+            editHref={`/dashboard/quizzes/${id}/edit`}
+            deleteAction={deleteQuizById.bind(null, id)}
+            deleteTitle="Elimina quiz"
+            deleteDescription="Sei sicuro di voler eliminare questo quiz? Questa azione non può essere annullata."
+            deleteErrorMessage="Errore durante l'eliminazione del quiz"
+          />
+        </div>
       </CardHeader>
       <CardContent className="pb-2">
         <div className="space-y-2">

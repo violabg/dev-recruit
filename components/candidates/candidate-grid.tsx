@@ -8,15 +8,8 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
 import { deleteCandidate } from "@/lib/actions/candidates";
 import { CandidateWithRelations } from "@/lib/data/candidates";
 import { format } from "date-fns";
@@ -28,12 +21,9 @@ import {
   FileText,
   Link2,
   Mail,
-  MoreHorizontal,
-  Trash,
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { CandidateStatusBadge } from "./candidate-status-badge";
 
 interface CandidateGridProps {
@@ -52,131 +42,101 @@ function getInitials(name: string): string {
 
 // Candidate grid component
 export function CandidateGrid({ candidates }: CandidateGridProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
-
   return (
-    <>
-      <div className="gap-4 grid sm:grid-cols-2 lg:grid-cols-3">
-        {candidates.map((candidate) => (
-          <Card key={candidate.id} className="overflow-hidden">
-            <CardHeader className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarFallback>
-                      {getInitials(candidate.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold">{candidate.name}</h3>
-                    <div className="flex items-center text-muted-foreground text-sm">
-                      <Mail className="mr-1 w-3 h-3" />
-                      {candidate.email}
-                    </div>
+    <div className="gap-4 grid sm:grid-cols-2 lg:grid-cols-3">
+      {candidates.map((candidate) => (
+        <Card key={candidate.id} className="overflow-hidden">
+          <CardHeader className="p-4">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center space-x-3">
+                <Avatar className="w-10 h-10">
+                  <AvatarFallback>{getInitials(candidate.name)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{candidate.name}</h3>
+                  <div className="flex items-center text-muted-foreground text-sm">
+                    <Mail className="mr-1 w-3 h-3" />
+                    {candidate.email}
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="p-0 w-8 h-8">
-                      <span className="sr-only">Apri menu</span>
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Azioni</DropdownMenuLabel>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/dashboard/candidates/${candidate.id}`}>
-                        <User className="mr-1 w-4 h-4" />
-                        Visualizza profilo
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-                        <Link2 className="mr-1 w-4 h-4" />
-                        Associa quiz
-                      </Link>
-                    </DropdownMenuItem>
-                    {candidate.interviews &&
-                      candidate.interviews.length > 0 && (
-                        <DropdownMenuItem asChild>
-                          <Link
-                            href={`/dashboard/interviews/${candidate.interviews[0].id}`}
-                          >
-                            <FileText className="mr-1 w-4 h-4" />
-                            Visualizza risultati
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => setDeleteDialogOpen(candidate.id)}
-                      className="text-red-600"
+              </div>
+              <EntityActionsMenu
+                entityId={candidate.id}
+                editHref={`/dashboard/candidates/${candidate.id}/edit`}
+                deleteAction={deleteCandidate.bind(null, candidate.id)}
+                deleteTitle="Elimina candidato"
+                deleteDescription="Sei sicuro di voler eliminare questo candidato? Questa azione non può essere annullata."
+                deleteErrorMessage="Errore durante l'eliminazione del candidato"
+              >
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/candidates/${candidate.id}`}>
+                    <User className="mr-1 w-4 h-4" />
+                    Visualizza profilo
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
+                    <Link2 className="mr-1 w-4 h-4" />
+                    Associa quiz
+                  </Link>
+                </DropdownMenuItem>
+                {candidate.interviews && candidate.interviews.length > 0 && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/dashboard/interviews/${candidate.interviews[0].id}`}
                     >
-                      <Trash className="mr-1 w-4 h-4" />
-                      Elimina
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <FileText className="mr-1 w-4 h-4" />
+                      Visualizza risultati
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+              </EntityActionsMenu>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="space-y-2">
+              <div className="flex items-center text-sm">
+                <Briefcase className="mr-2 w-4 h-4 text-muted-foreground" />
+                {candidate.position ? (
+                  <div>
+                    <span>{candidate.position.title}</span>
+                    {candidate.position.experienceLevel && (
+                      <span className="text-muted-foreground text-xs">
+                        {" "}
+                        • {candidate.position.experienceLevel}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">
+                    Nessuna posizione
+                  </span>
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="space-y-2">
-                <div className="flex items-center text-sm">
-                  <Briefcase className="mr-2 w-4 h-4 text-muted-foreground" />
-                  {candidate.position ? (
-                    <div>
-                      <span>{candidate.position.title}</span>
-                      {candidate.position.experienceLevel && (
-                        <span className="text-muted-foreground text-xs">
-                          {" "}
-                          • {candidate.position.experienceLevel}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Nessuna posizione
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center text-sm">
-                  <Calendar className="mr-2 w-4 h-4 text-muted-foreground" />
-                  {candidate.createdAt && (
-                    <span>
-                      Aggiunto il{" "}
-                      {format(new Date(candidate.createdAt), "dd MMMM yyyy", {
-                        locale: it,
-                      })}
-                    </span>
-                  )}
-                </div>
+              <div className="flex items-center text-sm">
+                <Calendar className="mr-2 w-4 h-4 text-muted-foreground" />
+                {candidate.createdAt && (
+                  <span>
+                    Aggiunto il{" "}
+                    {format(new Date(candidate.createdAt), "dd MMMM yyyy", {
+                      locale: it,
+                    })}
+                  </span>
+                )}
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between items-center p-4 border-t">
-              <CandidateStatusBadge status={candidate.status} />
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/dashboard/candidates/${candidate.id}`}>
-                  <Eye className="mr-1 w-4 h-4 text-primary" />
-                  Visualizza
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      {deleteDialogOpen && (
-        <DeleteWithConfirm
-          open={true}
-          onOpenChange={(open) => {
-            if (!open) setDeleteDialogOpen(null);
-          }}
-          deleteAction={deleteCandidate.bind(null, deleteDialogOpen)}
-          title="Elimina candidato"
-          description="Sei sicuro di voler eliminare questo candidato? Questa azione non può essere annullata."
-          errorMessage="Errore durante l'eliminazione del candidato"
-        />
-      )}
-    </>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between items-center p-4 border-t">
+            <CandidateStatusBadge status={candidate.status} />
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/candidates/${candidate.id}`}>
+                <Eye className="mr-1 w-4 h-4 text-primary" />
+                Visualizza
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
   );
 }
