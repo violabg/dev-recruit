@@ -6,7 +6,6 @@ import {
   convertToStrictQuestions,
   Question,
   questionSchemas,
-  QuestionType,
 } from "../schemas";
 import { getOptimalModel } from "../utils";
 
@@ -199,386 +198,354 @@ export type GenerateQuestionParams =
   | CodeSnippetQuestionParams;
 
 // ====================
-// PROMPT BUILDERS BY QUESTION TYPE
+// PROMPT BUILDER FUNCTIONS
 // ====================
+// Simplified functional approach - each question type has its own prompt builder
 
-abstract class BasePromptBuilder {
-  protected sanitizeInput(input: string): string {
-    return sanitizeInput(input);
-  }
+/**
+ * Builds common context shared across all question types
+ */
+function buildCommonContext(params: BaseQuestionParams): string {
+  const sanitizedQuizTitle = sanitizeInput(params.quizTitle);
+  const sanitizedPositionTitle = sanitizeInput(params.positionTitle);
+  const sanitizedInstructions = params.instructions
+    ? sanitizeInput(params.instructions)
+    : "";
 
-  protected buildCommonContext(params: BaseQuestionParams): string {
-    const sanitizedQuizTitle = this.sanitizeInput(params.quizTitle);
-    const sanitizedPositionTitle = this.sanitizeInput(params.positionTitle);
-    const sanitizedInstructions = params.instructions
-      ? this.sanitizeInput(params.instructions)
-      : "";
-
-    return `
-            Position Details:
-            - Experience Level: ${params.experienceLevel}
-            - Required Skills: ${params.skills.join(", ")}
-            - Difficulty level: ${params.difficulty || 3}/5
-            ${
-              sanitizedInstructions
-                ? `- Special instructions: ${sanitizedInstructions}`
-                : ""
-            }
-
-            Quiz Context: "${sanitizedQuizTitle}" for position "${sanitizedPositionTitle}"
-
-            ${
-              params.previousQuestions && params.previousQuestions.length > 0
-                ? `
-            Avoid repeating these existing questions:
-            ${params.previousQuestions
-              .map((q) => `- ${this.sanitizeInput(q.question)}`)
-              .join("\n")}
-            `
-                : ""
-            }`;
-  }
-
-  abstract buildSystemPrompt(questionIndex?: number): string;
-  abstract buildUserPrompt(params: BaseQuestionParams): string;
+  return `
+Position Details:
+- Experience Level: ${params.experienceLevel}
+- Required Skills: ${params.skills.join(", ")}
+- Difficulty level: ${params.difficulty || 3}/5
+${
+  sanitizedInstructions
+    ? `- Special instructions: ${sanitizedInstructions}`
+    : ""
 }
 
-class MultipleChoicePromptBuilder extends BasePromptBuilder {
-  buildSystemPrompt(questionIndex?: number): string {
-    const idFormat = `Format "q${questionIndex || 1}" (use "q${
-      questionIndex || 1
-    }" for this specific question)`;
+Quiz Context: "${sanitizedQuizTitle}" for position "${sanitizedPositionTitle}"
 
-    return `
-            You are a technical recruitment expert specializing in creating multiple choice assessment questions.
-
-            Generate a valid JSON object for a single multiple choice question (NOT an array) that adheres to these specifications:
-
-            REQUIRED FIELDS:
-            - id: ${idFormat}
-            - type: "multiple_choice"
-            - question: Italian text (clear, specific, and job-relevant)
-            - options: Array of exactly 4 Italian strings (each at least 3 characters)
-            - correctAnswer: Zero-based index number (0-3) of the correct option
-            - keywords: Array of relevant strings (optional)
-            - explanation: Italian text explaining the correct answer (optional)
-
-            QUALITY REQUIREMENTS:
-            - Question must test practical, job-relevant knowledge
-            - Options should be plausible but clearly distinguishable
-            - Avoid ambiguous or trick questions
-            - Include realistic distractors that test understanding
-            - Explanation should be educational and concise
-
-            Example Structure:
-            \`\`\`json
-            {
-              "id": "q${questionIndex || 1}",
-              "type": "multiple_choice",
-              "question": "Cosa rappresenta il DOM in JavaScript?",
-              "options": [
-                "Document Object Model",
-                "Data Object Management", 
-                "Dynamic Object Mapping",
-                "Distributed Object Method"
-              ],
-              "correctAnswer": 0,
-              "keywords": ["DOM", "JavaScript", "web"],
-              "explanation": "Il DOM (Document Object Model) è una rappresentazione strutturata del documento HTML che permette a JavaScript di manipolare il contenuto e la struttura della pagina."
-            }
-            \`\`\``;
-  }
-
-  buildUserPrompt(params: MultipleChoiceQuestionParams): string {
-    const context = this.buildCommonContext(params);
-
-    const specificRequirements = [];
-    if (params.focusAreas?.length) {
-      specificRequirements.push(`Focus areas: ${params.focusAreas.join(", ")}`);
-    }
-    if (params.distractorComplexity) {
-      specificRequirements.push(
-        `Distractor complexity: ${params.distractorComplexity}`
-      );
-    }
-
-    return `${context}
-
-            Create a multiple choice question with the following requirements:
-            - Must be practical and job-relevant
-            - Should test real-world application of skills
-            - Appropriate for ${params.experienceLevel} level
-            - Include 4 plausible options with clear distinctions
-
-            ${
-              specificRequirements.length > 0
-                ? `
-            Additional Requirements:
-            ${specificRequirements.map((req) => `- ${req}`).join("\n")}
-            `
-                : ""
-            }
-
-            Generate exactly 1 multiple choice question following these specifications.`;
-  }
+${
+  params.previousQuestions && params.previousQuestions.length > 0
+    ? `
+Avoid repeating these existing questions:
+${params.previousQuestions
+  .map((q) => `- ${sanitizeInput(q.question)}`)
+  .join("\n")}
+`
+    : ""
+}`;
 }
 
-class OpenQuestionPromptBuilder extends BasePromptBuilder {
-  buildSystemPrompt(questionIndex?: number): string {
-    const idFormat = `Format "q${questionIndex || 1}" (use "q${
-      questionIndex || 1
-    }" for this specific question)`;
+/**
+ * Prompt builders for each question type
+ */
+const promptBuilders = {
+  multiple_choice: {
+    system: (questionIndex: number) => `
+You are a technical recruitment expert specializing in creating multiple choice assessment questions.
 
-    return `
-            You are a technical recruitment expert specializing in creating open-ended assessment questions.
+Generate a valid JSON object for a single multiple choice question (NOT an array) that adheres to these specifications:
 
-            Generate a valid JSON object for a single open question (NOT an array) that adheres to these specifications:
+REQUIRED FIELDS:
+- id: Format "q${questionIndex}" (use "q${questionIndex}" for this specific question)
+- type: "multiple_choice"
+- question: Italian text (clear, specific, and job-relevant)
+- options: Array of exactly 4 Italian strings (each at least 3 characters)
+- correctAnswer: Zero-based index number (0-3) of the correct option
+- keywords: Array of relevant strings (optional)
+- explanation: Italian text explaining the correct answer (optional)
 
-            REQUIRED FIELDS:
-            - id: ${idFormat}
-            - type: "open_question"
-            - question: Italian text (clear, specific, and open-ended)
-            - keywords: Array of relevant strings for evaluation (optional)
-            - sampleAnswer: Italian text providing an example answer
-            - sampleSolution: Valid code string if question involves coding (optional)
-            - codeSnippet: Valid code string for context if needed (optional)
-            - explanation: Italian text with evaluation guidance (optional)
+QUALITY REQUIREMENTS:
+- Question must test practical, job-relevant knowledge
+- Options should be plausible but clearly distinguishable
+- Avoid ambiguous or trick questions
+- Include realistic distractors that test understanding
+- Explanation should be educational and concise
 
-            QUALITY REQUIREMENTS:
-            - Question should encourage detailed, thoughtful responses
-            - Allow for multiple valid approaches or answers
-            - Test understanding of concepts, not just memorization
-            - Provide clear evaluation criteria in sampleAnswer
-            - Include code examples when relevant to the role
-
-            Example Structure:
-            \`\`\`json
-            {
-              "id": "q${questionIndex || 1}",
-              "type": "open_question",
-              "question": "Spiega come implementeresti la gestione dello stato in un'applicazione React complessa e giustifica la tua scelta.",
-              "keywords": ["React", "state management", "Redux", "Context API", "architecture"],
-              "sampleAnswer": "Una risposta completa dovrebbe includere: valutazione dei requisiti, confronto tra soluzioni (Redux, Context API, Zustand), considerazioni di performance, e esempi di implementazione appropriati per il caso d'uso specifico.",
-              "explanation": "Valutare la comprensione dell'architettura React, capacità di analisi dei trade-off, e esperienza pratica con diverse soluzioni di state management."
-            }
-            \`\`\``;
-  }
-
-  buildUserPrompt(params: OpenQuestionParams): string {
-    const context = this.buildCommonContext(params);
-
-    const specificRequirements = [];
-    if (params.requireCodeExample) {
-      specificRequirements.push("Include code examples in the answer");
-    }
-    if (params.expectedResponseLength) {
-      specificRequirements.push(
-        `Expected response length: ${params.expectedResponseLength}`
-      );
-    }
-    if (params.evaluationCriteria?.length) {
-      specificRequirements.push(
-        `Evaluation criteria: ${params.evaluationCriteria.join(", ")}`
-      );
-    }
-
-    return `${context}
-
-            Create an open question with the following requirements:
-            - Must be practical and job-relevant
-            - Should encourage detailed, thoughtful responses
-            - Allow for multiple valid approaches
-            - Appropriate for ${params.experienceLevel} level
-            - Test conceptual understanding and practical experience
-
-            ${
-              specificRequirements.length > 0
-                ? `
-                  Additional Requirements:
-                  ${specificRequirements.map((req) => `- ${req}`).join("\n")}
-                  `
-                : ""
-            }
-
-            Generate exactly 1 open question following these specifications.`;
-  }
+Example Structure:
+\`\`\`json
+{
+  "id": "q${questionIndex}",
+  "type": "multiple_choice",
+  "question": "Cosa rappresenta il DOM in JavaScript?",
+  "options": [
+    "Document Object Model",
+    "Data Object Management", 
+    "Dynamic Object Mapping",
+    "Distributed Object Method"
+  ],
+  "correctAnswer": 0,
+  "keywords": ["DOM", "JavaScript", "web"],
+  "explanation": "Il DOM (Document Object Model) è una rappresentazione strutturata del documento HTML che permette a JavaScript di manipolare il contenuto e la struttura della pagina."
 }
+\`\`\``,
 
-class CodeSnippetPromptBuilder extends BasePromptBuilder {
-  buildSystemPrompt(questionIndex?: number): string {
-    const idFormat = `Format "q${questionIndex || 1}" (use "q${
-      questionIndex || 1
-    }" for this specific question)`;
+    user: (params: MultipleChoiceQuestionParams): string => {
+      const context = buildCommonContext(params);
+      const requirements: string[] = [];
 
-    return `
-            You are a technical recruitment expert specializing in creating code-based assessment questions.
-
-            Generate a valid JSON object for a single code snippet question (NOT an array) that adheres to these specifications:
-
-            REQUIRED FIELDS:
-            - id: ${idFormat}
-            - type: "code_snippet"
-            - question: Italian text asking to analyze, improve, or fix code (NO CODE in question text)
-            - codeSnippet: Valid code string (may contain bugs, performance issues, or be suitable for improvement)
-            - sampleSolution: Valid code string with the improved/corrected version
-            - language: Programming language (e.g., "javascript", "python", "java") MUST be included
-            - keywords: Array of relevant technical concepts (optional)
-            - explanation: Italian text explaining the solution (optional)
-
-            CRITICAL REQUIREMENT:
-            - You MUST use the programming language specified in the user prompt
-            - The "language" field MUST match the language requested by the user
-            - Both codeSnippet and sampleSolution MUST be written in the specified language
-            - Do NOT default to JavaScript unless explicitly requested
-
-            QUALITY REQUIREMENTS:
-            - Code should be realistic and job-relevant
-            - If fixing bugs: bugs should be common mistakes developers make
-            - If improving code: focus on best practices, performance, or readability
-            - Solution should demonstrate professional coding standards
-            - Include proper error handling where appropriate
-            - Code complexity should match experience level
-
-            Example Structures (adapt to requested language):
-
-            JavaScript Bug Fix Example:
-            \`\`\`json
-            {
-              "id": "q${questionIndex || 1}",
-              "type": "code_snippet",
-              "question": "Il seguente codice JavaScript presenta un bug che impedisce il corretto funzionamento asincrono. Identifica e correggi il problema.",
-              "codeSnippet": "async function fetchUserData(userId) {\\n  const response = fetch(\`/api/users/\${userId}\`);\\n  const userData = await response.json();\\n  return userData;\\n}",
-              "sampleSolution": "async function fetchUserData(userId) {\\n  const response = await fetch(\`/api/users/\${userId}\`);\\n  if (!response.ok) {\\n    throw new Error(\`HTTP error! status: \${response.status}\`);\\n  }\\n  const userData = await response.json();\\n  return userData;\\n}",
-              "language": "javascript",
-              "keywords": ["async/await", "fetch", "error handling", "Promise"],
-              "explanation": "Il bug principale era la mancanza di 'await' prima di fetch(). La soluzione include anche la gestione degli errori HTTP per robustezza."
-            }
-            \`\`\`
-
-            Python Code Improvement Example:
-            \`\`\`json
-            {
-              "id": "q${questionIndex || 1}",
-              "type": "code_snippet", 
-              "question": "Il seguente codice Python funziona ma può essere migliorato per performance e leggibilità. Proponi una versione ottimizzata.",
-              "codeSnippet": "def calculate_total(numbers):\\n    total = 0\\n    for i in range(len(numbers)):\\n        if numbers[i] > 0:\\n            total = total + numbers[i]\\n    return total",
-              "sampleSolution": "def calculate_total(numbers):\\n    return sum(num for num in numbers if num > 0)",
-              "language": "python",
-              "keywords": ["list comprehension", "sum function", "pythonic code", "performance"],
-              "explanation": "La versione migliorata usa una generator expression con la funzione sum(), che è più efficiente e pythonica."
-            }
-            \`\`\`
-
-            REMEMBER: Use the EXACT programming language specified in the user prompt, not these examples!`;
-  }
-
-  buildUserPrompt(params: CodeSnippetQuestionParams): string {
-    const context = this.buildCommonContext(params);
-
-    // Determine the programming language to use
-    // Explicit language parameter takes precedence over skills detection
-    let targetLanguage = params.language;
-    if (!targetLanguage) {
-      // Fall back to detecting from skills
-      const skills = params.skills.map((skill) => skill.toLowerCase());
-
-      if (
-        skills.some(
-          (skill) =>
-            skill.includes("javascript") ||
-            skill.includes("js") ||
-            skill.includes("node")
-        )
-      ) {
-        targetLanguage = "javascript";
-      } else if (
-        skills.some(
-          (skill) => skill.includes("typescript") || skill.includes("ts")
-        )
-      ) {
-        targetLanguage = "typescript";
-      } else if (skills.some((skill) => skill.includes("python"))) {
-        targetLanguage = "python";
-      } else if (skills.some((skill) => skill.includes("java"))) {
-        targetLanguage = "java";
-      } else if (
-        skills.some((skill) => skill.includes("c#") || skill.includes("csharp"))
-      ) {
-        targetLanguage = "csharp";
-      } else if (skills.some((skill) => skill.includes("php"))) {
-        targetLanguage = "php";
-      } else {
-        targetLanguage = "javascript"; // Default fallback
+      if (params.focusAreas?.length) {
+        requirements.push(`Focus areas: ${params.focusAreas.join(", ")}`);
       }
-    }
+      if (params.distractorComplexity) {
+        requirements.push(
+          `Distractor complexity: ${params.distractorComplexity}`
+        );
+      }
 
-    const specificRequirements = [];
-    specificRequirements.push(`Programming language: ${targetLanguage}`);
+      return `${context}
 
-    // Determine question type based on bugType parameter
-    const hasBugType = params.bugType && params.bugType.trim() !== "";
-    let questionType: string;
-    let codeRequirements: string;
+Create a multiple choice question with the following requirements:
+- Must be practical and job-relevant
+- Should test real-world application of skills
+- Appropriate for ${params.experienceLevel} level
+- Include 4 plausible options with clear distinctions
 
-    if (hasBugType) {
-      questionType = "bug fixing";
-      codeRequirements = `- Include intentional ${params.bugType} bugs that are common in practice
-                          - Provide a corrected solution demonstrating best practices
-                          - Focus on practical debugging skills`;
-      specificRequirements.push(`Bug type focus: ${params.bugType}`);
-    } else {
-      questionType = "code improvement/analysis";
-      codeRequirements = `- Code should be functional but have room for improvement
-                          - Focus on best practices, performance optimization, or code readability
-                          - Provide an improved solution that demonstrates professional coding standards
-                          - Focus on code quality and modern programming techniques`;
-    }
+${
+  requirements.length > 0
+    ? `Additional Requirements:\n${requirements
+        .map((r) => `- ${r}`)
+        .join("\n")}`
+    : ""
+}
 
-    if (params.codeComplexity) {
-      specificRequirements.push(`Code complexity: ${params.codeComplexity}`);
-    }
-    if (params.includeComments !== undefined) {
-      specificRequirements.push(
-        `Include comments: ${params.includeComments ? "yes" : "no"}`
-      );
-    }
+Generate exactly 1 multiple choice question following these specifications.`;
+    },
+  },
 
-    return `${context}
+  open_question: {
+    system: (questionIndex: number) => `
+You are a technical recruitment expert specializing in creating open-ended assessment questions.
 
-            Create a code snippet question with the following requirements:
-            - Must contain realistic, job-relevant code in ${targetLanguage}
-            - CRITICAL: Both codeSnippet and sampleSolution MUST be written in ${targetLanguage}
-            - The "language" field MUST be set to "${targetLanguage}"
-            ${codeRequirements}
-            - Appropriate complexity for ${params.experienceLevel} level
-            - Question type: ${questionType}
+Generate a valid JSON object for a single open question (NOT an array) that adheres to these specifications:
 
-            ${
-              specificRequirements.length > 0
-                ? `
-                  Additional Requirements:
-                  ${specificRequirements.map((req) => `- ${req}`).join("\n")}
-                  `
-                : ""
-            }
+REQUIRED FIELDS:
+- id: Format "q${questionIndex}" (use "q${questionIndex}" for this specific question)
+- type: "open_question"
+- question: Italian text (clear, specific, and open-ended)
+- keywords: Array of relevant strings for evaluation (optional)
+- sampleAnswer: Italian text providing an example answer
+- sampleSolution: Valid code string if question involves coding (optional)
+- codeSnippet: Valid code string for context if needed (optional)
+- explanation: Italian text with evaluation guidance (optional)
+
+QUALITY REQUIREMENTS:
+- Question should encourage detailed, thoughtful responses
+- Allow for multiple valid approaches or answers
+- Test understanding of concepts, not just memorization
+- Provide clear evaluation criteria in sampleAnswer
+- Include code examples when relevant to the role
+
+Example Structure:
+\`\`\`json
+{
+  "id": "q${questionIndex}",
+  "type": "open_question",
+  "question": "Spiega come implementeresti la gestione dello stato in un'applicazione React complessa e giustifica la tua scelta.",
+  "keywords": ["React", "state management", "Redux", "Context API", "architecture"],
+  "sampleAnswer": "Una risposta completa dovrebbe includere: valutazione dei requisiti, confronto tra soluzioni (Redux, Context API, Zustand), considerazioni di performance, e esempi di implementazione appropriati per il caso d'uso specifico.",
+  "explanation": "Valutare la comprensione dell'architettura React, capacità di analisi dei trade-off, e esperienza pratica con diverse soluzioni di state management."
+}
+\`\`\``,
+
+    user: (params: OpenQuestionParams): string => {
+      const context = buildCommonContext(params);
+      const requirements: string[] = [];
+
+      if (params.requireCodeExample) {
+        requirements.push("Include code examples in the answer");
+      }
+      if (params.expectedResponseLength) {
+        requirements.push(
+          `Expected response length: ${params.expectedResponseLength}`
+        );
+      }
+      if (params.evaluationCriteria?.length) {
+        requirements.push(
+          `Evaluation criteria: ${params.evaluationCriteria.join(", ")}`
+        );
+      }
+
+      return `${context}
+
+Create an open question with the following requirements:
+- Must be practical and job-relevant
+- Should encourage detailed, thoughtful responses
+- Allow for multiple valid approaches
+- Appropriate for ${params.experienceLevel} level
+- Test conceptual understanding and practical experience
+
+${
+  requirements.length > 0
+    ? `Additional Requirements:\n${requirements
+        .map((r) => `- ${r}`)
+        .join("\n")}`
+    : ""
+}
+
+Generate exactly 1 open question following these specifications.`;
+    },
+  },
+
+  code_snippet: {
+    system: (questionIndex: number) => `
+You are a technical recruitment expert specializing in creating code-based assessment questions.
+
+Generate a valid JSON object for a single code snippet question (NOT an array) that adheres to these specifications:
+
+REQUIRED FIELDS:
+- id: Format "q${questionIndex}" (use "q${questionIndex}" for this specific question)
+- type: "code_snippet"
+- question: Italian text asking to analyze, improve, or fix code (NO CODE in question text)
+- codeSnippet: Valid code string (may contain bugs, performance issues, or be suitable for improvement)
+- sampleSolution: Valid code string with the improved/corrected version
+- language: Programming language (e.g., "javascript", "python", "java") MUST be included
+- keywords: Array of relevant technical concepts (optional)
+- explanation: Italian text explaining the solution (optional)
+
+CRITICAL REQUIREMENT:
+- You MUST use the programming language specified in the user prompt
+- The "language" field MUST match the language requested by the user
+- Both codeSnippet and sampleSolution MUST be written in the specified language
+- Do NOT default to JavaScript unless explicitly requested
+
+QUALITY REQUIREMENTS:
+- Code should be realistic and job-relevant
+- If fixing bugs: bugs should be common mistakes developers make
+- If improving code: focus on best practices, performance, or readability
+- Solution should demonstrate professional coding standards
+- Include proper error handling where appropriate
+- Code complexity should match experience level
+
+Example (JavaScript):
+\`\`\`json
+{
+  "id": "q${questionIndex}",
+  "type": "code_snippet",
+  "question": "Il seguente codice JavaScript presenta un bug che impedisce il corretto funzionamento asincrono. Identifica e correggi il problema.",
+  "codeSnippet": "async function fetchUserData(userId) {\\n  const response = fetch(\`/api/users/\${userId}\`);\\n  const userData = await response.json();\\n  return userData;\\n}",
+  "sampleSolution": "async function fetchUserData(userId) {\\n  const response = await fetch(\`/api/users/\${userId}\`);\\n  if (!response.ok) {\\n    throw new Error(\`HTTP error! status: \${response.status}\`);\\n  }\\n  const userData = await response.json();\\n  return userData;\\n}",
+  "language": "javascript",
+  "keywords": ["async/await", "fetch", "error handling", "Promise"],
+  "explanation": "Il bug principale era la mancanza di 'await' prima di fetch(). La soluzione include anche la gestione degli errori HTTP per robustezza."
+}
+\`\`\`
+
+REMEMBER: Use the EXACT programming language specified in the user prompt!`,
+
+    user: (params: CodeSnippetQuestionParams): string => {
+      const context = buildCommonContext(params);
+
+      // Determine the programming language
+      let targetLanguage = params.language;
+      if (!targetLanguage) {
+        const skills = params.skills.map((s) => s.toLowerCase());
+        if (
+          skills.some(
+            (s) =>
+              s.includes("javascript") || s.includes("js") || s.includes("node")
+          )
+        ) {
+          targetLanguage = "javascript";
+        } else if (
+          skills.some((s) => s.includes("typescript") || s.includes("ts"))
+        ) {
+          targetLanguage = "typescript";
+        } else if (skills.some((s) => s.includes("python"))) {
+          targetLanguage = "python";
+        } else if (skills.some((s) => s.includes("java"))) {
+          targetLanguage = "java";
+        } else if (
+          skills.some((s) => s.includes("c#") || s.includes("csharp"))
+        ) {
+          targetLanguage = "csharp";
+        } else if (skills.some((s) => s.includes("php"))) {
+          targetLanguage = "php";
+        } else {
+          targetLanguage = "javascript";
+        }
+      }
+
+      const requirements = [`Programming language: ${targetLanguage}`];
+      const hasBugType = params.bugType && params.bugType.trim() !== "";
+
+      let questionType: string;
+      let codeRequirements: string;
+
+      if (hasBugType) {
+        questionType = "bug fixing";
+        codeRequirements = `- Include intentional ${params.bugType} bugs that are common in practice
+- Provide a corrected solution demonstrating best practices
+- Focus on practical debugging skills`;
+        requirements.push(`Bug type focus: ${params.bugType}`);
+      } else {
+        questionType = "code improvement/analysis";
+        codeRequirements = `- Code should be functional but have room for improvement
+- Focus on best practices, performance optimization, or code readability
+- Provide an improved solution that demonstrates professional coding standards`;
+      }
+
+      if (params.codeComplexity) {
+        requirements.push(`Code complexity: ${params.codeComplexity}`);
+      }
+      if (params.includeComments !== undefined) {
+        requirements.push(
+          `Include comments: ${params.includeComments ? "yes" : "no"}`
+        );
+      }
+
+      return `${context}
+
+Create a code snippet question with the following requirements:
+- Must contain realistic, job-relevant code in ${targetLanguage}
+- CRITICAL: Both codeSnippet and sampleSolution MUST be written in ${targetLanguage}
+- The "language" field MUST be set to "${targetLanguage}"
+${codeRequirements}
+- Appropriate complexity for ${params.experienceLevel} level
+- Question type: ${questionType}
+
+Additional Requirements:
+${requirements.map((r) => `- ${r}`).join("\n")}
 
 Generate exactly 1 code snippet question following these specifications.`;
-  }
-}
+    },
+  },
+} as const;
 
-// Factory for prompt builders
-class PromptBuilderFactory {
-  static createBuilder(type: QuestionType): BasePromptBuilder {
-    switch (type) {
-      case "multiple_choice":
-        return new MultipleChoicePromptBuilder();
-      case "open_question":
-        return new OpenQuestionPromptBuilder();
-      case "code_snippet":
-        return new CodeSnippetPromptBuilder();
-      default:
-        throw new Error(`Unsupported question type: ${type}`);
-    }
+/**
+ * Gets prompt builder for a question type
+ */
+/**
+ * Builds system and user prompts for a specific question type.
+ * Handles type narrowing to ensure proper parameter matching.
+ */
+function buildPrompts(params: GenerateQuestionParams): {
+  systemPrompt: string;
+  userPrompt: string;
+} {
+  switch (params.type) {
+    case "multiple_choice":
+      return {
+        systemPrompt: promptBuilders.multiple_choice.system(
+          params.questionIndex
+        ),
+        userPrompt: promptBuilders.multiple_choice.user(params),
+      };
+    case "open_question":
+      return {
+        systemPrompt: promptBuilders.open_question.system(params.questionIndex),
+        userPrompt: promptBuilders.open_question.user(params),
+      };
+    case "code_snippet":
+      return {
+        systemPrompt: promptBuilders.code_snippet.system(params.questionIndex),
+        userPrompt: promptBuilders.code_snippet.user(params),
+      };
+    default:
+      throw new Error(
+        `Unsupported question type: ${(params as GenerateQuestionParams).type}`
+      );
   }
 }
 
@@ -859,14 +826,8 @@ export class AIQuizService {
         params.specificModel
       );
 
-      // Get the appropriate prompt builder for the question type
-      const promptBuilder = PromptBuilderFactory.createBuilder(params.type);
-
       // Build system and user prompts using the type-specific builder
-      const systemPrompt = promptBuilder.buildSystemPrompt(
-        params.questionIndex
-      );
-      const userPrompt = promptBuilder.buildUserPrompt(params);
+      const { systemPrompt, userPrompt } = buildPrompts(params);
 
       const result = await withTimeout(
         withRetry(async () => {

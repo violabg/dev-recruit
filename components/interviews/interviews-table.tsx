@@ -15,7 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { InterviewListItem } from "@/lib/types/interview";
+import type { InterviewListItem } from "@/lib/data/interviews";
 import {
   CheckCircle,
   ChevronLeft,

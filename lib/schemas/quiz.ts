@@ -5,7 +5,12 @@ import { questionSchemas } from "./question";
 // ====================
 // UNIFIED QUIZ SCHEMAS
 // ====================
-// Consolidated quiz schemas eliminating duplication and providing single source of truth
+// Consolidated quiz schemas providing a single source of truth.
+// Schemas are organized by their purpose:
+// - AI Generation: aiQuizGenerationSchema
+// - Form Input: quizFormSchemas (frontend, formData, basic)
+// - API Contracts: quizApiSchemas (generateQuiz, update, save, generateQuestion)
+// - Entity Validation: quizSchema (validates DB entity structure)
 
 // AI Generation schema - only includes fields that the AI should generate
 // This schema excludes backend-managed fields like IDs, timestamps, etc.
@@ -15,21 +20,6 @@ export const aiQuizGenerationSchema = z.object({
   time_limit: z.number().nullable().optional(),
   difficulty: baseSchemas.difficulty.optional(),
   instructions: baseSchemas.instructions.optional(),
-});
-
-// Core quiz data schema - the single source of truth
-export const quizDataSchema = z.object({
-  id: baseSchemas.id.optional(), // Optional for creation
-  title: baseSchemas.title,
-  position_id: baseSchemas.id,
-  questions: z.array(questionSchemas.flexible),
-  time_limit: baseSchemas.timeLimit,
-  difficulty: baseSchemas.difficulty.optional(),
-  instructions: baseSchemas.instructions,
-  created_at: z.iso.datetime(),
-  updated_at: z.iso.datetime().optional(),
-  created_by: baseSchemas.id,
-  updated_by: baseSchemas.id.optional(),
 });
 
 // Generation configuration - shared across all generation contexts
@@ -161,42 +151,28 @@ export const quizFormSchemas = {
   }),
 } as const;
 
-// Database entity schemas
-export const quizEntitySchemas = {
-  // Complete quiz entity from database
-  complete: z.object({
-    id: baseSchemas.id,
-    title: baseSchemas.title,
-    position_id: baseSchemas.id,
-    questions: z.array(questionSchemas.flexible),
-    time_limit: z.number().nullable(),
-    difficulty: baseSchemas.difficulty.optional(),
-    created_at: z.string(),
-    created_by: baseSchemas.id,
-    updated_at: z.string().optional(),
-    updated_by: baseSchemas.id.optional(),
-  }),
-
-  // Minimal quiz for listing
-  summary: z.object({
-    id: baseSchemas.id,
-    title: baseSchemas.title,
-    position_id: baseSchemas.id,
-    difficulty: baseSchemas.difficulty.optional(),
-    created_at: z.string(),
-    question_count: z.int().min(0),
-  }),
-} as const;
+// Database entity schema - validates quiz data from Prisma
+// Use Prisma types for entity representation where possible
+export const quizSchema = z.object({
+  id: baseSchemas.id,
+  title: baseSchemas.title,
+  position_id: baseSchemas.id,
+  questions: z.array(questionSchemas.flexible),
+  time_limit: z.number().nullable(),
+  difficulty: baseSchemas.difficulty.optional(),
+  created_at: z.string(),
+  created_by: baseSchemas.id,
+  updated_at: z.string().optional(),
+  updated_by: baseSchemas.id.optional(),
+});
 
 // Type exports with consistent naming
-export type QuizData = z.infer<typeof quizDataSchema>;
 export type QuizGenerationConfig = z.infer<typeof quizGenerationConfigSchema>;
 export type QuizApiRequest = z.infer<typeof quizApiSchemas.generateQuiz>;
 export type QuizFormData = z.infer<typeof quizFormSchemas.frontend>;
 export type QuizFormDataRaw = z.infer<typeof quizFormSchemas.formData>;
 export type QuizBasicForm = z.infer<typeof quizFormSchemas.basic>;
-export type Quiz = z.infer<typeof quizEntitySchemas.complete>;
-export type QuizSummary = z.infer<typeof quizEntitySchemas.summary>;
+export type Quiz = z.infer<typeof quizSchema>;
 export type AIQuizGeneration = z.infer<typeof aiQuizGenerationSchema>;
 
 // API request types
@@ -211,8 +187,7 @@ export type UpdateQuizRequest = z.infer<typeof quizApiSchemas.update>;
 export type QuizForm = Quiz;
 export type GenerateQuizFormData = QuizFormDataRaw;
 
-// Schema exports for direct usage
-export const quizSchema = quizEntitySchemas.complete;
+// Schema exports for direct usage (aliases for cleaner imports)
 export const generateQuizRequestSchema = quizApiSchemas.generateQuiz;
 export const generateQuestionRequestSchema = quizApiSchemas.generateQuestion;
 export const saveQuizRequestSchema = quizApiSchemas.save;

@@ -1,36 +1,156 @@
 import { requireUser } from "@/lib/auth-server";
-import { mapQuizFromPrismaDetails, Quiz } from "@/lib/data/quizzes";
+import { mapQuizFromPrisma, Quiz } from "@/lib/data/quizzes";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import type {
-  AssignedInterview,
-  CandidateQuizData,
-  InterviewListItem,
-  QuizAssignmentData,
-} from "@/lib/types/interview";
 import { cacheLife, cacheTag } from "next/cache";
 
+// ============================================================================
+// Prisma GetPayload Types - derived from actual query includes
+// ============================================================================
+
+type InterviewWithCandidateAndQuiz = Prisma.InterviewGetPayload<{
+  include: {
+    candidate: {
+      select: { id: true; name: true; email: true };
+    };
+    quiz: {
+      select: { id: true; title: true };
+    };
+  };
+}>;
+
+type InterviewWithFullRelations = Prisma.InterviewGetPayload<{
+  include: {
+    candidate: {
+      select: { id: true; name: true; email: true };
+    };
+    quiz: {
+      select: {
+        id: true;
+        title: true;
+        positionId: true;
+        position: {
+          select: { id: true; title: true; skills: true };
+        };
+      };
+    };
+  };
+}>;
+
+// ============================================================================
+// API Response DTOs - serialized types for client consumption
+// These transform Prisma Date objects to ISO strings for JSON serialization
+// ============================================================================
+
 /**
- * Maps interview with relations to AssignedInterview type
- * Used across data layer for consistent interview representation
+ * Interview list item DTO for interviews table/grid views
+ * Includes flattened position data for display
  */
-export const mapAssignedInterview = (interview: {
+export type InterviewListItem = {
   id: string;
   token: string;
   status: string;
-  createdAt: Date;
-  startedAt: Date | null;
-  completedAt: Date | null;
-  candidate: {
-    id: string;
-    name: string | null;
-    email: string | null;
-  } | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  score: number | null;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  quizId: string;
+  quizTitle: string;
+  positionId: string | null;
+  positionTitle: string | null;
+  positionSkills: string[];
+};
+
+/**
+ * Assigned interview DTO for quiz assignment views
+ * Lightweight version with candidate and quiz info
+ */
+export type AssignedInterview = {
+  id: string;
+  token: string;
+  status: string;
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  quizId: string;
+  quizTitle: string;
+};
+
+/**
+ * Unassigned candidate DTO for assignment forms
+ */
+export type UnassignedCandidate = {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+};
+
+/**
+ * Quiz assignment data DTO - composite type for quiz invite page
+ */
+export type QuizAssignmentData = {
   quiz: {
     id: string;
     title: string;
+    positionId: string;
+    timeLimit: number | null;
+    createdBy: string;
+  };
+  position: {
+    id: string;
+    title: string;
   } | null;
-}): AssignedInterview => ({
+  assignedInterviews: AssignedInterview[];
+  unassignedCandidates: UnassignedCandidate[];
+};
+
+/**
+ * Candidate quiz data DTO - composite type for candidate quiz assignment
+ */
+export type CandidateQuizData = {
+  candidate: {
+    id: string;
+    name: string;
+    email: string;
+    status: string;
+    positionId: string;
+  };
+  position: {
+    id: string;
+    title: string;
+  } | null;
+  availableQuizzes: Array<{
+    id: string;
+    title: string;
+    createdAt: string;
+    timeLimit: number | null;
+    positionId: string;
+  }>;
+  assignedInterviews: AssignedInterview[];
+};
+
+// ============================================================================
+// Mapper Functions - transform Prisma results to DTOs
+// ============================================================================
+
+// ============================================================================
+// Mapper Functions - transform Prisma results to DTOs
+// ============================================================================
+
+/**
+ * Maps interview with relations to AssignedInterview DTO
+ * Used across data layer for consistent interview representation
+ */
+export const mapAssignedInterview = (
+  interview: InterviewWithCandidateAndQuiz
+): AssignedInterview => ({
   id: interview.id,
   token: interview.token,
   status: interview.status,
@@ -45,33 +165,12 @@ export const mapAssignedInterview = (interview: {
 });
 
 /**
- * Maps interview record to InterviewListItem type
+ * Maps interview record to InterviewListItem DTO
  * Used in interviews listing to include position information
  */
-export const mapInterviewListItem = (record: {
-  id: string;
-  token: string;
-  status: string;
-  startedAt: Date | null;
-  completedAt: Date | null;
-  createdAt: Date;
-  score: number | null;
-  candidateId: string;
-  candidate: {
-    name: string | null;
-    email: string | null;
-  } | null;
-  quizId: string;
-  quiz: {
-    title: string;
-    positionId: string;
-    position: {
-      id: string;
-      title: string;
-      skills: string[];
-    } | null;
-  } | null;
-}): InterviewListItem => {
+export const mapInterviewListItem = (
+  record: InterviewWithFullRelations
+): InterviewListItem => {
   return {
     id: record.id,
     token: record.token,
@@ -363,7 +462,7 @@ export const getInterviewByToken = async (
   }
 
   // Use consolidated mapping from quizzes data layer
-  const quiz = mapQuizFromPrismaDetails(interview.quiz);
+  const quiz = mapQuizFromPrisma(interview.quiz);
 
   const interviewAnswers =
     (interview.answers as Record<string, InterviewAnswer> | null) ?? null;
@@ -456,7 +555,7 @@ export const getInterviewDetail = async (
   }
 
   // Use consolidated mapping from quizzes data layer
-  const quiz = mapQuizFromPrismaDetails(interview.quiz);
+  const quiz = mapQuizFromPrisma(interview.quiz);
 
   const answers =
     (interview.answers as Record<string, InterviewAnswer> | null) ?? null;
