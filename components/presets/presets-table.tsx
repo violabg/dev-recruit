@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { deletePresetAction } from "@/lib/actions/presets";
-import { type Preset } from "@/lib/schemas";
+import { type Preset } from "@/lib/data/presets";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
 import { Edit, Eye, Trash2 } from "lucide-react";
 import Link from "next/link";

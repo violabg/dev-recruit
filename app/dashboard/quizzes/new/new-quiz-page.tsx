@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SaveQuizResult } from "@/hooks/use-edit-quiz-form";
-import { QuizForm } from "@/lib/schemas";
+import { QuizForEdit } from "@/lib/data/quizzes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -51,7 +51,7 @@ export const NewQuizCreationPage = ({
     );
   }, [fixedPosition, positions, selectedPositionId]);
 
-  const blankQuiz = useMemo<QuizForm | null>(() => {
+  const blankQuiz = useMemo<QuizForEdit | null>(() => {
     if (!selectedPosition) {
       return null;
     }
@@ -62,13 +62,7 @@ export const NewQuizCreationPage = ({
       positionId: selectedPosition.id,
       questions: [],
       timeLimit: null,
-      difficulty: 3,
-      instructions: "",
-      createdAt: new Date().toISOString(),
-      createdBy: "",
-      updatedAt: undefined,
-      updatedBy: undefined,
-    } as QuizForm;
+    };
   }, [selectedPosition]);
 
   const availablePositions = fixedPosition ? [fixedPosition] : positions;

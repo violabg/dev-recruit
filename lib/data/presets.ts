@@ -2,7 +2,10 @@
 
 import { cacheLife, cacheTag } from "next/cache";
 import prisma from "../prisma";
-import { presetSchema, type Preset } from "../schemas";
+import { Preset } from "../prisma/client";
+
+// Re-export Prisma Preset type for consumers
+export type { Preset };
 
 /**
  * Fetch all presets with caching
@@ -13,11 +16,9 @@ export async function getPresetsData(): Promise<Preset[]> {
   cacheLife("minutes");
   cacheTag("presets");
 
-  const presets = await prisma.preset.findMany({
+  return prisma.preset.findMany({
     orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
   });
-
-  return presets.map((p) => presetSchema.parse(p));
 }
 
 /**
@@ -29,10 +30,7 @@ export async function getPresetData(presetId: string): Promise<Preset | null> {
   cacheLife("minutes");
   cacheTag("presets", presetId);
 
-  const preset = await prisma.preset.findUnique({
+  return prisma.preset.findUnique({
     where: { id: presetId },
   });
-
-  if (!preset) return null;
-  return presetSchema.parse(preset);
 }

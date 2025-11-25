@@ -151,20 +151,9 @@ export const quizFormSchemas = {
   }),
 } as const;
 
-// Database entity schema - validates quiz data from Prisma
-// Use Prisma types for entity representation where possible
-export const quizSchema = z.object({
-  id: baseSchemas.id,
-  title: baseSchemas.title,
-  positionId: baseSchemas.id,
-  questions: z.array(questionSchemas.flexible),
-  timeLimit: z.number().nullable(),
-  difficulty: baseSchemas.difficulty.optional(),
-  createdAt: z.string(),
-  createdBy: baseSchemas.id,
-  updatedAt: z.string().optional(),
-  updatedBy: baseSchemas.id.optional(),
-});
+// NOTE: Entity types are defined in lib/data/quizzes.ts as QuizResponse
+// This file contains ONLY validation schemas, not entity definitions.
+// Use Prisma-derived types from the data layer for entity representation.
 
 // Type exports with consistent naming
 export type QuizGenerationConfig = z.infer<typeof quizGenerationConfigSchema>;
@@ -172,7 +161,6 @@ export type QuizApiRequest = z.infer<typeof quizApiSchemas.generateQuiz>;
 export type QuizFormData = z.infer<typeof quizFormSchemas.frontend>;
 export type QuizFormDataRaw = z.infer<typeof quizFormSchemas.formData>;
 export type QuizBasicForm = z.infer<typeof quizFormSchemas.basic>;
-export type Quiz = z.infer<typeof quizSchema>;
 export type AIQuizGeneration = z.infer<typeof aiQuizGenerationSchema>;
 
 // API request types
@@ -183,8 +171,7 @@ export type GenerateQuestionRequest = z.infer<
 export type SaveQuizRequest = z.infer<typeof quizApiSchemas.save>;
 export type UpdateQuizRequest = z.infer<typeof quizApiSchemas.update>;
 
-// Legacy aliases for backward compatibility
-export type QuizForm = Quiz;
+// Legacy alias - prefer importing QuizResponse from @/lib/data/quizzes
 export type GenerateQuizFormData = QuizFormDataRaw;
 
 // Schema exports for direct usage (aliases for cleaner imports)

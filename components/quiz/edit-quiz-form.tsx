@@ -6,7 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { QuestionType, QuizForm } from "@/lib/schemas";
+import { QuizForEdit } from "@/lib/data/quizzes";
+import { QuestionType } from "@/lib/schemas";
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { useAIGeneration } from "../../hooks/use-ai-generation";
@@ -23,7 +24,7 @@ import { QuestionsList } from "./questions-list";
 import { QuizSettings } from "./quiz-settings";
 
 type EditQuizFormProps = {
-  quiz: QuizForm;
+  quiz: QuizForEdit;
   position: {
     id: string;
     title: string;

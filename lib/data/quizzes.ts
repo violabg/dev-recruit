@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import { Question, quizSchema } from "@/lib/schemas";
+import { Question } from "@/lib/schemas";
 import { cacheLife, cacheTag } from "next/cache";
 
 // Prisma types for quiz queries - unified with optional position fields
@@ -18,26 +18,53 @@ type QuizWithPosition = Prisma.QuizGetPayload<{
   };
 }>;
 
-// API response DTO - for client/API contracts
+// ====================
+// ENTITY TYPES
+// ====================
+// These are the canonical entity types for quiz data.
+// Use Prisma types as base, with typed JSON fields.
+
 /**
- * Quiz API response DTO
- * Uses camelCase consistently with Prisma models
- * This is a composite view type, not a duplicate of Prisma fields
- *
- * @see Principle VII: Acceptable as API contract type extending Prisma model
+ * Quiz API response DTO - primary entity type for components.
+ * Extends Prisma model with typed questions array.
+ * Use this for component props and API responses.
  */
 export type QuizResponse = {
   id: string;
   title: string;
   createdAt: string; // ISO string from Prisma createdAt
-  positionId: string; // from Prisma positionId
+  positionId: string;
   positions: {
     id: string;
     title: string;
-    experienceLevel: string; // from Prisma experienceLevel
+    experienceLevel: string;
   } | null;
-  timeLimit: number | null; // from Prisma timeLimit
+  timeLimit: number | null;
   questions: Question[];
+};
+
+/**
+ * Quiz entity for edit operations.
+ * Minimal shape for form editing - excludes position relation.
+ */
+export type QuizForEdit = {
+  id: string;
+  title: string;
+  positionId: string;
+  questions: Question[];
+  timeLimit: number | null;
+};
+
+/**
+ * Position details returned with quiz data.
+ * Used by quiz edit forms to access position context.
+ */
+export type PositionDetails = {
+  id: string;
+  title: string;
+  experienceLevel: string;
+  skills: string[];
+  description: string | null;
 };
 
 // Backward compatibility alias
@@ -192,7 +219,7 @@ export async function CachedQuizzesContent({
  */
 export const getQuizData = async (
   quizId: string
-): Promise<{ quiz: any; position: any } | null> => {
+): Promise<{ quiz: QuizForEdit; position: PositionDetails } | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag("quizzes");
@@ -206,7 +233,7 @@ export const getQuizData = async (
     return null;
   }
 
-  const hydratedQuiz = {
+  const hydratedQuiz: QuizForEdit = {
     id: quiz.id,
     title: quiz.title,
     positionId: quiz.positionId,
@@ -214,24 +241,17 @@ export const getQuizData = async (
       ? (quiz.questions as Question[])
       : [],
     timeLimit: quiz.timeLimit,
-    createdAt: quiz.createdAt.toISOString(),
-    createdBy: quiz.createdBy,
-  } as const;
+  };
 
-  const parsedQuiz = quizSchema.safeParse(hydratedQuiz);
-  if (!parsedQuiz.success) {
-    return null;
-  }
-
-  const position = {
+  const position: PositionDetails = {
     id: quiz.position.id,
     title: quiz.position.title,
     experienceLevel: quiz.position.experienceLevel,
-    skills: quiz.position.skills,
+    skills: quiz.position.skills as string[],
     description: quiz.position.description,
   };
 
-  return { quiz: parsedQuiz.data, position };
+  return { quiz: hydratedQuiz, position };
 };
 
 /**

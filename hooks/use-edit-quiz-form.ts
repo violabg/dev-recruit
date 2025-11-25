@@ -1,11 +1,11 @@
 "use client";
 
 import { upsertQuizAction } from "@/lib/actions/quizzes";
+import { QuizForEdit } from "@/lib/data/quizzes";
 import {
   FlexibleQuestion,
   questionSchemas,
   QuestionType,
-  QuizForm,
   saveQuizRequestSchema,
 } from "@/lib/schemas";
 import { generateId } from "@/lib/utils/quiz-form-utils";
@@ -26,7 +26,7 @@ const editQuizFormSchema = saveQuizRequestSchema.extend({
 export type EditQuizFormData = z.infer<typeof editQuizFormSchema>;
 
 type UseEditQuizFormProps = {
-  quiz: QuizForm;
+  quiz: QuizForEdit;
   position: {
     id: string;
     title: string;

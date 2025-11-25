@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPresetsAction } from "@/lib/actions/presets";
-import { type Preset } from "@/lib/schemas";
+import { type Preset } from "@/lib/data/presets";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";

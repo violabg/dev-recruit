@@ -1,5 +1,6 @@
 "use client";
-import { QuestionType, type Preset } from "@/lib/schemas";
+import { type Preset } from "@/lib/data/presets";
+import { QuestionType } from "@/lib/schemas";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
 import {
   Collapsible,
@@ -35,7 +36,7 @@ export function PresetGenerationButtons(props: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePresetClick = async (preset: Preset) => {
-    await onGeneratePreset(preset.questionType, preset.id, {
+    await onGeneratePreset(preset.questionType as QuestionType, preset.id, {
       ...preset,
       llmModel: "llama-3.3-70b-versatile",
     });
