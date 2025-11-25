@@ -31,6 +31,54 @@ export function QuizCardsSkeleton() {
   );
 }
 
+export function QuizTableSkeleton() {
+  return (
+    <div className="border rounded-md">
+      <div className="p-4">
+        <div className="space-y-3">
+          {/* Header */}
+          <div className="flex gap-4 pb-3 border-b">
+            <Skeleton className="w-[250px] h-4" />
+            <Skeleton className="flex-1 h-4" />
+            <Skeleton className="w-20 h-4" />
+            <Skeleton className="w-20 h-4" />
+            <Skeleton className="w-24 h-4" />
+            <Skeleton className="w-16 h-4" />
+          </div>
+          {/* Rows */}
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-4 py-3">
+              <Skeleton className="w-[250px] h-4" />
+              <div className="flex flex-col flex-1 gap-1">
+                <Skeleton className="w-32 h-4" />
+                <Skeleton className="w-20 h-5" />
+              </div>
+              <Skeleton className="w-20 h-4" />
+              <Skeleton className="w-16 h-6" />
+              <Skeleton className="w-24 h-4" />
+              <Skeleton className="w-8 h-8" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function QuizListSkeleton() {
+  return (
+    <Card>
+      <CardContent>
+        <div className="flex justify-between items-center mb-4">
+          <Skeleton className="w-40 h-9" />
+          <Skeleton className="w-32 h-4" />
+        </div>
+        <QuizTableSkeleton />
+      </CardContent>
+    </Card>
+  );
+}
+
 export function QuizzesStatisticsSkeleton() {
   return (
     <div className="space-y-4">
