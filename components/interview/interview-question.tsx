@@ -17,7 +17,7 @@ import Editor from "@monaco-editor/react";
 import { Loader2, Speech, Square } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Highlight, themes } from "prism-react-renderer";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 type QuestionAnswer = string | { code: string } | null;
 
@@ -51,7 +51,7 @@ export function InterviewQuestion({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
-  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isPending, startTransition] = useTransition();
   // Reset state when question changes
   useEffect(() => {
     if (typeof currentAnswer === "string") {
@@ -86,32 +86,32 @@ export function InterviewQuestion({
       };
       recorder.onstop = async () => {
         setIsRecording(false);
-        setIsTranscribing(true);
+        // Use transition to indicate pending state for transcription
+        startTransition(async () => {
+          // Stop all tracks to release the microphone
+          stream.getTracks().forEach((track) => track.stop());
 
-        // Stop all tracks to release the microphone
-        stream.getTracks().forEach((track) => track.stop());
+          const audioBlob = new Blob(chunks, { type: "audio/webm" });
+          console.log("🚀 ~ audioBlob size:", audioBlob.size);
 
-        const audioBlob = new Blob(chunks, { type: "audio/webm" });
-        console.log("🚀 ~ audioBlob size:", audioBlob.size);
+          // Convert Blob to Uint8Array for server action
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          // Convert to regular array for server action serialization
+          const audioArray = Array.from(uint8Array);
 
-        // Convert Blob to Uint8Array for server action
-        const arrayBuffer = await audioBlob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        // Convert to regular array for server action serialization
-        const audioArray = Array.from(uint8Array);
-
-        try {
-          const result = await transcribeAudioAction(audioArray);
-          if (result.success && result.text) {
-            setAnswer(result.text);
-          } else {
-            console.error("Trascrizione fallita:", result.error);
+          try {
+            const result = await transcribeAudioAction(audioArray);
+            if (result.success && result.text) {
+              setAnswer(result.text);
+            } else {
+              console.error("Trascrizione fallita:", result.error);
+            }
+          } catch (err) {
+            console.log("🚀 ~ errore registrazione:", err);
+            // Gestione errore opzionale
           }
-        } catch (err) {
-          console.log("🚀 ~ errore registrazione:", err);
-          // Gestione errore opzionale
-        }
-        setIsTranscribing(false);
+        });
       };
       recorder.start();
     } catch (err) {
@@ -181,10 +181,10 @@ export function InterviewQuestion({
               className="min-h-32"
               value={answer || ""}
               onChange={(e) => setAnswer(e.target.value)}
-              disabled={isTranscribing}
+              disabled={isPending}
             />
             <div className="flex items-center gap-2">
-              {!isRecording && !isTranscribing && (
+              {!isRecording && !isPending && (
                 <Button
                   type="button"
                   variant="outline"
@@ -204,7 +204,7 @@ export function InterviewQuestion({
                   Ferma registrazione
                 </Button>
               )}
-              {isTranscribing && (
+              {isPending && (
                 <span className="text-muted-foreground text-sm">
                   <Loader2 className="inline-block mr-2 w-4 h-4 animate-spin" />
                   Trascrizione in corso...

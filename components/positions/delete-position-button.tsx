@@ -14,18 +14,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { deletePosition } from "@/lib/actions/positions";
 import { Loader2, Trash } from "lucide-react";
-import { useState } from "react";
+import { useTransition } from "react";
 
 export function DeletePositionButton({ id }: { id: string }) {
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleDelete = async () => {
     try {
-      setIsDeleting(true);
-      await deletePosition(id);
+      startTransition(async () => {
+        await deletePosition(id);
+      });
     } catch (error) {
       console.error("Error deleting position:", error);
-      setIsDeleting(false);
     }
   };
 
@@ -49,10 +49,10 @@ export function DeletePositionButton({ id }: { id: string }) {
           <AlertDialogCancel>Annulla</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={isDeleting}
+            disabled={isPending}
             className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
           >
-            {isDeleting ? (
+            {isPending ? (
               <>
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 Eliminazione...

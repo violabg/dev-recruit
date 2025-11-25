@@ -47,6 +47,7 @@ export async function deletePosition(id: string) {
 }
 
 export async function updatePosition(id: string, formData: FormData) {
+  const user = await requireUser();
   const parseJsonArray = (
     value: FormDataEntryValue | null,
     field: string

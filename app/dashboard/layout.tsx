@@ -7,6 +7,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import type React from "react";
 import { Suspense } from "react";
 
@@ -24,7 +25,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-2 w-full">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <Suspense>
+            <Suspense fallback={<Skeleton className="w-40 h-4" />}>
               <Breadcrumbs />
             </Suspense>
             <div className="flex-1 text-right">

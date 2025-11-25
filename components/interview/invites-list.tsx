@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Copy, Loader2, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react"; // Keep useEffect for potential refreshTrigger if needed
+import { useEffect, useState, useTransition } from "react"; // Keep useEffect for potential refreshTrigger if needed
 
 import {
   AlertDialog,
@@ -42,6 +42,7 @@ export function InvitesList({
     useState<AssignedInterview[]>(assignedInterviews);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Update interviews if the prop changes (e.g., after revalidation)
   useEffect(() => {
@@ -61,27 +62,31 @@ export function InvitesList({
   const handleDelete = async () => {
     if (!deleteId) return;
 
-    try {
-      setDeleting(true);
-      await deleteInterview(deleteId); // This server action should revalidate the path
+    startTransition(async () => {
+      try {
+        setDeleting(true);
+        await deleteInterview(deleteId); // This server action should revalidate the path
 
-      // Optimistically update UI or rely on revalidation from parent
-      setInterviews(
-        interviews.filter((interview) => interview.id !== deleteId)
-      );
+        // Optimistically update UI or rely on revalidation from parent
+        setInterviews(
+          interviews.filter((interview) => interview.id !== deleteId)
+        );
 
-      toast.success("Interview deleted", {
-        description: "The interview has been deleted successfully",
-      });
-    } catch (error: unknown) {
-      toast.error("Error", {
-        description:
-          error instanceof Error ? error.message : "Failed to delete interview",
-      });
-    } finally {
-      setDeleting(false);
-      setDeleteId(null);
-    }
+        toast.success("Interview deleted", {
+          description: "The interview has been deleted successfully",
+        });
+      } catch (error: unknown) {
+        toast.error("Error", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to delete interview",
+        });
+      } finally {
+        setDeleting(false);
+        setDeleteId(null);
+      }
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -181,7 +186,10 @@ export function InvitesList({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting || isPending}
+            >
               {deleting ? (
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
               ) : null}

@@ -20,6 +20,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -87,8 +88,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="px-2 py-2">
         <Suspense
           fallback={
-            <div className="p-4 text-muted-foreground text-sm">
-              Caricamento menu...
+            <div className="space-y-3 p-4">
+              {data.navSecondary.map((_, idx) => (
+                <Skeleton key={idx} className="rounded w-28 h-3" />
+              ))}
             </div>
           }
         >

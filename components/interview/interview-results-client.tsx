@@ -18,7 +18,7 @@ import { Question } from "@/lib/schemas";
 import { prismLanguage } from "@/lib/utils";
 import { Loader2, Sparkles } from "lucide-react";
 import { Highlight, themes } from "prism-react-renderer";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 interface InterviewResultsClientProps {
@@ -42,6 +42,7 @@ export function InterviewResultsClient({
   const [currentQuestionTitle, setCurrentQuestionTitle] = useState<string>("");
   const [isGeneratingOverallEvaluation, setIsGeneratingOverallEvaluation] =
     useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const evaluateAnswers = async () => {
     setLoading(true);
@@ -186,6 +187,8 @@ export function InterviewResultsClient({
     return count;
   };
 
+  const wrappedEvaluateAnswers = () => startTransition(evaluateAnswers);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -257,9 +260,11 @@ export function InterviewResultsClient({
           {!overallEvaluation && (
             <div className="space-y-4">
               <Button
-                onClick={evaluateAnswers}
+                onClick={wrappedEvaluateAnswers}
                 size="sm"
-                disabled={loading || getAnsweredQuestionsCount() === 0}
+                disabled={
+                  isPending || loading || getAnsweredQuestionsCount() === 0
+                }
               >
                 {loading ? (
                   <Loader2 className="mr-2 w-4 h-4 animate-spin" />
@@ -487,7 +492,7 @@ export function InterviewResultsClient({
                                       }
                                       style={style}
                                     >
-                                      <code className="break-words whitespace-pre-wrap">
+                                      <code className="wrap-break-word whitespace-pre-wrap">
                                         {tokens.map((line, i) => {
                                           const { key: lineKey, ...lineProps } =
                                             getLineProps({

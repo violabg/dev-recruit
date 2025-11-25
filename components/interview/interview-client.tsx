@@ -19,7 +19,7 @@ import {
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
 import { BrainCircuit, Clock } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "../theme-toggle";
 
@@ -59,18 +59,21 @@ export function InterviewClient({
   const [isStarted, setIsStarted] = useState(
     interview.status === "in_progress"
   );
+  const [isPending, startTransition] = useTransition();
 
-  const handleCompleteInterview = useCallback(async () => {
-    try {
-      await completeInterview(interview.token);
-      setIsCompleted(true);
-    } catch (cause) {
-      const message =
-        cause instanceof Error
-          ? cause.message
-          : "Impossibile completare l'intervista";
-      toast.error("Errore", { description: message });
-    }
+  const handleCompleteInterview = useCallback(() => {
+    startTransition(async () => {
+      try {
+        await completeInterview(interview.token);
+        setIsCompleted(true);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? cause.message
+            : "Impossibile completare l'intervista";
+        toast.error("Errore", { description: message });
+      }
+    });
   }, [interview.token]);
 
   useEffect(() => {
@@ -91,38 +94,41 @@ export function InterviewClient({
     return () => clearInterval(timer);
   }, [timeRemaining, isStarted, isCompleted, handleCompleteInterview]);
 
-  const handleStartInterview = async () => {
-    try {
-      await startInterview(interview.token);
-      setIsStarted(true);
-    } catch (cause) {
-      const message =
-        cause instanceof Error
-          ? cause.message
-          : "Impossibile avviare l'intervista";
-      toast.error("Errore", { description: message });
-    }
+  const handleStartInterview = () => {
+    startTransition(async () => {
+      try {
+        await startInterview(interview.token);
+        setIsStarted(true);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? cause.message
+            : "Impossibile avviare l'intervista";
+        toast.error("Errore", { description: message });
+      }
+    });
   };
 
-  const handleAnswer = async (questionId: string, answer: InterviewAnswer) => {
-    try {
-      setAnswers((prev) => ({
-        ...prev,
-        [questionId]: answer,
-      }));
-
-      await submitAnswer(interview.token, questionId, answer);
-
-      if (currentQuestionIndex < quiz.questions.length - 1) {
-        setCurrentQuestionIndex((prev) => prev + 1);
+  const handleAnswer = (questionId: string, answer: InterviewAnswer) => {
+    // Optimistically update UI, then submit via transition
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: answer,
+    }));
+    startTransition(async () => {
+      try {
+        await submitAnswer(interview.token, questionId, answer);
+        if (currentQuestionIndex < quiz.questions.length - 1) {
+          setCurrentQuestionIndex((prev) => prev + 1);
+        }
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? cause.message
+            : "Impossibile salvare la risposta";
+        toast.error("Errore", { description: message });
       }
-    } catch (cause) {
-      const message =
-        cause instanceof Error
-          ? cause.message
-          : "Impossibile salvare la risposta";
-      toast.error("Errore", { description: message });
-    }
+    });
   };
 
   const formatTimeRemaining = (seconds: number) => {
@@ -208,7 +214,11 @@ export function InterviewClient({
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" onClick={handleStartInterview}>
+            <Button
+              className="w-full"
+              onClick={handleStartInterview}
+              disabled={isPending}
+            >
               Inizia il quiz
             </Button>
           </CardFooter>
@@ -240,6 +250,7 @@ export function InterviewClient({
               variant="outline"
               size="sm"
               onClick={handleCompleteInterview}
+              disabled={isPending}
             >
               Completa
             </Button>
