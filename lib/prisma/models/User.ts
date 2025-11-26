@@ -260,6 +260,7 @@ export type UserWhereInput = {
   positions?: Prisma.PositionListRelationFilter
   candidates?: Prisma.CandidateListRelationFilter
   quizzes?: Prisma.QuizListRelationFilter
+  questions?: Prisma.QuestionListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -283,6 +284,7 @@ export type UserOrderByWithRelationInput = {
   positions?: Prisma.PositionOrderByRelationAggregateInput
   candidates?: Prisma.CandidateOrderByRelationAggregateInput
   quizzes?: Prisma.QuizOrderByRelationAggregateInput
+  questions?: Prisma.QuestionOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -309,6 +311,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   positions?: Prisma.PositionListRelationFilter
   candidates?: Prisma.CandidateListRelationFilter
   quizzes?: Prisma.QuizListRelationFilter
+  questions?: Prisma.QuestionListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -372,6 +375,7 @@ export type UserCreateInput = {
   positions?: Prisma.PositionCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -395,6 +399,7 @@ export type UserUncheckedCreateInput = {
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateUncheckedCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizUncheckedCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUpdateInput = {
@@ -418,6 +423,7 @@ export type UserUpdateInput = {
   positions?: Prisma.PositionUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -441,6 +447,7 @@ export type UserUncheckedUpdateInput = {
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUncheckedUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUncheckedUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUncheckedUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -658,6 +665,20 @@ export type UserUpdateOneRequiredWithoutQuizzesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutQuizzesInput, Prisma.UserUpdateWithoutQuizzesInput>, Prisma.UserUncheckedUpdateWithoutQuizzesInput>
 }
 
+export type UserCreateNestedOneWithoutQuestionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutQuestionsInput, Prisma.UserUncheckedCreateWithoutQuestionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutQuestionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutQuestionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutQuestionsInput, Prisma.UserUncheckedCreateWithoutQuestionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutQuestionsInput
+  upsert?: Prisma.UserUpsertWithoutQuestionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutQuestionsInput, Prisma.UserUpdateWithoutQuestionsInput>, Prisma.UserUncheckedUpdateWithoutQuestionsInput>
+}
+
 export type UserCreateWithoutSessionsInput = {
   id?: string
   name: string
@@ -678,6 +699,7 @@ export type UserCreateWithoutSessionsInput = {
   positions?: Prisma.PositionCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -700,6 +722,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateUncheckedCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizUncheckedCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutCreatorInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -738,6 +761,7 @@ export type UserUpdateWithoutSessionsInput = {
   positions?: Prisma.PositionUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -760,6 +784,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUncheckedUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUncheckedUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUncheckedUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -782,6 +807,7 @@ export type UserCreateWithoutAccountsInput = {
   positions?: Prisma.PositionCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -804,6 +830,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateUncheckedCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizUncheckedCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutCreatorInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -842,6 +869,7 @@ export type UserUpdateWithoutAccountsInput = {
   positions?: Prisma.PositionUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -864,6 +892,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUncheckedUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUncheckedUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUncheckedUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserCreateWithoutProfileInput = {
@@ -886,6 +915,7 @@ export type UserCreateWithoutProfileInput = {
   positions?: Prisma.PositionCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUncheckedCreateWithoutProfileInput = {
@@ -908,6 +938,7 @@ export type UserUncheckedCreateWithoutProfileInput = {
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateUncheckedCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizUncheckedCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutCreatorInput
 }
 
 export type UserCreateOrConnectWithoutProfileInput = {
@@ -946,6 +977,7 @@ export type UserUpdateWithoutProfileInput = {
   positions?: Prisma.PositionUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutProfileInput = {
@@ -968,6 +1000,7 @@ export type UserUncheckedUpdateWithoutProfileInput = {
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUncheckedUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUncheckedUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUncheckedUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserCreateWithoutPositionsInput = {
@@ -990,6 +1023,7 @@ export type UserCreateWithoutPositionsInput = {
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
   candidates?: Prisma.CandidateCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUncheckedCreateWithoutPositionsInput = {
@@ -1012,6 +1046,7 @@ export type UserUncheckedCreateWithoutPositionsInput = {
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
   candidates?: Prisma.CandidateUncheckedCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizUncheckedCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutCreatorInput
 }
 
 export type UserCreateOrConnectWithoutPositionsInput = {
@@ -1050,6 +1085,7 @@ export type UserUpdateWithoutPositionsInput = {
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
   candidates?: Prisma.CandidateUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPositionsInput = {
@@ -1072,6 +1108,7 @@ export type UserUncheckedUpdateWithoutPositionsInput = {
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
   candidates?: Prisma.CandidateUncheckedUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUncheckedUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUncheckedUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserCreateWithoutCandidatesInput = {
@@ -1094,6 +1131,7 @@ export type UserCreateWithoutCandidatesInput = {
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
   positions?: Prisma.PositionCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUncheckedCreateWithoutCandidatesInput = {
@@ -1116,6 +1154,7 @@ export type UserUncheckedCreateWithoutCandidatesInput = {
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCreatorInput
   quizzes?: Prisma.QuizUncheckedCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutCreatorInput
 }
 
 export type UserCreateOrConnectWithoutCandidatesInput = {
@@ -1154,6 +1193,7 @@ export type UserUpdateWithoutCandidatesInput = {
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCandidatesInput = {
@@ -1176,6 +1216,7 @@ export type UserUncheckedUpdateWithoutCandidatesInput = {
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCreatorNestedInput
   quizzes?: Prisma.QuizUncheckedUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUncheckedUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserCreateWithoutQuizzesInput = {
@@ -1198,6 +1239,7 @@ export type UserCreateWithoutQuizzesInput = {
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
   positions?: Prisma.PositionCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionCreateNestedManyWithoutCreatorInput
 }
 
 export type UserUncheckedCreateWithoutQuizzesInput = {
@@ -1220,6 +1262,7 @@ export type UserUncheckedCreateWithoutQuizzesInput = {
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCreatorInput
   candidates?: Prisma.CandidateUncheckedCreateNestedManyWithoutCreatorInput
+  questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutCreatorInput
 }
 
 export type UserCreateOrConnectWithoutQuizzesInput = {
@@ -1258,6 +1301,7 @@ export type UserUpdateWithoutQuizzesInput = {
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUpdateManyWithoutCreatorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQuizzesInput = {
@@ -1280,6 +1324,115 @@ export type UserUncheckedUpdateWithoutQuizzesInput = {
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCreatorNestedInput
   candidates?: Prisma.CandidateUncheckedUpdateManyWithoutCreatorNestedInput
+  questions?: Prisma.QuestionUncheckedUpdateManyWithoutCreatorNestedInput
+}
+
+export type UserCreateWithoutQuestionsInput = {
+  id?: string
+  name: string
+  firstName?: string | null
+  lastName?: string | null
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | string | null
+  isAnonymous?: boolean | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  positions?: Prisma.PositionCreateNestedManyWithoutCreatorInput
+  candidates?: Prisma.CandidateCreateNestedManyWithoutCreatorInput
+  quizzes?: Prisma.QuizCreateNestedManyWithoutCreatorInput
+}
+
+export type UserUncheckedCreateWithoutQuestionsInput = {
+  id?: string
+  name: string
+  firstName?: string | null
+  lastName?: string | null
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | string | null
+  isAnonymous?: boolean | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCreatorInput
+  candidates?: Prisma.CandidateUncheckedCreateNestedManyWithoutCreatorInput
+  quizzes?: Prisma.QuizUncheckedCreateNestedManyWithoutCreatorInput
+}
+
+export type UserCreateOrConnectWithoutQuestionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutQuestionsInput, Prisma.UserUncheckedCreateWithoutQuestionsInput>
+}
+
+export type UserUpsertWithoutQuestionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutQuestionsInput, Prisma.UserUncheckedUpdateWithoutQuestionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutQuestionsInput, Prisma.UserUncheckedCreateWithoutQuestionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutQuestionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutQuestionsInput, Prisma.UserUncheckedUpdateWithoutQuestionsInput>
+}
+
+export type UserUpdateWithoutQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isAnonymous?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  positions?: Prisma.PositionUpdateManyWithoutCreatorNestedInput
+  candidates?: Prisma.CandidateUpdateManyWithoutCreatorNestedInput
+  quizzes?: Prisma.QuizUpdateManyWithoutCreatorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isAnonymous?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  positions?: Prisma.PositionUncheckedUpdateManyWithoutCreatorNestedInput
+  candidates?: Prisma.CandidateUncheckedUpdateManyWithoutCreatorNestedInput
+  quizzes?: Prisma.QuizUncheckedUpdateManyWithoutCreatorNestedInput
 }
 
 
@@ -1293,6 +1446,7 @@ export type UserCountOutputType = {
   positions: number
   candidates: number
   quizzes: number
+  questions: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1301,6 +1455,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   positions?: boolean | UserCountOutputTypeCountPositionsArgs
   candidates?: boolean | UserCountOutputTypeCountCandidatesArgs
   quizzes?: boolean | UserCountOutputTypeCountQuizzesArgs
+  questions?: boolean | UserCountOutputTypeCountQuestionsArgs
 }
 
 /**
@@ -1348,6 +1503,13 @@ export type UserCountOutputTypeCountQuizzesArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.QuizWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.QuestionWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1370,6 +1532,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   positions?: boolean | Prisma.User$positionsArgs<ExtArgs>
   candidates?: boolean | Prisma.User$candidatesArgs<ExtArgs>
   quizzes?: boolean | Prisma.User$quizzesArgs<ExtArgs>
+  questions?: boolean | Prisma.User$questionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1432,6 +1595,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   positions?: boolean | Prisma.User$positionsArgs<ExtArgs>
   candidates?: boolean | Prisma.User$candidatesArgs<ExtArgs>
   quizzes?: boolean | Prisma.User$quizzesArgs<ExtArgs>
+  questions?: boolean | Prisma.User$questionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1446,6 +1610,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     positions: Prisma.$PositionPayload<ExtArgs>[]
     candidates: Prisma.$CandidatePayload<ExtArgs>[]
     quizzes: Prisma.$QuizPayload<ExtArgs>[]
+    questions: Prisma.$QuestionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1862,6 +2027,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   positions<T extends Prisma.User$positionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$positionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   candidates<T extends Prisma.User$candidatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$candidatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CandidatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   quizzes<T extends Prisma.User$quizzesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$quizzesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  questions<T extends Prisma.User$questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2429,6 +2595,30 @@ export type User$quizzesArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.QuizScalarFieldEnum | Prisma.QuizScalarFieldEnum[]
+}
+
+/**
+ * User.questions
+ */
+export type User$questionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Question
+   */
+  select?: Prisma.QuestionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Question
+   */
+  omit?: Prisma.QuestionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.QuestionInclude<ExtArgs> | null
+  where?: Prisma.QuestionWhereInput
+  orderBy?: Prisma.QuestionOrderByWithRelationInput | Prisma.QuestionOrderByWithRelationInput[]
+  cursor?: Prisma.QuestionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.QuestionScalarFieldEnum | Prisma.QuestionScalarFieldEnum[]
 }
 
 /**

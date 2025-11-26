@@ -32,6 +32,7 @@ model User {
   positions  Position[]  @relation("UserPositions")
   candidates Candidate[] @relation("UserCandidates")
   quizzes    Quiz[]      @relation("UserQuizzes")
+  questions  Question[]  @relation("UserQuestions")
 
   isAnonymous Boolean?
 
@@ -147,14 +148,15 @@ model Quiz {
   id         String   @id @default(cuid())
   title      String
   positionId String
-  questions  Json
+  questions  Json     // Legacy: inline questions (kept for backward compatibility)
   timeLimit  Int?
   createdBy  String
   createdAt  DateTime @default(now())
 
-  position   Position    @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  creator    User        @relation("UserQuizzes", fields: [createdBy], references: [id], onDelete: Cascade)
-  interviews Interview[]
+  position      Position       @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator       User           @relation("UserQuizzes", fields: [createdBy], references: [id], onDelete: Cascade)
+  interviews    Interview[]
+  quizQuestions QuizQuestion[] // New: linked reusable questions
 
   @@map("quizzes")
 }
@@ -175,6 +177,61 @@ model Interview {
   quiz      Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
   @@map("interviews")
+}
+
+// Reusable questions entity
+model Question {
+  id             String   @id @default(cuid())
+  type           QuestionType
+  question       String   // The question text
+  keywords       String[] @default([])
+  explanation    String?
+  
+  // Multiple choice fields
+  options        String[] @default([])
+  correctAnswer  Int?
+  
+  // Open question fields
+  sampleAnswer   String?
+  
+  // Code snippet fields
+  codeSnippet    String?
+  sampleSolution String?
+  language       String?
+  
+  // Favorites feature
+  isFavorite     Boolean  @default(false)
+  
+  // Metadata
+  createdBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  creator        User          @relation("UserQuestions", fields: [createdBy], references: [id], onDelete: Cascade)
+  quizQuestions  QuizQuestion[]
+
+  @@map("questions")
+}
+
+// Join table for Quiz-Question many-to-many relationship
+model QuizQuestion {
+  id         String   @id @default(cuid())
+  quizId     String
+  questionId String
+  order      Int      // Order of question in the quiz
+  createdAt  DateTime @default(now())
+
+  quiz     Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, questionId])
+  @@map("quiz_questions")
+}
+
+enum QuestionType {
+  multiple_choice
+  open_question
+  code_snippet
 }
 
 model Preset {

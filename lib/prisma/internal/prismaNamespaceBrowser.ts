@@ -60,6 +60,8 @@ export const ModelName = {
   Candidate: 'Candidate',
   Quiz: 'Quiz',
   Interview: 'Interview',
+  Question: 'Question',
+  QuizQuestion: 'QuizQuestion',
   Preset: 'Preset'
 } as const
 
@@ -214,6 +216,38 @@ export const InterviewScalarFieldEnum = {
 } as const
 
 export type InterviewScalarFieldEnum = (typeof InterviewScalarFieldEnum)[keyof typeof InterviewScalarFieldEnum]
+
+
+export const QuestionScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  question: 'question',
+  keywords: 'keywords',
+  explanation: 'explanation',
+  options: 'options',
+  correctAnswer: 'correctAnswer',
+  sampleAnswer: 'sampleAnswer',
+  codeSnippet: 'codeSnippet',
+  sampleSolution: 'sampleSolution',
+  language: 'language',
+  isFavorite: 'isFavorite',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+export const QuizQuestionScalarFieldEnum = {
+  id: 'id',
+  quizId: 'quizId',
+  questionId: 'questionId',
+  order: 'order',
+  createdAt: 'createdAt'
+} as const
+
+export type QuizQuestionScalarFieldEnum = (typeof QuizQuestionScalarFieldEnum)[keyof typeof QuizQuestionScalarFieldEnum]
 
 
 export const PresetScalarFieldEnum = {
