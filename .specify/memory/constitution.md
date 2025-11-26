@@ -1,21 +1,24 @@
 <!--
 Sync Impact Report
 ==================
-Version: 1.2.0 (MINOR: New principle added)
+Version: 1.3.0 (MINOR: Ownership filtering clarification)
 dev-recruit Constitution Amendment
 Status: Active
-Date: 2025-11-22
+Date: 2025-11-26
 
-Principles Added (v1.1.0 → v1.2.0):
+Principles Updated (v1.2.0 → v1.3.0):
+  3. Server Actions + Prisma with Auth Guards → clarified no ownership filtering
+
+Principles List:
   1. Cache Components First
   2. Zod Validation (Non-Negotiable)
-  3. Server Actions + Prisma with Auth Guards
+  3. Server Actions + Prisma with Auth Guards (No Ownership Filtering) - UPDATED
   4. Type-Safe AI Integration with Retries & Timeouts
   5. Data Queries in lib/data/ Only
   6. Suspense Fallbacks Using shadcn Skeleton
   7. Prisma Types Over Custom Types
   8. DRY: Avoid Code Duplication
-  9. useTransition for Form Pending States (NEW)
+  9. useTransition for Form Pending States
   10. Component Reuse Before Creation
 
 Sections Updated:
@@ -51,11 +54,11 @@ All AI-generated quiz outputs and form payloads MUST validate against Zod schema
 
 **Rationale**: Zod provides compile-time safety and runtime type guards, preventing malformed AI outputs or user input from corrupting the database or frontend state.
 
-### III. Server Actions + Prisma with Auth Guards
+### III. Server Actions + Prisma with Auth Guards (No Ownership Filtering)
 
-All data mutations live in `lib/actions/` and are marked `"use server"`. Every action MUST call `requireUser()` from `lib/auth-server.ts` before mutating state. Prisma client is centralized in `lib/prisma.ts` (Neon/Postgres with PrismaPg adapter). Cache invalidation after mutations MUST update tags (e.g., `updateTag('quizzes')`) and call `utils/revalidateQuizCache()` when supporting legacy paths.
+All data mutations live in `lib/actions/` and are marked `"use server"`. Every action MUST call `requireUser()` from `lib/auth-server.ts` to verify the user is authenticated. The `createdBy` field is set on entity creation (required by schema foreign key to User), but queries MUST NOT filter by `createdBy` for access control. This project does not implement entity ownership filtering—all authenticated users can access all entities. Prisma client is centralized in `lib/prisma.ts` (Neon/Postgres with PrismaPg adapter). Cache invalidation after mutations MUST update tags (e.g., `updateTag('quizzes')`) and call `utils/revalidateQuizCache()` when supporting legacy paths.
 
-**Rationale**: Server actions enforce row-level security, ensure authenticated access, and provide a single abstraction layer for tracing and cache invalidation.
+**Rationale**: Single-tenant or shared-access model simplifies data layer queries and improves cache efficiency. The `createdBy` field exists for auditing and future multi-tenancy if needed, but is not used for access control.
 
 ### IV. Type-Safe AI Integration with Retries & Timeouts
 
@@ -157,4 +160,4 @@ Architectural or major changes MUST be reflected in the project documentation:
 
 Documentation updates are considered part of the implementation and MUST be completed before a change is considered done.
 
-**Version**: 1.2.0 | **Ratified**: 2025-11-22 | **Last Amended**: 2025-11-22
+**Version**: 1.3.0 | **Ratified**: 2025-11-22 | **Last Amended**: 2025-11-26

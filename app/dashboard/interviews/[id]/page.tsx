@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 // Tabs removed — rendering results directly
-import { requireUser } from "@/lib/auth-server";
 import {
   getInterviewDetail,
   getRecentInterviewIds,
@@ -24,11 +23,11 @@ export async function generateStaticParams() {
   return interviewIds.map((id) => ({ id }));
 }
 
-// Calculate duration helper
+// Calculate duration helper - only computes when both dates are available
 function calculateDuration(startDate: string | null, endDate: string | null) {
-  if (!startDate) return "N/A";
+  if (!startDate || !endDate) return null;
   const start = new Date(startDate);
-  const end = endDate ? new Date(endDate) : new Date();
+  const end = new Date(endDate);
   const durationMs = end.getTime() - start.getTime();
   const minutes = Math.floor(durationMs / 60000);
   const seconds = Math.floor((durationMs % 60000) / 1000);
@@ -41,8 +40,7 @@ export default async function InterviewDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const unwrappedParams = await params;
-  const user = await requireUser();
-  const interviewData = await getInterviewDetail(unwrappedParams.id, user.id);
+  const interviewData = await getInterviewDetail(unwrappedParams.id);
 
   if (!interviewData) {
     return (
@@ -140,7 +138,10 @@ export default async function InterviewDetailPage({
           <CardContent>
             <div className="flex items-center gap-2">
               <span>
-                {calculateDuration(interview.startedAt, interview.completedAt)}
+                {calculateDuration(
+                  interview.startedAt,
+                  interview.completedAt
+                ) ?? (interview.status === "in_progress" ? "In corso" : "N/A")}
               </span>
             </div>
           </CardContent>

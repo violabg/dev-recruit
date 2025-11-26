@@ -1,12 +1,10 @@
 generator client {
-  provider   = "prisma-client"
-  output     = "../lib/prisma"
-  engineType = "client"
+  provider = "prisma-client"
+  output   = "../lib/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // Better Auth models

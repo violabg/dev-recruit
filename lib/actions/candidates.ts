@@ -54,10 +54,10 @@ export async function createCandidate(formData: FormData) {
 
   const position = await prisma.position.findUnique({
     where: { id: payload.positionId },
-    select: { id: true, createdBy: true },
+    select: { id: true },
   });
 
-  if (!position || position.createdBy !== user.id) {
+  if (!position) {
     throw new Error("Seleziona una posizione valida");
   }
 
@@ -124,10 +124,10 @@ export async function updateCandidate(
   if (payload.positionId) {
     const position = await prisma.position.findUnique({
       where: { id: payload.positionId },
-      select: { id: true, createdBy: true },
+      select: { id: true },
     });
 
-    if (!position || position.createdBy !== user.id) {
+    if (!position) {
       throw new Error("Seleziona una posizione valida");
     }
 

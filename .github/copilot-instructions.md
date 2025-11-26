@@ -9,7 +9,7 @@
 
 ## Data & Flow Patterns
 
-- **Server actions + Prisma:** mutate state inside `lib/actions/*`, typically calling `requireUser()` from `lib/auth-server.ts`. Reuse helpers from `lib/data/` when filtering/aggregating dashboard data (e.g., `lib/data/dashboard.ts`).
+- **Server actions + Prisma:** mutate state inside `lib/actions/*`, calling `requireUser()` from `lib/auth-server.ts` for authentication only (not ownership filtering). Reuse helpers from `lib/data/` when filtering/aggregating dashboard data (e.g., `lib/data/dashboard.ts`).
 - **AI prompts:** `AIQuizService` builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Refer to `docs/QUIZ_AI_GENERATION_SYSTEM.md` for the full flow and error-handling knobs.
 - **Dashboard pages:** split UI into Suspense-backed sections that fetch data independently so cached parts stay in the static shell while runtime segments stream separately.
 
@@ -25,7 +25,7 @@
 - **Styling:** favor Tailwind v4 utilities. CSS files must declare colors in OKLCH format (`oklch(...)`). Compose classes with `clsx`, `cn`, or `tailwind-merge` helpers.
 - **Forms:** always pair `react-hook-form` with Zod resolvers using schemas from `lib/schemas/`; validate before invoking server actions. Use rhf-input components from `components/` when using forms, create new components there as needed.
 - **Data fetching:** keep Prisma queries in server components. Only mark components `use client` when necessary for interactivity, and wrap runtime APIs inside Suspense with skeleton fallbacks.
-- **Authentication:** Better Auth config lives in `lib/auth.ts`; prefer `getCurrentUser()`/`requireUser()` helpers to enforce row-level security in server actions and routes.
+- **Authentication:** Better Auth config lives in `lib/auth.ts`; prefer `getCurrentUser()`/`requireUser()` helpers to verify user is authenticated. Note: this project does NOT filter entities by ownership (`createdBy`)—all authenticated users can access all entities.
 
 ## Essential References
 
@@ -61,7 +61,7 @@ All data queries in `lib/data/` follow this pattern:
 
 - **Routes & rendering:** every page under `app/` is a server component; interactive pieces use `use client` sparingly (see `app/dashboard/layout.tsx`).
 - **Cache Components:** code uses `"use cache"`, `cacheLife(...)`, and `cacheTag(...)` patterns (see `lib/data/`).
-- **Server actions:** mutation logic lives in `lib/actions/*` and is invoked from forms (`"use server"`). Use `requireUser()` from `lib/auth-server.ts` to guard actions (example: `lib/actions/quizzes.ts`).
+- **Server actions:** mutation logic lives in `lib/actions/*` and is invoked from forms (`"use server"`). Use `requireUser()` from `lib/auth-server.ts` to verify authentication (not ownership—no entity filtering by `createdBy`).
 - **AI layer:** `lib/services/ai-service.ts` (exported `aiQuizService`) builds prompts, applies `sanitizeInput`, retries (`withRetry`), timeouts, model selection (`getOptimalModel`) and validates via Zod schemas. Questions are expected in Italian and strict JSON structure.
 - **DB:** `lib/prisma.ts` builds a Prisma client with `PrismaPg` adapter (expects `DATABASE_URL`); Neon/Postgres-backed.
 
@@ -95,7 +95,7 @@ This file gives an agent the minimal, actionable knowledge to be productive in t
 
 - **App Router (Next.js App)**: every route under `app/` is a server component by default. Inspect `layout.tsx`, `page.tsx`, and `error.tsx` for the route's surface before editing.
 - **Cache Components**: code uses `"use cache"`, `cacheLife(...)`, `cacheTag(...)` and Suspense boundaries. See `docs/CACHE_IMPLEMENTATION.md` and `app/dashboard/candidates/page.tsx` for examples.
-- **Server actions & DB**: mutations live in `lib/actions/` (use `"use server"`). Use `requireUser()` from `lib/auth-server.ts` for auth checks. Prisma is centralized in `lib/prisma.ts` (Neon/Postgres).
+- **Server actions & DB**: mutations live in `lib/actions/` (use `"use server"`). Use `requireUser()` from `lib/auth-server.ts` for auth checks only (no entity ownership filtering). Prisma is centralized in `lib/prisma.ts` (Neon/Postgres).
 - **AI layer**: `lib/services/ai-service.ts` (exported as `aiQuizService`) builds prompts, picks models via `getOptimalModel`, retries/fallbacks and validates outputs against Zod schemas in `lib/schemas/`.
 
 **Key Developer Workflows**
@@ -126,7 +126,7 @@ This file gives an agent the minimal, actionable knowledge to be productive in t
 
 - Always run the dev server (`pnpm dev`) and use Next.js MCP runtime when changing routes or debugging hydration/runtime errors.
 - Reuse existing UI primitives in `components/ui/` and `components/dashboard/` instead of creating new low-level components.
-- When adding or modifying server actions: validate inputs with Zod, call `requireUser()`, update cache tags, and document the change in `docs/`.
+- When adding or modifying server actions: validate inputs with Zod, call `requireUser()` for authentication (not ownership filtering), update cache tags, and document the change in `docs/`.
 - **Documentation updates are mandatory** for architectural or major changes. Update the relevant docs:
   - `docs/AI_QUIZ_GENERATION.md` — AI service changes, prompt modifications, model updates
   - `docs/CACHE_IMPLEMENTATION.md` — Caching strategy changes, new cache patterns

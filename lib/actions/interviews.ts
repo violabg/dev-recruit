@@ -192,7 +192,6 @@ export async function assignCandidatesToQuiz(
   const quiz = await prisma.quiz.findUnique({
     where: {
       id: validatedQuizId,
-      createdBy: user.id,
     },
     select: {
       id: true,
@@ -209,7 +208,6 @@ export async function assignCandidatesToQuiz(
       id: {
         in: validatedCandidateIds,
       },
-      createdBy: user.id,
     },
     select: {
       id: true,
