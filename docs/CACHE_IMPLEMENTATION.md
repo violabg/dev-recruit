@@ -121,13 +121,12 @@ All data queries in `lib/data/` follow this pattern:
 import { cacheLife, cacheTag } from "next/cache";
 import prisma from "../prisma";
 
-export async function getQuizzes(userId: string) {
+export async function getQuizzes() {
   "use cache";
   cacheTag("quizzes");
   cacheLife("minutes");
 
   return await prisma.quiz.findMany({
-    where: { createdBy: userId },
     include: { position: true },
     orderBy: { createdAt: "desc" },
   });
@@ -407,16 +406,13 @@ export async function upsertQuizAction(formData: FormData) {
 // lib/data/interviews.ts
 import { cacheLife, cacheTag } from "next/cache";
 
-export async function getInterviewsWithResults(userId: string) {
+export async function getInterviewsWithResults() {
   "use cache";
   cacheTag("interviews");
   cacheLife("minutes");
 
   try {
     const interviews = await prisma.interview.findMany({
-      where: {
-        candidate: { createdBy: userId },
-      },
       include: {
         candidate: true,
         quiz: { include: { position: true } },

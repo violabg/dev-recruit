@@ -44,11 +44,10 @@ export async function generateNewQuizAction({
     // Validate user authentication
     const user = await requireUser();
 
-    // Get position details with ownership check
-    const position = await prisma.position.findFirst({
+    // Get position details
+    const position = await prisma.position.findUnique({
       where: {
         id: positionId,
-        createdBy: user.id,
       },
       select: {
         id: true,
@@ -144,12 +143,12 @@ export async function deleteQuizById(quizId: string) {
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
-      select: { createdBy: true, positionId: true },
+      select: { positionId: true },
     });
 
-    if (!quiz || quiz.createdBy !== user.id) {
+    if (!quiz) {
       throw new QuizSystemError(
-        "Quiz not found or access denied",
+        "Quiz not found",
         QuizErrorCode.QUIZ_NOT_FOUND,
         { quizId }
       );
@@ -257,11 +256,10 @@ export async function upsertQuizAction(formData: FormData) {
         );
       }
 
-      // Verify user owns the position
-      const position = await prisma.position.findFirst({
+      // Verify position exists
+      const position = await prisma.position.findUnique({
         where: {
           id: positionId,
-          createdBy: user.id,
         },
         select: { id: true },
       });
@@ -307,20 +305,12 @@ export async function upsertQuizAction(formData: FormData) {
       // UPDATE MODE
       const quiz = await prisma.quiz.findUnique({
         where: { id: quizId },
-        select: { createdBy: true, positionId: true },
+        select: { positionId: true },
       });
 
       if (!quiz) {
         throw new QuizSystemError(
-          "Quiz not found or access denied",
-          QuizErrorCode.QUIZ_NOT_FOUND,
-          { quizId }
-        );
-      }
-
-      if (quiz.createdBy !== user.id) {
-        throw new QuizSystemError(
-          "You do not have permission to update this quiz",
+          "Quiz not found",
           QuizErrorCode.QUIZ_NOT_FOUND,
           { quizId }
         );
@@ -389,10 +379,10 @@ export async function regenerateQuizAction({
   try {
     const user = await requireUser();
 
-    // Verify quiz exists and user owns it
+    // Verify quiz exists
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
-      select: { createdBy: true },
+      select: { id: true },
     });
 
     if (!quiz) {
@@ -403,15 +393,7 @@ export async function regenerateQuizAction({
       );
     }
 
-    if (quiz.createdBy !== user.id) {
-      throw new QuizSystemError(
-        "You do not have permission to regenerate this quiz",
-        QuizErrorCode.QUIZ_NOT_FOUND,
-        { quizId }
-      );
-    }
-
-    // Verify position exists and user owns it
+    // Verify position exists
     const position = await prisma.position.findFirst({
       where: {
         id: positionId,

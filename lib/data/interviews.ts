@@ -1,4 +1,3 @@
-import { requireUser } from "@/lib/auth-server";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { mapQuizFromPrisma, Quiz } from "@/lib/data/quizzes";
 import prisma from "@/lib/prisma";
@@ -192,17 +191,15 @@ export const mapInterviewListItem = (
 };
 
 const getQuizAssignmentDataCached = async (
-  quizId: string,
-  userId: string
+  quizId: string
 ): Promise<QuizAssignmentData | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag("interviews");
 
-  const quiz = await prisma.quiz.findFirst({
+  const quiz = await prisma.quiz.findUnique({
     where: {
       id: quizId,
-      createdBy: userId,
     },
     include: {
       position: {
@@ -250,7 +247,6 @@ const getQuizAssignmentDataCached = async (
   const unassignedCandidates = await prisma.candidate.findMany({
     where: {
       positionId: quiz.positionId,
-      createdBy: userId,
       id: {
         notIn: assignedCandidateIds,
       },
@@ -288,22 +284,19 @@ const getQuizAssignmentDataCached = async (
 export const getQuizAssignmentData = async (
   quizId: string
 ): Promise<QuizAssignmentData | null> => {
-  const user = await requireUser();
-  return getQuizAssignmentDataCached(quizId, user.id);
+  return getQuizAssignmentDataCached(quizId);
 };
 
 const getCandidateQuizDataCached = async (
-  candidateId: string,
-  userId: string
+  candidateId: string
 ): Promise<CandidateQuizData | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag("interviews");
 
-  const candidate = await prisma.candidate.findFirst({
+  const candidate = await prisma.candidate.findUnique({
     where: {
       id: candidateId,
-      createdBy: userId,
     },
     include: {
       position: {
@@ -360,7 +353,6 @@ const getCandidateQuizDataCached = async (
   const availableQuizzes = await prisma.quiz.findMany({
     where: {
       positionId: candidate.positionId,
-      createdBy: userId,
       id: {
         notIn: assignedQuizIds,
       },
@@ -405,8 +397,7 @@ const getCandidateQuizDataCached = async (
 export const getCandidateQuizData = async (
   candidateId: string
 ): Promise<CandidateQuizData | null> => {
-  const user = await requireUser();
-  return getCandidateQuizDataCached(candidateId, user.id);
+  return getCandidateQuizDataCached(candidateId);
 };
 
 type InterviewAnswer = string | { code: string } | null;
@@ -510,8 +501,7 @@ export type InterviewDetailResult = {
 };
 
 export const getInterviewDetail = async (
-  id: string,
-  userId: string
+  id: string
 ): Promise<InterviewDetailResult | null> => {
   "use cache";
   cacheLife("hours");
@@ -520,12 +510,6 @@ export const getInterviewDetail = async (
   const interview = await prisma.interview.findFirst({
     where: {
       id,
-      quiz: {
-        createdBy: userId,
-      },
-      candidate: {
-        createdBy: userId,
-      },
     },
     include: {
       quiz: {
