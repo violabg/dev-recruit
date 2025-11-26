@@ -29,6 +29,7 @@ type InterviewRecord = {
   token: string;
   status: "pending" | "in_progress" | "completed";
   answers: Record<string, InterviewAnswer> | null;
+  startedAt: string | null;
 };
 
 type Candidate = {
@@ -36,6 +37,50 @@ type Candidate = {
   name: string;
   email: string;
 };
+
+/**
+ * Calculate remaining time in seconds based on startedAt and timeLimit
+ * Returns null if no time limit, 0 if time expired
+ * Never returns more than the total time limit
+ */
+function calculateRemainingTime(
+  startedAt: string | null,
+  timeLimitMinutes: number | null
+): number | null {
+  if (!timeLimitMinutes) return null;
+
+  const totalSeconds = timeLimitMinutes * 60;
+
+  // If not started yet, return null (timer shouldn't show)
+  if (!startedAt) return null;
+
+  const startTime = new Date(startedAt).getTime();
+  const now = Date.now();
+  const elapsedSeconds = Math.floor((now - startTime) / 1000);
+  const remaining = totalSeconds - elapsedSeconds;
+
+  // Clamp between 0 and totalSeconds
+  return Math.max(0, Math.min(remaining, totalSeconds));
+}
+
+/**
+ * Find the index of the first unanswered question
+ * Returns 0 if all questions are answered or no questions exist
+ */
+function findFirstUnansweredQuestionIndex(
+  questions: { id: string }[],
+  answers: Record<string, InterviewAnswer> | null
+): number {
+  if (!answers || questions.length === 0) return 0;
+
+  for (let i = 0; i < questions.length; i++) {
+    if (answers[questions[i].id] === undefined) {
+      return i;
+    }
+  }
+  // All answered, go to last question
+  return questions.length - 1;
+}
 
 export function InterviewClient({
   interview,
@@ -46,7 +91,14 @@ export function InterviewClient({
   quiz: Quiz;
   candidate: Candidate;
 }) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  // Calculate initial question index - resume to first unanswered question if interview in progress
+  const initialQuestionIndex =
+    interview.status === "in_progress"
+      ? findFirstUnansweredQuestionIndex(quiz.questions, interview.answers)
+      : 0;
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] =
+    useState(initialQuestionIndex);
   const [answers, setAnswers] = useState<Record<string, InterviewAnswer>>(
     interview.answers ? { ...interview.answers } : {}
   );
@@ -54,8 +106,18 @@ export function InterviewClient({
   const handlePendingAnswerChange = useCallback((answer: InterviewAnswer) => {
     setPendingAnswer(answer);
   }, []);
+
+  // Calculate remaining time from startedAt if interview is in progress
+  const initialTimeRemaining = calculateRemainingTime(
+    interview.startedAt,
+    quiz.timeLimit
+  );
+
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
-    quiz.timeLimit ? quiz.timeLimit * 60 : null
+    initialTimeRemaining
+  );
+  const [isTimeExpired, setIsTimeExpired] = useState(
+    initialTimeRemaining !== null && initialTimeRemaining === 0
   );
   const [isCompleted, setIsCompleted] = useState(
     interview.status === "completed"
@@ -82,12 +144,13 @@ export function InterviewClient({
 
   useEffect(() => {
     // Timer for time limit
-    if (!timeRemaining || !isStarted || isCompleted) return;
+    if (!timeRemaining || !isStarted || isCompleted || isTimeExpired) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(timer);
+          setIsTimeExpired(true);
           handleCompleteInterview();
           return 0;
         }
@@ -96,13 +159,37 @@ export function InterviewClient({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeRemaining, isStarted, isCompleted, handleCompleteInterview]);
+  }, [
+    timeRemaining,
+    isStarted,
+    isCompleted,
+    isTimeExpired,
+    handleCompleteInterview,
+  ]);
+
+  // Auto-complete interview if time expired on mount (page refresh after time expired)
+  useEffect(() => {
+    if (isTimeExpired && !isCompleted) {
+      handleCompleteInterview();
+    }
+  }, [isTimeExpired, isCompleted, handleCompleteInterview]);
 
   const handleStartInterview = () => {
     startTransition(async () => {
       try {
-        await startInterview(interview.token);
+        const result = await startInterview(interview.token);
         setIsStarted(true);
+        // Calculate remaining time from server's startedAt timestamp
+        if (quiz.timeLimit && result.startedAt) {
+          const remaining = calculateRemainingTime(
+            result.startedAt,
+            quiz.timeLimit
+          );
+          setTimeRemaining(remaining);
+          if (remaining === 0) {
+            setIsTimeExpired(true);
+          }
+        }
       } catch (cause) {
         const message =
           cause instanceof Error
@@ -133,6 +220,14 @@ export function InterviewClient({
   };
 
   const handleSaveAndNext = () => {
+    // Block navigation if time expired
+    if (isTimeExpired) {
+      toast.error("Tempo scaduto", {
+        description: "Il tempo a disposizione è terminato.",
+      });
+      return;
+    }
+
     const currentQuestion = quiz.questions[currentQuestionIndex];
     if (pendingAnswer !== null) {
       handleAnswer(currentQuestion.id, pendingAnswer);

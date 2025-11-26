@@ -407,6 +407,7 @@ export type InterviewByTokenResult = {
     token: string;
     status: "pending" | "in_progress" | "completed";
     answers: Record<string, InterviewAnswer> | null;
+    startedAt: string | null;
   };
   quiz: Quiz;
   candidate: {
@@ -419,9 +420,8 @@ export type InterviewByTokenResult = {
 export const getInterviewByToken = async (
   token: string
 ): Promise<InterviewByTokenResult | null> => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("interviews");
+  // No caching for interview by token - data changes frequently during active interviews
+  // (startedAt, answers, completedAt, status all change during the interview)
 
   const interview = await prisma.interview.findUnique({
     where: { token },
@@ -471,6 +471,7 @@ export const getInterviewByToken = async (
       token: interview.token,
       status,
       answers: interviewAnswers,
+      startedAt: interview.startedAt?.toISOString() ?? null,
     },
     quiz,
     candidate: {

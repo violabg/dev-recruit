@@ -39,21 +39,27 @@ export async function startInterview(token: string) {
     throw new Error("Interview not found");
   }
 
+  // If already started, return existing startedAt
   if (interview.status !== "pending") {
-    return { success: true };
+    return {
+      success: true,
+      startedAt: interview.startedAt?.toISOString() ?? new Date().toISOString(),
+    };
   }
+
+  const startedAt = new Date();
 
   await prisma.interview.update({
     where: { id: interview.id },
     data: {
       status: "in_progress",
-      startedAt: new Date(),
+      startedAt,
     },
   });
 
   updateTag("interviews");
 
-  return { success: true };
+  return { success: true, startedAt: startedAt.toISOString() };
 }
 
 export async function submitAnswer(
@@ -66,11 +72,40 @@ export async function submitAnswer(
     select: {
       id: true,
       answers: true,
+      startedAt: true,
+      status: true,
+      quiz: {
+        select: {
+          timeLimit: true,
+        },
+      },
     },
   });
 
   if (!interview) {
     throw new Error("Interview not found");
+  }
+
+  // Validate time limit if quiz has one and interview has started
+  if (interview.quiz.timeLimit && interview.startedAt) {
+    const startTime = new Date(interview.startedAt).getTime();
+    const now = Date.now();
+    const elapsedMinutes = (now - startTime) / (1000 * 60);
+
+    if (elapsedMinutes > interview.quiz.timeLimit) {
+      // Auto-complete the interview if time has expired
+      if (interview.status !== "completed") {
+        await prisma.interview.update({
+          where: { id: interview.id },
+          data: {
+            status: "completed",
+            completedAt: new Date(),
+          },
+        });
+        updateTag("interviews");
+      }
+      throw new Error("Il tempo a disposizione è scaduto");
+    }
   }
 
   const currentAnswers =
