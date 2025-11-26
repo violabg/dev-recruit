@@ -50,6 +50,10 @@ export function InterviewClient({
   const [answers, setAnswers] = useState<Record<string, InterviewAnswer>>(
     interview.answers ? { ...interview.answers } : {}
   );
+  const [pendingAnswer, setPendingAnswer] = useState<InterviewAnswer>(null);
+  const handlePendingAnswerChange = useCallback((answer: InterviewAnswer) => {
+    setPendingAnswer(answer);
+  }, []);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
     quiz.timeLimit ? quiz.timeLimit * 60 : null
   );
@@ -118,9 +122,6 @@ export function InterviewClient({
     startTransition(async () => {
       try {
         await submitAnswer(interview.token, questionId, answer);
-        if (currentQuestionIndex < quiz.questions.length - 1) {
-          setCurrentQuestionIndex((prev) => prev + 1);
-        }
       } catch (cause) {
         const message =
           cause instanceof Error
@@ -129,6 +130,46 @@ export function InterviewClient({
         toast.error("Errore", { description: message });
       }
     });
+  };
+
+  const handleSaveAndNext = () => {
+    const currentQuestion = quiz.questions[currentQuestionIndex];
+    if (pendingAnswer !== null) {
+      handleAnswer(currentQuestion.id, pendingAnswer);
+    }
+    if (currentQuestionIndex < quiz.questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
+  };
+
+  const handleSaveAndComplete = () => {
+    const currentQuestion = quiz.questions[currentQuestionIndex];
+    if (pendingAnswer !== null && !answers[currentQuestion.id]) {
+      // Save the pending answer first, then complete
+      setAnswers((prev) => ({
+        ...prev,
+        [currentQuestion.id]: pendingAnswer,
+      }));
+      startTransition(async () => {
+        try {
+          await submitAnswer(
+            interview.token,
+            currentQuestion.id,
+            pendingAnswer
+          );
+          await completeInterview(interview.token);
+          setIsCompleted(true);
+        } catch (cause) {
+          const message =
+            cause instanceof Error
+              ? cause.message
+              : "Impossibile completare l'intervista";
+          toast.error("Errore", { description: message });
+        }
+      });
+    } else {
+      handleCompleteInterview();
+    }
   };
 
   const formatTimeRemaining = (seconds: number) => {
@@ -276,9 +317,7 @@ export function InterviewClient({
             <InterviewQuestion
               question={quiz.questions[currentQuestionIndex]}
               questionNumber={currentQuestionIndex + 1}
-              onAnswer={(answer) =>
-                handleAnswer(quiz.questions[currentQuestionIndex].id, answer)
-              }
+              onAnswerChange={handlePendingAnswerChange}
               currentAnswer={answers[quiz.questions[currentQuestionIndex].id]}
             />
           )}
@@ -293,17 +332,28 @@ export function InterviewClient({
             </Button>
             {currentQuestionIndex < totalQuestions - 1 ? (
               <Button
-                onClick={() =>
-                  setCurrentQuestionIndex(currentQuestionIndex + 1)
+                onClick={handleSaveAndNext}
+                disabled={
+                  pendingAnswer === null &&
+                  !answers[quiz.questions[currentQuestionIndex].id]
                 }
-                disabled={!answers[quiz.questions[currentQuestionIndex].id]}
               >
                 Successiva
               </Button>
             ) : (
               <Button
-                onClick={handleCompleteInterview}
-                disabled={totalQuestions !== totalAnswers || isPending}
+                onClick={handleSaveAndComplete}
+                disabled={
+                  (pendingAnswer === null &&
+                    !answers[quiz.questions[currentQuestionIndex].id]) ||
+                  totalQuestions !==
+                    totalAnswers +
+                      (pendingAnswer !== null &&
+                      !answers[quiz.questions[currentQuestionIndex].id]
+                        ? 1
+                        : 0) ||
+                  isPending
+                }
               >
                 Completa quiz
               </Button>

@@ -24,14 +24,14 @@ type QuestionAnswer = string | { code: string } | null;
 interface QuestionProps {
   question: Question;
   questionNumber: number;
-  onAnswer: (answer: QuestionAnswer) => void;
+  onAnswerChange: (answer: QuestionAnswer) => void;
   currentAnswer: QuestionAnswer;
 }
 
 export function InterviewQuestion({
   question,
   questionNumber,
-  onAnswer,
+  onAnswerChange,
   currentAnswer,
 }: QuestionProps) {
   const { theme, resolvedTheme } = useTheme();
@@ -50,6 +50,16 @@ export function InterviewQuestion({
     null
   );
   const [isPending, startTransition] = useTransition();
+
+  // Report answer changes to parent
+  useEffect(() => {
+    if (question.type === "code_snippet") {
+      onAnswerChange(code ? { code } : null);
+    } else {
+      // Treat empty string as null (no answer)
+      onAnswerChange(answer && answer.trim() ? answer : null);
+    }
+  }, [answer, code, question.type, onAnswerChange]);
   // Reset state when question changes
   useEffect(() => {
     if (typeof currentAnswer === "string") {
@@ -119,16 +129,6 @@ export function InterviewQuestion({
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
       // mediaRecorder will be cleaned up in the onstop handler
-    }
-  };
-
-  const handleSubmitAnswer = () => {
-    if (question.type === "multiple_choice") {
-      onAnswer(answer);
-    } else if (question.type === "open_question") {
-      onAnswer(answer);
-    } else if (question.type === "code_snippet") {
-      onAnswer({ code });
     }
   };
 
@@ -290,15 +290,6 @@ export function InterviewQuestion({
             </div>
           </div>
         )}
-
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSubmitAnswer}
-            disabled={answer === null && code === ""}
-          >
-            Salva risposta
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );
