@@ -17,6 +17,7 @@ import {
   handleActionError,
   isRedirectError,
 } from "../utils/action-error-handler";
+import { prepareQuestionForCreate } from "../utils/question-utils";
 
 /**
  * Create a new reusable question
@@ -407,21 +408,12 @@ export async function saveQuestionToLibraryAction(
     // Validate the incoming question
     const validated = questionSchemas.flexible.parse(question);
 
-    // Create the question entity
+    // Create the question entity using shared utility
+    const questionData = prepareQuestionForCreate(validated, user.id);
     const savedQuestion = await prisma.question.create({
       data: {
-        type: validated.type,
-        question: validated.question,
-        keywords: validated.keywords || [],
-        explanation: validated.explanation,
-        options: validated.options || [],
-        correctAnswer: validated.correctAnswer,
-        sampleAnswer: validated.sampleAnswer,
-        codeSnippet: validated.codeSnippet,
-        sampleSolution: validated.sampleSolution,
-        language: validated.language,
-        isFavorite: markAsFavorite,
-        createdBy: user.id,
+        ...questionData,
+        isFavorite: markAsFavorite, // Override default
       },
     });
 
@@ -458,24 +450,15 @@ export async function saveQuestionsToLibraryAction(
 
     // Create questions one by one to get their IDs
     const createdQuestions = await Promise.all(
-      validatedQuestions.map((q) =>
-        prisma.question.create({
+      validatedQuestions.map((q) => {
+        const questionData = prepareQuestionForCreate(q, user.id);
+        return prisma.question.create({
           data: {
-            type: q.type,
-            question: q.question,
-            keywords: q.keywords || [],
-            explanation: q.explanation,
-            options: q.options || [],
-            correctAnswer: q.correctAnswer,
-            sampleAnswer: q.sampleAnswer,
-            codeSnippet: q.codeSnippet,
-            sampleSolution: q.sampleSolution,
-            language: q.language,
-            isFavorite: markAsFavorite,
-            createdBy: user.id,
+            ...questionData,
+            isFavorite: markAsFavorite, // Override default
           },
-        })
-      )
+        });
+      })
     );
 
     // Invalidate cache
@@ -529,24 +512,11 @@ export async function saveQuizQuestionsToLibraryAndLinkAction(
 
     // Create questions and link to quiz in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create all questions
+      // Create all questions using shared utility
       const createdQuestions = await Promise.all(
         validatedQuestions.map((q) =>
           tx.question.create({
-            data: {
-              type: q.type,
-              question: q.question,
-              keywords: q.keywords || [],
-              explanation: q.explanation,
-              options: q.options || [],
-              correctAnswer: q.correctAnswer,
-              sampleAnswer: q.sampleAnswer,
-              codeSnippet: q.codeSnippet,
-              sampleSolution: q.sampleSolution,
-              language: q.language,
-              isFavorite: false,
-              createdBy: user.id,
-            },
+            data: prepareQuestionForCreate(q, user.id),
           })
         )
       );

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
-import { questionSchemas } from "../schemas";
+import { FlexibleQuestion, questionSchemas } from "../schemas";
 import { aiQuizService, GenerateQuestionParams } from "../services/ai-service";
 import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
 import {
@@ -12,6 +12,7 @@ import {
   isRedirectError,
 } from "../utils/action-error-handler";
 import { revalidateQuizCache } from "../utils/cache";
+import { prepareQuestionForCreate } from "../utils/question-utils";
 
 // Note: performance monitoring removed — keep simple debug logs instead
 
@@ -271,22 +272,8 @@ export async function upsertQuizAction(formData: FormData) {
 
         // Create Question entities and link to quiz
         for (let i = 0; i < questions.length; i++) {
-          const q = questions[i];
           const question = await tx.question.create({
-            data: {
-              type: q.type,
-              question: q.question,
-              keywords: q.keywords || [],
-              explanation: q.explanation,
-              options: q.options || [],
-              correctAnswer: q.correctAnswer,
-              sampleAnswer: q.sampleAnswer,
-              codeSnippet: q.codeSnippet,
-              sampleSolution: q.sampleSolution,
-              language: q.language,
-              isFavorite: false,
-              createdBy: user.id,
-            },
+            data: prepareQuestionForCreate(questions[i], user.id),
           });
 
           // Link question to quiz
@@ -368,22 +355,8 @@ export async function upsertQuizAction(formData: FormData) {
 
         // Create new Question entities and link to quiz
         for (let i = 0; i < questions.length; i++) {
-          const q = questions[i];
           const question = await tx.question.create({
-            data: {
-              type: q.type,
-              question: q.question,
-              keywords: q.keywords || [],
-              explanation: q.explanation,
-              options: q.options || [],
-              correctAnswer: q.correctAnswer,
-              sampleAnswer: q.sampleAnswer,
-              codeSnippet: q.codeSnippet,
-              sampleSolution: q.sampleSolution,
-              language: q.language,
-              isFavorite: false,
-              createdBy: user.id,
-            },
+            data: prepareQuestionForCreate(questions[i], user.id),
           });
 
           // Link question to quiz
@@ -545,25 +518,9 @@ export async function regenerateQuizAction({
 
       // Create new Question entities from AI-generated questions
       for (let i = 0; i < quizData.questions.length; i++) {
-        const q = quizData.questions[i] as Record<string, unknown>;
+        const q = quizData.questions[i] as FlexibleQuestion;
         const question = await tx.question.create({
-          data: {
-            type: q.type as
-              | "multiple_choice"
-              | "open_question"
-              | "code_snippet",
-            question: q.question as string,
-            keywords: (q.keywords as string[]) || [],
-            explanation: q.explanation as string | undefined,
-            options: (q.options as string[]) || [],
-            correctAnswer: q.correctAnswer as number | undefined,
-            sampleAnswer: q.sampleAnswer as string | undefined,
-            codeSnippet: q.codeSnippet as string | undefined,
-            sampleSolution: q.sampleSolution as string | undefined,
-            language: q.language as string | undefined,
-            isFavorite: false,
-            createdBy: user.id,
-          },
+          data: prepareQuestionForCreate(q, user.id),
         });
 
         // Link question to quiz
@@ -675,24 +632,24 @@ export async function duplicateQuizAction(formData: FormData) {
       // Duplicate questions and link to new quiz
       for (let i = 0; i < originalQuiz.quizQuestions.length; i++) {
         const qq = originalQuiz.quizQuestions[i];
-        const q = qq.question;
 
-        // Create a copy of the question
+        // Create a copy of the question (convert DB question to FlexibleQuestion for the utility)
+        const flexibleQuestion: FlexibleQuestion = {
+          id: `q${i + 1}`,
+          type: qq.question.type as FlexibleQuestion["type"],
+          question: qq.question.question,
+          keywords: qq.question.keywords,
+          explanation: qq.question.explanation || undefined,
+          options: qq.question.options,
+          correctAnswer: qq.question.correctAnswer ?? undefined,
+          sampleAnswer: qq.question.sampleAnswer || undefined,
+          codeSnippet: qq.question.codeSnippet || undefined,
+          sampleSolution: qq.question.sampleSolution || undefined,
+          language: qq.question.language || undefined,
+        };
+
         const newQuestion = await tx.question.create({
-          data: {
-            type: q.type,
-            question: q.question,
-            keywords: q.keywords,
-            explanation: q.explanation,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            sampleAnswer: q.sampleAnswer,
-            codeSnippet: q.codeSnippet,
-            sampleSolution: q.sampleSolution,
-            language: q.language,
-            isFavorite: false, // Don't copy favorite status
-            createdBy: user.id,
-          },
+          data: prepareQuestionForCreate(flexibleQuestion, user.id),
         });
 
         // Link to new quiz

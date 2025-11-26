@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache";
 import prisma from "../prisma";
 import type { QuestionType } from "../schemas/base";
+import { mapQuizQuestionsToFlexible } from "../utils/question-utils";
 
 /**
  * Questions data layer
@@ -168,6 +169,7 @@ export async function getFavoritesCount() {
 
 /**
  * Get questions for a quiz (via QuizQuestion join table)
+ * Returns FlexibleQuestion format for consistency with quiz data layer
  */
 export async function getQuizQuestions(quizId: string) {
   "use cache";
@@ -182,10 +184,7 @@ export async function getQuizQuestions(quizId: string) {
     },
   });
 
-  return quizQuestions.map((qq) => ({
-    ...qq.question,
-    order: qq.order,
-  }));
+  return mapQuizQuestionsToFlexible(quizQuestions);
 }
 
 /**

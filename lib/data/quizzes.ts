@@ -2,6 +2,7 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { FlexibleQuestion } from "@/lib/schemas";
+import { mapQuizQuestionsToFlexible } from "@/lib/utils/question-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
 // Type for quiz with linked questions from QuizQuestion join table - exported for use in interviews
@@ -129,23 +130,12 @@ const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
 /**
  * Convert linked questions from QuizQuestion to FlexibleQuestion format.
  * Exported for use by interviews.ts
+ * @deprecated Use mapQuizQuestionsToFlexible from @/lib/utils/question-utils instead
  */
 export const mapLinkedQuestionsToQuestionFormat = (
   quizQuestions: QuizWithLinkedQuestions["quizQuestions"]
 ): FlexibleQuestion[] => {
-  return quizQuestions.map((qq) => ({
-    id: `q${qq.order + 1}`,
-    type: qq.question.type as FlexibleQuestion["type"],
-    question: qq.question.question,
-    keywords: qq.question.keywords,
-    explanation: qq.question.explanation || undefined,
-    options: qq.question.options,
-    correctAnswer: qq.question.correctAnswer ?? undefined,
-    sampleAnswer: qq.question.sampleAnswer || undefined,
-    codeSnippet: qq.question.codeSnippet || undefined,
-    sampleSolution: qq.question.sampleSolution || undefined,
-    language: qq.question.language || undefined,
-  }));
+  return mapQuizQuestionsToFlexible(quizQuestions);
 };
 
 /**
