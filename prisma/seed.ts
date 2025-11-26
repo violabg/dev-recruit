@@ -1,7 +1,10 @@
 import "dotenv/config";
 
-import prisma from "@/lib/prisma";
-import { Prisma } from "@/lib/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Prisma, PrismaClient } from "../lib/prisma/client.js";
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 // Type for preset seed data (subset of PresetCreateInput)
 type PresetSeedData = Omit<
