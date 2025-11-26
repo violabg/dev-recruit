@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
-import { convertToStrictQuestions, questionSchemas } from "../schemas";
+import { questionSchemas } from "../schemas";
 import { aiQuizService, GenerateQuestionParams } from "../services/ai-service";
 import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
 import {
@@ -184,6 +184,7 @@ export async function deleteQuizById(quizId: string) {
 /**
  * Unified action for creating or updating a quiz.
  * Auto-detects operation based on presence of quizId in FormData.
+ * Now saves questions as Question entities linked via QuizQuestion.
  * FormData expects:
  * - title: string (required)
  * - questions: JSON stringified array (required)
@@ -217,31 +218,12 @@ export async function upsertQuizAction(formData: FormData) {
     let questions;
     try {
       questions = JSON.parse(questionsRaw);
-      // Ensure question IDs are in the format 'q1', 'q2', etc.
-      const formattedQuestions = questions.map(
-        (q: Record<string, unknown>, index: number) => ({
-          ...q,
-          id: `q${index + 1}`,
-        })
-      );
-      questions = z.array(questionSchemas.flexible).parse(formattedQuestions);
+      questions = z.array(questionSchemas.flexible).parse(questions);
     } catch (parseError) {
       throw new QuizSystemError(
         "Invalid questions format",
         QuizErrorCode.INVALID_INPUT,
         { parseError }
-      );
-    }
-
-    // Convert questions to strict format
-    let strictQuestions;
-    try {
-      strictQuestions = convertToStrictQuestions(questions);
-    } catch (conversionError) {
-      throw new QuizSystemError(
-        "Failed to validate question format",
-        QuizErrorCode.INVALID_INPUT,
-        { conversionError }
       );
     }
 
@@ -272,18 +254,52 @@ export async function upsertQuizAction(formData: FormData) {
         );
       }
 
-      // Save quiz to database
-      const quiz = await prisma.quiz.create({
-        data: {
-          title,
-          positionId: position.id,
-          questions: strictQuestions,
-          timeLimit,
-          createdBy: user.id,
-        },
-        select: {
-          id: true,
-        },
+      // Create quiz and questions in a transaction
+      const quiz = await prisma.$transaction(async (tx) => {
+        // Create the quiz first
+        const newQuiz = await tx.quiz.create({
+          data: {
+            title,
+            positionId: position.id,
+            timeLimit,
+            createdBy: user.id,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        // Create Question entities and link to quiz
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          const question = await tx.question.create({
+            data: {
+              type: q.type,
+              question: q.question,
+              keywords: q.keywords || [],
+              explanation: q.explanation,
+              options: q.options || [],
+              correctAnswer: q.correctAnswer,
+              sampleAnswer: q.sampleAnswer,
+              codeSnippet: q.codeSnippet,
+              sampleSolution: q.sampleSolution,
+              language: q.language,
+              isFavorite: false,
+              createdBy: user.id,
+            },
+          });
+
+          // Link question to quiz
+          await tx.quizQuestion.create({
+            data: {
+              quizId: newQuiz.id,
+              questionId: question.id,
+              order: i,
+            },
+          });
+        }
+
+        return newQuiz;
       });
 
       if (!quiz) {
@@ -295,6 +311,7 @@ export async function upsertQuizAction(formData: FormData) {
 
       // Invalidate Cache Components tags to refresh quizzes list
       updateTag("quizzes");
+      updateTag("questions");
       updateTag(`positions-${position.id}`);
 
       // Also revalidate traditional cache paths for compatibility
@@ -316,17 +333,73 @@ export async function upsertQuizAction(formData: FormData) {
         );
       }
 
-      await prisma.quiz.update({
-        where: { id: quizId },
-        data: {
-          title,
-          timeLimit,
-          questions: strictQuestions,
-        },
+      // Update quiz and replace questions in a transaction
+      await prisma.$transaction(async (tx) => {
+        // Update quiz metadata
+        await tx.quiz.update({
+          where: { id: quizId },
+          data: {
+            title,
+            timeLimit,
+          },
+        });
+
+        // Get existing linked questions to delete them
+        const existingLinks = await tx.quizQuestion.findMany({
+          where: { quizId },
+          select: { questionId: true },
+        });
+
+        // Delete existing quiz-question links
+        await tx.quizQuestion.deleteMany({
+          where: { quizId },
+        });
+
+        // Delete the old questions (they were created for this quiz)
+        if (existingLinks.length > 0) {
+          await tx.question.deleteMany({
+            where: {
+              id: { in: existingLinks.map((l) => l.questionId) },
+              // Only delete questions that aren't linked elsewhere
+              quizQuestions: { none: {} },
+            },
+          });
+        }
+
+        // Create new Question entities and link to quiz
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          const question = await tx.question.create({
+            data: {
+              type: q.type,
+              question: q.question,
+              keywords: q.keywords || [],
+              explanation: q.explanation,
+              options: q.options || [],
+              correctAnswer: q.correctAnswer,
+              sampleAnswer: q.sampleAnswer,
+              codeSnippet: q.codeSnippet,
+              sampleSolution: q.sampleSolution,
+              language: q.language,
+              isFavorite: false,
+              createdBy: user.id,
+            },
+          });
+
+          // Link question to quiz
+          await tx.quizQuestion.create({
+            data: {
+              quizId,
+              questionId: question.id,
+              order: i,
+            },
+          });
+        }
       });
 
       // Invalidate Cache Components tags to refresh quizzes list
       updateTag("quizzes");
+      updateTag("questions");
       if (quiz.positionId) {
         updateTag(`positions-${quiz.positionId}`);
       }
@@ -362,6 +435,7 @@ type RegenerateQuizActionParams = {
  * Generates a new set of questions and updates an existing quiz.
  * Preserves the quiz ID and position association.
  * Used in edit pages for full quiz regeneration.
+ * Now saves questions as Question entities linked via QuizQuestion.
  */
 export async function regenerateQuizAction({
   quizId,
@@ -437,29 +511,75 @@ export async function regenerateQuizAction({
       throw new Error("Failed to generate quiz questions");
     }
 
-    // Convert questions to strict format
-    let strictQuestions;
-    try {
-      strictQuestions = convertToStrictQuestions(quizData.questions);
-    } catch (conversionError) {
-      throw new QuizSystemError(
-        "Failed to validate generated questions",
-        QuizErrorCode.INVALID_INPUT,
-        { conversionError }
-      );
-    }
+    // Update quiz and replace questions in a transaction
+    await prisma.$transaction(async (tx) => {
+      // Update quiz title
+      await tx.quiz.update({
+        where: { id: quizId },
+        data: {
+          title: quizTitle,
+        },
+      });
 
-    // Update the quiz with new questions (preserve ID, position, creator)
-    await prisma.quiz.update({
-      where: { id: quizId },
-      data: {
-        title: quizTitle,
-        questions: strictQuestions,
-      },
+      // Get existing linked questions to delete them
+      const existingLinks = await tx.quizQuestion.findMany({
+        where: { quizId },
+        select: { questionId: true },
+      });
+
+      // Delete existing quiz-question links
+      await tx.quizQuestion.deleteMany({
+        where: { quizId },
+      });
+
+      // Delete the old questions (they were created for this quiz)
+      if (existingLinks.length > 0) {
+        await tx.question.deleteMany({
+          where: {
+            id: { in: existingLinks.map((l) => l.questionId) },
+            // Only delete questions that aren't linked elsewhere
+            quizQuestions: { none: {} },
+          },
+        });
+      }
+
+      // Create new Question entities from AI-generated questions
+      for (let i = 0; i < quizData.questions.length; i++) {
+        const q = quizData.questions[i] as Record<string, unknown>;
+        const question = await tx.question.create({
+          data: {
+            type: q.type as
+              | "multiple_choice"
+              | "open_question"
+              | "code_snippet",
+            question: q.question as string,
+            keywords: (q.keywords as string[]) || [],
+            explanation: q.explanation as string | undefined,
+            options: (q.options as string[]) || [],
+            correctAnswer: q.correctAnswer as number | undefined,
+            sampleAnswer: q.sampleAnswer as string | undefined,
+            codeSnippet: q.codeSnippet as string | undefined,
+            sampleSolution: q.sampleSolution as string | undefined,
+            language: q.language as string | undefined,
+            isFavorite: false,
+            createdBy: user.id,
+          },
+        });
+
+        // Link question to quiz
+        await tx.quizQuestion.create({
+          data: {
+            quizId,
+            questionId: question.id,
+            order: i,
+          },
+        });
+      }
     });
 
     // Invalidate Cache Components tags to refresh quizzes list
     updateTag("quizzes");
+    updateTag("questions");
     updateTag(`positions-${position.id}`);
 
     // Also revalidate traditional cache paths for compatibility
@@ -480,6 +600,7 @@ export async function regenerateQuizAction({
  * Duplicates an existing quiz to a new position.
  * Creates a new quiz with the same questions but different title and position.
  * Doesn't check for user ownership - can duplicate any quiz.
+ * Copies linked Question entities to the new quiz.
  */
 export async function duplicateQuizAction(formData: FormData) {
   try {
@@ -497,13 +618,20 @@ export async function duplicateQuizAction(formData: FormData) {
       );
     }
 
-    // Get the original quiz
+    // Get the original quiz with linked questions
     const originalQuiz = await prisma.quiz.findUnique({
       where: { id: quizId },
       select: {
         title: true,
-        questions: true,
         timeLimit: true,
+        quizQuestions: {
+          include: {
+            question: true,
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
     });
 
@@ -529,18 +657,55 @@ export async function duplicateQuizAction(formData: FormData) {
       );
     }
 
-    // Create the duplicated quiz
-    const newQuiz = await prisma.quiz.create({
-      data: {
-        title: newTitle,
-        positionId: newPositionId,
-        questions: originalQuiz.questions ?? [],
-        timeLimit: originalQuiz.timeLimit,
-        createdBy: user.id,
-      },
-      select: {
-        id: true,
-      },
+    // Create the duplicated quiz with questions in a transaction
+    const newQuiz = await prisma.$transaction(async (tx) => {
+      // Create the new quiz
+      const quiz = await tx.quiz.create({
+        data: {
+          title: newTitle,
+          positionId: newPositionId,
+          timeLimit: originalQuiz.timeLimit,
+          createdBy: user.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      // Duplicate questions and link to new quiz
+      for (let i = 0; i < originalQuiz.quizQuestions.length; i++) {
+        const qq = originalQuiz.quizQuestions[i];
+        const q = qq.question;
+
+        // Create a copy of the question
+        const newQuestion = await tx.question.create({
+          data: {
+            type: q.type,
+            question: q.question,
+            keywords: q.keywords,
+            explanation: q.explanation,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            sampleAnswer: q.sampleAnswer,
+            codeSnippet: q.codeSnippet,
+            sampleSolution: q.sampleSolution,
+            language: q.language,
+            isFavorite: false, // Don't copy favorite status
+            createdBy: user.id,
+          },
+        });
+
+        // Link to new quiz
+        await tx.quizQuestion.create({
+          data: {
+            quizId: quiz.id,
+            questionId: newQuestion.id,
+            order: qq.order,
+          },
+        });
+      }
+
+      return quiz;
     });
 
     if (!newQuiz) {
@@ -552,6 +717,7 @@ export async function duplicateQuizAction(formData: FormData) {
 
     // Invalidate Cache Components tags to refresh quizzes list
     updateTag("quizzes");
+    updateTag("questions");
     updateTag(`positions-${newPositionId}`);
 
     // Also revalidate traditional cache paths for compatibility

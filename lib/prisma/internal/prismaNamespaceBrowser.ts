@@ -193,7 +193,6 @@ export const QuizScalarFieldEnum = {
   id: 'id',
   title: 'title',
   positionId: 'positionId',
-  questions: 'questions',
   timeLimit: 'timeLimit',
   createdBy: 'createdBy',
   createdAt: 'createdAt'
@@ -283,13 +282,6 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-export const JsonNullValueInput = {
-  JsonNull: 'JsonNull'
-} as const
-
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const NullableJsonNullValueInput = {

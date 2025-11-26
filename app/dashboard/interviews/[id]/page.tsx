@@ -20,6 +20,12 @@ import Link from "next/link";
 export async function generateStaticParams() {
   const interviewIds = await getRecentInterviewIds(100);
 
+  // Cache Components requires at least one result from generateStaticParams
+  // Return a placeholder that will result in 404 at runtime if no interviews exist
+  if (interviewIds.length === 0) {
+    return [{ id: "placeholder" }];
+  }
+
   return interviewIds.map((id) => ({ id }));
 }
 

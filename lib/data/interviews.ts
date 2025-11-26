@@ -4,6 +4,27 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { cacheLife, cacheTag } from "next/cache";
 
+// Include pattern for quiz with linked questions + extended position details for interviews
+const QUIZ_INCLUDE_FOR_INTERVIEWS = {
+  position: {
+    select: {
+      id: true,
+      title: true,
+      experienceLevel: true,
+      description: true,
+      skills: true,
+    },
+  },
+  quizQuestions: {
+    include: {
+      question: true,
+    },
+    orderBy: {
+      order: "asc" as const,
+    },
+  },
+} as const;
+
 // ============================================================================
 // Prisma GetPayload Types - derived from actual query includes
 // ============================================================================
@@ -427,17 +448,7 @@ export const getInterviewByToken = async (
     where: { token },
     include: {
       quiz: {
-        include: {
-          position: {
-            select: {
-              id: true,
-              title: true,
-              experienceLevel: true,
-              description: true,
-              skills: true,
-            },
-          },
-        },
+        include: QUIZ_INCLUDE_FOR_INTERVIEWS,
       },
       candidate: {
         select: {
@@ -514,17 +525,7 @@ export const getInterviewDetail = async (
     },
     include: {
       quiz: {
-        include: {
-          position: {
-            select: {
-              id: true,
-              title: true,
-              experienceLevel: true,
-              description: true,
-              skills: true,
-            },
-          },
-        },
+        include: QUIZ_INCLUDE_FOR_INTERVIEWS,
       },
       candidate: {
         select: {

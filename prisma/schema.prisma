@@ -148,7 +148,6 @@ model Quiz {
   id         String   @id @default(cuid())
   title      String
   positionId String
-  questions  Json     // Legacy: inline questions (kept for backward compatibility)
   timeLimit  Int?
   createdBy  String
   createdAt  DateTime @default(now())

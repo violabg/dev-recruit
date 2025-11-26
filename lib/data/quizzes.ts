@@ -1,26 +1,11 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import { FlexibleQuestion, Question } from "@/lib/schemas";
+import { FlexibleQuestion } from "@/lib/schemas";
 import { cacheLife, cacheTag } from "next/cache";
 
-// Prisma types for quiz queries - unified with optional position fields
-type QuizWithPosition = Prisma.QuizGetPayload<{
-  include: {
-    position: {
-      select: {
-        id: true;
-        title: true;
-        experienceLevel: true;
-        // Additional fields like skills and description are optional
-        // and will be available when the query includes them
-      };
-    };
-  };
-}>;
-
-// Type for quiz with linked questions from QuizQuestion join table
-type QuizWithLinkedQuestions = Prisma.QuizGetPayload<{
+// Type for quiz with linked questions from QuizQuestion join table - exported for use in interviews
+export type QuizWithLinkedQuestions = Prisma.QuizGetPayload<{
   include: {
     position: {
       select: {
@@ -43,18 +28,15 @@ type QuizWithLinkedQuestions = Prisma.QuizGetPayload<{
 // ====================
 // ENTITY TYPES
 // ====================
-// These are the canonical entity types for quiz data.
-// Use Prisma types as base, with typed JSON fields.
 
 /**
  * Quiz API response DTO - primary entity type for components.
- * Extends Prisma model with typed questions array.
- * Use this for component props and API responses.
+ * Questions are now always loaded from linked Question entities.
  */
 export type QuizResponse = {
   id: string;
   title: string;
-  createdAt: string; // ISO string from Prisma createdAt
+  createdAt: string;
   positionId: string;
   positions: {
     id: string;
@@ -63,11 +45,11 @@ export type QuizResponse = {
   } | null;
   timeLimit: number | null;
   questions: FlexibleQuestion[];
+  questionCount: number;
 };
 
 /**
  * Quiz entity for edit operations.
- * Minimal shape for form editing - excludes position relation.
  */
 export type QuizForEdit = {
   id: string;
@@ -79,7 +61,6 @@ export type QuizForEdit = {
 
 /**
  * Position details returned with quiz data.
- * Used by quiz edit forms to access position context.
  */
 export type PositionDetails = {
   id: string;
@@ -106,31 +87,8 @@ export type PaginatedQuizzes = {
   uniqueLevels: string[];
 };
 
-// Reusable include patterns for quiz queries
-const QUIZ_INCLUDE_WITH_POSITION = {
-  position: {
-    select: {
-      id: true,
-      title: true,
-      experienceLevel: true,
-    },
-  },
-} as const;
-
-const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
-  position: {
-    select: {
-      id: true,
-      title: true,
-      experienceLevel: true,
-      skills: true,
-      description: true,
-    },
-  },
-} as const;
-
-// Include pattern for quiz with linked questions
-const QUIZ_INCLUDE_WITH_LINKED_QUESTIONS = {
+// Include pattern for quiz with linked questions - exported for use in interviews.ts
+export const QUIZ_INCLUDE_WITH_LINKED_QUESTIONS = {
   position: {
     select: {
       id: true,
@@ -148,15 +106,35 @@ const QUIZ_INCLUDE_WITH_LINKED_QUESTIONS = {
   },
 } as const;
 
+const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
+  position: {
+    select: {
+      id: true,
+      title: true,
+      experienceLevel: true,
+      skills: true,
+      description: true,
+    },
+  },
+  quizQuestions: {
+    include: {
+      question: true,
+    },
+    orderBy: {
+      order: "asc" as const,
+    },
+  },
+} as const;
+
 /**
- * Convert linked questions from QuizQuestion to FlexibleQuestion format
- * Used when quiz has questions stored in the Question entity
+ * Convert linked questions from QuizQuestion to FlexibleQuestion format.
+ * Exported for use by interviews.ts
  */
-const mapLinkedQuestionsToQuestionFormat = (
+export const mapLinkedQuestionsToQuestionFormat = (
   quizQuestions: QuizWithLinkedQuestions["quizQuestions"]
 ): FlexibleQuestion[] => {
   return quizQuestions.map((qq) => ({
-    id: `q${qq.order + 1}`, // Convert to q1, q2 format for compatibility
+    id: `q${qq.order + 1}`,
     type: qq.question.type as FlexibleQuestion["type"],
     question: qq.question.question,
     keywords: qq.question.keywords,
@@ -171,31 +149,12 @@ const mapLinkedQuestionsToQuestionFormat = (
 };
 
 /**
- * Get questions for a quiz - prefers linked questions over JSON
- * Returns questions from QuizQuestion join table if available,
- * otherwise falls back to inline JSON questions
- */
-const getQuestionsForQuiz = (
-  quiz: QuizWithPosition | QuizWithLinkedQuestions
-): FlexibleQuestion[] => {
-  // Check if quiz has linked questions
-  if ("quizQuestions" in quiz && quiz.quizQuestions.length > 0) {
-    return mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions);
-  }
-
-  // Fall back to inline JSON questions
-  return Array.isArray(quiz.questions)
-    ? (quiz.questions as FlexibleQuestion[])
-    : [];
-};
-
-/**
  * Maps quiz data from Prisma to API response format.
- * Handles both basic position and detailed position includes.
- * Additional position fields (skills, description) are ignored in this mapping
- * as the QuizResponse type only needs id, title, and experienceLevel.
+ * Exported for use by interviews.ts
  */
-export const mapQuizFromPrisma = (quiz: QuizWithPosition): QuizResponse => ({
+export const mapQuizFromPrisma = (
+  quiz: QuizWithLinkedQuestions
+): QuizResponse => ({
   id: quiz.id,
   title: quiz.title,
   createdAt: quiz.createdAt.toISOString(),
@@ -208,9 +167,8 @@ export const mapQuizFromPrisma = (quiz: QuizWithPosition): QuizResponse => ({
       }
     : null,
   timeLimit: quiz.timeLimit,
-  questions: Array.isArray(quiz.questions)
-    ? (quiz.questions as Question[])
-    : [],
+  questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
+  questionCount: quiz.quizQuestions.length,
 });
 
 export async function getQuizzes({
@@ -233,7 +191,6 @@ export async function getQuizzes({
   let uniqueLevels: string[] = [];
   let totalCount = 0;
 
-  // Avoid Math.max() which calls .valueOf() and fails with temporary client references
   const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
   const normalizedPageSize =
     typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
@@ -271,7 +228,7 @@ export async function getQuizzes({
       prisma.quiz.findMany({
         where,
         orderBy,
-        include: QUIZ_INCLUDE_WITH_POSITION,
+        include: QUIZ_INCLUDE_WITH_LINKED_QUESTIONS,
         skip: (normalizedPage - 1) * normalizedPageSize,
         take: normalizedPageSize,
       }),
@@ -338,8 +295,6 @@ export async function CachedQuizzesContent({
 
 /**
  * Fetch quiz with full details including position information
- * Cached for 1 hour and tagged for manual revalidation
- * Supports both inline JSON questions and linked Question entities
  */
 export const getQuizData = async (
   quizId: string
@@ -350,36 +305,18 @@ export const getQuizData = async (
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
-    include: {
-      ...QUIZ_INCLUDE_WITH_POSITION_DETAILS,
-      quizQuestions: {
-        include: {
-          question: true,
-        },
-        orderBy: {
-          order: "asc",
-        },
-      },
-    },
+    include: QUIZ_INCLUDE_WITH_POSITION_DETAILS,
   });
 
   if (!quiz || !quiz.position) {
     return null;
   }
 
-  // Prefer linked questions over inline JSON
-  const questions: FlexibleQuestion[] =
-    quiz.quizQuestions.length > 0
-      ? mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions)
-      : Array.isArray(quiz.questions)
-      ? (quiz.questions as FlexibleQuestion[])
-      : [];
-
   const hydratedQuiz: QuizForEdit = {
     id: quiz.id,
     title: quiz.title,
     positionId: quiz.positionId,
-    questions,
+    questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
     timeLimit: quiz.timeLimit,
   };
 
@@ -396,8 +333,6 @@ export const getQuizData = async (
 
 /**
  * Fetch all quizzes for a specific position
- * Cached for 1 hour and tagged for manual revalidation
- * Supports both inline JSON questions and linked Question entities
  */
 export const getQuizzesForPosition = async (
   positionId: string
@@ -418,12 +353,7 @@ export const getQuizzesForPosition = async (
     where: {
       positionId,
     },
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-      timeLimit: true,
-      questions: true,
+    include: {
       quizQuestions: {
         include: {
           question: true,
@@ -441,12 +371,7 @@ export const getQuizzesForPosition = async (
     title: quiz.title,
     createdAt: quiz.createdAt.toISOString(),
     timeLimit: quiz.timeLimit,
-    questions:
-      quiz.quizQuestions.length > 0
-        ? mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions)
-        : Array.isArray(quiz.questions)
-        ? (quiz.questions as FlexibleQuestion[])
-        : [],
+    questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
   }));
 };
 
@@ -461,7 +386,6 @@ export type QuizFilterOptions = {
 
 /**
  * Returns last N quiz IDs for generateStaticParams.
- * Used to pre-render most recent quiz detail pages at build time.
  */
 export const getRecentQuizIds = async (limit = 100): Promise<string[]> => {
   "use cache";
@@ -479,7 +403,6 @@ export const getRecentQuizIds = async (limit = 100): Promise<string[]> => {
 
 /**
  * Quiz detail for detail page view.
- * Includes position info for display.
  */
 export type QuizDetail = {
   id: string;
@@ -493,14 +416,10 @@ export type QuizDetail = {
     title: string;
     experienceLevel: string;
   } | null;
-  /** Whether questions are stored as linked entities vs inline JSON */
-  hasLinkedQuestions?: boolean;
 };
 
 /**
  * Fetch quiz by ID with position info for detail page
- * Cached for 1 hour and tagged for manual revalidation
- * Supports both inline JSON questions and linked Question entities
  */
 export const getQuizById = async (
   quizId: string
@@ -523,7 +442,7 @@ export const getQuizById = async (
     title: quiz.title,
     positionId: quiz.positionId,
     timeLimit: quiz.timeLimit,
-    questions: getQuestionsForQuiz(quiz),
+    questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
     createdAt: quiz.createdAt.toISOString(),
     position: quiz.position
       ? {
@@ -532,15 +451,11 @@ export const getQuizById = async (
           experienceLevel: quiz.position.experienceLevel,
         }
       : null,
-    // Include metadata about question storage
-    hasLinkedQuestions: quiz.quizQuestions.length > 0,
   };
 };
 
 /**
  * Cached filter options for quiz list page
- * Returns unique experience levels and positions for filter dropdowns
- * Tagged with both "quizzes" and "positions" for proper revalidation
  */
 export async function CachedQuizFilterOptions(): Promise<QuizFilterOptions> {
   "use cache";
