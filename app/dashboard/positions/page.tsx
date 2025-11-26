@@ -1,6 +1,14 @@
 import { SearchPositions } from "@/components/positions/search-positions";
 import { Button } from "@/components/ui/button";
 import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
   Table,
   TableBody,
   TableHead,
@@ -12,7 +20,7 @@ import {
   UrlPagination,
 } from "@/components/ui/url-pagination";
 import { getPositions } from "@/lib/data/positions";
-import { Plus } from "lucide-react";
+import { Briefcase, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import PositionsSkeleton from "./fallback";
@@ -110,21 +118,31 @@ const PositionsTable = async ({
           />
         </div>
       ) : (
-        <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[400px]">
-          <div className="text-center">
-            <p className="text-muted-foreground text-sm">
+        <Empty className="border h-[400px]">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Briefcase />
+            </EmptyMedia>
+            <EmptyTitle>
               {query ? "Nessuna posizione trovata" : "Nessuna posizione creata"}
-            </p>
-            {!query && (
-              <Button className="mt-2" size="sm" asChild>
+            </EmptyTitle>
+            <EmptyDescription>
+              {query
+                ? "Prova a modificare i criteri di ricerca."
+                : "Non hai ancora creato posizioni. Crea la tua prima posizione per iniziare."}
+            </EmptyDescription>
+          </EmptyHeader>
+          {!query && (
+            <EmptyContent>
+              <Button size="sm" asChild>
                 <Link href="/dashboard/positions/new">
                   <Plus className="mr-1 w-4 h-4" />
                   Crea posizione
                 </Link>
               </Button>
-            )}
-          </div>
-        </div>
+            </EmptyContent>
+          )}
+        </Empty>
       )}
     </>
   );

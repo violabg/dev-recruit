@@ -1,6 +1,14 @@
 import { PresetsClient } from "@/components/presets/presets-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DEFAULT_PAGE_SIZE,
@@ -8,7 +16,7 @@ import {
 } from "@/components/ui/url-pagination";
 import { getPresetsAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
-import { Plus } from "lucide-react";
+import { Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { SearchPresets } from "./search-presets";
@@ -55,20 +63,32 @@ async function PresetsContent({
       <SearchPresets defaultValue={search} />
       {presets.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col justify-center items-center py-12">
-            <p className="text-muted-foreground">
-              {search
-                ? `Nessun preset trovato per "${search}"`
-                : "Nessun preset ancora. Crea il tuo primo preset!"}
-            </p>
-            {!search && (
-              <Button asChild variant="default" size="sm" className="mt-4">
-                <Link href="/dashboard/presets/new">
-                  <Plus className="mr-1 w-4 h-4" />
-                  Nuovo preset
-                </Link>
-              </Button>
-            )}
+          <CardContent className="py-6">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Settings2 />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {search ? "Nessun preset trovato" : "Nessun preset ancora"}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {search
+                    ? `Nessun preset trovato per "${search}". Prova a modificare i criteri di ricerca.`
+                    : "Non hai ancora creato preset. Crea il tuo primo preset per iniziare."}
+                </EmptyDescription>
+              </EmptyHeader>
+              {!search && (
+                <EmptyContent>
+                  <Button asChild variant="default" size="sm">
+                    <Link href="/dashboard/presets/new">
+                      <Plus className="mr-1 w-4 h-4" />
+                      Nuovo preset
+                    </Link>
+                  </Button>
+                </EmptyContent>
+              )}
+            </Empty>
           </CardContent>
         </Card>
       ) : (

@@ -3,6 +3,14 @@ import { CandidateTable } from "@/components/candidates/candidate-table";
 import { SearchAndFilterCandidates } from "@/components/candidates/search-and-filter-candidates";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DEFAULT_PAGE_SIZE,
@@ -12,7 +20,7 @@ import {
   getCandidatePositions,
   getFilteredCandidates,
 } from "@/lib/data/candidates";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { CandidatesListSkeleton, FiltersSkeleton } from "./fallbacks";
 import type { CandidatesSearchParams } from "./page";
@@ -109,24 +117,27 @@ export const CandidatesRuntimeSection = async ({
       <Card>
         <CardContent>
           {!hasCandidates ? (
-            <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-[200px] text-center">
-              <div className="flex flex-col justify-center items-center mx-auto max-w-[420px] text-center">
-                <h3 className="mt-4 font-semibold text-lg">
-                  Nessun candidato trovato
-                </h3>
-                <p className="mt-2 mb-4 text-muted-foreground text-sm">
+            <Empty className="border h-[200px]">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Users />
+                </EmptyMedia>
+                <EmptyTitle>Nessun candidato trovato</EmptyTitle>
+                <EmptyDescription>
                   {search
                     ? `Nessun candidato trovato per "${search}". Prova a modificare i filtri.`
                     : "Non hai ancora aggiunto candidati. Aggiungi il tuo primo candidato per iniziare."}
-                </p>
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
                 <Button asChild size="sm">
                   <Link href="/dashboard/candidates/new">
                     <Plus className="mr-1 w-4 h-4" />
                     Nuovo Candidato
                   </Link>
                 </Button>
-              </div>
-            </div>
+              </EmptyContent>
+            </Empty>
           ) : (
             <div className="space-y-4">
               <Tabs defaultValue={activeView} className="w-full">

@@ -1,8 +1,17 @@
 import { QuizGrid } from "@/components/quiz/quiz-grid";
 import { QuizTable } from "@/components/quiz/quiz-table";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { UrlPagination } from "@/components/ui/url-pagination";
 import { CachedQuizzesContent } from "@/lib/data/quizzes";
+import { FileQuestion } from "lucide-react";
 
 import { NewQuizButton } from "./new-quiz-button";
 import { QuizViewTabs } from "./quiz-view-tabs";
@@ -89,16 +98,21 @@ export async function QuizListSection({
  */
 function QuizEmptyState({ hasFilters }: { hasFilters: boolean }) {
   return (
-    <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-[200px] text-center">
-      <div className="flex flex-col justify-center items-center mx-auto max-w-[420px] text-center">
-        <h3 className="mt-4 font-semibold text-lg">Nessun quiz trovato</h3>
-        <p className="mt-2 mb-4 text-muted-foreground text-sm">
+    <Empty className="border h-[200px]">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <FileQuestion />
+        </EmptyMedia>
+        <EmptyTitle>Nessun quiz trovato</EmptyTitle>
+        <EmptyDescription>
           {hasFilters
             ? "Nessun quiz trovato con i criteri di ricerca specificati."
             : "Non hai ancora creato quiz. Crea il tuo primo quiz per iniziare."}
-        </p>
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
         <NewQuizButton />
-      </div>
-    </div>
+      </EmptyContent>
+    </Empty>
   );
 }

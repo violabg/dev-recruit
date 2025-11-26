@@ -2,6 +2,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
   Table,
   TableBody,
   TableCell,
@@ -16,7 +23,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { InterviewListItem } from "@/lib/data/interviews";
-import { CheckCircle, Clock, Copy, MessageSquare, XCircle } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  Copy,
+  MessageSquare,
+  MessageSquareText,
+  XCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -89,11 +103,18 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
           <TableBody>
             {interviews.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={11}
-                  className="h-24 text-muted-foreground text-center"
-                >
-                  Nessun colloquio trovato
+                <TableCell colSpan={6} className="p-0">
+                  <Empty className="h-[200px]">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <MessageSquareText />
+                      </EmptyMedia>
+                      <EmptyTitle>Nessun colloquio trovato</EmptyTitle>
+                      <EmptyDescription>
+                        Prova a modificare i filtri di ricerca.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </TableCell>
               </TableRow>
             ) : (

@@ -1,5 +1,12 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
 import {
   Table,
@@ -12,6 +19,7 @@ import {
 import { deletePresetAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
+import { Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type PresetsTableProps = {
@@ -41,11 +49,18 @@ export function PresetsTable({ presets }: PresetsTableProps) {
           <TableBody>
             {presets.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="py-8 text-muted-foreground text-center"
-                >
-                  Nessun preset ancora. Crea il tuo primo preset!
+                <TableCell colSpan={5} className="p-0">
+                  <Empty className="h-[200px]">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Settings2 />
+                      </EmptyMedia>
+                      <EmptyTitle>Nessun preset ancora</EmptyTitle>
+                      <EmptyDescription>
+                        Crea il tuo primo preset per iniziare.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </TableCell>
               </TableRow>
             ) : (
