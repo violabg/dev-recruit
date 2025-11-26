@@ -70,12 +70,10 @@ async function QuizDetailContent({
 
   // Fetch all positions for duplicate dialog, excluding current position
   const allPositions = await getAllPositions();
-  const positionsForDialog = allPositions
-    .filter((pos) => pos.id !== position.id)
-    .map((pos) => ({
-      id: pos.id,
-      title: pos.title,
-    }));
+  const positionsForDialog = allPositions.map((pos) => ({
+    id: pos.id,
+    title: pos.title,
+  }));
 
   return (
     <div className="space-y-6">

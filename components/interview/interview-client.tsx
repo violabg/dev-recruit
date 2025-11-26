@@ -19,7 +19,7 @@ import {
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
 import { BrainCircuit, Clock } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "../theme-toggle";
 
@@ -108,6 +108,7 @@ export function InterviewClient({
   }, []);
 
   // Calculate remaining time from startedAt if interview is in progress
+  // Note: We compute this during render but defer side effects to useEffect
   const initialTimeRemaining = calculateRemainingTime(
     interview.startedAt,
     quiz.timeLimit
@@ -116,9 +117,9 @@ export function InterviewClient({
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
     initialTimeRemaining
   );
-  const [isTimeExpired, setIsTimeExpired] = useState(
-    initialTimeRemaining !== null && initialTimeRemaining === 0
-  );
+  // Don't set isTimeExpired to true during initial render - let useEffect handle it
+  // This avoids calling startTransition during render
+  const [isTimeExpired, setIsTimeExpired] = useState(false);
   const [isCompleted, setIsCompleted] = useState(
     interview.status === "completed"
   );
@@ -126,6 +127,13 @@ export function InterviewClient({
     interview.status === "in_progress"
   );
   const [isPending, startTransition] = useTransition();
+
+  // Check for expired time after mount to avoid startTransition during render
+  useEffect(() => {
+    if (initialTimeRemaining !== null && initialTimeRemaining === 0) {
+      setIsTimeExpired(true);
+    }
+  }, [initialTimeRemaining]);
 
   const handleCompleteInterview = useCallback(() => {
     startTransition(async () => {
@@ -151,7 +159,7 @@ export function InterviewClient({
         if (prev === null || prev <= 1) {
           clearInterval(timer);
           setIsTimeExpired(true);
-          handleCompleteInterview();
+          // Don't call handleCompleteInterview here - it will be called by the auto-complete effect
           return 0;
         }
         return prev - 1;
@@ -159,18 +167,19 @@ export function InterviewClient({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [
-    timeRemaining,
-    isStarted,
-    isCompleted,
-    isTimeExpired,
-    handleCompleteInterview,
-  ]);
+  }, [timeRemaining, isStarted, isCompleted, isTimeExpired]);
 
   // Auto-complete interview if time expired on mount (page refresh after time expired)
+  // Using a ref to track if we've already triggered completion to avoid double calls
+  const hasTriggeredCompletion = useRef(false);
+
   useEffect(() => {
-    if (isTimeExpired && !isCompleted) {
-      handleCompleteInterview();
+    if (isTimeExpired && !isCompleted && !hasTriggeredCompletion.current) {
+      hasTriggeredCompletion.current = true;
+      // Use setTimeout to ensure we're not in render phase
+      setTimeout(() => {
+        handleCompleteInterview();
+      }, 0);
     }
   }, [isTimeExpired, isCompleted, handleCompleteInterview]);
 
