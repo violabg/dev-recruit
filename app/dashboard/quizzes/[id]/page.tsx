@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getInterviewsByQuiz } from "@/lib/data/interviews";
 import { getAllPositions } from "@/lib/data/positions";
-import prisma from "@/lib/prisma";
-import { Question } from "@/lib/schemas";
+import { getQuizById, getRecentQuizIds } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Clock, Eye, Link2 } from "lucide-react";
 import Link from "next/link";
@@ -18,11 +17,11 @@ import { Suspense } from "react";
 import { QuizDetailSkeleton } from "./fallbacks";
 import { QuizDetailActionsClient } from "./quiz-detail-actions-client";
 
-type Position = {
-  id: string;
-  title: string;
-  experienceLevel: string;
-};
+export async function generateStaticParams() {
+  const quizIds = await getRecentQuizIds(100);
+
+  return quizIds.map((id) => ({ id }));
+}
 
 export default async function QuizDetailPage({
   params,
@@ -43,20 +42,9 @@ async function QuizDetailContent({
 }) {
   const { id } = await params;
 
-  const quizRecord = await prisma.quiz.findFirst({
-    where: { id },
-    include: {
-      position: {
-        select: {
-          id: true,
-          title: true,
-          experienceLevel: true,
-        },
-      },
-    },
-  });
+  const quiz = await getQuizById(id);
 
-  if (!quizRecord) {
+  if (!quiz) {
     return (
       <div className="flex flex-col justify-center items-center h-[400px]">
         <p className="font-medium text-lg">Quiz non trovato</p>
@@ -67,24 +55,7 @@ async function QuizDetailContent({
     );
   }
 
-  const quiz = {
-    id: quizRecord.id,
-    title: quizRecord.title,
-    positionId: quizRecord.positionId,
-    timeLimit: quizRecord.timeLimit,
-    questions: Array.isArray(quizRecord.questions)
-      ? (quizRecord.questions as Question[])
-      : [],
-    createdAt: quizRecord.createdAt.toISOString(),
-  };
-
-  const position: Position | null = quizRecord.position
-    ? {
-        id: quizRecord.position.id,
-        title: quizRecord.position.title,
-        experienceLevel: quizRecord.position.experienceLevel,
-      }
-    : null;
+  const position = quiz.position;
 
   if (!position) {
     return (

@@ -9,9 +9,17 @@ import {
 } from "@/components/ui/card";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deletePresetAction, getPresetAction } from "@/lib/actions/presets";
+import { getRecentPresetIds } from "@/lib/data/presets";
 import { Edit } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+export async function generateStaticParams() {
+  const presetIds = await getRecentPresetIds(100);
+
+  return presetIds.map((id) => ({ id }));
+}
 
 type PresetDetailPageProps = {
   params: Promise<{
@@ -110,7 +118,11 @@ export default async function PresetDetailPage({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm" variant="outline">
-            <Link href={`/dashboard/presets/${preset.id}/edit`}>
+            <Link
+              href={
+                `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
+              }
+            >
               <Edit className="mr-1 w-4 h-4" />
               Modifica
             </Link>

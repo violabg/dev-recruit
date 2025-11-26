@@ -220,3 +220,21 @@ export const getCandidatesCount = async () => {
 
   return prisma.candidate.count();
 };
+
+/**
+ * Returns last N candidates for generateStaticParams.
+ * Used to pre-render most recent candidate detail pages at build time.
+ */
+export const getRecentCandidateIds = async (limit = 100): Promise<string[]> => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("candidates");
+
+  const candidates = await prisma.candidate.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: { id: true },
+  });
+
+  return candidates.map((c) => c.id);
+};

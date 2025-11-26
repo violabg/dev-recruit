@@ -88,3 +88,20 @@ export async function getPresetData(presetId: string): Promise<Preset | null> {
     where: { id: presetId },
   });
 }
+
+/**
+ * Returns last N preset IDs for generateStaticParams.
+ * Used to pre-render most recent preset detail pages at build time.
+ */
+export async function getRecentPresetIds(limit = 100): Promise<string[]> {
+  cacheLife("minutes");
+  cacheTag("presets");
+
+  const presets = await prisma.preset.findMany({
+    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+    take: limit,
+    select: { id: true },
+  });
+
+  return presets.map((p) => p.id);
+}

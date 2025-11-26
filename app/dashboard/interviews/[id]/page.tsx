@@ -10,10 +10,19 @@ import {
 } from "@/components/ui/card";
 // Tabs removed — rendering results directly
 import { requireUser } from "@/lib/auth-server";
-import { getInterviewDetail } from "@/lib/data/interviews";
+import {
+  getInterviewDetail,
+  getRecentInterviewIds,
+} from "@/lib/data/interviews";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+
+export async function generateStaticParams() {
+  const interviewIds = await getRecentInterviewIds(100);
+
+  return interviewIds.map((id) => ({ id }));
+}
 
 // Calculate duration helper
 function calculateDuration(startDate: string | null, endDate: string | null) {

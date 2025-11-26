@@ -17,7 +17,8 @@ import Quizes from "./components/quizes";
 export async function generateStaticParams() {
   const positions = await getAllPositions();
 
-  return positions.map((position) => ({
+  // Pre-render only the last 100 positions for faster builds
+  return positions.slice(0, 100).map((position) => ({
     id: position.id,
   }));
 }

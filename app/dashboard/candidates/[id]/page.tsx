@@ -4,10 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deleteCandidate } from "@/lib/actions/candidates";
-import { getCandidateWithDetails } from "@/lib/data/candidates";
+import {
+  getCandidateWithDetails,
+  getRecentCandidateIds,
+} from "@/lib/data/candidates";
 import { Edit } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+
+export async function generateStaticParams() {
+  const candidateIds = await getRecentCandidateIds(100);
+
+  return candidateIds.map((id) => ({ id }));
+}
 
 export default async function CandidateDetailPage({
   params,

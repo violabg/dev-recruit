@@ -350,6 +350,81 @@ export type QuizFilterOptions = {
 };
 
 /**
+ * Returns last N quiz IDs for generateStaticParams.
+ * Used to pre-render most recent quiz detail pages at build time.
+ */
+export const getRecentQuizIds = async (limit = 100): Promise<string[]> => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("quizzes");
+
+  const quizzes = await prisma.quiz.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: { id: true },
+  });
+
+  return quizzes.map((q) => q.id);
+};
+
+/**
+ * Quiz detail for detail page view.
+ * Includes position info for display.
+ */
+export type QuizDetail = {
+  id: string;
+  title: string;
+  positionId: string;
+  timeLimit: number | null;
+  questions: Question[];
+  createdAt: string;
+  position: {
+    id: string;
+    title: string;
+    experienceLevel: string;
+  } | null;
+};
+
+/**
+ * Fetch quiz by ID with position info for detail page
+ * Cached for 1 hour and tagged for manual revalidation
+ */
+export const getQuizById = async (
+  quizId: string
+): Promise<QuizDetail | null> => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("quizzes", `quiz-${quizId}`);
+
+  const quiz = await prisma.quiz.findFirst({
+    where: { id: quizId },
+    include: QUIZ_INCLUDE_WITH_POSITION,
+  });
+
+  if (!quiz) {
+    return null;
+  }
+
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    positionId: quiz.positionId,
+    timeLimit: quiz.timeLimit,
+    questions: Array.isArray(quiz.questions)
+      ? (quiz.questions as Question[])
+      : [],
+    createdAt: quiz.createdAt.toISOString(),
+    position: quiz.position
+      ? {
+          id: quiz.position.id,
+          title: quiz.position.title,
+          experienceLevel: quiz.position.experienceLevel,
+        }
+      : null,
+  };
+};
+
+/**
  * Cached filter options for quiz list page
  * Returns unique experience levels and positions for filter dropdowns
  * Tagged with both "quizzes" and "positions" for proper revalidation

@@ -643,6 +643,24 @@ export const getInterviewsByQuiz = async (
  * Fetches filtered and paginated interviews list
  * Used in interviews dashboard
  */
+/**
+ * Returns last N interview IDs for generateStaticParams.
+ * Used to pre-render most recent interview detail pages at build time.
+ */
+export const getRecentInterviewIds = async (limit = 100): Promise<string[]> => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("interviews");
+
+  const interviews = await prisma.interview.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: { id: true },
+  });
+
+  return interviews.map((i) => i.id);
+};
+
 export async function getFilteredInterviews(filters: {
   search?: string;
   status?: string;
