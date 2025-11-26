@@ -1,7 +1,7 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import { Question } from "@/lib/schemas";
+import { FlexibleQuestion, Question } from "@/lib/schemas";
 import { cacheLife, cacheTag } from "next/cache";
 
 // Prisma types for quiz queries - unified with optional position fields
@@ -14,6 +14,27 @@ type QuizWithPosition = Prisma.QuizGetPayload<{
         experienceLevel: true;
         // Additional fields like skills and description are optional
         // and will be available when the query includes them
+      };
+    };
+  };
+}>;
+
+// Type for quiz with linked questions from QuizQuestion join table
+type QuizWithLinkedQuestions = Prisma.QuizGetPayload<{
+  include: {
+    position: {
+      select: {
+        id: true;
+        title: true;
+        experienceLevel: true;
+      };
+    };
+    quizQuestions: {
+      include: {
+        question: true;
+      };
+      orderBy: {
+        order: "asc";
       };
     };
   };
@@ -41,7 +62,7 @@ export type QuizResponse = {
     experienceLevel: string;
   } | null;
   timeLimit: number | null;
-  questions: Question[];
+  questions: FlexibleQuestion[];
 };
 
 /**
@@ -52,7 +73,7 @@ export type QuizForEdit = {
   id: string;
   title: string;
   positionId: string;
-  questions: Question[];
+  questions: FlexibleQuestion[];
   timeLimit: number | null;
 };
 
@@ -107,6 +128,66 @@ const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
     },
   },
 } as const;
+
+// Include pattern for quiz with linked questions
+const QUIZ_INCLUDE_WITH_LINKED_QUESTIONS = {
+  position: {
+    select: {
+      id: true,
+      title: true,
+      experienceLevel: true,
+    },
+  },
+  quizQuestions: {
+    include: {
+      question: true,
+    },
+    orderBy: {
+      order: "asc" as const,
+    },
+  },
+} as const;
+
+/**
+ * Convert linked questions from QuizQuestion to FlexibleQuestion format
+ * Used when quiz has questions stored in the Question entity
+ */
+const mapLinkedQuestionsToQuestionFormat = (
+  quizQuestions: QuizWithLinkedQuestions["quizQuestions"]
+): FlexibleQuestion[] => {
+  return quizQuestions.map((qq) => ({
+    id: `q${qq.order + 1}`, // Convert to q1, q2 format for compatibility
+    type: qq.question.type as FlexibleQuestion["type"],
+    question: qq.question.question,
+    keywords: qq.question.keywords,
+    explanation: qq.question.explanation || undefined,
+    options: qq.question.options,
+    correctAnswer: qq.question.correctAnswer ?? undefined,
+    sampleAnswer: qq.question.sampleAnswer || undefined,
+    codeSnippet: qq.question.codeSnippet || undefined,
+    sampleSolution: qq.question.sampleSolution || undefined,
+    language: qq.question.language || undefined,
+  }));
+};
+
+/**
+ * Get questions for a quiz - prefers linked questions over JSON
+ * Returns questions from QuizQuestion join table if available,
+ * otherwise falls back to inline JSON questions
+ */
+const getQuestionsForQuiz = (
+  quiz: QuizWithPosition | QuizWithLinkedQuestions
+): FlexibleQuestion[] => {
+  // Check if quiz has linked questions
+  if ("quizQuestions" in quiz && quiz.quizQuestions.length > 0) {
+    return mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions);
+  }
+
+  // Fall back to inline JSON questions
+  return Array.isArray(quiz.questions)
+    ? (quiz.questions as FlexibleQuestion[])
+    : [];
+};
 
 /**
  * Maps quiz data from Prisma to API response format.
@@ -258,6 +339,7 @@ export async function CachedQuizzesContent({
 /**
  * Fetch quiz with full details including position information
  * Cached for 1 hour and tagged for manual revalidation
+ * Supports both inline JSON questions and linked Question entities
  */
 export const getQuizData = async (
   quizId: string
@@ -268,20 +350,36 @@ export const getQuizData = async (
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
-    include: QUIZ_INCLUDE_WITH_POSITION_DETAILS,
+    include: {
+      ...QUIZ_INCLUDE_WITH_POSITION_DETAILS,
+      quizQuestions: {
+        include: {
+          question: true,
+        },
+        orderBy: {
+          order: "asc",
+        },
+      },
+    },
   });
 
   if (!quiz || !quiz.position) {
     return null;
   }
 
+  // Prefer linked questions over inline JSON
+  const questions: FlexibleQuestion[] =
+    quiz.quizQuestions.length > 0
+      ? mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions)
+      : Array.isArray(quiz.questions)
+      ? (quiz.questions as FlexibleQuestion[])
+      : [];
+
   const hydratedQuiz: QuizForEdit = {
     id: quiz.id,
     title: quiz.title,
     positionId: quiz.positionId,
-    questions: Array.isArray(quiz.questions)
-      ? (quiz.questions as Question[])
-      : [],
+    questions,
     timeLimit: quiz.timeLimit,
   };
 
@@ -299,6 +397,7 @@ export const getQuizData = async (
 /**
  * Fetch all quizzes for a specific position
  * Cached for 1 hour and tagged for manual revalidation
+ * Supports both inline JSON questions and linked Question entities
  */
 export const getQuizzesForPosition = async (
   positionId: string
@@ -308,7 +407,7 @@ export const getQuizzesForPosition = async (
     title: string;
     createdAt: string;
     timeLimit: number | null;
-    questions: Question[];
+    questions: FlexibleQuestion[];
   }>
 > => {
   "use cache";
@@ -325,6 +424,14 @@ export const getQuizzesForPosition = async (
       createdAt: true,
       timeLimit: true,
       questions: true,
+      quizQuestions: {
+        include: {
+          question: true,
+        },
+        orderBy: {
+          order: "asc",
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -334,9 +441,12 @@ export const getQuizzesForPosition = async (
     title: quiz.title,
     createdAt: quiz.createdAt.toISOString(),
     timeLimit: quiz.timeLimit,
-    questions: Array.isArray(quiz.questions)
-      ? (quiz.questions as Question[])
-      : [],
+    questions:
+      quiz.quizQuestions.length > 0
+        ? mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions)
+        : Array.isArray(quiz.questions)
+        ? (quiz.questions as FlexibleQuestion[])
+        : [],
   }));
 };
 
@@ -376,18 +486,21 @@ export type QuizDetail = {
   title: string;
   positionId: string;
   timeLimit: number | null;
-  questions: Question[];
+  questions: FlexibleQuestion[];
   createdAt: string;
   position: {
     id: string;
     title: string;
     experienceLevel: string;
   } | null;
+  /** Whether questions are stored as linked entities vs inline JSON */
+  hasLinkedQuestions?: boolean;
 };
 
 /**
  * Fetch quiz by ID with position info for detail page
  * Cached for 1 hour and tagged for manual revalidation
+ * Supports both inline JSON questions and linked Question entities
  */
 export const getQuizById = async (
   quizId: string
@@ -398,7 +511,7 @@ export const getQuizById = async (
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
-    include: QUIZ_INCLUDE_WITH_POSITION,
+    include: QUIZ_INCLUDE_WITH_LINKED_QUESTIONS,
   });
 
   if (!quiz) {
@@ -410,9 +523,7 @@ export const getQuizById = async (
     title: quiz.title,
     positionId: quiz.positionId,
     timeLimit: quiz.timeLimit,
-    questions: Array.isArray(quiz.questions)
-      ? (quiz.questions as Question[])
-      : [],
+    questions: getQuestionsForQuiz(quiz),
     createdAt: quiz.createdAt.toISOString(),
     position: quiz.position
       ? {
@@ -421,6 +532,8 @@ export const getQuizById = async (
           experienceLevel: quiz.position.experienceLevel,
         }
       : null,
+    // Include metadata about question storage
+    hasLinkedQuestions: quiz.quizQuestions.length > 0,
   };
 };
 

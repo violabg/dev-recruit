@@ -9,6 +9,15 @@
 * 🟢 You can import this file directly.
 */
 
+export const QuestionType = {
+  multiple_choice: 'multiple_choice',
+  open_question: 'open_question',
+  code_snippet: 'code_snippet'
+} as const
+
+export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType]
+
+
 export const ExpectedResponseLength = {
   short: 'short',
   medium: 'medium',

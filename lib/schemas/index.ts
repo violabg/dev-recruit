@@ -13,6 +13,9 @@ export * from "./base";
 // Re-export unified question schemas and types
 export * from "./question";
 
+// Re-export question entity schemas and types (database model)
+export * from "./questionEntity";
+
 // Re-export unified quiz schemas and types
 export * from "./quiz";
 
