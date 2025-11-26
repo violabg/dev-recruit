@@ -26,7 +26,6 @@ interface QuestionProps {
   questionNumber: number;
   onAnswer: (answer: QuestionAnswer) => void;
   currentAnswer: QuestionAnswer;
-  completed: boolean;
 }
 
 export function InterviewQuestion({
@@ -34,7 +33,6 @@ export function InterviewQuestion({
   questionNumber,
   onAnswer,
   currentAnswer,
-  completed,
 }: QuestionProps) {
   const { theme, resolvedTheme } = useTheme();
 
@@ -296,7 +294,7 @@ export function InterviewQuestion({
         <div className="flex justify-end">
           <Button
             onClick={handleSubmitAnswer}
-            disabled={(answer === null && code === "") || completed}
+            disabled={answer === null && code === ""}
           >
             Salva risposta
           </Button>

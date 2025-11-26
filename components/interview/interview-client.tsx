@@ -226,7 +226,6 @@ export function InterviewClient({
   }
   const totalQuestions = quiz.questions.length;
   const totalAnswers = Object.keys(answers).length;
-  const completed = totalQuestions === totalAnswers;
   return (
     <div className="flex flex-col min-h-dvh">
       <header className="top-0 z-10 sticky bg-background border-b">
@@ -277,7 +276,6 @@ export function InterviewClient({
             <InterviewQuestion
               question={quiz.questions[currentQuestionIndex]}
               questionNumber={currentQuestionIndex + 1}
-              completed={completed}
               onAnswer={(answer) =>
                 handleAnswer(quiz.questions[currentQuestionIndex].id, answer)
               }
@@ -289,7 +287,7 @@ export function InterviewClient({
             <Button
               variant="outline"
               onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
-              disabled={currentQuestionIndex === 0 || completed}
+              disabled={currentQuestionIndex === 0}
             >
               Precedente
             </Button>
@@ -305,7 +303,7 @@ export function InterviewClient({
             ) : (
               <Button
                 onClick={handleCompleteInterview}
-                disabled={totalQuestions !== totalAnswers}
+                disabled={totalQuestions !== totalAnswers || isPending}
               >
                 Completa quiz
               </Button>
