@@ -1,5 +1,5 @@
 import { CandidateForm } from "@/components/candidates/candidate-form";
-import prisma from "@/lib/prisma";
+import { getPositionsForSelect } from "@/lib/data/positions";
 import { Suspense } from "react";
 import { CandidateFormSkeleton } from "./fallbacks";
 
@@ -21,10 +21,7 @@ async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
   const params = await searchParams;
   const positionId = params.positionId;
 
-  const positions = await prisma.position.findMany({
-    select: { id: true, title: true },
-    orderBy: { title: "asc" },
-  });
+  const positions = await getPositionsForSelect();
 
   // Validate that the positionId exists if provided
   const validPositionId =

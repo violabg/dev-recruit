@@ -111,3 +111,18 @@ export const getRecentPositions = async (limit = 5) => {
     },
   });
 };
+
+/**
+ * Returns positions with only id and title for select/dropdown components.
+ * Sorted alphabetically by title.
+ */
+export const getPositionsForSelect = async () => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("positions");
+
+  return prisma.position.findMany({
+    select: { id: true, title: true },
+    orderBy: { title: "asc" },
+  });
+};
