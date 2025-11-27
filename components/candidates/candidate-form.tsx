@@ -226,6 +226,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
         name="dateOfBirth"
         label="Data di nascita"
         type="date"
+        className="w-auto"
       />
       <SelectField
         control={form.control}

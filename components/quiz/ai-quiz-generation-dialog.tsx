@@ -62,14 +62,14 @@ export const AIQuizGenerationDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[960px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-6 pr-2">
-          <div className="gap-6 grid md:grid-cols-2">
-            <div className="bg-panel p-6 border border-border rounded-2xl">
+          <div className="gap-6 grid md:grid-cols-5">
+            <div className="md:col-span-3 bg-panel p-6 border border-border rounded-2xl">
               <QuizForm
                 position={quizFormPosition}
                 onCancel={() => onOpenChange(false)}
@@ -77,7 +77,7 @@ export const AIQuizGenerationDialog = ({
                 quizId={quizId}
               />
             </div>
-            <Card>
+            <Card className="md:col-span-2">
               <CardContent className="space-y-4 p-6">
                 <div className="flex items-center gap-2 font-semibold text-lg">
                   <BrainCircuit className="w-5 h-5 text-primary" />
