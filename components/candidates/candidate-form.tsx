@@ -238,6 +238,16 @@ export const CandidateForm = (props: CandidateFormProps) => {
           label: position.title,
         }))}
       />
+      {isEditMode && (
+        <SelectField
+          control={form.control}
+          name="status"
+          label="Stato"
+          placeholder="Seleziona stato"
+          options={STATUS_OPTIONS}
+          triggerProps={{ disabled: isPending, size: "default" }}
+        />
+      )}
       <FileUploadField
         currentFileUrl={
           isEditMode && !removeExistingResume
