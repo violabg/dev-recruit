@@ -131,6 +131,14 @@ BETTER_AUTH_URL="http://localhost:3000"
 
 # AI (Groq)
 GROQ_API_KEY="your-groq-api-key"
+
+# Cloudflare R2 (Resume Storage)
+R2_ACCOUNT_ID="your-r2-account-id"
+R2_ACCESS_KEY_ID="your-r2-access-key-id"
+R2_SECRET_ACCESS_KEY="your-r2-secret"
+R2_BUCKET_NAME="your-r2-bucket-name"
+# Optional: if using a custom/public domain for files
+R2_PUBLIC_URL="https://files.yourdomain.com"
 ```
 
 ### 4. Set up the database
