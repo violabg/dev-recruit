@@ -33,6 +33,11 @@ type CandidateFormProps =
       defaultPositionId?: string;
     }
   | {
+      mode: "apply";
+      positions: { id: string; title: string }[];
+      defaultPositionId?: string;
+    }
+  | {
       mode: "edit";
       positions: { id: string; title: string }[];
       candidate: Pick<
@@ -54,7 +59,9 @@ export const CandidateForm = (props: CandidateFormProps) => {
   const [isPending, startTransition] = useTransition();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [removeExistingResume, setRemoveExistingResume] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const isEditMode = props.mode === "edit";
+  const isApplyMode = props.mode === "apply";
 
   // Use appropriate schema and type based on mode
   const schema = isEditMode ? candidateUpdateSchema : candidateFormSchema;
@@ -180,6 +187,10 @@ export const CandidateForm = (props: CandidateFormProps) => {
     startTransition(async () => {
       try {
         const response = await createCandidate(formData);
+        if (isApplyMode) {
+          setIsSubmitted(true);
+          return;
+        }
         if (response?.candidateId) {
           router.push(`/dashboard/candidates/${response.candidateId}`);
         } else {
@@ -194,6 +205,34 @@ export const CandidateForm = (props: CandidateFormProps) => {
       }
     });
   };
+
+  // Show success message after apply submission
+  if (isApplyMode && isSubmitted) {
+    return (
+      <div className="py-8 text-center">
+        <div className="flex justify-center items-center bg-green-100 dark:bg-green-900/30 mx-auto mb-4 rounded-full w-16 h-16">
+          <svg
+            className="w-8 h-8 text-green-600 dark:text-green-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h3 className="mb-2 font-semibold text-lg">Candidatura inviata!</h3>
+        <p className="text-muted-foreground">
+          Grazie per esserti candidato. Ti contatteremo presto per fornirti
+          maggiori dettagli sul processo di selezione.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -265,10 +304,16 @@ export const CandidateForm = (props: CandidateFormProps) => {
         {isPending ? (
           <>
             <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-            {isEditMode ? "Salvataggio in corso..." : "Creazione in corso..."}
+            {isEditMode
+              ? "Salvataggio in corso..."
+              : isApplyMode
+              ? "Invio candidatura..."
+              : "Creazione in corso..."}
           </>
         ) : isEditMode ? (
           "Aggiorna candidato"
+        ) : isApplyMode ? (
+          "Invia candidatura"
         ) : (
           "Crea candidato"
         )}
