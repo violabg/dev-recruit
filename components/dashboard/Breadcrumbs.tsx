@@ -47,10 +47,9 @@ const Breadcrumbs = () => {
   // Only show breadcrumbs for /dashboard and below
   if (!pathname.startsWith("/dashboard")) return null;
 
-  // Build hrefs for each segment
-  let href = "";
+  // Build hrefs for each segment using reduce to avoid mutable reassignment
   const items = segments.map((segment, idx) => {
-    href += "/" + segment;
+    const href = "/" + segments.slice(0, idx + 1).join("/");
     const isLast = idx === segments.length - 1;
     const isNewQuiz = segment === "quiz" && idx === 3;
     return (

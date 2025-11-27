@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "../ui/button";
 
@@ -13,7 +13,17 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [inputValue, setInputValue] = useState(defaultValue ?? "");
+  // Track local input separately from URL
+  const urlSearch = searchParams.get("q") || "";
+  const [inputValue, setInputValue] = useState(defaultValue ?? urlSearch);
+  // Track the last URL value to detect external changes (e.g., reset button)
+  const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch);
+
+  // Sync input when URL changes externally (e.g., reset button click)
+  if (urlSearch !== lastUrlSearch) {
+    setLastUrlSearch(urlSearch);
+    setInputValue(urlSearch);
+  }
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -32,11 +42,6 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
       router.push(queryString ? `${pathname}?${queryString}` : pathname);
     });
   }, 800);
-
-  // Sync input value with URL params
-  useEffect(() => {
-    setInputValue(searchParams.get("q") || "");
-  }, [searchParams]);
 
   const hasFilters = searchParams.get("q");
 

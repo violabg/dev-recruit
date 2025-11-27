@@ -1,7 +1,7 @@
 "use client";
 
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export type QuestionTypeFilter = "all" | QuestionType;
 
@@ -16,15 +16,25 @@ export const useQuestionManagement = ({
 }: UseQuestionManagementProps) => {
   const [questionTypeFilter, setQuestionTypeFilter] =
     useState<QuestionTypeFilter>("all");
+  // Initialize with all field IDs expanded
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
-    new Set()
+    () => new Set(fields.map((field) => field.id))
+  );
+  // Track field IDs to detect changes
+  const [lastFieldIds, setLastFieldIds] = useState<string[]>(() =>
+    fields.map((field) => field.id)
   );
 
-  // Set all questions as expanded by default
-  useEffect(() => {
-    const allQuestionIds = new Set(fields.map((field) => field.id));
-    setExpandedQuestions(allQuestionIds);
-  }, [fields]);
+  // Sync expanded questions when fields change (render-time sync)
+  const currentFieldIds = fields.map((field) => field.id);
+  const fieldsChanged =
+    currentFieldIds.length !== lastFieldIds.length ||
+    currentFieldIds.some((id, i) => id !== lastFieldIds[i]);
+
+  if (fieldsChanged) {
+    setLastFieldIds(currentFieldIds);
+    setExpandedQuestions(new Set(currentFieldIds));
+  }
 
   // Memoize filtered questions for better performance
   const filteredQuestions = useMemo(() => {

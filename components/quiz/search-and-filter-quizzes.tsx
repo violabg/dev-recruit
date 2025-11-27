@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 type PositionFilterOption = {
@@ -38,9 +38,17 @@ export const SearchAndFilterQuizzes = ({
   const searchParams = useSearchParams();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [inputValue, setInputValue] = useState(
-    searchParams.get("search") || ""
-  );
+  // Track local input separately from URL
+  const urlSearch = searchParams.get("search") || "";
+  const [inputValue, setInputValue] = useState(urlSearch);
+  // Track the last URL value to detect external changes (e.g., reset button)
+  const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch);
+
+  // Sync input when URL changes externally (e.g., reset button click)
+  if (urlSearch !== lastUrlSearch) {
+    setLastUrlSearch(urlSearch);
+    setInputValue(urlSearch);
+  }
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams);
@@ -93,10 +101,6 @@ export const SearchAndFilterQuizzes = ({
       replace(`/dashboard/quizzes?${params.toString()}`);
     });
   };
-
-  useEffect(() => {
-    setInputValue(searchParams.get("search") || "");
-  }, [searchParams]);
 
   const currentSearch = searchParams.get("search") || "";
   const currentSort = searchParams.get("sort") || "newest";

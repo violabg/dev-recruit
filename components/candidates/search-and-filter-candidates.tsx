@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "../ui/button";
 
@@ -51,9 +51,17 @@ export const SearchAndFilterCandidates = ({
   const pathname = usePathname();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [inputValue, setInputValue] = useState(
-    searchParams.get("search") || ""
-  );
+  // Track local input separately from URL
+  const urlSearch = searchParams.get("search") || "";
+  const [inputValue, setInputValue] = useState(urlSearch);
+  // Track the last URL value to detect external changes (e.g., reset button)
+  const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch);
+
+  // Sync input when URL changes externally (e.g., reset button click)
+  if (urlSearch !== lastUrlSearch) {
+    setLastUrlSearch(urlSearch);
+    setInputValue(urlSearch);
+  }
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -110,10 +118,6 @@ export const SearchAndFilterCandidates = ({
       replace(queryString ? `${pathname}?${queryString}` : pathname);
     });
   };
-
-  useEffect(() => {
-    setInputValue(searchParams.get("search") || "");
-  }, [searchParams]);
 
   const currentSearch = searchParams.get("search") || "";
   const currentStatus = searchParams.get("status") || "all";

@@ -40,28 +40,37 @@ export function InterviewQuestion({
   const monacoTheme =
     resolvedTheme === "dark" || theme === "dark" ? "vs-dark" : "light";
 
+  // Compute initial values from currentAnswer
+  const getInitialAnswer = (): string | null => {
+    if (typeof currentAnswer === "string") return currentAnswer;
+    return null;
+  };
+  const getInitialCode = (): string => {
+    if (
+      currentAnswer &&
+      typeof currentAnswer === "object" &&
+      "code" in currentAnswer
+    ) {
+      return currentAnswer.code;
+    }
+    return "";
+  };
+
   // Reset answer and code when question changes
-  const [answer, setAnswer] = useState<string | null>(
-    typeof currentAnswer === "string" ? currentAnswer : null
-  );
-  const [code, setCode] = useState<string>("");
+  const [answer, setAnswer] = useState<string | null>(getInitialAnswer);
+  const [code, setCode] = useState<string>(getInitialCode);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
   const [isPending, startTransition] = useTransition();
 
-  // Report answer changes to parent
-  useEffect(() => {
-    if (question.type === "code_snippet") {
-      onAnswerChange(code ? { code } : null);
-    } else {
-      // Treat empty string as null (no answer)
-      onAnswerChange(answer && answer.trim() ? answer : null);
-    }
-  }, [answer, code, question.type, onAnswerChange]);
-  // Reset state when question changes
-  useEffect(() => {
+  // Track question.id to detect when question changes
+  const [lastQuestionId, setLastQuestionId] = useState(question.id);
+
+  // Reset state when question changes (render-time sync)
+  if (question.id !== lastQuestionId) {
+    setLastQuestionId(question.id);
     if (typeof currentAnswer === "string") {
       setAnswer(currentAnswer);
       setCode("");
@@ -76,7 +85,17 @@ export function InterviewQuestion({
       setAnswer(null);
       setCode("");
     }
-  }, [question, currentAnswer]);
+  }
+
+  // Report answer changes to parent
+  useEffect(() => {
+    if (question.type === "code_snippet") {
+      onAnswerChange(code ? { code } : null);
+    } else {
+      // Treat empty string as null (no answer)
+      onAnswerChange(answer && answer.trim() ? answer : null);
+    }
+  }, [answer, code, question.type, onAnswerChange]);
 
   // Audio recording and transcription logic
   const handleStartRecording = async () => {

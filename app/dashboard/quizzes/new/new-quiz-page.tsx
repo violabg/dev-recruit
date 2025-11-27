@@ -13,7 +13,7 @@ import { SaveQuizResult } from "@/hooks/use-edit-quiz-form";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export type PositionOption = {
   id: string;
@@ -35,12 +35,6 @@ export const NewQuizCreationPage = ({
     fixedPosition?.id ?? ""
   );
   const router = useRouter();
-
-  useEffect(() => {
-    if (fixedPosition) {
-      setSelectedPositionId(fixedPosition.id);
-    }
-  }, [fixedPosition]);
 
   const selectedPosition = useMemo(() => {
     if (fixedPosition) {

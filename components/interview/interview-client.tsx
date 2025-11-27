@@ -117,9 +117,10 @@ export function InterviewClient({
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
     initialTimeRemaining
   );
-  // Don't set isTimeExpired to true during initial render - let useEffect handle it
-  // This avoids calling startTransition during render
-  const [isTimeExpired, setIsTimeExpired] = useState(false);
+  // Initialize isTimeExpired based on initial remaining time
+  const [isTimeExpired, setIsTimeExpired] = useState(
+    () => initialTimeRemaining !== null && initialTimeRemaining === 0
+  );
   const [isCompleted, setIsCompleted] = useState(
     interview.status === "completed"
   );
@@ -127,13 +128,6 @@ export function InterviewClient({
     interview.status === "in_progress"
   );
   const [isPending, startTransition] = useTransition();
-
-  // Check for expired time after mount to avoid startTransition during render
-  useEffect(() => {
-    if (initialTimeRemaining !== null && initialTimeRemaining === 0) {
-      setIsTimeExpired(true);
-    }
-  }, [initialTimeRemaining]);
 
   const handleCompleteInterview = useCallback(() => {
     startTransition(async () => {

@@ -25,12 +25,25 @@ import Link from "next/link";
 import { CandidatesListSkeleton, FiltersSkeleton } from "./fallbacks";
 import type { CandidatesSearchParams } from "./page";
 
-type CandidateStatus = "all" | "active" | "archived";
-type CandidateSort = "newest" | "oldest" | "progress";
+type CandidateStatus =
+  | "all"
+  | "pending"
+  | "contacted"
+  | "interviewing"
+  | "hired"
+  | "rejected";
+type CandidateSort = "newest" | "oldest" | "name" | "status";
 type CandidateView = "table" | "grid";
 
-const STATUS_VALUES: CandidateStatus[] = ["all", "active", "archived"];
-const SORT_VALUES: CandidateSort[] = ["newest", "oldest", "progress"];
+const STATUS_VALUES: CandidateStatus[] = [
+  "all",
+  "pending",
+  "contacted",
+  "interviewing",
+  "hired",
+  "rejected",
+];
+const SORT_VALUES: CandidateSort[] = ["newest", "oldest", "name", "status"];
 const VIEW_VALUES: CandidateView[] = ["table", "grid"];
 
 const normalizeStatus = (value?: string): CandidateStatus =>

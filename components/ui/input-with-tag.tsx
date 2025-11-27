@@ -10,7 +10,8 @@ type Props = RefAttributes<HTMLInputElement> & {
 
 export default function InputWithTag(props: Props) {
   const { id: propsId, ...rest } = props;
-  const id = propsId || useId();
+  const generatedId = useId();
+  const id = propsId || generatedId;
 
   const [tags, setTags] = useState<Tag[]>(
     rest.value?.map((tag) => ({ id: tag, text: tag })) || []

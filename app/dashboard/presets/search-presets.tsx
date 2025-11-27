@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
@@ -13,7 +13,17 @@ export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [inputValue, setInputValue] = useState(defaultValue ?? "");
+  // Track local input separately from URL - only sync on mount
+  const urlSearch = searchParams.get("search") || "";
+  const [inputValue, setInputValue] = useState(defaultValue ?? urlSearch);
+  // Track the last URL value to detect external changes (e.g., reset button)
+  const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch);
+
+  // Sync input when URL changes externally (e.g., reset button click)
+  if (urlSearch !== lastUrlSearch) {
+    setLastUrlSearch(urlSearch);
+    setInputValue(urlSearch);
+  }
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -29,14 +39,10 @@ export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
 
     startTransition(() => {
       const queryString = params.toString();
-      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      router.push(url as "/dashboard/presets");
     });
   }, 800);
-
-  // Sync input value with URL params
-  useEffect(() => {
-    setInputValue(searchParams.get("search") || "");
-  }, [searchParams]);
 
   const hasFilters = searchParams.get("search");
 
@@ -62,7 +68,7 @@ export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
       </div>
       {hasFilters && (
         <Button variant="outlineDestructive" asChild disabled={isPending}>
-          <Link href={pathname}>
+          <Link href={pathname as "/dashboard/presets"}>
             <X className="mr-1 size-4" />
             Reset
           </Link>

@@ -71,16 +71,21 @@ export const CandidateForm = (props: CandidateFormProps) => {
   });
 
   // Reset form when mode changes or when defaultPositionId changes
+  const defaultPositionId =
+    !isEditMode && "defaultPositionId" in props
+      ? props.defaultPositionId
+      : undefined;
+  const firstPositionId = props.positions[0]?.id;
   useEffect(() => {
-    if (!isEditMode && "defaultPositionId" in props) {
+    if (!isEditMode) {
       form.reset({
         name: "",
         email: "",
-        positionId: props.defaultPositionId || props.positions[0]?.id || "",
+        positionId: defaultPositionId || firstPositionId || "",
         resumeUrl: "",
       });
     }
-  }, [isEditMode, props.positions, form]);
+  }, [isEditMode, defaultPositionId, firstPositionId, form]);
 
   const handleFormSubmission = (
     values: CandidateFormData | CandidateUpdateData
