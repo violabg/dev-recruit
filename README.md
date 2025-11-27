@@ -86,7 +86,7 @@ dev-recruit/
 | ------------------ | ----------------------------- |
 | **Framework**      | Next.js 16 (App Router)       |
 | **Language**       | TypeScript 5.9                |
-| **Database**       | PostgreSQL (Neon) + Prisma 6  |
+| **Database**       | PostgreSQL (Neon) + Prisma 7  |
 | **AI/LLM**         | Groq API (Vercel AI SDK)      |
 | **Styling**        | Tailwind CSS 4 + OKLCH colors |
 | **UI Components**  | Radix UI + shadcn/ui          |
