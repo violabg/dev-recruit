@@ -257,7 +257,7 @@ export function CandidateEvaluationsView({
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <CardTitle className="text-lg">
+                      <CardTitle className="text-primary text-lg">
                         {evaluation.title}
                       </CardTitle>
                       <CardDescription>
