@@ -1,18 +1,17 @@
-// ESLint configuration using flat config format
-// Note: ESLint has issues with FlatCompat + Next.js plugins in this version
-// For now, linting is handled by Next.js built-in lint via next lint command
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import { defineConfig, globalIgnores } from 'eslint/config'
 
-export default [
-  {
-    ignores: [
-      "node_modules/",
-      ".next/",
-      "dist/",
-      "coverage/",
-      ".pnpm-store/",
-      ".vscode/",
-      ".DS_Store",
-      "*.tsbuildinfo",
-    ],
-  },
-];
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    '.next/**',
+    'out/**',
+    'build/**',
+    'lib/prisma/**',
+    'next-env.d.ts',
+  ]),
+])
+
+export default eslintConfig
