@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 // Tabs removed — rendering results directly
+import { getEvaluationByInterviewId } from "@/lib/data/evaluations";
 import {
   getInterviewDetail,
   getRecentInterviewIds,
@@ -46,7 +47,10 @@ export default async function InterviewDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const unwrappedParams = await params;
-  const interviewData = await getInterviewDetail(unwrappedParams.id);
+  const [interviewData, evaluation] = await Promise.all([
+    getInterviewDetail(unwrappedParams.id),
+    getEvaluationByInterviewId(unwrappedParams.id),
+  ]);
 
   if (!interviewData) {
     return (
@@ -161,6 +165,7 @@ export default async function InterviewDetailPage({
             quizQuestions={quiz.questions}
             answers={interview.answers || {}}
             candidateName={candidate.name ?? ""}
+            initialEvaluation={evaluation}
           />
         ) : (
           <Card>

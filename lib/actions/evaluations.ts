@@ -3,8 +3,8 @@
 import {
   EvaluationResult,
   evaluationResultSchema,
+  FlexibleQuestion,
   overallEvaluationSchema,
-  Question,
 } from "@/lib/schemas";
 import { groq } from "@ai-sdk/groq";
 import { generateObject } from "ai";
@@ -12,7 +12,7 @@ import { getOptimalModel } from "../utils";
 
 // Evaluation actions
 export async function evaluateAnswer(
-  question: Question,
+  question: FlexibleQuestion,
   answer: string,
   specificModel?: string
 ) {

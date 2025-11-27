@@ -9,40 +9,69 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  createInterviewEvaluation,
+  updateEvaluationNotes,
+} from "@/lib/actions/evaluation-entity";
 import {
   evaluateAnswer,
   generateOverallEvaluation,
 } from "@/lib/actions/evaluations";
-import { Question } from "@/lib/schemas";
+import type { EvaluationWithRelations } from "@/lib/data/evaluations";
+import { FlexibleQuestion } from "@/lib/schemas";
 import { prismLanguage } from "@/lib/utils";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Save, Sparkles } from "lucide-react";
 import { Highlight, themes } from "prism-react-renderer";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 interface InterviewResultsClientProps {
   interviewId: string;
-  quizQuestions: Question[];
+  quizQuestions: FlexibleQuestion[];
   answers: Record<string, any>;
   candidateName: string;
+  initialEvaluation?: EvaluationWithRelations | null;
 }
 
 export function InterviewResultsClient({
+  interviewId,
   quizQuestions,
   answers,
   candidateName,
+  initialEvaluation,
 }: InterviewResultsClientProps) {
   const [loading, setLoading] = useState(false);
   const [evaluations, setEvaluations] = useState<Record<string, any>>({});
-  const [overallEvaluation, setOverallEvaluation] = useState<any | null>(null);
-  const [overallScore, setOverallScore] = useState<number | null>(null);
+  const [savedEvaluation, setSavedEvaluation] =
+    useState<EvaluationWithRelations | null>(initialEvaluation ?? null);
+  const [overallEvaluation, setOverallEvaluation] = useState<any | null>(
+    initialEvaluation
+      ? {
+          evaluation: initialEvaluation.evaluation,
+          strengths: initialEvaluation.strengths,
+          weaknesses: initialEvaluation.weaknesses,
+          recommendation: initialEvaluation.recommendation,
+          fitScore: initialEvaluation.fitScore,
+        }
+      : null
+  );
+  // Note: overallScore is the quiz percentage score (from evaluating answers)
+  // This is different from fitScore which is the AI's candidate fit assessment
+  // quizScore is persisted in the database for interview evaluations
+  const [overallScore, setOverallScore] = useState<number | null>(
+    (initialEvaluation as any)?.quizScore ?? null
+  );
   const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
   const [totalQuestionsToEvaluate, setTotalQuestionsToEvaluate] = useState(0);
   const [currentQuestionTitle, setCurrentQuestionTitle] = useState<string>("");
   const [isGeneratingOverallEvaluation, setIsGeneratingOverallEvaluation] =
     useState(false);
+  const [notes, setNotes] = useState(initialEvaluation?.notes ?? "");
+  const [isSavingNotes, startSavingNotes] = useTransition();
 
   const evaluateAnswers = async () => {
     setLoading(true);
@@ -141,7 +170,38 @@ export function InterviewResultsClient({
           evaluatedQuestions
         );
 
-        setOverallEvaluation(result);
+        // Normalize fitScore from 0-100 (AI output) to 0-10 (display scale)
+        const normalizedResult = {
+          ...result,
+          fitScore: result.fitScore
+            ? Math.round(result.fitScore / 10)
+            : undefined,
+        };
+
+        setOverallEvaluation(normalizedResult);
+
+        // Save to database (createInterviewEvaluation also normalizes fitScore)
+        try {
+          const saved = await createInterviewEvaluation(
+            interviewId,
+            result,
+            percentageScore
+          );
+          setSavedEvaluation({
+            ...saved,
+            interview: null,
+            candidate: null,
+            position: null,
+            creator: null,
+          } as unknown as EvaluationWithRelations);
+          toast.success("Valutazione salvata con successo");
+        } catch (saveError) {
+          console.error("Error saving evaluation:", saveError);
+          toast.error("Errore nel salvataggio", {
+            description:
+              "La valutazione è stata generata ma non salvata nel database",
+          });
+        }
       } catch (error) {
         console.error("Error generating overall evaluation:", error);
         toast.error("Errore valutazione complessiva", {
@@ -185,6 +245,20 @@ export function InterviewResultsClient({
       }
     }
     return count;
+  };
+
+  const handleSaveNotes = () => {
+    if (!savedEvaluation) return;
+
+    startSavingNotes(async () => {
+      try {
+        await updateEvaluationNotes(savedEvaluation.id, notes);
+        toast.success("Note salvate con successo");
+      } catch (error) {
+        console.error("Error saving notes:", error);
+        toast.error("Errore durante il salvataggio delle note");
+      }
+    });
   };
 
   return (
@@ -312,6 +386,37 @@ export function InterviewResultsClient({
           {overallEvaluation && (
             <OverallEvaluationCard overallEvaluation={overallEvaluation} />
           )}
+
+          {savedEvaluation && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="space-y-2">
+                <Label htmlFor="notes" className="font-medium text-sm">
+                  Note manuali
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Aggiungi note personali o osservazioni sulla valutazione..."
+                  rows={3}
+                />
+              </div>
+              <Button
+                onClick={handleSaveNotes}
+                size="sm"
+                disabled={
+                  isSavingNotes || notes === (savedEvaluation.notes ?? "")
+                }
+              >
+                {isSavingNotes ? (
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 w-4 h-4" />
+                )}
+                Salva note
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -373,22 +478,23 @@ export function InterviewResultsClient({
                               <div className="font-medium">
                                 Risposta del candidato:
                               </div>
-                              {type === "multiple_choice" && (
-                                <div
-                                  className={`rounded-md border p-3 ${
-                                    Number.parseInt(answers[id]) ===
-                                    question.correctAnswer
-                                      ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                      : "border-red-500 bg-red-50 dark:bg-red-950/20"
-                                  }`}
-                                >
-                                  {
-                                    question.options[
-                                      Number.parseInt(answers[id])
-                                    ]
-                                  }
-                                </div>
-                              )}
+                              {type === "multiple_choice" &&
+                                question.options && (
+                                  <div
+                                    className={`rounded-md border p-3 ${
+                                      Number.parseInt(answers[id]) ===
+                                      question.correctAnswer
+                                        ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                                        : "border-red-500 bg-red-50 dark:bg-red-950/20"
+                                    }`}
+                                  >
+                                    {
+                                      question.options[
+                                        Number.parseInt(answers[id])
+                                      ]
+                                    }
+                                  </div>
+                                )}
 
                               {type === "open_question" && (
                                 <div className="p-3 border rounded-md whitespace-pre-wrap">
@@ -455,21 +561,23 @@ export function InterviewResultsClient({
                               )}
                             </div>
 
-                            {type === "multiple_choice" && (
-                              <div className="space-y-2">
-                                <div className="font-medium">
-                                  Risposta corretta:
-                                </div>
-                                <div className="bg-green-50 dark:bg-green-950/20 p-3 border border-green-500 rounded-md">
-                                  {question.options[question.correctAnswer]}
-                                </div>
-                                {question.explanation && (
-                                  <div className="text-muted-foreground text-sm">
-                                    {question.explanation}
+                            {type === "multiple_choice" &&
+                              question.options &&
+                              question.correctAnswer !== undefined && (
+                                <div className="space-y-2">
+                                  <div className="font-medium">
+                                    Risposta corretta:
                                   </div>
-                                )}
-                              </div>
-                            )}
+                                  <div className="bg-green-50 dark:bg-green-950/20 p-3 border border-green-500 rounded-md">
+                                    {question.options[question.correctAnswer]}
+                                  </div>
+                                  {question.explanation && (
+                                    <div className="text-muted-foreground text-sm">
+                                      {question.explanation}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
                             {evaluation && (
                               <div className="space-y-2">

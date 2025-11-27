@@ -10,7 +10,7 @@ import {
 } from "@/lib/data/candidates";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Edit, ExternalLink, FileText } from "lucide-react";
+import { ClipboardCheck, Edit, ExternalLink, FileText } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
@@ -63,6 +63,16 @@ export default async function CandidateDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline">
+            <Link
+              href={
+                `/dashboard/candidates/${candidate.id}/evaluations` as Route<`/dashboard/candidates/${string}/evaluations`>
+              }
+            >
+              <ClipboardCheck className="mr-1 w-4 h-4" />
+              Valutazioni
+            </Link>
+          </Button>
           <Button asChild variant="ghost">
             <Link
               href={

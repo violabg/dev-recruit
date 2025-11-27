@@ -395,6 +395,7 @@ export const ModelName = {
   Interview: 'Interview',
   Question: 'Question',
   QuizQuestion: 'QuizQuestion',
+  Evaluation: 'Evaluation',
   Preset: 'Preset'
 } as const
 
@@ -411,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "profile" | "position" | "candidate" | "quiz" | "interview" | "question" | "quizQuestion" | "preset"
+    modelProps: "user" | "session" | "account" | "verification" | "profile" | "position" | "candidate" | "quiz" | "interview" | "question" | "quizQuestion" | "evaluation" | "preset"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1229,6 +1230,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Evaluation: {
+      payload: Prisma.$EvaluationPayload<ExtArgs>
+      fields: Prisma.EvaluationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.EvaluationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.EvaluationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>
+        }
+        findFirst: {
+          args: Prisma.EvaluationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.EvaluationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>
+        }
+        findMany: {
+          args: Prisma.EvaluationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>[]
+        }
+        create: {
+          args: Prisma.EvaluationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>
+        }
+        createMany: {
+          args: Prisma.EvaluationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.EvaluationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>[]
+        }
+        delete: {
+          args: Prisma.EvaluationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>
+        }
+        update: {
+          args: Prisma.EvaluationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>
+        }
+        deleteMany: {
+          args: Prisma.EvaluationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.EvaluationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.EvaluationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>[]
+        }
+        upsert: {
+          args: Prisma.EvaluationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EvaluationPayload>
+        }
+        aggregate: {
+          args: Prisma.EvaluationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateEvaluation>
+        }
+        groupBy: {
+          args: Prisma.EvaluationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EvaluationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.EvaluationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EvaluationCountAggregateOutputType> | number
+        }
+      }
+    }
     Preset: {
       payload: Prisma.$PresetPayload<ExtArgs>
       fields: Prisma.PresetFieldRefs
@@ -1512,6 +1587,27 @@ export const QuizQuestionScalarFieldEnum = {
 export type QuizQuestionScalarFieldEnum = (typeof QuizQuestionScalarFieldEnum)[keyof typeof QuizQuestionScalarFieldEnum]
 
 
+export const EvaluationScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  interviewId: 'interviewId',
+  candidateId: 'candidateId',
+  positionId: 'positionId',
+  evaluation: 'evaluation',
+  strengths: 'strengths',
+  weaknesses: 'weaknesses',
+  recommendation: 'recommendation',
+  fitScore: 'fitScore',
+  quizScore: 'quizScore',
+  notes: 'notes',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EvaluationScalarFieldEnum = (typeof EvaluationScalarFieldEnum)[keyof typeof EvaluationScalarFieldEnum]
+
+
 export const PresetScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1780,6 +1876,7 @@ export type GlobalOmitConfig = {
   interview?: Prisma.InterviewOmit
   question?: Prisma.QuestionOmit
   quizQuestion?: Prisma.QuizQuestionOmit
+  evaluation?: Prisma.EvaluationOmit
   preset?: Prisma.PresetOmit
 }
 
