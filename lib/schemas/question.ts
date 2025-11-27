@@ -55,6 +55,7 @@ export const questionSchemas = {
   flexible: z
     .object({
       id: z.string(),
+      questionId: z.string().optional(), // Database ID for linked questions
       type: baseSchemas.questionType,
       question: z.string().min(1, "Question text required"),
       options: z.array(z.string()).optional(),
@@ -65,6 +66,7 @@ export const questionSchemas = {
       language: z.string().optional(),
       codeSnippet: z.string().optional(),
       sampleSolution: z.string().optional(),
+      isFavorite: z.boolean().optional(),
     })
     .superRefine((data, ctx) => {
       // For multiple choice questions, validate options

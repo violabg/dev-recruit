@@ -18,6 +18,7 @@ type QuizQuestionWithQuestion = {
     codeSnippet: string | null;
     sampleSolution: string | null;
     language: string | null;
+    isFavorite: boolean;
   };
 };
 
@@ -30,6 +31,7 @@ export function mapQuizQuestionsToFlexible(
 ): FlexibleQuestion[] {
   return quizQuestions.map((qq) => ({
     id: `q${qq.order + 1}`,
+    questionId: qq.question.id, // Keep the actual database ID
     type: qq.question.type as FlexibleQuestion["type"],
     question: qq.question.question,
     keywords: qq.question.keywords,
@@ -40,6 +42,7 @@ export function mapQuizQuestionsToFlexible(
     codeSnippet: qq.question.codeSnippet || undefined,
     sampleSolution: qq.question.sampleSolution || undefined,
     language: qq.question.language || undefined,
+    isFavorite: qq.question.isFavorite,
   }));
 }
 
@@ -62,7 +65,7 @@ export function prepareQuestionForCreate(
     codeSnippet: question.codeSnippet,
     sampleSolution: question.sampleSolution,
     language: question.language,
-    isFavorite: false,
+    isFavorite: question.isFavorite ?? false,
     createdBy: userId,
   };
 }

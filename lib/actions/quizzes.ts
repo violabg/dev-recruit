@@ -270,17 +270,41 @@ export async function upsertQuizAction(formData: FormData) {
           },
         });
 
-        // Create Question entities and link to quiz
+        // Create Question entities or link existing ones to quiz
         for (let i = 0; i < questions.length; i++) {
-          const question = await tx.question.create({
-            data: prepareQuestionForCreate(questions[i], user.id),
-          });
+          const q = questions[i] as FlexibleQuestion;
+          let questionId: string;
+
+          // If question has an existing questionId, link to it; otherwise create new
+          if (q.questionId) {
+            // Verify the question exists
+            const existingQuestion = await tx.question.findUnique({
+              where: { id: q.questionId },
+              select: { id: true },
+            });
+
+            if (existingQuestion) {
+              questionId = existingQuestion.id;
+            } else {
+              // Fallback: create new if referenced question doesn't exist
+              const newQuestion = await tx.question.create({
+                data: prepareQuestionForCreate(q, user.id),
+              });
+              questionId = newQuestion.id;
+            }
+          } else {
+            // No existing ID, create new question
+            const newQuestion = await tx.question.create({
+              data: prepareQuestionForCreate(q, user.id),
+            });
+            questionId = newQuestion.id;
+          }
 
           // Link question to quiz
           await tx.quizQuestion.create({
             data: {
               quizId: newQuiz.id,
-              questionId: question.id,
+              questionId,
               order: i,
             },
           });
@@ -331,39 +355,74 @@ export async function upsertQuizAction(formData: FormData) {
           },
         });
 
-        // Get existing linked questions to delete them
+        // Get existing linked questions
         const existingLinks = await tx.quizQuestion.findMany({
           where: { quizId },
           select: { questionId: true },
         });
+
+        // Build a set of questionIds that will be kept (linked from favorites)
+        const keepQuestionIds = new Set(
+          questions
+            .filter((q: FlexibleQuestion) => q.questionId)
+            .map((q: FlexibleQuestion) => q.questionId)
+        );
 
         // Delete existing quiz-question links
         await tx.quizQuestion.deleteMany({
           where: { quizId },
         });
 
-        // Delete the old questions (they were created for this quiz)
-        if (existingLinks.length > 0) {
+        // Delete old questions that are not being reused and aren't linked elsewhere
+        const questionIdsToDelete = existingLinks
+          .filter((l) => !keepQuestionIds.has(l.questionId))
+          .map((l) => l.questionId);
+
+        if (questionIdsToDelete.length > 0) {
           await tx.question.deleteMany({
             where: {
-              id: { in: existingLinks.map((l) => l.questionId) },
-              // Only delete questions that aren't linked elsewhere
+              id: { in: questionIdsToDelete },
+              // Only delete questions that aren't linked to other quizzes
               quizQuestions: { none: {} },
             },
           });
         }
 
-        // Create new Question entities and link to quiz
+        // Create new Question entities or link existing ones to quiz
         for (let i = 0; i < questions.length; i++) {
-          const question = await tx.question.create({
-            data: prepareQuestionForCreate(questions[i], user.id),
-          });
+          const q = questions[i] as FlexibleQuestion;
+          let questionId: string;
+
+          // If question has an existing questionId, link to it; otherwise create new
+          if (q.questionId) {
+            // Verify the question exists
+            const existingQuestion = await tx.question.findUnique({
+              where: { id: q.questionId },
+              select: { id: true },
+            });
+
+            if (existingQuestion) {
+              questionId = existingQuestion.id;
+            } else {
+              // Fallback: create new if referenced question doesn't exist
+              const newQuestion = await tx.question.create({
+                data: prepareQuestionForCreate(q, user.id),
+              });
+              questionId = newQuestion.id;
+            }
+          } else {
+            // No existing ID, create new question
+            const newQuestion = await tx.question.create({
+              data: prepareQuestionForCreate(q, user.id),
+            });
+            questionId = newQuestion.id;
+          }
 
           // Link question to quiz
           await tx.quizQuestion.create({
             data: {
               quizId,
-              questionId: question.id,
+              questionId,
               order: i,
             },
           });

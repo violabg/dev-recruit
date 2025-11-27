@@ -12,6 +12,12 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { toggleQuestionFavoriteAction } from "@/lib/actions/questions";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import {
   getQuestionTypeLabel,
@@ -19,8 +25,10 @@ import {
   getSaveButtonVariant,
   SaveStatus,
 } from "@/lib/utils/quiz-form-utils";
-import { ChevronDown, ChevronUp, Sparkles, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Heart, Sparkles, Trash2 } from "lucide-react";
+import { useState, useTransition } from "react";
 import { UseFormReturn } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod/v4";
 import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
 
@@ -54,6 +62,35 @@ export const QuestionItem = ({
   onSaveQuestion,
   questionSaveStatus,
 }: QuestionItemProps) => {
+  const [isFavorite, setIsFavorite] = useState(field.isFavorite ?? false);
+  const [isPending, startTransition] = useTransition();
+
+  // Check if this question has a database ID (is linked to Question entity)
+  const hasDbId = !!field.questionId;
+
+  const handleToggleFavorite = () => {
+    if (!hasDbId) {
+      toast.error(
+        "Salva prima il quiz per poter aggiungere la domanda ai preferiti"
+      );
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await toggleQuestionFavoriteAction(field.questionId!);
+      if (result?.success) {
+        setIsFavorite(result.isFavorite ?? !isFavorite);
+        toast.success(
+          result.isFavorite
+            ? "Domanda aggiunta ai preferiti"
+            : "Domanda rimossa dai preferiti"
+        );
+      } else {
+        toast.error("Errore nel salvataggio della domanda");
+      }
+    });
+  };
+
   return (
     <Card key={field.id} className="relative">
       <CardHeader className="pb-3">
@@ -67,18 +104,31 @@ export const QuestionItem = ({
             </span>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onToggleExpansion(field.id)}
-            >
-              {isExpanded ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleToggleFavorite}
+                  disabled={isPending || !hasDbId}
+                  className={isFavorite ? "text-red-500" : ""}
+                >
+                  <Heart
+                    className={`w-4 h-4 ${
+                      isFavorite ? "fill-red-500 text-red-500" : ""
+                    }`}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {!hasDbId
+                  ? "Salva il quiz per abilitare i preferiti"
+                  : isFavorite
+                  ? "Rimuovi dai preferiti"
+                  : "Aggiungi ai preferiti"}
+              </TooltipContent>
+            </Tooltip>
             <Button
               type="button"
               variant="ghost"
@@ -97,6 +147,18 @@ export const QuestionItem = ({
               className="text-destructive hover:text-destructive"
             >
               <Trash2 className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onToggleExpansion(field.id)}
+            >
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
             </Button>
           </div>
         </div>

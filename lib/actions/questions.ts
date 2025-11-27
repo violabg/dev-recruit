@@ -643,3 +643,41 @@ export async function linkLibraryQuestionsToQuizAction(
     });
   }
 }
+
+/**
+ * Fetch favorite questions (server action for client components)
+ * This wraps the data layer function for use in client components
+ */
+export async function fetchFavoriteQuestionsAction(page = 1, limit = 100) {
+  try {
+    await requireUser();
+
+    const skip = (page - 1) * limit;
+
+    const [questions, total] = await Promise.all([
+      prisma.question.findMany({
+        where: { isFavorite: true },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.question.count({ where: { isFavorite: true } }),
+    ]);
+
+    return {
+      success: true,
+      questions,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  } catch (error) {
+    handleActionError(error, {
+      operation: "fetchFavoriteQuestionsAction",
+      fallbackMessage: "Failed to fetch favorite questions. Please try again.",
+    });
+  }
+}

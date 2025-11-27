@@ -14,13 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { QuestionTypeFilter } from "@/hooks/use-question-management";
 import { QuestionType } from "@/lib/schemas";
 import {
   getQuestionTypeLabel,
   questionTypes,
 } from "@/lib/utils/quiz-form-utils";
-import { ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Heart, Plus } from "lucide-react";
 
 type QuestionsHeaderProps = {
   fieldsLength: number;
@@ -29,6 +34,7 @@ type QuestionsHeaderProps = {
   expandAllQuestions: () => void;
   collapseAllQuestions: () => void;
   onAddQuestion: (type: QuestionType) => void;
+  onOpenFavorites?: () => void;
 };
 
 export const QuestionsHeader = ({
@@ -38,6 +44,7 @@ export const QuestionsHeader = ({
   expandAllQuestions,
   collapseAllQuestions,
   onAddQuestion,
+  onOpenFavorites,
 }: QuestionsHeaderProps) => {
   return (
     <Card>
@@ -89,6 +96,7 @@ export const QuestionsHeader = ({
             <ChevronUp className="mr-1 w-4 h-4" />
             Comprimi tutto
           </Button>
+
           <div className="flex gap-2 ml-auto">
             {questionTypes.map((type) => (
               <Button
@@ -103,6 +111,23 @@ export const QuestionsHeader = ({
                 {getQuestionTypeLabel(type.value as QuestionType)}
               </Button>
             ))}
+            {onOpenFavorites && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenFavorites}
+                    className="gap-2"
+                  >
+                    <Heart className="w-4 h-4 text-red-500" />
+                    Preferite
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Aggiungi domande dai preferiti</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
       </CardContent>

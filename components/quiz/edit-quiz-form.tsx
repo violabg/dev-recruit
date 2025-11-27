@@ -7,7 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { QuizForEdit } from "@/lib/data/quizzes";
-import { QuestionType } from "@/lib/schemas";
+import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
+import { generateId } from "@/lib/utils/quiz-form-utils";
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { useAIGeneration } from "../../hooks/use-ai-generation";
@@ -18,6 +19,7 @@ import {
 } from "../../hooks/use-edit-quiz-form";
 import { useQuestionManagement } from "../../hooks/use-question-management";
 import { AIDialogs } from "./ai-dialogs";
+import { FavoriteQuestionsDialog } from "./favorite-questions-dialog";
 import { PresetGenerationButtons } from "./preset-generation-buttons";
 import { QuestionsHeader } from "./questions-header";
 import { QuestionsList } from "./questions-list";
@@ -93,6 +95,32 @@ export function EditQuizForm({
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
   const [fullQuizDialogOpen, setFullQuizDialogOpen] = useState(false);
+  const [favoritesDialogOpen, setFavoritesDialogOpen] = useState(false);
+
+  // Handle adding favorite questions
+  const handleAddFavoriteQuestions = useCallback(
+    (questions: FlexibleQuestion[]) => {
+      // Generate new IDs for each question to avoid conflicts
+      questions.forEach((q) => {
+        prepend({
+          ...q,
+          id: generateId(),
+        });
+      });
+      // Expand newly added questions
+      setExpandedQuestions((prev) => {
+        const newSet = new Set(prev);
+        questions.forEach((_, idx) => {
+          const field = fields[idx];
+          if (field) {
+            newSet.add(field.id);
+          }
+        });
+        return newSet;
+      });
+    },
+    [prepend, fields, setExpandedQuestions]
+  );
 
   // Handle preset generation
   const handleGeneratePreset = async (
@@ -181,6 +209,7 @@ export function EditQuizForm({
                 expandAllQuestions={expandAllQuestions}
                 collapseAllQuestions={collapseAllQuestions}
                 onAddQuestion={addBlankQuestion}
+                onOpenFavorites={() => setFavoritesDialogOpen(true)}
               />
               {/* Questions List */}
               <QuestionsList
@@ -216,6 +245,13 @@ export function EditQuizForm({
         aiLoading={aiLoading}
         position={position}
         quizId={mode === "edit" ? quiz.id : undefined}
+      />
+
+      {/* Favorite Questions Dialog */}
+      <FavoriteQuestionsDialog
+        open={favoritesDialogOpen}
+        onOpenChange={setFavoritesDialogOpen}
+        onAddQuestions={handleAddFavoriteQuestions}
       />
     </div>
   );

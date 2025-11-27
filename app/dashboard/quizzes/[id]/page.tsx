@@ -3,6 +3,7 @@ import {
   MultipleChoiceDisplay,
   OpenQuestionDisplay,
 } from "@/components/quiz/question-display";
+import { SaveFavoriteButton } from "@/components/quiz/save-favorite-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,20 +122,23 @@ async function QuizDetailContent({
             {quiz.questions.map((question, index) => (
               <Card key={index}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Badge
-                      variant="outline"
-                      className="flex justify-center items-center p-0 rounded-full w-6 h-6"
-                    >
-                      {index + 1}
-                    </Badge>
-                    <span>
-                      {question.type === "multiple_choice"
-                        ? "Risposta multipla"
-                        : question.type === "open_question"
-                        ? "Domanda aperta"
-                        : "Snippet di codice"}
-                    </span>
+                  <CardTitle className="flex justify-between items-center gap-2 text-lg">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="flex justify-center items-center p-0 rounded-full w-6 h-6"
+                      >
+                        {index + 1}
+                      </Badge>
+                      <span>
+                        {question.type === "multiple_choice"
+                          ? "Risposta multipla"
+                          : question.type === "open_question"
+                          ? "Domanda aperta"
+                          : "Snippet di codice"}
+                      </span>
+                    </div>
+                    <SaveFavoriteButton question={question} />
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
