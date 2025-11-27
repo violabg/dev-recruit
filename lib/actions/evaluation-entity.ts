@@ -8,7 +8,7 @@ import prisma from "../prisma";
 import { overallEvaluationSchema, type OverallEvaluation } from "../schemas";
 import { getOptimalModel } from "../utils";
 
-// PDF parsing using pdf-parse (needs to be installed)
+// PDF parsing using unpdf (serverless-compatible)
 async function extractTextFromPDF(pdfUrl: string): Promise<string> {
   try {
     // Fetch the PDF file from the URL
@@ -18,14 +18,13 @@ async function extractTextFromPDF(pdfUrl: string): Promise<string> {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
-    // Dynamic import of pdf-parse to avoid SSR issues
-    const { PDFParse } = await import("pdf-parse");
-    const pdfParse = new PDFParse({ data: buffer });
-    const result = await pdfParse.getText();
+    // Use unpdf which is designed for serverless environments
+    const { extractText, getDocumentProxy } = await import("unpdf");
+    const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+    const { text } = await extractText(pdf, { mergePages: true });
 
-    return result.text || "";
+    return text || "";
   } catch (error) {
     console.error("Failed to extract text from PDF:", error);
     throw new Error(
