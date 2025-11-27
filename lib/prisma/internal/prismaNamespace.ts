@@ -1438,8 +1438,10 @@ export type PositionScalarFieldEnum = (typeof PositionScalarFieldEnum)[keyof typ
 
 export const CandidateScalarFieldEnum = {
   id: 'id',
-  name: 'name',
+  firstName: 'firstName',
+  lastName: 'lastName',
   email: 'email',
+  dateOfBirth: 'dateOfBirth',
   positionId: 'positionId',
   status: 'status',
   resumeUrl: 'resumeUrl',

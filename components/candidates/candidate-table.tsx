@@ -23,6 +23,11 @@ interface CandidateTableProps {
   candidates: CandidateWithRelations[];
 }
 
+// Get full name from firstName and lastName
+function getFullName(firstName: string, lastName: string): string {
+  return `${firstName} ${lastName}`.trim();
+}
+
 // Candidate table component
 export function CandidateTable({ candidates }: CandidateTableProps) {
   const router = useRouter();
@@ -56,7 +61,9 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
               className="cursor-pointer"
               onClick={() => handleRowClick(candidate.id)}
             >
-              <TableCell className="font-medium">{candidate.name}</TableCell>
+              <TableCell className="font-medium">
+                {getFullName(candidate.firstName, candidate.lastName)}
+              </TableCell>
               <TableCell>{candidate.email}</TableCell>
               <TableCell>
                 {candidate.position ? (

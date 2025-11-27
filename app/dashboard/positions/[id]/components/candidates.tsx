@@ -29,7 +29,9 @@ export default async function Candidates({ id }: { id: string }) {
           {candidates.map((candidate) => (
             <Card key={candidate.id}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{candidate.name}</CardTitle>
+                <CardTitle className="text-lg">
+                  {candidate.firstName} {candidate.lastName}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">

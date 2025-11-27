@@ -128,14 +128,16 @@ model Position {
 }
 
 model Candidate {
-  id         String   @id @default(cuid())
-  name       String
-  email      String
-  positionId String
-  status     String   @default("pending")
-  resumeUrl  String?
-  createdBy  String
-  createdAt  DateTime @default(now())
+  id          String    @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String
+  dateOfBirth DateTime?
+  positionId  String
+  status      String    @default("pending")
+  resumeUrl   String?
+  createdBy   String
+  createdAt   DateTime  @default(now())
 
   position   Position    @relation(fields: [positionId], references: [id], onDelete: Cascade)
   creator    User        @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)

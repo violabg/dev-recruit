@@ -69,7 +69,7 @@ export type PaginatedCandidates = {
 const ORDER_BY_MAP: Record<string, Prisma.CandidateOrderByWithRelationInput> = {
   newest: { createdAt: "desc" },
   oldest: { createdAt: "asc" },
-  name: { name: "asc" },
+  name: { lastName: "asc" },
   status: { status: "asc" },
 };
 
@@ -93,7 +93,8 @@ const buildCandidateWhere = ({
 
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
+      { firstName: { contains: search, mode: "insensitive" } },
+      { lastName: { contains: search, mode: "insensitive" } },
       { email: { contains: search, mode: "insensitive" } },
     ];
   }
