@@ -12,7 +12,7 @@ import {
 import { Briefcase, ClockFading, Code, Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 type Position = {
@@ -42,8 +42,16 @@ export function SearchAndFilterInterviews({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState(initialSearch);
+
+  // Focus input when there's a search term in URL on mount
+  useEffect(() => {
+    if (initialSearch && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [initialSearch]);
   const [status, setStatus] = useState(initialStatus);
   const [position, setPosition] = useState(initialPosition);
   const [language, setLanguage] = useState(initialLanguage);
@@ -59,7 +67,8 @@ export function SearchAndFilterInterviews({
     }
     startTransition(() => {
       const queryString = params.toString();
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      router.replace(url as "/dashboard/interviews");
     });
   }, 800);
 
@@ -80,7 +89,8 @@ export function SearchAndFilterInterviews({
 
       startTransition(() => {
         const queryString = params.toString();
-        router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+        const url = queryString ? `${pathname}?${queryString}` : pathname;
+        router.replace(url as "/dashboard/interviews");
       });
     },
     [router, pathname, searchParams]
@@ -105,6 +115,7 @@ export function SearchAndFilterInterviews({
           <Search className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
         )}
         <Input
+          ref={inputRef}
           type="search"
           placeholder="Cerca per candidato, email, quiz o posizione..."
           value={search}
@@ -186,7 +197,7 @@ export function SearchAndFilterInterviews({
           disabled={isPending}
           asChild
         >
-          <Link href={pathname}>
+          <Link href={pathname as "/dashboard/interviews"}>
             <X className="mr-2 size-4" />
             Reset
           </Link>

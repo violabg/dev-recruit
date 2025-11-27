@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "../ui/button";
 
@@ -51,6 +51,7 @@ export const SearchAndFilterCandidates = ({
   const pathname = usePathname();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
   // Track local input separately from URL
   const urlSearch = searchParams.get("search") || "";
   const [inputValue, setInputValue] = useState(urlSearch);
@@ -63,6 +64,13 @@ export const SearchAndFilterCandidates = ({
     setInputValue(urlSearch);
   }
 
+  // Focus input when there's a search term in URL on mount
+  useEffect(() => {
+    if (urlSearch && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [urlSearch]);
+
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
@@ -73,7 +81,8 @@ export const SearchAndFilterCandidates = ({
     }
     startTransition(() => {
       const queryString = params.toString();
-      replace(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      replace(url as "/dashboard/candidates");
     });
   }, 800);
 
@@ -87,7 +96,8 @@ export const SearchAndFilterCandidates = ({
     }
     startTransition(() => {
       const queryString = params.toString();
-      replace(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      replace(url as "/dashboard/candidates");
     });
   };
 
@@ -101,7 +111,8 @@ export const SearchAndFilterCandidates = ({
     }
     startTransition(() => {
       const queryString = params.toString();
-      replace(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      replace(url as "/dashboard/candidates");
     });
   };
 
@@ -115,7 +126,8 @@ export const SearchAndFilterCandidates = ({
     }
     startTransition(() => {
       const queryString = params.toString();
-      replace(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      replace(url as "/dashboard/candidates");
     });
   };
 
@@ -140,6 +152,7 @@ export const SearchAndFilterCandidates = ({
             <SearchIcon className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
           )}
           <Input
+            ref={inputRef}
             type="search"
             name="search"
             placeholder="Cerca candidati..."
@@ -208,7 +221,7 @@ export const SearchAndFilterCandidates = ({
         </Select>
         {hasActiveFilters && (
           <Button variant="outlineDestructive" asChild disabled={isPending}>
-            <Link href={pathname}>
+            <Link href={pathname as "/dashboard/candidates"}>
               <X className="mr-1 size-4" />
               Reset
             </Link>

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
@@ -13,6 +13,7 @@ export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
   // Track local input separately from URL - only sync on mount
   const urlSearch = searchParams.get("search") || "";
   const [inputValue, setInputValue] = useState(defaultValue ?? urlSearch);
@@ -24,6 +25,13 @@ export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
     setLastUrlSearch(urlSearch);
     setInputValue(urlSearch);
   }
+
+  // Focus input when there's a search term in URL on mount
+  useEffect(() => {
+    if (urlSearch && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [urlSearch]);
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -55,6 +63,7 @@ export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
           <Search className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
         )}
         <Input
+          ref={inputRef}
           type="search"
           placeholder="Cerca preset per nome, etichetta o tag..."
           className="pl-8"

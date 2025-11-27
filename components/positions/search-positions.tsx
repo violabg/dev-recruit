@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "../ui/button";
 
@@ -13,6 +13,7 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
   // Track local input separately from URL
   const urlSearch = searchParams.get("q") || "";
   const [inputValue, setInputValue] = useState(defaultValue ?? urlSearch);
@@ -24,6 +25,13 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
     setLastUrlSearch(urlSearch);
     setInputValue(urlSearch);
   }
+
+  // Focus input when there's a search term in URL on mount
+  useEffect(() => {
+    if (urlSearch && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [urlSearch]);
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -39,7 +47,8 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
 
     startTransition(() => {
       const queryString = params.toString();
-      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      router.push(url as "/dashboard/positions");
     });
   }, 800);
 
@@ -54,6 +63,7 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
           <Search className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
         )}
         <Input
+          ref={inputRef}
           type="search"
           placeholder="Cerca posizioni..."
           className="pl-8"
@@ -67,7 +77,7 @@ export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
       </div>
       {hasFilters && (
         <Button variant="outlineDestructive" asChild disabled={isPending}>
-          <Link href={pathname}>
+          <Link href={pathname as "/dashboard/positions"}>
             <X className="mr-1 size-4" />
             Reset
           </Link>

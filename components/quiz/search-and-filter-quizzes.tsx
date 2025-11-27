@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 type PositionFilterOption = {
@@ -38,6 +38,7 @@ export const SearchAndFilterQuizzes = ({
   const searchParams = useSearchParams();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
   // Track local input separately from URL
   const urlSearch = searchParams.get("search") || "";
   const [inputValue, setInputValue] = useState(urlSearch);
@@ -49,6 +50,13 @@ export const SearchAndFilterQuizzes = ({
     setLastUrlSearch(urlSearch);
     setInputValue(urlSearch);
   }
+
+  // Focus input when there's a search term in URL on mount
+  useEffect(() => {
+    if (urlSearch && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [urlSearch]);
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams);
@@ -116,6 +124,7 @@ export const SearchAndFilterQuizzes = ({
           <SearchIcon className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
         )}
         <Input
+          ref={inputRef}
           type="search"
           name="search"
           placeholder="Cerca quiz..."
