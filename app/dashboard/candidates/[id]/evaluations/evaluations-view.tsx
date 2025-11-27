@@ -1,6 +1,6 @@
 "use client";
 
-import { OverallEvaluationCard } from "@/components/interview/overall-evaluation-card";
+import { OverallEvaluationCard } from "@/components/recruting/overall-evaluation-card";
 import { Button } from "@/components/ui/button";
 import {
   Card,

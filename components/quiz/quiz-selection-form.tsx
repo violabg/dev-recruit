@@ -85,7 +85,7 @@ export function QuizSelectionForm({
   }, [formState, form, onSuccess]);
 
   const copyInterviewLink = (token: string) => {
-    const link = `${window.location.origin}/interview/${token}`;
+    const link = `${window.location.origin}/recruting/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copied", {
       description: "The interview link has been copied to your clipboard",

@@ -3,8 +3,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { InvitesList } from "@/components/interview/invites-list";
 import { QuizSelectionForm } from "@/components/quiz/quiz-selection-form";
+import { InvitesList } from "@/components/recruting/invites-list";
 import { Button } from "@/components/ui/button";
 import {
   Card,

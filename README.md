@@ -46,13 +46,13 @@ dev-recruit/
 │   │   ├── positions/      # Job position management
 │   │   ├── quizzes/        # Quiz creation & editing
 │   │   └── presets/        # Question generation presets
-│   ├── interview/          # Public interview pages
+│   ├── recruting/          # Public interview pages
 │   └── auth/               # Authentication pages
 ├── components/             # React components
 │   ├── ui/                 # Base UI primitives (shadcn/ui)
 │   ├── dashboard/          # Dashboard-specific components
 │   ├── quiz/               # Quiz editing components
-│   └── interview/          # Interview taking components
+│   └── recruting/          # Interview taking components
 ├── lib/                    # Core business logic
 │   ├── actions/            # Server actions
 │   ├── data/               # Data fetching layer

@@ -1,7 +1,7 @@
 "use client";
 
-import { InterviewComplete } from "@/components/interview/interview-complete";
-import { InterviewQuestion } from "@/components/interview/interview-question";
+import { InterviewComplete } from "@/components/recruting/interview-complete";
+import { InterviewQuestion } from "@/components/recruting/interview-question";
 import { Button } from "@/components/ui/button";
 import {
   Card,

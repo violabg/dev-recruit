@@ -2,8 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { CandidateSelectionForm } from "@/components/interview/candidate-selection-form";
-import { InvitesList } from "@/components/interview/invites-list"; // Import AssignedInterview type
+import { CandidateSelectionForm } from "@/components/recruting/candidate-selection-form";
+import { InvitesList } from "@/components/recruting/invites-list"; // Import AssignedInterview type
 import { Button } from "@/components/ui/button";
 import {
   Card,

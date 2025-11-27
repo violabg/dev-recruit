@@ -1,4 +1,4 @@
-import { InterviewResults } from "@/components/interview/interview-results";
+import { InterviewResults } from "@/components/recruting/interview-results";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

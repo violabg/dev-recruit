@@ -72,7 +72,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const copyInterviewLink = async (token: string) => {
-    const interviewUrl = `${window.location.origin}/interview/${token}`;
+    const interviewUrl = `${window.location.origin}/recruting/${token}`;
 
     try {
       await navigator.clipboard.writeText(interviewUrl);
