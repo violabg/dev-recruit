@@ -26,8 +26,10 @@ export type AggregateCandidate = {
 
 export type CandidateMinAggregateOutputType = {
   id: string | null
-  name: string | null
+  firstName: string | null
+  lastName: string | null
   email: string | null
+  dateOfBirth: Date | null
   positionId: string | null
   status: string | null
   resumeUrl: string | null
@@ -37,8 +39,10 @@ export type CandidateMinAggregateOutputType = {
 
 export type CandidateMaxAggregateOutputType = {
   id: string | null
-  name: string | null
+  firstName: string | null
+  lastName: string | null
   email: string | null
+  dateOfBirth: Date | null
   positionId: string | null
   status: string | null
   resumeUrl: string | null
@@ -48,8 +52,10 @@ export type CandidateMaxAggregateOutputType = {
 
 export type CandidateCountAggregateOutputType = {
   id: number
-  name: number
+  firstName: number
+  lastName: number
   email: number
+  dateOfBirth: number
   positionId: number
   status: number
   resumeUrl: number
@@ -61,8 +67,10 @@ export type CandidateCountAggregateOutputType = {
 
 export type CandidateMinAggregateInputType = {
   id?: true
-  name?: true
+  firstName?: true
+  lastName?: true
   email?: true
+  dateOfBirth?: true
   positionId?: true
   status?: true
   resumeUrl?: true
@@ -72,8 +80,10 @@ export type CandidateMinAggregateInputType = {
 
 export type CandidateMaxAggregateInputType = {
   id?: true
-  name?: true
+  firstName?: true
+  lastName?: true
   email?: true
+  dateOfBirth?: true
   positionId?: true
   status?: true
   resumeUrl?: true
@@ -83,8 +93,10 @@ export type CandidateMaxAggregateInputType = {
 
 export type CandidateCountAggregateInputType = {
   id?: true
-  name?: true
+  firstName?: true
+  lastName?: true
   email?: true
+  dateOfBirth?: true
   positionId?: true
   status?: true
   resumeUrl?: true
@@ -167,8 +179,10 @@ export type CandidateGroupByArgs<ExtArgs extends runtime.Types.Extensions.Intern
 
 export type CandidateGroupByOutputType = {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth: Date | null
   positionId: string
   status: string
   resumeUrl: string | null
@@ -199,8 +213,10 @@ export type CandidateWhereInput = {
   OR?: Prisma.CandidateWhereInput[]
   NOT?: Prisma.CandidateWhereInput | Prisma.CandidateWhereInput[]
   id?: Prisma.StringFilter<"Candidate"> | string
-  name?: Prisma.StringFilter<"Candidate"> | string
+  firstName?: Prisma.StringFilter<"Candidate"> | string
+  lastName?: Prisma.StringFilter<"Candidate"> | string
   email?: Prisma.StringFilter<"Candidate"> | string
+  dateOfBirth?: Prisma.DateTimeNullableFilter<"Candidate"> | Date | string | null
   positionId?: Prisma.StringFilter<"Candidate"> | string
   status?: Prisma.StringFilter<"Candidate"> | string
   resumeUrl?: Prisma.StringNullableFilter<"Candidate"> | string | null
@@ -213,8 +229,10 @@ export type CandidateWhereInput = {
 
 export type CandidateOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  firstName?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrderInput | Prisma.SortOrder
   positionId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   resumeUrl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -230,8 +248,10 @@ export type CandidateWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.CandidateWhereInput | Prisma.CandidateWhereInput[]
   OR?: Prisma.CandidateWhereInput[]
   NOT?: Prisma.CandidateWhereInput | Prisma.CandidateWhereInput[]
-  name?: Prisma.StringFilter<"Candidate"> | string
+  firstName?: Prisma.StringFilter<"Candidate"> | string
+  lastName?: Prisma.StringFilter<"Candidate"> | string
   email?: Prisma.StringFilter<"Candidate"> | string
+  dateOfBirth?: Prisma.DateTimeNullableFilter<"Candidate"> | Date | string | null
   positionId?: Prisma.StringFilter<"Candidate"> | string
   status?: Prisma.StringFilter<"Candidate"> | string
   resumeUrl?: Prisma.StringNullableFilter<"Candidate"> | string | null
@@ -244,8 +264,10 @@ export type CandidateWhereUniqueInput = Prisma.AtLeast<{
 
 export type CandidateOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  firstName?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrderInput | Prisma.SortOrder
   positionId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   resumeUrl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -261,8 +283,10 @@ export type CandidateScalarWhereWithAggregatesInput = {
   OR?: Prisma.CandidateScalarWhereWithAggregatesInput[]
   NOT?: Prisma.CandidateScalarWhereWithAggregatesInput | Prisma.CandidateScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Candidate"> | string
-  name?: Prisma.StringWithAggregatesFilter<"Candidate"> | string
+  firstName?: Prisma.StringWithAggregatesFilter<"Candidate"> | string
+  lastName?: Prisma.StringWithAggregatesFilter<"Candidate"> | string
   email?: Prisma.StringWithAggregatesFilter<"Candidate"> | string
+  dateOfBirth?: Prisma.DateTimeNullableWithAggregatesFilter<"Candidate"> | Date | string | null
   positionId?: Prisma.StringWithAggregatesFilter<"Candidate"> | string
   status?: Prisma.StringWithAggregatesFilter<"Candidate"> | string
   resumeUrl?: Prisma.StringNullableWithAggregatesFilter<"Candidate"> | string | null
@@ -272,8 +296,10 @@ export type CandidateScalarWhereWithAggregatesInput = {
 
 export type CandidateCreateInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   status?: string
   resumeUrl?: string | null
   createdAt?: Date | string
@@ -284,8 +310,10 @@ export type CandidateCreateInput = {
 
 export type CandidateUncheckedCreateInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   positionId: string
   status?: string
   resumeUrl?: string | null
@@ -296,8 +324,10 @@ export type CandidateUncheckedCreateInput = {
 
 export type CandidateUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -308,8 +338,10 @@ export type CandidateUpdateInput = {
 
 export type CandidateUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -320,8 +352,10 @@ export type CandidateUncheckedUpdateInput = {
 
 export type CandidateCreateManyInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   positionId: string
   status?: string
   resumeUrl?: string | null
@@ -331,8 +365,10 @@ export type CandidateCreateManyInput = {
 
 export type CandidateUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -340,8 +376,10 @@ export type CandidateUpdateManyMutationInput = {
 
 export type CandidateUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -361,8 +399,10 @@ export type CandidateOrderByRelationAggregateInput = {
 
 export type CandidateCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  firstName?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrder
   positionId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   resumeUrl?: Prisma.SortOrder
@@ -372,8 +412,10 @@ export type CandidateCountOrderByAggregateInput = {
 
 export type CandidateMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  firstName?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrder
   positionId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   resumeUrl?: Prisma.SortOrder
@@ -383,8 +425,10 @@ export type CandidateMaxOrderByAggregateInput = {
 
 export type CandidateMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  firstName?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrder
   positionId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   resumeUrl?: Prisma.SortOrder
@@ -497,8 +541,10 @@ export type CandidateUpdateOneRequiredWithoutInterviewsNestedInput = {
 
 export type CandidateCreateWithoutCreatorInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   status?: string
   resumeUrl?: string | null
   createdAt?: Date | string
@@ -508,8 +554,10 @@ export type CandidateCreateWithoutCreatorInput = {
 
 export type CandidateUncheckedCreateWithoutCreatorInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   positionId: string
   status?: string
   resumeUrl?: string | null
@@ -548,8 +596,10 @@ export type CandidateScalarWhereInput = {
   OR?: Prisma.CandidateScalarWhereInput[]
   NOT?: Prisma.CandidateScalarWhereInput | Prisma.CandidateScalarWhereInput[]
   id?: Prisma.StringFilter<"Candidate"> | string
-  name?: Prisma.StringFilter<"Candidate"> | string
+  firstName?: Prisma.StringFilter<"Candidate"> | string
+  lastName?: Prisma.StringFilter<"Candidate"> | string
   email?: Prisma.StringFilter<"Candidate"> | string
+  dateOfBirth?: Prisma.DateTimeNullableFilter<"Candidate"> | Date | string | null
   positionId?: Prisma.StringFilter<"Candidate"> | string
   status?: Prisma.StringFilter<"Candidate"> | string
   resumeUrl?: Prisma.StringNullableFilter<"Candidate"> | string | null
@@ -559,8 +609,10 @@ export type CandidateScalarWhereInput = {
 
 export type CandidateCreateWithoutPositionInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   status?: string
   resumeUrl?: string | null
   createdAt?: Date | string
@@ -570,8 +622,10 @@ export type CandidateCreateWithoutPositionInput = {
 
 export type CandidateUncheckedCreateWithoutPositionInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   status?: string
   resumeUrl?: string | null
   createdBy: string
@@ -607,8 +661,10 @@ export type CandidateUpdateManyWithWhereWithoutPositionInput = {
 
 export type CandidateCreateWithoutInterviewsInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   status?: string
   resumeUrl?: string | null
   createdAt?: Date | string
@@ -618,8 +674,10 @@ export type CandidateCreateWithoutInterviewsInput = {
 
 export type CandidateUncheckedCreateWithoutInterviewsInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   positionId: string
   status?: string
   resumeUrl?: string | null
@@ -645,8 +703,10 @@ export type CandidateUpdateToOneWithWhereWithoutInterviewsInput = {
 
 export type CandidateUpdateWithoutInterviewsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -656,8 +716,10 @@ export type CandidateUpdateWithoutInterviewsInput = {
 
 export type CandidateUncheckedUpdateWithoutInterviewsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -667,8 +729,10 @@ export type CandidateUncheckedUpdateWithoutInterviewsInput = {
 
 export type CandidateCreateManyCreatorInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   positionId: string
   status?: string
   resumeUrl?: string | null
@@ -677,8 +741,10 @@ export type CandidateCreateManyCreatorInput = {
 
 export type CandidateUpdateWithoutCreatorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -688,8 +754,10 @@ export type CandidateUpdateWithoutCreatorInput = {
 
 export type CandidateUncheckedUpdateWithoutCreatorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -699,8 +767,10 @@ export type CandidateUncheckedUpdateWithoutCreatorInput = {
 
 export type CandidateUncheckedUpdateManyWithoutCreatorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -709,8 +779,10 @@ export type CandidateUncheckedUpdateManyWithoutCreatorInput = {
 
 export type CandidateCreateManyPositionInput = {
   id?: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  dateOfBirth?: Date | string | null
   status?: string
   resumeUrl?: string | null
   createdBy: string
@@ -719,8 +791,10 @@ export type CandidateCreateManyPositionInput = {
 
 export type CandidateUpdateWithoutPositionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -730,8 +804,10 @@ export type CandidateUpdateWithoutPositionInput = {
 
 export type CandidateUncheckedUpdateWithoutPositionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -741,8 +817,10 @@ export type CandidateUncheckedUpdateWithoutPositionInput = {
 
 export type CandidateUncheckedUpdateManyWithoutPositionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   resumeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -782,8 +860,10 @@ export type CandidateCountOutputTypeCountInterviewsArgs<ExtArgs extends runtime.
 
 export type CandidateSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  name?: boolean
+  firstName?: boolean
+  lastName?: boolean
   email?: boolean
+  dateOfBirth?: boolean
   positionId?: boolean
   status?: boolean
   resumeUrl?: boolean
@@ -797,8 +877,10 @@ export type CandidateSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
 
 export type CandidateSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  name?: boolean
+  firstName?: boolean
+  lastName?: boolean
   email?: boolean
+  dateOfBirth?: boolean
   positionId?: boolean
   status?: boolean
   resumeUrl?: boolean
@@ -810,8 +892,10 @@ export type CandidateSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
 
 export type CandidateSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  name?: boolean
+  firstName?: boolean
+  lastName?: boolean
   email?: boolean
+  dateOfBirth?: boolean
   positionId?: boolean
   status?: boolean
   resumeUrl?: boolean
@@ -823,8 +907,10 @@ export type CandidateSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
 
 export type CandidateSelectScalar = {
   id?: boolean
-  name?: boolean
+  firstName?: boolean
+  lastName?: boolean
   email?: boolean
+  dateOfBirth?: boolean
   positionId?: boolean
   status?: boolean
   resumeUrl?: boolean
@@ -832,7 +918,7 @@ export type CandidateSelectScalar = {
   createdAt?: boolean
 }
 
-export type CandidateOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "positionId" | "status" | "resumeUrl" | "createdBy" | "createdAt", ExtArgs["result"]["candidate"]>
+export type CandidateOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "dateOfBirth" | "positionId" | "status" | "resumeUrl" | "createdBy" | "createdAt", ExtArgs["result"]["candidate"]>
 export type CandidateInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   position?: boolean | Prisma.PositionDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -857,8 +943,10 @@ export type $CandidatePayload<ExtArgs extends runtime.Types.Extensions.InternalA
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    name: string
+    firstName: string
+    lastName: string
     email: string
+    dateOfBirth: Date | null
     positionId: string
     status: string
     resumeUrl: string | null
@@ -1291,8 +1379,10 @@ export interface Prisma__CandidateClient<T, Null = never, ExtArgs extends runtim
  */
 export interface CandidateFieldRefs {
   readonly id: Prisma.FieldRef<"Candidate", 'String'>
-  readonly name: Prisma.FieldRef<"Candidate", 'String'>
+  readonly firstName: Prisma.FieldRef<"Candidate", 'String'>
+  readonly lastName: Prisma.FieldRef<"Candidate", 'String'>
   readonly email: Prisma.FieldRef<"Candidate", 'String'>
+  readonly dateOfBirth: Prisma.FieldRef<"Candidate", 'DateTime'>
   readonly positionId: Prisma.FieldRef<"Candidate", 'String'>
   readonly status: Prisma.FieldRef<"Candidate", 'String'>
   readonly resumeUrl: Prisma.FieldRef<"Candidate", 'String'>

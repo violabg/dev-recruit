@@ -8,9 +8,16 @@ import {
   getCandidateWithDetails,
   getRecentCandidateIds,
 } from "@/lib/data/candidates";
-import { Edit } from "lucide-react";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import { Edit, ExternalLink, FileText } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+
+// Get full name from firstName and lastName
+function getFullName(firstName: string, lastName: string): string {
+  return `${firstName} ${lastName}`.trim();
+}
 
 export async function generateStaticParams() {
   const candidateIds = await getRecentCandidateIds(100);
@@ -38,11 +45,13 @@ export default async function CandidateDetailPage({
     );
   }
 
+  const fullName = getFullName(candidate.firstName, candidate.lastName);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="font-bold text-3xl">{candidate.name}</h1>
+          <h1 className="font-bold text-3xl">{fullName}</h1>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline">{candidate.status}</Badge>
             {candidate.position && (
@@ -76,14 +85,28 @@ export default async function CandidateDetailPage({
           <CardTitle>Dettagli Candidato</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="gap-2 grid md:grid-cols-2">
+          <div className="gap-4 grid md:grid-cols-2">
             <div>
               <div className="font-semibold">Nome</div>
-              <div>{candidate.name}</div>
+              <div>{candidate.firstName}</div>
+            </div>
+            <div>
+              <div className="font-semibold">Cognome</div>
+              <div>{candidate.lastName}</div>
             </div>
             <div>
               <div className="font-semibold">Email</div>
               <div>{candidate.email}</div>
+            </div>
+            <div>
+              <div className="font-semibold">Data di nascita</div>
+              <div>
+                {candidate.dateOfBirth
+                  ? format(new Date(candidate.dateOfBirth), "dd MMMM yyyy", {
+                      locale: it,
+                    })
+                  : "-"}
+              </div>
             </div>
             <div>
               <div className="font-semibold">Stato</div>
@@ -92,6 +115,23 @@ export default async function CandidateDetailPage({
             <div>
               <div className="font-semibold">Posizione</div>
               <div>{candidate.position?.title || "-"}</div>
+            </div>
+            <div className="md:col-span-2">
+              <div className="font-semibold">Curriculum</div>
+              {candidate.resumeUrl ? (
+                <a
+                  href={candidate.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  <FileText className="w-4 h-4" />
+                  Visualizza curriculum
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : (
+                <span className="text-muted-foreground">Non disponibile</span>
+              )}
             </div>
           </div>
         </CardContent>

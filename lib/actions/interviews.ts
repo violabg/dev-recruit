@@ -246,7 +246,8 @@ export async function assignCandidatesToQuiz(
     },
     select: {
       id: true,
-      name: true,
+      firstName: true,
+      lastName: true,
       email: true,
     },
   });
@@ -259,6 +260,10 @@ export async function assignCandidatesToQuiz(
       },
     };
   }
+
+  // Helper to get full name
+  const getFullName = (firstName: string, lastName: string) =>
+    `${firstName} ${lastName}`.trim();
 
   const candidateMap = new Map(
     candidates.map((candidate) => [candidate.id, candidate])
@@ -277,6 +282,11 @@ export async function assignCandidatesToQuiz(
       continue;
     }
 
+    const candidateFullName = getFullName(
+      candidate.firstName,
+      candidate.lastName
+    );
+
     const existingInterview = await prisma.interview.findFirst({
       where: {
         quizId: quiz.id,
@@ -288,7 +298,7 @@ export async function assignCandidatesToQuiz(
     if (existingInterview) {
       generalErrors.push(
         `Un colloquio è già presente per ${
-          candidate.name ?? "il candidato selezionato"
+          candidateFullName || "il candidato selezionato"
         }.`
       );
       continue;
@@ -312,7 +322,7 @@ export async function assignCandidatesToQuiz(
     createdInterviews.push({
       candidateId,
       token: interview.token,
-      candidateName: candidate.name,
+      candidateName: candidateFullName,
       candidateEmail: candidate.email,
     });
   }

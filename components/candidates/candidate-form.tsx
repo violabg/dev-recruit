@@ -1,12 +1,14 @@
 "use client";
 
-import { InputField, SelectField } from "@/components/rhf-inputs";
+import {
+  FileUploadField,
+  InputField,
+  SelectField,
+} from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import { createCandidate, updateCandidate } from "@/lib/actions/candidates";
 import { Candidate } from "@/lib/prisma/client";
 import {
-  CandidateFormData,
-  CandidateUpdateData,
   candidateFormSchema,
   candidateUpdateSchema,
 } from "@/lib/schemas/candidate";
@@ -35,7 +37,14 @@ type CandidateFormProps =
       positions: { id: string; title: string }[];
       candidate: Pick<
         Candidate,
-        "id" | "name" | "email" | "positionId" | "status" | "resumeUrl"
+        | "id"
+        | "firstName"
+        | "lastName"
+        | "email"
+        | "dateOfBirth"
+        | "positionId"
+        | "status"
+        | "resumeUrl"
       >;
     };
 
@@ -43,16 +52,21 @@ export const CandidateForm = (props: CandidateFormProps) => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [removeExistingResume, setRemoveExistingResume] = useState(false);
   const isEditMode = props.mode === "edit";
 
-  const form = useForm<CandidateFormData | CandidateUpdateData>({
-    resolver: zodResolver(
-      isEditMode ? candidateUpdateSchema : candidateFormSchema
-    ),
+  // Use appropriate schema and type based on mode
+  const schema = isEditMode ? candidateUpdateSchema : candidateFormSchema;
+
+  const form = useForm({
+    resolver: zodResolver(schema),
     defaultValues: isEditMode
       ? {
-          name: props.candidate.name,
+          firstName: props.candidate.firstName,
+          lastName: props.candidate.lastName,
           email: props.candidate.email,
+          dateOfBirth: props.candidate.dateOfBirth ?? undefined,
           positionId: props.candidate.positionId,
           status: props.candidate.status as
             | "pending"
@@ -60,13 +74,12 @@ export const CandidateForm = (props: CandidateFormProps) => {
             | "interviewing"
             | "hired"
             | "rejected",
-          resumeUrl: props.candidate.resumeUrl ?? "",
         }
       : {
-          name: "",
+          firstName: "",
+          lastName: "",
           email: "",
           positionId: props.defaultPositionId || props.positions[0]?.id || "",
-          resumeUrl: "",
         },
   });
 
@@ -79,41 +92,70 @@ export const CandidateForm = (props: CandidateFormProps) => {
   useEffect(() => {
     if (!isEditMode) {
       form.reset({
-        name: "",
+        firstName: "",
+        lastName: "",
         email: "",
         positionId: defaultPositionId || firstPositionId || "",
-        resumeUrl: "",
       });
+      setSelectedFile(null);
+      setRemoveExistingResume(false);
     }
   }, [isEditMode, defaultPositionId, firstPositionId, form]);
 
-  const handleFormSubmission = (
-    values: CandidateFormData | CandidateUpdateData
-  ) => {
+  const handleFileSelect = (file: File | null) => {
+    setSelectedFile(file);
+    if (file) {
+      setRemoveExistingResume(false);
+    }
+  };
+
+  const handleRemoveExisting = () => {
+    setRemoveExistingResume(true);
+    setSelectedFile(null);
+  };
+
+  const handleFormSubmission = (values: Record<string, unknown>) => {
     setError(null);
     const formData = new FormData();
 
-    if (values.name !== undefined) {
-      formData.append("name", values.name);
+    if (values.firstName !== undefined) {
+      formData.append("firstName", String(values.firstName));
+    }
+
+    if (values.lastName !== undefined) {
+      formData.append("lastName", String(values.lastName));
     }
 
     if (values.email !== undefined) {
-      formData.append("email", values.email);
+      formData.append("email", String(values.email));
     }
 
     if (values.positionId !== undefined) {
-      formData.append("positionId", values.positionId);
+      formData.append("positionId", String(values.positionId));
+    }
+
+    if (values.dateOfBirth !== undefined && values.dateOfBirth !== null) {
+      formData.append(
+        "dateOfBirth",
+        values.dateOfBirth instanceof Date
+          ? values.dateOfBirth.toISOString()
+          : String(values.dateOfBirth)
+      );
+    }
+
+    // Handle file upload
+    if (selectedFile) {
+      formData.append("resumeFile", selectedFile);
     }
 
     if (isEditMode) {
-      const updateValues = values as CandidateUpdateData;
-
-      if (updateValues.status !== undefined) {
-        formData.append("status", updateValues.status);
+      if (values.status !== undefined) {
+        formData.append("status", String(values.status));
       }
 
-      if (updateValues.resumeUrl !== undefined) {
-        formData.append("resumeUrl", updateValues.resumeUrl ?? "");
+      // Flag to remove existing resume
+      if (removeExistingResume) {
+        formData.append("removeResume", "true");
       }
 
       startTransition(async () => {
@@ -135,14 +177,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
       return;
     }
 
-    const createValues = values as CandidateFormData;
-
     startTransition(async () => {
       try {
-        if (createValues.resumeUrl !== undefined) {
-          formData.append("resumeUrl", createValues.resumeUrl ?? "");
-        }
-
         const response = await createCandidate(formData);
         if (response?.candidateId) {
           router.push(`/dashboard/candidates/${response.candidateId}`);
@@ -164,18 +200,32 @@ export const CandidateForm = (props: CandidateFormProps) => {
       onSubmit={form.handleSubmit(handleFormSubmission)}
       className="space-y-6"
     >
-      <InputField
-        control={form.control}
-        name="name"
-        label="Nome"
-        placeholder="Nome candidato"
-      />
+      <div className="gap-4 grid sm:grid-cols-2">
+        <InputField
+          control={form.control}
+          name="firstName"
+          label="Nome"
+          placeholder="Nome"
+        />
+        <InputField
+          control={form.control}
+          name="lastName"
+          label="Cognome"
+          placeholder="Cognome"
+        />
+      </div>
       <InputField
         control={form.control}
         name="email"
         label="Email"
         placeholder="Email candidato"
         type="email"
+      />
+      <InputField
+        control={form.control}
+        name="dateOfBirth"
+        label="Data di nascita"
+        type="date"
       />
       <SelectField
         control={form.control}
@@ -187,24 +237,18 @@ export const CandidateForm = (props: CandidateFormProps) => {
           label: position.title,
         }))}
       />
-      <InputField
-        control={form.control}
-        name="resumeUrl"
-        label="URL curriculum"
-        placeholder="https://"
-        type="url"
+      <FileUploadField
+        currentFileUrl={
+          isEditMode && !removeExistingResume
+            ? props.candidate.resumeUrl
+            : undefined
+        }
+        onFileSelect={handleFileSelect}
+        onRemoveExisting={isEditMode ? handleRemoveExisting : undefined}
+        isUploading={isPending}
+        disabled={isPending}
       />
-      {isEditMode && (
-        <>
-          <SelectField
-            control={form.control}
-            name="status"
-            label="Stato"
-            placeholder="Seleziona stato"
-            options={STATUS_OPTIONS}
-          />
-        </>
-      )}
+
       {error && <p className="text-destructive text-sm">{error}</p>}
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? (

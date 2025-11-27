@@ -32,7 +32,7 @@ const QUIZ_INCLUDE_FOR_INTERVIEWS = {
 type InterviewWithCandidateAndQuiz = Prisma.InterviewGetPayload<{
   include: {
     candidate: {
-      select: { id: true; name: true; email: true };
+      select: { id: true; firstName: true; lastName: true; email: true };
     };
     quiz: {
       select: { id: true; title: true };
@@ -43,7 +43,7 @@ type InterviewWithCandidateAndQuiz = Prisma.InterviewGetPayload<{
 type InterviewWithFullRelations = Prisma.InterviewGetPayload<{
   include: {
     candidate: {
-      select: { id: true; name: true; email: true };
+      select: { id: true; firstName: true; lastName: true; email: true };
     };
     quiz: {
       select: {
@@ -161,9 +161,16 @@ export type CandidateQuizData = {
 // Mapper Functions - transform Prisma results to DTOs
 // ============================================================================
 
-// ============================================================================
-// Mapper Functions - transform Prisma results to DTOs
-// ============================================================================
+/**
+ * Helper to get full name from firstName and lastName
+ */
+function getFullName(
+  firstName: string | null,
+  lastName: string | null
+): string {
+  const parts = [firstName, lastName].filter(Boolean);
+  return parts.join(" ") || "";
+}
 
 /**
  * Maps interview with relations to AssignedInterview DTO
@@ -179,7 +186,10 @@ export const mapAssignedInterview = (
   startedAt: interview.startedAt?.toISOString() ?? null,
   completedAt: interview.completedAt?.toISOString() ?? null,
   candidateId: interview.candidate?.id ?? "",
-  candidateName: interview.candidate?.name ?? "",
+  candidateName: getFullName(
+    interview.candidate?.firstName ?? null,
+    interview.candidate?.lastName ?? null
+  ),
   candidateEmail: interview.candidate?.email ?? "",
   quizId: interview.quiz?.id ?? "",
   quizTitle: interview.quiz?.title ?? "",
@@ -201,7 +211,10 @@ export const mapInterviewListItem = (
     createdAt: record.createdAt.toISOString(),
     score: record.score ?? null,
     candidateId: record.candidateId,
-    candidateName: record.candidate?.name ?? "",
+    candidateName: getFullName(
+      record.candidate?.firstName ?? null,
+      record.candidate?.lastName ?? null
+    ),
     candidateEmail: record.candidate?.email ?? "",
     quizId: record.quizId,
     quizTitle: record.quiz?.title ?? "",
@@ -244,7 +257,8 @@ const getQuizAssignmentDataCached = async (
       candidate: {
         select: {
           id: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },
@@ -274,12 +288,13 @@ const getQuizAssignmentDataCached = async (
     },
     select: {
       id: true,
-      name: true,
+      firstName: true,
+      lastName: true,
       email: true,
       status: true,
     },
     orderBy: {
-      name: "asc",
+      lastName: "asc",
     },
   });
 
@@ -298,7 +313,12 @@ const getQuizAssignmentDataCached = async (
         }
       : null,
     assignedInterviews,
-    unassignedCandidates,
+    unassignedCandidates: unassignedCandidates.map((c) => ({
+      id: c.id,
+      name: getFullName(c.firstName, c.lastName),
+      email: c.email,
+      status: c.status,
+    })),
   };
 };
 
@@ -361,7 +381,7 @@ const getCandidateQuizDataCached = async (
     startedAt: interview.startedAt?.toISOString() ?? null,
     completedAt: interview.completedAt?.toISOString() ?? null,
     candidateId: interview.candidateId,
-    candidateName: candidate.name,
+    candidateName: getFullName(candidate.firstName, candidate.lastName),
     candidateEmail: candidate.email,
     quizId: interview.quiz?.id ?? "",
     quizTitle: interview.quiz?.title ?? "",
@@ -393,7 +413,7 @@ const getCandidateQuizDataCached = async (
   return {
     candidate: {
       id: candidate.id,
-      name: candidate.name,
+      name: getFullName(candidate.firstName, candidate.lastName),
       email: candidate.email,
       status: candidate.status,
       positionId: candidate.positionId,
@@ -453,7 +473,8 @@ export const getInterviewByToken = async (
       candidate: {
         select: {
           id: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },
@@ -487,7 +508,10 @@ export const getInterviewByToken = async (
     quiz,
     candidate: {
       id: interview.candidate.id,
-      name: interview.candidate.name,
+      name: getFullName(
+        interview.candidate.firstName,
+        interview.candidate.lastName
+      ),
       email: interview.candidate.email,
     },
   };
@@ -530,7 +554,8 @@ export const getInterviewDetail = async (
       candidate: {
         select: {
           id: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },
@@ -570,7 +595,10 @@ export const getInterviewDetail = async (
     quiz,
     candidate: {
       id: interview.candidate.id,
-      name: interview.candidate.name,
+      name: getFullName(
+        interview.candidate.firstName,
+        interview.candidate.lastName
+      ),
       email: interview.candidate.email,
     },
   };
@@ -606,7 +634,8 @@ export const getInterviewsByQuiz = async (
       candidate: {
         select: {
           id: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },
@@ -705,7 +734,15 @@ export async function getFilteredInterviews(filters: {
       OR: [
         {
           candidate: {
-            name: {
+            firstName: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          candidate: {
+            lastName: {
               contains: searchTerm,
               mode: "insensitive",
             },
@@ -753,7 +790,8 @@ export async function getFilteredInterviews(filters: {
       candidate: {
         select: {
           id: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },

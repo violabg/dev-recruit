@@ -80,8 +80,10 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
             positions={positionOptions}
             candidate={{
               id: candidate.id,
-              name: candidate.name,
+              firstName: candidate.firstName,
+              lastName: candidate.lastName,
               email: candidate.email,
+              dateOfBirth: candidate.dateOfBirth,
               positionId: candidate.positionId,
               status: candidate.status,
               resumeUrl: candidate.resumeUrl,

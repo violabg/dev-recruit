@@ -30,14 +30,16 @@ interface CandidateGridProps {
   candidates: CandidateWithRelations[];
 }
 
-// Get initials from name
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .substring(0, 2);
+// Get full name from firstName and lastName
+function getFullName(firstName: string, lastName: string): string {
+  return `${firstName} ${lastName}`.trim();
+}
+
+// Get initials from firstName and lastName
+function getInitials(firstName: string, lastName: string): string {
+  const firstInitial = firstName?.[0] || "";
+  const lastInitial = lastName?.[0] || "";
+  return `${firstInitial}${lastInitial}`.toUpperCase();
 }
 
 // Candidate grid component
@@ -50,10 +52,14 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             <div className="flex justify-between items-start">
               <div className="flex items-center space-x-3">
                 <Avatar className="w-10 h-10">
-                  <AvatarFallback>{getInitials(candidate.name)}</AvatarFallback>
+                  <AvatarFallback>
+                    {getInitials(candidate.firstName, candidate.lastName)}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold">{candidate.name}</h3>
+                  <h3 className="font-semibold">
+                    {getFullName(candidate.firstName, candidate.lastName)}
+                  </h3>
                   <div className="flex items-center text-muted-foreground text-sm">
                     <Mail className="mr-1 w-3 h-3" />
                     {candidate.email}
