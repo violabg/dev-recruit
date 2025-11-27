@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { transcribeAudioAction } from "@/lib/actions/transcription";
-import { Question } from "@/lib/schemas";
+import { FlexibleQuestion } from "@/lib/schemas";
 import { prismLanguage } from "@/lib/utils";
 import Editor from "@monaco-editor/react";
 import { Loader2, Speech, Square } from "lucide-react";
@@ -22,7 +22,7 @@ import { useEffect, useState, useTransition } from "react";
 type QuestionAnswer = string | { code: string } | null;
 
 interface QuestionProps {
-  question: Question;
+  question: FlexibleQuestion;
   questionNumber: number;
   onAnswerChange: (answer: QuestionAnswer) => void;
   currentAnswer: QuestionAnswer;
