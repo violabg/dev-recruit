@@ -56,7 +56,9 @@ All AI-generated quiz outputs and form payloads MUST validate against Zod schema
 
 ### III. Server Actions + Prisma with Auth Guards (No Ownership Filtering)
 
-All data mutations live in `lib/actions/` and are marked `"use server"`. Every action MUST call `requireUser()` from `lib/auth-server.ts` to verify the user is authenticated. The `createdBy` field is set on entity creation (required by schema foreign key to User), but queries MUST NOT filter by `createdBy` for access control. This project does not implement entity ownership filtering—all authenticated users can access all entities. Prisma client is centralized in `lib/prisma.ts` (Neon/Postgres with PrismaPg adapter). Cache invalidation after mutations MUST update tags (e.g., `updateTag('quizzes')`) and call `utils/revalidateQuizCache()` when supporting legacy paths.
+All data mutations live in `lib/actions/` and are marked `"use server"`. Every action MUST call `requireUser()` from `lib/auth-server.ts` to verify the user is authenticated. The `createdBy` field is set on entity creation (required by schema foreign key to User), but queries MUST NOT filter by `createdBy` for access control. This project does not implement entity ownership filtering—all authenticated users can access all entities. Prisma client is centralized in `lib/prisma.ts` (Neon/Postgres with PrismaPg adapter). Cache invalidation after mutations MUST update tags (e.g., `updateTag('quizzes')`, `updateTag('questions')`, `updateTag('evaluations')`) and call revalidation helpers when supporting legacy paths.
+
+**Data Model**: Questions are reusable entities linked to Quizzes via `QuizQuestion` join table. Evaluations use polymorphic pattern (either `interviewId` for quiz-based or `candidateId`+`positionId` for resume-based). Presets define question generation templates. Candidate resumes stored in Cloudflare R2.
 
 **Rationale**: Single-tenant or shared-access model simplifies data layer queries and improves cache efficiency. The `createdBy` field exists for auditing and future multi-tenancy if needed, but is not used for access control.
 
@@ -64,7 +66,15 @@ All data mutations live in `lib/actions/` and are marked `"use server"`. Every a
 
 The `lib/services/ai-service.ts` exports `aiQuizService`, which MUST orchestrate all Groq AI requests using `sanitizeInput`, `withRetry` (configurable backoff), timeouts, and `getOptimalModel` selection. All quiz/question text MUST be generated in Italian per system prompts. AI responses validate via Zod schemas. If a generation fails after retries, responses MUST surface the error to the user with remediation options (retry, cancel, etc.).
 
-**Rationale**: Structured AI integration with retries/timeouts prevents cascading failures, enforces language consistency (Italian), and provides deterministic error handling for reliability.
+AI capabilities include:
+
+- Quiz and question generation with type-specific prompts
+- Interview answer evaluation with structured feedback
+- Candidate resume evaluation against position requirements
+- Streaming position description generation via `streamPositionDescription`
+- Audio transcription via `transcribeAudioAction` using Whisper models
+
+**Rationale**: Structured AI integration with retries/timeouts prevents cascading failures, enforces language consistency (Italian), and provides deterministic error handling for reliability. Multiple AI use cases share common infrastructure for consistency.
 
 ### V. Data Queries in `lib/data/` Only
 
@@ -151,12 +161,14 @@ All PRs must verify compliance with these principles. Complexity introducing exc
 
 Architectural or major changes MUST be reflected in the project documentation:
 
-| Change Type                   | Documentation File             |
-| ----------------------------- | ------------------------------ |
-| AI service, prompts, models   | `docs/AI_QUIZ_GENERATION.md`   |
-| Caching strategies, patterns  | `docs/CACHE_IMPLEMENTATION.md` |
-| Question schemas, validation  | `docs/QUESTION_SCHEMAS.md`     |
-| Features, setup, dependencies | `README.md`                    |
+| Change Type                                | Documentation File                |
+| ------------------------------------------ | --------------------------------- |
+| AI service, prompts, models, evaluations   | `docs/AI_QUIZ_GENERATION.md`      |
+| Caching strategies, patterns, tags         | `docs/CACHE_IMPLEMENTATION.md`    |
+| Question schemas, Question entity, presets | `docs/QUESTION_SCHEMAS.md`        |
+| Features, setup, dependencies, data model  | `README.md`                       |
+| Development workflow, new entities         | `.github/copilot-instructions.md` |
+| Core principles, governance                | `.specify/memory/constitution.md` |
 
 Documentation updates are considered part of the implementation and MUST be completed before a change is considered done.
 

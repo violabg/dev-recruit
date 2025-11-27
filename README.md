@@ -11,29 +11,38 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 
 ### Core Functionality
 
-- **📋 Position Management** - Create and manage job positions with detailed skill requirements
-- **👥 Candidate Tracking** - Track candidates through the recruitment pipeline with status management
+- **📋 Position Management** - Create and manage job positions with detailed skill requirements and AI-generated descriptions
+- **👥 Candidate Tracking** - Track candidates through the recruitment pipeline with status management and resume storage
 - **📝 AI-Powered Quiz Generation** - Generate technical assessments tailored to specific positions using advanced LLMs
-- **🎯 Interview System** - Send quiz invitations to candidates via unique tokens
-- **📊 AI Evaluation** - Automated answer evaluation with detailed feedback and scoring
+- **🎯 Interview System** - Send quiz invitations to candidates via unique tokens for remote technical assessments
+- **📊 AI Evaluation** - Dual evaluation system:
+  - **Interview Evaluations** - Automated quiz answer evaluation with detailed feedback and scoring
+  - **Candidate Evaluations** - Resume-based assessment against position requirements with fit scoring
+- **🔄 Reusable Question Library** - Create, manage, and favorite questions for reuse across multiple quizzes
+- **⚙️ Generation Presets** - Configurable templates for question generation with type-specific parameters
 
 ### AI Capabilities
 
-- **Multi-Model Support** - Flexible LLM selection (Groq-powered models including LLaMA, Gemma, DeepSeek)
+- **Multi-Model Support** - Flexible LLM selection (Groq-powered models including LLaMA, Gemma, DeepSeek, Kimi)
 - **Three Question Types**:
   - Multiple Choice - Auto-validated with intelligent distractors
   - Open Questions - Free-form responses with sample answers
   - Code Snippets - Code analysis, bug fixing, and improvement tasks
 - **Smart Prompting** - Type-specific prompt engineering for optimal question quality
 - **Retry & Fallback** - Robust error handling with automatic model fallbacks
+- **Streaming Responses** - Real-time position description generation with streaming AI responses
+- **Voice Transcription** - Audio-to-text transcription for candidate answers using Whisper models
 
 ### Technical Features
 
 - **Server Components** - Next.js 16 App Router with Cache Components (`"use cache"`)
 - **Real-time Streaming** - Position description generation with streaming responses
-- **Zod Validation** - End-to-end type safety with comprehensive schemas
+- **Zod Validation** - End-to-end type safety with comprehensive schemas (Zod v4)
 - **Better Auth** - Modern authentication with session management
 - **Neon PostgreSQL** - Serverless database with Prisma ORM
+- **Cloudflare R2 Storage** - S3-compatible object storage for resume/file uploads
+- **PDF Parsing** - Serverless PDF text extraction using unpdf for resume analysis
+- **Polymorphic Evaluations** - Unified evaluation entity supporting both interview and candidate assessments
 
 ## 📁 Project Structure
 
@@ -41,25 +50,32 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 dev-recruit/
 ├── app/                    # Next.js App Router
 │   ├── dashboard/          # Protected dashboard routes
-│   │   ├── candidates/     # Candidate management
-│   │   ├── interviews/     # Interview tracking
+│   │   ├── candidates/     # Candidate management & evaluations
+│   │   ├── interviews/     # Interview tracking & evaluations
 │   │   ├── positions/      # Job position management
-│   │   ├── quizzes/        # Quiz creation & editing
-│   │   └── presets/        # Question generation presets
-│   ├── recruting/          # Public interview pages
-│   └── auth/               # Authentication pages
+│   │   ├── quizzes/        # Quiz creation & editing with reusable questions
+│   │   ├── presets/        # Question generation presets management
+│   │   └── profile/        # User profile & settings
+│   ├── recruting/          # Public interview pages (candidate-facing)
+│   ├── auth/               # Authentication pages (login, signup, etc.)
+│   └── api/                # API routes (streaming, uploads)
 ├── components/             # React components
 │   ├── ui/                 # Base UI primitives (shadcn/ui)
 │   ├── dashboard/          # Dashboard-specific components
-│   ├── quiz/               # Quiz editing components
+│   ├── quiz/               # Quiz editing components (AI dialogs, question management)
+│   ├── candidates/         # Candidate management components
+│   ├── interviews/         # Interview tracking components
+│   ├── presets/            # Preset management components
+│   ├── rhf-inputs/         # React Hook Form input components
 │   └── recruting/          # Interview taking components
 ├── lib/                    # Core business logic
-│   ├── actions/            # Server actions
-│   ├── data/               # Data fetching layer
+│   ├── actions/            # Server actions (quizzes, candidates, evaluations, etc.)
+│   ├── data/               # Data fetching layer (cached queries)
 │   ├── schemas/            # Zod validation schemas
-│   ├── services/           # AI services
-│   └── utils/              # Utility functions
-├── hooks/                  # React hooks
+│   ├── services/           # AI services (quiz generation, evaluation, transcription)
+│   ├── utils/              # Utility functions
+│   └── prisma/             # Generated Prisma client
+├── hooks/                  # React hooks (AI generation, forms, etc.)
 ├── prisma/                 # Database schema & migrations
 └── docs/                   # Documentation
 ```
@@ -241,14 +257,18 @@ See `lib/auth.ts` for configuration and `lib/auth-server.ts` for server-side hel
 
 The core entities in DevRecruit:
 
-| Entity        | Description                                 |
-| ------------- | ------------------------------------------- |
-| **User**      | Application users (recruiters)              |
-| **Position**  | Job positions with skill requirements       |
-| **Candidate** | Applicants linked to positions              |
-| **Quiz**      | Technical assessments with questions        |
-| **Interview** | Quiz assignments to candidates with results |
-| **Preset**    | Reusable question generation templates      |
+| Entity           | Description                                                          |
+| ---------------- | -------------------------------------------------------------------- |
+| **User**         | Application users (recruiters)                                       |
+| **Position**     | Job positions with skill requirements                                |
+| **Candidate**    | Applicants linked to positions with resume storage                   |
+| **Quiz**         | Technical assessments composed of reusable questions                 |
+| **Question**     | Reusable question library (multiple choice, open, code snippet)      |
+| **QuizQuestion** | Join table linking questions to quizzes with ordering                |
+| **Interview**    | Quiz assignments to candidates with answers and results              |
+| **Evaluation**   | AI-generated assessments (polymorphic: interview or candidate-based) |
+| **Preset**       | Question generation templates with type-specific parameters          |
+| **Preset**       | Reusable question generation templates                               |
 
 ## 🎨 Styling Guidelines
 

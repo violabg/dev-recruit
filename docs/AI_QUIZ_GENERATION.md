@@ -4,15 +4,12 @@ This document provides a comprehensive overview of the AI-powered quiz generatio
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Generation Flow](#generation-flow)
-- [Question Types](#question-types)
-- [Prompt Engineering](#prompt-engineering)
-- [Model Selection](#model-selection)
-- [Error Handling](#error-handling)
-- [Validation](#validation)
-- [Usage Examples](#usage-examples)
+- [AI Evaluations](#ai-evaluations)
+- [Presets System](#presets-system)
+- [Streaming Responses](#streaming-responses)
+- [Audio Transcription](#audio-transcription)
+- [Performance Considerations](#performance-considerations)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
@@ -62,13 +59,18 @@ graph TB
 
 ### Key Components
 
-| Component                   | Location                     | Purpose                                          |
-| --------------------------- | ---------------------------- | ------------------------------------------------ |
-| `AIQuizService`             | `lib/services/ai-service.ts` | Main service class for AI generation             |
-| `generateNewQuizAction`     | `lib/actions/quizzes.ts`     | Server action for full quiz generation           |
-| `generateNewQuestionAction` | `lib/actions/quizzes.ts`     | Server action for single question generation     |
-| `useAIGeneration`           | `hooks/use-ai-generation.ts` | React hook for client-side generation management |
-| Question Schemas            | `lib/schemas/question.ts`    | Zod schemas for question validation              |
+| Component                     | Location                           | Purpose                                          |
+| ----------------------------- | ---------------------------------- | ------------------------------------------------ |
+| `AIQuizService`               | `lib/services/ai-service.ts`       | Main service class for AI generation             |
+| `generateNewQuizAction`       | `lib/actions/quizzes.ts`           | Server action for full quiz generation           |
+| `generateNewQuestionAction`   | `lib/actions/quizzes.ts`           | Server action for single question generation     |
+| `useAIGeneration`             | `hooks/use-ai-generation.ts`       | React hook for client-side generation management |
+| Question Schemas              | `lib/schemas/question.ts`          | Zod schemas for question validation              |
+| `evaluateAnswer`              | `lib/actions/evaluations.ts`       | Server action for answer evaluation              |
+| `generateCandidateEvaluation` | `lib/actions/evaluation-entity.ts` | Resume-based candidate assessment                |
+| `streamPositionDescription`   | `lib/services/ai-service.ts`       | Streaming position description generation        |
+| `transcribeAudioAction`       | `lib/actions/transcription.ts`     | Audio transcription using Whisper                |
+| Preset Management             | `lib/actions/presets.ts`           | Question generation template management          |
 
 ## Generation Flow
 
@@ -471,6 +473,340 @@ const quiz = await aiQuizService.generateQuiz({
 2. **Caching** - Quiz configurations can be saved as presets for reuse
 3. **Streaming** - Position descriptions use streaming for better UX
 4. **Parallel Generation** - Consider generating questions in parallel for large quizzes
+
+## AI Evaluations
+
+The system provides two types of AI-powered evaluations:
+
+### Interview Evaluations
+
+Evaluates candidate answers to quiz questions with structured feedback.
+
+**Location**: `lib/actions/evaluations.ts`
+
+**Capabilities**:
+
+- Answer correctness scoring (0-10 scale)
+- Detailed evaluation text
+- Strengths and weaknesses identification
+- Type-specific evaluation logic for each question type
+
+**Schema**:
+
+```typescript
+const evaluationResultSchema = z.object({
+  evaluation: z.string(),
+  score: z.number().min(0).max(10),
+  strengths: z.array(z.string()),
+  weaknesses: z.array(z.string()),
+});
+```
+
+**Usage Example**:
+
+```typescript
+import { evaluateAnswer } from "@/lib/actions/evaluations";
+
+const result = await evaluateAnswer(
+  question, // FlexibleQuestion
+  candidateAnswer, // string
+  "llama-3.3-70b-versatile" // optional model override
+);
+
+// Result: { evaluation, score, strengths, weaknesses, maxScore }
+```
+
+**Evaluation Flow**:
+
+```mermaid
+sequenceDiagram
+    participant I as Interview Component
+    participant A as evaluateAnswer Action
+    participant AI as Groq API
+    participant S as Zod Schema
+
+    I->>A: Submit answer for evaluation
+    A->>A: Build type-specific prompt
+    A->>AI: generateObject() with evaluationResultSchema
+    AI-->>A: Structured evaluation
+    A->>S: Validate response
+    S-->>A: EvaluationResult
+    A-->>I: Return evaluation + score
+```
+
+### Candidate Evaluations
+
+Evaluates candidates based on their resume against position requirements.
+
+**Location**: `lib/actions/evaluation-entity.ts`
+
+**Capabilities**:
+
+- PDF resume text extraction using `unpdf`
+- Skills match analysis
+- Experience level assessment
+- Soft skills evaluation
+- Overall fit score (0-100 scale)
+- Recommendations for next steps
+
+**Schema**:
+
+```typescript
+const overallEvaluationSchema = z.object({
+  evaluation: z.string(),
+  strengths: z.array(z.string()),
+  weaknesses: z.array(z.string()),
+  recommendation: z.string(),
+  fitScore: z.number().min(0).max(100),
+});
+```
+
+**Usage Example**:
+
+```typescript
+import { generateCandidateEvaluationAction } from "@/lib/actions/evaluation-entity";
+
+const result = await generateCandidateEvaluationAction({
+  candidateId: "candidate-123",
+  positionId: "position-456",
+});
+
+// Creates Evaluation entity with AI assessment
+```
+
+**Evaluation Entity (Polymorphic)**:
+The `Evaluation` model supports both types:
+
+```prisma
+model Evaluation {
+  id    String @id
+  title String
+
+  // Polymorphic: one of these will be set
+  interviewId String? @unique  // 1:1 with interview (quiz-based)
+  candidateId String?          // Many evaluations per candidate
+  positionId  String?          // Required for candidate evals
+
+  // AI evaluation content
+  evaluation     String?
+  strengths      String[]
+  weaknesses     String[]
+  recommendation String?
+  fitScore       Int?     // 0-10 for interviews, 0-100 for candidates
+  quizScore      Int?     // Only for interview evaluations
+
+  // Manual notes
+  notes String?
+}
+```
+
+## Presets System
+
+Presets provide reusable templates for question generation with type-specific parameters.
+
+**Location**: `lib/actions/presets.ts`, `lib/data/presets.ts`
+
+**Purpose**:
+
+- Standardize question generation across quizzes
+- Configure type-specific AI parameters
+- Enable quick generation with predefined settings
+- Maintain consistency in question quality
+
+**Preset Schema**:
+
+```typescript
+model Preset {
+  id           String   @id
+  name         String   @unique
+  label        String
+  description  String?
+  icon         String   // Lucide icon name
+  questionType String   // multiple_choice, code_snippet, open_question
+  instructions String?
+
+  // Type-specific parameters
+  focusAreas           String[]
+  distractorComplexity String?
+  requireCodeExample   Boolean?
+  expectedResponseLength ExpectedResponseLength?
+  evaluationCriteria   String[]
+  language             String?
+  bugType              String?
+  codeComplexity       String?
+  includeComments      Boolean?
+
+  // Metadata
+  tags       String[]
+  difficulty Int      @default(3) // 1-5 scale
+  isDefault  Boolean  @default(true)
+}
+```
+
+**Type-Specific Parameters**:
+
+| Question Type   | Parameters Available                                                     |
+| --------------- | ------------------------------------------------------------------------ |
+| Multiple Choice | `focusAreas`, `distractorComplexity` (simple/moderate/complex)           |
+| Open Question   | `requireCodeExample`, `expectedResponseLength`, `evaluationCriteria`     |
+| Code Snippet    | `language`, `bugType`, `codeComplexity`, `includeComments`, `focusAreas` |
+
+**Usage Example**:
+
+```typescript
+import { getPresetData } from "@/lib/data/presets";
+import { generateNewQuestionAction } from "@/lib/actions/quizzes";
+
+// Get preset configuration
+const preset = await getPresetData("react-hooks-advanced");
+
+// Use preset parameters in generation
+const result = await generateNewQuestionAction({
+  positionId: "pos-123",
+  quizId: "quiz-456",
+  questionType: preset.questionType,
+  difficulty: preset.difficulty,
+  focusAreas: preset.focusAreas,
+  distractorComplexity: preset.distractorComplexity,
+  // ... other preset parameters
+});
+```
+
+**Preset Management Actions**:
+
+- `getPresetsAction` - Get all presets with pagination/search
+- `createPresetAction` - Create new preset
+- `updatePresetAction` - Update existing preset
+- `deletePresetAction` - Delete preset
+- `seedPresetsAction` - Seed default presets
+
+**Seeded Default Presets** (see `prisma/seed.ts`):
+
+- React Hooks (Basic/Advanced)
+- JavaScript ES6+ Fundamentals
+- TypeScript Type System
+- Node.js Best Practices
+- SQL Query Optimization
+- Security Best Practices
+- Algorithm & Data Structures
+- System Design Concepts
+
+## Streaming Responses
+
+The system supports streaming AI responses for better UX during long-running operations.
+
+**Location**: `lib/services/ai-service.ts` → `streamPositionDescription`
+
+**Use Case**: Position description generation
+
+**Implementation**:
+
+```typescript
+import { streamPositionDescription } from "@/lib/services/ai-service";
+
+// Server action or API route
+const stream = await streamPositionDescription({
+  title: "Senior React Developer",
+  experienceLevel: "senior",
+  skills: ["React", "TypeScript", "Node.js"],
+  softSkills: ["Communication", "Leadership"],
+  contractType: "full-time",
+  currentDescription: "...", // optional - for refinement
+});
+
+// Return stream to client
+return stream.toTextStreamResponse();
+```
+
+**API Endpoint**:
+
+```typescript
+// app/api/positions/generate-description/route.ts
+export async function POST(request: NextRequest) {
+  await requireUser();
+  const body = await request.json();
+  const validated = positionDescriptionSchema.parse(body);
+
+  const stream = await streamPositionDescription(validated);
+  return stream.toTextStreamResponse();
+}
+```
+
+**Client Usage**:
+
+```typescript
+const response = await fetch("/api/positions/generate-description", {
+  method: "POST",
+  body: JSON.stringify(positionData),
+});
+
+const reader = response.body?.getReader();
+// Stream chunks to UI
+```
+
+**Benefits**:
+
+- Immediate feedback to users
+- Perceived performance improvement
+- Progressive content display
+- Reduced time-to-first-content
+
+## Audio Transcription
+
+The system supports audio transcription for candidate answers using Groq's Whisper models.
+
+**Location**: `lib/actions/transcription.ts`
+
+**Model**: `whisper-large-v3-turbo` (Groq API)
+
+**Implementation**:
+
+```typescript
+import { transcribeAudioAction } from "@/lib/actions/transcription";
+
+// Client sends audio as number array (Uint8Array converted)
+const audioData = Array.from(uint8Array);
+
+const result = await transcribeAudioAction(audioData);
+
+if (result.success) {
+  console.log("Transcribed text:", result.text);
+} else {
+  console.error("Transcription error:", result.error);
+}
+```
+
+**Use Cases**:
+
+- Voice input for open questions
+- Accessibility features
+- Interview recording transcription
+- Candidate answer capture
+
+**Technical Details**:
+
+- Accepts audio as `number[]` (serializable for server actions)
+- Converts to `Uint8Array` server-side
+- Uses Groq's `transcription` model via Vercel AI SDK
+- Returns plain text transcript
+
+**Example Flow**:
+
+```mermaid
+sequenceDiagram
+    participant C as Candidate
+    participant UI as Interview UI
+    participant A as transcribeAudioAction
+    participant W as Whisper API
+
+    C->>UI: Record audio answer
+    UI->>UI: Convert to Uint8Array
+    UI->>A: Send audio data
+    A->>W: Transcribe with whisper-large-v3-turbo
+    W-->>A: Text transcript
+    A-->>UI: Return transcript
+    UI->>UI: Populate answer field
+```
 
 ## Related Documentation
 
