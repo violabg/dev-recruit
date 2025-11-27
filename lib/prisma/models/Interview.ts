@@ -254,6 +254,7 @@ export type InterviewWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Interview"> | Date | string
   candidate?: Prisma.XOR<Prisma.CandidateScalarRelationFilter, Prisma.CandidateWhereInput>
   quiz?: Prisma.XOR<Prisma.QuizScalarRelationFilter, Prisma.QuizWhereInput>
+  evaluation?: Prisma.XOR<Prisma.EvaluationNullableScalarRelationFilter, Prisma.EvaluationWhereInput> | null
 }
 
 export type InterviewOrderByWithRelationInput = {
@@ -269,6 +270,7 @@ export type InterviewOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   candidate?: Prisma.CandidateOrderByWithRelationInput
   quiz?: Prisma.QuizOrderByWithRelationInput
+  evaluation?: Prisma.EvaluationOrderByWithRelationInput
 }
 
 export type InterviewWhereUniqueInput = Prisma.AtLeast<{
@@ -287,6 +289,7 @@ export type InterviewWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Interview"> | Date | string
   candidate?: Prisma.XOR<Prisma.CandidateScalarRelationFilter, Prisma.CandidateWhereInput>
   quiz?: Prisma.XOR<Prisma.QuizScalarRelationFilter, Prisma.QuizWhereInput>
+  evaluation?: Prisma.XOR<Prisma.EvaluationNullableScalarRelationFilter, Prisma.EvaluationWhereInput> | null
 }, "id" | "token">
 
 export type InterviewOrderByWithAggregationInput = {
@@ -334,6 +337,7 @@ export type InterviewCreateInput = {
   createdAt?: Date | string
   candidate: Prisma.CandidateCreateNestedOneWithoutInterviewsInput
   quiz: Prisma.QuizCreateNestedOneWithoutInterviewsInput
+  evaluation?: Prisma.EvaluationCreateNestedOneWithoutInterviewInput
 }
 
 export type InterviewUncheckedCreateInput = {
@@ -347,6 +351,7 @@ export type InterviewUncheckedCreateInput = {
   answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   token: string
   createdAt?: Date | string
+  evaluation?: Prisma.EvaluationUncheckedCreateNestedOneWithoutInterviewInput
 }
 
 export type InterviewUpdateInput = {
@@ -360,6 +365,7 @@ export type InterviewUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   candidate?: Prisma.CandidateUpdateOneRequiredWithoutInterviewsNestedInput
   quiz?: Prisma.QuizUpdateOneRequiredWithoutInterviewsNestedInput
+  evaluation?: Prisma.EvaluationUpdateOneWithoutInterviewNestedInput
 }
 
 export type InterviewUncheckedUpdateInput = {
@@ -373,6 +379,7 @@ export type InterviewUncheckedUpdateInput = {
   answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   token?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  evaluation?: Prisma.EvaluationUncheckedUpdateOneWithoutInterviewNestedInput
 }
 
 export type InterviewCreateManyInput = {
@@ -467,6 +474,11 @@ export type InterviewSumOrderByAggregateInput = {
   score?: Prisma.SortOrder
 }
 
+export type InterviewNullableScalarRelationFilter = {
+  is?: Prisma.InterviewWhereInput | null
+  isNot?: Prisma.InterviewWhereInput | null
+}
+
 export type InterviewCreateNestedManyWithoutCandidateInput = {
   create?: Prisma.XOR<Prisma.InterviewCreateWithoutCandidateInput, Prisma.InterviewUncheckedCreateWithoutCandidateInput> | Prisma.InterviewCreateWithoutCandidateInput[] | Prisma.InterviewUncheckedCreateWithoutCandidateInput[]
   connectOrCreate?: Prisma.InterviewCreateOrConnectWithoutCandidateInput | Prisma.InterviewCreateOrConnectWithoutCandidateInput[]
@@ -559,6 +571,22 @@ export type NullableFloatFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type InterviewCreateNestedOneWithoutEvaluationInput = {
+  create?: Prisma.XOR<Prisma.InterviewCreateWithoutEvaluationInput, Prisma.InterviewUncheckedCreateWithoutEvaluationInput>
+  connectOrCreate?: Prisma.InterviewCreateOrConnectWithoutEvaluationInput
+  connect?: Prisma.InterviewWhereUniqueInput
+}
+
+export type InterviewUpdateOneWithoutEvaluationNestedInput = {
+  create?: Prisma.XOR<Prisma.InterviewCreateWithoutEvaluationInput, Prisma.InterviewUncheckedCreateWithoutEvaluationInput>
+  connectOrCreate?: Prisma.InterviewCreateOrConnectWithoutEvaluationInput
+  upsert?: Prisma.InterviewUpsertWithoutEvaluationInput
+  disconnect?: Prisma.InterviewWhereInput | boolean
+  delete?: Prisma.InterviewWhereInput | boolean
+  connect?: Prisma.InterviewWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.InterviewUpdateToOneWithWhereWithoutEvaluationInput, Prisma.InterviewUpdateWithoutEvaluationInput>, Prisma.InterviewUncheckedUpdateWithoutEvaluationInput>
+}
+
 export type InterviewCreateWithoutCandidateInput = {
   id?: string
   status?: string
@@ -569,6 +597,7 @@ export type InterviewCreateWithoutCandidateInput = {
   token: string
   createdAt?: Date | string
   quiz: Prisma.QuizCreateNestedOneWithoutInterviewsInput
+  evaluation?: Prisma.EvaluationCreateNestedOneWithoutInterviewInput
 }
 
 export type InterviewUncheckedCreateWithoutCandidateInput = {
@@ -581,6 +610,7 @@ export type InterviewUncheckedCreateWithoutCandidateInput = {
   answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   token: string
   createdAt?: Date | string
+  evaluation?: Prisma.EvaluationUncheckedCreateNestedOneWithoutInterviewInput
 }
 
 export type InterviewCreateOrConnectWithoutCandidateInput = {
@@ -635,6 +665,7 @@ export type InterviewCreateWithoutQuizInput = {
   token: string
   createdAt?: Date | string
   candidate: Prisma.CandidateCreateNestedOneWithoutInterviewsInput
+  evaluation?: Prisma.EvaluationCreateNestedOneWithoutInterviewInput
 }
 
 export type InterviewUncheckedCreateWithoutQuizInput = {
@@ -647,6 +678,7 @@ export type InterviewUncheckedCreateWithoutQuizInput = {
   answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   token: string
   createdAt?: Date | string
+  evaluation?: Prisma.EvaluationUncheckedCreateNestedOneWithoutInterviewInput
 }
 
 export type InterviewCreateOrConnectWithoutQuizInput = {
@@ -675,6 +707,74 @@ export type InterviewUpdateManyWithWhereWithoutQuizInput = {
   data: Prisma.XOR<Prisma.InterviewUpdateManyMutationInput, Prisma.InterviewUncheckedUpdateManyWithoutQuizInput>
 }
 
+export type InterviewCreateWithoutEvaluationInput = {
+  id?: string
+  status?: string
+  startedAt?: Date | string | null
+  completedAt?: Date | string | null
+  score?: number | null
+  answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  token: string
+  createdAt?: Date | string
+  candidate: Prisma.CandidateCreateNestedOneWithoutInterviewsInput
+  quiz: Prisma.QuizCreateNestedOneWithoutInterviewsInput
+}
+
+export type InterviewUncheckedCreateWithoutEvaluationInput = {
+  id?: string
+  candidateId: string
+  quizId: string
+  status?: string
+  startedAt?: Date | string | null
+  completedAt?: Date | string | null
+  score?: number | null
+  answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  token: string
+  createdAt?: Date | string
+}
+
+export type InterviewCreateOrConnectWithoutEvaluationInput = {
+  where: Prisma.InterviewWhereUniqueInput
+  create: Prisma.XOR<Prisma.InterviewCreateWithoutEvaluationInput, Prisma.InterviewUncheckedCreateWithoutEvaluationInput>
+}
+
+export type InterviewUpsertWithoutEvaluationInput = {
+  update: Prisma.XOR<Prisma.InterviewUpdateWithoutEvaluationInput, Prisma.InterviewUncheckedUpdateWithoutEvaluationInput>
+  create: Prisma.XOR<Prisma.InterviewCreateWithoutEvaluationInput, Prisma.InterviewUncheckedCreateWithoutEvaluationInput>
+  where?: Prisma.InterviewWhereInput
+}
+
+export type InterviewUpdateToOneWithWhereWithoutEvaluationInput = {
+  where?: Prisma.InterviewWhereInput
+  data: Prisma.XOR<Prisma.InterviewUpdateWithoutEvaluationInput, Prisma.InterviewUncheckedUpdateWithoutEvaluationInput>
+}
+
+export type InterviewUpdateWithoutEvaluationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  token?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidate?: Prisma.CandidateUpdateOneRequiredWithoutInterviewsNestedInput
+  quiz?: Prisma.QuizUpdateOneRequiredWithoutInterviewsNestedInput
+}
+
+export type InterviewUncheckedUpdateWithoutEvaluationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidateId?: Prisma.StringFieldUpdateOperationsInput | string
+  quizId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  token?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type InterviewCreateManyCandidateInput = {
   id?: string
   quizId: string
@@ -697,6 +797,7 @@ export type InterviewUpdateWithoutCandidateInput = {
   token?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quiz?: Prisma.QuizUpdateOneRequiredWithoutInterviewsNestedInput
+  evaluation?: Prisma.EvaluationUpdateOneWithoutInterviewNestedInput
 }
 
 export type InterviewUncheckedUpdateWithoutCandidateInput = {
@@ -709,6 +810,7 @@ export type InterviewUncheckedUpdateWithoutCandidateInput = {
   answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   token?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  evaluation?: Prisma.EvaluationUncheckedUpdateOneWithoutInterviewNestedInput
 }
 
 export type InterviewUncheckedUpdateManyWithoutCandidateInput = {
@@ -745,6 +847,7 @@ export type InterviewUpdateWithoutQuizInput = {
   token?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   candidate?: Prisma.CandidateUpdateOneRequiredWithoutInterviewsNestedInput
+  evaluation?: Prisma.EvaluationUpdateOneWithoutInterviewNestedInput
 }
 
 export type InterviewUncheckedUpdateWithoutQuizInput = {
@@ -757,6 +860,7 @@ export type InterviewUncheckedUpdateWithoutQuizInput = {
   answers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   token?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  evaluation?: Prisma.EvaluationUncheckedUpdateOneWithoutInterviewNestedInput
 }
 
 export type InterviewUncheckedUpdateManyWithoutQuizInput = {
@@ -786,6 +890,7 @@ export type InterviewSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   createdAt?: boolean
   candidate?: boolean | Prisma.CandidateDefaultArgs<ExtArgs>
   quiz?: boolean | Prisma.QuizDefaultArgs<ExtArgs>
+  evaluation?: boolean | Prisma.Interview$evaluationArgs<ExtArgs>
 }, ExtArgs["result"]["interview"]>
 
 export type InterviewSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -835,6 +940,7 @@ export type InterviewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs 
 export type InterviewInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   candidate?: boolean | Prisma.CandidateDefaultArgs<ExtArgs>
   quiz?: boolean | Prisma.QuizDefaultArgs<ExtArgs>
+  evaluation?: boolean | Prisma.Interview$evaluationArgs<ExtArgs>
 }
 export type InterviewIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   candidate?: boolean | Prisma.CandidateDefaultArgs<ExtArgs>
@@ -850,6 +956,7 @@ export type $InterviewPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   objects: {
     candidate: Prisma.$CandidatePayload<ExtArgs>
     quiz: Prisma.$QuizPayload<ExtArgs>
+    evaluation: Prisma.$EvaluationPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1258,6 +1365,7 @@ export interface Prisma__InterviewClient<T, Null = never, ExtArgs extends runtim
   readonly [Symbol.toStringTag]: "PrismaPromise"
   candidate<T extends Prisma.CandidateDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CandidateDefaultArgs<ExtArgs>>): Prisma.Prisma__CandidateClient<runtime.Types.Result.GetResult<Prisma.$CandidatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   quiz<T extends Prisma.QuizDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.QuizDefaultArgs<ExtArgs>>): Prisma.Prisma__QuizClient<runtime.Types.Result.GetResult<Prisma.$QuizPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  evaluation<T extends Prisma.Interview$evaluationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Interview$evaluationArgs<ExtArgs>>): Prisma.Prisma__EvaluationClient<runtime.Types.Result.GetResult<Prisma.$EvaluationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1690,6 +1798,25 @@ export type InterviewDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Limit how many Interviews to delete.
    */
   limit?: number
+}
+
+/**
+ * Interview.evaluation
+ */
+export type Interview$evaluationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Evaluation
+   */
+  select?: Prisma.EvaluationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Evaluation
+   */
+  omit?: Prisma.EvaluationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EvaluationInclude<ExtArgs> | null
+  where?: Prisma.EvaluationWhereInput
 }
 
 /**

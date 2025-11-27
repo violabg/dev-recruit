@@ -29,10 +29,11 @@ model User {
   sessions   Session[]
   accounts   Account[]
   profile    Profile?
-  positions  Position[]  @relation("UserPositions")
-  candidates Candidate[] @relation("UserCandidates")
-  quizzes    Quiz[]      @relation("UserQuizzes")
-  questions  Question[]  @relation("UserQuestions")
+  positions   Position[]   @relation("UserPositions")
+  candidates  Candidate[]  @relation("UserCandidates")
+  quizzes     Quiz[]       @relation("UserQuizzes")
+  questions   Question[]   @relation("UserQuestions")
+  evaluations Evaluation[] @relation("UserEvaluations")
 
   isAnonymous Boolean?
 
@@ -120,9 +121,10 @@ model Position {
   createdBy       String
   createdAt       DateTime @default(now())
 
-  creator    User        @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
-  candidates Candidate[]
-  quizzes    Quiz[]
+  creator     User         @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
+  candidates  Candidate[]
+  quizzes     Quiz[]
+  evaluations Evaluation[]
 
   @@map("positions")
 }
@@ -139,9 +141,10 @@ model Candidate {
   createdBy   String
   createdAt   DateTime  @default(now())
 
-  position   Position    @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  creator    User        @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
-  interviews Interview[]
+  position    Position     @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator     User         @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
+  interviews  Interview[]
+  evaluations Evaluation[]
 
   @@map("candidates")
 }
@@ -174,8 +177,9 @@ model Interview {
   token       String    @unique
   createdAt   DateTime  @default(now())
 
-  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  quiz      Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  candidate  Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  quiz       Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  evaluation Evaluation?
 
   @@map("interviews")
 }
@@ -233,6 +237,43 @@ enum QuestionType {
   multiple_choice
   open_question
   code_snippet
+}
+
+// AI-generated evaluations for interviews (quiz-based) and candidates (resume-based)
+model Evaluation {
+  id    String @id @default(cuid())
+  title String // Quiz name for interview eval, Position name for candidate eval
+
+  // Polymorphic: one of interviewId or candidateId will be set
+  interviewId String?    @unique // 1:1 with interview
+  candidateId String?    // Many evaluations per candidate (different positions)
+  positionId  String?    // Required for candidate evaluations to track which position
+
+  // AI evaluation content (from OverallEvaluation interface)
+  evaluation     String?  // Detailed text evaluation
+  strengths      String[] @default([])
+  weaknesses     String[] @default([])
+  recommendation String?
+  fitScore       Int?     // 0-10 scale (AI's candidate fit assessment)
+  quizScore      Int?     // 0-100 percentage score from quiz answers (interview evals only)
+
+  // Manual notes field
+  notes String?
+
+  // Metadata
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  interview Interview? @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  candidate Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  position  Position?  @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  creator   User       @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([positionId])
+  @@map("evaluations")
 }
 
 model Preset {
