@@ -1,7 +1,6 @@
 "use client";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -201,35 +200,33 @@ export function EditQuizForm({
             loading={aiLoading}
           />
 
-          <Card>
-            <CardContent className="space-y-4">
-              {/* Questions Management */}
-              <QuestionsHeader
-                fieldsLength={fields.length}
-                questionTypeFilter={questionTypeFilter}
-                setQuestionTypeFilter={setQuestionTypeFilter}
-                expandAllQuestions={expandAllQuestions}
-                collapseAllQuestions={collapseAllQuestions}
-                onAddQuestion={addBlankQuestion}
-                onOpenFavorites={() => setFavoritesDialogOpen(true)}
-              />
-              {/* Questions List */}
-              <QuestionsList
-                filteredQuestions={filteredQuestions}
-                fields={fields}
-                expandedQuestions={expandedQuestions}
-                questionTypeFilter={questionTypeFilter}
-                form={form}
-                onToggleExpansion={toggleQuestionExpansion}
-                onRegenerate={handleRegenerate}
-                onRemove={remove}
-                aiLoading={aiLoading}
-                hasQuestionChanges={hasQuestionChanges}
-                onSaveQuestion={handleQuestionSaveWithValidation}
-                sectionSaveStatus={sectionSaveStatus}
-              />
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Questions Management */}
+            <QuestionsHeader
+              fieldsLength={fields.length}
+              questionTypeFilter={questionTypeFilter}
+              setQuestionTypeFilter={setQuestionTypeFilter}
+              expandAllQuestions={expandAllQuestions}
+              collapseAllQuestions={collapseAllQuestions}
+              onAddQuestion={addBlankQuestion}
+              onOpenFavorites={() => setFavoritesDialogOpen(true)}
+            />
+            {/* Questions List */}
+            <QuestionsList
+              filteredQuestions={filteredQuestions}
+              fields={fields}
+              expandedQuestions={expandedQuestions}
+              questionTypeFilter={questionTypeFilter}
+              form={form}
+              onToggleExpansion={toggleQuestionExpansion}
+              onRegenerate={handleRegenerate}
+              onRemove={remove}
+              aiLoading={aiLoading}
+              hasQuestionChanges={hasQuestionChanges}
+              onSaveQuestion={handleQuestionSaveWithValidation}
+              sectionSaveStatus={sectionSaveStatus}
+            />
+          </div>
         </form>
       </FormProvider>
 

@@ -11,7 +11,10 @@ import {
   isRedirectError,
 } from "../utils/action-error-handler";
 import { invalidateQuizCache } from "../utils/cache-utils";
-import { prepareQuestionForCreate } from "../utils/question-utils";
+import {
+  prepareQuestionForCreate,
+  prepareQuestionForUpdate,
+} from "../utils/question-utils";
 
 // Note: performance monitoring removed — keep simple debug logs instead
 
@@ -380,12 +383,12 @@ export async function upsertQuizAction(formData: FormData) {
           });
         }
 
-        // Create new Question entities or link existing ones to quiz
+        // Update existing questions or create new ones, then link to quiz
         for (let i = 0; i < questions.length; i++) {
           const q = questions[i] as FlexibleQuestion;
           let questionId: string;
 
-          // If question has an existing questionId, link to it; otherwise create new
+          // If question has an existing questionId, UPDATE it; otherwise create new
           if (q.questionId) {
             // Verify the question exists
             const existingQuestion = await tx.question.findUnique({
@@ -394,6 +397,11 @@ export async function upsertQuizAction(formData: FormData) {
             });
 
             if (existingQuestion) {
+              // UPDATE the existing question with new data
+              await tx.question.update({
+                where: { id: q.questionId },
+                data: prepareQuestionForUpdate(q),
+              });
               questionId = existingQuestion.id;
             } else {
               // Fallback: create new if referenced question doesn't exist

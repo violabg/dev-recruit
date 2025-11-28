@@ -71,6 +71,27 @@ export function prepareQuestionForCreate(
 }
 
 /**
+ * Prepare question data for Prisma update operation
+ * Converts FlexibleQuestion to the shape needed for prisma.question.update
+ * Does NOT include createdBy as that should not change on update
+ */
+export function prepareQuestionForUpdate(question: FlexibleQuestion) {
+  return {
+    type: question.type,
+    question: question.question,
+    keywords: question.keywords || [],
+    explanation: question.explanation,
+    options: question.options || [],
+    correctAnswer: question.correctAnswer,
+    sampleAnswer: question.sampleAnswer,
+    codeSnippet: question.codeSnippet,
+    sampleSolution: question.sampleSolution,
+    language: question.language,
+    // isFavorite is not updated here - it's managed separately
+  };
+}
+
+/**
  * Prepare multiple questions for bulk create
  */
 export function prepareQuestionsForBulkCreate(

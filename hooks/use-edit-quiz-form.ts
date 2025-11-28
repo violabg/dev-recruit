@@ -143,6 +143,9 @@ export const useEditQuizForm = ({
       setSaveStatus("success");
       toast.success("Quiz salvato con successo");
 
+      // Reset form dirty state after successful save
+      form.reset(data);
+
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus("idle"), 2000);
       if (onSaveSuccess && result) {
@@ -224,6 +227,9 @@ export const useEditQuizForm = ({
         questions: { ...prev.questions, [questionId]: "success" },
       }));
       toast.success("Domanda salvata con successo");
+
+      // Reset form dirty state after successful save
+      form.reset(data);
 
       // Reset status after 2 seconds
       const timeoutId = setTimeout(() => {

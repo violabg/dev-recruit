@@ -112,6 +112,8 @@ export function invalidateQuestionCache(options?: {
 
   if (options?.isFavorite) {
     updateTag(CacheTags.QUESTIONS_FAVORITES);
+    // Also invalidate quizzes since quiz edit pages show favorite status
+    updateTag(CacheTags.QUIZZES);
   }
 }
 
