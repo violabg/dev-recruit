@@ -32,6 +32,7 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 - **Retry & Fallback** - Robust error handling with automatic model fallbacks
 - **Streaming Responses** - Real-time position description generation with streaming AI responses
 - **Voice Transcription** - Audio-to-text transcription for candidate answers using Whisper models
+- **Consistent Evaluations** - Temperature-controlled AI responses for reproducible assessment scores
 
 ### Technical Features
 

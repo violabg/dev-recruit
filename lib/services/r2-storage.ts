@@ -13,6 +13,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { storageLogger } from "./logger";
 
 // Lazy import to avoid validation at module load time
 // This allows client components to import validateResumeFile without errors
@@ -117,7 +118,7 @@ export async function uploadResumeToR2(
   try {
     await client.send(command);
   } catch (error) {
-    console.error("R2 upload error:", error);
+    storageLogger.error("R2 upload failed", { error, candidateId, key });
     throw new Error(
       `Failed to upload file to R2: ${
         error instanceof Error ? error.message : "Unknown error"
@@ -143,7 +144,9 @@ export async function deleteFileFromR2(key: string): Promise<void> {
   const { env, isR2Configured } = getEnvModule();
 
   if (!isR2Configured()) {
-    console.warn("R2 storage is not configured. Skipping file deletion.");
+    storageLogger.warn("R2 storage not configured, skipping file deletion", {
+      key,
+    });
     return;
   }
 
@@ -159,7 +162,7 @@ export async function deleteFileFromR2(key: string): Promise<void> {
   } catch (error) {
     // Ignore 404 errors (file already deleted)
     if (error instanceof Error && error.name !== "NoSuchKey") {
-      console.error("R2 delete error:", error);
+      storageLogger.error("R2 delete failed", { error, key });
       throw new Error(
         `Failed to delete file from R2: ${
           error instanceof Error ? error.message : "Unknown error"

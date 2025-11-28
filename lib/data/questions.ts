@@ -1,3 +1,4 @@
+import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import prisma from "../prisma";
 import type { QuestionType } from "../schemas/base";
@@ -43,7 +44,7 @@ export type QuestionWithMetadata = {
 export async function getQuestions(filters: QuestionFilters = {}) {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions");
+  cacheTag(CacheTags.QUESTIONS);
 
   const { type, isFavorite, search, page = 1, limit = 20 } = filters;
   const skip = (page - 1) * limit;
@@ -86,7 +87,7 @@ export async function getQuestions(filters: QuestionFilters = {}) {
 export async function getQuestionById(id: string) {
   "use cache";
   cacheLife("minutes");
-  cacheTag(`question-${id}`);
+  cacheTag(entityTag.question(id));
 
   return prisma.question.findUnique({
     where: { id },
@@ -99,7 +100,7 @@ export async function getQuestionById(id: string) {
 export async function getFavoriteQuestions(page = 1, limit = 20) {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions-favorites");
+  cacheTag(CacheTags.QUESTIONS_FAVORITES);
 
   const skip = (page - 1) * limit;
 
@@ -130,7 +131,7 @@ export async function getFavoriteQuestions(page = 1, limit = 20) {
 export async function getQuestionsCountByType() {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions");
+  cacheTag(CacheTags.QUESTIONS);
 
   const counts = await prisma.question.groupBy({
     by: ["type"],
@@ -149,7 +150,7 @@ export async function getQuestionsCountByType() {
 export async function getQuestionsCount() {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions");
+  cacheTag(CacheTags.QUESTIONS);
 
   return prisma.question.count();
 }
@@ -160,7 +161,7 @@ export async function getQuestionsCount() {
 export async function getFavoritesCount() {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions-favorites");
+  cacheTag(CacheTags.QUESTIONS_FAVORITES);
 
   return prisma.question.count({
     where: { isFavorite: true },
@@ -174,7 +175,7 @@ export async function getFavoritesCount() {
 export async function getQuizQuestions(quizId: string) {
   "use cache";
   cacheLife("minutes");
-  cacheTag(`quiz-${quizId}`);
+  cacheTag(entityTag.quiz(quizId));
 
   const quizQuestions = await prisma.quizQuestion.findMany({
     where: { quizId },
@@ -193,7 +194,7 @@ export async function getQuizQuestions(quizId: string) {
 export async function searchQuestions(search: string, limit = 10) {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions");
+  cacheTag(CacheTags.QUESTIONS);
 
   return prisma.question.findMany({
     where: {
@@ -213,7 +214,7 @@ export async function searchQuestions(search: string, limit = 10) {
 export async function getRecentQuestions(limit = 5) {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions");
+  cacheTag(CacheTags.QUESTIONS);
 
   return prisma.question.findMany({
     orderBy: { createdAt: "desc" },
@@ -228,7 +229,7 @@ export async function getRecentQuestions(limit = 5) {
 export async function getLinkedQuestionIds(quizId: string): Promise<string[]> {
   "use cache";
   cacheLife("minutes");
-  cacheTag(`quiz-${quizId}`);
+  cacheTag(entityTag.quiz(quizId));
 
   const quizQuestions = await prisma.quizQuestion.findMany({
     where: { quizId },
@@ -248,7 +249,7 @@ export async function getAvailableQuestionsForQuiz(
 ) {
   "use cache";
   cacheLife("minutes");
-  cacheTag("questions", `quiz-${quizId}`);
+  cacheTag(CacheTags.QUESTIONS, entityTag.quiz(quizId));
 
   const { type, isFavorite, search } = filters;
 

@@ -1,8 +1,9 @@
 "use server";
 
-import { updateTag } from "next/cache";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
+import { logger } from "../services/logger";
+import { invalidatePresetCache } from "../utils/cache-utils";
 
 // Type for preset seed data (subset of PresetCreateInput)
 type PresetSeedData = Omit<
@@ -159,7 +160,7 @@ export async function seedDefaultPresetsAction() {
       )
     );
 
-    updateTag("presets");
+    invalidatePresetCache();
 
     return {
       success: true,
@@ -167,7 +168,7 @@ export async function seedDefaultPresetsAction() {
       count: created.length,
     };
   } catch (error) {
-    console.error("Error seeding presets:", error);
+    logger.error("Failed to seed presets", { error });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to seed presets",

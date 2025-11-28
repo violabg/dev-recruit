@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
+import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
 // Prisma type for evaluation with relations
@@ -100,7 +101,7 @@ export async function getEvaluationByInterviewId(
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag("evaluations", `evaluation-interview-${interviewId}`);
+  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationInterview(interviewId));
 
   return prisma.evaluation.findUnique({
     where: { interviewId },
@@ -116,7 +117,7 @@ export async function getEvaluationsByCandidateId(
 ): Promise<EvaluationWithRelations[]> {
   "use cache";
   cacheLife("hours");
-  cacheTag("evaluations", `evaluation-candidate-${candidateId}`);
+  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationCandidate(candidateId));
 
   return prisma.evaluation.findMany({
     where: { candidateId },
@@ -133,7 +134,7 @@ export async function getEvaluationById(
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag("evaluations", `evaluation-${id}`);
+  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluation(id));
 
   return prisma.evaluation.findUnique({
     where: { id },
@@ -150,7 +151,7 @@ export async function hasEvaluationForPosition(
 ): Promise<boolean> {
   "use cache";
   cacheLife("minutes");
-  cacheTag("evaluations", `evaluation-candidate-${candidateId}`);
+  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationCandidate(candidateId));
 
   const count = await prisma.evaluation.count({
     where: {
@@ -169,7 +170,7 @@ export async function hasEvaluationForPosition(
 export async function getEvaluationStats() {
   "use cache";
   cacheLife("hours");
-  cacheTag("evaluations");
+  cacheTag(CacheTags.EVALUATIONS);
 
   const [interviewEvaluations, candidateEvaluations] = await Promise.all([
     prisma.evaluation.count({ where: { interviewId: { not: null } } }),

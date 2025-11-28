@@ -3,8 +3,8 @@
 import { auth } from "@/lib/auth";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { invalidateProfileCache } from "../utils/cache-utils";
 
 type PrismaProfile = Awaited<ReturnType<typeof prisma.profile.findUnique>>;
 
@@ -91,7 +91,7 @@ export async function updateProfile(formData: FormData) {
       },
     });
 
-    revalidatePath("/dashboard/profile");
+    invalidateProfileCache();
     return { success: true };
   } catch (error) {
     throw new Error(

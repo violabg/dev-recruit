@@ -32,7 +32,7 @@ graph TB
 
     subgraph "Server Layer"
         SA[Server Actions<br/>lib/actions/quizzes.ts]
-        AIS[AIQuizService<br/>lib/services/ai-service.ts]
+        AIS[AIQuizService<br/>lib/services/ai/core.ts]
     end
 
     subgraph "AI Layer"
@@ -61,16 +61,19 @@ graph TB
 
 | Component                     | Location                           | Purpose                                          |
 | ----------------------------- | ---------------------------------- | ------------------------------------------------ |
-| `AIQuizService`               | `lib/services/ai-service.ts`       | Main service class for AI generation             |
+| `AIQuizService`               | `lib/services/ai/core.ts`          | Main service class for AI generation             |
 | `generateNewQuizAction`       | `lib/actions/quizzes.ts`           | Server action for full quiz generation           |
 | `generateNewQuestionAction`   | `lib/actions/quizzes.ts`           | Server action for single question generation     |
 | `useAIGeneration`             | `hooks/use-ai-generation.ts`       | React hook for client-side generation management |
 | Question Schemas              | `lib/schemas/question.ts`          | Zod schemas for question validation              |
 | `evaluateAnswer`              | `lib/actions/evaluations.ts`       | Server action for answer evaluation              |
 | `generateCandidateEvaluation` | `lib/actions/evaluation-entity.ts` | Resume-based candidate assessment                |
-| `streamPositionDescription`   | `lib/services/ai-service.ts`       | Streaming position description generation        |
+| `streamPositionDescription`   | `lib/services/ai/streaming.ts`     | Streaming position description generation        |
 | `transcribeAudioAction`       | `lib/actions/transcription.ts`     | Audio transcription using Whisper                |
 | Preset Management             | `lib/actions/presets.ts`           | Question generation template management          |
+| Logging                       | `lib/services/logger.ts`           | Scoped AI logger (`aiLogger`)                    |
+
+> **Note:** The AI service is modular - `lib/services/ai-service.ts` re-exports from `lib/services/ai/` for backward compatibility. The actual implementation is split across `core.ts`, `prompts.ts`, `retry.ts`, `streaming.ts`, `sanitize.ts`, and `types.ts`.
 
 ## Generation Flow
 
@@ -308,6 +311,51 @@ export const getOptimalModel = (
 | `deepseek-r1-distill-llama-70b`    | 128K    | Reasoning/evaluation    |
 | `moonshotai/kimi-k2-instruct-0905` | Large   | Current default         |
 
+## Temperature Configuration
+
+The system uses different temperature settings based on the task type to balance creativity and consistency:
+
+| Task Type                   | Temperature | Purpose                               | File                               |
+| --------------------------- | ----------- | ------------------------------------- | ---------------------------------- |
+| Quiz Generation             | 0.7         | High creativity for diverse questions | `lib/services/ai/core.ts`          |
+| Question Generation         | 0.7         | Varied question content               | `lib/services/ai/core.ts`          |
+| Position Description        | 0.7         | Creative text generation              | `lib/services/ai/streaming.ts`     |
+| Answer Evaluation           | 0.1         | Consistent, reproducible scoring      | `lib/actions/evaluations.ts`       |
+| Overall Quiz Evaluation     | 0.2         | Consistent assessment summaries       | `lib/actions/evaluations.ts`       |
+| Resume/Candidate Evaluation | 0.2         | Consistent candidate assessments      | `lib/actions/evaluation-entity.ts` |
+
+**Why Different Temperatures?**
+
+- **High temperature (0.7)** - Used for content generation where variety is desirable. Each quiz should have unique questions, and position descriptions should feel fresh.
+- **Low temperature (0.1-0.2)** - Used for evaluations where consistency is critical. Re-evaluating the same answer should produce similar scores and feedback.
+
+**Temperature Scale:**
+
+- `0.0` - Completely deterministic (may be too rigid)
+- `0.1-0.3` - Very consistent with minor wording variations
+- `0.5` - Balanced between consistency and creativity
+- `0.7-1.0` - More creative but less predictable
+
+**Example Configuration:**
+
+```typescript
+// High temperature for creative content
+const quizResult = await generateObject({
+  model: groq(model),
+  prompt,
+  temperature: 0.7, // Creative quiz generation
+  // ...
+});
+
+// Low temperature for consistent evaluations
+const evalResult = await generateObject({
+  model: groq(model),
+  prompt,
+  temperature: 0.1, // Reproducible scoring
+  // ...
+});
+```
+
 ## Error Handling
 
 ### Retry Strategy
@@ -490,6 +538,7 @@ Evaluates candidate answers to quiz questions with structured feedback.
 - Detailed evaluation text
 - Strengths and weaknesses identification
 - Type-specific evaluation logic for each question type
+- **Consistent scoring** with low temperature (0.1) for reproducible results
 
 **Schema**:
 
@@ -548,6 +597,7 @@ Evaluates candidates based on their resume against position requirements.
 - Soft skills evaluation
 - Overall fit score (0-100 scale)
 - Recommendations for next steps
+- **Consistent assessments** with low temperature (0.2) for reproducible results
 
 **Schema**:
 
@@ -695,7 +745,7 @@ const result = await generateNewQuestionAction({
 
 The system supports streaming AI responses for better UX during long-running operations.
 
-**Location**: `lib/services/ai-service.ts` → `streamPositionDescription`
+**Location**: `lib/services/ai/streaming.ts` → `streamPositionDescription`
 
 **Use Case**: Position description generation
 

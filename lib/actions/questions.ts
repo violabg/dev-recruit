@@ -1,5 +1,4 @@
 "use server";
-import { updateTag } from "next/cache";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { FlexibleQuestion, questionSchemas } from "../schemas";
@@ -17,6 +16,10 @@ import {
   handleActionError,
   isRedirectError,
 } from "../utils/action-error-handler";
+import {
+  invalidateQuestionCache,
+  invalidateQuizCache,
+} from "../utils/cache-utils";
 import { prepareQuestionForCreate } from "../utils/question-utils";
 
 /**
@@ -47,7 +50,7 @@ export async function createQuestionAction(input: CreateQuestionInput) {
     });
 
     // Invalidate cache
-    updateTag("questions");
+    invalidateQuestionCache({ questionId: question.id });
 
     return { success: true, question };
   } catch (error) {
@@ -89,8 +92,7 @@ export async function updateQuestionAction(input: UpdateQuestionInput) {
     });
 
     // Invalidate cache
-    updateTag("questions");
-    updateTag(`question-${id}`);
+    invalidateQuestionCache({ questionId: id });
 
     return { success: true, question };
   } catch (error) {
@@ -134,8 +136,7 @@ export async function deleteQuestionAction(questionId: string) {
     });
 
     // Invalidate cache
-    updateTag("questions");
-    updateTag(`question-${questionId}`);
+    invalidateQuestionCache({ questionId });
 
     return { success: true };
   } catch (error) {
@@ -186,9 +187,7 @@ export async function toggleQuestionFavoriteAction(questionId: string) {
     });
 
     // Invalidate cache
-    updateTag("questions");
-    updateTag("questions-favorites");
-    updateTag(`question-${questionId}`);
+    invalidateQuestionCache({ questionId, isFavorite: true });
 
     return { success: true, isFavorite: question.isFavorite };
   } catch (error) {
@@ -258,8 +257,7 @@ export async function addQuestionsToQuizAction(
     const addedCount = results.filter(Boolean).length;
 
     // Invalidate cache
-    updateTag("quizzes");
-    updateTag(`quiz-${validatedInput.quizId}`);
+    invalidateQuizCache({ quizId: validatedInput.quizId });
 
     return { success: true, addedCount };
   } catch (error) {
@@ -294,8 +292,7 @@ export async function removeQuestionFromQuizAction(
     });
 
     // Invalidate cache
-    updateTag("quizzes");
-    updateTag(`quiz-${validatedInput.quizId}`);
+    invalidateQuizCache({ quizId: validatedInput.quizId });
 
     return { success: true };
   } catch (error) {
@@ -338,8 +335,7 @@ export async function reorderQuizQuestionsAction(
     );
 
     // Invalidate cache
-    updateTag("quizzes");
-    updateTag(`quiz-${validatedInput.quizId}`);
+    invalidateQuizCache({ quizId: validatedInput.quizId });
 
     return { success: true };
   } catch (error) {
@@ -383,7 +379,7 @@ export async function createBulkQuestionsAction(
     });
 
     // Invalidate cache
-    updateTag("questions");
+    invalidateQuestionCache({});
 
     return { success: true, count: createdQuestions.count };
   } catch (error) {
@@ -418,10 +414,10 @@ export async function saveQuestionToLibraryAction(
     });
 
     // Invalidate cache
-    updateTag("questions");
-    if (markAsFavorite) {
-      updateTag("questions-favorites");
-    }
+    invalidateQuestionCache({
+      questionId: savedQuestion.id,
+      isFavorite: markAsFavorite,
+    });
 
     return { success: true, question: savedQuestion };
   } catch (error) {
@@ -462,10 +458,7 @@ export async function saveQuestionsToLibraryAction(
     );
 
     // Invalidate cache
-    updateTag("questions");
-    if (markAsFavorite) {
-      updateTag("questions-favorites");
-    }
+    invalidateQuestionCache({ isFavorite: markAsFavorite });
 
     return {
       success: true,
@@ -539,9 +532,8 @@ export async function saveQuizQuestionsToLibraryAndLinkAction(
     });
 
     // Invalidate cache
-    updateTag("questions");
-    updateTag("quizzes");
-    updateTag(`quiz-${quizId}`);
+    invalidateQuestionCache({});
+    invalidateQuizCache({ quizId });
 
     return {
       success: true,
@@ -632,8 +624,7 @@ export async function linkLibraryQuestionsToQuizAction(
     });
 
     // Invalidate cache
-    updateTag("quizzes");
-    updateTag(`quiz-${quizId}`);
+    invalidateQuizCache({ quizId });
 
     return { success: true };
   } catch (error) {

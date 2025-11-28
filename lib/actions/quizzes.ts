@@ -1,5 +1,4 @@
 "use server";
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
@@ -11,7 +10,7 @@ import {
   handleActionError,
   isRedirectError,
 } from "../utils/action-error-handler";
-import { revalidateQuizCache } from "../utils/cache";
+import { invalidateQuizCache } from "../utils/cache-utils";
 import { prepareQuestionForCreate } from "../utils/question-utils";
 
 // Note: performance monitoring removed — keep simple debug logs instead
@@ -155,18 +154,13 @@ export async function deleteQuizById(quizId: string) {
       );
     }
 
-    const positionTag = quiz.positionId ? `positions-${quiz.positionId}` : null;
-
     await prisma.quiz.delete({ where: { id: quizId } });
 
-    // Invalidate Cache Components tags to refresh quizzes list
-    updateTag("quizzes");
-    if (positionTag) {
-      updateTag(positionTag);
-    }
-
-    // Also revalidate traditional cache paths for compatibility
-    revalidateQuizCache(quizId);
+    // Invalidate cache
+    invalidateQuizCache({
+      quizId,
+      positionId: quiz.positionId ?? undefined,
+    });
 
     redirect("/dashboard/quizzes");
   } catch (error) {
@@ -320,13 +314,11 @@ export async function upsertQuizAction(formData: FormData) {
         );
       }
 
-      // Invalidate Cache Components tags to refresh quizzes list
-      updateTag("quizzes");
-      updateTag("questions");
-      updateTag(`positions-${position.id}`);
-
-      // Also revalidate traditional cache paths for compatibility
-      revalidateQuizCache("");
+      // Invalidate cache
+      invalidateQuizCache({
+        quizId: quiz.id,
+        positionId: position.id,
+      });
 
       return { id: quiz.id };
     } else {
@@ -429,15 +421,11 @@ export async function upsertQuizAction(formData: FormData) {
         }
       });
 
-      // Invalidate Cache Components tags to refresh quizzes list
-      updateTag("quizzes");
-      updateTag("questions");
-      if (quiz.positionId) {
-        updateTag(`positions-${quiz.positionId}`);
-      }
-
-      // Also revalidate traditional cache paths for compatibility
-      revalidateQuizCache(quizId);
+      // Invalidate cache
+      invalidateQuizCache({
+        quizId,
+        positionId: quiz.positionId ?? undefined,
+      });
 
       return {};
     }
@@ -593,13 +581,11 @@ export async function regenerateQuizAction({
       }
     });
 
-    // Invalidate Cache Components tags to refresh quizzes list
-    updateTag("quizzes");
-    updateTag("questions");
-    updateTag(`positions-${position.id}`);
-
-    // Also revalidate traditional cache paths for compatibility
-    revalidateQuizCache(quizId);
+    // Invalidate cache
+    invalidateQuizCache({
+      quizId,
+      positionId: position.id,
+    });
 
     return { id: quizId };
   } catch (error) {
@@ -731,13 +717,11 @@ export async function duplicateQuizAction(formData: FormData) {
       );
     }
 
-    // Invalidate Cache Components tags to refresh quizzes list
-    updateTag("quizzes");
-    updateTag("questions");
-    updateTag(`positions-${newPositionId}`);
-
-    // Also revalidate traditional cache paths for compatibility
-    revalidateQuizCache("");
+    // Invalidate cache
+    invalidateQuizCache({
+      quizId: newQuiz.id,
+      positionId: newPositionId,
+    });
 
     return { id: newQuiz.id };
   } catch (error) {

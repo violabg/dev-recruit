@@ -14,24 +14,23 @@ export const MultipleChoiceDisplay = ({
       <h3 className="font-medium">Opzioni:</h3>
       <div className="flex flex-col gap-4 mt-2">
         {question.options?.map((option: string, optIndex: number) => {
-          const correctAnswer = question.correctAnswer || 0;
+          const correctAnswer = question.correctAnswer ?? 0;
+          const isCorrect = correctAnswer === optIndex;
           return (
             <div
               key={optIndex}
               className={`flex items-center gap-2 rounded-md border p-2 ${
-                correctAnswer === optIndex
+                isCorrect
                   ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                   : ""
               }`}
             >
               <div
                 className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  correctAnswer === optIndex
-                    ? "border-green-500 bg-green-500 text-white"
-                    : ""
+                  isCorrect ? "border-green-500 bg-green-500 text-white" : ""
                 }`}
               >
-                {correctAnswer === optIndex && (
+                {isCorrect && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"

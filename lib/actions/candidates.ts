@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
@@ -11,11 +10,13 @@ import {
   candidateFormSchema,
   candidateUpdateSchema,
 } from "../schemas";
+import { storageLogger } from "../services/logger";
 import {
   deleteResumeFromR2,
   uploadResumeToR2,
   validateResumeFile,
 } from "../services/r2-storage";
+import { invalidateCandidateCache } from "../utils/cache-utils";
 
 const readFormValue = (formData: FormData, key: string) => {
   const value = formData.get(key);
@@ -89,16 +90,19 @@ export async function createCandidate(formData: FormData) {
         data: { resumeUrl },
       });
     } catch (uploadError) {
-      console.error("Failed to upload resume:", uploadError);
+      storageLogger.error("Failed to upload resume during candidate creation", {
+        error: uploadError,
+        candidateId: candidate.id,
+      });
       // Don't fail the entire operation, just log the error
       // The candidate is created without the resume
     }
   }
 
-  revalidatePath(`/dashboard/positions/${candidate.positionId}`);
-  revalidatePath("/dashboard/candidates");
-  updateTag("candidates");
-  updateTag(`positions-${candidate.positionId}`);
+  invalidateCandidateCache({
+    candidateId: candidate.id,
+    positionId: candidate.positionId,
+  });
 
   return { success: true as const, candidateId: candidate.id };
 }
@@ -185,7 +189,10 @@ export async function updateCandidate(
       try {
         await deleteResumeFromR2(candidate.resumeUrl);
       } catch (deleteError) {
-        console.error("Failed to delete old resume:", deleteError);
+        storageLogger.error("Failed to delete old resume", {
+          error: deleteError,
+          candidateId: id,
+        });
         // Continue anyway
       }
     }
@@ -195,7 +202,10 @@ export async function updateCandidate(
       const resumeUrl = await uploadResumeToR2(resumeFile, id);
       updateData.resumeUrl = resumeUrl;
     } catch (uploadError) {
-      console.error("Failed to upload resume:", uploadError);
+      storageLogger.error("Failed to upload resume during candidate update", {
+        error: uploadError,
+        candidateId: id,
+      });
       throw new Error("Errore durante il caricamento del curriculum");
     }
   } else if (removeResume && candidate.resumeUrl) {
@@ -203,7 +213,10 @@ export async function updateCandidate(
     try {
       await deleteResumeFromR2(candidate.resumeUrl);
     } catch (deleteError) {
-      console.error("Failed to delete resume:", deleteError);
+      storageLogger.error("Failed to delete resume during removal", {
+        error: deleteError,
+        candidateId: id,
+      });
       // Continue anyway
     }
     updateData.resumeUrl = null;
@@ -218,14 +231,9 @@ export async function updateCandidate(
     data: updateData,
   });
 
-  if (newPositionId || candidate.positionId) {
-    const positionToRefresh = newPositionId ?? candidate.positionId;
-    revalidatePath(`/dashboard/positions/${positionToRefresh}`);
-  }
-
-  updateTag("candidates");
+  // Invalidate cache for all affected positions
   for (const positionId of positionsToInvalidate) {
-    updateTag(`positions-${positionId}`);
+    invalidateCandidateCache({ candidateId: id, positionId });
   }
 
   return { success: true };
@@ -242,19 +250,20 @@ export async function deleteCandidate(id: string) {
     try {
       await deleteResumeFromR2(candidate.resumeUrl);
     } catch (deleteError) {
-      console.error("Failed to delete resume:", deleteError);
+      storageLogger.error("Failed to delete resume during candidate deletion", {
+        error: deleteError,
+        candidateId: id,
+      });
       // Continue with candidate deletion anyway
     }
   }
 
   await prisma.candidate.delete({ where: { id } });
 
-  if (candidate.positionId) {
-    revalidatePath(`/dashboard/positions/${candidate.positionId}`);
-    updateTag(`positions-${candidate.positionId}`);
-  }
-  revalidatePath("/dashboard/candidates");
-  updateTag("candidates");
+  invalidateCandidateCache({
+    candidateId: id,
+    positionId: candidate.positionId ?? undefined,
+  });
 
   redirect("/dashboard/candidates");
 }

@@ -8,6 +8,7 @@ import {
 } from "@/lib/schemas";
 import { groq } from "@ai-sdk/groq";
 import { generateObject } from "ai";
+import { aiLogger } from "../services/logger";
 import { getOptimalModel } from "../utils";
 
 // Evaluation actions
@@ -22,28 +23,58 @@ export async function evaluateAnswer(
 
   // Prepare the prompt based on question type
   let prompt = "";
+
+  // Parse answer index for multiple choice - handle various formats
+  const answerIndex = Number.parseInt(answer, 10);
+  const isValidAnswerIndex =
+    !isNaN(answerIndex) &&
+    answerIndex >= 0 &&
+    answerIndex < (question.options?.length || 0);
+  const selectedOptionText = isValidAnswerIndex
+    ? question.options?.[answerIndex]
+    : null;
+  const correctOptionText = question.options?.[question.correctAnswer ?? 0];
+  const isCorrect =
+    isValidAnswerIndex && answerIndex === question.correctAnswer;
+
   if (question.type === "multiple_choice") {
     prompt = `
           Evaluate this multiple choice answer:
 
           Question: ${question.question}
-          Candidate's selected option: "${answer}"
-          Correct option: "${question.options?.[question.correctAnswer || 0]}"
-
-          The answer is ${
-            Number.parseInt(answer) === question.correctAnswer
-              ? "correct"
-              : "incorrect"
-          }.
-          Provide a detailed evaluation of the answer, explaining why it is correct or incorrect.
-          Identify strengths and weaknesses in the candidate's understanding.
-          You must respond with EXACTLY this JSON structure:
-          {
-          "evaluation": "detailed evaluation text here",
-          "score": number_from_0_to_10,
-          "strengths": ["strength1", "strength2"],
-          "weaknesses": ["weakness1", "weakness2"]
+          Options available:
+          ${question.options?.map((opt, idx) => `${idx}. ${opt}`).join("\n")}
+          
+          Candidate's selected option: ${
+            isValidAnswerIndex
+              ? `${answerIndex} - "${selectedOptionText}"`
+              : "No valid option selected"
           }
+          Correct option: ${
+            question.correctAnswer ?? 0
+          } - "${correctOptionText}"
+
+          The answer is ${isCorrect ? "CORRECT" : "INCORRECT"}.
+          ${question.explanation ? `Explanation: ${question.explanation}` : ""}
+
+          IMPORTANT CONTEXT FOR EVALUATION:
+          This is a multiple choice question where the candidate can ONLY select one option from the list.
+          The candidate CANNOT add explanations, comments, or additional context - they can only click on one answer.
+          
+          Your evaluation should:
+          - Focus ONLY on whether the selected option demonstrates understanding of the concept
+          - ${
+            isCorrect
+              ? "Acknowledge the correct choice and the knowledge it demonstrates"
+              : "Explain why the correct answer is better and what misconception the wrong choice might indicate"
+          }
+          - DO NOT criticize lack of depth, explanation, or elaboration - this format doesn't allow for it
+          - DO NOT suggest the candidate should have "gone deeper" or "provided more context"
+          - Evaluate based on the binary choice made, not on what they could have explained
+          
+          Scoring guide for multiple choice:
+          - Correct answer: 8-10 points (based on question difficulty)
+          - Incorrect answer: 0-4 points (partial credit if the wrong answer shows some related understanding)
           `;
   } else if (question.type === "open_question") {
     prompt = `
@@ -51,56 +82,78 @@ export async function evaluateAnswer(
 
           Question: ${question.question}
           Candidate's answer: "${answer}"
-          Sample answer: "${question.sampleAnswer}"
           ${
-            question.keywords
+            question.sampleAnswer
+              ? `Sample answer: "${question.sampleAnswer}"`
+              : ""
+          }
+          ${
+            question.keywords && question.keywords.length > 0
               ? `Keywords to look for: ${question.keywords.join(", ")}`
               : ""
           }
-          Provide a detailed evaluation of the answer, considering:
-          1. Technical correctness
-          2. Completeness
-          3. Clarity of expression
-          4. Presence of key words or important concepts
+          
+          EVALUATION CONTEXT:
+          This is an open question where the candidate can write a detailed response.
+          Here you CAN and SHOULD evaluate:
+          - Depth and completeness of the explanation
+          - Technical accuracy and correctness
+          - Clarity of expression and communication
+          - Coverage of key concepts and keywords
+          - Practical examples or real-world application (if relevant)
 
-          You must respond with EXACTLY this JSON structure:
-          {
-            "evaluation": "detailed evaluation text here",
-            "score": number_from_0_to_10,
-            "strengths": ["strength1", "strength2"],
-            "weaknesses": ["weakness1", "weakness2"]
-          }
-        `;
+          Provide a detailed evaluation considering:
+          1. Technical correctness - Is the answer factually accurate?
+          2. Completeness - Did they cover all important aspects?
+          3. Clarity of expression - Is it well-articulated?
+          4. Presence of key concepts - Did they mention important keywords/ideas?
+          `;
   } else if (question.type === "code_snippet") {
     prompt = `
-              Evaluate this code snippet:
+          Evaluate this code solution:
 
-              Question: ${question.question}
-              Candidate's code:
-              \`\`\`
-              ${answer}
-              \`\`\`
+          Question: ${question.question}
+          ${
+            question.codeSnippet
+              ? `Original code to analyze/fix:\n\`\`\`${
+                  question.language ? question.language : ""
+                }\n${question.codeSnippet}\n\`\`\``
+              : ""
+          }
+          
+          Candidate's code:
+          \`\`\`${question.language ? question.language : ""}
+          ${answer}
+          \`\`\`
 
-              Sample solution:
-              \`\`\`
-              ${question.sampleSolution}
-              \`\`\`
+          ${
+            question.sampleSolution
+              ? `Sample solution:\n\`\`\`${
+                  question.language ? question.language : ""
+                }\n${question.sampleSolution}\n\`\`\``
+              : ""
+          }
 
-              Provide a detailed evaluation of the code, considering:
-              1. Functional correctness
-              2. Algorithm efficiency
-              3. Code readability and style
-              4. Error handling
-
-              You must respond with EXACTLY this JSON structure:
-              {
-                "evaluation": "detailed evaluation text here",
-                "score": number_from_0_to_10,
-                "strengths": ["strength1", "strength2"],
-                "weaknesses": ["weakness1", "weakness2"]
-              }
-              `;
+          EVALUATION CONTEXT:
+          This is a code question where the candidate writes/modifies code.
+          ${
+            question.language
+              ? `Programming language: ${question.language}`
+              : ""
+          }
+          Evaluate the code quality and correctness, considering:
+          
+          1. Functional correctness - Does it solve the problem correctly?
+          2. Bug fixes - If the question was about fixing bugs, were they identified and fixed?
+          3. Code quality - Readability, naming conventions, structure
+          4. Algorithm efficiency - Is the approach reasonably efficient?
+          5. Error handling - Are edge cases considered?
+          6. Best practices - Does it follow good coding conventions?
+          
+          Note: Minor syntax differences from the sample solution are acceptable if the logic is correct.
+          `;
   }
+
   prompt += ` 
 
   IMPORTANT: Your response must be valid JSON that exactly matches this structure:
@@ -114,6 +167,7 @@ export async function evaluateAnswer(
   Do not include any other fields, nested objects, or additional formatting.`;
 
   // Use Groq to evaluate the answer with generateObject
+  // Use low temperature for consistent, deterministic evaluations
   const model = groq(getOptimalModel("evaluation", specificModel));
   try {
     const { object: result } = await generateObject({
@@ -123,6 +177,7 @@ export async function evaluateAnswer(
         "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
       schema: evaluationResultSchema,
       mode: "json",
+      temperature: 0.1, // Low temperature for consistent, reproducible evaluations
       providerOptions: {
         groq: {
           structuredOutputs: false, // Disable for DeepSeek R1 - not supported
@@ -135,7 +190,10 @@ export async function evaluateAnswer(
       maxScore: 10,
     } as EvaluationResult & { maxScore: number };
   } catch (error) {
-    console.error("Primary model failed, trying fallback model:", error);
+    aiLogger.warn("Primary model failed for evaluation, trying fallback", {
+      error,
+      questionType: question.type,
+    });
 
     // Fallback to a different stable model if the primary fails
     const fallbackModel = "llama-3.1-8b-instant"; // Fast and reliable model
@@ -148,6 +206,7 @@ export async function evaluateAnswer(
           "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
         schema: evaluationResultSchema,
         mode: "json",
+        temperature: 0.1, // Low temperature for consistent evaluations
         providerOptions: {
           groq: {
             structuredOutputs: false,
@@ -160,7 +219,10 @@ export async function evaluateAnswer(
         maxScore: 10,
       } as EvaluationResult & { maxScore: number };
     } catch (fallbackError) {
-      console.error("Fallback model also failed:", fallbackError);
+      aiLogger.error("Fallback model also failed for evaluation", {
+        error: fallbackError,
+        questionType: question.type,
+      });
 
       // Provide more specific error message based on error type
       let errorMessage = "Evaluation service temporarily unavailable";
@@ -227,14 +289,16 @@ export async function generateOverallEvaluation(
                   `;
 
   // Generate overall evaluation using AI
+  // Use low temperature for consistent, deterministic evaluations
   try {
     const { object: result } = await generateObject({
       model: groq(getOptimalModel("overall_evaluation", specificModel)),
       prompt,
       system:
-        "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in English.",
+        "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
       schema: overallEvaluationSchema,
       mode: "json",
+      temperature: 0.2, // Low temperature for consistent evaluations
       providerOptions: {
         groq: {
           structuredOutputs: false, // Disable for DeepSeek R1 - not supported
@@ -244,9 +308,9 @@ export async function generateOverallEvaluation(
 
     return result;
   } catch (error) {
-    console.error(
-      "Primary model failed for overall evaluation, trying fallback:",
-      error
+    aiLogger.warn(
+      "Primary model failed for overall evaluation, trying fallback",
+      { error, candidateName }
     );
 
     // Fallback to a different stable model if the primary fails
@@ -257,9 +321,10 @@ export async function generateOverallEvaluation(
         model: groq(fallbackModel),
         prompt,
         system:
-          "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in English.",
+          "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
         schema: overallEvaluationSchema,
         mode: "json",
+        temperature: 0.2, // Low temperature for consistent evaluations
         providerOptions: {
           groq: {
             structuredOutputs: false,
@@ -269,10 +334,10 @@ export async function generateOverallEvaluation(
 
       return result;
     } catch (fallbackError) {
-      console.error(
-        "Fallback model also failed for overall evaluation:",
-        fallbackError
-      );
+      aiLogger.error("Fallback model also failed for overall evaluation", {
+        error: fallbackError,
+        candidateName,
+      });
 
       // Provide more specific error message based on error type
       let errorMessage = "Overall evaluation service temporarily unavailable";

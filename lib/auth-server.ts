@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "./auth";
+import { authLogger } from "./services/logger";
 
 /**
  * Get current user session from Better Auth
@@ -24,7 +25,7 @@ export async function getCurrentUser() {
   } catch (error) {
     // Log only if it's not a prerendering error
     if (error instanceof Error && !error.message.includes("prerendering")) {
-      console.error("Failed to get current user:", error);
+      authLogger.error("Failed to get current user", { error });
     }
     return null;
   }

@@ -1,5 +1,4 @@
 "use server";
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { requireUser } from "../auth-server";
@@ -15,6 +14,7 @@ import {
   type CreatePresetInput,
   type UpdatePresetInput,
 } from "../schemas";
+import { invalidatePresetCache } from "../utils/cache-utils";
 
 // Get all presets with pagination and search
 export async function getPresetsAction(params?: PresetsFilterParams) {
@@ -65,10 +65,8 @@ export async function createPresetAction(data: CreatePresetInput) {
       data: validatedData as Parameters<typeof prisma.preset.create>[0]["data"],
     });
 
-    // Invalidate cache
-    updateTag("presets");
+    invalidatePresetCache(preset.id);
 
-    // Return success before redirecting
     return { success: true, presetId: preset.id };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -114,10 +112,8 @@ export async function updatePresetAction(
       data: validatedData as Parameters<typeof prisma.preset.update>[0]["data"],
     });
 
-    // Invalidate cache
-    updateTag("presets");
+    invalidatePresetCache(preset.id);
 
-    // Return success before redirecting
     return { success: true, presetId: preset.id };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -155,8 +151,7 @@ export async function deletePresetAction(presetId: string) {
       where: { id: presetId },
     });
 
-    // Invalidate cache
-    updateTag("presets");
+    invalidatePresetCache();
   } catch (error) {
     return {
       success: false,
@@ -180,8 +175,7 @@ export async function bulkCreatePresetsAction(presets: CreatePresetInput[]) {
       )
     );
 
-    // Invalidate cache
-    updateTag("presets");
+    invalidatePresetCache();
 
     return { success: true, created };
   } catch (error) {

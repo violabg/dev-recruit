@@ -1,19 +1,20 @@
 <!--
 Sync Impact Report
 ==================
-Version: 1.3.0 (MINOR: Ownership filtering clarification)
+Version: 1.4.0 (MINOR: Centralized cache utilities and logging)
 dev-recruit Constitution Amendment
 Status: Active
-Date: 2025-11-26
+Date: 2025-11-27
 
-Principles Updated (v1.2.0 → v1.3.0):
-  3. Server Actions + Prisma with Auth Guards → clarified no ownership filtering
+Principles Updated (v1.3.0 → v1.4.0):
+  3. Server Actions + Prisma → added centralized cache utilities requirement
+  4. Type-Safe AI Integration → updated to reference modular AI service and logger
 
 Principles List:
   1. Cache Components First
   2. Zod Validation (Non-Negotiable)
-  3. Server Actions + Prisma with Auth Guards (No Ownership Filtering) - UPDATED
-  4. Type-Safe AI Integration with Retries & Timeouts
+  3. Server Actions + Prisma with Auth Guards (Centralized Cache Utils) - UPDATED
+  4. Type-Safe AI Integration with Retries & Timeouts (Modular, Logger) - UPDATED
   5. Data Queries in lib/data/ Only
   6. Suspense Fallbacks Using shadcn Skeleton
   7. Prisma Types Over Custom Types
@@ -22,20 +23,20 @@ Principles List:
   10. Component Reuse Before Creation
 
 Sections Updated:
-  - Core Principles: expanded from 9 to 10 principles
-  - Handling Changes: no updates needed (already comprehensive)
+  - Principle III: Cache invalidation now requires lib/utils/cache-utils.ts helpers
+  - Principle IV: AI service is now modular (lib/services/ai/), requires scoped loggers
 
 Templates to Review:
-  ✅ .specify/templates/plan-template.md (aligns with new principle)
-  ✅ .specify/templates/spec-template.md (aligns with new principle)
-  ✅ .specify/templates/tasks-template.md (aligns with new principle)
-  ⚠ .github/copilot-instructions.md (reference document, already comprehensive)
+  ✅ .specify/templates/plan-template.md (aligns with updated principles)
+  ✅ .specify/templates/spec-template.md (aligns with updated principles)
+  ✅ .specify/templates/tasks-template.md (aligns with updated principles)
+  ✅ .github/copilot-instructions.md (updated to reference new utilities)
 
 Deferred Items: None
 
 Follow-up:
-  - Code review checklists should verify useTransition usage in form components
-  - PR templates should flag any useState usage for form pending states
+  - Ensure all action files use centralized cache helpers (completed)
+  - Ensure all services use scoped loggers (completed)
 -->
 
 # dev-recruit Constitution
@@ -56,15 +57,15 @@ All AI-generated quiz outputs and form payloads MUST validate against Zod schema
 
 ### III. Server Actions + Prisma with Auth Guards (No Ownership Filtering)
 
-All data mutations live in `lib/actions/` and are marked `"use server"`. Every action MUST call `requireUser()` from `lib/auth-server.ts` to verify the user is authenticated. The `createdBy` field is set on entity creation (required by schema foreign key to User), but queries MUST NOT filter by `createdBy` for access control. This project does not implement entity ownership filtering—all authenticated users can access all entities. Prisma client is centralized in `lib/prisma.ts` (Neon/Postgres with PrismaPg adapter). Cache invalidation after mutations MUST update tags (e.g., `updateTag('quizzes')`, `updateTag('questions')`, `updateTag('evaluations')`) and call revalidation helpers when supporting legacy paths.
+All data mutations live in `lib/actions/` and are marked `"use server"`. Every action MUST call `requireUser()` from `lib/auth-server.ts` to verify the user is authenticated. The `createdBy` field is set on entity creation (required by schema foreign key to User), but queries MUST NOT filter by `createdBy` for access control. This project does not implement entity ownership filtering—all authenticated users can access all entities. Prisma client is centralized in `lib/prisma.ts` (Neon/Postgres with PrismaPg adapter). Cache invalidation after mutations MUST use centralized helpers from `lib/utils/cache-utils.ts` (e.g., `invalidateQuizCache()`, `invalidateCandidateCache()`) instead of direct `updateTag()` calls.
 
 **Data Model**: Questions are reusable entities linked to Quizzes via `QuizQuestion` join table. Evaluations use polymorphic pattern (either `interviewId` for quiz-based or `candidateId`+`positionId` for resume-based). Presets define question generation templates. Candidate resumes stored in Cloudflare R2.
 
-**Rationale**: Single-tenant or shared-access model simplifies data layer queries and improves cache efficiency. The `createdBy` field exists for auditing and future multi-tenancy if needed, but is not used for access control.
+**Rationale**: Single-tenant or shared-access model simplifies data layer queries and improves cache efficiency. The `createdBy` field exists for auditing and future multi-tenancy if needed, but is not used for access control. Centralized cache helpers ensure consistent invalidation patterns.
 
 ### IV. Type-Safe AI Integration with Retries & Timeouts
 
-The `lib/services/ai-service.ts` exports `aiQuizService`, which MUST orchestrate all Groq AI requests using `sanitizeInput`, `withRetry` (configurable backoff), timeouts, and `getOptimalModel` selection. All quiz/question text MUST be generated in Italian per system prompts. AI responses validate via Zod schemas. If a generation fails after retries, responses MUST surface the error to the user with remediation options (retry, cancel, etc.).
+The modular AI service in `lib/services/ai/` (re-exported via `lib/services/ai-service.ts`) MUST orchestrate all Groq AI requests using `sanitizeInput`, `withRetry` (configurable backoff), timeouts, and `getOptimalModel` selection. All quiz/question text MUST be generated in Italian per system prompts. AI responses validate via Zod schemas. If a generation fails after retries, responses MUST surface the error to the user with remediation options (retry, cancel, etc.). Logging MUST use scoped loggers from `lib/services/logger.ts` (`aiLogger`, `storageLogger`, `authLogger`) instead of raw `console.error/warn/log`.
 
 AI capabilities include:
 
@@ -172,4 +173,4 @@ Architectural or major changes MUST be reflected in the project documentation:
 
 Documentation updates are considered part of the implementation and MUST be completed before a change is considered done.
 
-**Version**: 1.3.0 | **Ratified**: 2025-11-22 | **Last Amended**: 2025-11-26
+**Version**: 1.4.0 | **Ratified**: 2025-11-22 | **Last Amended**: 2025-11-27
