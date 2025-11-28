@@ -88,6 +88,7 @@ async function generateResumeEvaluation(
         "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
       schema: overallEvaluationSchema,
       mode: "json",
+      temperature: 0.2, // Low temperature for consistent, reproducible evaluations
       providerOptions: {
         groq: {
           structuredOutputs: false,
@@ -116,6 +117,7 @@ async function generateResumeEvaluation(
           "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
         schema: overallEvaluationSchema,
         mode: "json",
+        temperature: 0.2, // Low temperature for consistent evaluations
         providerOptions: {
           groq: {
             structuredOutputs: false,
