@@ -95,20 +95,28 @@ export function InterviewResultsClient({
         );
 
         let answer = "";
+        const rawAnswer = answers[question.id];
+
         switch (question.type) {
           case "multiple_choice":
-            const options = question.options || [];
-            const answerIndex = parseInt(answers[question.id]);
-            answer = options[answerIndex];
+            // Pass the index as string - evaluateAnswer expects the index, not the option text
+            answer = String(rawAnswer ?? "");
             break;
           case "code_snippet":
-            answer = answers[question.id].code;
+            // code_snippet answers are stored as { code: string }
+            answer =
+              typeof rawAnswer === "object" &&
+              rawAnswer !== null &&
+              "code" in rawAnswer
+                ? rawAnswer.code
+                : String(rawAnswer ?? "");
             break;
           case "open_question":
-            answer = answers[question.id];
+            // open_question answers are stored as plain strings
+            answer = String(rawAnswer ?? "");
             break;
           default:
-            console.error("Unknown question type:");
+            console.error("Unknown question type:", question.type);
             continue;
         }
         const maxScore = 10; // Max score per question
@@ -238,10 +246,12 @@ export function InterviewResultsClient({
     for (const question of quizQuestions) {
       if (
         question.type === "multiple_choice" &&
-        answers[question.id] !== undefined &&
-        parseInt(answers[question.id]) === question.correctAnswer
+        answers[question.id] !== undefined
       ) {
-        count++;
+        const answerIdx = Number.parseInt(String(answers[question.id]), 10);
+        if (!isNaN(answerIdx) && answerIdx === question.correctAnswer) {
+          count++;
+        }
       }
     }
     return count;
@@ -479,33 +489,52 @@ export function InterviewResultsClient({
                                 Risposta del candidato:
                               </div>
                               {type === "multiple_choice" &&
-                                question.options && (
-                                  <div
-                                    className={`rounded-md border p-3 ${
-                                      Number.parseInt(answers[id]) ===
-                                      question.correctAnswer
-                                        ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                        : "border-red-500 bg-red-50 dark:bg-red-950/20"
-                                    }`}
-                                  >
-                                    {
-                                      question.options[
-                                        Number.parseInt(answers[id])
-                                      ]
-                                    }
-                                  </div>
-                                )}
+                                question.options &&
+                                (() => {
+                                  const answerIdx = Number.parseInt(
+                                    String(answers[id]),
+                                    10
+                                  );
+                                  const isValidIdx =
+                                    !isNaN(answerIdx) &&
+                                    answerIdx >= 0 &&
+                                    answerIdx < question.options.length;
+                                  const selectedOption = isValidIdx
+                                    ? question.options[answerIdx]
+                                    : null;
+                                  const isCorrectAnswer =
+                                    isValidIdx &&
+                                    answerIdx === question.correctAnswer;
+
+                                  return (
+                                    <div
+                                      className={`rounded-md border p-3 ${
+                                        isCorrectAnswer
+                                          ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                                          : "border-red-500 bg-red-50 dark:bg-red-950/20"
+                                      }`}
+                                    >
+                                      {selectedOption ?? "Risposta non valida"}
+                                    </div>
+                                  );
+                                })()}
 
                               {type === "open_question" && (
                                 <div className="p-3 border rounded-md whitespace-pre-wrap">
-                                  {answers[id]}
+                                  {String(answers[id] ?? "")}
                                 </div>
                               )}
 
                               {type === "code_snippet" && (
                                 <Highlight
                                   theme={themes.vsDark}
-                                  code={answers[id].code}
+                                  code={
+                                    typeof answers[id] === "object" &&
+                                    answers[id] !== null &&
+                                    "code" in answers[id]
+                                      ? answers[id].code
+                                      : String(answers[id] ?? "")
+                                  }
                                   language={prismLanguage(
                                     question.language ?? "javascript"
                                   )}
@@ -563,7 +592,10 @@ export function InterviewResultsClient({
 
                             {type === "multiple_choice" &&
                               question.options &&
-                              question.correctAnswer !== undefined && (
+                              question.correctAnswer !== undefined &&
+                              question.correctAnswer >= 0 &&
+                              question.correctAnswer <
+                                question.options.length && (
                                 <div className="space-y-2">
                                   <div className="font-medium">
                                     Risposta corretta:
