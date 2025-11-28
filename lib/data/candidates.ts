@@ -1,6 +1,7 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
+import { CacheTags } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
 // Prisma type for candidate with position and interviews
@@ -105,7 +106,7 @@ const buildCandidateWhere = ({
 export async function getCandidateStats() {
   "use cache";
   cacheLife("hours");
-  cacheTag("candidates");
+  cacheTag(CacheTags.CANDIDATES);
 
   const [statusCountsRaw, totalCandidates] = await Promise.all([
     prisma.candidate.groupBy({
@@ -128,7 +129,7 @@ export async function getCandidateStats() {
 export async function getCandidatePositions() {
   "use cache";
   cacheLife("hours");
-  cacheTag("positions");
+  cacheTag(CacheTags.POSITIONS);
 
   return prisma.position.findMany({
     select: { id: true, title: true },
@@ -141,7 +142,7 @@ export async function getFilteredCandidates(
 ): Promise<PaginatedCandidates> {
   "use cache";
   cacheLife("hours");
-  cacheTag("candidates");
+  cacheTag(CacheTags.CANDIDATES);
 
   const {
     search = "",
@@ -185,7 +186,7 @@ export async function getFilteredCandidates(
 export const getCandidatesByPosition = async (positionId: string) => {
   "use cache";
   cacheLife("hours");
-  cacheTag("candidates");
+  cacheTag(CacheTags.CANDIDATES);
 
   return prisma.candidate.findMany({
     where: {
@@ -200,7 +201,7 @@ export const getCandidateWithDetails = async (
 ): Promise<CandidateWithRelations | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag("candidates");
+  cacheTag(CacheTags.CANDIDATES);
 
   return prisma.candidate.findFirst({
     where: { id },
@@ -217,7 +218,7 @@ export const getCandidateWithDetails = async (
 export const getCandidatesCount = async () => {
   "use cache";
   cacheLife("hours");
-  cacheTag("candidates");
+  cacheTag(CacheTags.CANDIDATES);
 
   return prisma.candidate.count();
 };
@@ -229,7 +230,7 @@ export const getCandidatesCount = async () => {
 export const getRecentCandidateIds = async (limit = 100): Promise<string[]> => {
   "use cache";
   cacheLife("hours");
-  cacheTag("candidates");
+  cacheTag(CacheTags.CANDIDATES);
 
   const candidates = await prisma.candidate.findMany({
     orderBy: { createdAt: "desc" },

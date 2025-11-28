@@ -2,6 +2,7 @@
 
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { Prisma } from "@/lib/prisma/client";
+import { CacheTags } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import prisma from "../prisma";
 import { Preset } from "../prisma/client";
@@ -33,7 +34,7 @@ export async function getPresetsData(
   params?: PresetsFilterParams
 ): Promise<PaginatedPresets> {
   cacheLife("minutes");
-  cacheTag("presets");
+  cacheTag(CacheTags.PRESETS);
 
   const { search, page = 1, pageSize = DEFAULT_PAGE_SIZE } = params ?? {};
   // Avoid Math.max() which calls .valueOf() and fails with temporary client references
@@ -82,7 +83,7 @@ export async function getPresetsData(
  */
 export async function getPresetData(presetId: string): Promise<Preset | null> {
   cacheLife("minutes");
-  cacheTag("presets", presetId);
+  cacheTag(CacheTags.PRESETS, presetId);
 
   return prisma.preset.findUnique({
     where: { id: presetId },
@@ -95,7 +96,7 @@ export async function getPresetData(presetId: string): Promise<Preset | null> {
  */
 export async function getRecentPresetIds(limit = 100): Promise<string[]> {
   cacheLife("minutes");
-  cacheTag("presets");
+  cacheTag(CacheTags.PRESETS);
 
   const presets = await prisma.preset.findMany({
     orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],

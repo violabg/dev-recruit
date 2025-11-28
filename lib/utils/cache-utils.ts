@@ -28,11 +28,19 @@ export const CacheTags = {
   EVALUATIONS: "evaluations",
   PRESETS: "presets",
 
+  // Aggregate views
+  DASHBOARD: "dashboard",
+
   // Legacy tags (for backward compatibility)
   QUIZ_DATA: "quiz-data",
   POSITION_DATA: "position-data",
   USER_DATA: "user-data",
 } as const;
+
+/**
+ * Type for cache tag values
+ */
+export type CacheTagValue = (typeof CacheTags)[keyof typeof CacheTags];
 
 /**
  * Generate cache tag for a specific entity by ID

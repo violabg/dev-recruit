@@ -2,9 +2,9 @@ import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { overallEvaluationSchema } from "@/lib/schemas";
 import { getOptimalModel } from "@/lib/utils";
+import { invalidateEvaluationCache } from "@/lib/utils/cache-utils";
 import { groq } from "@ai-sdk/groq";
 import { streamText } from "ai";
-import { revalidatePath } from "next/cache";
 
 /** Remove markdown code blocks from AI response if present */
 function cleanJsonResponse(text: string): string {
@@ -222,8 +222,8 @@ export async function POST(request: Request) {
               },
             });
 
-            // Revalidate the candidate page to show the new evaluation
-            revalidatePath(`/dashboard/candidates/${candidateId}`);
+            // Invalidate cache to show the new evaluation
+            invalidateEvaluationCache({ candidateId });
           } catch (parseError) {
             console.error("Error parsing/saving evaluation:", parseError);
           }

@@ -1,5 +1,6 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
+import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import { Position } from "../prisma/client";
 
@@ -19,7 +20,7 @@ export const getPositions = async (params?: {
 }): Promise<PaginatedPositions> => {
   "use cache";
   cacheLife("hours");
-  cacheTag("positions");
+  cacheTag(CacheTags.POSITIONS);
 
   const { search, page = 1, pageSize = DEFAULT_PAGE_SIZE } = params ?? {};
   const filter = search?.trim();
@@ -64,7 +65,7 @@ export const getPositionById = async (
 ): Promise<Position | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(`positions-${positionId}`);
+  cacheTag(entityTag.position(positionId));
   return prisma.position.findFirst({
     where: {
       id: positionId,
@@ -75,7 +76,7 @@ export const getPositionById = async (
 export const getPositionsCount = async () => {
   "use cache";
   cacheLife("hours");
-  cacheTag("positions");
+  cacheTag(CacheTags.POSITIONS);
 
   return prisma.position.count();
 };
@@ -87,7 +88,7 @@ export const getPositionsCount = async () => {
 export const getAllPositions = async (): Promise<Position[]> => {
   "use cache";
   cacheLife("hours");
-  cacheTag("positions");
+  cacheTag(CacheTags.POSITIONS);
 
   return prisma.position.findMany({
     orderBy: { createdAt: "desc" },
@@ -97,7 +98,7 @@ export const getAllPositions = async (): Promise<Position[]> => {
 export const getRecentPositions = async (limit = 5) => {
   "use cache";
   cacheLife("hours");
-  cacheTag("positions");
+  cacheTag(CacheTags.POSITIONS);
 
   return prisma.position.findMany({
     orderBy: {
@@ -119,7 +120,7 @@ export const getRecentPositions = async (limit = 5) => {
 export const getPositionsForSelect = async () => {
   "use cache";
   cacheLife("hours");
-  cacheTag("positions");
+  cacheTag(CacheTags.POSITIONS);
 
   return prisma.position.findMany({
     select: { id: true, title: true },

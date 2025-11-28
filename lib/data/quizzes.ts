@@ -2,6 +2,7 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { FlexibleQuestion } from "@/lib/schemas";
+import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { mapQuizQuestionsToFlexible } from "@/lib/utils/question-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
@@ -278,7 +279,7 @@ export async function CachedQuizzesContent({
 }): Promise<PaginatedQuizzes> {
   "use cache";
   cacheLife("hours");
-  cacheTag("quizzes");
+  cacheTag(CacheTags.QUIZZES);
 
   return await getQuizzes({ search, sort, filter, positionId, page, pageSize });
 }
@@ -291,7 +292,7 @@ export const getQuizData = async (
 ): Promise<{ quiz: QuizForEdit; position: PositionDetails } | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag("quizzes");
+  cacheTag(CacheTags.QUIZZES);
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
@@ -337,7 +338,7 @@ export const getQuizzesForPosition = async (
 > => {
   "use cache";
   cacheLife("hours");
-  cacheTag("quizzes");
+  cacheTag(CacheTags.QUIZZES);
 
   const quizzes = await prisma.quiz.findMany({
     where: {
@@ -380,7 +381,7 @@ export type QuizFilterOptions = {
 export const getRecentQuizIds = async (limit = 100): Promise<string[]> => {
   "use cache";
   cacheLife("hours");
-  cacheTag("quizzes");
+  cacheTag(CacheTags.QUIZZES);
 
   const quizzes = await prisma.quiz.findMany({
     orderBy: { createdAt: "desc" },
@@ -416,7 +417,7 @@ export const getQuizById = async (
 ): Promise<QuizDetail | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag("quizzes", `quiz-${quizId}`);
+  cacheTag(CacheTags.QUIZZES, entityTag.quiz(quizId));
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
@@ -450,7 +451,7 @@ export const getQuizById = async (
 export async function CachedQuizFilterOptions(): Promise<QuizFilterOptions> {
   "use cache";
   cacheLife("hours");
-  cacheTag("quizzes", "positions");
+  cacheTag(CacheTags.QUIZZES, CacheTags.POSITIONS);
 
   try {
     const [experienceLevels, positions] = await Promise.all([
