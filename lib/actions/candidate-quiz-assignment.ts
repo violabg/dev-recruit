@@ -2,9 +2,9 @@
 
 import { candidateQuizAssignmentSchema } from "@/lib/schemas";
 import { generateInterviewToken } from "@/lib/utils/token";
-import { revalidatePath } from "next/cache";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
+import { invalidateInterviewCache } from "../utils/cache-utils";
 
 export type AssignQuizzesToCandidateState = {
   message: string;
@@ -144,8 +144,12 @@ export async function assignQuizzesToCandidate(
     });
   }
 
-  revalidatePath(`/dashboard/candidates/${candidate.id}/quiz`);
-  revalidatePath(`/dashboard/candidates/${candidate.id}`);
+  // Invalidate cache for created interviews
+  if (createdInterviews.length > 0) {
+    for (const interview of createdInterviews) {
+      invalidateInterviewCache({ quizId: interview.quizId });
+    }
+  }
 
   if (generalErrors.length > 0) {
     return {

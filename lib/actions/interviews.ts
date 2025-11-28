@@ -3,10 +3,10 @@
 import { getFilteredInterviews } from "@/lib/data/interviews";
 import { candidateQuizSelectionSchema } from "@/lib/schemas";
 import { generateInterviewToken } from "@/lib/utils/token";
-import { revalidatePath, updateTag } from "next/cache";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
+import { invalidateInterviewCache } from "../utils/cache-utils";
 
 /**
  * Legacy wrapper for backward compatibility
@@ -57,7 +57,7 @@ export async function startInterview(token: string) {
     },
   });
 
-  updateTag("interviews");
+  invalidateInterviewCache({ interviewId: interview.id });
 
   return { success: true, startedAt: startedAt.toISOString() };
 }
@@ -102,7 +102,7 @@ export async function submitAnswer(
             completedAt: new Date(),
           },
         });
-        updateTag("interviews");
+        invalidateInterviewCache({ interviewId: interview.id });
       }
       throw new Error("Il tempo a disposizione è scaduto");
     }
@@ -123,7 +123,7 @@ export async function submitAnswer(
     },
   });
 
-  updateTag("interviews");
+  invalidateInterviewCache({ interviewId: interview.id });
 
   return { success: true };
 }
@@ -148,7 +148,7 @@ export async function completeInterview(token: string) {
     },
   });
 
-  updateTag("interviews");
+  invalidateInterviewCache({ interviewId: interview.id });
 
   return { success: true };
 }
@@ -174,10 +174,10 @@ export async function deleteInterview(id: string) {
     where: { id },
   });
 
-  updateTag("interviews");
-
-  revalidatePath("/dashboard/interviews");
-  revalidatePath(`/dashboard/quizzes/${interview.quizId}`);
+  invalidateInterviewCache({
+    interviewId: id,
+    quizId: interview.quizId,
+  });
 
   return { success: true };
 }
@@ -327,10 +327,8 @@ export async function assignCandidatesToQuiz(
     });
   }
 
-  revalidatePath(`/dashboard/quizzes/${quiz.id}/invite`);
-
   if (createdInterviews.length > 0) {
-    updateTag("interviews");
+    invalidateInterviewCache({ quizId: quiz.id });
   }
 
   if (generalErrors.length > 0) {

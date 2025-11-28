@@ -189,7 +189,61 @@ async function UserGreeting() {
 
 ## Cache Invalidation
 
-### Using updateTag
+### Centralized Cache Utilities
+
+All cache invalidation MUST use the centralized helpers from `lib/utils/cache-utils.ts`:
+
+```typescript
+import {
+  invalidateQuizCache,
+  invalidateCandidateCache,
+  invalidateInterviewCache,
+  invalidatePositionCache,
+  invalidateEvaluationCache,
+  invalidateQuestionCache,
+  invalidatePresetCache,
+  invalidateProfileCache,
+  entityTag,
+  CacheTags,
+} from "@/lib/utils/cache-utils";
+
+// After mutations, call the appropriate helper:
+await prisma.quiz.create({ ... });
+invalidateQuizCache();
+
+// For entity-specific invalidation:
+await prisma.quiz.update({ where: { id }, ... });
+invalidateQuizCache(id);
+```
+
+### Available Cache Helpers
+
+| Helper                           | Tags Invalidated                 | Paths Revalidated       |
+| -------------------------------- | -------------------------------- | ----------------------- |
+| `invalidateQuizCache(id?)`       | `quizzes`, `quiz:{id}`           | `/dashboard/quizzes`    |
+| `invalidateCandidateCache(id?)`  | `candidates`, `candidate:{id}`   | `/dashboard/candidates` |
+| `invalidateInterviewCache(id?)`  | `interviews`, `interview:{id}`   | `/dashboard/interviews` |
+| `invalidatePositionCache(id?)`   | `positions`, `position:{id}`     | `/dashboard/positions`  |
+| `invalidateEvaluationCache(id?)` | `evaluations`, `evaluation:{id}` | N/A                     |
+| `invalidateQuestionCache(id?)`   | `questions`, `question:{id}`     | N/A                     |
+| `invalidatePresetCache(id?)`     | `presets`, `preset:{id}`         | `/dashboard/presets`    |
+| `invalidateProfileCache(id?)`    | `profile`, `profile:{id}`        | `/dashboard/profile`    |
+
+### Entity Tag Helper
+
+Use `entityTag()` for consistent entity-specific tag naming:
+
+```typescript
+import { entityTag } from "@/lib/utils/cache-utils";
+
+// In cached data functions:
+cacheTag(entityTag("quiz", quizId)); // Creates tag "quiz:abc123"
+
+// In mutations:
+updateTag(entityTag("quiz", quizId)); // Invalidates "quiz:abc123"
+```
+
+### Using updateTag (Direct Usage)
 
 After mutations, invalidate relevant cache tags:
 

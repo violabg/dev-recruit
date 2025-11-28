@@ -1,4 +1,5 @@
 import { AIErrorCode } from "./ai-service";
+import { logger } from "./logger";
 
 // Quiz-specific error types
 export class QuizSystemError extends Error {
@@ -105,20 +106,21 @@ export class ErrorHandler {
       ...errorInfo.details,
     };
 
-    // Log to console (in production, this would go to a logging service)
+    // Log using centralized logger
     if (this.isDevelopment) {
-      console.error("=== ERROR DETAILS ===");
-      console.error("Timestamp:", timestamp);
-      console.error("Message:", errorInfo.message);
-      console.error("Code:", errorInfo.code);
-      console.error("Context:", context);
-      if (errorInfo.stack) {
-        console.error("Stack:", errorInfo.stack);
-      }
-      console.error("===================");
+      logger.error("Error occurred", {
+        message: errorInfo.message,
+        code: errorInfo.code,
+        context,
+        stack: errorInfo.stack,
+      });
     } else {
       // In production, log structured data
-      console.error(JSON.stringify(logEntry));
+      logger.error(errorInfo.message, {
+        code: errorInfo.code,
+        context,
+        ...errorInfo.details,
+      });
     }
 
     // In a real application, you would also store logs or send alerts.

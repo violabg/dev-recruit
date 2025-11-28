@@ -4,7 +4,10 @@
 
 - **App Router + cache components:** every route under `app/` renders as a server component. Keep Prisma/AI calls in `'use cache'` scopes, use `cacheLife`, and wrap any runtime data (`cookies()`, `headers()`, etc.) inside Suspense boundaries (see `app/dashboard/candidates/page.tsx`).
 - **Dashboard shell:** `app/dashboard/layout.tsx` wires the sidebar, breadcrumbs, theme toggle, and content surface. Shared navigation and helpers live under `components/dashboard/`.
-- **Lib layer:** `lib/actions/` contains server actions for quiz/question management, candidate management, interviews, evaluations, and presets. `lib/services/ai-service.ts` orchestrates Groq AI requests with retries/fallbacks and Zod validation. `lib/services/r2-storage.ts` handles resume uploads to Cloudflare R2. `lib/prisma.ts` exposes the Neon-backed Prisma client used everywhere.
+- **Lib layer:** `lib/actions/` contains server actions for quiz/question management, candidate management, interviews, evaluations, and presets. `lib/services/ai/` provides modular AI service (core, prompts, retry, streaming, sanitize). `lib/services/r2-storage.ts` handles resume uploads to Cloudflare R2. `lib/prisma.ts` exposes the Neon-backed Prisma client used everywhere.
+- **Environment:** `lib/env.ts` provides validated environment variables with lazy loading (Proxy-based) to prevent client-side import errors.
+- **Logging:** `lib/services/logger.ts` provides centralized logging with scoped loggers (`aiLogger`, `storageLogger`, `authLogger`, `dbLogger`).
+- **Cache Utilities:** `lib/utils/cache-utils.ts` provides centralized cache invalidation helpers (`invalidateQuizCache`, `invalidateCandidateCache`, etc.).
 - **Data model:** Questions are now reusable entities linked to quizzes via `QuizQuestion` join table. Evaluations are polymorphic (interview-based or candidate-based). Presets define question generation templates with type-specific parameters.
 - **UI/design system:** base primitives in `components/ui/` power buttons, cards, tabs, skeletons, etc. Styling relies on Tailwind v4 utilities, OKLCH tokens in `app/globals.css`.
 
@@ -13,7 +16,7 @@
 - **Server actions + Prisma:** mutate state inside `lib/actions/*`, calling `requireUser()` from `lib/auth-server.ts` for authentication only (not ownership filtering). Reuse helpers from `lib/data/` when filtering/aggregating dashboard data (e.g., `lib/data/dashboard.ts`).
 - **Question management:** Questions are reusable entities. Use `lib/actions/questions.ts` for CRUD operations. Link questions to quizzes via `QuizQuestion` join table with ordering support. Favorites system allows marking questions for quick access.
 - **Evaluations:** Two types via polymorphic relationship - interview evaluations (quiz-based with answers) and candidate evaluations (resume-based against position requirements). Both use AI-generated assessments with structured schemas.
-- **AI prompts:** `AIQuizService` builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Streaming responses for position descriptions via `streamPositionDescription`. Audio transcription via `transcribeAudioAction` using Whisper models. Refer to `docs/AI_QUIZ_GENERATION.md` for the full flow and error-handling knobs.
+- **AI prompts:** `AIQuizService` (in `lib/services/ai/core.ts`) builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Streaming responses for position descriptions via `streamPositionDescription`. Audio transcription via `transcribeAudioAction` using Whisper models. Refer to `docs/AI_QUIZ_GENERATION.md` for the full flow and error-handling knobs.
 - **Presets system:** `Preset` entity stores question generation templates with type-specific parameters (focusAreas, distractorComplexity, language, etc.). Used during AI question generation to provide consistent configurations.
 - **File storage:** Candidate resumes uploaded to Cloudflare R2 via `lib/services/r2-storage.ts`. Resume text extraction using unpdf for AI-based candidate evaluation.
 - **Dashboard pages:** split UI into Suspense-backed sections that fetch data independently so cached parts stay in the static shell while runtime segments stream separately.
@@ -23,7 +26,7 @@
 - Dev server: `pnpm dev` (Next.js MCP enabled).
 - Build/lint/test: `pnpm build`, `pnpm lint`, `pnpm test` (if available).
 - Database migrations: `pnpm prisma migrate deploy` (prod) or `pnpm prisma db push` (local dev).
-- Cache updates should use `cacheLife(...)` and tagged scopes (`cacheTag`/`revalidateTag`) as described in `docs/CACHE_IMPLEMENTATION.md`.
+- Cache invalidation should use helpers from `lib/utils/cache-utils.ts` (e.g., `invalidateQuizCache()`, `invalidateCandidateCache()`).
 
 ## Project-Specific Conventions
 
@@ -31,11 +34,17 @@
 - **Forms:** always pair `react-hook-form` with Zod resolvers using schemas from `lib/schemas/`; validate before invoking server actions. Use rhf-input components from `components/` when using forms, create new components there as needed.
 - **Data fetching:** keep Prisma queries in server components. Only mark components `use client` when necessary for interactivity, and wrap runtime APIs inside Suspense with skeleton fallbacks.
 - **Authentication:** Better Auth config lives in `lib/auth.ts`; prefer `getCurrentUser()`/`requireUser()` helpers to verify user is authenticated. Note: this project does NOT filter entities by ownership (`createdBy`)—all authenticated users can access all entities.
+- **Logging:** use scoped loggers from `lib/services/logger.ts` (`aiLogger`, `storageLogger`, `authLogger`) instead of raw `console.error/warn/log`.
+- **Cache invalidation:** use centralized helpers from `lib/utils/cache-utils.ts` instead of direct `updateTag()` calls.
 
 ## Essential References
 
-- `lib/services/ai-service.ts` – AI quiz generation, evaluation, streaming, and transcription with model selection, retries, and Zod guards.
+- `lib/services/ai/` – Modular AI service (core.ts, prompts.ts, retry.ts, streaming.ts, sanitize.ts, types.ts).
+- `lib/services/ai-service.ts` – Re-exports from `lib/services/ai/` for backward compatibility.
+- `lib/services/logger.ts` – Centralized logging with scoped loggers.
 - `lib/services/r2-storage.ts` – Cloudflare R2 file upload/delete for resume storage.
+- `lib/env.ts` – Validated environment variables with lazy loading.
+- `lib/utils/cache-utils.ts` – Centralized cache invalidation helpers.
 - `lib/schemas/` – Zod validation schemas (v4) for questions, evaluations, presets, positions, etc.
 - `lib/schemas/questionEntity.ts` – Database Question entity schemas (separate from inline quiz questions).
 - `app/dashboard/layout.tsx` + `components/dashboard/` – layout, navigation, and theme wiring.
@@ -51,7 +60,9 @@
 3. Reuse UI primitives from `components/ui` or existing dashboard components before building new ones.
 4. Document substantial behavior changes in `docs/` (e.g., caching, AI flows, layout shifts).
 5. Follow the constitutional governance in `.specify/memory/constitution.md` for all architectural decisions.
-6. **Update documentation for architectural changes**: Any major or architectural changes MUST be reflected in the relevant documentation files under `docs/` (see `docs/AI_QUIZ_GENERATION.md`, `docs/CACHE_IMPLEMENTATION.md`, `docs/QUESTION_SCHEMAS.md`).
+6. Use centralized cache invalidation helpers from `lib/utils/cache-utils.ts`.
+7. Use scoped loggers from `lib/services/logger.ts` instead of raw console calls.
+8. **Update documentation for architectural changes**: Any major or architectural changes MUST be reflected in the relevant documentation files under `docs/` (see `docs/AI_QUIZ_GENERATION.md`, `docs/CACHE_IMPLEMENTATION.md`, `docs/QUESTION_SCHEMAS.md`).
 
 ## Cache & Streaming Patterns
 

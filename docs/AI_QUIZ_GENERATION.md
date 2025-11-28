@@ -32,7 +32,7 @@ graph TB
 
     subgraph "Server Layer"
         SA[Server Actions<br/>lib/actions/quizzes.ts]
-        AIS[AIQuizService<br/>lib/services/ai-service.ts]
+        AIS[AIQuizService<br/>lib/services/ai/core.ts]
     end
 
     subgraph "AI Layer"
@@ -61,16 +61,19 @@ graph TB
 
 | Component                     | Location                           | Purpose                                          |
 | ----------------------------- | ---------------------------------- | ------------------------------------------------ |
-| `AIQuizService`               | `lib/services/ai-service.ts`       | Main service class for AI generation             |
+| `AIQuizService`               | `lib/services/ai/core.ts`          | Main service class for AI generation             |
 | `generateNewQuizAction`       | `lib/actions/quizzes.ts`           | Server action for full quiz generation           |
 | `generateNewQuestionAction`   | `lib/actions/quizzes.ts`           | Server action for single question generation     |
 | `useAIGeneration`             | `hooks/use-ai-generation.ts`       | React hook for client-side generation management |
 | Question Schemas              | `lib/schemas/question.ts`          | Zod schemas for question validation              |
 | `evaluateAnswer`              | `lib/actions/evaluations.ts`       | Server action for answer evaluation              |
 | `generateCandidateEvaluation` | `lib/actions/evaluation-entity.ts` | Resume-based candidate assessment                |
-| `streamPositionDescription`   | `lib/services/ai-service.ts`       | Streaming position description generation        |
+| `streamPositionDescription`   | `lib/services/ai/streaming.ts`     | Streaming position description generation        |
 | `transcribeAudioAction`       | `lib/actions/transcription.ts`     | Audio transcription using Whisper                |
 | Preset Management             | `lib/actions/presets.ts`           | Question generation template management          |
+| Logging                       | `lib/services/logger.ts`           | Scoped AI logger (`aiLogger`)                    |
+
+> **Note:** The AI service is modular - `lib/services/ai-service.ts` re-exports from `lib/services/ai/` for backward compatibility. The actual implementation is split across `core.ts`, `prompts.ts`, `retry.ts`, `streaming.ts`, `sanitize.ts`, and `types.ts`.
 
 ## Generation Flow
 
@@ -695,7 +698,7 @@ const result = await generateNewQuestionAction({
 
 The system supports streaming AI responses for better UX during long-running operations.
 
-**Location**: `lib/services/ai-service.ts` → `streamPositionDescription`
+**Location**: `lib/services/ai/streaming.ts` → `streamPositionDescription`
 
 **Use Case**: Position description generation
 

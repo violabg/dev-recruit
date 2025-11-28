@@ -1,9 +1,9 @@
 "use server";
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { PositionFormData, positionFormSchema } from "../schemas";
+import { invalidatePositionCache } from "../utils/cache-utils";
 
 // Position actions
 export async function createPosition(values: PositionFormData) {
@@ -24,7 +24,7 @@ export async function createPosition(values: PositionFormData) {
     select: { id: true },
   });
 
-  updateTag("positions");
+  invalidatePositionCache(position.id);
 
   redirect(`/dashboard/positions/${position.id}`);
 }
@@ -41,7 +41,7 @@ export async function deletePosition(id: string) {
 
   await prisma.position.delete({ where: { id } });
 
-  updateTag("positions");
+  invalidatePositionCache();
 
   redirect("/dashboard/positions");
 }
@@ -98,8 +98,7 @@ export async function updatePosition(id: string, formData: FormData) {
     },
   });
 
-  updateTag("positions");
-  updateTag(`positions-${id}`);
+  invalidatePositionCache(id);
 
   redirect(`/dashboard/positions/${id}`);
 }

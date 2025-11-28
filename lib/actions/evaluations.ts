@@ -8,6 +8,7 @@ import {
 } from "@/lib/schemas";
 import { groq } from "@ai-sdk/groq";
 import { generateObject } from "ai";
+import { aiLogger } from "../services/logger";
 import { getOptimalModel } from "../utils";
 
 // Evaluation actions
@@ -135,7 +136,10 @@ export async function evaluateAnswer(
       maxScore: 10,
     } as EvaluationResult & { maxScore: number };
   } catch (error) {
-    console.error("Primary model failed, trying fallback model:", error);
+    aiLogger.warn("Primary model failed for evaluation, trying fallback", {
+      error,
+      questionType: question.type,
+    });
 
     // Fallback to a different stable model if the primary fails
     const fallbackModel = "llama-3.1-8b-instant"; // Fast and reliable model
@@ -160,7 +164,10 @@ export async function evaluateAnswer(
         maxScore: 10,
       } as EvaluationResult & { maxScore: number };
     } catch (fallbackError) {
-      console.error("Fallback model also failed:", fallbackError);
+      aiLogger.error("Fallback model also failed for evaluation", {
+        error: fallbackError,
+        questionType: question.type,
+      });
 
       // Provide more specific error message based on error type
       let errorMessage = "Evaluation service temporarily unavailable";
@@ -244,9 +251,9 @@ export async function generateOverallEvaluation(
 
     return result;
   } catch (error) {
-    console.error(
-      "Primary model failed for overall evaluation, trying fallback:",
-      error
+    aiLogger.warn(
+      "Primary model failed for overall evaluation, trying fallback",
+      { error, candidateName }
     );
 
     // Fallback to a different stable model if the primary fails
@@ -269,10 +276,10 @@ export async function generateOverallEvaluation(
 
       return result;
     } catch (fallbackError) {
-      console.error(
-        "Fallback model also failed for overall evaluation:",
-        fallbackError
-      );
+      aiLogger.error("Fallback model also failed for overall evaluation", {
+        error: fallbackError,
+        candidateName,
+      });
 
       // Provide more specific error message based on error type
       let errorMessage = "Overall evaluation service temporarily unavailable";

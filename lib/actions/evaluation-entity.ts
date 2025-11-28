@@ -2,11 +2,12 @@
 
 import { groq } from "@ai-sdk/groq";
 import { generateObject } from "ai";
-import { revalidatePath, updateTag } from "next/cache";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { overallEvaluationSchema, type OverallEvaluation } from "../schemas";
+import { aiLogger } from "../services/logger";
 import { getOptimalModel } from "../utils";
+import { invalidateEvaluationCache } from "../utils/cache-utils";
 
 // PDF parsing using unpdf (serverless-compatible)
 async function extractTextFromPDF(pdfUrl: string): Promise<string> {
@@ -26,7 +27,7 @@ async function extractTextFromPDF(pdfUrl: string): Promise<string> {
 
     return text || "";
   } catch (error) {
-    console.error("Failed to extract text from PDF:", error);
+    aiLogger.error("Failed to extract text from PDF", { error, pdfUrl });
     throw new Error(
       `Impossibile leggere il curriculum: ${
         error instanceof Error ? error.message : "Errore sconosciuto"
@@ -96,7 +97,13 @@ async function generateResumeEvaluation(
 
     return result;
   } catch (error) {
-    console.error("Primary model failed for resume evaluation:", error);
+    aiLogger.warn(
+      "Primary model failed for resume evaluation, trying fallback",
+      {
+        error,
+        candidateName,
+      }
+    );
 
     // Fallback model
     const fallbackModel = "llama-3.1-8b-instant";
@@ -171,9 +178,10 @@ export async function createInterviewEvaluation(
     },
   });
 
-  updateTag("evaluations");
-  updateTag(`evaluation-interview-${interviewId}`);
-  revalidatePath(`/dashboard/interviews/${interviewId}`);
+  invalidateEvaluationCache({
+    evaluationId: evaluation.id,
+    interviewId,
+  });
 
   return evaluation;
 }
@@ -272,9 +280,10 @@ export async function createCandidateEvaluation(
     },
   });
 
-  updateTag("evaluations");
-  updateTag(`evaluation-candidate-${candidateId}`);
-  revalidatePath(`/dashboard/candidates/${candidateId}`);
+  invalidateEvaluationCache({
+    evaluationId: evaluation.id,
+    candidateId,
+  });
 
   return evaluation;
 }
@@ -299,18 +308,11 @@ export async function updateEvaluationNotes(id: string, notes: string) {
     data: { notes },
   });
 
-  updateTag("evaluations");
-  updateTag(`evaluation-${id}`);
-
-  if (evaluation.interviewId) {
-    updateTag(`evaluation-interview-${evaluation.interviewId}`);
-    revalidatePath(`/dashboard/interviews/${evaluation.interviewId}`);
-  }
-
-  if (evaluation.candidateId) {
-    updateTag(`evaluation-candidate-${evaluation.candidateId}`);
-    revalidatePath(`/dashboard/candidates/${evaluation.candidateId}`);
-  }
+  invalidateEvaluationCache({
+    evaluationId: id,
+    interviewId: evaluation.interviewId ?? undefined,
+    candidateId: evaluation.candidateId ?? undefined,
+  });
 
   return updated;
 }
@@ -332,18 +334,11 @@ export async function deleteEvaluation(id: string) {
 
   await prisma.evaluation.delete({ where: { id } });
 
-  updateTag("evaluations");
-  updateTag(`evaluation-${id}`);
-
-  if (evaluation.interviewId) {
-    updateTag(`evaluation-interview-${evaluation.interviewId}`);
-    revalidatePath(`/dashboard/interviews/${evaluation.interviewId}`);
-  }
-
-  if (evaluation.candidateId) {
-    updateTag(`evaluation-candidate-${evaluation.candidateId}`);
-    revalidatePath(`/dashboard/candidates/${evaluation.candidateId}`);
-  }
+  invalidateEvaluationCache({
+    evaluationId: id,
+    interviewId: evaluation.interviewId ?? undefined,
+    candidateId: evaluation.candidateId ?? undefined,
+  });
 
   return { success: true };
 }

@@ -1,7 +1,28 @@
+/**
+ * Cache utilities
+ *
+ * @deprecated Import from './cache-utils' instead for new code.
+ * This file is kept for backward compatibility.
+ */
+
 import { revalidatePath } from "next/cache";
 
+// Re-export new utilities for convenience
+export {
+  CacheTags,
+  entityTag,
+  invalidateCandidateCache,
+  invalidateEvaluationCache,
+  invalidateInterviewCache,
+  invalidatePositionCache,
+  invalidatePresetCache,
+  invalidateProfileCache,
+  invalidateQuestionCache,
+  invalidateQuizCache,
+} from "./cache-utils";
+
 /**
- * Cache tags used throughout the application
+ * @deprecated Use CacheTags from './cache-utils' instead
  */
 export const CACHE_TAGS = {
   QUIZ_DATA: "quiz-data",
@@ -10,29 +31,27 @@ export const CACHE_TAGS = {
 } as const;
 
 /**
- * Generate cache tag for a specific quiz
+ * @deprecated Use entityTag.quiz from './cache-utils' instead
  */
 export const getQuizCacheTag = (quizId: string) => `quiz-${quizId}`;
 
 /**
- * Generate cache tag for a specific position
+ * @deprecated Use entityTag.position from './cache-utils' instead
  */
 export const getPositionCacheTag = (positionId: string) =>
   `position-${positionId}`;
 
 /**
- * Generate cache tag for a specific user
+ * @deprecated Use entityTag.user from './cache-utils' instead
  */
 export const getUserCacheTag = (userId: string) => `user-${userId}`;
 
 /**
- * Revalidate quiz-related pages and data
+ * @deprecated Use invalidateQuizCache from './cache-utils' instead
  */
 export const revalidateQuizCache = (quizId?: string) => {
-  // Revalidate quiz listing pages
   revalidatePath("/dashboard/quizzes");
 
-  // Revalidate specific quiz page if ID provided
   if (quizId) {
     revalidatePath(`/dashboard/quizzes/${quizId}`);
     revalidatePath(`/dashboard/quizzes/${quizId}/edit`);
@@ -40,13 +59,11 @@ export const revalidateQuizCache = (quizId?: string) => {
 };
 
 /**
- * Revalidate position-related pages and data
+ * @deprecated Use invalidatePositionCache from './cache-utils' instead
  */
 export const revalidatePositionCache = (positionId?: string) => {
-  // Revalidate position listing pages
   revalidatePath("/dashboard/positions");
 
-  // Revalidate specific position page if ID provided
   if (positionId) {
     revalidatePath(`/dashboard/positions/${positionId}`);
     revalidatePath(`/dashboard/positions/${positionId}/edit`);
@@ -54,14 +71,12 @@ export const revalidatePositionCache = (positionId?: string) => {
 };
 
 /**
- * Revalidate user-related pages and data
+ * @deprecated Use invalidateProfileCache from './cache-utils' instead
  */
 export const revalidateUserCache = (userId?: string) => {
-  // Revalidate user profile and dashboard
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/profile");
 
-  // Can be extended for user-specific pages if needed
   if (userId) {
     // Add user-specific page revalidations here
   }
