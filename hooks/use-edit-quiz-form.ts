@@ -10,7 +10,7 @@ import {
 } from "@/lib/schemas";
 import { generateId } from "@/lib/utils/quiz-form-utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod/v4";
@@ -265,6 +265,46 @@ export const useEditQuizForm = ({
     }
   };
 
+  // Track form dirty state for unsaved changes warning
+  const isDirty = form.formState.isDirty;
+
+  // Warn user about unsaved changes when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        // Modern browsers ignore custom messages and show their own
+        return "";
+      }
+    };
+
+    // Handle browser back/forward buttons
+    const handlePopState = () => {
+      if (isDirty) {
+        const confirmed = window.confirm(
+          "Hai modifiche non salvate. Sei sicuro di voler abbandonare la pagina?"
+        );
+        if (!confirmed) {
+          // Push current state back to prevent navigation
+          window.history.pushState(null, "", window.location.href);
+        }
+      }
+    };
+
+    // Push initial state to enable popstate interception
+    if (isDirty) {
+      window.history.pushState(null, "", window.location.href);
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isDirty]);
+
   return {
     form,
     fields,
@@ -280,5 +320,6 @@ export const useEditQuizForm = ({
     hasSettingsChanges,
     hasQuestionChanges,
     sectionSaveStatus,
+    isDirty,
   };
 };

@@ -57,6 +57,7 @@ export function EditQuizForm({
     hasQuestionChanges,
     sectionSaveStatus,
     addBlankQuestion,
+    isDirty,
   } = useEditQuizForm({ quiz, position, mode, onSaveSuccess });
 
   // Question management
@@ -191,6 +192,7 @@ export function EditQuizForm({
             saveStatus={saveStatus}
             onGenerateFullQuiz={() => setFullQuizDialogOpen(true)}
             aiLoading={aiLoading}
+            isDirty={isDirty}
           />
 
           {/* Smart Question Presets */}

@@ -24,6 +24,7 @@ type QuizSettingsProps = {
   saveStatus: SaveStatus;
   onGenerateFullQuiz: () => void;
   aiLoading: boolean;
+  isDirty?: boolean;
 };
 
 export const QuizSettings = ({
@@ -31,8 +32,19 @@ export const QuizSettings = ({
   saveStatus,
   onGenerateFullQuiz,
   aiLoading,
+  isDirty = false,
 }: QuizSettingsProps) => {
   const router = useRouter();
+
+  const handleCancel = () => {
+    if (isDirty) {
+      const confirmed = window.confirm(
+        "Hai modifiche non salvate. Sei sicuro di voler abbandonare la pagina?"
+      );
+      if (!confirmed) return;
+    }
+    router.back();
+  };
 
   return (
     <Card>
@@ -75,7 +87,7 @@ export const QuizSettings = ({
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.back()}
+              onClick={handleCancel}
               size="sm"
               disabled={saveStatus === "saving"}
             >
