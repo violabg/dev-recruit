@@ -141,43 +141,45 @@ export async function POST(request: Request) {
 
     const prompt = `Analizza il seguente curriculum vitae e valuta l'idoneità del candidato per la posizione specificata.
 
-CURRICULUM DEL CANDIDATO (${candidateName}):
-${truncatedResume}${resumeSuffix}
+          CURRICULUM DEL CANDIDATO (${candidateName}):
+          ${truncatedResume}${resumeSuffix}
 
-POSIZIONE DA VALUTARE:
-- Titolo: ${position.title}
-- Livello di esperienza richiesto: ${position.experienceLevel}
-- Competenze tecniche richieste: ${position.skills.join(", ")}
-- Soft skills richieste: ${position.softSkills.join(", ")}
-${position.description ? `- Descrizione: ${position.description}` : ""}
+          POSIZIONE DA VALUTARE:
+          - Titolo: ${position.title}
+          - Livello di esperienza richiesto: ${position.experienceLevel}
+          - Competenze tecniche richieste: ${position.skills.join(", ")}
+          - Soft skills richieste: ${position.softSkills.join(", ")}
+          ${
+            position.description ? `- Descrizione: ${position.description}` : ""
+          }
 
-Fornisci una valutazione dettagliata considerando:
-1. Corrispondenza delle competenze tecniche
-2. Esperienza lavorativa rilevante
-3. Livello di esperienza rispetto a quanto richiesto
-4. Soft skills e caratteristiche personali evidenziate
-5. Formazione e certificazioni pertinenti
-6. Potenziale di crescita e adattabilità
+          Fornisci una valutazione dettagliata considerando:
+          1. Corrispondenza delle competenze tecniche
+          2. Esperienza lavorativa rilevante
+          3. Livello di esperienza rispetto a quanto richiesto
+          4. Soft skills e caratteristiche personali evidenziate
+          5. Formazione e certificazioni pertinenti
+          6. Potenziale di crescita e adattabilità
 
-Rispondi con un oggetto JSON contenente:
-- evaluation: una valutazione dettagliata in italiano
-- strengths: array di punti di forza del candidato
-- weaknesses: array di aree di miglioramento o lacune
-- recommendation: una raccomandazione su come procedere con il candidato
-- fitScore: un punteggio da 0 a 100 che indica l'idoneità complessiva per la posizione`;
+          Rispondi con un oggetto JSON contenente:
+          - evaluation: una valutazione dettagliata in italiano
+          - strengths: array di punti di forza del candidato
+          - weaknesses: array di aree di miglioramento o lacune
+          - recommendation: una raccomandazione su come procedere con il candidato
+          - fitScore: un punteggio da 0 a 100 che indica l'idoneità complessiva per la posizione`;
 
     const model = getOptimalModel("overall_evaluation");
 
     const jsonFormatInstructions = `
 
-IMPORTANTE: Rispondi SOLO con un oggetto JSON valido, senza markdown o altri formati. L'oggetto deve avere questa struttura esatta:
-{
-  "evaluation": "testo della valutazione",
-  "strengths": ["punto 1", "punto 2", ...],
-  "weaknesses": ["punto 1", "punto 2", ...],
-  "recommendation": "testo della raccomandazione",
-  "fitScore": numero da 0 a 100
-}`;
+          IMPORTANTE: Rispondi SOLO con un oggetto JSON valido, senza markdown o altri formati. L'oggetto deve avere questa struttura esatta:
+          {
+            "evaluation": "testo della valutazione",
+            "strengths": ["punto 1", "punto 2", ...],
+            "weaknesses": ["punto 1", "punto 2", ...],
+            "recommendation": "testo della raccomandazione",
+            "fitScore": numero da 0 a 100
+          }`;
 
     const result = streamText({
       model: groq(model),
