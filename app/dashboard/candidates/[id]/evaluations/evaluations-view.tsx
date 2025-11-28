@@ -1,6 +1,7 @@
 "use client";
 
 import { OverallEvaluationCard } from "@/components/recruting/overall-evaluation-card";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,7 +31,15 @@ import {
   updateEvaluationNotes,
 } from "@/lib/actions/evaluation-entity";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
-import { Loader2, Plus, Save, Sparkles, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  ChevronDown,
+  Loader2,
+  Plus,
+  Save,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -63,7 +78,6 @@ export function CandidateEvaluationsView({
     return initial;
   });
   const [savingNotes, startSavingNotes] = useTransition();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Filter out positions that already have an evaluation
   const evaluatedPositionIds = new Set(
@@ -143,17 +157,8 @@ export function CandidateEvaluationsView({
   };
 
   const handleDeleteEvaluation = async (evaluationId: string) => {
-    setDeletingId(evaluationId);
-    try {
-      await deleteEvaluation(evaluationId);
-      setEvaluations((prev) => prev.filter((e) => e.id !== evaluationId));
-      toast.success("Valutazione eliminata");
-    } catch (error) {
-      console.error("Error deleting evaluation:", error);
-      toast.error("Errore durante l'eliminazione della valutazione");
-    } finally {
-      setDeletingId(null);
-    }
+    await deleteEvaluation(evaluationId);
+    setEvaluations((prev) => prev.filter((e) => e.id !== evaluationId));
   };
 
   return (
@@ -248,96 +253,112 @@ export function CandidateEvaluationsView({
             };
 
             return (
-              <Card key={evaluation.id}>
-                <CardHeader
-                  className="cursor-pointer"
-                  onClick={() =>
-                    setExpandedEvaluation(isExpanded ? null : evaluation.id)
-                  }
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-primary text-lg">
-                        {evaluation.title}
-                      </CardTitle>
-                      <CardDescription>
-                        Creata il{" "}
-                        {new Date(evaluation.createdAt).toLocaleDateString(
-                          "it-IT",
-                          {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
+              <Collapsible
+                key={evaluation.id}
+                open={isExpanded}
+                onOpenChange={(open) =>
+                  setExpandedEvaluation(open ? evaluation.id : null)
+                }
+              >
+                <Card className="py-0">
+                  <CardHeader className="gap-0 p-0">
+                    <div className="flex items-center">
+                      <CollapsibleTrigger asChild>
+                        <button className="flex flex-1 items-center gap-3 hover:bg-muted/50 p-6 rounded-t-lg text-left transition-colors">
+                          <ChevronDown
+                            className={cn(
+                              "w-5 h-5 text-muted-foreground transition-transform duration-200 shrink-0",
+                              isExpanded && "rotate-180"
+                            )}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-primary text-lg">
+                              {evaluation.title}
+                            </CardTitle>
+                            <CardDescription>
+                              Creata il{" "}
+                              {new Date(
+                                evaluation.createdAt
+                              ).toLocaleDateString("it-IT", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })}
+                              {evaluation.fitScore !== null && (
+                                <span className="ml-2">
+                                  • Punteggio: {evaluation.fitScore}/10
+                                </span>
+                              )}
+                            </CardDescription>
+                          </div>
+                        </button>
+                      </CollapsibleTrigger>
+                      <div className="pr-4">
+                        <DeleteWithConfirm
+                          deleteAction={() =>
+                            handleDeleteEvaluation(evaluation.id)
                           }
-                        )}
-                        {evaluation.fitScore !== null && (
-                          <span className="ml-2">
-                            • Punteggio: {evaluation.fitScore}/10
-                          </span>
-                        )}
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteEvaluation(evaluation.id);
-                      }}
-                      disabled={deletingId === evaluation.id}
-                    >
-                      {deletingId === evaluation.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-
-                {isExpanded && (
-                  <CardContent className="space-y-6">
-                    <OverallEvaluationCard
-                      overallEvaluation={overallEvaluation}
-                    />
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`notes-${evaluation.id}`}>
-                          Note manuali
-                        </Label>
-                        <Textarea
-                          id={`notes-${evaluation.id}`}
-                          value={notes[evaluation.id] ?? ""}
-                          onChange={(e) =>
-                            setNotes((prev) => ({
-                              ...prev,
-                              [evaluation.id]: e.target.value,
-                            }))
-                          }
-                          placeholder="Inserisci le tue note qui..."
-                          rows={3}
-                        />
+                          title="Eliminare la valutazione?"
+                          description={`Sei sicuro di voler eliminare la valutazione "${evaluation.title}"? Questa azione non può essere annullata.`}
+                          successMessage="Valutazione eliminata"
+                          errorMessage="Errore durante l'eliminazione della valutazione"
+                          variant="ghost"
+                          iconOnly
+                        >
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                        </DeleteWithConfirm>
                       </div>
-                      <Button
-                        onClick={() => handleSaveNotes(evaluation.id)}
-                        disabled={
-                          savingNotes ||
-                          notes[evaluation.id] === (evaluation.notes ?? "")
-                        }
-                        size="sm"
-                      >
-                        {savingNotes ? (
-                          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                        ) : (
-                          <Save className="mr-2 w-4 h-4" />
-                        )}
-                        Salva note
-                      </Button>
                     </div>
-                  </CardContent>
-                )}
-              </Card>
+                  </CardHeader>
+
+                  <CollapsibleContent>
+                    <CardContent className="space-y-6 pt-0 pb-6">
+                      <OverallEvaluationCard
+                        overallEvaluation={overallEvaluation}
+                      />
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`notes-${evaluation.id}`}>
+                            Note manuali
+                          </Label>
+                          <Textarea
+                            id={`notes-${evaluation.id}`}
+                            value={notes[evaluation.id] ?? ""}
+                            onChange={(e) =>
+                              setNotes((prev) => ({
+                                ...prev,
+                                [evaluation.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Inserisci le tue note qui..."
+                            rows={3}
+                          />
+                        </div>
+                        <Button
+                          onClick={() => handleSaveNotes(evaluation.id)}
+                          disabled={
+                            savingNotes ||
+                            notes[evaluation.id] === (evaluation.notes ?? "")
+                          }
+                          size="sm"
+                        >
+                          {savingNotes ? (
+                            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                          ) : (
+                            <Save className="mr-2 w-4 h-4" />
+                          )}
+                          Salva note
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             );
           })}
         </div>
