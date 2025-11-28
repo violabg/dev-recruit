@@ -1,0 +1,117 @@
+/**
+ * AI Service Types
+ *
+ * Shared types and interfaces for the AI service modules.
+ */
+
+// AI-specific error types
+export class AIGenerationError extends Error {
+  constructor(
+    message: string,
+    public code: AIErrorCode,
+    public details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = "AIGenerationError";
+  }
+}
+
+export enum AIErrorCode {
+  GENERATION_FAILED = "GENERATION_FAILED",
+  MODEL_UNAVAILABLE = "MODEL_UNAVAILABLE",
+  TIMEOUT = "TIMEOUT",
+  INVALID_RESPONSE = "INVALID_RESPONSE",
+  RATE_LIMITED = "RATE_LIMITED",
+  CONTENT_FILTERED = "CONTENT_FILTERED",
+  QUOTA_EXCEEDED = "QUOTA_EXCEEDED",
+}
+
+// Configuration interface
+export interface AIGenerationConfig {
+  maxRetries: number;
+  retryDelay: number;
+  timeout: number;
+  fallbackModels: string[];
+}
+
+// Default configuration
+export const DEFAULT_CONFIG: AIGenerationConfig = {
+  maxRetries: 3,
+  retryDelay: 1000, // 1 second base delay
+  timeout: 60000, // 60 seconds
+  fallbackModels: [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "gemma2-9b-it",
+  ],
+};
+
+// Quiz generation parameters
+export interface GenerateQuizParams {
+  positionTitle: string;
+  experienceLevel: string;
+  skills: string[];
+  description?: string;
+  quizTitle: string;
+  questionCount: number;
+  difficulty: number;
+  includeMultipleChoice: boolean;
+  includeOpenQuestions: boolean;
+  includeCodeSnippets: boolean;
+  instructions?: string;
+  previousQuestions?: { question: string }[];
+  specificModel?: string;
+}
+
+// Base parameters for all question types
+export interface BaseQuestionParams {
+  quizTitle: string;
+  positionTitle: string;
+  experienceLevel: string;
+  skills: string[];
+  difficulty?: number;
+  previousQuestions?: { question: string; type?: string }[];
+  specificModel?: string;
+  instructions?: string;
+  questionIndex: number;
+}
+
+// Type-specific question generation parameters
+export interface MultipleChoiceQuestionParams extends BaseQuestionParams {
+  type: "multiple_choice";
+  focusAreas?: string[];
+  distractorComplexity?: "simple" | "moderate" | "complex";
+}
+
+export interface OpenQuestionParams extends BaseQuestionParams {
+  type: "open_question";
+  requireCodeExample?: boolean;
+  expectedResponseLength?: "short" | "medium" | "long";
+  evaluationCriteria?: string[];
+}
+
+export interface CodeSnippetQuestionParams extends BaseQuestionParams {
+  type: "code_snippet";
+  language?: string;
+  bugType?: "syntax" | "logic" | "performance" | "security";
+  codeComplexity?: "basic" | "intermediate" | "advanced";
+  includeComments?: boolean;
+}
+
+// Union type for all question generation parameters
+export type GenerateQuestionParams =
+  | MultipleChoiceQuestionParams
+  | OpenQuestionParams
+  | CodeSnippetQuestionParams;
+
+// Position description generation parameters
+export interface GeneratePositionDescriptionParams {
+  title: string;
+  experienceLevel: string;
+  skills: string[];
+  softSkills?: string[];
+  contractType?: string;
+  currentDescription?: string;
+  instructions?: string;
+  specificModel?: string;
+}

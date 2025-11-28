@@ -1,6 +1,6 @@
 "use client";
 import { Tag, TagInput } from "emblor";
-import { RefAttributes, useEffect, useId, useState } from "react";
+import { RefAttributes, useCallback, useEffect, useId, useState } from "react";
 
 type Props = RefAttributes<HTMLInputElement> & {
   id?: string;
@@ -9,21 +9,28 @@ type Props = RefAttributes<HTMLInputElement> & {
 };
 
 export default function InputWithTag(props: Props) {
-  const { id: propsId, ...rest } = props;
+  const { id: propsId, onChange, value, ...rest } = props;
   const generatedId = useId();
   const id = propsId || generatedId;
 
   const [tags, setTags] = useState<Tag[]>(
-    rest.value?.map((tag) => ({ id: tag, text: tag })) || []
+    value?.map((tag) => ({ id: tag, text: tag })) || []
   );
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
+
+  // Stable callback to notify parent of changes
+  const notifyParent = useCallback(
+    (newTags: Tag[]) => {
+      onChange(newTags.map((t) => t.text));
+    },
+    [onChange]
+  );
 
   useEffect(() => {
     // Notify parent of tag changes after local state updates to avoid
     // updating parent state during render of this component.
-    rest.onChange(tags.map((t) => t.text));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tags]);
+    notifyParent(tags);
+  }, [tags, notifyParent]);
 
   return (
     <TagInput

@@ -15,10 +15,8 @@
   "dependencies": {
     "@ai-sdk/groq": "^2.0.29",
     "@aws-sdk/client-s3": "^3.940.0",
-    "@aws-sdk/s3-request-presigner": "^3.940.0",
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",
-    "@neondatabase/serverless": "latest",
     "@prisma/adapter-pg": "^7.0.1",
     "@prisma/client": "^7.0.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -42,7 +40,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@uiw/react-textarea-code-editor": "^3.1.1",
     "ai": "^5.0.102",
-    "autoprefixer": "^10.4.22",
     "better-auth": "^1.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
