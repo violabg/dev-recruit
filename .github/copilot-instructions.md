@@ -4,13 +4,18 @@
 
 - **App Router + cache components:** every route under `app/` renders as a server component. Keep Prisma/AI calls in `'use cache'` scopes, use `cacheLife`, and wrap any runtime data (`cookies()`, `headers()`, etc.) inside Suspense boundaries (see `app/dashboard/candidates/page.tsx`).
 - **Dashboard shell:** `app/dashboard/layout.tsx` wires the sidebar, breadcrumbs, theme toggle, and content surface. Shared navigation and helpers live under `components/dashboard/`.
-- **Lib layer:** `lib/actions/` contains server actions for quiz generation, candidate management, and interviews. `lib/services/ai-service.ts` orchestrates Groq AI requests with retries/fallbacks and Zod validation. `lib/prisma.ts` exposes the Neon-backed Prisma client used everywhere.
+- **Lib layer:** `lib/actions/` contains server actions for quiz/question management, candidate management, interviews, evaluations, and presets. `lib/services/ai-service.ts` orchestrates Groq AI requests with retries/fallbacks and Zod validation. `lib/services/r2-storage.ts` handles resume uploads to Cloudflare R2. `lib/prisma.ts` exposes the Neon-backed Prisma client used everywhere.
+- **Data model:** Questions are now reusable entities linked to quizzes via `QuizQuestion` join table. Evaluations are polymorphic (interview-based or candidate-based). Presets define question generation templates with type-specific parameters.
 - **UI/design system:** base primitives in `components/ui/` power buttons, cards, tabs, skeletons, etc. Styling relies on Tailwind v4 utilities, OKLCH tokens in `app/globals.css`.
 
 ## Data & Flow Patterns
 
 - **Server actions + Prisma:** mutate state inside `lib/actions/*`, calling `requireUser()` from `lib/auth-server.ts` for authentication only (not ownership filtering). Reuse helpers from `lib/data/` when filtering/aggregating dashboard data (e.g., `lib/data/dashboard.ts`).
-- **AI prompts:** `AIQuizService` builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Refer to `docs/QUIZ_AI_GENERATION_SYSTEM.md` for the full flow and error-handling knobs.
+- **Question management:** Questions are reusable entities. Use `lib/actions/questions.ts` for CRUD operations. Link questions to quizzes via `QuizQuestion` join table with ordering support. Favorites system allows marking questions for quick access.
+- **Evaluations:** Two types via polymorphic relationship - interview evaluations (quiz-based with answers) and candidate evaluations (resume-based against position requirements). Both use AI-generated assessments with structured schemas.
+- **AI prompts:** `AIQuizService` builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Streaming responses for position descriptions via `streamPositionDescription`. Audio transcription via `transcribeAudioAction` using Whisper models. Refer to `docs/AI_QUIZ_GENERATION.md` for the full flow and error-handling knobs.
+- **Presets system:** `Preset` entity stores question generation templates with type-specific parameters (focusAreas, distractorComplexity, language, etc.). Used during AI question generation to provide consistent configurations.
+- **File storage:** Candidate resumes uploaded to Cloudflare R2 via `lib/services/r2-storage.ts`. Resume text extraction using unpdf for AI-based candidate evaluation.
 - **Dashboard pages:** split UI into Suspense-backed sections that fetch data independently so cached parts stay in the static shell while runtime segments stream separately.
 
 ## Workflows & Commands
@@ -29,11 +34,15 @@
 
 ## Essential References
 
-- `lib/services/ai-service.ts` + `lib/schemas/` – model selection, retries, and Zod guards.
+- `lib/services/ai-service.ts` – AI quiz generation, evaluation, streaming, and transcription with model selection, retries, and Zod guards.
+- `lib/services/r2-storage.ts` – Cloudflare R2 file upload/delete for resume storage.
+- `lib/schemas/` – Zod validation schemas (v4) for questions, evaluations, presets, positions, etc.
+- `lib/schemas/questionEntity.ts` – Database Question entity schemas (separate from inline quiz questions).
 - `app/dashboard/layout.tsx` + `components/dashboard/` – layout, navigation, and theme wiring.
-- `prisma/schema.prisma` + `schema.sql` – data model, migrations, and SQL helpers.
+- `prisma/schema.prisma` – data model with Question, QuizQuestion, Evaluation, Preset entities.
 - `lib/data/` + `lib/actions/` – shared helpers to reuse instead of duplicating logic.
-- `app/globals.css` – color tokens.
+- `lib/utils/question-utils.ts` – Question transformation utilities.
+- `app/globals.css` – color tokens (OKLCH format).
 
 ## Handling Requests
 
@@ -69,9 +78,12 @@ All data queries in `lib/data/` follow this pattern:
 
 - **AI outputs:** Generated quiz JSON must match the schemas in `lib/schemas` (see `aiQuizGenerationSchema` and `questionSchemas.flexible`). Example enforcement: `aiQuizService.generateQuiz` validates presence of `title` and `questions`.
 - **Language rule:** quiz/question text must be in Italian (system prompts in `lib/services/ai-service.ts`).
-- **Form-server contract:** `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `timeLimit`, and `positionId` for creation — see `lib/actions/quizzes.ts` for exact behavior.
-- **Cache invalidation:** after mutations update cache tags (e.g., `updateTag("quizzes")`) and call helper revalidation (`utils/revalidateQuizCache`) to support both Cache Components and legacy paths.
-- **Validation:** prefer Zod strict parsing in server actions (see `lib/actions/quizzes.ts` usage of `questionSchemas.strict`).
+- **Question entity:** Questions are stored as reusable database entities. Use `createQuestionAction`, `updateQuestionAction`, `deleteQuestionAction` from `lib/actions/questions.ts`. Link to quizzes via `addQuestionsToQuizAction` which creates `QuizQuestion` records with ordering.
+- **Evaluation polymorphism:** `Evaluation` entity uses polymorphic pattern - either `interviewId` (1:1, quiz-based) or `candidateId` + `positionId` (many-to-one, resume-based). Use `lib/actions/evaluation-entity.ts` for creation, `lib/actions/evaluations.ts` for interview answer evaluation.
+- **Presets usage:** When generating questions, fetch preset configuration from `getPresetData` and pass parameters to AI service. Presets define focusAreas, distractorComplexity, language, bugType, etc.
+- **Form-server contract:** `upsertQuizAction(formData)` no longer accepts inline questions - questions are linked separately. Use question management actions to add/remove/reorder questions in quizzes.
+- **Cache invalidation:** after mutations update cache tags (e.g., `updateTag("quizzes")`, `updateTag("questions")`, `updateTag("evaluations")`) and call helper revalidation functions when needed.
+- **Validation:** prefer Zod strict parsing in server actions. Use `questionSchemas.strict` for runtime validation, `createQuestionSchema`/`updateQuestionSchema` for entity operations.
 
 ## Developer workflows & commands (run these)
 
