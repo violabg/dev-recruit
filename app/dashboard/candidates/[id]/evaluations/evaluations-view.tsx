@@ -24,13 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  createCandidateEvaluation,
   deleteEvaluation,
   updateEvaluationNotes,
 } from "@/lib/actions/evaluation-entity";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
+import type { OverallEvaluation } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import {
   ChevronDown,
@@ -40,8 +41,64 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
+
+/** Unescape JSON string values */
+function unescapeJsonString(str: string): string {
+  return str.replace(/\\n/g, "\n").replace(/\\"/g, '"');
+}
+
+/** Extract array items from partial JSON using regex */
+function extractArrayItems(content: string): string[] {
+  return [...content.matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) =>
+    unescapeJsonString(m[1])
+  );
+}
+
+/** Parse partial JSON fields as they stream in */
+function parsePartialEvaluation(text: string): Partial<OverallEvaluation> {
+  const partialEval: Partial<OverallEvaluation> = {};
+
+  // Try to parse evaluation field
+  const evalMatch = text.match(/"evaluation"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (evalMatch) {
+    partialEval.evaluation = unescapeJsonString(evalMatch[1]);
+  }
+
+  // Try to parse strengths array
+  const strengthsMatch = text.match(/"strengths"\s*:\s*\[([\s\S]*?)(?:\]|$)/);
+  if (strengthsMatch) {
+    const strengths = extractArrayItems(strengthsMatch[1]);
+    if (strengths.length > 0) {
+      partialEval.strengths = strengths;
+    }
+  }
+
+  // Try to parse weaknesses array
+  const weaknessesMatch = text.match(/"weaknesses"\s*:\s*\[([\s\S]*?)(?:\]|$)/);
+  if (weaknessesMatch) {
+    const weaknesses = extractArrayItems(weaknessesMatch[1]);
+    if (weaknesses.length > 0) {
+      partialEval.weaknesses = weaknesses;
+    }
+  }
+
+  // Try to parse recommendation field
+  const recMatch = text.match(/"recommendation"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (recMatch) {
+    partialEval.recommendation = unescapeJsonString(recMatch[1]);
+  }
+
+  // Try to parse fitScore field
+  const scoreMatch = text.match(/"fitScore"\s*:\s*(\d+)/);
+  if (scoreMatch) {
+    partialEval.fitScore = parseInt(scoreMatch[1], 10);
+  }
+
+  return partialEval;
+}
 
 interface Position {
   id: string;
@@ -78,6 +135,39 @@ export function CandidateEvaluationsView({
     return initial;
   });
   const [savingNotes, startSavingNotes] = useTransition();
+  const [streamingEvaluation, setStreamingEvaluation] =
+    useState<Partial<OverallEvaluation> | null>(null);
+  const [streamingPositionTitle, setStreamingPositionTitle] = useState<
+    string | null
+  >(null);
+  const router = useRouter();
+  const prevEvaluationsLengthRef = useRef(initialEvaluations.length);
+  const isStreamingRef = useRef(false);
+
+  // Update evaluations when prop changes (after router.refresh())
+  useEffect(() => {
+    const prevLength = prevEvaluationsLengthRef.current;
+    const newLength = initialEvaluations.length;
+
+    setEvaluations(initialEvaluations);
+
+    // Clear streaming state when new data arrives from server (new evaluation added)
+    if (isStreamingRef.current && newLength > prevLength) {
+      setStreamingEvaluation(null);
+      setStreamingPositionTitle(null);
+      setIsGenerating(false);
+      isStreamingRef.current = false;
+
+      // Expand the newly added evaluation (first one since sorted by createdAt desc)
+      const newEval = initialEvaluations[0];
+      if (newEval) {
+        setExpandedEvaluation(newEval.id);
+        setNotes((prev) => ({ ...prev, [newEval.id]: newEval.notes ?? "" }));
+      }
+    }
+
+    prevEvaluationsLengthRef.current = newLength;
+  }, [initialEvaluations]);
 
   // Filter out positions that already have an evaluation
   const evaluatedPositionIds = new Set(
@@ -87,7 +177,7 @@ export function CandidateEvaluationsView({
     (p) => !evaluatedPositionIds.has(p.id)
   );
 
-  const handleGenerateEvaluation = async () => {
+  const handleGenerateEvaluation = useCallback(async () => {
     if (!selectedPositionId) {
       toast.error("Seleziona una posizione");
       return;
@@ -100,38 +190,44 @@ export function CandidateEvaluationsView({
       return;
     }
 
+    const position = positions.find((p) => p.id === selectedPositionId);
+    setStreamingPositionTitle(position?.title ?? "Valutazione");
+    setStreamingEvaluation({});
     setIsGenerating(true);
+    isStreamingRef.current = true;
 
     try {
-      const newEvaluation = await createCandidateEvaluation(
-        candidateId,
-        selectedPositionId
-      );
+      const response = await fetch("/api/evaluations/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateId, positionId: selectedPositionId }),
+      });
 
-      // Add the new evaluation to the list
-      const position = positions.find((p) => p.id === selectedPositionId);
-      const enrichedEvaluation = {
-        ...newEvaluation,
-        interview: null,
-        candidate: null,
-        position: position
-          ? {
-              id: position.id,
-              title: position.title,
-            }
-          : null,
-        creator: null,
-      } as unknown as EvaluationWithRelations;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Errore durante la generazione");
+      }
 
-      setEvaluations((prev) => [enrichedEvaluation, ...prev]);
-      setNotes((prev) => ({
-        ...prev,
-        [newEvaluation.id]: newEvaluation.notes ?? "",
-      }));
-      setExpandedEvaluation(newEvaluation.id);
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        fullText += decoder.decode(value, { stream: true });
+        setStreamingEvaluation(parsePartialEvaluation(fullText));
+      }
+
       setSelectedPositionId("");
-
       toast.success("Valutazione generata con successo");
+
+      // Refresh the page to get the saved evaluation from DB
+      // The useEffect will clear the streaming state when new data arrives
+      router.refresh();
     } catch (error) {
       console.error("Error generating evaluation:", error);
       toast.error(
@@ -139,10 +235,13 @@ export function CandidateEvaluationsView({
           ? error.message
           : "Errore durante la generazione della valutazione"
       );
-    } finally {
+      // Clear streaming state on error
+      setStreamingEvaluation(null);
+      setStreamingPositionTitle(null);
       setIsGenerating(false);
+      isStreamingRef.current = false;
     }
-  };
+  }, [selectedPositionId, hasResume, positions, candidateId, router]);
 
   const handleSaveNotes = (evaluationId: string) => {
     startSavingNotes(async () => {
@@ -228,7 +327,7 @@ export function CandidateEvaluationsView({
       </Card>
 
       {/* List of evaluations */}
-      {evaluations.length === 0 ? (
+      {evaluations.length === 0 && !streamingEvaluation ? (
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">
@@ -239,8 +338,122 @@ export function CandidateEvaluationsView({
       ) : (
         <div className="space-y-4">
           <h2 className="font-semibold text-lg">
-            Valutazioni esistenti ({evaluations.length})
+            Valutazioni esistenti ({evaluations.length}
+            {streamingEvaluation ? " + 1 in corso" : ""})
           </h2>
+
+          {/* Streaming evaluation card - shown as first item in list */}
+          {streamingEvaluation && (
+            <Card className="py-0 border-primary/50">
+              <CardHeader className="gap-0 p-0">
+                <div className="flex items-center">
+                  <div className="flex flex-1 items-center gap-3 p-6 text-left">
+                    <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-primary text-lg">
+                        {streamingPositionTitle}
+                      </CardTitle>
+                      <CardDescription>Generazione in corso...</CardDescription>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pb-6">
+                {/* Evaluation text */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-muted-foreground text-sm">
+                    Valutazione
+                  </h4>
+                  {streamingEvaluation.evaluation ? (
+                    <p className="text-sm whitespace-pre-wrap">
+                      {streamingEvaluation.evaluation}
+                      <span className="inline-block bg-primary ml-0.5 w-1 h-4 animate-pulse" />
+                    </p>
+                  ) : (
+                    <Skeleton className="w-full h-20" />
+                  )}
+                </div>
+
+                {/* Strengths */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-green-600 dark:text-green-400 text-sm">
+                    Punti di forza
+                  </h4>
+                  {streamingEvaluation.strengths &&
+                  streamingEvaluation.strengths.length > 0 ? (
+                    <ul className="space-y-1 pl-5 text-sm list-disc">
+                      {streamingEvaluation.strengths.map((strength, idx) => (
+                        <li key={idx}>{strength}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="space-y-2">
+                      <Skeleton className="w-3/4 h-4" />
+                      <Skeleton className="w-2/3 h-4" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Weaknesses */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-amber-600 dark:text-amber-400 text-sm">
+                    Aree di miglioramento
+                  </h4>
+                  {streamingEvaluation.weaknesses &&
+                  streamingEvaluation.weaknesses.length > 0 ? (
+                    <ul className="space-y-1 pl-5 text-sm list-disc">
+                      {streamingEvaluation.weaknesses.map((weakness, idx) => (
+                        <li key={idx}>{weakness}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="space-y-2">
+                      <Skeleton className="w-3/4 h-4" />
+                      <Skeleton className="w-2/3 h-4" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Recommendation */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Raccomandazione</h4>
+                  {streamingEvaluation.recommendation ? (
+                    <p className="text-sm">
+                      {streamingEvaluation.recommendation}
+                    </p>
+                  ) : (
+                    <Skeleton className="w-full h-12" />
+                  )}
+                </div>
+
+                {/* Fit Score */}
+                <div className="flex items-center gap-2 pt-2 border-t">
+                  <span className="text-muted-foreground text-sm">
+                    Punteggio di idoneità:
+                  </span>
+                  {streamingEvaluation.fitScore !== undefined ? (
+                    <div className="flex items-center">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`w-2 h-4 mx-0.5 rounded-sm ${
+                            i < Math.round(streamingEvaluation.fitScore! / 10)
+                              ? "bg-primary"
+                              : "bg-muted"
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-2 font-medium">
+                        {Math.round(streamingEvaluation.fitScore / 10)}/10
+                      </span>
+                    </div>
+                  ) : (
+                    <Skeleton className="w-32 h-4" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {evaluations.map((evaluation) => {
             const isExpanded = expandedEvaluation === evaluation.id;
