@@ -47,10 +47,11 @@ export function NavMain({
                   size="default"
                   className={cn(
                     "group relative rounded-md overflow-hidden transition-all duration-200",
-                    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    "hover:bg-muted-foreground/20 dark:hover:bg-muted-foreground/30 hover:text-foreground hover:scale-[1.02] hover:shadow-sm",
+                    "active:scale-[0.98]",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
-                      : "text-muted-foreground"
+                      ? "bg-muted-foreground/15 dark:bg-muted-foreground/25 text-foreground font-medium shadow-sm border-l-2 border-primary"
+                      : "text-muted-foreground hover:translate-x-0.5"
                   )}
                 >
                   <span
