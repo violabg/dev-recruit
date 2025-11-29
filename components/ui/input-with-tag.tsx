@@ -1,6 +1,6 @@
 "use client";
 import { Tag, TagInput } from "emblor";
-import { RefAttributes, useCallback, useEffect, useId, useState } from "react";
+import { RefAttributes, useEffect, useId, useRef, useState } from "react";
 
 type Props = RefAttributes<HTMLInputElement> & {
   id?: string;
@@ -18,27 +18,40 @@ export default function InputWithTag(props: Props) {
   );
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
 
-  // Stable callback to notify parent of changes
-  const notifyParent = useCallback(
-    (newTags: Tag[]) => {
-      onChange(newTags.map((t) => t.text));
-    },
-    [onChange]
-  );
+  // Track if this is initial mount - skip notifying parent on mount
+  const isInitialMount = useRef(true);
+  // Store pending tags to notify parent about (after render completes)
+  const pendingNotify = useRef<Tag[] | null>(null);
 
+  const handleSetTags = (newTags: Tag[] | ((prev: Tag[]) => Tag[])) => {
+    setTags((prev) => {
+      const resolved = typeof newTags === "function" ? newTags(prev) : newTags;
+      // Schedule parent notification for after render
+      pendingNotify.current = resolved;
+      return resolved;
+    });
+  };
+
+  // Notify parent after render completes (not during render)
   useEffect(() => {
-    // Notify parent of tag changes after local state updates to avoid
-    // updating parent state during render of this component.
-    notifyParent(tags);
-  }, [tags, notifyParent]);
+    // Skip initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // If we have pending changes, notify parent
+    if (pendingNotify.current !== null) {
+      onChange(pendingNotify.current.map((t) => t.text));
+      pendingNotify.current = null;
+    }
+  }, [tags, onChange]);
 
   return (
     <TagInput
       id={id}
       tags={tags}
-      setTags={(newTags) => {
-        setTags(newTags);
-      }}
+      setTags={handleSetTags}
       placeholder="Add a tag"
       styleClasses={{
         inlineTagsContainer:
