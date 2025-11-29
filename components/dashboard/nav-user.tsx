@@ -17,13 +17,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { CurrentUserAvatar } from "../auth/current-user-avatar";
 import { LogoutButton } from "../auth/logout-button";
 
 export function NavUser() {
-  const { data } = authClient.useSession();
+  const { data, isPending } = authClient.useSession();
   const user = data?.user ?? null;
   const { isMobile } = useSidebar();
 
@@ -36,13 +37,25 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <CurrentUserAvatar />
-              <div className="flex-1 grid text-sm text-left leading-tight">
-                <span className="font-medium truncate">
-                  {user?.name ?? user?.email ?? ""}
-                </span>
-                <span className="text-xs truncate">{user?.email}</span>
-              </div>
+              {isPending ? (
+                <>
+                  <Skeleton className="rounded-full size-8" />
+                  <div className="flex-1 gap-1 grid">
+                    <Skeleton className="w-24 h-4" />
+                    <Skeleton className="w-32 h-3" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <CurrentUserAvatar />
+                  <div className="flex-1 grid text-sm text-left leading-tight">
+                    <span className="font-medium truncate">
+                      {user?.name ?? user?.email ?? ""}
+                    </span>
+                    <span className="text-xs truncate">{user?.email}</span>
+                  </div>
+                </>
+              )}
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
