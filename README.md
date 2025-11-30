@@ -14,7 +14,7 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 - **📋 Position Management** - Create and manage job positions with detailed skill requirements and AI-generated descriptions
 - **👥 Candidate Tracking** - Track candidates through the recruitment pipeline with status management and resume storage
 - **📝 AI-Powered Quiz Generation** - Generate technical assessments tailored to specific positions using advanced LLMs
-- **🎯 Interview System** - Send quiz invitations to candidates via unique tokens for remote technical assessments
+- **🎯 Interview System** - Send quiz invitations to candidates via unique tokens for remote technical assessments. Features time-limited quizzes with user confirmation dialogs for completion when time expires.
 - **📊 AI Evaluation** - Dual evaluation system:
   - **Interview Evaluations** - Automated quiz answer evaluation with detailed feedback and scoring
   - **Candidate Evaluations** - Resume-based assessment against position requirements with fit scoring

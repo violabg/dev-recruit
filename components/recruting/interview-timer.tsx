@@ -8,6 +8,7 @@ interface InterviewTimerProps {
   isCompleted: boolean;
   isTimeExpired: boolean;
   onTimeExpired: () => void;
+  totalTimeSeconds?: number;
 }
 
 /**
@@ -20,6 +21,7 @@ export function InterviewTimer({
   isCompleted,
   isTimeExpired,
   onTimeExpired,
+  totalTimeSeconds,
 }: InterviewTimerProps) {
   const [hydrationComplete, setHydrationComplete] = useState(false);
 
@@ -63,6 +65,20 @@ export function InterviewTimer({
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
+  // Calculate icon color based on time remaining percentage
+  const getIconColor = () => {
+    if (!displayTime || !totalTimeSeconds) return "text-muted-foreground";
+
+    const percentage = (displayTime / totalTimeSeconds) * 100;
+
+    if (percentage <= 10) {
+      return "text-red-500"; // Red at 10% or less
+    } else if (percentage <= 30) {
+      return "text-yellow-500"; // Yellow at 30% or less
+    }
+    return "text-muted-foreground"; // Default color
+  };
+
   // Only render timer after hydration and when time is available
   if (!hydrationComplete || displayTime === null) {
     return null;
@@ -70,7 +86,7 @@ export function InterviewTimer({
 
   return (
     <div className="flex items-center gap-2">
-      <Clock className="w-4 h-4 text-muted-foreground" />
+      <Clock className={`w-4 h-4 ${getIconColor()}`} />
       <span className="font-mono">{formatTimeRemaining(displayTime)}</span>
     </div>
   );

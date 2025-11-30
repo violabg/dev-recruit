@@ -1,6 +1,4 @@
 "use client";
-
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BrainCircuit, CheckCircle } from "lucide-react";
-import Link from "next/link";
 
 export function InterviewComplete() {
   return (
@@ -33,9 +30,6 @@ export function InterviewComplete() {
             <BrainCircuit className="w-5 h-5" />
             <span className="font-bold">DevRecruit AI</span>
           </div>
-          <Button className="w-full" asChild>
-            <Link href="/">Torna alla home</Link>
-          </Button>
         </CardContent>
       </Card>
     </div>

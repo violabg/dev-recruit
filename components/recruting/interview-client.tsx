@@ -2,6 +2,15 @@
 import { InterviewComplete } from "@/components/recruting/interview-complete";
 import { InterviewQuestion } from "@/components/recruting/interview-question";
 import { InterviewTimer } from "@/components/recruting/interview-timer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,7 +27,7 @@ import {
   submitAnswer,
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
-import { BrainCircuit } from "lucide-react";
+import { AlertTriangle, BrainCircuit } from "lucide-react";
 import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "../theme-toggle";
@@ -128,6 +137,67 @@ export function InterviewClient({
     interview.status === "in_progress"
   );
   const [isPending, startTransition] = useTransition();
+
+  // Show dialog on mount if time is already expired and interview not completed
+  const [showTimeExpiredDialog, setShowTimeExpiredDialog] = useState(
+    () =>
+      initialTimeRemaining !== null &&
+      initialTimeRemaining === 0 &&
+      interview.status !== "completed"
+  );
+
+  const handleTimeExpired = useCallback(() => {
+    setShowTimeExpiredDialog(true);
+  }, []);
+
+  const handleConfirmTimeExpired = useCallback(() => {
+    // Save any pending answer
+    const currentQuestion = quiz.questions[currentQuestionIndex];
+    if (pendingAnswer !== null && !answers[currentQuestion.id]) {
+      setAnswers((prev) => ({
+        ...prev,
+        [currentQuestion.id]: pendingAnswer,
+      }));
+      startTransition(async () => {
+        try {
+          await submitAnswer(
+            interview.token,
+            currentQuestion.id,
+            pendingAnswer
+          );
+          await completeInterview(interview.token);
+          setIsCompleted(true);
+        } catch (cause) {
+          const message =
+            cause instanceof Error
+              ? cause.message
+              : "Impossibile completare l'intervista";
+          toast.error("Errore", { description: message });
+        }
+      });
+    } else {
+      startTransition(async () => {
+        try {
+          await completeInterview(interview.token);
+          setIsCompleted(true);
+        } catch (cause) {
+          const message =
+            cause instanceof Error
+              ? cause.message
+              : "Impossibile completare l'intervista";
+          toast.error("Errore", { description: message });
+        }
+      });
+    }
+    setIsTimeExpired(true);
+    setShowTimeExpiredDialog(false);
+  }, [
+    quiz.questions,
+    currentQuestionIndex,
+    pendingAnswer,
+    answers,
+    interview.token,
+  ]);
 
   const handleCompleteInterview = useCallback(() => {
     startTransition(async () => {
@@ -246,7 +316,7 @@ export function InterviewClient({
   if (!isStarted) {
     return (
       <div className="flex flex-col justify-center items-center p-4 min-h-dvh">
-        <Card className="w-full max-w-2xl">
+        <Card className="w-full">
           <CardHeader>
             <div className="flex justify-center items-center gap-2 text-primary">
               <BrainCircuit className="w-6 h-6" />
@@ -342,25 +412,18 @@ export function InterviewClient({
               isStarted={isStarted}
               isCompleted={isCompleted}
               isTimeExpired={isTimeExpired}
-              onTimeExpired={() => {
-                setIsTimeExpired(true);
-              }}
+              onTimeExpired={handleTimeExpired}
+              totalTimeSeconds={
+                quiz.timeLimit ? quiz.timeLimit * 60 : undefined
+              }
             />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCompleteInterview}
-              disabled={isPending}
-            >
-              Completa
-            </Button>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <main className="flex-1 p-4 md:p-6">
-        <div className="mx-auto max-w-4xl">
+      <main className="flex-1 m-auto p-4 md:p-6 container">
+        <div className="mx-auto">
           <div className="space-y-2 mb-6">
             <h1 className="font-bold text-2xl">{quiz.title}</h1>
             <div className="flex justify-between items-center">
@@ -423,6 +486,31 @@ export function InterviewClient({
           </div>
         </div>
       </main>
+
+      <AlertDialog
+        open={showTimeExpiredDialog}
+        onOpenChange={setShowTimeExpiredDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex justify-center items-center bg-yellow-100 dark:bg-yellow-900 rounded-full w-10 h-10">
+                <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <AlertDialogTitle>Tempo scaduto</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              Il tempo a disposizione per completare il quiz è terminato. Vuoi
+              salvare le risposte e completare l&apos;intervista ora?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleConfirmTimeExpired}>
+              Salva e completa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
