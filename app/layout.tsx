@@ -26,6 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" suppressHydrationWarning>
+      <link rel="icon" href="/favicon.ico" sizes="any" />
       <body className="bg-background min-h-dvh font-sans text-foreground antialiased">
         <ThemeProvider
           attribute="class"
