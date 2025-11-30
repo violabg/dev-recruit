@@ -1,19 +1,13 @@
 "use client";
 
 import { programmingLanguages } from "@/components/positions/data";
+import { SelectField } from "@/components/rhf-inputs";
 import {
   Field,
   FieldContent,
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Question } from "@/lib/schemas";
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
@@ -49,47 +43,19 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
 
   return (
     <div className="space-y-4">
-      <Field>
-        <FieldLabel htmlFor={`questions-${index}-language`}>
-          Linguaggio di programmazione
-          <span aria-hidden className="ps-1 text-destructive">
-            *
-          </span>
-        </FieldLabel>
-        <FieldContent>
-          <Controller
-            control={form.control}
-            name={`questions.${index}.language`}
-            render={({ field: languageField }) => (
-              <Select
-                value={languageField.value?.toLowerCase() || getLanguage()}
-                onValueChange={(value) => {
-                  languageField.onChange(value);
-                }}
-              >
-                <SelectTrigger
-                  className="w-48"
-                  id={`questions-${index}-language`}
-                >
-                  <SelectValue placeholder="Seleziona linguaggio" />
-                </SelectTrigger>
-                <SelectContent>
-                  {programmingLanguages.map((lang) => (
-                    <SelectItem key={lang} value={lang.toLowerCase()}>
-                      {lang}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </FieldContent>
-        <FieldError
-          errors={
-            questionErrors?.language ? [questionErrors.language] : undefined
-          }
-        />
-      </Field>
+      <SelectField
+        control={form.control}
+        name={`questions.${index}.language`}
+        label="Linguaggio di programmazione"
+        required
+        placeholder="Seleziona linguaggio"
+        selectProps={{}} // kept for future customizations
+        triggerProps={{ id: `questions-${index}-language`, className: "w-48" }}
+        options={programmingLanguages.map((lang) => ({
+          value: lang.toLowerCase(),
+          label: lang,
+        }))}
+      />
       <Field>
         <FieldLabel htmlFor={`questions-${index}-code`}>
           Snippet di codice

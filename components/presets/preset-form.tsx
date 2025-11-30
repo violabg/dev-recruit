@@ -284,8 +284,8 @@ export function PresetForm({ preset }: PresetFormProps) {
                   control={form.control}
                   name="focusAreas"
                   label="Aree di focus"
-                  placeholder="Aggiungi un'area di focus"
-                  description="Premi enter dopo aver digitato un'area di interesse."
+                  placeholder="Premi invio dopo ogni parola"
+                  description="Aree tematiche su cui l'AI dovrebbe concentrarsi durante la generazione delle domande"
                 />
               </div>
 

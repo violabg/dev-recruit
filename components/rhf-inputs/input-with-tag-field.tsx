@@ -29,6 +29,7 @@ export function InputWithTagField<T extends FieldValues>({
           id={field.name}
           // The TagInput component expects an array of tags
           // Ensure we always pass an array, defaulting to empty if undefined
+          placeholder={placeholder}
           value={(field.value as string[] | undefined) || []}
           onChange={(newTags: string[]) => field.onChange(newTags)}
         />

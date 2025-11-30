@@ -45,8 +45,9 @@ export function BaseController<T extends FieldValues>({
     <Controller
       name={name}
       control={control}
+      rules={{ required: !!required }}
       render={({ field, fieldState, formState }) => (
-        <Field>
+        <Field data-invalid={fieldState.invalid}>
           {label && (
             <FieldLabel htmlFor={field.name}>
               {label}

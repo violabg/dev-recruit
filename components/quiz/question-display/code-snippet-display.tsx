@@ -1,5 +1,8 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { prismLanguage } from "@/lib/utils";
+import { useTheme } from "next-themes";
 import { Highlight, themes } from "prism-react-renderer";
 
 type CodeSnippetDisplayProps = {
@@ -11,6 +14,11 @@ type CodeSnippetDisplayProps = {
 };
 
 export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
+  const { theme, resolvedTheme } = useTheme();
+  const prismTheme =
+    resolvedTheme === "dark" || theme === "dark"
+      ? themes.vsDark
+      : themes.vsLight;
   return (
     <div className="space-y-3">
       {question.codeSnippet && (
@@ -24,7 +32,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
             )}
           </div>
           <Highlight
-            theme={themes.vsDark}
+            theme={prismTheme}
             code={question.codeSnippet}
             language={prismLanguage(question.language || "javascript")}
           >
@@ -71,7 +79,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
             )}
           </div>
           <Highlight
-            theme={themes.vsDark}
+            theme={prismTheme}
             code={question.sampleSolution}
             language={prismLanguage(question.language || "javascript")}
           >

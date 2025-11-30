@@ -97,6 +97,7 @@ export function SelectField<T extends FieldValues>({
           <SelectTrigger
             aria-required={required}
             aria-invalid={!!fieldState.error}
+            data-invalid={!!fieldState.error}
             {...triggerProps}
           >
             <SelectValue placeholder={placeholder} />

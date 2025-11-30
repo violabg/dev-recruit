@@ -40,6 +40,11 @@ export function InterviewQuestion({
   const monacoTheme =
     resolvedTheme === "dark" || theme === "dark" ? "vs-dark" : "light";
 
+  const prismTheme =
+    resolvedTheme === "dark" || theme === "dark"
+      ? themes.vsDark
+      : themes.vsLight;
+
   // Compute initial values from currentAnswer
   const getInitialAnswer = (): string | null => {
     if (typeof currentAnswer === "string") return currentAnswer;
@@ -233,7 +238,7 @@ export function InterviewQuestion({
               <div>
                 <h3 className="mb-2 font-medium">Codice:</h3>
                 <Highlight
-                  theme={themes.vsDark}
+                  theme={prismTheme}
                   code={question.codeSnippet}
                   language={prismLanguage(question.language || "javascript")}
                 >

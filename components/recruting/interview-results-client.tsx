@@ -25,6 +25,7 @@ import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import { FlexibleQuestion } from "@/lib/schemas";
 import { prismLanguage } from "@/lib/utils";
 import { Loader2, Save, Sparkles } from "lucide-react";
+import { useTheme } from "next-themes";
 import { Highlight, themes } from "prism-react-renderer";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -72,6 +73,11 @@ export function InterviewResultsClient({
     useState(false);
   const [notes, setNotes] = useState(initialEvaluation?.notes ?? "");
   const [isSavingNotes, startSavingNotes] = useTransition();
+  const { theme, resolvedTheme } = useTheme();
+  const prismTheme =
+    resolvedTheme === "dark" || theme === "dark"
+      ? themes.vsDark
+      : themes.vsLight;
 
   const evaluateAnswers = async () => {
     setLoading(true);
@@ -527,7 +533,7 @@ export function InterviewResultsClient({
 
                               {type === "code_snippet" && (
                                 <Highlight
-                                  theme={themes.vsDark}
+                                  theme={prismTheme}
                                   code={
                                     typeof answers[id] === "object" &&
                                     answers[id] !== null &&

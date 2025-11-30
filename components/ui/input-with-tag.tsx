@@ -4,6 +4,7 @@ import { RefAttributes, useEffect, useId, useRef, useState } from "react";
 
 type Props = RefAttributes<HTMLInputElement> & {
   id?: string;
+  placeholder?: string;
   value: string[];
   onChange: (tags: string[]) => void;
 };
@@ -52,7 +53,7 @@ export default function InputWithTag(props: Props) {
       id={id}
       tags={tags}
       setTags={handleSetTags}
-      placeholder="Add a tag"
+      placeholder={props.placeholder || "Aggiungi un tag..."}
       styleClasses={{
         inlineTagsContainer:
           "border-input rounded-md bg-background shadow-xs transition-[color,box-shadow] focus-within:border-ring outline-none focus-within:ring-[3px] focus-within:ring-ring/50 p-1 gap-1",
