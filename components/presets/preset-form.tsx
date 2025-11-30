@@ -54,7 +54,6 @@ const COMMON_TAGS = [
 ];
 
 const DISTRACTOR_COMPLEXITY_OPTIONS = [
-  { value: "", label: "Non specificato" },
   { value: "simple", label: "Semplice" },
   { value: "moderate", label: "Moderato" },
   { value: "complex", label: "Complesso" },
@@ -114,7 +113,8 @@ export function PresetForm({ preset }: PresetFormProps) {
     language: preset?.language ?? "",
     requireCodeExample: preset?.requireCodeExample ?? false,
     includeComments: preset?.includeComments ?? true,
-    distractorComplexity: preset?.distractorComplexity ?? "",
+    distractorComplexity:
+      preset?.distractorComplexity ?? DISTRACTOR_COMPLEXITY_OPTIONS[1].value,
     expectedResponseLength: preset?.expectedResponseLength ?? "",
     bugType: preset?.bugType ?? "",
     codeComplexity: preset?.codeComplexity ?? "",
@@ -183,12 +183,17 @@ export function PresetForm({ preset }: PresetFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6"
+          noValidate
+        >
           <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
             <InputField
               control={form.control}
               name="name"
               label="Nome preset"
+              required
               placeholder="es. react-hooks"
               description="Identificatore univoco per il preset"
             />
@@ -197,6 +202,7 @@ export function PresetForm({ preset }: PresetFormProps) {
               control={form.control}
               name="label"
               label="Etichetta visualizzata"
+              required
               placeholder="es. Esperto React Hooks"
               description="Nome leggibile dall'uomo"
             />
@@ -223,6 +229,7 @@ export function PresetForm({ preset }: PresetFormProps) {
               control={form.control}
               name="icon"
               label="Icona"
+              required
               options={PRESET_ICON_OPTIONS.map((icon) => ({
                 value: icon.value,
                 label: icon.label,
@@ -240,6 +247,7 @@ export function PresetForm({ preset }: PresetFormProps) {
               control={form.control}
               name="questionType"
               label="Tipo di domanda"
+              required
               options={QUESTION_TYPES}
               description="Tipo di domande generate da questo preset"
             />
@@ -248,6 +256,7 @@ export function PresetForm({ preset }: PresetFormProps) {
               control={form.control}
               name="difficulty"
               label="Livello difficoltà"
+              required
               min={1}
               max={5}
               step={1}
@@ -259,6 +268,7 @@ export function PresetForm({ preset }: PresetFormProps) {
             control={form.control}
             name="tags"
             label="Tag"
+            required
             options={COMMON_TAGS.map((tag) => ({
               value: tag,
               label: tag,
@@ -284,7 +294,7 @@ export function PresetForm({ preset }: PresetFormProps) {
                 name="distractorComplexity"
                 label="Complessità distrattori"
                 options={DISTRACTOR_COMPLEXITY_OPTIONS}
-                description="Quanto sfumate dovrebbero essere le risposte errate"
+                description="Quanto dovrebbero essere difficili da distinguere le opzioni sbagliate"
               />
             </div>
           )}

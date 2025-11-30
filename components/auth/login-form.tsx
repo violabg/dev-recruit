@@ -87,6 +87,7 @@ export function LoginForm({
               autoComplete="email"
               control={form.control}
               disabled={isPending}
+              required
             />
             <>
               <div className="flex items-center gap-2">
@@ -104,6 +105,7 @@ export function LoginForm({
                 placeholder="Password"
                 autoComplete="current-password"
                 disabled={isPending}
+                required
               />
             </>
             <Button type="submit" className="w-full" disabled={isPending}>

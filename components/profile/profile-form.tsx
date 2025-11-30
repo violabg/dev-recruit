@@ -1,5 +1,6 @@
 "use client";
 
+import { InputField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +18,6 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { InputField } from "@/components/rhf-inputs";
 
 type ProfileFormValues = ProfileFormData;
 
@@ -76,7 +76,11 @@ export const ProfileForm = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+            noValidate
+          >
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="font-medium text-sm">Email</label>
@@ -90,6 +94,7 @@ export const ProfileForm = ({
                 control={form.control}
                 name="full_name"
                 label="Nome Completo"
+                required
                 placeholder="Il tuo nome completo"
                 disabled={isPending}
               />
@@ -98,6 +103,7 @@ export const ProfileForm = ({
                 control={form.control}
                 name="user_name"
                 label="Nome Utente"
+                required
                 placeholder="Il tuo nome utente"
                 disabled={isPending}
               />

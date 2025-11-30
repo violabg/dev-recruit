@@ -86,6 +86,7 @@ export function SignUpForm({
               placeholder="Mario"
               autoComplete="given-name"
               disabled={isPending}
+              required
             />
             <InputField<SignUpFormData>
               name="last_name"
@@ -95,6 +96,7 @@ export function SignUpForm({
               placeholder="Rossi"
               autoComplete="family-name"
               disabled={isPending}
+              required
             />
             <InputField<SignUpFormData>
               name="email"
@@ -104,6 +106,7 @@ export function SignUpForm({
               placeholder="m@example.com"
               autoComplete="email"
               disabled={isPending}
+              required
             />
             <PasswordField<SignUpFormData>
               name="password"
@@ -111,6 +114,7 @@ export function SignUpForm({
               control={form.control}
               autoComplete="new-password"
               disabled={isPending}
+              required
             />
             <PasswordField<SignUpFormData>
               name="repeatPassword"
@@ -118,6 +122,7 @@ export function SignUpForm({
               control={form.control}
               autoComplete="new-password"
               disabled={isPending}
+              required
             />
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Creazione account..." : "Registrati"}

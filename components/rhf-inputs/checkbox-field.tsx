@@ -24,6 +24,7 @@ export function CheckboxField<T extends FieldValues>({
   description,
   disableFieldError = false,
   orientation = "horizontal",
+  required,
   ...checkboxProps
 }: FieldCheckboxProps<T>) {
   return (
@@ -40,7 +41,16 @@ export function CheckboxField<T extends FieldValues>({
                 {...checkboxProps}
               />
               <div className="space-y-1 leading-none">
-                {label && <FieldLabel>{label}</FieldLabel>}
+                {label && (
+                  <FieldLabel>
+                    {label}
+                    {required && (
+                      <span aria-hidden className="ps-1 text-destructive">
+                        *
+                      </span>
+                    )}
+                  </FieldLabel>
+                )}
                 {description && (
                   <FieldDescription>{description}</FieldDescription>
                 )}

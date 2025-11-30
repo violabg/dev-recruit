@@ -248,6 +248,7 @@ export const QuestionItem = ({
                 name={`questions.${actualIndex}.question`}
                 label="Testo della domanda"
                 placeholder="Inserisci il testo della domanda"
+                required
                 maxLength={500}
                 className="bg-background"
               />

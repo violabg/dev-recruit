@@ -1,5 +1,4 @@
-import { FieldValues } from "react-hook-form";
-import { Switch } from "../ui/switch";
+import { Control, Controller, FieldPath, FieldValues } from "react-hook-form";
 import {
   Field,
   FieldContent,
@@ -7,7 +6,7 @@ import {
   FieldError,
   FieldLabel,
 } from "../ui/field";
-import { Controller, Control, FieldPath } from "react-hook-form";
+import { Switch } from "../ui/switch";
 
 type FieldSwitchProps<T extends FieldValues> = Omit<
   React.ComponentProps<typeof Switch>,
@@ -18,6 +17,7 @@ type FieldSwitchProps<T extends FieldValues> = Omit<
   label?: string;
   description?: string;
   disableFieldError?: boolean;
+  required?: boolean;
 };
 
 export function SwitchField<T extends FieldValues>({
@@ -26,6 +26,7 @@ export function SwitchField<T extends FieldValues>({
   label,
   description,
   disableFieldError = false,
+  required,
   ...switchProps
 }: FieldSwitchProps<T>) {
   return (
@@ -38,7 +39,16 @@ export function SwitchField<T extends FieldValues>({
           orientation="horizontal"
         >
           <div className="space-y-0.5">
-            {label && <FieldLabel className="text-base">{label}</FieldLabel>}
+            {label && (
+              <FieldLabel className="text-base">
+                {label}
+                {required && (
+                  <span aria-hidden className="ps-1 text-destructive">
+                    *
+                  </span>
+                )}
+              </FieldLabel>
+            )}
             {description && <FieldDescription>{description}</FieldDescription>}
           </div>
           <FieldContent className="flex justify-end items-center">

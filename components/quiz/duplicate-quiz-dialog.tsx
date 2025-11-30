@@ -91,11 +91,16 @@ export function DuplicateQuizDialog({
         </DialogHeader>
 
         <FormProvider<DuplicateFormData> {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            noValidate
+          >
             <InputField<DuplicateFormData>
               control={form.control}
               name="newTitle"
               label="Titolo del Quiz"
+              required
               placeholder="Es: Quiz Sviluppatore - Copia"
             />
 
@@ -103,6 +108,7 @@ export function DuplicateQuizDialog({
               control={form.control}
               name="newPositionId"
               label="Posizione"
+              required
               placeholder="Seleziona una posizione"
               options={positions.map((pos) => ({
                 value: pos.id,

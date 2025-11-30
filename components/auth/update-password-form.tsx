@@ -76,6 +76,7 @@ export function UpdatePasswordForm({
               placeholder="New password"
               autoComplete="new-password"
               disabled={isPending}
+              required
             />
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Salvataggio..." : "Salva nuova password"}

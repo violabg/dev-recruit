@@ -17,6 +17,7 @@ export function InputDateField<T extends FieldValues>({
   description,
   disableFieldError = false,
   className,
+  required,
   ...inputProps
 }: FieldInputProps<T>) {
   return (
@@ -24,6 +25,7 @@ export function InputDateField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >
@@ -33,6 +35,7 @@ export function InputDateField<T extends FieldValues>({
             <DateInput
               className={className}
               aria-invalid={!!fieldState.error}
+              aria-required={required}
               aria-describedby={
                 fieldState.error ? `${field.name}-error` : undefined
               }

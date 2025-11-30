@@ -25,6 +25,8 @@ export interface FileUploadProps {
   description?: string;
   /** Whether the field is disabled */
   disabled?: boolean;
+  /** Whether the field is required */
+  required?: boolean;
   /** Custom className */
   className?: string;
 }
@@ -38,6 +40,7 @@ export function FileUploadField({
   label = "Curriculum",
   description = "Carica il curriculum del candidato (PDF, DOC, DOCX - max 10MB)",
   disabled = false,
+  required = false,
   className,
 }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -122,7 +125,16 @@ export function FileUploadField({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {label && <Label>{label}</Label>}
+      {label && (
+        <Label>
+          {label}
+          {required && (
+            <span aria-hidden className="ps-1 text-destructive">
+              *
+            </span>
+          )}
+        </Label>
+      )}
 
       <div
         className={cn(

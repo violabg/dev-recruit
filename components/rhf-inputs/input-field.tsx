@@ -17,8 +17,9 @@ export function InputField<T extends FieldValues>({
   description,
   maxLength,
   disableFieldError = false,
+  required,
   ...inputProps
-}: FieldInputProps<T>) {
+}: FieldInputProps<T> & { required?: boolean }) {
   const fieldWatcher = useWatch({
     control: control,
     name: name,
@@ -30,6 +31,7 @@ export function InputField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >
@@ -38,6 +40,7 @@ export function InputField<T extends FieldValues>({
           <Input
             id={field.name}
             aria-invalid={!!fieldState.error}
+            aria-required={required}
             aria-describedby={
               fieldState.error ? `${field.name}-error` : undefined
             }

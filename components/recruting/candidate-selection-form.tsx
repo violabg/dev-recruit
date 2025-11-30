@@ -114,7 +114,7 @@ export function CandidateSelectionForm({
           </p>
         </div>
       ) : (
-        <form action={formAction} className="space-y-6">
+        <form action={formAction} className="space-y-6" noValidate>
           <input type="hidden" name="quizId" value={quizId} />
           {watch("candidateIds").map((candidateId) => (
             <input
@@ -129,6 +129,7 @@ export function CandidateSelectionForm({
             control={control}
             name="candidateIds"
             label="Select candidates"
+            required
             options={candidateOptions}
             placeholder="Select candidates to assign this quiz"
           />

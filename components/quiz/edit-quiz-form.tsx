@@ -184,7 +184,11 @@ export function EditQuizForm({
       </Card>
 
       <FormProvider<EditQuizFormData> {...form}>
-        <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(handleSave)}
+          className="space-y-6"
+          noValidate
+        >
           {/* Quiz Settings */}
           <QuizSettings
             form={form}

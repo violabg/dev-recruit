@@ -16,8 +16,9 @@ export function TextareaField<T extends FieldValues>({
   description,
   maxLength,
   disableFieldError = false,
+  required,
   ...textareaProps
-}: FieldTextareaProps<T>) {
+}: FieldTextareaProps<T> & { required?: boolean }) {
   const fieldWatcher = useWatch({
     control: control,
     name: name,
@@ -29,6 +30,7 @@ export function TextareaField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >
@@ -36,6 +38,7 @@ export function TextareaField<T extends FieldValues>({
         <div className="relative">
           <Textarea
             id={field.name}
+            aria-required={required}
             {...field}
             {...textareaProps}
             aria-invalid={!!fieldState.error}

@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  CheckboxField,
+  SelectField,
+  SliderField,
+  TextareaField,
+} from "@/components/rhf-inputs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +19,6 @@ import {
 import {
   Field,
   FieldContent,
-  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
@@ -29,12 +34,6 @@ import { Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import {
-  CheckboxField,
-  SelectField,
-  SliderField,
-  TextareaField,
-} from "@/components/rhf-inputs";
 
 const getDifficultyLabel = (value: number) => {
   const labels = {
@@ -195,7 +194,11 @@ export const AIQuestionGenerationDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-6"
+          noValidate
+        >
           <div className="space-y-4">
             <h3 className="font-medium text-sm">Impostazioni di Base</h3>
 
@@ -204,7 +207,12 @@ export const AIQuestionGenerationDialog = ({
               name="llmModel"
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel>Modello AI</FieldLabel>
+                  <FieldLabel>
+                    Modello AI
+                    <span aria-hidden className="ps-1 text-destructive">
+                      *
+                    </span>
+                  </FieldLabel>
                   <FieldContent>
                     <LLMModelSelect
                       value={field.value}

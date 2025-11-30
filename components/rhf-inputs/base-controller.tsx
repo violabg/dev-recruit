@@ -28,6 +28,7 @@ export type BaseControllerProps<T extends FieldValues> = {
   label?: string;
   description?: string | ReactNode;
   disableFieldError?: boolean;
+  required?: boolean;
   children: (params: ControllerRenderParams<T>) => ReactNode;
 };
 
@@ -37,6 +38,7 @@ export function BaseController<T extends FieldValues>({
   label,
   description,
   disableFieldError = false,
+  required = false,
   children,
 }: BaseControllerProps<T>) {
   return (
@@ -45,7 +47,16 @@ export function BaseController<T extends FieldValues>({
       control={control}
       render={({ field, fieldState, formState }) => (
         <Field>
-          {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
+          {label && (
+            <FieldLabel htmlFor={field.name}>
+              {label}
+              {required && (
+                <span aria-hidden className="ps-1 text-destructive">
+                  *
+                </span>
+              )}
+            </FieldLabel>
+          )}
           <FieldContent>
             {children({ field, fieldState, formState })}
             {description && <FieldDescription>{description}</FieldDescription>}

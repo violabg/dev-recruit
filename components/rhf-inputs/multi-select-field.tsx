@@ -13,6 +13,7 @@ export function MultiSelectField<T extends FieldValues>({
   label,
   description,
   disableFieldError = false,
+  required,
   options,
   placeholder,
 }: FieldSelectProps<T>) {
@@ -21,6 +22,7 @@ export function MultiSelectField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >

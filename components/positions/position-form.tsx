@@ -178,11 +178,12 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
       <InputField<PositionFormData>
         name="title"
         control={control}
         label="Titolo della posizione"
+        required
         placeholder="es. Sviluppatore Frontend React"
         description="Inserisci un titolo chiaro e descrittivo"
       />
@@ -190,6 +191,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
         control={control}
         name="experienceLevel"
         label="Livello di esperienza"
+        required
         description="Indica il livello di esperienza richiesto"
         placeholder="Seleziona un livello"
         triggerProps={{
@@ -206,6 +208,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
         control={control}
         name="skills"
         label="Competenze tecniche"
+        required
         description="Seleziona le competenze tecniche richieste per questa posizione"
         options={allSkills}
         placeholder="Seleziona competenze..."

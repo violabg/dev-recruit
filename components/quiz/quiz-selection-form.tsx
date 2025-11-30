@@ -110,7 +110,7 @@ export function QuizSelectionForm({
           </p>
         </div>
       ) : (
-        <form action={formAction} className="space-y-6">
+        <form action={formAction} className="space-y-6" noValidate>
           <input type="hidden" name="candidateId" value={candidateId} />
           {watch("quizIds").map((quizId) => (
             <input key={quizId} type="hidden" name="quizIds" value={quizId} />
@@ -120,6 +120,7 @@ export function QuizSelectionForm({
             control={control}
             name="quizIds"
             label="Select quizzes"
+            required
             options={quizOptions}
             placeholder="Select quizzes to assign to this candidate"
           />

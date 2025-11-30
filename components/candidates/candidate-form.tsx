@@ -244,12 +244,14 @@ export const CandidateForm = (props: CandidateFormProps) => {
           control={form.control}
           name="firstName"
           label="Nome"
+          required
           placeholder="Nome"
         />
         <InputField
           control={form.control}
           name="lastName"
           label="Cognome"
+          required
           placeholder="Cognome"
         />
       </div>
@@ -257,6 +259,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
         control={form.control}
         name="email"
         label="Email"
+        required
         placeholder="Email candidato"
         type="email"
       />
@@ -271,6 +274,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
         control={form.control}
         name="positionId"
         label="Posizione"
+        required
         placeholder="Seleziona posizione"
         options={props.positions.map((position) => ({
           value: position.id,

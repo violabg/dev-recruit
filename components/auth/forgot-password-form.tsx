@@ -95,6 +95,7 @@ export function ForgotPasswordForm({
                 placeholder="m@example.com"
                 autoComplete="email"
                 disabled={isPending}
+                required
               />
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? "Invio in corso..." : "Invia email di reset"}

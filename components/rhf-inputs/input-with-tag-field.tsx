@@ -13,12 +13,14 @@ export function InputWithTagField<T extends FieldValues>({
   description,
   disableFieldError = false,
   placeholder,
+  required,
 }: Props<T>) {
   return (
     <BaseController
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >

@@ -27,6 +27,9 @@ export const OpenQuestionForm = ({ index }: OpenQuestionFormProps) => {
       <Field>
         <FieldLabel htmlFor={`questions-${index}-sample`}>
           Risposta di esempio
+          <span aria-hidden className="ps-1 text-destructive">
+            *
+          </span>
         </FieldLabel>
         <FieldContent>
           <Controller

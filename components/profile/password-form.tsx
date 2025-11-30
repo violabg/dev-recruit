@@ -1,5 +1,6 @@
 "use client";
 
+import { PasswordField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +17,6 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { PasswordField } from "@/components/rhf-inputs";
 
 type PasswordFormProps = {
   className?: string;
@@ -68,12 +68,17 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+            noValidate
+          >
             <div className="space-y-4">
               <PasswordField
                 control={form.control}
                 name="current_password"
                 label="Password Attuale"
+                required
                 placeholder="Inserisci la password attuale"
                 disabled={isPending}
               />
@@ -82,6 +87,7 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
                 control={form.control}
                 name="new_password"
                 label="Nuova Password"
+                required
                 placeholder="Inserisci la nuova password"
                 disabled={isPending}
               />
@@ -90,6 +96,7 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
                 control={form.control}
                 name="confirm_password"
                 label="Conferma Nuova Password"
+                required
                 placeholder="Conferma la nuova password"
                 disabled={isPending}
               />

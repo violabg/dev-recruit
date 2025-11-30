@@ -10,12 +10,7 @@ export const positionFormSchema = z.object({
     error: "Il titolo deve contenere almeno 2 caratteri.",
   }),
   description: baseSchemas.description,
-  experienceLevel: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Seleziona un livello di esperienza."
-        : undefined,
-  }),
+  experienceLevel: z.string().min(1, "Seleziona un livello di esperienza."),
   skills: z.array(z.string()).min(1, {
     error: "Seleziona almeno una competenza.",
   }),

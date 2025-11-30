@@ -1,7 +1,6 @@
-import { ReactNode } from "react";
 import { FieldValues } from "react-hook-form";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { BaseController, BaseControllerProps } from "./base-controller";
 
 type RadioOption = {
@@ -25,6 +24,7 @@ export function RadioGroupField<T extends FieldValues>({
   description,
   disableFieldError = false,
   options,
+  required,
   ...radioGroupProps
 }: FieldRadioGroupProps<T>) {
   return (
@@ -32,11 +32,16 @@ export function RadioGroupField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >
       {({ field }) => (
-        <RadioGroup value={field.value} onValueChange={field.onChange} {...radioGroupProps}>
+        <RadioGroup
+          value={field.value}
+          onValueChange={field.onChange}
+          {...radioGroupProps}
+        >
           {options.map((option) => (
             <div key={option.value} className="flex items-center space-x-2">
               <RadioGroupItem

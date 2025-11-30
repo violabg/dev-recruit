@@ -30,7 +30,12 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <label className="font-medium">Opzioni</label>
+          <label className="font-medium">
+            Opzioni
+            <span aria-hidden className="ps-1 text-destructive">
+              *
+            </span>
+          </label>
           <span className="text-muted-foreground text-sm">
             Minimo 4 opzioni, ognuna con almeno 3 caratteri
           </span>
@@ -73,6 +78,7 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
         control={form.control}
         name={`questions.${index}.correctAnswer`}
         label="Risposta corretta (indice)"
+        required
         type="number"
         placeholder="0, 1, 2..."
         min={0}

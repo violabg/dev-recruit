@@ -48,6 +48,7 @@ export function SelectField<T extends FieldValues>({
   onValueChange,
   triggerProps,
   children,
+  required,
   ...selectProps
 }: FieldSelectProps<T>) {
   return (
@@ -55,10 +56,11 @@ export function SelectField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >
-      {({ field }) => (
+      {({ field, fieldState }) => (
         <Select
           value={
             field.value === undefined ||
@@ -92,7 +94,11 @@ export function SelectField<T extends FieldValues>({
           }}
           {...selectProps}
         >
-          <SelectTrigger {...triggerProps}>
+          <SelectTrigger
+            aria-required={required}
+            aria-invalid={!!fieldState.error}
+            {...triggerProps}
+          >
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>

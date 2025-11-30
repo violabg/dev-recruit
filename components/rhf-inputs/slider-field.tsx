@@ -19,6 +19,7 @@ export function SliderField<T extends FieldValues>({
   disableFieldError = false,
   showValue = false,
   valueFormatter,
+  required,
   ...sliderProps
 }: FieldSliderProps<T>) {
   return (
@@ -26,6 +27,7 @@ export function SliderField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
+      required={required}
       description={description}
       disableFieldError={disableFieldError}
     >
@@ -37,7 +39,7 @@ export function SliderField<T extends FieldValues>({
             {...sliderProps}
           />
           {showValue && (
-            <div className="text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground text-sm text-center">
               {valueFormatter ? valueFormatter(field.value) : field.value}
             </div>
           )}

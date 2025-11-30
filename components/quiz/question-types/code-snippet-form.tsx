@@ -52,6 +52,9 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
       <Field>
         <FieldLabel htmlFor={`questions-${index}-language`}>
           Linguaggio di programmazione
+          <span aria-hidden className="ps-1 text-destructive">
+            *
+          </span>
         </FieldLabel>
         <FieldContent>
           <Controller
@@ -90,6 +93,9 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
       <Field>
         <FieldLabel htmlFor={`questions-${index}-code`}>
           Snippet di codice
+          <span aria-hidden className="ps-1 text-destructive">
+            *
+          </span>
         </FieldLabel>
         <FieldContent>
           <Controller
@@ -129,6 +135,9 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
       <Field>
         <FieldLabel htmlFor={`questions-${index}-solution`}>
           Soluzione di esempio
+          <span aria-hidden className="ps-1 text-destructive">
+            *
+          </span>
         </FieldLabel>
         <FieldContent>
           <Controller
