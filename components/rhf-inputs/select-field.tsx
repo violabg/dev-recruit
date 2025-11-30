@@ -61,8 +61,10 @@ export function SelectField<T extends FieldValues>({
       {({ field }) => (
         <Select
           value={
-            field.value === undefined || field.value === null
-              ? ""
+            field.value === undefined ||
+            field.value === null ||
+            field.value === ""
+              ? EMPTY_SELECT_VALUE
               : String(field.value)
           }
           onValueChange={(value) => {

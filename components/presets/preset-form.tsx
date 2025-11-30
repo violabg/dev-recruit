@@ -114,10 +114,10 @@ export function PresetForm({ preset }: PresetFormProps) {
     language: preset?.language ?? "",
     requireCodeExample: preset?.requireCodeExample ?? false,
     includeComments: preset?.includeComments ?? true,
-    distractorComplexity: preset?.distractorComplexity ?? undefined,
-    expectedResponseLength: preset?.expectedResponseLength ?? undefined,
-    bugType: preset?.bugType ?? undefined,
-    codeComplexity: preset?.codeComplexity ?? undefined,
+    distractorComplexity: preset?.distractorComplexity ?? "",
+    expectedResponseLength: preset?.expectedResponseLength ?? "",
+    bugType: preset?.bugType ?? "",
+    codeComplexity: preset?.codeComplexity ?? "",
   };
 
   const form = useForm<PresetFormValues>({
@@ -126,7 +126,6 @@ export function PresetForm({ preset }: PresetFormProps) {
   });
 
   const questionType = form.watch("questionType");
-  const focusAreasValue = (form.watch("focusAreas") ?? []).join("\n");
   const evaluationCriteriaValue = (form.watch("evaluationCriteria") ?? []).join(
     "\n"
   );
