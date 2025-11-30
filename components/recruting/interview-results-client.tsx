@@ -1,5 +1,6 @@
 "use client";
 
+import { CodeHighlight } from "@/components/quiz/code-highlight";
 import { OverallEvaluationCard } from "@/components/recruting/overall-evaluation-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +24,8 @@ import {
 } from "@/lib/actions/evaluations";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import { FlexibleQuestion } from "@/lib/schemas";
-import { prismLanguage } from "@/lib/utils";
 import { Loader2, Save, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Highlight, themes } from "prism-react-renderer";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -74,10 +73,6 @@ export function InterviewResultsClient({
   const [notes, setNotes] = useState(initialEvaluation?.notes ?? "");
   const [isSavingNotes, startSavingNotes] = useTransition();
   const { theme, resolvedTheme } = useTheme();
-  const prismTheme =
-    resolvedTheme === "dark" || theme === "dark"
-      ? themes.vsDark
-      : themes.vsLight;
 
   const evaluateAnswers = async () => {
     setLoading(true);
@@ -532,8 +527,7 @@ export function InterviewResultsClient({
                               )}
 
                               {type === "code_snippet" && (
-                                <Highlight
-                                  theme={prismTheme}
+                                <CodeHighlight
                                   code={
                                     typeof answers[id] === "object" &&
                                     answers[id] !== null &&
@@ -541,58 +535,9 @@ export function InterviewResultsClient({
                                       ? answers[id].code
                                       : String(answers[id] ?? "")
                                   }
-                                  language={prismLanguage(
-                                    question.language ?? "javascript"
-                                  )}
-                                >
-                                  {({
-                                    className,
-                                    style,
-                                    tokens,
-                                    getLineProps,
-                                    getTokenProps,
-                                  }) => (
-                                    <pre
-                                      className={
-                                        "p-4 rounded-lg font-mono text-sm bg-[oklch(0.18_0.02_260)] text-[oklch(0.95_0_0)] border border-[oklch(0.3_0.02_260)] " +
-                                        className
-                                      }
-                                      style={style}
-                                    >
-                                      <code className="wrap-break-word whitespace-pre-wrap">
-                                        {tokens.map((line, i) => {
-                                          const { key: lineKey, ...lineProps } =
-                                            getLineProps({
-                                              line,
-                                              key: i,
-                                            });
-                                          return (
-                                            <div
-                                              key={String(lineKey)}
-                                              {...lineProps}
-                                            >
-                                              {line.map((token, key) => {
-                                                const {
-                                                  key: tokenKey,
-                                                  ...rest
-                                                } = getTokenProps({
-                                                  token,
-                                                  key,
-                                                });
-                                                return (
-                                                  <span
-                                                    key={String(tokenKey)}
-                                                    {...rest}
-                                                  />
-                                                );
-                                              })}
-                                            </div>
-                                          );
-                                        })}
-                                      </code>
-                                    </pre>
-                                  )}
-                                </Highlight>
+                                  language={question.language ?? "javascript"}
+                                  className="bg-[oklch(0.18_0.02_260)] p-4 border border-[oklch(0.3_0.02_260)] rounded-lg font-mono text-[oklch(0.95_0_0)] text-sm"
+                                />
                               )}
                             </div>
 

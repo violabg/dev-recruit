@@ -1,4 +1,5 @@
 "use client";
+import { CodeHighlight } from "@/components/quiz/code-highlight";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,11 +13,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { transcribeAudioAction } from "@/lib/actions/transcription";
 import { FlexibleQuestion } from "@/lib/schemas";
-import { prismLanguage } from "@/lib/utils";
 import Editor from "@monaco-editor/react";
 import { Loader2, Speech, Square } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Highlight, themes } from "prism-react-renderer";
 import { useEffect, useState, useTransition } from "react";
 
 type QuestionAnswer = string | { code: string } | null;
@@ -39,11 +38,6 @@ export function InterviewQuestion({
   // Use resolvedTheme to handle 'system' theme properly
   const monacoTheme =
     resolvedTheme === "dark" || theme === "dark" ? "vs-dark" : "light";
-
-  const prismTheme =
-    resolvedTheme === "dark" || theme === "dark"
-      ? themes.vsDark
-      : themes.vsLight;
 
   // Compute initial values from currentAnswer
   const getInitialAnswer = (): string | null => {
@@ -237,50 +231,10 @@ export function InterviewQuestion({
             {question.codeSnippet && (
               <div>
                 <h3 className="mb-2 font-medium">Codice:</h3>
-                <Highlight
-                  theme={prismTheme}
+                <CodeHighlight
                   code={question.codeSnippet}
-                  language={prismLanguage(question.language || "javascript")}
-                >
-                  {({
-                    className,
-                    style,
-                    tokens,
-                    getLineProps,
-                    getTokenProps,
-                  }) => (
-                    <pre
-                      className={
-                        "mt-1 overflow-x-auto rounded-md bg-muted p-4 text-sm" +
-                        className
-                      }
-                      style={style}
-                    >
-                      <code className="wrap-break-word whitespace-pre-wrap">
-                        {tokens.map((line, i) => {
-                          const { key: lineKey, ...lineProps } = getLineProps({
-                            line,
-                            key: i,
-                          });
-                          return (
-                            <div key={String(lineKey)} {...lineProps}>
-                              {line.map((token, key) => {
-                                const { key: tokenKey, ...rest } =
-                                  getTokenProps({
-                                    token,
-                                    key,
-                                  });
-                                return (
-                                  <span key={String(tokenKey)} {...rest} />
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
-                      </code>
-                    </pre>
-                  )}
-                </Highlight>
+                  language={question.language || "javascript"}
+                />
               </div>
             )}
             <div>

@@ -1,11 +1,10 @@
+import { CodeHighlight } from "@/components/quiz/code-highlight";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/lib/auth-server";
-import { prismLanguage } from "@/lib/utils";
 import { ArrowRight, BrainCircuit, CheckCircle, Users } from "lucide-react";
 import Link from "next/link";
-import { Highlight, themes } from "prism-react-renderer";
 import { Suspense } from "react";
 
 async function StartButton() {
@@ -82,54 +81,10 @@ export default async function Home() {
                           Domanda 2: Identifica l&apos;errore nel seguente
                           codice:
                         </p>
-                        <Highlight
-                          theme={themes.vsDark}
+                        <CodeHighlight
                           code={`function fetchData() {\n  return fetch('/api/data')\n  .then(res => res.json());\n}`}
-                          language={prismLanguage("JavaScript")}
-                        >
-                          {({
-                            className,
-                            style,
-                            tokens,
-                            getLineProps,
-                            getTokenProps,
-                          }) => (
-                            <pre
-                              className={
-                                "mt-1 overflow-x-auto rounded-md bg-muted p-4 text-sm" +
-                                className
-                              }
-                              style={style}
-                            >
-                              <code className="wrap-break-word whitespace-pre-wrap">
-                                {tokens.map((line, i) => {
-                                  const { key: lineKey, ...lineProps } =
-                                    getLineProps({
-                                      line,
-                                      key: i,
-                                    });
-                                  return (
-                                    <div key={String(lineKey)} {...lineProps}>
-                                      {line.map((token, key) => {
-                                        const { key: tokenKey, ...rest } =
-                                          getTokenProps({
-                                            token,
-                                            key,
-                                          });
-                                        return (
-                                          <span
-                                            key={String(tokenKey)}
-                                            {...rest}
-                                          />
-                                        );
-                                      })}
-                                    </div>
-                                  );
-                                })}
-                              </code>
-                            </pre>
-                          )}
-                        </Highlight>
+                          language="JavaScript"
+                        />
                       </div>
                     </div>
                   </div>

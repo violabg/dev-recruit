@@ -1,7 +1,7 @@
 "use client";
-
 import { InterviewComplete } from "@/components/recruting/interview-complete";
 import { InterviewQuestion } from "@/components/recruting/interview-question";
+import { InterviewTimer } from "@/components/recruting/interview-timer";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,8 +18,8 @@ import {
   submitAnswer,
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
-import { BrainCircuit, Clock } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { BrainCircuit } from "lucide-react";
+import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "../theme-toggle";
 
@@ -144,39 +144,8 @@ export function InterviewClient({
     });
   }, [interview.token]);
 
-  useEffect(() => {
-    // Timer for time limit
-    if (!timeRemaining || !isStarted || isCompleted || isTimeExpired) return;
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev === null || prev <= 1) {
-          clearInterval(timer);
-          setIsTimeExpired(true);
-          // Don't call handleCompleteInterview here - it will be called by the auto-complete effect
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeRemaining, isStarted, isCompleted, isTimeExpired]);
-
-  // Auto-complete interview if time expired on mount (page refresh after time expired)
-  // Using a ref to track if we've already triggered completion to avoid double calls
-  const hasTriggeredCompletion = useRef(false);
-
-  useEffect(() => {
-    if (isTimeExpired && !isCompleted && !hasTriggeredCompletion.current) {
-      hasTriggeredCompletion.current = true;
-      // Use setTimeout to ensure we're not in render phase
-      setTimeout(() => {
-        handleCompleteInterview();
-      }, 0);
-    }
-  }, [isTimeExpired, isCompleted, handleCompleteInterview]);
-
+  // Calculate remaining time from startedAt if interview is in progress
+  // Note: We compute this during render but defer side effects to useEffect
   const handleStartInterview = () => {
     startTransition(async () => {
       try {
@@ -268,12 +237,6 @@ export function InterviewClient({
     } else {
       handleCompleteInterview();
     }
-  };
-
-  const formatTimeRemaining = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   if (isCompleted) {
@@ -374,14 +337,15 @@ export function InterviewClient({
             <span className="font-bold">DevRecruit AI</span>
           </div>
           <div className="flex items-center gap-4">
-            {timeRemaining !== null && (
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-muted-foreground" />
-                <span className="font-mono">
-                  {formatTimeRemaining(timeRemaining)}
-                </span>
-              </div>
-            )}
+            <InterviewTimer
+              timeRemaining={timeRemaining}
+              isStarted={isStarted}
+              isCompleted={isCompleted}
+              isTimeExpired={isTimeExpired}
+              onTimeExpired={() => {
+                setIsTimeExpired(true);
+              }}
+            />
             <Button
               variant="outline"
               size="sm"
