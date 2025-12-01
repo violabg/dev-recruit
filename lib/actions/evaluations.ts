@@ -167,7 +167,7 @@ export async function evaluateAnswer(
   Do not include any other fields, nested objects, or additional formatting.`;
 
   // Use Groq to evaluate the answer with generateObject
-  // Use low temperature for consistent, deterministic evaluations
+  // Use zero temperature for deterministic, reproducible evaluations
   const model = groq(getOptimalModel("evaluation", specificModel));
   try {
     const { object: result } = await generateObject({
@@ -177,7 +177,8 @@ export async function evaluateAnswer(
         "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
       schema: evaluationResultSchema,
       mode: "json",
-      temperature: 0.1, // Low temperature for consistent, reproducible evaluations
+      temperature: 0.0, // Zero temperature for deterministic, reproducible evaluations
+      seed: 42, // Fixed seed for reproducible results
       providerOptions: {
         groq: {
           structuredOutputs: false, // Using json mode instead for broader model compatibility
@@ -206,7 +207,8 @@ export async function evaluateAnswer(
           "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
         schema: evaluationResultSchema,
         mode: "json",
-        temperature: 0.1, // Low temperature for consistent evaluations
+        temperature: 0.0, // Zero temperature for deterministic evaluations
+        seed: 42, // Fixed seed for reproducible results
         providerOptions: {
           groq: {
             structuredOutputs: false,
@@ -289,7 +291,7 @@ export async function generateOverallEvaluation(
                   `;
 
   // Generate overall evaluation using AI
-  // Use low temperature for consistent, deterministic evaluations
+  // Use zero temperature for deterministic, reproducible evaluations
   try {
     const { object: result } = await generateObject({
       model: groq(getOptimalModel("overall_evaluation", specificModel)),
@@ -298,7 +300,8 @@ export async function generateOverallEvaluation(
         "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
       schema: overallEvaluationSchema,
       mode: "json",
-      temperature: 0.1, // Low temperature for consistent evaluations
+      temperature: 0.0, // Zero temperature for deterministic evaluations
+      seed: 42, // Fixed seed for reproducible results
       providerOptions: {
         groq: {
           structuredOutputs: false, // Using json mode instead for broader model compatibility
@@ -324,7 +327,8 @@ export async function generateOverallEvaluation(
           "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
         schema: overallEvaluationSchema,
         mode: "json",
-        temperature: 0.2, // Low temperature for consistent evaluations
+        temperature: 0.0, // Zero temperature for deterministic evaluations
+        seed: 42, // Fixed seed for reproducible results
         providerOptions: {
           groq: {
             structuredOutputs: false,
