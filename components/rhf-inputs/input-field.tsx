@@ -1,5 +1,5 @@
 import { InputHTMLAttributes } from "react";
-import { FieldValues, useWatch } from "react-hook-form";
+import { FieldValues } from "react-hook-form";
 import { Input } from "../ui/input";
 import { BaseController, BaseControllerProps } from "./base-controller";
 
@@ -20,12 +20,6 @@ export function InputField<T extends FieldValues>({
   required,
   ...inputProps
 }: FieldInputProps<T> & { required?: boolean }) {
-  const fieldWatcher = useWatch({
-    control: control,
-    name: name,
-    disabled: !maxLength,
-  });
-
   return (
     <BaseController
       control={control}
@@ -53,7 +47,7 @@ export function InputField<T extends FieldValues>({
           />
           {maxLength && (
             <div className="top-1/2 right-3 absolute text-muted-foreground text-xs -translate-y-1/2 pointer-events-none">
-              {(fieldWatcher || "").length}/{maxLength}
+              {(field.value || "").length}/{maxLength}
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { FieldValues, useWatch } from "react-hook-form";
+import { FieldValues } from "react-hook-form";
 import { Textarea } from "../ui/textarea";
 import { BaseController, BaseControllerProps } from "./base-controller";
 
@@ -19,12 +19,6 @@ export function TextareaField<T extends FieldValues>({
   required,
   ...textareaProps
 }: FieldTextareaProps<T> & { required?: boolean }) {
-  const fieldWatcher = useWatch({
-    control: control,
-    name: name,
-    disabled: !maxLength,
-  });
-
   return (
     <BaseController
       control={control}
@@ -51,7 +45,7 @@ export function TextareaField<T extends FieldValues>({
           />
           {maxLength && (
             <div className="top-3 right-3 absolute bg-background/80 px-1 rounded text-muted-foreground text-xs pointer-events-none">
-              {(fieldWatcher || "").length}/{maxLength}
+              {(field.value || "").length}/{maxLength}
             </div>
           )}
         </div>
