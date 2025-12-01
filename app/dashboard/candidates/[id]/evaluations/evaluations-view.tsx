@@ -222,11 +222,9 @@ export function CandidateEvaluationsView({
         setStreamingEvaluation(parsePartialEvaluation(fullText));
       }
 
+      // Stream only closes after DB save completes, so we can safely refresh
       setSelectedPositionId("");
       toast.success("Valutazione generata con successo");
-
-      // Refresh the page to get the saved evaluation from DB
-      // The useEffect will clear the streaming state when new data arrives
       router.refresh();
     } catch (error) {
       console.error("Error generating evaluation:", error);

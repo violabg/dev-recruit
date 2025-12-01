@@ -2,36 +2,81 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 // Available LLM models with their capabilities
+// Updated: December 2025 - Synced with Groq documentation
 export const LLM_MODELS = {
-  // Production models - stable and reliable
-  VERSATILE: "llama-3.3-70b-versatile", // 128K context, 32K output - Best for complex tasks
-  INSTANT: "llama-3.1-8b-instant", // 128K context, 8K output - Fast for simple tasks
-  GEMMA2_9B_IT: "gemma2-9b-it", // 8K context - Google model
-  LLAMA_GUARD_4_12B: "meta-llama/llama-guard-4-12b", // 131K context - Content moderation
-  LLAMA3_70B_8192: "llama3-70b-8192", // 8K context - Legacy Meta model
-  LLAMA3_8B_8192: "llama3-8b-8192", // 8K context - Legacy Meta model
+  // ============================================================================
+  // PRODUCTION MODELS - Stable and reliable for production use
+  // ============================================================================
+
+  // Meta Llama 3.3 70B - Best for complex tasks requiring high capability
+  // Context: 131K, Output: 32K, Speed: 280 tps
+  VERSATILE: "llama-3.3-70b-versatile",
+
+  // Meta Llama 3.1 8B - Fastest text model for simple tasks
+  // Context: 131K, Output: 131K, Speed: 560 tps
+  INSTANT: "llama-3.1-8b-instant",
+
+  // Meta Llama Guard 4 12B - Content moderation and safety
+  // Context: 131K, Output: 1K, Speed: 1200 tps
+  LLAMA_GUARD_4_12B: "meta-llama/llama-guard-4-12b",
+
+  // OpenAI GPT OSS 120B - Reasoning, Tool Use, JSON Mode, Code Execution
+  // Context: 131K, Output: 65K, Speed: 500 tps
+  // Best for: Structured outputs, evaluations, complex reasoning
+  GPT_OSS_120B: "openai/gpt-oss-120b",
+
+  // OpenAI GPT OSS 20B - Faster reasoning with same capabilities
+  // Context: 131K, Output: 65K, Speed: 1000 tps
+  GPT_OSS_20B: "openai/gpt-oss-20b",
+
+  // OpenAI GPT OSS Safeguard 20B - Safety-focused model
+  // Context: 131K, Output: 65K, Speed: 1000 tps
+  GPT_OSS_SAFEGUARD_20B: "openai/gpt-oss-safeguard-20b",
+
+  // Audio transcription models
   WHISPER_LARGE_V3: "whisper-large-v3", // Audio transcription
   WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo", // Fast audio transcription
-  DISTIL_WHISPER_LARGE_V3_EN: "distil-whisper-large-v3-en", // English audio transcription
 
-  // Preview models - experimental, may be discontinued
-  REASONING: "deepseek-r1-distill-llama-70b", // 128K context - Best for evaluation/reasoning
+  // ============================================================================
+  // PRODUCTION SYSTEMS - Compound AI systems with tool use
+  // ============================================================================
+
+  // Groq Compound - Agentic system with tool use
+  // Context: 131K, Output: 8K, Speed: 450 tps
+  COMPOUND: "groq/compound",
+
+  // Groq Compound Mini - Lightweight agentic system
+  // Context: 131K, Output: 8K, Speed: 450 tps
+  COMPOUND_MINI: "groq/compound-mini",
+
+  // ============================================================================
+  // PREVIEW MODELS - Experimental, evaluate before production use
+  // ============================================================================
+
+  // Moonshot AI Kimi K2 - Largest context window available
+  // Context: 262K, Output: 16K, Speed: 200 tps
+  // Best for: Long documents, resume analysis, multi-question generation
   KIMI: "moonshotai/kimi-k2-instruct-0905",
-  MAVERICK: "meta-llama/llama-4-maverick-17b-128e-instruct", // 131K context, 8K output
-  SCOUT: "meta-llama/llama-4-scout-17b-16e-instruct", // 131K context, 8K output
-  ALLAM_2_7B: "allam-2-7b", // 4K context - Saudi Data and AI Authority model
-  LLAMA_PROMPT_GUARD_2_22M: "meta-llama/llama-prompt-guard-2-22m", // 512 context - Prompt safety
-  LLAMA_PROMPT_GUARD_2_86M: "meta-llama/llama-prompt-guard-2-86m", // 512 context - Prompt safety
-  MISTRAL_SABA_24B: "mistral-saba-24b", // 32K context - Mistral model
-  PLAYAI_TTS: "playai-tts", // 10K context - Text to speech
-  PLAYAI_TTS_ARABIC: "playai-tts-arabic", // 10K context - Arabic text to speech
-  QWEN_QWQ_32B: "qwen-qwq-32b", // 128K context - Alibaba Cloud model
-  GPT_OSS_20B: "openai/gpt-oss-20b", // 131K context - OpenAI model has  Tool Use, Browser Search, Code Execution, JSON Object Mode, Reasoning
-  GPT_OSS_120B: "openai/gpt-oss-120b", // 131K context - OpenAI model has  Tool Use, Browser Search, Code Execution, JSON Object Mode, Reasoning
 
-  // Preview systems - compound models with tools
-  COMPOUND_BETA: "compound-beta", // 128K context, 8K output - Agentic system
-  COMPOUND_BETA_MINI: "compound-beta-mini", // 128K context, 8K output - Lightweight agentic system
+  // Meta Llama 4 Maverick 17B - Fast preview model
+  // Context: 131K, Output: 8K, Speed: 600 tps
+  MAVERICK: "meta-llama/llama-4-maverick-17b-128e-instruct",
+
+  // Meta Llama 4 Scout 17B - Fastest Llama 4 model
+  // Context: 131K, Output: 8K, Speed: 750 tps
+  SCOUT: "meta-llama/llama-4-scout-17b-16e-instruct",
+
+  // Alibaba Cloud Qwen3 32B - Strong multilingual model
+  // Context: 131K, Output: 40K, Speed: 400 tps
+  QWEN3_32B: "qwen/qwen3-32b",
+
+  // Safety models for prompt injection detection
+  LLAMA_PROMPT_GUARD_2_22M: "meta-llama/llama-prompt-guard-2-22m", // Context: 512
+  LLAMA_PROMPT_GUARD_2_86M: "meta-llama/llama-prompt-guard-2-86m", // Context: 512
+
+  // Text-to-speech models
+  PLAYAI_TTS: "playai-tts", // Context: 8K
+  PLAYAI_TTS_ARABIC: "playai-tts-arabic", // Context: 8K
 } as const;
 
 // Task types for model selection
@@ -40,6 +85,7 @@ export type LLMTaskType =
   | "question_generation" // Single question creation
   | "evaluation" // Answer evaluation and scoring
   | "overall_evaluation" // Comprehensive candidate assessment
+  | "resume_evaluation" // Resume-based candidate evaluation against position
   | "simple_task"; // Basic text processing
 
 // Type for available model names
@@ -54,42 +100,39 @@ export const getAllAvailableModels = (): LLMModelName[] => {
 
 /**
  * Returns an object with model categories for easier selection
+ * Updated: December 2025 - Synced with Groq documentation
  */
 export const getModelsByCategory = () => {
   return {
     production: {
       text: [
-        LLM_MODELS.VERSATILE,
-        LLM_MODELS.INSTANT,
-        LLM_MODELS.GEMMA2_9B_IT,
-        LLM_MODELS.LLAMA3_70B_8192,
-        LLM_MODELS.LLAMA3_8B_8192,
+        LLM_MODELS.VERSATILE, // llama-3.3-70b - Complex tasks
+        LLM_MODELS.INSTANT, // llama-3.1-8b - Fast simple tasks
+        LLM_MODELS.GPT_OSS_120B, // Reasoning + JSON Mode
+        LLM_MODELS.GPT_OSS_20B, // Faster reasoning
       ],
-      moderation: [LLM_MODELS.LLAMA_GUARD_4_12B],
-      audio: [
-        LLM_MODELS.WHISPER_LARGE_V3,
-        LLM_MODELS.WHISPER_LARGE_V3_TURBO,
-        LLM_MODELS.DISTIL_WHISPER_LARGE_V3_EN,
+      moderation: [
+        LLM_MODELS.LLAMA_GUARD_4_12B,
+        LLM_MODELS.GPT_OSS_SAFEGUARD_20B,
+      ],
+      audio: [LLM_MODELS.WHISPER_LARGE_V3, LLM_MODELS.WHISPER_LARGE_V3_TURBO],
+      systems: [
+        LLM_MODELS.COMPOUND, // Agentic with tools
+        LLM_MODELS.COMPOUND_MINI, // Lightweight agentic
       ],
     },
     preview: {
       text: [
-        LLM_MODELS.REASONING,
-        LLM_MODELS.KIMI,
-        LLM_MODELS.MAVERICK,
-        LLM_MODELS.SCOUT,
-        LLM_MODELS.ALLAM_2_7B,
-        LLM_MODELS.MISTRAL_SABA_24B,
-        LLM_MODELS.QWEN_QWQ_32B,
-        LLM_MODELS.GPT_OSS_20B,
-        LLM_MODELS.GPT_OSS_120B,
+        LLM_MODELS.KIMI, // 262K context - largest
+        LLM_MODELS.MAVERICK, // Llama 4 - fast
+        LLM_MODELS.SCOUT, // Llama 4 - fastest
+        LLM_MODELS.QWEN3_32B, // Multilingual
       ],
       safety: [
         LLM_MODELS.LLAMA_PROMPT_GUARD_2_22M,
         LLM_MODELS.LLAMA_PROMPT_GUARD_2_86M,
       ],
       tts: [LLM_MODELS.PLAYAI_TTS, LLM_MODELS.PLAYAI_TTS_ARABIC],
-      systems: [LLM_MODELS.COMPOUND_BETA, LLM_MODELS.COMPOUND_BETA_MINI],
     },
   };
 };
@@ -97,6 +140,13 @@ export const getModelsByCategory = () => {
 /**
  * Returns the optimal LLM model for a given task type.
  * Balances performance, cost, and reliability based on task complexity.
+ *
+ * Model Selection Rationale (December 2025):
+ * - KIMI (262K context, 16K output): Best for long documents and multi-question generation
+ * - GPT_OSS_120B (131K context, 65K output): Best for structured outputs, reasoning, JSON mode
+ * - VERSATILE (131K context, 32K output): Reliable production model for general tasks
+ * - INSTANT (131K context, 131K output, 560 tps): Fastest for simple tasks
+ *
  * @param taskType - The type of task to perform
  * @param specificModel - Optional specific model to use instead of the optimal one
  */
@@ -112,29 +162,34 @@ export const getOptimalModel = (
   // Otherwise, return the optimal model for the task type
   switch (taskType) {
     case "quiz_generation":
-      // Complex multi-question generation needs high capability and large output
+      // Complex multi-question generation needs large context and output
+      // KIMI: 262K context for position context + 16K output for multiple questions
       return LLM_MODELS.KIMI;
-    // return LLM_MODELS.VERSATILE;
 
     case "question_generation":
-      // Single question generation can use faster model
-      return LLM_MODELS.KIMI;
-    // return LLM_MODELS.INSTANT;
+      // Single question generation - use reliable production model
+      // VERSATILE: 32K output is plenty, 280 tps is fast enough
+      return LLM_MODELS.VERSATILE;
 
-    case "overall_evaluation":
     case "evaluation":
-      // Answer evaluation benefits from reasoning capabilities
-      // Using DeepSeek R1 model with proper v5 configuration for structured outputs
+    case "overall_evaluation":
+      // Answer evaluation benefits from reasoning capabilities and JSON mode
+      // GPT_OSS_120B: Native JSON Mode, reasoning, 65K output for detailed feedback
+      return LLM_MODELS.GPT_OSS_120B;
+
+    case "resume_evaluation":
+      // Resume analysis needs large context for full resume text
+      // KIMI: 262K context ideal for resume + position requirements
       return LLM_MODELS.KIMI;
-    // return LLM_MODELS.REASONING;
 
     case "simple_task":
       // Basic tasks use fastest model
-      return LLM_MODELS.KIMI;
+      // INSTANT: 560 tps, cheapest, fast responses
+      return LLM_MODELS.INSTANT;
 
     default:
       // Default to versatile model for unknown tasks
-      return LLM_MODELS.KIMI;
+      return LLM_MODELS.VERSATILE;
   }
 };
 

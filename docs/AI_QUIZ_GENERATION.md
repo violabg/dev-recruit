@@ -288,28 +288,62 @@ export const getOptimalModel = (
 
   switch (taskType) {
     case "quiz_generation":
-      return LLM_MODELS.KIMI; // Complex multi-question
+      return LLM_MODELS.KIMI; // 262K context, 16K output
     case "question_generation":
-      return LLM_MODELS.KIMI; // Single question
+      return LLM_MODELS.VERSATILE; // Reliable production model
     case "evaluation":
-      return LLM_MODELS.KIMI; // Answer scoring
+    case "overall_evaluation":
+      return LLM_MODELS.GPT_OSS_120B; // Reasoning + JSON Mode
+    case "resume_evaluation":
+      return LLM_MODELS.KIMI; // Large context for full resume
     case "simple_task":
-      return LLM_MODELS.KIMI; // Basic tasks
+      return LLM_MODELS.INSTANT; // Fastest
     default:
-      return LLM_MODELS.KIMI;
+      return LLM_MODELS.VERSATILE;
   }
 };
 ```
 
-### Available Models
+### Available Models (December 2025)
 
-| Model ID                           | Context | Best For                |
-| ---------------------------------- | ------- | ----------------------- |
-| `llama-3.3-70b-versatile`          | 128K    | Complex quiz generation |
-| `llama-3.1-8b-instant`             | 128K    | Fast single questions   |
-| `gemma2-9b-it`                     | 8K      | General tasks           |
-| `deepseek-r1-distill-llama-70b`    | 128K    | Reasoning/evaluation    |
-| `moonshotai/kimi-k2-instruct-0905` | Large   | Current default         |
+#### Production Models
+
+| Model ID                       | Context | Output | Speed    | Best For                           |
+| ------------------------------ | ------- | ------ | -------- | ---------------------------------- |
+| `llama-3.3-70b-versatile`      | 131K    | 32K    | 280 tps  | Complex tasks, single question gen |
+| `llama-3.1-8b-instant`         | 131K    | 131K   | 560 tps  | Simple tasks, fast responses       |
+| `openai/gpt-oss-120b`          | 131K    | 65K    | 500 tps  | Evaluation, reasoning, JSON Mode   |
+| `openai/gpt-oss-20b`           | 131K    | 65K    | 1000 tps | Faster reasoning, fallback         |
+| `meta-llama/llama-guard-4-12b` | 131K    | 1K     | 1200 tps | Content moderation                 |
+| `groq/compound`                | 131K    | 8K     | 450 tps  | Agentic tasks with tools           |
+| `groq/compound-mini`           | 131K    | 8K     | 450 tps  | Lightweight agentic tasks          |
+
+#### Preview Models (Evaluate before production)
+
+| Model ID                                        | Context | Output | Speed   | Best For                                |
+| ----------------------------------------------- | ------- | ------ | ------- | --------------------------------------- |
+| `moonshotai/kimi-k2-instruct-0905`              | 262K    | 16K    | 200 tps | Quiz gen, resume analysis (largest ctx) |
+| `meta-llama/llama-4-maverick-17b-128e-instruct` | 131K    | 8K     | 600 tps | Fast preview tasks                      |
+| `meta-llama/llama-4-scout-17b-16e-instruct`     | 131K    | 8K     | 750 tps | Fastest Llama 4                         |
+| `qwen/qwen3-32b`                                | 131K    | 40K    | 400 tps | Multilingual tasks                      |
+
+#### Audio Models
+
+| Model ID                 | Best For                 |
+| ------------------------ | ------------------------ |
+| `whisper-large-v3`       | Audio transcription      |
+| `whisper-large-v3-turbo` | Fast audio transcription |
+
+### Task-Model Mapping Rationale
+
+| Task Type             | Model        | Why                                               |
+| --------------------- | ------------ | ------------------------------------------------- |
+| `quiz_generation`     | KIMI         | 262K context for position + multi-question output |
+| `question_generation` | VERSATILE    | Reliable, 32K output sufficient for 1 question    |
+| `evaluation`          | GPT_OSS_120B | Native JSON Mode, reasoning capabilities          |
+| `overall_evaluation`  | GPT_OSS_120B | Structured assessment with detailed feedback      |
+| `resume_evaluation`   | KIMI         | 262K context for full resume + position match     |
+| `simple_task`         | INSTANT      | 560 tps, cheapest, fast responses                 |
 
 ## Temperature Configuration
 
@@ -381,9 +415,9 @@ const DEFAULT_CONFIG = {
   retryDelay: 1000, // 1s base, exponential: 1s, 2s, 4s
   timeout: 60000, // 60 seconds
   fallbackModels: [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
-    "gemma2-9b-it",
+    "llama-3.3-70b-versatile", // Production - reliable
+    "openai/gpt-oss-20b", // Production - fast reasoning
+    "llama-3.1-8b-instant", // Production - fastest
   ],
 };
 ```

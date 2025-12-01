@@ -2,7 +2,7 @@ import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { overallEvaluationSchema } from "@/lib/schemas";
 import { getOptimalModel } from "@/lib/utils";
-import { invalidateEvaluationCache } from "@/lib/utils/cache-utils";
+import { invalidateEvaluationCacheInRouteHandler } from "@/lib/utils/cache-utils";
 import { groq } from "@ai-sdk/groq";
 import { streamText } from "ai";
 
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
           - recommendation: una raccomandazione su come procedere con il candidato
           - fitScore: un punteggio da 0 a 100 che indica l'idoneità complessiva per la posizione`;
 
-    const model = getOptimalModel("overall_evaluation");
+    const model = getOptimalModel("resume_evaluation");
 
     const jsonFormatInstructions = `
 
@@ -201,9 +201,7 @@ export async function POST(request: Request) {
             controller.enqueue(encoder.encode(chunk));
           }
 
-          controller.close();
-
-          // After streaming completes, parse and save to database
+          // After streaming completes, parse and save to database BEFORE closing
           try {
             const jsonText = cleanJsonResponse(fullText);
             const parsed = overallEvaluationSchema.parse(JSON.parse(jsonText));
@@ -223,10 +221,13 @@ export async function POST(request: Request) {
             });
 
             // Invalidate cache to show the new evaluation
-            invalidateEvaluationCache({ candidateId });
+            invalidateEvaluationCacheInRouteHandler({ candidateId });
           } catch (parseError) {
             console.error("Error parsing/saving evaluation:", parseError);
           }
+
+          // Close AFTER the database save is complete
+          controller.close();
         } catch (error) {
           controller.error(error);
         }

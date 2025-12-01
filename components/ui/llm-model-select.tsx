@@ -26,35 +26,32 @@ export const LLMModelSelect = ({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={LLM_MODELS.KIMI}>
-          🔬 Kimi - Kimi K2 Instruct (Raccomandato)
-        </SelectItem>
+        {/* Production Models - Recommended for reliability */}
         <SelectItem value={LLM_MODELS.VERSATILE}>
-          🚀 Versatile - Llama 3.3 70B
+          🚀 Versatile - Llama 3.3 70B (Affidabile)
         </SelectItem>
         <SelectItem value={LLM_MODELS.INSTANT}>
-          ⚡ Instant - Llama 3.1 8B (Veloce)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.REASONING}>
-          🧠 Reasoning - DeepSeek R1 70B (Valutazione)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.MAVERICK}>
-          🔬 Maverick - Llama 4 17B (Sperimentale)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.SCOUT}>
-          🎯 Scout - Llama 4 Scout 17B (Sperimentale)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.GEMMA2_9B_IT}>
-          💎 Gemma2 9B (Google)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.QWEN_QWQ_32B}>
-          🌟 Qwen QWQ 32B (Alibaba)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.GPT_OSS_20B}>
-          🌟 GPT OSS 20B (OpenAI)
+          ⚡ Instant - Llama 3.1 8B (Velocissimo)
         </SelectItem>
         <SelectItem value={LLM_MODELS.GPT_OSS_120B}>
-          🌟 GPT OSS 120B (OpenAI)
+          🧠 GPT OSS 120B - Ragionamento + JSON Mode
+        </SelectItem>
+        <SelectItem value={LLM_MODELS.GPT_OSS_20B}>
+          💨 GPT OSS 20B - Ragionamento Veloce
+        </SelectItem>
+
+        {/* Preview Models - Larger context, experimental */}
+        <SelectItem value={LLM_MODELS.KIMI}>
+          🔬 Kimi K2 - 262K contesto (Raccomandato per quiz)
+        </SelectItem>
+        <SelectItem value={LLM_MODELS.MAVERICK}>
+          🎯 Maverick - Llama 4 17B (Sperimentale)
+        </SelectItem>
+        <SelectItem value={LLM_MODELS.SCOUT}>
+          🏃 Scout - Llama 4 Scout 17B (Veloce)
+        </SelectItem>
+        <SelectItem value={LLM_MODELS.QWEN3_32B}>
+          🌟 Qwen3 32B - Multilingue (Alibaba)
         </SelectItem>
       </SelectContent>
     </Select>

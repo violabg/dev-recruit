@@ -35,14 +35,15 @@ export interface AIGenerationConfig {
 }
 
 // Default configuration
+// Updated: December 2025 - Synced with Groq documentation
 export const DEFAULT_CONFIG: AIGenerationConfig = {
   maxRetries: 3,
   retryDelay: 1000, // 1 second base delay
   timeout: 60000, // 60 seconds
   fallbackModels: [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
-    "gemma2-9b-it",
+    "llama-3.3-70b-versatile", // Production - reliable
+    "openai/gpt-oss-20b", // Production - fast reasoning
+    "llama-3.1-8b-instant", // Production - fastest
   ],
 };
 

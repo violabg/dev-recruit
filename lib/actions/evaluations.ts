@@ -180,7 +180,7 @@ export async function evaluateAnswer(
       temperature: 0.1, // Low temperature for consistent, reproducible evaluations
       providerOptions: {
         groq: {
-          structuredOutputs: false, // Disable for DeepSeek R1 - not supported
+          structuredOutputs: false, // Using json mode instead for broader model compatibility
         },
       },
     });
@@ -298,10 +298,10 @@ export async function generateOverallEvaluation(
         "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
       schema: overallEvaluationSchema,
       mode: "json",
-      temperature: 0.2, // Low temperature for consistent evaluations
+      temperature: 0.1, // Low temperature for consistent evaluations
       providerOptions: {
         groq: {
-          structuredOutputs: false, // Disable for DeepSeek R1 - not supported
+          structuredOutputs: false, // Using json mode instead for broader model compatibility
         },
       },
     });

@@ -82,16 +82,16 @@ async function generateResumeEvaluation(
 
   try {
     const { object: result } = await generateObject({
-      model: groq(getOptimalModel("overall_evaluation", specificModel)),
+      model: groq(getOptimalModel("resume_evaluation", specificModel)),
       prompt,
       system:
         "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
       schema: overallEvaluationSchema,
       mode: "json",
-      temperature: 0.2, // Low temperature for consistent, reproducible evaluations
+      temperature: 0.1, // Low temperature for consistent, reproducible evaluations
       providerOptions: {
         groq: {
-          structuredOutputs: false,
+          structuredOutputs: false, // Disable for preview models like KIMI
         },
       },
     });

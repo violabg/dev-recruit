@@ -5,10 +5,14 @@
  * across the application. Use these helpers instead of calling updateTag()
  * and revalidatePath() directly in server actions.
  *
+ * IMPORTANT: Use the correct function based on context:
+ * - Server Actions: Use the standard functions (invalidateQuizCache, etc.)
+ * - Route Handlers: Use the *InRouteHandler variants (invalidateEvaluationCacheInRouteHandler, etc.)
+ *
  * @see docs/CACHE_IMPLEMENTATION.md for caching strategy details
  */
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 
 // ============================================================================
 // Cache Tag Constants
@@ -194,6 +198,7 @@ export function invalidateInterviewCache(options?: {
 
 /**
  * Invalidate evaluation cache after create/update/delete operations
+ * Use this in Server Actions only. For Route Handlers, use invalidateEvaluationCacheInRouteHandler.
  */
 export function invalidateEvaluationCache(options?: {
   evaluationId?: string;
@@ -213,6 +218,39 @@ export function invalidateEvaluationCache(options?: {
 
   if (options?.candidateId) {
     updateTag(entityTag.evaluationCandidate(options.candidateId));
+    revalidatePath(`/dashboard/candidates/${options.candidateId}`);
+    revalidatePath(`/dashboard/candidates/${options.candidateId}/evaluations`);
+  }
+}
+
+/**
+ * Invalidate evaluation cache from Route Handlers (uses revalidateTag instead of updateTag)
+ * Use this in Route Handlers (app/api/*). For Server Actions, use invalidateEvaluationCache.
+ *
+ * Uses { expire: 0 } for immediate expiration since we want the new data to show right away.
+ */
+export function invalidateEvaluationCacheInRouteHandler(options?: {
+  evaluationId?: string;
+  interviewId?: string;
+  candidateId?: string;
+}) {
+  revalidateTag(CacheTags.EVALUATIONS, { expire: 0 });
+
+  if (options?.evaluationId) {
+    revalidateTag(entityTag.evaluation(options.evaluationId), { expire: 0 });
+  }
+
+  if (options?.interviewId) {
+    revalidateTag(entityTag.evaluationInterview(options.interviewId), {
+      expire: 0,
+    });
+    revalidatePath(`/dashboard/interviews/${options.interviewId}`);
+  }
+
+  if (options?.candidateId) {
+    revalidateTag(entityTag.evaluationCandidate(options.candidateId), {
+      expire: 0,
+    });
     revalidatePath(`/dashboard/candidates/${options.candidateId}`);
     revalidatePath(`/dashboard/candidates/${options.candidateId}/evaluations`);
   }
