@@ -37,16 +37,16 @@ export type ApiResponse<T> =
 
 // Type for schema validation middleware configuration
 export type ValidationConfig = {
-  body?: z.ZodJSONSchema;
-  query?: z.ZodJSONSchema;
-  params?: z.ZodJSONSchema;
-  headers?: z.ZodJSONSchema;
+  body?: z.ZodType;
+  query?: z.ZodType;
+  params?: z.ZodType;
+  headers?: z.ZodType;
 };
 
 // Type for validated request data in API routes
 export type ValidatedRequestData<T extends ValidationConfig> = {
-  body: T["body"] extends z.ZodJSONSchema ? z.infer<T["body"]> : never;
-  query: T["query"] extends z.ZodJSONSchema ? z.infer<T["query"]> : never;
-  params: T["params"] extends z.ZodJSONSchema ? z.infer<T["params"]> : never;
-  headers: T["headers"] extends z.ZodJSONSchema ? z.infer<T["headers"]> : never;
+  body: T["body"] extends z.ZodType ? z.infer<T["body"]> : never;
+  query: T["query"] extends z.ZodType ? z.infer<T["query"]> : never;
+  params: T["params"] extends z.ZodType ? z.infer<T["params"]> : never;
+  headers: T["headers"] extends z.ZodType ? z.infer<T["headers"]> : never;
 };

@@ -1,0 +1,349 @@
+/**
+ * Test Mock Factory
+ *
+ * Provides consistent mock data for testing across the application.
+ * Use these factories to create test data that matches your Prisma schema.
+ */
+
+import type { FlexibleQuestion } from "@/lib/schemas";
+
+// ============================================================================
+// User Mocks
+// ============================================================================
+
+export const mockUser = (overrides: Partial<MockUser> = {}): MockUser => ({
+  id: "user-123",
+  name: "Test User",
+  email: "test@example.com",
+  image: null,
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockUser {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// Question Mocks
+// ============================================================================
+
+export const mockMultipleChoiceQuestion = (
+  overrides: Partial<FlexibleQuestion> = {}
+): FlexibleQuestion => ({
+  id: "q1",
+  type: "multiple_choice",
+  question: "Qual è il risultato di 2 + 2?",
+  options: ["Tre", "Quattro", "Cinque", "Sei"],
+  correctAnswer: 1,
+  explanation: "La somma di 2 + 2 è 4",
+  keywords: ["matematica", "aritmetica"],
+  ...overrides,
+});
+
+export const mockOpenQuestion = (
+  overrides: Partial<FlexibleQuestion> = {}
+): FlexibleQuestion => ({
+  id: "q2",
+  type: "open_question",
+  question: "Spiega il concetto di closure in JavaScript",
+  sampleAnswer:
+    "Una closure è una funzione che ha accesso alle variabili del suo scope esterno anche dopo che la funzione esterna è terminata.",
+  keywords: ["javascript", "closure", "scope"],
+  ...overrides,
+});
+
+export const mockCodeSnippetQuestion = (
+  overrides: Partial<FlexibleQuestion> = {}
+): FlexibleQuestion => ({
+  id: "q3",
+  type: "code_snippet",
+  question: "Correggi il seguente codice per invertire un array",
+  codeSnippet: "function reverse(arr) { return arr.reverse(); }",
+  sampleSolution:
+    "function reverse(arr) { return [...arr].reverse(); } // Non muta l'array originale",
+  language: "javascript",
+  keywords: ["array", "reverse", "immutability"],
+  ...overrides,
+});
+
+export const mockQuestionEntity = (
+  overrides: Partial<MockQuestionEntity> = {}
+): MockQuestionEntity => ({
+  id: "question-123",
+  type: "multiple_choice",
+  question: "Qual è il risultato di 2 + 2?",
+  options: ["Tre", "Quattro", "Cinque", "Sei"],
+  correctAnswer: 1,
+  explanation: "La somma di 2 + 2 è 4",
+  keywords: ["matematica", "aritmetica"],
+  sampleAnswer: null,
+  codeSnippet: null,
+  sampleSolution: null,
+  language: null,
+  isFavorite: false,
+  createdBy: "user-123",
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockQuestionEntity {
+  id: string;
+  type: string;
+  question: string;
+  options: string[];
+  correctAnswer: number | null;
+  explanation: string | null;
+  keywords: string[];
+  sampleAnswer: string | null;
+  codeSnippet: string | null;
+  sampleSolution: string | null;
+  language: string | null;
+  isFavorite: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// Quiz Mocks
+// ============================================================================
+
+export const mockQuiz = (overrides: Partial<MockQuiz> = {}): MockQuiz => ({
+  id: "quiz-123",
+  title: "Quiz di JavaScript",
+  description: "Test sulle basi di JavaScript",
+  instructions: "Rispondi a tutte le domande",
+  timeLimit: 30,
+  positionId: "position-123",
+  createdBy: "user-123",
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockQuiz {
+  id: string;
+  title: string;
+  description: string | null;
+  instructions: string | null;
+  timeLimit: number | null;
+  positionId: string | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const mockQuizWithQuestions = (
+  overrides: Partial<MockQuiz> = {},
+  questions: FlexibleQuestion[] = [
+    mockMultipleChoiceQuestion(),
+    mockOpenQuestion(),
+  ]
+) => ({
+  ...mockQuiz(overrides),
+  quizQuestions: questions.map((q, index) => ({
+    order: index,
+    question: {
+      id: `question-${index}`,
+      type: q.type,
+      question: q.question,
+      options: q.options || [],
+      correctAnswer: q.correctAnswer ?? null,
+      explanation: q.explanation || null,
+      keywords: q.keywords || [],
+      sampleAnswer: q.sampleAnswer || null,
+      codeSnippet: q.codeSnippet || null,
+      sampleSolution: q.sampleSolution || null,
+      language: q.language || null,
+      isFavorite: q.isFavorite ?? false,
+    },
+  })),
+});
+
+// ============================================================================
+// Position Mocks
+// ============================================================================
+
+export const mockPosition = (
+  overrides: Partial<MockPosition> = {}
+): MockPosition => ({
+  id: "position-123",
+  title: "Senior Frontend Developer",
+  description: "Sviluppatore React esperto",
+  requirements: "5+ anni di esperienza con React e TypeScript",
+  skills: ["React", "TypeScript", "CSS"],
+  experienceLevel: "senior",
+  location: "Milano",
+  contractType: "full-time",
+  salary: "50000-70000",
+  createdBy: "user-123",
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockPosition {
+  id: string;
+  title: string;
+  description: string | null;
+  requirements: string | null;
+  skills: string[];
+  experienceLevel: string;
+  location: string | null;
+  contractType: string;
+  salary: string | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// Candidate Mocks
+// ============================================================================
+
+export const mockCandidate = (
+  overrides: Partial<MockCandidate> = {}
+): MockCandidate => ({
+  id: "candidate-123",
+  name: "Mario Rossi",
+  email: "mario.rossi@example.com",
+  phone: "+39 123 456 7890",
+  resumeUrl: "https://example.com/resume.pdf",
+  resumeText: "Esperienza: 5 anni come sviluppatore...",
+  notes: "Ottimo candidato",
+  status: "pending",
+  positionId: "position-123",
+  createdBy: "user-123",
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockCandidate {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  resumeUrl: string | null;
+  resumeText: string | null;
+  notes: string | null;
+  status: string;
+  positionId: string | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// Interview Mocks
+// ============================================================================
+
+export const mockInterview = (
+  overrides: Partial<MockInterview> = {}
+): MockInterview => ({
+  id: "interview-123",
+  token: "abc123def456",
+  candidateId: "candidate-123",
+  quizId: "quiz-123",
+  status: "pending",
+  answers: {},
+  startedAt: null,
+  completedAt: null,
+  createdBy: "user-123",
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockInterview {
+  id: string;
+  token: string;
+  candidateId: string;
+  quizId: string;
+  status: string;
+  answers: Record<string, unknown>;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// Evaluation Mocks
+// ============================================================================
+
+export const mockEvaluation = (
+  overrides: Partial<MockEvaluation> = {}
+): MockEvaluation => ({
+  id: "evaluation-123",
+  interviewId: "interview-123",
+  candidateId: null,
+  positionId: null,
+  score: 8.5,
+  feedback: "Ottima performance complessiva",
+  details: {
+    questionScores: [
+      { questionId: "q1", score: 9, feedback: "Risposta corretta" },
+      { questionId: "q2", score: 8, feedback: "Buona comprensione" },
+    ],
+  },
+  createdBy: "user-123",
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockEvaluation {
+  id: string;
+  interviewId: string | null;
+  candidateId: string | null;
+  positionId: string | null;
+  score: number;
+  feedback: string;
+  details: Record<string, unknown>;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// Preset Mocks
+// ============================================================================
+
+export const mockPreset = (
+  overrides: Partial<MockPreset> = {}
+): MockPreset => ({
+  id: "preset-123",
+  name: "JavaScript Basics",
+  description: "Preset per domande JavaScript base",
+  questionType: "multiple_choice",
+  parameters: {
+    difficulty: 3,
+    focusAreas: ["syntax", "functions", "arrays"],
+    language: "javascript",
+  },
+  createdBy: "user-123",
+  createdAt: new Date("2024-01-01"),
+  updatedAt: new Date("2024-01-01"),
+  ...overrides,
+});
+
+export interface MockPreset {
+  id: string;
+  name: string;
+  description: string | null;
+  questionType: string;
+  parameters: Record<string, unknown>;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
