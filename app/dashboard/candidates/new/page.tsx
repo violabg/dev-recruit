@@ -1,4 +1,11 @@
 import { CandidateForm } from "@/components/candidates/candidate-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getPositionsForSelect } from "@/lib/data/positions";
 import { Suspense } from "react";
 import { CandidateFormSkeleton } from "./fallbacks";
@@ -30,23 +37,20 @@ async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
       : undefined;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-bold text-3xl">Nuovo Candidato</h1>
-        <p className="text-muted-foreground">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-2xl">Nuovo Candidato</CardTitle>
+        <CardDescription>
           Inserisci i dati del candidato da aggiungere
-        </p>
-      </div>
-      <div className="max-w-xl">
-        <div className="p-6 border rounded-md">
-          <h2 className="mb-4 font-semibold text-xl">Crea candidato</h2>
-          <CandidateForm
-            mode="new"
-            positions={positions}
-            defaultPositionId={validPositionId}
-          />
-        </div>
-      </div>
-    </div>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <CandidateForm
+          mode="new"
+          positions={positions}
+          defaultPositionId={validPositionId}
+        />
+      </CardContent>
+    </Card>
   );
 }

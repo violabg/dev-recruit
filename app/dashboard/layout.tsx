@@ -20,7 +20,8 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       {/* <SidebarInset> */}
-      <SidebarInset className="bg-[linear-gradient(to_bottom_right,var(--background),oklch(0.85_0.02_247.839))] dark:bg-[linear-gradient(to_bottom_right,var(--background),oklch(0.18_0.03_260.5))]">
+      <SidebarInset>
+        {/* <SidebarInset className="dark:bg-[linear-gradient(to_bottom_right,var(--background),oklch(0.18_0.03_260.5))]"> */}
         <header className="top-0 z-30 sticky flex items-center gap-2 bg-background/95 supports-backdrop-filter:bg-background/60 backdrop-blur px-4 border-b rounded-t-lg h-16 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 transition-[width,height] ease-linear shrink-0">
           <div className="flex items-center gap-2 w-full">
             <SidebarTrigger className="-ml-1" />

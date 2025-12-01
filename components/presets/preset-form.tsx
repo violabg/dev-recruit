@@ -9,13 +9,6 @@ import {
   TextareaField,
 } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { createPresetAction, updatePresetAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { createPresetSchema, type CreatePresetInput } from "@/lib/schemas";
@@ -169,218 +162,212 @@ export function PresetForm({ preset }: PresetFormProps) {
     });
   };
 
+  const handleCancel = () => {
+    router.back();
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {preset ? "Modifica preset" : "Crea nuovo preset"}
-        </CardTitle>
-        <CardDescription>
-          {preset
-            ? "Aggiorna la configurazione del preset"
-            : "Crea un nuovo preset per la generazione di domande"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6"
-          noValidate
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="space-y-6"
+      noValidate
+    >
+      <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
+        <InputField
+          control={form.control}
+          name="name"
+          label="Nome preset"
+          required
+          placeholder="es. react-hooks"
+          description="Identificatore univoco per il preset"
+        />
+
+        <InputField
+          control={form.control}
+          name="label"
+          label="Etichetta visualizzata"
+          required
+          placeholder="es. Esperto React Hooks"
+          description="Nome leggibile dall'uomo"
+        />
+      </div>
+
+      <TextareaField
+        control={form.control}
+        name="description"
+        label="Descrizione"
+        placeholder="Descrivi a cosa serve questo preset..."
+        description="Descrizione opzionale del preset"
+      />
+
+      <TextareaField
+        control={form.control}
+        name="instructions"
+        label="Istruzioni AI"
+        placeholder="Ulteriori indicazioni per l'AI durante la generazione delle domande"
+        description="Aiuta l'AI a concentrarsi su requisiti o pattern specifici"
+      />
+
+      <div className="gap-6 grid grid-cols-1 md:grid-cols-3">
+        <SelectField
+          control={form.control}
+          name="icon"
+          label="Icona"
+          required
+          options={PRESET_ICON_OPTIONS.map((icon) => ({
+            value: icon.value,
+            label: icon.label,
+            leading: (
+              <icon.icon className="size-4 text-primary" aria-hidden="true" />
+            ),
+          }))}
+          description="Scegli un'icona da lucide-react"
+        />
+
+        <SelectField
+          control={form.control}
+          name="questionType"
+          label="Tipo di domanda"
+          required
+          options={QUESTION_TYPES}
+          description="Tipo di domande generate da questo preset"
+        />
+
+        <SliderField
+          control={form.control}
+          name="difficulty"
+          label="Livello difficoltà"
+          required
+          min={1}
+          max={5}
+          step={1}
+          description="1 = Principiante, 5 = Esperto"
+        />
+      </div>
+
+      <MultiSelectField
+        control={form.control}
+        name="tags"
+        label="Tag"
+        required
+        options={COMMON_TAGS.map((tag) => ({
+          value: tag,
+          label: tag,
+        }))}
+        description="Seleziona tag rilevanti per questo preset"
+      />
+
+      {questionType === "multiple_choice" && (
+        <div className="space-y-4 p-4 border rounded-lg">
+          <h3 className="font-medium text-base">Opzioni scelta multipla</h3>
+          <div>
+            <InputWithTagField
+              control={form.control}
+              name="focusAreas"
+              label="Aree di focus"
+              placeholder="Premi invio dopo ogni parola"
+              description="Aree tematiche su cui l'AI dovrebbe concentrarsi durante la generazione delle domande"
+            />
+          </div>
+
+          <SelectField
+            control={form.control}
+            name="distractorComplexity"
+            label="Complessità distrattori"
+            options={DISTRACTOR_COMPLEXITY_OPTIONS}
+            description="Quanto dovrebbero essere difficili da distinguere le opzioni sbagliate"
+          />
+        </div>
+      )}
+
+      {questionType === "open_question" && (
+        <div className="space-y-4 p-4 border rounded-lg">
+          <h3 className="font-medium text-base">Opzioni domanda aperta</h3>
+
+          <SelectField
+            control={form.control}
+            name="expectedResponseLength"
+            label="Lunghezza risposta attesa"
+            options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
+            description="Lascia che l'AI sappia quanto dettagliata dovrebbe essere la risposta"
+          />
+
+          <div>
+            <label className="font-medium text-sm">
+              Criteri di valutazione
+            </label>
+            <textarea
+              className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-20 placeholder:text-muted-foreground text-base"
+              value={evaluationCriteriaValue}
+              onChange={(event) =>
+                form.setValue(
+                  "evaluationCriteria",
+                  parseListField(event.target.value),
+                  { shouldDirty: true, shouldValidate: true }
+                )
+              }
+              placeholder={"scalabilità\ntrade-offs\nsicurezza"}
+            />
+            <p className="mt-2 text-muted-foreground text-sm">
+              Un criterio per riga. Questi guideranno il rubric di punteggio.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {questionType === "code_snippet" && (
+        <div className="space-y-4 p-4 border rounded-lg">
+          <h3 className="font-medium text-base">Opzioni snippet di codice</h3>
+          <InputField
+            control={form.control}
+            name="language"
+            label="Linguaggio primario"
+            placeholder="es. typescript"
+            description="Linguaggio che lo snippet buggy dovrebbe usare"
+          />
+
+          <SelectField
+            control={form.control}
+            name="bugType"
+            label="Tipo di bug"
+            options={BUG_TYPE_OPTIONS}
+            description="Che tipo di problema dovrebbe includere lo snippet"
+          />
+
+          <SelectField
+            control={form.control}
+            name="codeComplexity"
+            label="Complessità codice"
+            options={CODE_COMPLEXITY_OPTIONS}
+            description="Aiuta a regolare la lunghezza e la difficoltà dello snippet"
+          />
+
+          <SwitchField
+            control={form.control}
+            name="includeComments"
+            label="Includi commenti"
+            description="Se lo snippet dovrebbe contenere commenti inline"
+          />
+        </div>
+      )}
+      <div className="flex gap-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleCancel}
+          disabled={isPending}
         >
-          <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
-            <InputField
-              control={form.control}
-              name="name"
-              label="Nome preset"
-              required
-              placeholder="es. react-hooks"
-              description="Identificatore univoco per il preset"
-            />
-
-            <InputField
-              control={form.control}
-              name="label"
-              label="Etichetta visualizzata"
-              required
-              placeholder="es. Esperto React Hooks"
-              description="Nome leggibile dall'uomo"
-            />
-          </div>
-
-          <TextareaField
-            control={form.control}
-            name="description"
-            label="Descrizione"
-            placeholder="Descrivi a cosa serve questo preset..."
-            description="Descrizione opzionale del preset"
-          />
-
-          <TextareaField
-            control={form.control}
-            name="instructions"
-            label="Istruzioni AI"
-            placeholder="Ulteriori indicazioni per l'AI durante la generazione delle domande"
-            description="Aiuta l'AI a concentrarsi su requisiti o pattern specifici"
-          />
-
-          <div className="gap-6 grid grid-cols-1 md:grid-cols-3">
-            <SelectField
-              control={form.control}
-              name="icon"
-              label="Icona"
-              required
-              options={PRESET_ICON_OPTIONS.map((icon) => ({
-                value: icon.value,
-                label: icon.label,
-                leading: (
-                  <icon.icon
-                    className="size-4 text-primary"
-                    aria-hidden="true"
-                  />
-                ),
-              }))}
-              description="Scegli un'icona da lucide-react"
-            />
-
-            <SelectField
-              control={form.control}
-              name="questionType"
-              label="Tipo di domanda"
-              required
-              options={QUESTION_TYPES}
-              description="Tipo di domande generate da questo preset"
-            />
-
-            <SliderField
-              control={form.control}
-              name="difficulty"
-              label="Livello difficoltà"
-              required
-              min={1}
-              max={5}
-              step={1}
-              description="1 = Principiante, 5 = Esperto"
-            />
-          </div>
-
-          <MultiSelectField
-            control={form.control}
-            name="tags"
-            label="Tag"
-            required
-            options={COMMON_TAGS.map((tag) => ({
-              value: tag,
-              label: tag,
-            }))}
-            description="Seleziona tag rilevanti per questo preset"
-          />
-
-          {questionType === "multiple_choice" && (
-            <div className="space-y-4 p-4 border rounded-lg">
-              <h3 className="font-medium text-base">Opzioni scelta multipla</h3>
-              <div>
-                <InputWithTagField
-                  control={form.control}
-                  name="focusAreas"
-                  label="Aree di focus"
-                  placeholder="Premi invio dopo ogni parola"
-                  description="Aree tematiche su cui l'AI dovrebbe concentrarsi durante la generazione delle domande"
-                />
-              </div>
-
-              <SelectField
-                control={form.control}
-                name="distractorComplexity"
-                label="Complessità distrattori"
-                options={DISTRACTOR_COMPLEXITY_OPTIONS}
-                description="Quanto dovrebbero essere difficili da distinguere le opzioni sbagliate"
-              />
-            </div>
-          )}
-
-          {questionType === "open_question" && (
-            <div className="space-y-4 p-4 border rounded-lg">
-              <h3 className="font-medium text-base">Opzioni domanda aperta</h3>
-
-              <SelectField
-                control={form.control}
-                name="expectedResponseLength"
-                label="Lunghezza risposta attesa"
-                options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
-                description="Lascia che l'AI sappia quanto dettagliata dovrebbe essere la risposta"
-              />
-
-              <div>
-                <label className="font-medium text-sm">
-                  Criteri di valutazione
-                </label>
-                <textarea
-                  className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-20 placeholder:text-muted-foreground text-base"
-                  value={evaluationCriteriaValue}
-                  onChange={(event) =>
-                    form.setValue(
-                      "evaluationCriteria",
-                      parseListField(event.target.value),
-                      { shouldDirty: true, shouldValidate: true }
-                    )
-                  }
-                  placeholder={"scalabilità\ntrade-offs\nsicurezza"}
-                />
-                <p className="mt-2 text-muted-foreground text-sm">
-                  Un criterio per riga. Questi guideranno il rubric di
-                  punteggio.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {questionType === "code_snippet" && (
-            <div className="space-y-4 p-4 border rounded-lg">
-              <h3 className="font-medium text-base">
-                Opzioni snippet di codice
-              </h3>
-              <InputField
-                control={form.control}
-                name="language"
-                label="Linguaggio primario"
-                placeholder="es. typescript"
-                description="Linguaggio che lo snippet buggy dovrebbe usare"
-              />
-
-              <SelectField
-                control={form.control}
-                name="bugType"
-                label="Tipo di bug"
-                options={BUG_TYPE_OPTIONS}
-                description="Che tipo di problema dovrebbe includere lo snippet"
-              />
-
-              <SelectField
-                control={form.control}
-                name="codeComplexity"
-                label="Complessità codice"
-                options={CODE_COMPLEXITY_OPTIONS}
-                description="Aiuta a regolare la lunghezza e la difficoltà dello snippet"
-              />
-
-              <SwitchField
-                control={form.control}
-                name="includeComments"
-                label="Includi commenti"
-                description="Se lo snippet dovrebbe contenere commenti inline"
-              />
-            </div>
-          )}
-
-          <Button type="submit" disabled={isPending} className="w-full">
-            {isPending
-              ? "Salvataggio..."
-              : preset
-              ? "Aggiorna preset"
-              : "Crea preset"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+          Annulla
+        </Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending
+            ? "Salvataggio..."
+            : preset
+            ? "Aggiorna preset"
+            : "Crea preset"}
+        </Button>
+      </div>
+    </form>
   );
 }

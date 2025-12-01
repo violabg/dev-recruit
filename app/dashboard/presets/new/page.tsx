@@ -1,17 +1,25 @@
 import { PresetForm } from "@/components/presets/preset-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function NewPresetPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-bold text-3xl tracking-tight">Crea preset</h1>
-        <p className="mt-2 text-muted-foreground">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-2xl">Gestione preset</CardTitle>
+        <CardDescription>
           Definisci un preset per la generazione di domande che può essere
           riutilizzato nelle tue posizioni.
-        </p>
-      </div>
-
-      <PresetForm />
-    </div>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <PresetForm />
+      </CardContent>
+    </Card>
   );
 }

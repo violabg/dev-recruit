@@ -66,6 +66,10 @@ export const CandidateForm = (props: CandidateFormProps) => {
   // Use appropriate schema and type based on mode
   const schema = isEditMode ? candidateUpdateSchema : candidateFormSchema;
 
+  const handleCancel = () => {
+    router.back();
+  };
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: isEditMode
@@ -304,24 +308,35 @@ export const CandidateForm = (props: CandidateFormProps) => {
       />
 
       {error && <p className="text-destructive text-sm">{error}</p>}
-      <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? (
-          <>
-            <Loader2 className="mr-2 size-4 animate-spin" />
-            {isEditMode
-              ? "Salvataggio in corso..."
-              : isApplyMode
-              ? "Invio candidatura..."
-              : "Creazione in corso..."}
-          </>
-        ) : isEditMode ? (
-          "Aggiorna candidato"
-        ) : isApplyMode ? (
-          "Invia candidatura"
-        ) : (
-          "Crea candidato"
-        )}
-      </Button>
+      <div className="flex gap-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleCancel}
+          disabled={isPending}
+        >
+          Annulla
+        </Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              {isEditMode
+                ? "Salvataggio in corso..."
+                : isApplyMode
+                ? "Invio candidatura..."
+                : "Creazione in corso..."}
+            </>
+          ) : isEditMode ? (
+            "Aggiorna candidato"
+          ) : isApplyMode ? (
+            "Invia candidatura"
+          ) : (
+            "Crea candidato"
+          )}
+        </Button>
+      </div>
     </form>
   );
 };
