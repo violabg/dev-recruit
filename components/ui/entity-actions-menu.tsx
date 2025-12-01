@@ -67,7 +67,7 @@ export function EntityActionsMenu({
           <DropdownMenuLabel>{actionsLabel}</DropdownMenuLabel>
           {editHref && (
             <DropdownMenuItem asChild>
-              <Link href={editHref}>
+              <Link href={editHref as never}>
                 <Edit className="mr-1 size-4" />
                 {editLabel}
               </Link>
