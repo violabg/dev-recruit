@@ -109,18 +109,25 @@ export const QuestionItem = ({
     <Card
       key={field.id}
       className={cn(
-        "relative transition-all duration-200",
+        "relative pt-0 overflow-hidden transition-all duration-200",
         hasQuestionChanges
           ? "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] dark:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
-          : "hover:border-primary/50",
-        isExpanded && "ring-1 ring-primary/5"
+          : "hover:border-primary/50 border-muted",
+        isExpanded
+          ? "ring-1 ring-primary/10 shadow-md border-primary/20"
+          : "shadow-sm"
       )}
     >
-      <CardHeader className="pb-3">
+      <CardHeader
+        className={cn(
+          "gap-0 pt-4 [.border-b]:pb-4 transition-colors",
+          isExpanded ? "bg-primary/10 border-b" : "bg-muted/10"
+        )}
+      >
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <div className="flex flex-col">
-              <span className="font-medium text-foreground text-sm">
+              <span className="font-medium text-foreground text-md">
                 Domanda {actualIndex + 1}
               </span>
               {hasQuestionChanges && (

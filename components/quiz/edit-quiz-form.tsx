@@ -1,10 +1,4 @@
 "use client";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { useCallback, useState } from "react";
@@ -168,17 +162,7 @@ export function EditQuizForm({
   );
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Modifica Quiz</CardTitle>
-          <CardDescription>
-            Aggiorna le domande e le impostazioni del quiz per la posizione{" "}
-            <strong>{position.title}</strong>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
+    <>
       <FormProvider<EditQuizFormData> {...form}>
         <form
           onSubmit={form.handleSubmit(handleSave)}
@@ -253,6 +237,6 @@ export function EditQuizForm({
         onOpenChange={setFavoritesDialogOpen}
         onAddQuestions={handleAddFavoriteQuestions}
       />
-    </div>
+    </>
   );
 }

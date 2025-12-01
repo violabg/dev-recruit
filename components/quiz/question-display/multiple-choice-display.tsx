@@ -11,7 +11,7 @@ export const MultipleChoiceDisplay = ({
 }: MultipleChoiceDisplayProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-medium">Opzioni:</h3>
+      <h3 className="font-bold dark:text-primary text-sm">Opzioni:</h3>
       <div className="flex flex-col gap-4 mt-2">
         {question.options?.map((option: string, optIndex: number) => {
           const correctAnswer = question.correctAnswer ?? 0;
@@ -52,7 +52,7 @@ export const MultipleChoiceDisplay = ({
       </div>
       {question.explanation && (
         <div className="flex flex-col gap-2 mt-2">
-          <h3 className="font-medium">Spiegazione:</h3>
+          <h3 className="font-bold dark:text-primary text-sm">Spiegazione:</h3>
           <p className="mt-1 text-muted-foreground text-sm">
             {question.explanation}
           </p>

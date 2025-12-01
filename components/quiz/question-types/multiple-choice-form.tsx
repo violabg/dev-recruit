@@ -30,7 +30,7 @@ export const MultipleChoiceForm = ({ index }: MultipleChoiceFormProps) => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <label className="font-medium">
+          <label className="font-bold dark:text-primary text-sm">
             Opzioni
             <span aria-hidden className="ps-1 text-destructive">
               *
