@@ -142,7 +142,6 @@ export function EditQuizForm({
         instructions?: string;
         focusAreas?: string[];
         distractorComplexity?: "simple" | "moderate" | "complex";
-        requireCodeExample?: boolean;
         expectedResponseLength?: "short" | "medium" | "long";
         evaluationCriteria?: string[];
         language?: string;

@@ -185,7 +185,6 @@ Free-form text responses with sample answers.
 
 **Type-Specific Parameters:**
 
-- `requireCodeExample?: boolean` - Should include code in answer
 - `expectedResponseLength?: "short" | "medium" | "long"` - Expected answer length
 - `evaluationCriteria?: string[]` - What to look for in answers
 
@@ -712,7 +711,6 @@ model Preset {
   // Type-specific parameters
   focusAreas           String[]
   distractorComplexity String?
-  requireCodeExample   Boolean?
   expectedResponseLength ExpectedResponseLength?
   evaluationCriteria   String[]
   language             String?
@@ -732,7 +730,7 @@ model Preset {
 | Question Type   | Parameters Available                                                     |
 | --------------- | ------------------------------------------------------------------------ |
 | Multiple Choice | `focusAreas`, `distractorComplexity` (simple/moderate/complex)           |
-| Open Question   | `requireCodeExample`, `expectedResponseLength`, `evaluationCriteria`     |
+| Open Question   | `expectedResponseLength`, `evaluationCriteria`                           |
 | Code Snippet    | `language`, `bugType`, `codeComplexity`, `includeComments`, `focusAreas` |
 
 **Usage Example**:

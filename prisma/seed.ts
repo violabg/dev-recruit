@@ -52,7 +52,6 @@ const PRESETS: PresetSeedData[] = [
     description: "Optimization techniques and best practices",
     icon: "Zap",
     questionType: "open_question",
-    requireCodeExample: true,
     expectedResponseLength: "medium",
     evaluationCriteria: [
       "performance optimization",
@@ -113,7 +112,6 @@ const PRESETS: PresetSeedData[] = [
     description: "Algorithm and logic challenges",
     icon: "Brain",
     questionType: "open_question",
-    requireCodeExample: true,
     expectedResponseLength: "long",
     evaluationCriteria: ["algorithm efficiency", "code clarity", "edge cases"],
     instructions: "Test algorithmic thinking and problem-solving approach",
@@ -126,7 +124,6 @@ const PRESETS: PresetSeedData[] = [
     description: "Architecture and scalability",
     icon: "Settings",
     questionType: "open_question",
-    requireCodeExample: false,
     expectedResponseLength: "long",
     evaluationCriteria: ["scalability", "architecture", "trade-offs"],
     instructions: "Design a scalable system architecture",

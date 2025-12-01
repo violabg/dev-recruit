@@ -18,7 +18,6 @@ type AIDialogsProps = {
       // Type-specific options
       focusAreas?: string[];
       distractorComplexity?: "simple" | "moderate" | "complex";
-      requireCodeExample?: boolean;
       expectedResponseLength?: "short" | "medium" | "long";
       evaluationCriteria?: string[];
       language?: string;
@@ -40,7 +39,6 @@ type AIDialogsProps = {
       // Type-specific options
       focusAreas?: string[];
       distractorComplexity?: "simple" | "moderate" | "complex";
-      requireCodeExample?: boolean;
       expectedResponseLength?: "short" | "medium" | "long";
       evaluationCriteria?: string[];
       language?: string;

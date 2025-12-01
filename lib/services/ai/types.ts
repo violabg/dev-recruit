@@ -86,7 +86,6 @@ export interface MultipleChoiceQuestionParams extends BaseQuestionParams {
 
 export interface OpenQuestionParams extends BaseQuestionParams {
   type: "open_question";
-  requireCodeExample?: boolean;
   expectedResponseLength?: "short" | "medium" | "long";
   evaluationCriteria?: string[];
 }

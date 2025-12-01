@@ -100,7 +100,6 @@ export const quizApiSchemas = {
     distractorComplexity: z.enum(["simple", "moderate", "complex"]).optional(),
 
     // Open question specific
-    requireCodeExample: z.boolean().optional(),
     expectedResponseLength: z.enum(["short", "medium", "long"]).optional(),
     evaluationCriteria: z.array(z.string()).optional(),
 

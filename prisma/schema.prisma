@@ -286,7 +286,6 @@ model Preset {
   instructions String?
   focusAreas   String[] @default([])
   distractorComplexity String?
-  requireCodeExample  Boolean?
   expectedResponseLength ExpectedResponseLength?
   evaluationCriteria String[] @default([])
   language     String?

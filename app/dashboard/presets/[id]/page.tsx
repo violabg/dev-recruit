@@ -67,10 +67,6 @@ export default async function PresetDetailPage({
     ],
     open_question: [
       {
-        label: "Richiedi esempio codice",
-        value: formatBoolean(preset.requireCodeExample),
-      },
-      {
         label: "Lunghezza risposta attesa",
         value: formatEnum(preset.expectedResponseLength),
       },

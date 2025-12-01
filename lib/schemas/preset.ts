@@ -46,7 +46,6 @@ export const presetSchema = z.object({
   instructions: optionalTrimmedString(1000),
   focusAreas: optionalStringArray,
   distractorComplexity: optionalEnum(distractorComplexitySchema),
-  requireCodeExample: optionalBoolean,
   expectedResponseLength: optionalEnum(expectedResponseLengthSchema),
   evaluationCriteria: optionalStringArray,
   language: optionalTrimmedString(100),

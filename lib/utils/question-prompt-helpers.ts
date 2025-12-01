@@ -59,7 +59,6 @@ export const createOpenQuestionParams = (
   baseConfig: Omit<BaseQuestionParams, "questionIndex">,
   questionIndex: number,
   options: {
-    requireCodeExample?: boolean;
     expectedResponseLength?: "short" | "medium" | "long";
     evaluationCriteria?: string[];
   } = {}
@@ -67,7 +66,6 @@ export const createOpenQuestionParams = (
   ...createBaseParams(baseConfig),
   type: "open_question",
   questionIndex,
-  requireCodeExample: options.requireCodeExample,
   expectedResponseLength: options.expectedResponseLength,
   evaluationCriteria: options.evaluationCriteria,
 });
@@ -145,12 +143,11 @@ export const createFrontendQuestionParams = (
       distractorComplexity: "moderate" as const,
     },
     open_question: {
-      requireCodeExample: true,
       expectedResponseLength: "medium" as const,
       evaluationCriteria: [
         "technical accuracy",
         "best practices",
-        "code quality",
+        "conceptual understanding",
       ],
     },
     code_snippet: {
@@ -183,7 +180,6 @@ export const createBackendQuestionParams = (
       distractorComplexity: "complex" as const,
     },
     open_question: {
-      requireCodeExample: true,
       expectedResponseLength: "long" as const,
       evaluationCriteria: [
         "system design",

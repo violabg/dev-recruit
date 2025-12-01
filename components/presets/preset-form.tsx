@@ -111,7 +111,6 @@ export function PresetForm({ preset }: PresetFormProps) {
     focusAreas: preset?.focusAreas ?? [],
     evaluationCriteria: preset?.evaluationCriteria ?? [],
     language: preset?.language ?? "",
-    requireCodeExample: preset?.requireCodeExample ?? false,
     includeComments: preset?.includeComments ?? true,
     distractorComplexity:
       preset?.distractorComplexity ?? DISTRACTOR_COMPLEXITY_OPTIONS[1].value,
@@ -302,12 +301,6 @@ export function PresetForm({ preset }: PresetFormProps) {
           {questionType === "open_question" && (
             <div className="space-y-4 p-4 border rounded-lg">
               <h3 className="font-medium text-base">Opzioni domanda aperta</h3>
-              <SwitchField
-                control={form.control}
-                name="requireCodeExample"
-                label="Richiedi esempio codice"
-                description="Se abilitato, i candidati devono includere un campione di codice"
-              />
 
               <SelectField
                 control={form.control}

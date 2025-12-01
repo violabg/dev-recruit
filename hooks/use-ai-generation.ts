@@ -49,7 +49,6 @@ type GenerationOptions = {
   // Type-specific options
   focusAreas?: string[];
   distractorComplexity?: "simple" | "moderate" | "complex";
-  requireCodeExample?: boolean;
   expectedResponseLength?: "short" | "medium" | "long";
   evaluationCriteria?: string[];
   language?: string;
@@ -109,7 +108,6 @@ export const useAIGeneration = ({
           break;
         case "open_question":
           params = createOpenQuestionParams(baseConfig, fields.length + 1, {
-            requireCodeExample: options.requireCodeExample,
             expectedResponseLength: options.expectedResponseLength || "medium",
             evaluationCriteria: options.evaluationCriteria,
           });
@@ -275,7 +273,6 @@ export const useAIGeneration = ({
             baseConfig,
             regeneratingQuestionIndex + 1,
             {
-              requireCodeExample: options.requireCodeExample,
               expectedResponseLength:
                 options.expectedResponseLength || "medium",
               evaluationCriteria: options.evaluationCriteria,
@@ -424,8 +421,8 @@ export const useAIGeneration = ({
  * await generateFrontendQuestion("open_question", {
  *   llmModel: "llama-3.3-70b-versatile",
  *   difficulty: 3,
- *   requireCodeExample: true,
- *   evaluationCriteria: ["code quality", "best practices"]
+ *   expectedResponseLength: "medium",
+ *   evaluationCriteria: ["conceptual understanding", "best practices"]
  * });
  *
  * // Generate a backend code snippet question

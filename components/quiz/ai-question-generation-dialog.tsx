@@ -57,7 +57,6 @@ const generationSchema = z.object({
   distractorComplexity: z.enum(["simple", "moderate", "complex"]).optional(),
 
   // Open Question specific
-  requireCodeExample: z.boolean().optional(),
   expectedResponseLength: z.enum(["short", "medium", "long"]).optional(),
   evaluationCriteria: z.array(z.string()).optional(),
 
@@ -316,13 +315,6 @@ export const AIQuestionGenerationDialog = ({
                 Impostazioni Domanda Aperta
               </h3>
               <Separator className="my-4" />
-              <CheckboxField
-                control={form.control}
-                name="requireCodeExample"
-                label="Richiedi Esempio di Codice"
-                description="Includi esempi di codice nella domanda"
-                orientation="horizontal"
-              />
 
               <SelectField
                 control={form.control}
