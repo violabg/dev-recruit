@@ -36,9 +36,9 @@ describe("questionSchemas.flexible", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should validate a question with optional id field (backward compatibility)", () => {
+    it("should validate a question with optional dbId field (backward compatibility)", () => {
       const question = {
-        id: "some-id",
+        dbId: "some-id",
         type: "multiple_choice" as const,
         question: "Test question?",
         options: ["Option A", "Option B", "Option C", "Option D"],
@@ -113,18 +113,18 @@ describe("questionSchemas.flexible", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should accept optional id for linked questions (database ID)", () => {
+    it("should accept optional dbId for linked questions (database ID)", () => {
       const question = {
         type: "multiple_choice" as const,
         question: "Test question?",
         options: ["Option A", "Option B", "Option C", "Option D"],
         correctAnswer: 0,
-        id: "db-id-123",
+        dbId: "db-id-123",
       };
       const result = questionSchemas.flexible.safeParse(question);
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.id).toBe("db-id-123");
+        expect(result.data.dbId).toBe("db-id-123");
       }
     });
   });

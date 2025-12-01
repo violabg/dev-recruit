@@ -39,7 +39,7 @@ const convertToFlexibleQuestion = (
   question: QuestionWithMetadata
 ): FlexibleQuestion => {
   return {
-    id: question.id, // Database ID for linking
+    dbId: question.id, // Database ID for linking
     type: question.type as QuestionType,
     question: question.question,
     keywords: question.keywords,

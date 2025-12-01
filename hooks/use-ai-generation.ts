@@ -286,9 +286,10 @@ export const useAIGeneration = ({
       const newQuestion = await generateNewQuestionAction(params);
 
       // Update the question at the specific index
+      // Keep the same dbId to maintain the database link
       update(regeneratingQuestionIndex, {
         ...newQuestion,
-        id: currentQuestion.id, // Keep the same ID
+        dbId: currentQuestion.dbId,
       });
 
       toast.success("Domanda rigenerata con successo!");

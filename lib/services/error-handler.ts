@@ -24,6 +24,7 @@ export enum QuizErrorCode {
   // Resource errors
   POSITION_NOT_FOUND = "POSITION_NOT_FOUND",
   QUIZ_NOT_FOUND = "QUIZ_NOT_FOUND",
+  QUESTION_NOT_FOUND = "QUESTION_NOT_FOUND",
 
   // AI service errors
   AI_GENERATION_FAILED = "AI_GENERATION_FAILED",
@@ -57,6 +58,7 @@ const USER_FRIENDLY_MESSAGES: Record<QuizErrorCode, string> = {
     "Non hai i permessi per eseguire questa operazione.",
   [QuizErrorCode.POSITION_NOT_FOUND]: "Posizione non trovata o accesso negato.",
   [QuizErrorCode.QUIZ_NOT_FOUND]: "Quiz non trovato o accesso negato.",
+  [QuizErrorCode.QUESTION_NOT_FOUND]: "Domanda non trovata o accesso negato.",
   [QuizErrorCode.AI_GENERATION_FAILED]:
     "Generazione AI fallita. Riprova tra qualche minuto.",
   [QuizErrorCode.AI_MODEL_UNAVAILABLE]:

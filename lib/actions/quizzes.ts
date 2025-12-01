@@ -272,11 +272,11 @@ export async function upsertQuizAction(formData: FormData) {
           const q = questions[i] as FlexibleQuestion;
           let questionId: string;
 
-          // If question has an existing id (database ID), link to it; otherwise create new
-          if (q.id) {
+          // If question has an existing dbId (database ID), link to it; otherwise create new
+          if (q.dbId) {
             // Verify the question exists
             const existingQuestion = await tx.question.findUnique({
-              where: { id: q.id },
+              where: { id: q.dbId },
               select: { id: true },
             });
 
@@ -359,8 +359,8 @@ export async function upsertQuizAction(formData: FormData) {
         // Build a set of questionIds that will be kept (linked from favorites)
         const keepQuestionIds = new Set(
           questions
-            .filter((q: FlexibleQuestion) => q.id)
-            .map((q: FlexibleQuestion) => q.id)
+            .filter((q: FlexibleQuestion) => q.dbId)
+            .map((q: FlexibleQuestion) => q.dbId)
         );
 
         // Delete existing quiz-question links
@@ -388,18 +388,18 @@ export async function upsertQuizAction(formData: FormData) {
           const q = questions[i] as FlexibleQuestion;
           let questionId: string;
 
-          // If question has an existing id (database ID), UPDATE it; otherwise create new
-          if (q.id) {
+          // If question has an existing dbId (database ID), UPDATE it; otherwise create new
+          if (q.dbId) {
             // Verify the question exists
             const existingQuestion = await tx.question.findUnique({
-              where: { id: q.id },
+              where: { id: q.dbId },
               select: { id: true },
             });
 
             if (existingQuestion) {
               // UPDATE the existing question with new data
               await tx.question.update({
-                where: { id: q.id },
+                where: { id: q.dbId },
                 data: prepareQuestionForUpdate(q),
               });
               questionId = existingQuestion.id;
@@ -687,8 +687,8 @@ export async function duplicateQuizAction(formData: FormData) {
         const qq = originalQuiz.quizQuestions[i];
 
         // Create a copy of the question (convert DB question to FlexibleQuestion for the utility)
+        // Note: dbId is not set because we're creating a new question copy (no DB link yet)
         const flexibleQuestion: FlexibleQuestion = {
-          id: `q${i + 1}`,
           type: qq.question.type as FlexibleQuestion["type"],
           question: qq.question.question,
           keywords: qq.question.keywords,

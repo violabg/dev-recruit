@@ -82,7 +82,7 @@ export function InterviewResultsClient({
       let maxPossibleScore = 0;
 
       // Get questions that have answers
-      const questionsToEvaluate = quizQuestions.filter((q) => answers[q.id]);
+      const questionsToEvaluate = quizQuestions.filter((q) => answers[q.dbId]);
       setTotalQuestionsToEvaluate(questionsToEvaluate.length);
       setCurrentEvaluationIndex(0);
 
@@ -96,7 +96,7 @@ export function InterviewResultsClient({
         );
 
         let answer = "";
-        const rawAnswer = answers[question.id];
+        const rawAnswer = answers[question.dbId];
 
         switch (question.type) {
           case "multiple_choice":
@@ -126,7 +126,7 @@ export function InterviewResultsClient({
           // Call the server action to evaluate the answer
           const result = await evaluateAnswer(question, answer);
 
-          evaluatedQuestions[question.id] = {
+          evaluatedQuestions[question.dbId] = {
             evaluation: result.evaluation,
             score: result.score,
             maxScore,
@@ -144,7 +144,7 @@ export function InterviewResultsClient({
               50
             )}...`,
           });
-          evaluatedQuestions[question.id] = {
+          evaluatedQuestions[question.dbId] = {
             evaluation:
               "Errore durante la valutazione automatica. La risposta verrà valutata manualmente.",
             score: 0,
@@ -169,7 +169,7 @@ export function InterviewResultsClient({
       setIsGeneratingOverallEvaluation(true);
       setCurrentQuestionTitle("");
       try {
-        const answeredQuestions = quizQuestions.filter((q) => answers[q.id]);
+        const answeredQuestions = quizQuestions.filter((q) => answers[q.dbId]);
 
         const result = await generateOverallEvaluation(
           candidateName,
@@ -247,9 +247,9 @@ export function InterviewResultsClient({
     for (const question of quizQuestions) {
       if (
         question.type === "multiple_choice" &&
-        answers[question.id] !== undefined
+        answers[question.dbId] !== undefined
       ) {
-        const answerIdx = Number.parseInt(String(answers[question.id]), 10);
+        const answerIdx = Number.parseInt(String(answers[question.dbId]), 10);
         if (!isNaN(answerIdx) && answerIdx === question.correctAnswer) {
           count++;
         }
@@ -449,12 +449,12 @@ export function InterviewResultsClient({
               {quizQuestions
                 .filter((q) => tabValue === "all" || q.type === tabValue)
                 .map((question, index) => {
-                  const { id, question: questionText, type } = question;
-                  const isAnswered = !!answers[id];
-                  const evaluation = evaluations[id];
+                  const { dbId, question: questionText, type } = question;
+                  const isAnswered = !!answers[dbId];
+                  const evaluation = evaluations[dbId];
 
                   return (
-                    <Card key={id}>
+                    <Card key={dbId}>
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-center">
                           <CardTitle className="text-lg">
@@ -493,7 +493,7 @@ export function InterviewResultsClient({
                                 question.options &&
                                 (() => {
                                   const answerIdx = Number.parseInt(
-                                    String(answers[id]),
+                                    String(answers[dbId]),
                                     10
                                   );
                                   const isValidIdx =
@@ -522,18 +522,18 @@ export function InterviewResultsClient({
 
                               {type === "open_question" && (
                                 <div className="p-3 border rounded-md whitespace-pre-wrap">
-                                  {String(answers[id] ?? "")}
+                                  {String(answers[dbId] ?? "")}
                                 </div>
                               )}
 
                               {type === "code_snippet" && (
                                 <CodeHighlight
                                   code={
-                                    typeof answers[id] === "object" &&
-                                    answers[id] !== null &&
-                                    "code" in answers[id]
-                                      ? answers[id].code
-                                      : String(answers[id] ?? "")
+                                    typeof answers[dbId] === "object" &&
+                                    answers[dbId] !== null &&
+                                    "code" in answers[dbId]
+                                      ? answers[dbId].code
+                                      : String(answers[dbId] ?? "")
                                   }
                                   language={question.language ?? "javascript"}
                                   className="bg-[oklch(0.18_0.02_260)] p-4 border border-[oklch(0.3_0.02_260)] rounded-lg font-mono text-[oklch(0.95_0_0)] text-sm"

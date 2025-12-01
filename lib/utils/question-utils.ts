@@ -31,7 +31,7 @@ export function mapQuizQuestionsToFlexible(
   quizQuestions: QuizQuestionWithQuestion[]
 ): SavedQuestion[] {
   return quizQuestions.map((qq) => ({
-    id: qq.question.id, // Database ID
+    dbId: qq.question.id, // Database ID
     type: qq.question.type as SavedQuestion["type"],
     question: qq.question.question,
     keywords: qq.question.keywords,

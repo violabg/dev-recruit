@@ -1,5 +1,4 @@
 "use client";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,7 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { ReactNode, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -113,18 +112,16 @@ export function DeleteWithConfirm({
       size={iconOnly ? "icon" : size}
       disabled={disabled || isPending}
     >
-      <Trash className={iconOnly ? "size-4" : "mr-1 size-4"} />
+      <Trash2 className={iconOnly ? "size-4" : "mr-1 size-4"} />
       {!iconOnly && label}
     </Button>
   );
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      {children !== undefined ? (
-        children
-      ) : (
-        <AlertDialogTrigger asChild>{defaultTrigger}</AlertDialogTrigger>
-      )}
+      <AlertDialogTrigger asChild>
+        {children !== undefined ? children : defaultTrigger}
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -144,7 +141,7 @@ export function DeleteWithConfirm({
               </>
             ) : (
               <>
-                <Trash className="mr-1 size-4" />
+                <Trash2 className="mr-1 size-4" />
                 {label}
               </>
             )}

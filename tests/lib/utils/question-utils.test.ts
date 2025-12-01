@@ -56,8 +56,8 @@ describe("mapQuizQuestionsToFlexible", () => {
 
     expect(result).toHaveLength(2);
 
-    // First question - id is now the database ID directly
-    expect(result[0].id).toBe("question-1");
+    // First question - dbId is now the database ID directly
+    expect(result[0].dbId).toBe("question-1");
     expect(result[0].type).toBe("multiple_choice");
     expect(result[0].question).toBe("Test question 1?");
     expect(result[0].options).toEqual(["A", "B", "C", "D"]);
@@ -66,7 +66,7 @@ describe("mapQuizQuestionsToFlexible", () => {
     expect(result[0].isFavorite).toBe(false);
 
     // Second question
-    expect(result[1].id).toBe("question-2");
+    expect(result[1].dbId).toBe("question-2");
     expect(result[1].type).toBe("open_question");
     expect(result[1].sampleAnswer).toBe("Sample answer");
     expect(result[1].isFavorite).toBe(true);
@@ -136,7 +136,7 @@ describe("prepareQuestionForCreate", () => {
 
   it("should handle missing optional fields", () => {
     const question = {
-      id: "q1",
+      dbId: "q1",
       type: "multiple_choice" as const,
       question: "Test?",
     };

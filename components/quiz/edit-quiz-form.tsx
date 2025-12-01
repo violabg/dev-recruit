@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/card";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
-import { generateId } from "@/lib/utils/quiz-form-utils";
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { useAIGeneration } from "../../hooks/use-ai-generation";
@@ -100,12 +99,10 @@ export function EditQuizForm({
   // Handle adding favorite questions
   const handleAddFavoriteQuestions = useCallback(
     (questions: FlexibleQuestion[]) => {
-      // Generate new IDs for each question to avoid conflicts
+      // useFieldArray will generate its own 'id' for tracking
+      // The question's 'dbId' is preserved for database linking
       questions.forEach((q) => {
-        prepend({
-          ...q,
-          id: generateId(),
-        });
+        prepend(q);
       });
       // Expand newly added questions
       setExpandedQuestions((prev) => {
@@ -216,6 +213,7 @@ export function EditQuizForm({
             />
             {/* Questions List */}
             <QuestionsList
+              quizId={mode === "edit" ? quiz.id : undefined}
               filteredQuestions={filteredQuestions}
               fields={fields}
               expandedQuestions={expandedQuestions}

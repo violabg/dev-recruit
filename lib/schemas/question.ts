@@ -49,10 +49,11 @@ export const questionSchemas = {
   strict: z.discriminatedUnion("type", questionTypeSchemas),
 
   // Flexible schema for parsing AI responses and existing data
-  // Note: 'id' is the Prisma database ID (optional for new questions)
+  // Note: 'dbId' is the Prisma database ID (optional for new questions)
+  // We use 'dbId' instead of 'id' to avoid conflicts with React Hook Form's useFieldArray which adds its own 'id' property
   flexible: z
     .object({
-      id: z.string().optional(), // Database ID for linked questions
+      dbId: z.string().optional(), // Database ID for linked questions
       type: baseSchemas.questionType,
       question: z.string().min(1, "Question text required"),
       options: z.array(z.string()).optional(),
@@ -123,8 +124,8 @@ export type MultipleChoiceQuestion = z.infer<
 export type OpenQuestion = z.infer<typeof openQuestionSchema>;
 export type CodeSnippetQuestion = z.infer<typeof codeSnippetQuestionSchema>;
 
-// SavedQuestion is a FlexibleQuestion with required id (for questions loaded from DB)
-export type SavedQuestion = FlexibleQuestion & { id: string };
+// SavedQuestion is a FlexibleQuestion with required dbId (for questions loaded from DB)
+export type SavedQuestion = FlexibleQuestion & { dbId: string };
 
 // Type guards for runtime type checking
 export const isMultipleChoiceQuestion = (

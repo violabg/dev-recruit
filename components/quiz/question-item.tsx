@@ -8,12 +8,16 @@ import { InputField } from "@/components/rhf-inputs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { toggleQuestionFavoriteAction } from "@/lib/actions/questions";
+import {
+  deleteQuestionFromQuizAction,
+  toggleQuestionFavoriteAction,
+} from "@/lib/actions/questions";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { getQuestionTypeLabel, SaveStatus } from "@/lib/utils/quiz-form-utils";
@@ -34,7 +38,8 @@ import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
 type Question = z.infer<typeof questionSchemas.flexible>;
 
 type QuestionItemProps = {
-  field: Question & { id: string };
+  quizId?: string;
+  field: Question & { id: string }; // Note: 'id' is from useFieldArray, 'dbId' is the database ID
   actualIndex: number;
   isExpanded: boolean;
   form: UseFormReturn<EditQuizFormData>;
@@ -49,6 +54,7 @@ type QuestionItemProps = {
 };
 
 export const QuestionItem = ({
+  quizId,
   field,
   actualIndex,
   isExpanded,
@@ -72,7 +78,8 @@ export const QuestionItem = ({
   const isFavorite = localFavoriteOverride ?? field.isFavorite ?? false;
 
   // Check if this question has a database ID (is linked to Question entity)
-  const hasDbId = !!field.id;
+  // 'dbId' is the Prisma database ID, separate from useFieldArray's 'id'
+  const hasDbId = !!field.dbId;
 
   const handleToggleFavorite = () => {
     if (!hasDbId) {
@@ -83,7 +90,7 @@ export const QuestionItem = ({
     }
 
     startTransition(async () => {
-      const result = await toggleQuestionFavoriteAction(field.id!);
+      const result = await toggleQuestionFavoriteAction(field.dbId!);
       if (result?.success) {
         // Set local override for optimistic UI update
         setLocalFavoriteOverride(result.isFavorite ?? !isFavorite);
@@ -202,20 +209,48 @@ export const QuestionItem = ({
               <TooltipContent>Rigenera domanda con AI</TooltipContent>
             </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="w-8 h-8 text-muted-foreground hover:text-destructive"
-                  onClick={() => onRemove(actualIndex)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Elimina domanda</TooltipContent>
-            </Tooltip>
+            {quizId && hasDbId ? (
+              <DeleteWithConfirm
+                deleteAction={async () => {
+                  const result = await deleteQuestionFromQuizAction(
+                    quizId,
+                    field.dbId!
+                  );
+                  if (result?.success) {
+                    // Remove from form state after successful deletion
+                    onRemove(actualIndex);
+                  }
+                  return result;
+                }}
+                title="Elimina domanda"
+                description={
+                  isFavorite
+                    ? "Questa domanda è nei preferiti. Verrà rimossa dal quiz ma rimarrà disponibile nei preferiti."
+                    : "Questa azione non può essere annullata. La domanda verrà eliminata permanentemente."
+                }
+                label="Elimina"
+                iconOnly
+                variant="ghost"
+                successMessage={
+                  isFavorite ? "Domanda rimossa dal quiz" : "Domanda eliminata"
+                }
+              />
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => onRemove(actualIndex)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Rimuovi domanda</TooltipContent>
+              </Tooltip>
+            )}
 
             <Button
               type="button"

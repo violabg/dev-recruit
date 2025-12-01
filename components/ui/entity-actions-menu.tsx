@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Edit, MoreHorizontal, Trash } from "lucide-react";
+import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { ReactNode, useState } from "react";
 
@@ -78,7 +78,7 @@ export function EntityActionsMenu({
               onClick={() => setDeleteDialogOpen(true)}
               className="text-red-600"
             >
-              <Trash className="mr-1 size-4" />
+              <Trash2 className="mr-1 size-4" />
               Elimina
             </DropdownMenuItem>
           )}

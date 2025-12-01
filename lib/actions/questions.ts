@@ -81,7 +81,7 @@ export async function updateQuestionAction(input: UpdateQuestionInput) {
     if (!existing) {
       throw new QuizSystemError(
         "Question not found",
-        QuizErrorCode.QUIZ_NOT_FOUND,
+        QuizErrorCode.QUESTION_NOT_FOUND,
         { questionId: id }
       );
     }
@@ -126,7 +126,7 @@ export async function deleteQuestionAction(questionId: string) {
     if (!existing) {
       throw new QuizSystemError(
         "Question not found",
-        QuizErrorCode.QUIZ_NOT_FOUND,
+        QuizErrorCode.QUESTION_NOT_FOUND,
         { questionId }
       );
     }
@@ -174,7 +174,7 @@ export async function toggleQuestionFavoriteAction(questionId: string) {
     if (!existing) {
       throw new QuizSystemError(
         "Question not found",
-        QuizErrorCode.QUIZ_NOT_FOUND,
+        QuizErrorCode.QUESTION_NOT_FOUND,
         { questionId }
       );
     }
@@ -299,6 +299,74 @@ export async function removeQuestionFromQuizAction(
     handleActionError(error, {
       operation: "removeQuestionFromQuizAction",
       fallbackMessage: "Failed to remove question from quiz. Please try again.",
+    });
+  }
+}
+
+/**
+ * Delete a question from a quiz.
+ * - If the question is a favorite, only unlink it from the quiz (keep the question entity)
+ * - If the question is NOT a favorite, delete the question entity entirely
+ */
+export async function deleteQuestionFromQuizAction(
+  quizId: string,
+  questionId: string
+) {
+  try {
+    await requireUser();
+
+    // Validate input
+    const validatedInput = removeQuestionFromQuizSchema.parse({
+      quizId,
+      questionId,
+    });
+
+    // Check if the question is a favorite
+    const question = await prisma.question.findUnique({
+      where: { id: validatedInput.questionId },
+      select: { id: true, isFavorite: true },
+    });
+
+    if (!question) {
+      throw new QuizSystemError(
+        "Question not found",
+        QuizErrorCode.QUESTION_NOT_FOUND,
+        { questionId: validatedInput.questionId }
+      );
+    }
+
+    if (question.isFavorite) {
+      // Only unlink the question from the quiz (keep the entity)
+      await prisma.quizQuestion.deleteMany({
+        where: {
+          quizId: validatedInput.quizId,
+          questionId: validatedInput.questionId,
+        },
+      });
+    } else {
+      // Delete the question entity entirely (cascades to QuizQuestion links)
+      await prisma.question.delete({
+        where: { id: validatedInput.questionId },
+      });
+      invalidateQuestionCache({ questionId: validatedInput.questionId });
+    }
+
+    // Invalidate quiz cache
+    invalidateQuizCache({ quizId: validatedInput.quizId });
+
+    return {
+      success: true,
+      wasDeleted: !question.isFavorite,
+      wasFavorite: question.isFavorite,
+    };
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    handleActionError(error, {
+      operation: "deleteQuestionFromQuizAction",
+      fallbackMessage: "Failed to delete question from quiz. Please try again.",
     });
   }
 }

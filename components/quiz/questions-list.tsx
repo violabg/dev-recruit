@@ -12,6 +12,7 @@ import { QuestionItem } from "./question-item";
 type Question = z.infer<typeof questionSchemas.flexible>;
 
 type QuestionsListProps = {
+  quizId?: string;
   filteredQuestions: Array<Question & { id: string }>;
   fields: Array<Question & { id: string }>;
   expandedQuestions: Set<string>;
@@ -31,6 +32,7 @@ type QuestionsListProps = {
 };
 
 export const QuestionsList = ({
+  quizId,
   filteredQuestions,
   fields,
   expandedQuestions,
@@ -70,6 +72,7 @@ export const QuestionsList = ({
         return (
           <QuestionItem
             key={field.id}
+            quizId={quizId}
             field={field}
             actualIndex={actualIndex}
             isExpanded={isExpanded}

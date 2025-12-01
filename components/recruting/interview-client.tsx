@@ -77,13 +77,13 @@ function calculateRemainingTime(
  * Returns 0 if all questions are answered or no questions exist
  */
 function findFirstUnansweredQuestionIndex(
-  questions: { id: string }[],
+  questions: { dbId: string }[],
   answers: Record<string, InterviewAnswer> | null
 ): number {
   if (!answers || questions.length === 0) return 0;
 
   for (let i = 0; i < questions.length; i++) {
-    if (answers[questions[i].id] === undefined) {
+    if (answers[questions[i].dbId] === undefined) {
       return i;
     }
   }
@@ -153,16 +153,16 @@ export function InterviewClient({
   const handleConfirmTimeExpired = useCallback(() => {
     // Save any pending answer
     const currentQuestion = quiz.questions[currentQuestionIndex];
-    if (pendingAnswer !== null && !answers[currentQuestion.id]) {
+    if (pendingAnswer !== null && !answers[currentQuestion.dbId]) {
       setAnswers((prev) => ({
         ...prev,
-        [currentQuestion.id]: pendingAnswer,
+        [currentQuestion.dbId]: pendingAnswer,
       }));
       startTransition(async () => {
         try {
           await submitAnswer(
             interview.token,
-            currentQuestion.id,
+            currentQuestion.dbId,
             pendingAnswer
           );
           await completeInterview(interview.token);
@@ -272,7 +272,7 @@ export function InterviewClient({
 
     const currentQuestion = quiz.questions[currentQuestionIndex];
     if (pendingAnswer !== null) {
-      handleAnswer(currentQuestion.id, pendingAnswer);
+      handleAnswer(currentQuestion.dbId, pendingAnswer);
     }
     if (currentQuestionIndex < quiz.questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
@@ -281,17 +281,17 @@ export function InterviewClient({
 
   const handleSaveAndComplete = () => {
     const currentQuestion = quiz.questions[currentQuestionIndex];
-    if (pendingAnswer !== null && !answers[currentQuestion.id]) {
+    if (pendingAnswer !== null && !answers[currentQuestion.dbId]) {
       // Save the pending answer first, then complete
       setAnswers((prev) => ({
         ...prev,
-        [currentQuestion.id]: pendingAnswer,
+        [currentQuestion.dbId]: pendingAnswer,
       }));
       startTransition(async () => {
         try {
           await submitAnswer(
             interview.token,
-            currentQuestion.id,
+            currentQuestion.dbId,
             pendingAnswer
           );
           await completeInterview(interview.token);
@@ -443,7 +443,7 @@ export function InterviewClient({
               question={quiz.questions[currentQuestionIndex]}
               questionNumber={currentQuestionIndex + 1}
               onAnswerChange={handlePendingAnswerChange}
-              currentAnswer={answers[quiz.questions[currentQuestionIndex].id]}
+              currentAnswer={answers[quiz.questions[currentQuestionIndex].dbId]}
             />
           )}
 
@@ -460,7 +460,7 @@ export function InterviewClient({
                 onClick={handleSaveAndNext}
                 disabled={
                   pendingAnswer === null &&
-                  !answers[quiz.questions[currentQuestionIndex].id]
+                  !answers[quiz.questions[currentQuestionIndex].dbId]
                 }
               >
                 Successiva
@@ -470,11 +470,11 @@ export function InterviewClient({
                 onClick={handleSaveAndComplete}
                 disabled={
                   (pendingAnswer === null &&
-                    !answers[quiz.questions[currentQuestionIndex].id]) ||
+                    !answers[quiz.questions[currentQuestionIndex].dbId]) ||
                   totalQuestions !==
                     totalAnswers +
                       (pendingAnswer !== null &&
-                      !answers[quiz.questions[currentQuestionIndex].id]
+                      !answers[quiz.questions[currentQuestionIndex].dbId]
                         ? 1
                         : 0) ||
                   isPending

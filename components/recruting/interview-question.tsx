@@ -64,12 +64,12 @@ export function InterviewQuestion({
   );
   const [isPending, startTransition] = useTransition();
 
-  // Track question.id to detect when question changes
-  const [lastQuestionId, setLastQuestionId] = useState(question.id);
+  // Track question.dbId to detect when question changes
+  const [lastQuestionId, setLastQuestionId] = useState(question.dbId);
 
   // Reset state when question changes (render-time sync)
-  if (question.id !== lastQuestionId) {
-    setLastQuestionId(question.id);
+  if (question.dbId !== lastQuestionId) {
+    setLastQuestionId(question.dbId);
     if (typeof currentAnswer === "string") {
       setAnswer(currentAnswer);
       setCode("");
