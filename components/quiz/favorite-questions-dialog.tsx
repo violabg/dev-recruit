@@ -36,12 +36,10 @@ type FavoriteQuestionsDialogProps = {
 
 // Convert database entity to FlexibleQuestion format for the form
 const convertToFlexibleQuestion = (
-  question: QuestionWithMetadata,
-  index: number
+  question: QuestionWithMetadata
 ): FlexibleQuestion => {
   return {
-    id: `q${index + 1}`,
-    questionId: question.id, // Keep the actual database ID for linking
+    id: question.id, // Database ID for linking
     type: question.type as QuestionType,
     question: question.question,
     keywords: question.keywords,
@@ -112,8 +110,8 @@ export function FavoriteQuestionsDialog({
 
   const handleAddQuestions = () => {
     const selectedQuestions = questions.filter((q) => selectedIds.has(q.id));
-    const flexibleQuestions = selectedQuestions.map((q, idx) =>
-      convertToFlexibleQuestion(q, idx)
+    const flexibleQuestions = selectedQuestions.map((q) =>
+      convertToFlexibleQuestion(q)
     );
     onAddQuestions(flexibleQuestions);
     onOpenChange(false);

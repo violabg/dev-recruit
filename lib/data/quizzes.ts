@@ -1,7 +1,7 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import { FlexibleQuestion } from "@/lib/schemas";
+import { FlexibleQuestion, SavedQuestion } from "@/lib/schemas";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { mapQuizQuestionsToFlexible } from "@/lib/utils/question-utils";
 import { cacheLife, cacheTag } from "next/cache";
@@ -34,6 +34,7 @@ export type QuizWithLinkedQuestions = Prisma.QuizGetPayload<{
 /**
  * Quiz API response DTO - primary entity type for components.
  * Questions are now always loaded from linked Question entities.
+ * Uses SavedQuestion since questions from DB always have an id.
  */
 export type QuizResponse = {
   id: string;
@@ -46,7 +47,7 @@ export type QuizResponse = {
     experienceLevel: string;
   } | null;
   timeLimit: number | null;
-  questions: FlexibleQuestion[];
+  questions: SavedQuestion[];
   questionCount: number;
 };
 
@@ -129,13 +130,13 @@ const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
 } as const;
 
 /**
- * Convert linked questions from QuizQuestion to FlexibleQuestion format.
+ * Convert linked questions from QuizQuestion to SavedQuestion format.
  * Exported for use by interviews.ts
  * @deprecated Use mapQuizQuestionsToFlexible from @/lib/utils/question-utils instead
  */
 export const mapLinkedQuestionsToQuestionFormat = (
   quizQuestions: QuizWithLinkedQuestions["quizQuestions"]
-): FlexibleQuestion[] => {
+): SavedQuestion[] => {
   return mapQuizQuestionsToFlexible(quizQuestions);
 };
 

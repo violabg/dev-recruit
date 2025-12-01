@@ -72,7 +72,7 @@ export const QuestionItem = ({
   const isFavorite = localFavoriteOverride ?? field.isFavorite ?? false;
 
   // Check if this question has a database ID (is linked to Question entity)
-  const hasDbId = !!field.questionId;
+  const hasDbId = !!field.id;
 
   const handleToggleFavorite = () => {
     if (!hasDbId) {
@@ -83,7 +83,7 @@ export const QuestionItem = ({
     }
 
     startTransition(async () => {
-      const result = await toggleQuestionFavoriteAction(field.questionId!);
+      const result = await toggleQuestionFavoriteAction(field.id!);
       if (result?.success) {
         // Set local override for optimistic UI update
         setLocalFavoriteOverride(result.isFavorite ?? !isFavorite);

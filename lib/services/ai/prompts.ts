@@ -64,13 +64,12 @@ function buildCommonContext(params: BaseQuestionParams): string {
  */
 export const questionPromptBuilders = {
   multiple_choice: {
-    system: (questionIndex: number) => `
+    system: () => `
           You are a technical recruitment expert specializing in creating multiple choice assessment questions.
 
           Generate a valid JSON object for a single multiple choice question (NOT an array) that adheres to these specifications:
 
           REQUIRED FIELDS:
-          - id: Format "q${questionIndex}" (use "q${questionIndex}" for this specific question)
           - type: "multiple_choice"
           - question: Italian text (clear, specific, and job-relevant)
           - options: Array of exactly 4 Italian strings (each at least 3 characters)
@@ -88,7 +87,6 @@ export const questionPromptBuilders = {
           Example Structure:
           \`\`\`json
           {
-            "id": "q${questionIndex}",
             "type": "multiple_choice",
             "question": "Cosa rappresenta il DOM in JavaScript?",
             "options": [
@@ -137,13 +135,12 @@ export const questionPromptBuilders = {
   },
 
   open_question: {
-    system: (questionIndex: number) => `
+    system: () => `
           You are a technical recruitment expert specializing in creating open-ended assessment questions.
 
           Generate a valid JSON object for a single open question (NOT an array) that adheres to these specifications:
 
           REQUIRED FIELDS:
-          - id: Format "q${questionIndex}" (use "q${questionIndex}" for this specific question)
           - type: "open_question"
           - question: Italian text (clear, specific, and open-ended)
           - keywords: Array of relevant strings for evaluation (optional)
@@ -167,7 +164,6 @@ export const questionPromptBuilders = {
           Example Structure:
           \`\`\`json
           {
-            "id": "q${questionIndex}",
             "type": "open_question",
             "question": "Spiega i principali vantaggi e svantaggi dell'utilizzo di Redux rispetto a Context API per la gestione dello stato in un'applicazione React. In quali scenari consiglieresti l'uno rispetto all'altro?",
             "keywords": ["React", "state management", "Redux", "Context API", "architecture"],
@@ -218,13 +214,12 @@ export const questionPromptBuilders = {
   },
 
   code_snippet: {
-    system: (questionIndex: number) => `
+    system: () => `
           You are a technical recruitment expert specializing in creating code-based assessment questions.
 
           Generate a valid JSON object for a single code snippet question (NOT an array) that adheres to these specifications:
 
           REQUIRED FIELDS:
-          - id: Format "q${questionIndex}" (use "q${questionIndex}" for this specific question)
           - type: "code_snippet"
           - question: Italian text asking to analyze, improve, or fix code (NO CODE in question text)
           - codeSnippet: Valid code string (may contain bugs, performance issues, or be suitable for improvement)
@@ -250,7 +245,6 @@ export const questionPromptBuilders = {
           Example (JavaScript):
           \`\`\`json
           {
-            "id": "q${questionIndex}",
             "type": "code_snippet",
             "question": "Il seguente codice JavaScript presenta un bug che impedisce il corretto funzionamento asincrono. Identifica e correggi il problema.",
             "codeSnippet": "async function fetchUserData(userId) {\\n  const response = fetch(\`/api/users/\${userId}\`);\\n  const userData = await response.json();\\n  return userData;\\n}",
@@ -353,23 +347,17 @@ export function buildQuestionPrompts(params: GenerateQuestionParams): {
   switch (params.type) {
     case "multiple_choice":
       return {
-        systemPrompt: questionPromptBuilders.multiple_choice.system(
-          params.questionIndex
-        ),
+        systemPrompt: questionPromptBuilders.multiple_choice.system(),
         userPrompt: questionPromptBuilders.multiple_choice.user(params),
       };
     case "open_question":
       return {
-        systemPrompt: questionPromptBuilders.open_question.system(
-          params.questionIndex
-        ),
+        systemPrompt: questionPromptBuilders.open_question.system(),
         userPrompt: questionPromptBuilders.open_question.user(params),
       };
     case "code_snippet":
       return {
-        systemPrompt: questionPromptBuilders.code_snippet.system(
-          params.questionIndex
-        ),
+        systemPrompt: questionPromptBuilders.code_snippet.system(),
         userPrompt: questionPromptBuilders.code_snippet.user(params),
       };
     default:
@@ -402,7 +390,7 @@ export function buildQuizSystemPrompt(): string {
         Question Types and Required Fields:
   
         1. Multiple Choice Questions (\`type: "multiple_choice"\`)
-          - id: Format "q1" through "q10"
+          - type: "multiple_choice"
           - question: Italian text
           - options: Array of exactly 4 Italian strings
           - correctAnswer: Zero-based index number of the correct option
@@ -410,7 +398,7 @@ export function buildQuizSystemPrompt(): string {
           - explanation: Italian text (optional)
   
         2. Open Questions (\`type: "open_question"\`)
-          - id: Format "q1" through "q10"
+          - type: "open_question"
           - question: Italian text
           - keywords: Array of relevant strings (optional)
           - sampleAnswer: Italian text
@@ -419,7 +407,7 @@ export function buildQuizSystemPrompt(): string {
           - explanation: Italian text (optional)
   
         3. Code Questions (\`type: "code_snippet"\`)
-          - id: Format "q1" through "q10"
+          - type: "code_snippet"
           - question: Italian text, must be code related and ask to fix bugs, don't include code in the question text do it in the codeSnippet field
           - codeSnippet: Valid code string, must be relevant to the question and contain a bug if the question is about fixing bugs,
           - sampleSolution: Valid code string, must be the corrected version of the code snippet
@@ -440,7 +428,6 @@ export function buildQuizSystemPrompt(): string {
           "title": "Quiz per Sviluppatore Frontend Senior",
           "questions": [
             {
-              "id": "q1",
               "type": "multiple_choice",
               "question": "Cosa rappresenta il DOM in JavaScript?",
               "options": [

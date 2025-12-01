@@ -149,7 +149,6 @@ Auto-validated questions with four options.
 
 ```typescript
 {
-  id: "q1",                           // Format: q{number}
   type: "multiple_choice",
   question: "Italian question text",
   options: ["Option A", "Option B", "Option C", "Option D"],  // Min 4, each min 3 chars
@@ -172,7 +171,6 @@ Free-form text responses with sample answers.
 
 ```typescript
 {
-  id: "q2",
   type: "open_question",
   question: "Italian question text",
   sampleAnswer: "Expected answer content",  // Required
@@ -196,7 +194,6 @@ Code analysis, bug fixing, or improvement tasks.
 
 ```typescript
 {
-  id: "q3",
   type: "code_snippet",
   question: "Italian question (no code here)",
   codeSnippet: "// Code to analyze",         // Required

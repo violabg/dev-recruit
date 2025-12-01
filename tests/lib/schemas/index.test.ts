@@ -37,7 +37,6 @@ describe("Schema exports", () => {
 describe("Schema type inference", () => {
   it("should properly infer question types", () => {
     const mcQuestion: schemas.MultipleChoiceQuestion = {
-      id: "q1",
       type: "multiple_choice",
       question: "Test?",
       options: ["A", "B", "C", "D"],
@@ -49,7 +48,6 @@ describe("Schema type inference", () => {
 
   it("should properly infer flexible question types", () => {
     const flexQuestion: schemas.FlexibleQuestion = {
-      id: "q1",
       type: "multiple_choice",
       question: "Test?",
       options: ["AAA", "BBB", "CCC", "DDD"],

@@ -21,7 +21,7 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   // Check if this question has a database ID (is linked to Question entity)
-  const hasDbId = !!question.questionId;
+  const hasDbId = !!question.id;
 
   const handleToggleFavorite = () => {
     if (!hasDbId) {
@@ -30,7 +30,7 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
     }
 
     startTransition(async () => {
-      const result = await toggleQuestionFavoriteAction(question.questionId!);
+      const result = await toggleQuestionFavoriteAction(question.id!);
       if (result?.success) {
         setIsFavorite(result.isFavorite ?? !isFavorite);
         toast.success(

@@ -2,7 +2,7 @@
  * Shared utilities for Question entity operations
  * Used by both quiz and question actions/data layers
  */
-import type { FlexibleQuestion } from "@/lib/schemas";
+import type { FlexibleQuestion, SavedQuestion } from "@/lib/schemas";
 
 type QuizQuestionWithQuestion = {
   order: number;
@@ -23,16 +23,16 @@ type QuizQuestionWithQuestion = {
 };
 
 /**
- * Convert linked questions from QuizQuestion join table to FlexibleQuestion format
+ * Convert linked questions from QuizQuestion join table to SavedQuestion format
+ * Returns SavedQuestion[] since questions from DB always have an id.
  * Shared between quizzes.ts and questions.ts data layers
  */
 export function mapQuizQuestionsToFlexible(
   quizQuestions: QuizQuestionWithQuestion[]
-): FlexibleQuestion[] {
+): SavedQuestion[] {
   return quizQuestions.map((qq) => ({
-    id: `q${qq.order + 1}`,
-    questionId: qq.question.id, // Keep the actual database ID
-    type: qq.question.type as FlexibleQuestion["type"],
+    id: qq.question.id, // Database ID
+    type: qq.question.type as SavedQuestion["type"],
     question: qq.question.question,
     keywords: qq.question.keywords,
     explanation: qq.question.explanation || undefined,

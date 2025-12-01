@@ -23,7 +23,7 @@ import {
   generateOverallEvaluation,
 } from "@/lib/actions/evaluations";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
-import { FlexibleQuestion } from "@/lib/schemas";
+import { SavedQuestion } from "@/lib/schemas";
 import { Loader2, Save, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useTransition } from "react";
@@ -31,7 +31,7 @@ import { toast } from "sonner";
 
 interface InterviewResultsClientProps {
   interviewId: string;
-  quizQuestions: FlexibleQuestion[];
+  quizQuestions: SavedQuestion[];
   answers: Record<string, any>;
   candidateName: string;
   initialEvaluation?: EvaluationWithRelations | null;

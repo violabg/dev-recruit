@@ -8,9 +8,6 @@ import { baseSchemas } from "./base";
 
 // Base question schema with common fields
 const baseQuestionSchema = z.object({
-  id: z
-    .string()
-    .regex(/^q\d+$/, "Question ID must be in format 'q1', 'q2', etc."),
   question: z.string().min(1, "Question text is required"),
   keywords: z.array(z.string()).optional(),
   explanation: z.string().optional(),
@@ -52,10 +49,10 @@ export const questionSchemas = {
   strict: z.discriminatedUnion("type", questionTypeSchemas),
 
   // Flexible schema for parsing AI responses and existing data
+  // Note: 'id' is the Prisma database ID (optional for new questions)
   flexible: z
     .object({
-      id: z.string(),
-      questionId: z.string().optional(), // Database ID for linked questions
+      id: z.string().optional(), // Database ID for linked questions
       type: baseSchemas.questionType,
       question: z.string().min(1, "Question text required"),
       options: z.array(z.string()).optional(),
@@ -125,6 +122,9 @@ export type MultipleChoiceQuestion = z.infer<
 >;
 export type OpenQuestion = z.infer<typeof openQuestionSchema>;
 export type CodeSnippetQuestion = z.infer<typeof codeSnippetQuestionSchema>;
+
+// SavedQuestion is a FlexibleQuestion with required id (for questions loaded from DB)
+export type SavedQuestion = FlexibleQuestion & { id: string };
 
 // Type guards for runtime type checking
 export const isMultipleChoiceQuestion = (

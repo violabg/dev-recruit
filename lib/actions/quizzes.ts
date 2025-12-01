@@ -272,11 +272,11 @@ export async function upsertQuizAction(formData: FormData) {
           const q = questions[i] as FlexibleQuestion;
           let questionId: string;
 
-          // If question has an existing questionId, link to it; otherwise create new
-          if (q.questionId) {
+          // If question has an existing id (database ID), link to it; otherwise create new
+          if (q.id) {
             // Verify the question exists
             const existingQuestion = await tx.question.findUnique({
-              where: { id: q.questionId },
+              where: { id: q.id },
               select: { id: true },
             });
 
@@ -359,8 +359,8 @@ export async function upsertQuizAction(formData: FormData) {
         // Build a set of questionIds that will be kept (linked from favorites)
         const keepQuestionIds = new Set(
           questions
-            .filter((q: FlexibleQuestion) => q.questionId)
-            .map((q: FlexibleQuestion) => q.questionId)
+            .filter((q: FlexibleQuestion) => q.id)
+            .map((q: FlexibleQuestion) => q.id)
         );
 
         // Delete existing quiz-question links
@@ -388,18 +388,18 @@ export async function upsertQuizAction(formData: FormData) {
           const q = questions[i] as FlexibleQuestion;
           let questionId: string;
 
-          // If question has an existing questionId, UPDATE it; otherwise create new
-          if (q.questionId) {
+          // If question has an existing id (database ID), UPDATE it; otherwise create new
+          if (q.id) {
             // Verify the question exists
             const existingQuestion = await tx.question.findUnique({
-              where: { id: q.questionId },
+              where: { id: q.id },
               select: { id: true },
             });
 
             if (existingQuestion) {
               // UPDATE the existing question with new data
               await tx.question.update({
-                where: { id: q.questionId },
+                where: { id: q.id },
                 data: prepareQuestionForUpdate(q),
               });
               questionId = existingQuestion.id;

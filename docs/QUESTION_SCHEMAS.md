@@ -44,9 +44,6 @@ All question types extend from a common base schema:
 
 ```typescript
 const baseQuestionSchema = z.object({
-  id: z
-    .string()
-    .regex(/^q\d+$/, "Question ID must be in format 'q1', 'q2', etc."),
   question: z.string().min(1, "Question text is required"),
   keywords: z.array(z.string()).optional(),
   explanation: z.string().optional(),
@@ -57,7 +54,6 @@ const baseQuestionSchema = z.object({
 
 | Field         | Type       | Required | Description                       |
 | ------------- | ---------- | -------- | --------------------------------- |
-| `id`          | `string`   | ✅       | Format: `q1`, `q2`, etc.          |
 | `question`    | `string`   | ✅       | The question text (Italian)       |
 | `keywords`    | `string[]` | ❌       | Relevant keywords for evaluation  |
 | `explanation` | `string`   | ❌       | Explanation of the correct answer |
@@ -86,7 +82,6 @@ const multipleChoiceQuestionSchema = baseQuestionSchema.extend({
 
 ```json
 {
-  "id": "q1",
   "type": "multiple_choice",
   "question": "Qual è il principale vantaggio di usare TypeScript?",
   "options": [
@@ -123,7 +118,6 @@ const openQuestionSchema = baseQuestionSchema.extend({
 
 ```json
 {
-  "id": "q2",
   "type": "open_question",
   "question": "Spiega la differenza tra useEffect e useLayoutEffect in React.",
   "sampleAnswer": "useEffect viene eseguito in modo asincrono dopo il render, mentre useLayoutEffect viene eseguito in modo sincrono prima che il browser dipinga. useLayoutEffect è utile per misurazioni DOM e animazioni.",
@@ -154,7 +148,6 @@ const codeSnippetQuestionSchema = baseQuestionSchema.extend({
 
 ```json
 {
-  "id": "q3",
   "type": "code_snippet",
   "question": "Il seguente codice contiene un bug di sicurezza. Identificalo e correggi.",
   "codeSnippet": "const query = `SELECT * FROM users WHERE id = ${userId}`;",

@@ -1,12 +1,12 @@
 "use client";
 
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
-import { FlexibleQuestion } from "@/lib/schemas";
+import { SavedQuestion } from "@/lib/schemas";
 import { InterviewResultsClient } from "./interview-results-client";
 
 interface InterviewResultsProps {
   interviewId: string;
-  quizQuestions: FlexibleQuestion[];
+  quizQuestions: SavedQuestion[];
   answers: Record<string, any>;
   candidateName: string;
   initialEvaluation?: EvaluationWithRelations | null;

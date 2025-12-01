@@ -101,19 +101,19 @@ export const useAIGeneration = ({
       // Create type-specific parameters based on question type
       switch (type) {
         case "multiple_choice":
-          params = createMultipleChoiceParams(baseConfig, fields.length + 1, {
+          params = createMultipleChoiceParams(baseConfig, {
             focusAreas: options.focusAreas,
             distractorComplexity: options.distractorComplexity || "moderate",
           });
           break;
         case "open_question":
-          params = createOpenQuestionParams(baseConfig, fields.length + 1, {
+          params = createOpenQuestionParams(baseConfig, {
             expectedResponseLength: options.expectedResponseLength || "medium",
             evaluationCriteria: options.evaluationCriteria,
           });
           break;
         case "code_snippet":
-          params = createCodeSnippetParams(baseConfig, fields.length + 1, {
+          params = createCodeSnippetParams(baseConfig, {
             language: options.language || inferLanguageFromSkills(),
             bugType: options.bugType,
             codeComplexity: options.codeComplexity || "intermediate",
@@ -170,11 +170,7 @@ export const useAIGeneration = ({
     options: Omit<GenerationOptions, "language" | "bugType" | "codeComplexity">
   ) => {
     const baseConfig = createBaseConfig();
-    const params = createFrontendQuestionParams(
-      type,
-      baseConfig,
-      fields.length + 1
-    );
+    const params = createFrontendQuestionParams(type, baseConfig);
 
     // Override with user options
     if (options.difficulty) params.difficulty = options.difficulty;
@@ -192,11 +188,7 @@ export const useAIGeneration = ({
     options: Omit<GenerationOptions, "focusAreas" | "distractorComplexity">
   ) => {
     const baseConfig = createBaseConfig();
-    const params = createBackendQuestionParams(
-      type,
-      baseConfig,
-      fields.length + 1
-    );
+    const params = createBackendQuestionParams(type, baseConfig);
 
     // Override with user options
     if (options.difficulty) params.difficulty = options.difficulty;
@@ -259,37 +251,24 @@ export const useAIGeneration = ({
       // Create type-specific parameters based on question type
       switch (type) {
         case "multiple_choice":
-          params = createMultipleChoiceParams(
-            baseConfig,
-            regeneratingQuestionIndex + 1,
-            {
-              focusAreas: options.focusAreas,
-              distractorComplexity: options.distractorComplexity || "moderate",
-            }
-          );
+          params = createMultipleChoiceParams(baseConfig, {
+            focusAreas: options.focusAreas,
+            distractorComplexity: options.distractorComplexity || "moderate",
+          });
           break;
         case "open_question":
-          params = createOpenQuestionParams(
-            baseConfig,
-            regeneratingQuestionIndex + 1,
-            {
-              expectedResponseLength:
-                options.expectedResponseLength || "medium",
-              evaluationCriteria: options.evaluationCriteria,
-            }
-          );
+          params = createOpenQuestionParams(baseConfig, {
+            expectedResponseLength: options.expectedResponseLength || "medium",
+            evaluationCriteria: options.evaluationCriteria,
+          });
           break;
         case "code_snippet":
-          params = createCodeSnippetParams(
-            baseConfig,
-            regeneratingQuestionIndex + 1,
-            {
-              language: options.language || inferLanguageFromSkills(),
-              bugType: options.bugType,
-              codeComplexity: options.codeComplexity || "intermediate",
-              includeComments: options.includeComments ?? true,
-            }
-          );
+          params = createCodeSnippetParams(baseConfig, {
+            language: options.language || inferLanguageFromSkills(),
+            bugType: options.bugType,
+            codeComplexity: options.codeComplexity || "intermediate",
+            includeComments: options.includeComments ?? true,
+          });
           break;
       }
 
