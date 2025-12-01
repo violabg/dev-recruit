@@ -169,7 +169,7 @@ export const QuestionItem = ({
                 >
                   <Heart
                     className={cn(
-                      "w-4 h-4 transition-colors",
+                      "size-4 transition-colors",
                       isFavorite
                         ? "fill-red-500 text-red-500"
                         : "text-muted-foreground"
@@ -196,7 +196,7 @@ export const QuestionItem = ({
                   onClick={() => onRegenerate(actualIndex)}
                   disabled={aiLoading}
                 >
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Sparkles className="size-4 text-primary" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Rigenera domanda con AI</TooltipContent>
@@ -211,7 +211,7 @@ export const QuestionItem = ({
                   className="w-8 h-8 text-muted-foreground hover:text-destructive"
                   onClick={() => onRemove(actualIndex)}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="size-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Elimina domanda</TooltipContent>
@@ -225,9 +225,9 @@ export const QuestionItem = ({
               onClick={() => onToggleExpansion(field.id)}
             >
               {isExpanded ? (
-                <ChevronUp className="w-4 h-4" />
+                <ChevronUp className="size-4" />
               ) : (
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="size-4" />
               )}
             </Button>
           </div>
@@ -286,7 +286,7 @@ export const QuestionItem = ({
                     : "bg-amber-600 hover:bg-amber-700 text-white"
                 )}
               >
-                <Save className="mr-2 w-4 h-4" />
+                <Save className="mr-2 size-4" />
                 {questionSaveStatus === "saving"
                   ? "Salvataggio in corso..."
                   : questionSaveStatus === "success"

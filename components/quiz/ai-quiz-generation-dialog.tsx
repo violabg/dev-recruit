@@ -120,7 +120,7 @@ export const AIQuizGenerationDialog = ({
                   </h3>
                   <ul className="space-y-2 mt-2">
                     <li className="flex items-start gap-2">
-                      <span className="flex justify-center items-center bg-primary rounded-full w-4 h-4 font-bold text-primary-foreground text-xs">
+                      <span className="flex justify-center items-center bg-primary rounded-full size-4 font-bold text-primary-foreground text-xs">
                         1
                       </span>
                       <span>
@@ -129,7 +129,7 @@ export const AIQuizGenerationDialog = ({
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="flex justify-center items-center bg-primary rounded-full w-4 h-4 font-bold text-primary-foreground text-xs">
+                      <span className="flex justify-center items-center bg-primary rounded-full size-4 font-bold text-primary-foreground text-xs">
                         2
                       </span>
                       <span>
@@ -138,7 +138,7 @@ export const AIQuizGenerationDialog = ({
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="flex justify-center items-center bg-primary rounded-full w-4 h-4 font-bold text-primary-foreground text-xs">
+                      <span className="flex justify-center items-center bg-primary rounded-full size-4 font-bold text-primary-foreground text-xs">
                         3
                       </span>
                       <span>
@@ -147,7 +147,7 @@ export const AIQuizGenerationDialog = ({
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="flex justify-center items-center bg-primary rounded-full w-4 h-4 font-bold text-primary-foreground text-xs">
+                      <span className="flex justify-center items-center bg-primary rounded-full size-4 font-bold text-primary-foreground text-xs">
                         4
                       </span>
                       <span>

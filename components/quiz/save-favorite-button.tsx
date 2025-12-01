@@ -56,7 +56,7 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
           className={isFavorite ? "text-red-500" : ""}
         >
           <Heart
-            className={`w-4 h-4 ${
+            className={`size-4 ${
               isFavorite ? "fill-red-500 text-red-500" : ""
             }`}
           />

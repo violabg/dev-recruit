@@ -33,7 +33,7 @@ async function OpenPositions() {
           <CardTitle className="font-medium text-sm">
             Posizioni Aperte
           </CardTitle>
-          <Briefcase className="w-4 h-4 text-muted-foreground" />
+          <Briefcase className="size-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="font-bold text-2xl">{positionsCount || 0}</div>
@@ -56,7 +56,7 @@ async function Candidates() {
       <Card className="hover:shadow-md transition-shadow cursor-pointer">
         <CardHeader className="flex flex-row justify-between items-center pb-2">
           <CardTitle className="font-medium text-sm">Candidati</CardTitle>
-          <Users className="w-4 h-4 text-muted-foreground" />
+          <Users className="size-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="font-bold text-2xl">{candidatesCount || 0}</div>
@@ -81,7 +81,7 @@ async function Interviews() {
           <CardTitle className="font-medium text-sm">
             Colloqui Completati
           </CardTitle>
-          <BarChart3 className="w-4 h-4 text-muted-foreground" />
+          <BarChart3 className="size-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="font-bold text-2xl">{interviewsCount || 0}</div>
@@ -128,7 +128,7 @@ async function RecentPositions() {
                   title="Vai al dettaglio"
                 >
                   <Link href={`/dashboard/positions/${position.id}`}>
-                    <Eye className="mr-1 w-4 h-4 text-primary" />
+                    <Eye className="mr-1 size-4 text-primary" />
                   </Link>
                 </Button>
               </div>
@@ -142,7 +142,7 @@ async function RecentPositions() {
               </p>
               <Button className="mt-2" size="sm" asChild>
                 <Link href="/dashboard/positions/new">
-                  <Plus className="mr-1 w-4 h-4" />
+                  <Plus className="mr-1 size-4" />
                   Crea posizione
                 </Link>
               </Button>
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
         <h1 className="font-bold text-3xl">Dashboard</h1>
         <Button asChild variant={"default"}>
           <Link href="/dashboard/positions/new">
-            <Plus className="mr-1 w-4 h-4" />
+            <Plus className="mr-1 size-4" />
             Nuova Posizione
           </Link>
         </Button>

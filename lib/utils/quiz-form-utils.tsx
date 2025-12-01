@@ -12,28 +12,28 @@ export const getSaveButtonContent = (saveStatus: SaveStatus) => {
     case "saving":
       return (
         <>
-          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+          <Loader2 className="mr-2 size-4 animate-spin" />
           Salvataggio...
         </>
       );
     case "success":
       return (
         <>
-          <CheckCircle className="mr-1 w-4 h-4" />
+          <CheckCircle className="mr-1 size-4" />
           Salvato!
         </>
       );
     case "error":
       return (
         <>
-          <AlertCircle className="mr-1 w-4 h-4" />
+          <AlertCircle className="mr-1 size-4" />
           Errore
         </>
       );
     default:
       return (
         <>
-          <Save className="mr-1 w-4 h-4" />
+          <Save className="mr-1 size-4" />
           Salva Quiz
         </>
       );

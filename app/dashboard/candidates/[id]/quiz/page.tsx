@@ -57,7 +57,7 @@ export default async function CandidateQuizPage({
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/dashboard/candidates/${candidateId}`}>
-            <ArrowLeft className="mr-1 w-4 h-4" />
+            <ArrowLeft className="mr-1 size-4" />
             Back to candidate
           </Link>
         </Button>

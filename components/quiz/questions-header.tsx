@@ -84,7 +84,7 @@ export const QuestionsHeader = ({
             size="sm"
             onClick={expandAllQuestions}
           >
-            <ChevronDown className="mr-1 w-4 h-4" />
+            <ChevronDown className="mr-1 size-4" />
             Espandi tutto
           </Button>
           <Button
@@ -93,7 +93,7 @@ export const QuestionsHeader = ({
             size="sm"
             onClick={collapseAllQuestions}
           >
-            <ChevronUp className="mr-1 w-4 h-4" />
+            <ChevronUp className="mr-1 size-4" />
             Comprimi tutto
           </Button>
 
@@ -107,7 +107,7 @@ export const QuestionsHeader = ({
                 onClick={() => onAddQuestion(type.value as QuestionType)}
                 className="gap-2"
               >
-                <Plus className="mr-1 w-4 h-4 text-primary" />
+                <Plus className="mr-1 size-4 text-primary" />
                 {getQuestionTypeLabel(type.value as QuestionType)}
               </Button>
             ))}
@@ -121,7 +121,7 @@ export const QuestionsHeader = ({
                     onClick={onOpenFavorites}
                     className="gap-2"
                   >
-                    <Heart className="w-4 h-4 text-red-500" />
+                    <Heart className="size-4 text-red-500" />
                     Preferite
                   </Button>
                 </TooltipTrigger>

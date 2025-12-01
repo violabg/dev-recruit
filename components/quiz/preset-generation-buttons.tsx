@@ -130,7 +130,7 @@ export function PresetGenerationButtons(props: Props) {
                       disabled={loading}
                     >
                       <div className="flex items-center gap-2 mb-2 w-full">
-                        <IconComponent className="w-4 h-4 text-primary" />
+                        <IconComponent className="size-4 text-primary" />
                         <span className="font-medium text-sm">
                           {preset.label}
                         </span>

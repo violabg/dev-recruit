@@ -451,7 +451,7 @@ export const AIQuestionGenerationDialog = ({
               Annulla
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
+              {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
               Genera Domanda
             </Button>
           </DialogFooter>

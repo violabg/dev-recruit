@@ -136,7 +136,7 @@ export function FavoriteQuestionsDialog({
         {/* Filters */}
         <div className="flex gap-2 py-2">
           <div className="relative flex-1">
-            <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2 transform" />
+            <Search className="top-1/2 left-3 absolute size-4 text-muted-foreground -translate-y-1/2 transform" />
             <Input
               placeholder="Cerca domande..."
               value={searchQuery}

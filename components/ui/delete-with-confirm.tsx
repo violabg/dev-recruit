@@ -113,7 +113,7 @@ export function DeleteWithConfirm({
       size={iconOnly ? "icon" : size}
       disabled={disabled || isPending}
     >
-      <Trash className={iconOnly ? "w-4 h-4" : "mr-1 w-4 h-4"} />
+      <Trash className={iconOnly ? "size-4" : "mr-1 size-4"} />
       {!iconOnly && label}
     </Button>
   );
@@ -139,12 +139,12 @@ export function DeleteWithConfirm({
           >
             {isPending ? (
               <>
-                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
                 Eliminazione...
               </>
             ) : (
               <>
-                <Trash className="mr-1 w-4 h-4" />
+                <Trash className="mr-1 size-4" />
                 {label}
               </>
             )}

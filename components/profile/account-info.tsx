@@ -100,7 +100,7 @@ export const AccountInfo = ({
                 size="sm"
               >
                 <Link href="/dashboard/profile/edit">
-                  <Edit className="mr-1 w-4 h-4" />
+                  <Edit className="mr-1 size-4" />
                   Modifica Profilo
                 </Link>
               </Button>
@@ -111,7 +111,7 @@ export const AccountInfo = ({
                 size="sm"
               >
                 <Link href="/dashboard/profile/change-password">
-                  <Lock className="mr-1 w-4 h-4" />
+                  <Lock className="mr-1 size-4" />
                   Cambia Password
                 </Link>
               </Button>

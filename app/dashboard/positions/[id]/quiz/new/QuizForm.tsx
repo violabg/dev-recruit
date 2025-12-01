@@ -288,12 +288,12 @@ export const QuizForm = ({
         <Button type="submit" disabled={isPending} size="sm">
           {isPending ? (
             <>
-              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+              <Loader2 className="mr-2 size-4 animate-spin" />
               Generazione in corso...
             </>
           ) : (
             <>
-              <BrainCircuit className="mr-1 w-4 h-4" />
+              <BrainCircuit className="mr-1 size-4" />
               Genera Quiz
             </>
           )}

@@ -186,7 +186,7 @@ export function FileUploadField({
               }}
               disabled={disabled}
             >
-              <X className="w-4 h-4" />
+              <X className="size-4" />
             </Button>
           </div>
         ) : hasExistingFile ? (
@@ -217,7 +217,7 @@ export function FileUploadField({
                 }}
                 disabled={disabled}
               >
-                <Upload className="mr-1 w-4 h-4" />
+                <Upload className="mr-1 size-4" />
                 Sostituisci
               </Button>
               {onRemoveExisting && (
@@ -232,7 +232,7 @@ export function FileUploadField({
                   disabled={disabled}
                   className="text-destructive hover:text-destructive"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="size-4" />
                 </Button>
               )}
             </div>

@@ -60,7 +60,7 @@ export function EntityActionsMenu({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="p-0 w-8 h-8">
             <span className="sr-only">Apri menu</span>
-            <MoreHorizontal className="w-4 h-4" />
+            <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -68,7 +68,7 @@ export function EntityActionsMenu({
           {editHref && (
             <DropdownMenuItem asChild>
               <Link href={editHref}>
-                <Edit className="mr-1 w-4 h-4" />
+                <Edit className="mr-1 size-4" />
                 {editLabel}
               </Link>
             </DropdownMenuItem>
@@ -78,7 +78,7 @@ export function EntityActionsMenu({
               onClick={() => setDeleteDialogOpen(true)}
               className="text-red-600"
             >
-              <Trash className="mr-1 w-4 h-4" />
+              <Trash className="mr-1 size-4" />
               Elimina
             </DropdownMenuItem>
           )}

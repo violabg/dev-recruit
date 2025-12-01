@@ -58,9 +58,9 @@ export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
     <div className="flex flex-1 gap-2">
       <div className="relative flex-1">
         {isPending ? (
-          <Loader2 className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground animate-spin" />
+          <Loader2 className="top-2.5 left-2.5 absolute size-4 text-muted-foreground animate-spin" />
         ) : (
-          <Search className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
+          <Search className="top-2.5 left-2.5 absolute size-4 text-muted-foreground" />
         )}
         <Input
           ref={inputRef}

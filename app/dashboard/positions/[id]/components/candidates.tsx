@@ -18,7 +18,7 @@ export default async function Candidates({ id }: { id: string }) {
         <h2 className="font-semibold text-xl">Candidati</h2>
         <Button asChild size="sm" variant="default">
           <Link href={`/dashboard/candidates/new?positionId=${id}`}>
-            <Plus className="mr-1 w-4 h-4" />
+            <Plus className="mr-1 size-4" />
             Aggiungi Candidato
           </Link>
         </Button>
@@ -82,7 +82,7 @@ export default async function Candidates({ id }: { id: string }) {
             </p>
             <Button className="mt-2" size="sm" asChild>
               <Link href={`/dashboard/candidates/new?positionId=${id}`}>
-                <Users className="mr-1 w-4 h-4" />
+                <Users className="mr-1 size-4" />
                 Aggiungi candidato
               </Link>
             </Button>

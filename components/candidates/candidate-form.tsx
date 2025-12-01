@@ -307,7 +307,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? (
           <>
-            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+            <Loader2 className="mr-2 size-4 animate-spin" />
             {isEditMode
               ? "Salvataggio in corso..."
               : isApplyMode

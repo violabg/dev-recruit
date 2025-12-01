@@ -86,7 +86,7 @@ export function InterviewTimer({
 
   return (
     <div className="flex items-center gap-2">
-      <Clock className={`w-4 h-4 ${getIconColor()}`} />
+      <Clock className={`size-4 ${getIconColor()}`} />
       <span className="font-mono">{formatTimeRemaining(displayTime)}</span>
     </div>
   );

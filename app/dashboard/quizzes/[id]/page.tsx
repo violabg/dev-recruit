@@ -81,7 +81,7 @@ async function QuizDetailContent({
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/dashboard/positions/${position.id}`}>
-            <ArrowLeft className="mr-1 w-4 h-4" />
+            <ArrowLeft className="mr-1 size-4" />
             Vai alla posizione
           </Link>
         </Button>
@@ -225,7 +225,7 @@ async function QuizResultsContent({ quizId }: { quizId: string }) {
           </p>
           <Button className="mt-2" size="sm" asChild>
             <Link href={`/dashboard/quizzes/${quizId}/invite`}>
-              <Link2 className="mr-1 w-4 h-4" />
+              <Link2 className="mr-1 size-4" />
               Associa a candidati
             </Link>
           </Button>
@@ -301,7 +301,7 @@ async function QuizResultsContent({ quizId }: { quizId: string }) {
                     <Link
                       href={`/dashboard/candidates/${interview.candidateId}`}
                     >
-                      <Eye className="w-4 h-4 text-primary" />
+                      <Eye className="size-4 text-primary" />
                     </Link>
                   </Button>
                 </td>

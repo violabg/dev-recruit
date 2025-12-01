@@ -202,7 +202,7 @@ export function InterviewQuestion({
                   variant="outline"
                   onClick={handleStartRecording}
                 >
-                  <Speech className="mr-2 w-4 h-4" />
+                  <Speech className="mr-2 size-4" />
                   Registra risposta
                 </Button>
               )}
@@ -212,13 +212,13 @@ export function InterviewQuestion({
                   variant="destructive"
                   onClick={handleStopRecording}
                 >
-                  <Square className="mr-2 w-4 h-4" />
+                  <Square className="mr-2 size-4" />
                   Ferma registrazione
                 </Button>
               )}
               {isPending && (
                 <span className="text-muted-foreground text-sm">
-                  <Loader2 className="inline-block mr-2 w-4 h-4 animate-spin" />
+                  <Loader2 className="inline-block mr-2 size-4 animate-spin" />
                   Trascrizione in corso...
                 </span>
               )}

@@ -256,12 +256,12 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
           >
             {isGeneratingDescription ? (
               <>
-                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
                 Generazione in corso...
               </>
             ) : (
               <>
-                <Sparkles className="ml-2 w-4 h-4 text-primary" />
+                <Sparkles className="ml-2 size-4 text-primary" />
                 Genera descrizione
               </>
             )}
@@ -282,7 +282,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
         <Button type="submit" size="sm" disabled={isSubmitting}>
           {isSubmitting ? (
             <>
-              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+              <Loader2 className="mr-2 size-4 animate-spin" />
               {isEditing
                 ? "Aggiornamento in corso..."
                 : "Creazione in corso..."}

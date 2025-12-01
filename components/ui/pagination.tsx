@@ -70,7 +70,7 @@ const PaginationPrevious = ({
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
-    <ChevronLeft className="w-4 h-4" />
+    <ChevronLeft className="size-4" />
     <span>Previous</span>
   </PaginationLink>
 );
@@ -87,7 +87,7 @@ const PaginationNext = ({
     {...props}
   >
     <span>Next</span>
-    <ChevronRight className="w-4 h-4" />
+    <ChevronRight className="size-4" />
   </PaginationLink>
 );
 PaginationNext.displayName = "PaginationNext";
@@ -101,7 +101,7 @@ const PaginationEllipsis = ({
     className={cn("flex justify-center items-center w-9 h-9", className)}
     {...props}
   >
-    <MoreHorizontal className="w-4 h-4" />
+    <MoreHorizontal className="size-4" />
     <span className="sr-only">More pages</span>
   </span>
 );

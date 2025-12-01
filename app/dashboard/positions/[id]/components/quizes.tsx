@@ -17,7 +17,7 @@ export default async function Quizes({ id }: { id: string }) {
         <h2 className="font-semibold text-xl">Quiz</h2>
         <Button asChild size="sm" variant="default">
           <Link href={`/dashboard/positions/${id}/quiz/new`}>
-            <Plus className="mr-1 w-4 h-4" />
+            <Plus className="mr-1 size-4" />
             New Quiz
           </Link>
         </Button>
@@ -67,7 +67,7 @@ export default async function Quizes({ id }: { id: string }) {
             </p>
             <Button className="mt-2" size="sm" asChild>
               <Link href={`/dashboard/positions/${id}/quiz/new`}>
-                <Plus className="mr-1 w-4 h-4" />
+                <Plus className="mr-1 size-4" />
                 New Quiz
               </Link>
             </Button>

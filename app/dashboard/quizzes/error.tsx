@@ -45,7 +45,7 @@ export default function QuizzesError({
               </p>
             )}
             <Button onClick={reset} variant="default" size="sm">
-              <RefreshCw className="mr-2 w-4 h-4" />
+              <RefreshCw className="mr-2 size-4" />
               Riprova
             </Button>
           </div>

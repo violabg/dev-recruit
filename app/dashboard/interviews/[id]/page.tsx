@@ -70,7 +70,7 @@ export default async function InterviewDetailPage({
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/dashboard/quizzes/${quiz.id}`}>
-            <ArrowLeft className="mr-1 w-4 h-4" />
+            <ArrowLeft className="mr-1 size-4" />
             Torna al quiz
           </Link>
         </Button>

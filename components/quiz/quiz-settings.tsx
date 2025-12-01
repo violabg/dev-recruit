@@ -60,7 +60,7 @@ export const QuizSettings = ({
             onClick={onGenerateFullQuiz}
             disabled={aiLoading}
           >
-            <Sparkles className="mr-2 w-4 h-4 text-primary" />
+            <Sparkles className="mr-2 size-4 text-primary" />
             Genera nuovo quiz con AI
           </Button>
         </div>

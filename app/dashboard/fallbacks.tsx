@@ -16,7 +16,7 @@ export const InterviewsSkeleton = () => (
             <CardTitle>
               <Skeleton className="w-20 h-4" />
             </CardTitle>
-            <Skeleton className="w-4 h-4" />
+            <Skeleton className="size-4" />
           </CardHeader>
           <CardContent>
             <Skeleton className="mb-2 w-16 h-8" />
@@ -58,7 +58,7 @@ export function DashboardStatsSkeleton() {
     <Card className="animate-pulse">
       <CardHeader className="flex flex-row justify-between items-center pb-2">
         <Skeleton className="w-24 h-4" />
-        <Skeleton className="rounded-full w-4 h-4" />
+        <Skeleton className="rounded-full size-4" />
       </CardHeader>
       <CardContent>
         <Skeleton className="w-16 h-8" />

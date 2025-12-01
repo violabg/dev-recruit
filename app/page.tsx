@@ -14,7 +14,7 @@ async function StartButton() {
     <Link href={href}>
       <Button size="lg" className="gap-1.5">
         Inizia ora
-        <ArrowRight className="w-4 h-4" />
+        <ArrowRight className="size-4" />
       </Button>
     </Link>
   );
@@ -59,7 +59,7 @@ export default async function Home() {
                         </p>
                         <div className="space-y-1 mt-2 text-muted-foreground">
                           <div className="flex items-center gap-2">
-                            <div className="flex justify-center items-center border rounded-full w-4 h-4">
+                            <div className="flex justify-center items-center border rounded-full size-4">
                               <div className="bg-primary rounded-full w-2 h-2" />
                             </div>
                             <span>
@@ -67,11 +67,11 @@ export default async function Home() {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="border rounded-full w-4 h-4" />
+                            <div className="border rounded-full size-4" />
                             <span>Un metodo per chiudere una connessione</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="border rounded-full w-4 h-4" />
+                            <div className="border rounded-full size-4" />
                             <span>Un tipo di variabile globale</span>
                           </div>
                         </div>
@@ -143,7 +143,7 @@ export default async function Home() {
       <footer className="py-8 md:py-12 border-t">
         <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-4 container">
           <div className="flex items-center gap-2 text-sm">
-            <BrainCircuit className="w-4 h-4" />
+            <BrainCircuit className="size-4" />
             <span>© 2025 DevRecruit AI. Tutti i diritti riservati.</span>
           </div>
           <div className="flex gap-4 text-muted-foreground text-sm">

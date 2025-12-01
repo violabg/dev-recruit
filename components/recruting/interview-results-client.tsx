@@ -348,9 +348,9 @@ export function InterviewResultsClient({
                 disabled={loading || getAnsweredQuestionsCount() === 0}
               >
                 {loading ? (
-                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                 ) : (
-                  <Sparkles className="mr-1 w-4 h-4" />
+                  <Sparkles className="mr-1 size-4" />
                 )}
                 Valuta risposte con AI
               </Button>
@@ -383,7 +383,7 @@ export function InterviewResultsClient({
                   ) : (
                     // Show overall evaluation progress
                     <div className="flex items-center space-x-3">
-                      <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                      <Loader2 className="size-4 text-primary animate-spin" />
                       <div className="text-muted-foreground text-sm">
                         Generazione valutazione complessiva...
                       </div>
@@ -420,9 +420,9 @@ export function InterviewResultsClient({
                 }
               >
                 {isSavingNotes ? (
-                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                 ) : (
-                  <Save className="mr-2 w-4 h-4" />
+                  <Save className="mr-2 size-4" />
                 )}
                 Salva note
               </Button>

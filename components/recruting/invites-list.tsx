@@ -153,7 +153,7 @@ export function InvitesList({
                       onClick={() => copyInterviewLink(interview.token)}
                       title="Copy interview link"
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="size-4" />
                     </Button>
                     <Button
                       variant="outline"
@@ -162,7 +162,7 @@ export function InvitesList({
                       title="Delete interview"
                       disabled={interview.status === "completed"}
                     >
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                      <Trash2 className="size-4 text-destructive" />
                     </Button>
                   </div>
                 </TableCell>
@@ -191,7 +191,7 @@ export function InvitesList({
               disabled={deleting || isPending}
             >
               {deleting ? (
-                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
               ) : null}
               Delete
             </AlertDialogAction>

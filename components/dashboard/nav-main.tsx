@@ -71,7 +71,7 @@ export function NavMain({
                   >
                     <route.icon
                       className={cn(
-                        "mr-2 w-4 h-4 transition-colors",
+                        "mr-2 size-4 transition-colors",
                         isActive
                           ? "text-primary"
                           : "text-muted-foreground group-hover:text-foreground"
@@ -89,7 +89,7 @@ export function NavMain({
                     </span>
 
                     {isLoading && (
-                      <Loader2 className="ml-2 w-4 h-4 text-primary animate-spin" />
+                      <Loader2 className="ml-2 size-4 text-primary animate-spin" />
                     )}
                   </span>
                 </SidebarMenuButton>

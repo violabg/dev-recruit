@@ -69,7 +69,7 @@ export default async function CandidateDetailPage({
                 `/dashboard/candidates/${candidate.id}/evaluations` as Route<`/dashboard/candidates/${string}/evaluations`>
               }
             >
-              <ClipboardCheck className="mr-1 w-4 h-4" />
+              <ClipboardCheck className="mr-1 size-4" />
               Valutazioni
             </Link>
           </Button>
@@ -79,7 +79,7 @@ export default async function CandidateDetailPage({
                 `/dashboard/candidates/${candidate.id}/edit` as Route<`/dashboard/candidates/${string}/edit`>
               }
             >
-              <Edit className="mr-1 w-4 h-4" />
+              <Edit className="mr-1 size-4" />
               Modifica
             </Link>
           </Button>
@@ -135,7 +135,7 @@ export default async function CandidateDetailPage({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-primary hover:underline"
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="size-4" />
                   Visualizza curriculum
                   <ExternalLink className="w-3 h-3" />
                 </a>

@@ -37,7 +37,7 @@ export default async function CandidateEvaluationsPage({
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/dashboard/candidates/${id}`}>
-            <ArrowLeft className="mr-1 w-4 h-4" />
+            <ArrowLeft className="mr-1 size-4" />
             Torna al candidato
           </Link>
         </Button>

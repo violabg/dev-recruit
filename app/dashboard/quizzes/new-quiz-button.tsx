@@ -20,7 +20,7 @@ export function NewQuizButton({
   return (
     <Button variant={variant} size={size} className={className} asChild>
       <Link href="/dashboard/quizzes/new">
-        <Plus className="mr-1 w-4 h-4" />
+        <Plus className="mr-1 size-4" />
         Nuovo quiz
       </Link>
     </Button>

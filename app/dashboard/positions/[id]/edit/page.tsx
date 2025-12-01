@@ -29,7 +29,7 @@ export default async function EditPositionPage({
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/dashboard/positions/${params.id}`}>
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="size-4" />
           </Link>
         </Button>
         <div>

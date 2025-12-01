@@ -33,12 +33,12 @@ export function SeedPresetsButton() {
     >
       {isPending ? (
         <>
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="size-4 animate-spin" />
           Caricamento...
         </>
       ) : (
         <>
-          <Zap className="w-4 h-4" />
+          <Zap className="size-4" />
           Carica preset predefiniti
         </>
       )}

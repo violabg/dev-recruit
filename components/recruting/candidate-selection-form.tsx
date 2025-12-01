@@ -137,12 +137,12 @@ export function CandidateSelectionForm({
           <Button type="submit" size="sm" disabled={isPending}>
             {isPending ? (
               <>
-                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
                 Creating interviews...
               </>
             ) : (
               <>
-                <Plus className="mr-1 w-4 h-4" />
+                <Plus className="mr-1 size-4" />
                 Create interview links
               </>
             )}
@@ -171,7 +171,7 @@ export function CandidateSelectionForm({
                   size="sm"
                   onClick={() => copyInterviewLink(link.token)}
                 >
-                  <Copy className="mr-1 w-4 h-4" />
+                  <Copy className="mr-1 size-4" />
                   Copy Link
                 </Button>
               </div>

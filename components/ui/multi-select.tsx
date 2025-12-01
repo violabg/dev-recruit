@@ -128,7 +128,7 @@ export function MultiSelect({
               </Badge>
             ))}
           </div>
-          <ChevronsUpDown className="opacity-50 w-4 h-4 shrink-0" />
+          <ChevronsUpDown className="opacity-50 size-4 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-full" align="start">
@@ -151,7 +151,7 @@ export function MultiSelect({
                           >
                             <div
                               className={cn(
-                                "flex justify-center items-center border border-primary rounded-sm w-4 h-4",
+                                "flex justify-center items-center border border-primary rounded-sm size-4",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "opacity-50 [&_svg]:invisible"
@@ -177,7 +177,7 @@ export function MultiSelect({
                           >
                             <div
                               className={cn(
-                                "flex justify-center items-center border border-primary rounded-sm w-4 h-4",
+                                "flex justify-center items-center border border-primary rounded-sm size-4",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "opacity-50 [&_svg]:invisible"

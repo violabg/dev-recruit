@@ -145,7 +145,7 @@ export const CandidatesRuntimeSection = async ({
               <EmptyContent>
                 <Button asChild size="sm">
                   <Link href="/dashboard/candidates/new">
-                    <Plus className="mr-1 w-4 h-4" />
+                    <Plus className="mr-1 size-4" />
                     Nuovo Candidato
                   </Link>
                 </Button>

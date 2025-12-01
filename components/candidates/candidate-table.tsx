@@ -44,7 +44,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
             <TableHead className="w-[250px]">
               <div className="flex items-center">
                 Nome
-                <ArrowUpDown className="ml-2 w-4 h-4" />
+                <ArrowUpDown className="ml-2 size-4" />
               </div>
             </TableHead>
             <TableHead>Email</TableHead>
@@ -104,7 +104,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                 >
                   <DropdownMenuItem asChild>
                     <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-                      <Link2 className="mr-1 w-4 h-4" />
+                      <Link2 className="mr-1 size-4" />
                       Associa quiz
                     </Link>
                   </DropdownMenuItem>
@@ -113,7 +113,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                       <Link
                         href={`/dashboard/interviews/${candidate.interviews[0].id}`}
                       >
-                        <FileText className="mr-1 w-4 h-4" />
+                        <FileText className="mr-1 size-4" />
                         Visualizza risultati
                       </Link>
                     </DropdownMenuItem>

@@ -110,9 +110,9 @@ export function SearchAndFilterInterviews({
     <div className="flex sm:flex-row flex-col gap-4">
       <div className="relative flex-1">
         {isPending ? (
-          <Loader2 className="top-2.5 left-2.5 absolute w-4 h-4 animate-spin" />
+          <Loader2 className="top-2.5 left-2.5 absolute size-4 animate-spin" />
         ) : (
-          <Search className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
+          <Search className="top-2.5 left-2.5 absolute size-4 text-muted-foreground" />
         )}
         <Input
           ref={inputRef}
@@ -136,7 +136,7 @@ export function SearchAndFilterInterviews({
           }}
         >
           <SelectTrigger>
-            <ClockFading className="w-4 h-4" />
+            <ClockFading className="size-4" />
             <SelectValue placeholder="Stato" />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +155,7 @@ export function SearchAndFilterInterviews({
           }}
         >
           <SelectTrigger>
-            <Briefcase className="w-4 h-4" />
+            <Briefcase className="size-4" />
             <SelectValue placeholder="Posizione" />
           </SelectTrigger>
           <SelectContent>
@@ -175,7 +175,7 @@ export function SearchAndFilterInterviews({
           }}
         >
           <SelectTrigger>
-            <Code className="w-4 h-4" />
+            <Code className="size-4" />
             <SelectValue placeholder="Linguaggio" />
           </SelectTrigger>
           <SelectContent>

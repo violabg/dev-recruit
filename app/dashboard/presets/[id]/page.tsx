@@ -123,7 +123,7 @@ export default async function PresetDetailPage({
                 `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
               }
             >
-              <Edit className="mr-1 w-4 h-4" />
+              <Edit className="mr-1 size-4" />
               Modifica
             </Link>
           </Button>

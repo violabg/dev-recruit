@@ -76,13 +76,13 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
               >
                 <DropdownMenuItem asChild>
                   <Link href={`/dashboard/candidates/${candidate.id}`}>
-                    <User className="mr-1 w-4 h-4" />
+                    <User className="mr-1 size-4" />
                     Visualizza profilo
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-                    <Link2 className="mr-1 w-4 h-4" />
+                    <Link2 className="mr-1 size-4" />
                     Associa quiz
                   </Link>
                 </DropdownMenuItem>
@@ -91,7 +91,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                     <Link
                       href={`/dashboard/interviews/${candidate.interviews[0].id}`}
                     >
-                      <FileText className="mr-1 w-4 h-4" />
+                      <FileText className="mr-1 size-4" />
                       Visualizza risultati
                     </Link>
                   </DropdownMenuItem>
@@ -102,7 +102,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
           <CardContent className="p-4 pt-0">
             <div className="space-y-2">
               <div className="flex items-center text-sm">
-                <Briefcase className="mr-2 w-4 h-4 text-muted-foreground" />
+                <Briefcase className="mr-2 size-4 text-muted-foreground" />
                 {candidate.position ? (
                   <div>
                     <span>{candidate.position.title}</span>
@@ -120,7 +120,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                 )}
               </div>
               <div className="flex items-center text-sm">
-                <Calendar className="mr-2 w-4 h-4 text-muted-foreground" />
+                <Calendar className="mr-2 size-4 text-muted-foreground" />
                 {candidate.createdAt && (
                   <span>
                     Aggiunto il{" "}
@@ -136,7 +136,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             <CandidateStatusBadge status={candidate.status} />
             <Button asChild variant="outline" size="sm">
               <Link href={`/dashboard/candidates/${candidate.id}`}>
-                <Eye className="mr-1 w-4 h-4 text-primary" />
+                <Eye className="mr-1 size-4 text-primary" />
                 Visualizza
               </Link>
             </Button>

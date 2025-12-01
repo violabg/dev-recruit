@@ -119,9 +119,9 @@ export const SearchAndFilterQuizzes = ({
     <div className="flex sm:flex-row flex-col gap-4">
       <div className="relative flex-1">
         {isPending ? (
-          <Loader2 className="top-2.5 left-2.5 absolute w-4 h-4 animate-spin" />
+          <Loader2 className="top-2.5 left-2.5 absolute size-4 animate-spin" />
         ) : (
-          <SearchIcon className="top-2.5 left-2.5 absolute w-4 h-4 text-muted-foreground" />
+          <SearchIcon className="top-2.5 left-2.5 absolute size-4 text-muted-foreground" />
         )}
         <Input
           ref={inputRef}
@@ -146,7 +146,7 @@ export const SearchAndFilterQuizzes = ({
         >
           <SelectTrigger>
             <div className="flex items-center gap-2">
-              <ArrowUpDown className="w-4 h-4" />
+              <ArrowUpDown className="size-4" />
               <SelectValue placeholder="Ordina" />
             </div>
           </SelectTrigger>
@@ -165,7 +165,7 @@ export const SearchAndFilterQuizzes = ({
         >
           <SelectTrigger>
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4" />
+              <Filter className="size-4" />
               <SelectValue placeholder="Filtra" />
             </div>
           </SelectTrigger>
@@ -186,7 +186,7 @@ export const SearchAndFilterQuizzes = ({
         >
           <SelectTrigger>
             <div className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4" />
+              <Briefcase className="size-4" />
               <SelectValue placeholder="Posizione" />
             </div>
           </SelectTrigger>

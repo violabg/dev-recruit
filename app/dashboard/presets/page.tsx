@@ -82,7 +82,7 @@ async function PresetsContent({
                 <EmptyContent>
                   <Button asChild variant="default" size="sm">
                     <Link href="/dashboard/presets/new">
-                      <Plus className="mr-1 w-4 h-4" />
+                      <Plus className="mr-1 size-4" />
                       Nuovo preset
                     </Link>
                   </Button>
@@ -128,7 +128,7 @@ export default async function PresetsPage({
         </div>
         <Button asChild variant="default" size="sm">
           <Link href="/dashboard/presets/new">
-            <Plus className="mr-1 w-4 h-4" />
+            <Plus className="mr-1 size-4" />
             Nuovo preset
           </Link>
         </Button>

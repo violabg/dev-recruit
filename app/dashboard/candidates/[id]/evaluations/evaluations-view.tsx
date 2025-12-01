@@ -315,9 +315,9 @@ export function CandidateEvaluationsView({
                 disabled={isGenerating || !selectedPositionId}
               >
                 {isGenerating ? (
-                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                 ) : (
-                  <Sparkles className="mr-2 w-4 h-4" />
+                  <Sparkles className="mr-2 size-4" />
                 )}
                 {isGenerating ? "Generazione..." : "Genera valutazione"}
               </Button>
@@ -520,7 +520,7 @@ export function CandidateEvaluationsView({
                         >
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon">
-                              <Trash2 className="w-4 h-4 text-destructive" />
+                              <Trash2 className="size-4 text-destructive" />
                             </Button>
                           </AlertDialogTrigger>
                         </DeleteWithConfirm>
@@ -561,9 +561,9 @@ export function CandidateEvaluationsView({
                           size="sm"
                         >
                           {savingNotes ? (
-                            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                            <Loader2 className="mr-2 size-4 animate-spin" />
                           ) : (
-                            <Save className="mr-2 w-4 h-4" />
+                            <Save className="mr-2 size-4" />
                           )}
                           Salva note
                         </Button>

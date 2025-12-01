@@ -37,7 +37,7 @@ export function QuizTable({ quizzes }: QuizTableProps) {
             <TableHead className="w-[250px]">
               <div className="flex items-center">
                 Titolo
-                <ArrowUpDown className="ml-2 w-4 h-4" />
+                <ArrowUpDown className="ml-2 size-4" />
               </div>
             </TableHead>
             <TableHead>Posizione</TableHead>
@@ -101,7 +101,7 @@ export function QuizTable({ quizzes }: QuizTableProps) {
                 >
                   <DropdownMenuItem asChild>
                     <Link href={`/dashboard/quizzes/${quiz.id}/invite`}>
-                      <Link2 className="mr-1 w-4 h-4" />
+                      <Link2 className="mr-1 size-4" />
                       Associa candidato
                     </Link>
                   </DropdownMenuItem>
