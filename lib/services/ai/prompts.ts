@@ -148,25 +148,30 @@ export const questionPromptBuilders = {
           - question: Italian text (clear, specific, and open-ended)
           - keywords: Array of relevant strings for evaluation (optional)
           - sampleAnswer: Italian text providing an example answer
-          - sampleSolution: Valid code string if question involves coding (optional)
-          - codeSnippet: Valid code string for context if needed (optional)
           - explanation: Italian text with evaluation guidance (optional)
 
+          CRITICAL CONSTRAINT:
+          - DO NOT ask questions that require writing blocks of code
+          - Questions should focus on concepts, explanations, comparisons, architecture decisions, or problem-solving approaches
+          - If code is relevant, ask candidates to EXPLAIN or DESCRIBE rather than WRITE code
+          - Acceptable: "Spiega come funziona..." or "Descrivi l'approccio per..."
+          - NOT acceptable: "Scrivi una funzione che..." or "Implementa un algoritmo per..."
+
           QUALITY REQUIREMENTS:
-          - Question should encourage detailed, thoughtful responses
+          - Question should encourage detailed, thoughtful explanations
           - Allow for multiple valid approaches or answers
           - Test understanding of concepts, not just memorization
           - Provide clear evaluation criteria in sampleAnswer
-          - Include code examples when relevant to the role
+          - Focus on reasoning, trade-offs, and architectural thinking
 
           Example Structure:
           \`\`\`json
           {
             "id": "q${questionIndex}",
             "type": "open_question",
-            "question": "Spiega come implementeresti la gestione dello stato in un'applicazione React complessa e giustifica la tua scelta.",
+            "question": "Spiega i principali vantaggi e svantaggi dell'utilizzo di Redux rispetto a Context API per la gestione dello stato in un'applicazione React. In quali scenari consiglieresti l'uno rispetto all'altro?",
             "keywords": ["React", "state management", "Redux", "Context API", "architecture"],
-            "sampleAnswer": "Una risposta completa dovrebbe includere: valutazione dei requisiti, confronto tra soluzioni (Redux, Context API, Zustand), considerazioni di performance, e esempi di implementazione appropriati per il caso d'uso specifico.",
+            "sampleAnswer": "Una risposta completa dovrebbe includere: scalabilità (Redux migliore per app complesse), debugging (Redux DevTools), boilerplate (Context API più semplice), performance (Context può causare re-render non necessari), middleware (Redux supporta middleware per side effects). Consigliare Redux per app grandi con stato complesso, Context API per stato semplice o localizzato.",
             "explanation": "Valutare la comprensione dell'architettura React, capacità di analisi dei trade-off, e esperienza pratica con diverse soluzioni di state management."
           }
           \`\`\``,
@@ -175,9 +180,6 @@ export const questionPromptBuilders = {
       const context = buildCommonContext(params);
       const requirements: string[] = [];
 
-      if (params.requireCodeExample) {
-        requirements.push("Include code examples in the answer");
-      }
       if (params.expectedResponseLength) {
         requirements.push(
           `Expected response length: ${params.expectedResponseLength}`
@@ -197,6 +199,11 @@ export const questionPromptBuilders = {
           - Allow for multiple valid approaches
           - Appropriate for ${params.experienceLevel} level
           - Test conceptual understanding and practical experience
+          
+          IMPORTANT CONSTRAINT:
+          - DO NOT create questions that ask to write blocks of code
+          - Focus on explanations, comparisons, trade-offs, or architectural decisions
+          - Ask candidates to EXPLAIN or DESCRIBE concepts, not to IMPLEMENT code
 
           ${
             requirements.length > 0
