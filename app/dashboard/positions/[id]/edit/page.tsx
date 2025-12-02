@@ -1,5 +1,12 @@
 import { PositionForm } from "@/components/positions/position-form";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getPositionById } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -25,27 +32,23 @@ export default async function EditPositionPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <Card>
+      <CardHeader className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/dashboard/positions/${params.id}`}>
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
         <div>
-          <h1 className="font-bold text-3xl">Modifica Posizione</h1>
-          <p className="text-muted-foreground">
-            Modifica i dettagli della posizione &ldquo;{position.title}&rdquo;
-          </p>
+          <CardTitle className="text-2xl"> Posizione</CardTitle>
+          <CardDescription>
+            Modifica i dettagli della posizione&ldquo;{position.title}&rdquo;
+          </CardDescription>
         </div>
-      </div>
-
-      <div className="max-w-2xl">
-        <div className="p-6 border rounded-md">
-          <h2 className="mb-4 font-semibold text-xl">Dettagli posizione</h2>
-          <PositionForm position={position} />
-        </div>
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <PositionForm position={position} />
+      </CardContent>
+    </Card>
   );
 }
