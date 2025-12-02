@@ -6,9 +6,14 @@ import { Plus, Users } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
-export default async function Candidates({ id }: { id: string }) {
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function Candidates({ params }: Props) {
   "use cache";
   cacheLife("hours");
+  const { id } = await params;
   cacheTag(`positions-${id}`);
   const candidates = await getCandidatesByPosition(id);
 

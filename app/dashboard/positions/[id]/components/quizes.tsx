@@ -5,9 +5,14 @@ import { Plus } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
-export default async function Quizes({ id }: { id: string }) {
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function Quizes({ params }: Props) {
   "use cache";
   cacheLife("hours");
+  const { id } = await params;
   cacheTag(`positions-${id}`);
   const quizzes = await getQuizzesForPosition(id);
 
