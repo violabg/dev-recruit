@@ -74,6 +74,22 @@ export const useEditQuizForm = ({
     name: "questions",
   });
 
+  // Reset form after initial mount to establish clean baseline for dirty tracking
+  // useFieldArray modifies the form state by adding internal 'id' fields, which can make isDirty true
+  useEffect(() => {
+    // Small delay to ensure useFieldArray has finished initializing
+    const timeoutId = setTimeout(() => {
+      form.reset(form.getValues(), {
+        keepValues: true,
+        keepDirty: false,
+        keepDefaultValues: false,
+      });
+    }, 0);
+    return () => clearTimeout(timeoutId);
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const createEmptyQuestion = (type: QuestionType): FlexibleQuestion => {
     const base = {
       id: generateId(),

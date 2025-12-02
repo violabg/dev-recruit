@@ -187,6 +187,12 @@ export const QuestionItem = ({
                   if (result?.success) {
                     // Remove from form state after successful deletion
                     onRemove(actualIndex);
+                    // Reset form with current values (after removal) to clear dirty state
+                    // Use setTimeout to ensure the removal has been processed
+                    setTimeout(() => {
+                      const currentValues = form.getValues();
+                      form.reset(currentValues);
+                    }, 0);
                   }
                   return result;
                 }}
