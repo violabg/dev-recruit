@@ -56,7 +56,7 @@ export async function QuizResultsContent({ params }: Props) {
               >
                 <td className="p-2">
                   <Link
-                    href={`/dashboard/interviews/${interview.id}`}
+                    href={`/dashboard/candidates/${interview.candidateId}`}
                     className="text-primary hover:underline"
                   >
                     {interview.candidateName}
@@ -95,9 +95,7 @@ export async function QuizResultsContent({ params }: Props) {
                 </td>
                 <td className="p-2 text-center">
                   <Button variant="ghost" size="icon" asChild>
-                    <Link
-                      href={`/dashboard/candidates/${interview.candidateId}`}
-                    >
+                    <Link href={`/dashboard/interviews/${interview.id}`}>
                       <Eye className="size-4 text-primary" />
                     </Link>
                   </Button>
