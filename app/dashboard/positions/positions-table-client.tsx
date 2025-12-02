@@ -5,7 +5,7 @@ import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { deletePosition } from "@/lib/actions/positions";
 import { formatDate } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Position = {
   id: string;
@@ -20,21 +20,17 @@ type PositionsTableClientProps = {
 };
 
 export function PositionsTableClient({ positions }: PositionsTableClientProps) {
-  const router = useRouter();
-
-  const handleRowClick = (id: string) => {
-    router.push(`/dashboard/positions/${id}`);
-  };
-
   return (
     <>
       {positions.map((position) => (
-        <TableRow
-          key={position.id}
-          className="cursor-pointer"
-          onClick={() => handleRowClick(position.id)}
-        >
-          <TableCell className="font-medium">{position.title}</TableCell>
+        <TableRow key={position.id} className="group relative">
+          <TableCell className="font-medium">
+            <Link
+              href={`/dashboard/positions/${position.id}`}
+              className="absolute inset-0"
+            />
+            {position.title}
+          </TableCell>
           <TableCell>
             <Badge variant="outline">{position.experienceLevel}</Badge>
           </TableCell>
@@ -51,10 +47,7 @@ export function PositionsTableClient({ positions }: PositionsTableClientProps) {
             </div>
           </TableCell>
           <TableCell>{formatDate(position.createdAt)}</TableCell>
-          <TableCell
-            className="text-right"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <TableCell className="z-10 relative text-right">
             <EntityActionsMenu
               entityId={position.id}
               editHref={`/dashboard/positions/${position.id}/edit`}
