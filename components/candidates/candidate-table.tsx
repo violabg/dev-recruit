@@ -14,7 +14,6 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ArrowUpDown, FileText, Link2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { EntityActionsMenu } from "../ui/entity-actions-menu";
 import { CandidateStatusBadge } from "./candidate-status-badge";
 
@@ -30,12 +29,6 @@ function getFullName(firstName: string, lastName: string): string {
 
 // Candidate table component
 export function CandidateTable({ candidates }: CandidateTableProps) {
-  const router = useRouter();
-
-  const handleRowClick = (id: string) => {
-    router.push(`/dashboard/candidates/${id}`);
-  };
-
   return (
     <div className="border rounded-md">
       <Table>
@@ -56,12 +49,12 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
         </TableHeader>
         <TableBody>
           {candidates.map((candidate) => (
-            <TableRow
-              key={candidate.id}
-              className="cursor-pointer"
-              onClick={() => handleRowClick(candidate.id)}
-            >
+            <TableRow key={candidate.id} className="group relative">
               <TableCell className="font-medium">
+                <Link
+                  href={`/dashboard/candidates/${candidate.id}`}
+                  className="absolute inset-0"
+                />
                 {getFullName(candidate.firstName, candidate.lastName)}
               </TableCell>
               <TableCell>{candidate.email}</TableCell>
@@ -90,10 +83,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                     locale: it,
                   })}
               </TableCell>
-              <TableCell
-                className="text-right"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <TableCell className="z-10 relative text-right">
                 <EntityActionsMenu
                   entityId={candidate.id}
                   editHref={`/dashboard/candidates/${candidate.id}/edit`}

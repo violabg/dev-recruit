@@ -20,19 +20,13 @@ import { deletePresetAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
 import { Settings2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type PresetsTableProps = {
   presets: Preset[];
 };
 
 export function PresetsTable({ presets }: PresetsTableProps) {
-  const router = useRouter();
-
-  const handleRowClick = (id: string) => {
-    router.push(`/dashboard/presets/${id}`);
-  };
-
   return (
     <>
       <div className="border rounded-lg">
@@ -67,12 +61,12 @@ export function PresetsTable({ presets }: PresetsTableProps) {
               presets.map((preset) => {
                 const Icon = getPresetIcon(preset.icon);
                 return (
-                  <TableRow
-                    key={preset.id}
-                    className="cursor-pointer"
-                    onClick={() => handleRowClick(preset.id!)}
-                  >
+                  <TableRow key={preset.id} className="group relative">
                     <TableCell>
+                      <Link
+                        href={`/dashboard/presets/${preset.id}`}
+                        className="absolute inset-0"
+                      />
                       <div className="flex items-center gap-3">
                         <Icon
                           className="size-5 text-primary"
@@ -114,10 +108,7 @@ export function PresetsTable({ presets }: PresetsTableProps) {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell
-                      className="text-right"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <TableCell className="z-10 relative text-right">
                       <EntityActionsMenu
                         entityId={preset.id!}
                         editHref={`/dashboard/presets/${preset.id}/edit`}

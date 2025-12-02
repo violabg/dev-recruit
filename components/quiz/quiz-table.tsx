@@ -16,19 +16,12 @@ import { Quiz } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
 import { ArrowUpDown, Clock, Link2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 interface QuizTableProps {
   quizzes: Quiz[];
 }
 
 export function QuizTable({ quizzes }: QuizTableProps) {
-  const router = useRouter();
-
-  const handleRowClick = (id: string) => {
-    router.push(`/dashboard/quizzes/${id}`);
-  };
-
   return (
     <div className="border rounded-md">
       <Table>
@@ -49,12 +42,14 @@ export function QuizTable({ quizzes }: QuizTableProps) {
         </TableHeader>
         <TableBody>
           {quizzes.map((quiz) => (
-            <TableRow
-              key={quiz.id}
-              className="cursor-pointer"
-              onClick={() => handleRowClick(quiz.id)}
-            >
-              <TableCell className="font-medium">{quiz.title}</TableCell>
+            <TableRow key={quiz.id} className="group relative">
+              <TableCell className="font-medium">
+                <Link
+                  href={`/dashboard/quizzes/${quiz.id}`}
+                  className="absolute inset-0"
+                />
+                {quiz.title}
+              </TableCell>
               <TableCell>
                 {quiz.positions ? (
                   <div className="flex flex-col gap-1">
@@ -87,10 +82,7 @@ export function QuizTable({ quizzes }: QuizTableProps) {
                 )}
               </TableCell>
               <TableCell>{formatDate(quiz.createdAt)}</TableCell>
-              <TableCell
-                className="text-right"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <TableCell className="z-10 relative text-right">
                 <EntityActionsMenu
                   entityId={quiz.id}
                   editHref={`/dashboard/quizzes/${quiz.id}/edit`}

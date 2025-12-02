@@ -31,7 +31,7 @@ import {
   MessageSquareText,
   XCircle,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -68,7 +68,6 @@ const statusConfig = {
 };
 
 export function InterviewsTable({ interviews }: InterviewsTableProps) {
-  const router = useRouter();
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const copyInterviewLink = async (token: string) => {
@@ -124,14 +123,12 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                 const StatusIcon = statusInfo?.icon || Clock;
 
                 return (
-                  <TableRow
-                    key={interview.id}
-                    className="cursor-pointer"
-                    onClick={() =>
-                      router.push(`/dashboard/interviews/${interview.id}`)
-                    }
-                  >
+                  <TableRow key={interview.id} className="group relative">
                     <TableCell className="font-medium">
+                      <Link
+                        href={`/dashboard/interviews/${interview.id}`}
+                        className="absolute inset-0"
+                      />
                       {interview.candidateName || "N/A"}
                     </TableCell>
                     <TableCell>
@@ -186,10 +183,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                         {statusInfo?.label || interview.status}
                       </Badge>
                     </TableCell>
-                    <TableCell
-                      className="text-right"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <TableCell className="z-10 relative text-right">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>

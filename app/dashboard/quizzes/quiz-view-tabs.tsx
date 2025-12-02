@@ -32,7 +32,8 @@ export function QuizViewTabs({
         params.set("view", value);
       }
       const queryString = params.toString();
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+      const url = queryString ? `${pathname}?${queryString}` : pathname;
+      router.replace(url as "/dashboard/quizzes");
     },
     [router, pathname, searchParams]
   );
