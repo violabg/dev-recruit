@@ -5,7 +5,12 @@ import { formatDate } from "@/lib/utils";
 import { Eye, Link2 } from "lucide-react";
 import Link from "next/link";
 
-export async function QuizResultsContent({ quizId }: { quizId: string }) {
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function QuizResultsContent({ params }: Props) {
+  const { id: quizId } = await params;
   const interviews = await getInterviewsByQuiz(quizId);
 
   if (interviews.length === 0) {

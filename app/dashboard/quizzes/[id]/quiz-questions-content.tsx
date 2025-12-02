@@ -8,8 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuizById } from "@/lib/data/quizzes";
 
-export async function QuizQuestionsContent({ quizId }: { quizId: string }) {
-  const quiz = await getQuizById(quizId);
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function QuizQuestionsContent({ params }: Props) {
+  const { id } = await params;
+  const quiz = await getQuizById(id);
 
   if (!quiz || !quiz.questions.length) {
     return (

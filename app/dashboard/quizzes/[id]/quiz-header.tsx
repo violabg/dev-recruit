@@ -7,8 +7,13 @@ import { ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
 import { QuizDetailActionsClient } from "./quiz-detail-actions-client";
 
-export async function QuizHeader({ quizId }: { quizId: string }) {
-  const quiz = await getQuizById(quizId);
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function QuizHeader({ params }: Props) {
+  const { id } = await params;
+  const quiz = await getQuizById(id);
 
   if (!quiz) {
     return (

@@ -1,8 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuizById } from "@/lib/data/quizzes";
 
-export async function QuizSettingsContent({ quizId }: { quizId: string }) {
-  const quiz = await getQuizById(quizId);
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function QuizSettingsContent({ params }: Props) {
+  const { id } = await params;
+  const quiz = await getQuizById(id);
 
   if (!quiz) {
     return null;
