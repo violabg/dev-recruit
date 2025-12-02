@@ -1,5 +1,16 @@
 import { PresetForm } from "@/components/presets/preset-form";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getPresetAction } from "@/lib/actions/presets";
+import { ArrowLeft } from "lucide-react";
+import { Route } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 type EditPresetPageProps = {
@@ -17,16 +28,28 @@ export default async function EditPresetPage({ params }: EditPresetPageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-bold text-3xl tracking-tight">Modifica preset</h1>
-        <p className="mt-2 text-muted-foreground">
-          Aggiorna la configurazione di questo preset prima di riutilizzarlo nei
-          tuoi colloqui.
-        </p>
-      </div>
-
-      <PresetForm preset={result.preset} />
-    </div>
+    <Card>
+      <CardHeader className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link
+            href={
+              `/dashboard/presets/${result.preset.id}` as Route<`/dashboard/presets/${string}`>
+            }
+          >
+            <ArrowLeft className="size-4" />
+          </Link>
+        </Button>
+        <div>
+          <CardTitle className="text-2xl">Modifica preset</CardTitle>
+          <CardDescription>
+            Aggiorna la configurazione di questo preset prima di riutilizzarlo
+            nei tuoi colloqui.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <PresetForm preset={result.preset} />
+      </CardContent>
+    </Card>
   );
 }
