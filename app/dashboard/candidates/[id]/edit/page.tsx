@@ -1,8 +1,17 @@
 import { CandidateForm } from "@/components/candidates/candidate-form";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   getCandidatePositions,
   getCandidateWithDetails,
 } from "@/lib/data/candidates";
+import { ArrowLeft } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -51,46 +60,40 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
   const positionOptions = positions || [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex justify-between items-start gap-4">
-          <div>
-            <h1 className="font-bold text-3xl">Modifica candidato</h1>
-            <p className="text-muted-foreground">
-              Aggiorna i dati per mantenere le informazioni sincronizzate.
-            </p>
-          </div>
-          <div className="text-right">
-            <Link
-              href={
-                `/dashboard/candidates/${candidate.id}` as Route<`/dashboard/candidates/${string}`>
-              }
-              className="font-semibold text-primary text-sm"
-            >
-              Vai al profilo
-            </Link>
-          </div>
+    <Card>
+      <CardHeader className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link
+            href={
+              `/dashboard/candidates/${candidate.id}` as Route<`/dashboard/candidates/${string}`>
+            }
+          >
+            <ArrowLeft className="size-4" />
+          </Link>
+        </Button>
+        <div>
+          <CardTitle className="text-2xl">Modifica Candidato</CardTitle>
+          <CardDescription>
+            Aggiorna i dati per mantenere le informazioni sincronizzate.
+          </CardDescription>
         </div>
-      </div>
-      <div className="max-w-xl">
-        <div className="p-6 border rounded-md">
-          <h2 className="mb-4 font-semibold text-xl">Dati candidato</h2>
-          <CandidateForm
-            mode="edit"
-            positions={positionOptions}
-            candidate={{
-              id: candidate.id,
-              firstName: candidate.firstName,
-              lastName: candidate.lastName,
-              email: candidate.email,
-              dateOfBirth: candidate.dateOfBirth,
-              positionId: candidate.positionId,
-              status: candidate.status,
-              resumeUrl: candidate.resumeUrl,
-            }}
-          />
-        </div>
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <CandidateForm
+          mode="edit"
+          positions={positionOptions}
+          candidate={{
+            id: candidate.id,
+            firstName: candidate.firstName,
+            lastName: candidate.lastName,
+            email: candidate.email,
+            dateOfBirth: candidate.dateOfBirth,
+            positionId: candidate.positionId,
+            status: candidate.status,
+            resumeUrl: candidate.resumeUrl,
+          }}
+        />
+      </CardContent>
+    </Card>
   );
 }
