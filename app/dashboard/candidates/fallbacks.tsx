@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 export const StatsSkeleton = () => (
   <div className="gap-4 grid md:grid-cols-4">
@@ -24,23 +18,12 @@ export const StatsSkeleton = () => (
 );
 
 export const FiltersSkeleton = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>
-        <Skeleton className="w-32 h-4" />
-      </CardTitle>
-      <CardDescription>
-        <Skeleton className="w-40 h-3" />
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="flex flex-col gap-4">
-        {Array.from({ length: 1 }).map((_, index) => (
-          <Skeleton key={index} className="w-full h-12" />
-        ))}
-      </div>
-    </CardContent>
-  </Card>
+  <div className="flex md:flex-row flex-col gap-4">
+    <Skeleton className="flex-1 h-10" />
+    <Skeleton className="w-full md:w-[180px] h-10" />
+    <Skeleton className="w-full md:w-[180px] h-10" />
+    <Skeleton className="w-full md:w-[180px] h-10" />
+  </div>
 );
 
 export const CandidatesListSkeleton = () => (

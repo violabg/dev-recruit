@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { InterviewsSkeleton } from "@/app/dashboard/fallbacks";
+import { InterviewsSkeleton } from "./fallbacks";
 import {
   InterviewsRuntimeSection,
   type InterviewsSearchParams,

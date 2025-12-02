@@ -9,7 +9,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   DEFAULT_PAGE_SIZE,
   UrlPagination,
@@ -19,6 +18,7 @@ import { type Preset } from "@/lib/data/presets";
 import { Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { PresetsListSkeleton } from "./fallbacks";
 import { SearchPresets } from "./search-presets";
 
 type PresetsSearchParams = Promise<{
@@ -134,17 +134,7 @@ export default async function PresetsPage({
         </Button>
       </div>
 
-      <Suspense
-        fallback={
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <Skeleton className="w-full h-10" />
-              <Skeleton className="w-full h-10" />
-              <Skeleton className="w-full h-10" />
-            </CardContent>
-          </Card>
-        }
-      >
+      <Suspense fallback={<PresetsListSkeleton />}>
         <PresetsContent searchParams={searchParams} />
       </Suspense>
     </div>

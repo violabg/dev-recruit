@@ -7,52 +7,6 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const InterviewsSkeleton = () => (
-  <div className="space-y-6">
-    <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <Card key={index} className="animate-pulse">
-          <CardHeader className="flex flex-row justify-between items-center pb-2">
-            <CardTitle>
-              <Skeleton className="w-20 h-4" />
-            </CardTitle>
-            <Skeleton className="size-4" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="mb-2 w-16 h-8" />
-            <Skeleton className="w-24 h-3" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-
-    <div className="space-y-4 p-4 border rounded-md">
-      <Skeleton className="w-full h-10" />
-      <Skeleton className="w-full h-10" />
-      <Skeleton className="w-full h-10" />
-    </div>
-
-    <Card className="animate-pulse">
-      <CardHeader>
-        <CardTitle>
-          <Skeleton className="w-32 h-5" />
-        </CardTitle>
-        <CardDescription>
-          <Skeleton className="w-48 h-4" />
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="flex justify-between items-center">
-            <Skeleton className="w-32 h-4" />
-            <Skeleton className="w-24 h-4" />
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  </div>
-);
-
 export function DashboardStatsSkeleton() {
   return (
     <Card className="animate-pulse">
