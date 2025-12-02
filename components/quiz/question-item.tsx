@@ -20,15 +20,8 @@ import {
 } from "@/lib/actions/questions";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
-import { getQuestionTypeLabel, SaveStatus } from "@/lib/utils/quiz-form-utils";
-import {
-  ChevronDown,
-  ChevronUp,
-  Heart,
-  Save,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { getQuestionTypeLabel } from "@/lib/utils/quiz-form-utils";
+import { ChevronDown, ChevronUp, Heart, Sparkles, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
@@ -47,10 +40,7 @@ type QuestionItemProps = {
   onRegenerate: (index: number) => void;
   onRemove: (index: number) => void;
   aiLoading: boolean;
-  // Section-specific save props
   hasQuestionChanges: boolean;
-  onSaveQuestion: () => void;
-  questionSaveStatus: SaveStatus;
 };
 
 export const QuestionItem = ({
@@ -64,8 +54,6 @@ export const QuestionItem = ({
   onRemove,
   aiLoading,
   hasQuestionChanges,
-  onSaveQuestion,
-  questionSaveStatus,
 }: QuestionItemProps) => {
   // Track local optimistic update state for favorite toggle
   // null means use the field value, boolean means we have a pending/optimistic update
@@ -111,10 +99,13 @@ export const QuestionItem = ({
       className={cn(
         "relative pt-0 overflow-hidden transition-all duration-200",
         hasQuestionChanges
-          ? "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] dark:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
+          ? "border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.15)] dark:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
           : "hover:border-primary/50 border-muted",
         isExpanded
-          ? "ring-1 ring-primary/10 shadow-md border-primary/20"
+          ? cn(
+              "shadow-md ring-1 ring-primary/10",
+              !hasQuestionChanges && "border-primary/20"
+            )
           : "shadow-sm"
       )}
     >
@@ -141,36 +132,6 @@ export const QuestionItem = ({
             </Badge>
           </div>
           <div className="flex items-center space-x-1">
-            {/* Save button in header - visible when changes exist */}
-            {(hasQuestionChanges || questionSaveStatus !== "idle") && (
-              <Button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSaveQuestion();
-                }}
-                disabled={questionSaveStatus === "saving"}
-                size="sm"
-                className={cn(
-                  "mr-2 px-3 h-8 transition-all",
-                  questionSaveStatus === "success"
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : questionSaveStatus === "error"
-                    ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                    : "bg-amber-600 hover:bg-amber-700 text-white"
-                )}
-              >
-                <Save className="mr-1.5 w-3.5 h-3.5" />
-                {questionSaveStatus === "saving"
-                  ? "Salvataggio..."
-                  : questionSaveStatus === "success"
-                  ? "Salvato"
-                  : questionSaveStatus === "error"
-                  ? "Errore"
-                  : "Salva"}
-              </Button>
-            )}
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -311,34 +272,6 @@ export const QuestionItem = ({
               )}
             </div>
           </div>
-
-          {(hasQuestionChanges || questionSaveStatus !== "idle") && (
-            <div className="bottom-0 z-10 sticky flex justify-end bg-background shadow-sm -mx-6 mt-6 -mb-6 p-4 border-t rounded-b-xl">
-              <Button
-                type="button"
-                onClick={onSaveQuestion}
-                disabled={questionSaveStatus === "saving"}
-                size="sm"
-                className={cn(
-                  "shadow-sm",
-                  questionSaveStatus === "success"
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : questionSaveStatus === "error"
-                    ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                    : "bg-amber-600 hover:bg-amber-700 text-white"
-                )}
-              >
-                <Save className="mr-2 size-4" />
-                {questionSaveStatus === "saving"
-                  ? "Salvataggio in corso..."
-                  : questionSaveStatus === "success"
-                  ? "Modifiche salvate"
-                  : questionSaveStatus === "error"
-                  ? "Errore salvataggio"
-                  : "Salva modifiche"}
-              </Button>
-            </div>
-          )}
         </CardContent>
       )}
     </Card>

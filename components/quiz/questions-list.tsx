@@ -1,8 +1,6 @@
 "use client";
 
 import { questionSchemas } from "@/lib/schemas";
-import { SaveStatus } from "@/lib/utils/quiz-form-utils";
-import { useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod/v4";
 import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
@@ -22,13 +20,7 @@ type QuestionsListProps = {
   onRegenerate: (index: number) => void;
   onRemove: (index: number) => void;
   aiLoading: boolean;
-  // Section-specific save props
   hasQuestionChanges: (index: number) => boolean;
-  onSaveQuestion: (index: number) => void;
-  sectionSaveStatus: {
-    settings: SaveStatus;
-    questions: Record<string, SaveStatus>;
-  };
 };
 
 export const QuestionsList = ({
@@ -43,15 +35,8 @@ export const QuestionsList = ({
   onRemove,
   aiLoading,
   hasQuestionChanges,
-  onSaveQuestion,
-  sectionSaveStatus,
 }: QuestionsListProps) => {
   form.watch("questions");
-  // Create stable callback for saving questions
-  const handleSaveQuestion = useCallback(
-    (index: number) => () => onSaveQuestion(index),
-    [onSaveQuestion]
-  );
 
   if (filteredQuestions.length === 0) {
     return (
@@ -82,8 +67,6 @@ export const QuestionsList = ({
             onRemove={onRemove}
             aiLoading={aiLoading}
             hasQuestionChanges={hasQuestionChanges(actualIndex)}
-            onSaveQuestion={handleSaveQuestion(actualIndex)}
-            questionSaveStatus={sectionSaveStatus.questions[field.id] || "idle"}
           />
         );
       })}

@@ -1,11 +1,16 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
+import { getSaveButtonContent } from "@/lib/utils/quiz-form-utils";
+import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { useAIGeneration } from "../../hooks/use-ai-generation";
 import {
-  EditQuizFormData,
+  type EditQuizFormData,
   SaveQuizResult,
   useEditQuizForm,
 } from "../../hooks/use-edit-quiz-form";
@@ -16,6 +21,18 @@ import { PresetGenerationButtons } from "./preset-generation-buttons";
 import { QuestionsHeader } from "./questions-header";
 import { QuestionsList } from "./questions-list";
 import { QuizSettings } from "./quiz-settings";
+
+const _: EditQuizFormData = {
+  title: "string",
+  timeLimit: 0,
+  questions: [
+    {
+      type: "code_snippet" as const,
+      question: "string",
+    },
+  ],
+};
+// to avoid unused type error
 
 type EditQuizFormProps = {
   quiz: QuizForEdit;
@@ -35,6 +52,8 @@ export function EditQuizForm({
   mode = "edit",
   onSaveSuccess,
 }: EditQuizFormProps) {
+  const router = useRouter();
+
   // Form management
   const {
     form,
@@ -45,12 +64,26 @@ export function EditQuizForm({
     update,
     handleSave,
     saveStatus,
-    handleSaveQuestion,
-    hasQuestionChanges,
-    sectionSaveStatus,
     addBlankQuestion,
     isDirty,
+    hasQuestionChanges,
   } = useEditQuizForm({ quiz, position, mode, onSaveSuccess });
+
+  const handleCancel = () => {
+    if (isDirty) {
+      const confirmed = window.confirm(
+        "Hai modifiche non salvate. Sei sicuro di voler abbandonare la pagina?"
+      );
+      if (!confirmed) return;
+      // Reset form to prevent popstate handler from blocking navigation
+      form.reset();
+    }
+    if (mode === "edit") {
+      router.push(`/dashboard/quizzes/${quiz.id}`);
+    } else {
+      router.push(`/dashboard/quizzes`);
+    }
+  };
 
   // Question management
   const {
@@ -151,16 +184,6 @@ export function EditQuizForm({
     [setRegeneratingQuestionIndex]
   );
 
-  // Create a wrapper function for question saving with validation
-  const handleQuestionSaveWithValidation = useCallback(
-    (index: number) => {
-      return form.handleSubmit((data: EditQuizFormData) =>
-        handleSaveQuestion(index, data)
-      )();
-    },
-    [form, handleSaveQuestion]
-  );
-
   return (
     <>
       <FormProvider<EditQuizFormData> {...form}>
@@ -172,10 +195,8 @@ export function EditQuizForm({
           {/* Quiz Settings */}
           <QuizSettings
             form={form}
-            saveStatus={saveStatus}
             onGenerateFullQuiz={() => setFullQuizDialogOpen(true)}
             aiLoading={aiLoading}
-            isDirty={isDirty}
           />
 
           {/* Smart Question Presets */}
@@ -208,10 +229,44 @@ export function EditQuizForm({
               onRemove={remove}
               aiLoading={aiLoading}
               hasQuestionChanges={hasQuestionChanges}
-              onSaveQuestion={handleQuestionSaveWithValidation}
-              sectionSaveStatus={sectionSaveStatus}
             />
           </div>
+
+          {/* Sticky Save Bar - visible only when form is dirty */}
+          {isDirty && (
+            <div className="right-0 bottom-0 left-0 z-50 fixed flex justify-center items-center gap-4 bg-background/95 supports-backdrop-filter:bg-background/80 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)] backdrop-blur px-6 py-4 border-t">
+              <div className="flex items-center gap-3">
+                <span className="font-medium text-amber-600 dark:text-amber-500 text-sm animate-pulse">
+                  Modifiche non salvate
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancel}
+                  disabled={saveStatus === "saving"}
+                >
+                  <X className="mr-1.5 size-4" />
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={saveStatus === "saving"}
+                  className={cn(
+                    "transition-all",
+                    saveStatus === "success"
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : saveStatus === "error"
+                      ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                      : "bg-amber-600 hover:bg-amber-700 text-white"
+                  )}
+                >
+                  {getSaveButtonContent(saveStatus)}
+                </Button>
+              </div>
+            </div>
+          )}
         </form>
       </FormProvider>
 
