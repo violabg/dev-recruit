@@ -27,6 +27,7 @@ import {
   submitAnswer,
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
+import { InterviewStatus } from "@/lib/schemas";
 import { AlertTriangle, BrainCircuit } from "lucide-react";
 import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -36,7 +37,7 @@ type InterviewAnswer = string | { code: string } | null;
 
 type InterviewRecord = {
   token: string;
-  status: "pending" | "in_progress" | "completed";
+  status: InterviewStatus;
   answers: Record<string, InterviewAnswer> | null;
   startedAt: string | null;
 };

@@ -450,7 +450,7 @@ type InterviewAnswer = string | { code: string } | null;
 export type InterviewByTokenResult = {
   interview: {
     token: string;
-    status: "pending" | "in_progress" | "completed";
+    status: InterviewStatus;
     answers: Record<string, InterviewAnswer> | null;
     startedAt: string | null;
   };
@@ -521,11 +521,17 @@ export const getInterviewByToken = async (
   };
 };
 
+export type InterviewStatus =
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
 export type InterviewDetailResult = {
   interview: {
     id: string;
     token: string;
-    status: "pending" | "in_progress" | "completed" | "cancelled";
+    status: InterviewStatus;
     startedAt: string | null;
     completedAt: string | null;
     createdAt: string;
@@ -675,7 +681,7 @@ export const getRecentInterviewIds = async (limit = 100): Promise<string[]> => {
 
 export async function getFilteredInterviews(filters: {
   search?: string;
-  status?: string;
+  status?: InterviewStatus | "all";
   positionId?: string;
   programmingLanguage?: string;
   page?: number;

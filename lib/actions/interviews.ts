@@ -5,7 +5,7 @@ import { candidateQuizSelectionSchema } from "@/lib/schemas";
 import { generateInterviewToken } from "@/lib/utils/token";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
-import { Prisma } from "../prisma/client";
+import { InterviewStatus, Prisma } from "../prisma/client";
 import { invalidateInterviewCache } from "../utils/cache-utils";
 
 /**
@@ -15,7 +15,7 @@ import { invalidateInterviewCache } from "../utils/cache-utils";
 export async function getInterviews(
   filters: {
     search?: string;
-    status?: string;
+    status?: InterviewStatus | "all";
     positionId?: string;
     programmingLanguage?: string;
     page?: number;

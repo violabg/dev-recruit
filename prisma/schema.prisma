@@ -166,22 +166,29 @@ model Quiz {
 }
 
 model Interview {
-  id          String    @id @default(cuid())
+  id          String          @id @default(cuid())
   candidateId String
   quizId      String
-  status      String    @default("pending")
+  status      InterviewStatus @default(pending)
   startedAt   DateTime?
   completedAt DateTime?
   score       Float?
   answers     Json?
-  token       String    @unique
-  createdAt   DateTime  @default(now())
+  token       String          @unique
+  createdAt   DateTime        @default(now())
 
   candidate  Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   quiz       Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
   evaluation Evaluation?
 
   @@map("interviews")
+}
+
+enum InterviewStatus {
+  pending
+  in_progress
+  completed
+  cancelled
 }
 
 // Reusable questions entity
