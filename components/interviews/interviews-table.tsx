@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { InterviewListItem } from "@/lib/data/interviews";
+import { isInterviewExpired } from "@/lib/utils/interview-utils";
 import {
   CheckCircle,
   Clock,
@@ -118,8 +119,22 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
               </TableRow>
             ) : (
               interviews.map((interview) => {
+                let status = interview.status;
+
+                // If the interview has been started but not completed, and the time
+                // limit for the quiz has passed, treat it as cancelled (display only)
+                if (
+                  isInterviewExpired(
+                    interview.startedAt,
+                    interview.completedAt,
+                    interview.quizTimeLimit
+                  )
+                ) {
+                  status = "cancelled";
+                }
+
                 const statusInfo =
-                  statusConfig[interview.status as keyof typeof statusConfig];
+                  statusConfig[status as keyof typeof statusConfig];
                 const StatusIcon = statusInfo?.icon || Clock;
 
                 return (
@@ -180,7 +195,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                         className="flex items-center gap-1 w-fit"
                       >
                         <StatusIcon className="size-3" />
-                        {statusInfo?.label || interview.status}
+                        {statusInfo?.label || status}
                       </Badge>
                     </TableCell>
                     <TableCell className="z-10 relative text-right">

@@ -182,6 +182,35 @@ export async function deleteInterview(id: string) {
   return { success: true };
 }
 
+export async function cancelInterviewById(id: string) {
+  const user = await requireUser();
+
+  const interview = await prisma.interview.findUnique({
+    where: { id },
+    select: { id: true, status: true },
+  });
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  if (interview.status === "completed" || interview.status === "cancelled") {
+    return { success: true, message: "No action needed" };
+  }
+
+  await prisma.interview.update({
+    where: { id },
+    data: {
+      status: "cancelled",
+      completedAt: new Date(),
+    },
+  });
+
+  invalidateInterviewCache({ interviewId: id });
+
+  return { success: true };
+}
+
 export type AssignCandidatesToQuizState = {
   message: string;
   errors?: {

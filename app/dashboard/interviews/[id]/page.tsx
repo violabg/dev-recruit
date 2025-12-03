@@ -1,3 +1,4 @@
+import { InterviewExpiryChecker } from "@/components/interviews/interview-expiry-checker";
 import { InterviewResults } from "@/components/recruting/interview-results";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,14 @@ export default async function InterviewDetailPage({
 
   return (
     <div className="space-y-6">
+      {/* Client-side expiry checker - only triggers for in_progress interviews */}
+      <InterviewExpiryChecker
+        interviewId={interview.id}
+        status={interview.status}
+        startedAt={interview.startedAt}
+        timeLimit={quiz.timeLimit}
+      />
+
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/dashboard/quizzes/${quiz.id}`}>
@@ -87,6 +96,8 @@ export default async function InterviewDetailPage({
               variant={
                 interview.status === "pending"
                   ? "outline"
+                  : interview.status === "cancelled"
+                  ? "destructive"
                   : interview.status === "completed"
                   ? "default"
                   : interview.status === "in_progress"
@@ -96,6 +107,8 @@ export default async function InterviewDetailPage({
             >
               {interview.status === "pending"
                 ? "In attesa"
+                : interview.status === "cancelled"
+                ? "Annullato"
                 : interview.status === "completed"
                 ? "Completato"
                 : interview.status === "in_progress"

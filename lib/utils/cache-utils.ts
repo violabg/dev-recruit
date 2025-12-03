@@ -172,6 +172,7 @@ export function invalidateCandidateCache(options?: {
 
 /**
  * Invalidate interview cache after create/update/delete operations
+ * Use this in Server Actions only. For Route Handlers, use invalidateInterviewCacheInRouteHandler.
  */
 export function invalidateInterviewCache(options?: {
   interviewId?: string;
@@ -181,6 +182,31 @@ export function invalidateInterviewCache(options?: {
 
   if (options?.interviewId) {
     updateTag(entityTag.interview(options.interviewId));
+    revalidatePath(`/dashboard/interviews/${options.interviewId}`);
+  }
+
+  if (options?.quizId) {
+    revalidatePath(`/dashboard/quizzes/${options.quizId}`);
+    revalidatePath(`/dashboard/quizzes/${options.quizId}/invite`);
+  }
+
+  revalidatePath("/dashboard/interviews");
+}
+
+/**
+ * Invalidate interview cache from Route Handlers (uses revalidateTag instead of updateTag)
+ * Use this in Route Handlers (app/api/*). For Server Actions, use invalidateInterviewCache.
+ *
+ * Uses { expire: 0 } for immediate expiration since we want the new data to show right away.
+ */
+export function invalidateInterviewCacheInRouteHandler(options?: {
+  interviewId?: string;
+  quizId?: string;
+}) {
+  revalidateTag(CacheTags.INTERVIEWS, { expire: 0 });
+
+  if (options?.interviewId) {
+    revalidateTag(entityTag.interview(options.interviewId), { expire: 0 });
     revalidatePath(`/dashboard/interviews/${options.interviewId}`);
   }
 

@@ -51,6 +51,7 @@ type InterviewWithFullRelations = Prisma.InterviewGetPayload<{
         id: true;
         title: true;
         positionId: true;
+        timeLimit: true;
         position: {
           select: { id: true; title: true; skills: true };
         };
@@ -81,6 +82,7 @@ export type InterviewListItem = {
   candidateEmail: string;
   quizId: string;
   quizTitle: string;
+  quizTimeLimit: number;
   positionId: string | null;
   positionTitle: string | null;
   positionSkills: string[];
@@ -219,6 +221,7 @@ export const mapInterviewListItem = (
     candidateEmail: record.candidate?.email ?? "",
     quizId: record.quizId,
     quizTitle: record.quiz?.title ?? "",
+    quizTimeLimit: record.quiz?.timeLimit ?? 0,
     positionId: record.quiz?.position?.id ?? null,
     positionTitle: record.quiz?.position?.title ?? null,
     positionSkills: record.quiz?.position?.skills ?? [],
@@ -522,7 +525,7 @@ export type InterviewDetailResult = {
   interview: {
     id: string;
     token: string;
-    status: "pending" | "in_progress" | "completed";
+    status: "pending" | "in_progress" | "completed" | "cancelled";
     startedAt: string | null;
     completedAt: string | null;
     createdAt: string;
@@ -573,18 +576,11 @@ export const getInterviewDetail = async (
   const answers =
     (interview.answers as Record<string, InterviewAnswer> | null) ?? null;
 
-  const detailStatus =
-    interview.status === "pending" ||
-    interview.status === "in_progress" ||
-    interview.status === "completed"
-      ? interview.status
-      : "pending";
-
   return {
     interview: {
       id: interview.id,
       token: interview.token,
-      status: detailStatus,
+      status: interview.status,
       startedAt: interview.startedAt ? interview.startedAt.toISOString() : null,
       completedAt: interview.completedAt
         ? interview.completedAt.toISOString()
@@ -801,6 +797,7 @@ export async function getFilteredInterviews(filters: {
           id: true,
           title: true,
           positionId: true,
+          timeLimit: true,
           position: {
             select: {
               id: true,
