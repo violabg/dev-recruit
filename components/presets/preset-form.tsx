@@ -84,12 +84,6 @@ export function PresetForm({ preset }: PresetFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const parseListField = (value: string) =>
-    value
-      .split(/\n|,/)
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-
   const defaultValues: PresetFormValues = {
     name: preset?.name ?? "",
     label: preset?.label ?? "",
@@ -118,9 +112,6 @@ export function PresetForm({ preset }: PresetFormProps) {
   });
 
   const questionType = form.watch("questionType");
-  const evaluationCriteriaValue = (form.watch("evaluationCriteria") ?? []).join(
-    "\n"
-  );
 
   const onSubmit = (data: PresetFormValues) => {
     startTransition(async () => {
@@ -283,7 +274,6 @@ export function PresetForm({ preset }: PresetFormProps) {
       {questionType === "open_question" && (
         <div className="space-y-4 p-4 border rounded-lg">
           <h3 className="font-medium text-base">Opzioni domanda aperta</h3>
-
           <SelectField
             control={form.control}
             name="expectedResponseLength"
@@ -291,27 +281,13 @@ export function PresetForm({ preset }: PresetFormProps) {
             options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
             description="Lascia che l'AI sappia quanto dettagliata dovrebbe essere la risposta"
           />
-
-          <div>
-            <label className="font-medium text-sm">
-              Criteri di valutazione
-            </label>
-            <textarea
-              className="flex bg-background disabled:opacity-50 mt-2 px-3 py-2 border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full min-h-20 placeholder:text-muted-foreground text-base"
-              value={evaluationCriteriaValue}
-              onChange={(event) =>
-                form.setValue(
-                  "evaluationCriteria",
-                  parseListField(event.target.value),
-                  { shouldDirty: true, shouldValidate: true }
-                )
-              }
-              placeholder={"scalabilità\ntrade-offs\nsicurezza"}
-            />
-            <p className="mt-2 text-muted-foreground text-sm">
-              Un criterio per riga. Questi guideranno il rubric di punteggio.
-            </p>
-          </div>
+          <InputWithTagField
+            control={form.control}
+            name="evaluationCriteria"
+            label="Criteri di valutazione"
+            placeholder="Premi invio dopo ogni criterio"
+            description="Criteri per valutare le risposte aperte (es. correttezza, profondità, chiarezza). L'AI li userà per generare un rubric di punteggio."
+          />
         </div>
       )}
 
