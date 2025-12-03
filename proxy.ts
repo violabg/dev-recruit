@@ -8,17 +8,22 @@ export async function proxy(request: NextRequest) {
   });
   const { pathname } = request.nextUrl;
 
-  // condensed root handling and login redirect
+  // Root path handling: redirect authenticated users to dashboard
   if (pathname === "/") {
     return session?.user
       ? NextResponse.redirect(new URL("/dashboard", request.url))
       : NextResponse.next();
   }
 
+  // Protected routes: if user is not authenticated and not in auth paths, redirect
   if (!session?.user && !pathname.startsWith("/auth")) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    // Preserve the intended destination for redirect after login
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
+  // Allow request to continue
   return NextResponse.next();
 }
 

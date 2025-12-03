@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import Breadcrumbs from "@/components/dashboard/Breadcrumbs";
+import { SessionRefreshProvider } from "@/components/dashboard/session-refresh-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -18,6 +19,7 @@ export default async function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
+      <SessionRefreshProvider />
       <AppSidebar />
       {/* <SidebarInset> */}
       <SidebarInset>
