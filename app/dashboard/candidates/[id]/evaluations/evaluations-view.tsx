@@ -1,7 +1,6 @@
 "use client";
 
 import { OverallEvaluationCard } from "@/components/recruting/overall-evaluation-card";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,14 +32,7 @@ import {
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import type { OverallEvaluation } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
-import {
-  ChevronDown,
-  Loader2,
-  Plus,
-  Save,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { ChevronDown, Loader2, Plus, Save, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -515,13 +507,7 @@ export function CandidateEvaluationsView({
                           errorMessage="Errore durante l'eliminazione della valutazione"
                           variant="ghost"
                           iconOnly
-                        >
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="size-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                        </DeleteWithConfirm>
+                        />
                       </div>
                     </div>
                   </CardHeader>
