@@ -72,7 +72,8 @@ export function UrlPagination({
       params.set("page", page.toString());
     }
     const queryString = params.toString();
-    return queryString ? `${pathname}?${queryString}` : pathname;
+    const url = queryString ? `${pathname}?${queryString}` : pathname;
+    return url as "/dashboard/positions";
   };
 
   const navigateToPage = (page: number) => {
@@ -140,14 +141,13 @@ export function UrlPagination({
         className
       )}
     >
-      {showCount && (
-        <div className="text-muted-foreground text-sm">
-          {totalCount} {totalCount === 1 ? itemLabel : itemLabelPlural} • Pagina{" "}
-          {currentPage} di {totalPages}
-        </div>
-      )}
-
       <Pagination className={cn(isPending && "opacity-50 pointer-events-none")}>
+        {showCount && (
+          <div className="flex items-center text-muted-foreground text-sm">
+            {totalCount} {totalCount === 1 ? itemLabel : itemLabelPlural} •
+            Pagina {currentPage} di {totalPages}
+          </div>
+        )}
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious

@@ -8,15 +8,16 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "../ui/button";
 
-export function SearchPositions({ defaultValue }: { defaultValue?: string }) {
+export function SearchPositions() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   // Track local input separately from URL
   const urlSearch = searchParams.get("q") || "";
-  const [inputValue, setInputValue] = useState(defaultValue ?? urlSearch);
+  const [inputValue, setInputValue] = useState(q ?? urlSearch);
   // Track the last URL value to detect external changes (e.g., reset button)
   const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch);
 

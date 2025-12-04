@@ -23,7 +23,7 @@ import { getPositions } from "@/lib/data/positions";
 import { Briefcase, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import PositionsSkeleton from "./fallback";
+import { PositionsSkeleton, SearchPositionsSkeleton } from "./fallback";
 import { PositionsTableClient } from "./positions-table-client";
 
 type PositionsSearchParams = Promise<{
@@ -47,6 +47,11 @@ export default async function PositionsPage({
             Nuova Posizione
           </Link>
         </Button>
+      </div>
+      <div className="flex items-center gap-4">
+        <Suspense fallback={<SearchPositionsSkeleton />}>
+          <SearchPositions />
+        </Suspense>
       </div>
       <Suspense fallback={<PositionsSkeleton />}>
         <PositionsTable searchParams={searchParams} />
@@ -78,12 +83,9 @@ const PositionsTable = async ({
   });
 
   return (
-    <>
-      <div className="flex items-center gap-4">
-        <SearchPositions defaultValue={query} />
-      </div>
+    <div className="space-y-4">
       {positions && positions.length > 0 ? (
-        <div className="space-y-4">
+        <>
           <div className="border rounded-md">
             <Table>
               <TableHeader>
@@ -116,7 +118,7 @@ const PositionsTable = async ({
             itemLabel="posizione"
             itemLabelPlural="posizioni"
           />
-        </div>
+        </>
       ) : (
         <Empty className="border h-[400px]">
           <EmptyHeader>
@@ -144,6 +146,6 @@ const PositionsTable = async ({
           )}
         </Empty>
       )}
-    </>
+    </div>
   );
 };
