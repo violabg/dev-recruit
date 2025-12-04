@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowLink } from "@/components/ui/table-row-link";
 import { deleteQuizById } from "@/lib/actions/quizzes";
 import { Quiz } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
@@ -42,12 +43,9 @@ export function QuizTable({ quizzes }: QuizTableProps) {
         </TableHeader>
         <TableBody>
           {quizzes.map((quiz) => (
-            <TableRow key={quiz.id} className="group relative">
-              <TableCell className="font-medium">
-                <Link
-                  href={`/dashboard/quizzes/${quiz.id}`}
-                  className="absolute inset-0"
-                />
+            <TableRow key={quiz.id} className="group">
+              <TableCell className="relative font-medium">
+                <TableRowLink href={`/dashboard/quizzes/${quiz.id}`} />
                 {quiz.title}
               </TableCell>
               <TableCell>

@@ -1,11 +1,10 @@
 "use client";
-
 import { Badge } from "@/components/ui/badge";
 import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { TableRowLink } from "@/components/ui/table-row-link";
 import { deletePosition } from "@/lib/actions/positions";
 import { formatDate } from "@/lib/utils";
-import Link from "next/link";
 
 type Position = {
   id: string;
@@ -23,12 +22,9 @@ export function PositionsTableClient({ positions }: PositionsTableClientProps) {
   return (
     <>
       {positions.map((position) => (
-        <TableRow key={position.id} className="group relative">
-          <TableCell className="font-medium">
-            <Link
-              href={`/dashboard/positions/${position.id}`}
-              className="absolute inset-0"
-            />
+        <TableRow key={position.id} className="group">
+          <TableCell className="relative font-medium">
+            <TableRowLink href={`/dashboard/positions/${position.id}`} />
             {position.title}
           </TableCell>
           <TableCell>

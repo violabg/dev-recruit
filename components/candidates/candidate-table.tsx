@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowLink } from "@/components/ui/table-row-link";
 import { deleteCandidate } from "@/lib/actions/candidates";
 import { CandidateWithRelations } from "@/lib/data/candidates";
 import { format } from "date-fns";
@@ -49,12 +50,9 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
         </TableHeader>
         <TableBody>
           {candidates.map((candidate) => (
-            <TableRow key={candidate.id} className="group relative">
-              <TableCell className="font-medium">
-                <Link
-                  href={`/dashboard/candidates/${candidate.id}`}
-                  className="absolute inset-0"
-                />
+            <TableRow key={candidate.id} className="group">
+              <TableCell className="relative font-medium">
+                <TableRowLink href={`/dashboard/candidates/${candidate.id}`} />
                 {getFullName(candidate.firstName, candidate.lastName)}
               </TableCell>
               <TableCell>{candidate.email}</TableCell>

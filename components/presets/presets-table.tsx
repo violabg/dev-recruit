@@ -16,11 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowLink } from "@/components/ui/table-row-link";
 import { deletePresetAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
 import { Settings2 } from "lucide-react";
-import Link from "next/link";
 
 type PresetsTableProps = {
   presets: Preset[];
@@ -61,12 +61,9 @@ export function PresetsTable({ presets }: PresetsTableProps) {
               presets.map((preset) => {
                 const Icon = getPresetIcon(preset.icon);
                 return (
-                  <TableRow key={preset.id} className="group relative">
-                    <TableCell>
-                      <Link
-                        href={`/dashboard/presets/${preset.id}`}
-                        className="absolute inset-0"
-                      />
+                  <TableRow key={preset.id} className="group">
+                    <TableCell className="relative">
+                      <TableRowLink href={`/dashboard/presets/${preset.id}`} />
                       <div className="flex items-center gap-3">
                         <Icon
                           className="size-5 text-primary"

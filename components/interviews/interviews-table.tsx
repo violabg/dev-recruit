@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowLink } from "@/components/ui/table-row-link";
 import {
   Tooltip,
   TooltipContent,
@@ -32,7 +33,6 @@ import {
   MessageSquareText,
   XCircle,
 } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -138,11 +138,10 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                 const StatusIcon = statusInfo?.icon || Clock;
 
                 return (
-                  <TableRow key={interview.id} className="group relative">
-                    <TableCell className="font-medium">
-                      <Link
+                  <TableRow key={interview.id} className="group">
+                    <TableCell className="relative font-medium">
+                      <TableRowLink
                         href={`/dashboard/interviews/${interview.id}`}
-                        className="absolute inset-0"
                       />
                       {interview.candidateName || "N/A"}
                     </TableCell>

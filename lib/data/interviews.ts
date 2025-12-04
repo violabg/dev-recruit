@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { CacheTags } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
+import { InterviewStatus } from "../schemas";
 
 // Include pattern for quiz with linked questions + extended position details for interviews
 const QUIZ_INCLUDE_FOR_INTERVIEWS = {
@@ -520,12 +521,6 @@ export const getInterviewByToken = async (
     },
   };
 };
-
-export type InterviewStatus =
-  | "pending"
-  | "in_progress"
-  | "completed"
-  | "cancelled";
 
 export type InterviewDetailResult = {
   interview: {

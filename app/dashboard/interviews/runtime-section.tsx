@@ -13,24 +13,19 @@ import {
 } from "@/components/ui/card";
 import { UrlPagination } from "@/components/ui/url-pagination";
 import { getInterviews } from "@/lib/actions/interviews";
+import { InterviewStatus } from "@/lib/schemas";
 import { CheckCircle, Clock, MessageSquare, XCircle } from "lucide-react";
 
 export type InterviewsSearchParams = {
   search?: string;
-  status?: string;
+  status?: InterviewStatus | "all";
   position?: string;
   language?: string;
   page?: string;
 };
 
-type InterviewsRuntimeStatus =
-  | "pending"
-  | "in_progress"
-  | "completed"
-  | "cancelled";
-
 const STATUS_CONFIG: Record<
-  InterviewsRuntimeStatus,
+  InterviewStatus,
   {
     label: string;
     icon: ComponentType<SVGProps<SVGSVGElement>>;
@@ -59,7 +54,9 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const normalizeStatus = (value?: string): string => value || "all";
+const normalizeStatus = (
+  value?: InterviewStatus | "all"
+): InterviewStatus | "all" => value || "all";
 const normalizeLanguage = (value?: string): string => value || "all";
 const normalizePosition = (value?: string): string => value?.trim() || "all";
 const normalizePage = (value?: string) => {
@@ -106,7 +103,7 @@ export const InterviewsRuntimeSection = async ({
     <div className="space-y-6">
       <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-          const count = statusCounts[key as InterviewsRuntimeStatus] ?? 0;
+          const count = statusCounts[key as InterviewStatus] ?? 0;
           const Icon = config.icon;
 
           return (
@@ -144,8 +141,7 @@ export const InterviewsRuntimeSection = async ({
           </span>
           {status !== "all" && (
             <Badge variant="outline">
-              {STATUS_CONFIG[status as InterviewsRuntimeStatus]?.label ||
-                status}
+              {STATUS_CONFIG[status as InterviewStatus]?.label || status}
             </Badge>
           )}
           {positionId !== "all" && (
