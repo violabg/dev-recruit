@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getPositionsForSelect } from "@/lib/data/positions";
+import { CacheTags } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import { Suspense } from "react";
 import { ApplyFormSkeleton } from "./fallbacks";
@@ -58,7 +59,7 @@ export default async function ApplyPage() {
 async function ApplyFormContent() {
   "use cache";
   cacheLife("hours");
-  cacheTag("positions");
+  cacheTag(CacheTags.POSITIONS);
 
   const positions = await getPositionsForSelect();
 

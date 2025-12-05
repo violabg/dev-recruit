@@ -3,6 +3,8 @@ import {
   PositionOption,
 } from "@/app/dashboard/quizzes/new/new-quiz-page";
 import { getPositionById } from "@/lib/data/positions";
+import { entityTag } from "@/lib/utils/cache-utils";
+import { cacheLife, cacheTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { QuizGeneratorSkeleton } from "./fallbacks";
@@ -26,7 +28,10 @@ async function QuizGeneratorContent({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  "use cache";
+  cacheLife("hours");
   const { id } = await incomingParams;
+  cacheTag(entityTag.position(id));
   const position = await getPositionById(id);
 
   if (!position) {

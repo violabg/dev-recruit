@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,30 +8,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowUpDown,
-  Briefcase,
-  Filter,
-  Loader2,
-  Search as SearchIcon,
-} from "lucide-react";
+import { ArrowUpDown, Loader2, Search as SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import { PositionLevelsSelect } from "../positions/position-levels-select";
+import PositionsSelect from "../positions/positions-select";
 
-type PositionFilterOption = {
+type PositionOption = {
   id: string;
   title: string;
 };
 
 type SearchAndFilterQuizzesProps = {
-  uniqueLevels: string[];
-  positions: PositionFilterOption[];
+  levels: string[];
+  positions: PositionOption[];
 };
 
 export const SearchAndFilterQuizzes = ({
-  uniqueLevels,
+  levels,
   positions,
 }: SearchAndFilterQuizzesProps) => {
   const searchParams = useSearchParams();
@@ -157,48 +152,18 @@ export const SearchAndFilterQuizzes = ({
             <SelectItem value="z-a">Z-A</SelectItem>
           </SelectContent>
         </Select>
-        <Select
-          name="filter"
-          value={currentFilter}
-          onValueChange={handleFilter}
-          disabled={isPending}
-        >
-          <SelectTrigger>
-            <div className="flex items-center gap-2">
-              <Filter className="size-4" />
-              <SelectValue placeholder="Filtra" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutti i livelli</SelectItem>
-            {uniqueLevels.map((level) => (
-              <SelectItem key={level} value={level}>
-                {level}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          name="position"
-          value={currentPosition}
-          onValueChange={handlePosition}
-          disabled={isPending || positions.length === 0}
-        >
-          <SelectTrigger>
-            <div className="flex items-center gap-2">
-              <Briefcase className="size-4" />
-              <SelectValue placeholder="Posizione" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutte le posizioni</SelectItem>
-            {positions.map((position) => (
-              <SelectItem key={position.id} value={position.id}>
-                {position.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <PositionLevelsSelect
+          levels={levels}
+          currentFilter={currentFilter}
+          handleFilter={handleFilter}
+          isPending={isPending}
+        />
+        <PositionsSelect
+          positions={positions}
+          currentPosition={currentPosition}
+          handlePosition={handlePosition}
+          isPending={isPending}
+        />
         {(currentSearch ||
           currentFilter !== "all" ||
           currentPosition !== "all") && (

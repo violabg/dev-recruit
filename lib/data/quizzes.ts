@@ -130,17 +130,6 @@ const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
 } as const;
 
 /**
- * Convert linked questions from QuizQuestion to SavedQuestion format.
- * Exported for use by interviews.ts
- * @deprecated Use mapQuizQuestionsToFlexible from @/lib/utils/question-utils instead
- */
-export const mapLinkedQuestionsToQuestionFormat = (
-  quizQuestions: QuizWithLinkedQuestions["quizQuestions"]
-): SavedQuestion[] => {
-  return mapQuizQuestionsToFlexible(quizQuestions);
-};
-
-/**
  * Maps quiz data from Prisma to API response format.
  * Exported for use by interviews.ts
  */
@@ -159,7 +148,7 @@ export const mapQuizFromPrisma = (
       }
     : null,
   timeLimit: quiz.timeLimit,
-  questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
+  questions: mapQuizQuestionsToFlexible(quiz.quizQuestions),
   questionCount: quiz.quizQuestions.length,
 });
 
@@ -308,7 +297,7 @@ export const getQuizData = async (
     id: quiz.id,
     title: quiz.title,
     positionId: quiz.positionId,
-    questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
+    questions: mapQuizQuestionsToFlexible(quiz.quizQuestions),
     timeLimit: quiz.timeLimit,
   };
 
@@ -363,7 +352,7 @@ export const getQuizzesForPosition = async (
     title: quiz.title,
     createdAt: quiz.createdAt.toISOString(),
     timeLimit: quiz.timeLimit,
-    questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
+    questions: mapQuizQuestionsToFlexible(quiz.quizQuestions),
   }));
 };
 
@@ -434,7 +423,7 @@ export const getQuizById = async (
     title: quiz.title,
     positionId: quiz.positionId,
     timeLimit: quiz.timeLimit,
-    questions: mapLinkedQuestionsToQuestionFormat(quiz.quizQuestions),
+    questions: mapQuizQuestionsToFlexible(quiz.quizQuestions),
     createdAt: quiz.createdAt.toISOString(),
     position: quiz.position
       ? {
@@ -445,41 +434,3 @@ export const getQuizById = async (
       : null,
   };
 };
-
-/**
- * Cached filter options for quiz list page
- */
-export async function CachedQuizFilterOptions(): Promise<QuizFilterOptions> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.QUIZZES, CacheTags.POSITIONS);
-
-  try {
-    const [experienceLevels, positions] = await Promise.all([
-      prisma.position.findMany({
-        where: {},
-        select: { experienceLevel: true },
-      }),
-      prisma.position.findMany({
-        select: { id: true, title: true },
-        orderBy: { title: "asc" },
-      }),
-    ]);
-
-    const uniqueLevels = Array.from(
-      new Set(
-        experienceLevels
-          .map((item) => item.experienceLevel)
-          .filter((level): level is string => Boolean(level))
-      )
-    );
-
-    return {
-      uniqueLevels,
-      positions: positions.map((p) => ({ id: p.id, title: p.title })),
-    };
-  } catch (error) {
-    console.error("Failed to fetch filter options:", error);
-    return { uniqueLevels: [], positions: [] };
-  }
-}

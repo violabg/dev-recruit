@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 
 import { DEFAULT_PAGE_SIZE } from "@/components/ui/url-pagination";
-import { FiltersSkeleton, QuizListSkeleton } from "./fallbacks";
-import { QuizFiltersSection } from "./quiz-filters-section";
+import { QuizListSkeleton } from "./fallbacks";
 import { QuizListSection } from "./quiz-list-section";
 
 // ===================
@@ -90,10 +89,6 @@ export const QuizzesRuntimeSection = async ({
 
   return (
     <>
-      <Suspense fallback={<FiltersSkeleton />}>
-        <QuizFiltersSection />
-      </Suspense>
-
       <Suspense fallback={<QuizListSkeleton />}>
         <QuizListSection {...normalizedParams} />
       </Suspense>
