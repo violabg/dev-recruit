@@ -1,6 +1,5 @@
 import { CandidateGrid } from "@/components/candidates/candidate-grid";
 import { CandidateTable } from "@/components/candidates/candidate-table";
-import { SearchAndFilterCandidates } from "@/components/candidates/search-and-filter-candidates";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,13 +15,10 @@ import {
   DEFAULT_PAGE_SIZE,
   UrlPagination,
 } from "@/components/ui/url-pagination";
-import {
-  getCandidatePositions,
-  getFilteredCandidates,
-} from "@/lib/data/candidates";
+import { getFilteredCandidates } from "@/lib/data/candidates";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
-import { CandidatesListSkeleton, FiltersSkeleton } from "./fallbacks";
+import { CandidatesListSkeleton } from "./fallbacks";
 import type { CandidatesSearchParams } from "./page";
 
 type CandidateStatus =
@@ -74,12 +70,7 @@ const normalizePageValue = (value: string | undefined, fallback: number) => {
   return Math.floor(parsed);
 };
 
-export const CandidatesRuntimeFallback = () => (
-  <div className="space-y-6">
-    <FiltersSkeleton />
-    <CandidatesListSkeleton />
-  </div>
-);
+export const CandidatesRuntimeFallback = () => <CandidatesListSkeleton />;
 
 export const CandidatesRuntimeSection = async ({
   searchParams,
@@ -99,17 +90,14 @@ export const CandidatesRuntimeSection = async ({
   const pageSize = normalizePageValue(params.pageSize, DEFAULT_PAGE_SIZE);
 
   // Fetch all data in parallel within the same Suspense boundary
-  const [positions, candidatesData] = await Promise.all([
-    getCandidatePositions(),
-    getFilteredCandidates({
-      search,
-      status,
-      positionId,
-      sort,
-      page,
-      pageSize,
-    }),
-  ]);
+  const candidatesData = await getFilteredCandidates({
+    search,
+    status,
+    positionId,
+    sort,
+    page,
+    pageSize,
+  });
 
   const {
     candidates,
@@ -124,64 +112,60 @@ export const CandidatesRuntimeSection = async ({
   const activeView = view || "table";
 
   return (
-    <>
-      <SearchAndFilterCandidates positions={positions || []} />
-
-      <Card>
-        <CardContent>
-          {!hasCandidates ? (
-            <Empty className="border h-[200px]">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Users />
-                </EmptyMedia>
-                <EmptyTitle>Nessun candidato trovato</EmptyTitle>
-                <EmptyDescription>
-                  {search
-                    ? `Nessun candidato trovato per "${search}". Prova a modificare i filtri.`
-                    : "Non hai ancora aggiunto candidati. Aggiungi il tuo primo candidato per iniziare."}
-                </EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button asChild size="sm">
-                  <Link href="/dashboard/candidates/new">
-                    <Plus className="mr-1 size-4" />
-                    Nuovo Candidato
-                  </Link>
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <div className="space-y-4">
-              <Tabs defaultValue={activeView} className="w-full">
-                <div className="flex justify-between items-center">
-                  <TabsList>
-                    <TabsTrigger value="table">Tabella</TabsTrigger>
-                    <TabsTrigger value="grid">Griglia</TabsTrigger>
-                  </TabsList>
-                </div>
-                <TabsContent value="table" className="pt-4">
-                  <CandidateTable candidates={candidates} />
-                </TabsContent>
-                <TabsContent value="grid" className="pt-4">
-                  <CandidateGrid candidates={candidates} />
-                </TabsContent>
-              </Tabs>
-              <UrlPagination
-                pagination={{
-                  currentPage,
-                  totalPages,
-                  totalCount,
-                  hasNextPage,
-                  hasPrevPage,
-                }}
-                itemLabel="candidato"
-                itemLabelPlural="candidati"
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </>
+    <Card>
+      <CardContent>
+        {!hasCandidates ? (
+          <Empty className="border h-[200px]">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Users />
+              </EmptyMedia>
+              <EmptyTitle>Nessun candidato trovato</EmptyTitle>
+              <EmptyDescription>
+                {search
+                  ? `Nessun candidato trovato per "${search}". Prova a modificare i filtri.`
+                  : "Non hai ancora aggiunto candidati. Aggiungi il tuo primo candidato per iniziare."}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button asChild size="sm">
+                <Link href="/dashboard/candidates/new">
+                  <Plus className="mr-1 size-4" />
+                  Nuovo Candidato
+                </Link>
+              </Button>
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <div className="space-y-4">
+            <Tabs defaultValue={activeView} className="w-full">
+              <div className="flex justify-between items-center">
+                <TabsList>
+                  <TabsTrigger value="table">Tabella</TabsTrigger>
+                  <TabsTrigger value="grid">Griglia</TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="table" className="pt-4">
+                <CandidateTable candidates={candidates} />
+              </TabsContent>
+              <TabsContent value="grid" className="pt-4">
+                <CandidateGrid candidates={candidates} />
+              </TabsContent>
+            </Tabs>
+            <UrlPagination
+              pagination={{
+                currentPage,
+                totalPages,
+                totalCount,
+                hasNextPage,
+                hasPrevPage,
+              }}
+              itemLabel="candidato"
+              itemLabelPlural="candidati"
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };

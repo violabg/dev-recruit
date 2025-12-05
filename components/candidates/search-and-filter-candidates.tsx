@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowUpDown,
-  Briefcase,
   ClockFading,
   Loader2,
   Search as SearchIcon,
@@ -19,6 +18,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import PositionsSelect from "../positions/positions-select";
 import { Button } from "../ui/button";
 
 type StatusOption = {
@@ -183,25 +183,12 @@ export const SearchAndFilterCandidates = ({
             ))}
           </SelectContent>
         </Select>
-        <Select
-          name="position"
-          value={currentPosition}
-          onValueChange={handlePosition}
-          disabled={isPending}
-        >
-          <SelectTrigger className="w-auto @[800px]w-full">
-            <Briefcase className="size-4" />
-            <SelectValue placeholder="Posizione" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutte le posizioni</SelectItem>
-            {positions?.map((position) => (
-              <SelectItem key={position.id} value={position.id}>
-                {position.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <PositionsSelect
+          positions={positions}
+          currentPosition={currentPosition}
+          handlePosition={handlePosition}
+          isPending={isPending}
+        />
         <Select
           name="sort"
           value={currentSort}
