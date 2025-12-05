@@ -1,7 +1,7 @@
 "use client";
 
 import { Slot } from "@radix-ui/react-slot";
-import { VariantProps, cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 
@@ -187,7 +187,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="[&>button]:hidden bg-sidebar p-0 w-(--sidebar-width) text-sidebar-foreground"
+          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -244,7 +244,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="flex flex-col bg-sidebar w-full h-full"
+          className="flex flex-col bg-sidebar group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:rounded-lg w-full h-full"
         >
           {children}
         </div>
@@ -387,7 +387,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-group"
       data-sidebar="group"
-      className={cn("relative flex flex-col w-full min-w-0", className)}
+      className={cn("relative flex flex-col p-2 w-full min-w-0", className)}
       {...props}
     />
   );
@@ -517,7 +517,6 @@ function SidebarMenuButton({
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
-      suppressHydrationWarning
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
     />
@@ -634,7 +633,7 @@ function SidebarMenuSkeleton({
         />
       )}
       <Skeleton
-        className="flex-1 max-w-(--skeleton-width) h-4"
+        className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
         style={
           {
