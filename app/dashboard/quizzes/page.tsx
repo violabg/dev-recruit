@@ -1,6 +1,6 @@
+import { SearchAndFilterQuizzesWrapper } from "@/components/quiz/search-and-filter-quizzes-wrapper";
 import { Suspense } from "react";
-
-import { QuizzesRuntimeFallback } from "./fallbacks";
+import { FiltersSkeleton, QuizzesRuntimeFallback } from "./fallbacks";
 import { NewQuizButton } from "./new-quiz-button";
 import {
   QuizzesRuntimeSection,
@@ -47,6 +47,10 @@ export default async function QuizzesPage({
 
       <div className="@container">
         <div className="space-y-4">
+          <Suspense fallback={<FiltersSkeleton />}>
+            <SearchAndFilterQuizzesWrapper />
+          </Suspense>
+
           <Suspense fallback={<QuizzesRuntimeFallback />}>
             <QuizzesRuntimeSection searchParams={searchParams} />
           </Suspense>

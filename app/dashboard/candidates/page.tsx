@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { FiltersSkeleton } from "./fallbacks";
 import {
   CandidatesRuntimeFallback,
   CandidatesRuntimeSection,
 } from "./runtime-section";
+import { SearchAndFilterQuizzesWrapper } from "./search-and-filter-quizzes-wrapper";
 
 export type CandidatesSearchParams = Promise<{
   search?: string;
@@ -39,9 +41,15 @@ export default async function CandidatesPage({
         </Button>
       </div>
 
-      <Suspense fallback={<CandidatesRuntimeFallback />}>
-        <CandidatesRuntimeSection searchParams={searchParams} />
-      </Suspense>
+      <div className="space-y-6">
+        <Suspense fallback={<FiltersSkeleton />}>
+          <SearchAndFilterQuizzesWrapper />
+        </Suspense>
+
+        <Suspense fallback={<CandidatesRuntimeFallback />}>
+          <CandidatesRuntimeSection searchParams={searchParams} />
+        </Suspense>
+      </div>
     </div>
   );
 }

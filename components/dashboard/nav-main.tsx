@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function NavMain({
@@ -54,19 +55,9 @@ export function NavMain({
                       : "text-muted-foreground hover:translate-x-0.5"
                   )}
                 >
-                  <span
-                    role="link"
+                  <Link
                     tabIndex={0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavigation(route.href);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleNavigation(route.href);
-                      }
-                    }}
+                    href={route.href as any}
                     className="relative flex items-center px-2 py-2 w-full cursor-pointer"
                   >
                     <route.icon
@@ -91,7 +82,7 @@ export function NavMain({
                     {isLoading && (
                       <Loader2 className="ml-2 size-4 text-primary animate-spin" />
                     )}
-                  </span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );

@@ -10,9 +10,9 @@ export function FiltersSkeleton() {
       </div>
       {/* Filter selects skeleton */}
       <div className="flex gap-2">
-        <Skeleton className="w-[140px] h-9" />
-        <Skeleton className="w-[140px] h-9" />
-        <Skeleton className="w-40 h-9" />
+        <Skeleton className="w-[142px] h-9" />
+        <Skeleton className="w-[145px] h-9" />
+        <Skeleton className="w-[183px] h-9" />
       </div>
     </div>
   );
@@ -152,7 +152,6 @@ export function QuizzesStatisticsSkeleton() {
 
 export const QuizzesRuntimeFallback = () => (
   <div className="space-y-4">
-    <FiltersSkeleton />
     <QuizListSkeleton />
   </div>
 );

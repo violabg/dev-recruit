@@ -126,17 +126,6 @@ export async function getCandidateStats() {
   return { statusCounts, totalCandidates };
 }
 
-export async function getCandidatePositions() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.POSITIONS);
-
-  return prisma.position.findMany({
-    select: { id: true, title: true },
-    orderBy: { title: "asc" },
-  });
-}
-
 export async function getFilteredCandidates(
   params?: FetchCandidatesParams
 ): Promise<PaginatedCandidates> {

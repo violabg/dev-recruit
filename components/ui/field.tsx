@@ -63,10 +63,10 @@ const fieldVariants = cva(
         horizontal: [
           "flex-row items-center",
           "[&>[data-slot=field-label]]:flex-auto",
-          "has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px has-[>[data-slot=field-content]]:items-start",
+          "has-[>[data-slot=field-content]]:items-start has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
         ],
         responsive: [
-          "@md/field-group:flex-row @md/field-group:items-center @md/field-group:[&>*]:w-auto flex-col [&>*]:w-full [&>.sr-only]:w-auto",
+          "flex-col [&>*]:w-full [&>.sr-only]:w-auto @md/field-group:flex-row @md/field-group:items-center @md/field-group:[&>*]:w-auto",
           "@md/field-group:[&>[data-slot=field-label]]:flex-auto",
           "@md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
         ],
@@ -144,7 +144,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
       data-slot="field-description"
       className={cn(
         "font-normal text-muted-foreground text-sm group-has-data-[orientation=horizontal]/field:text-balance leading-normal",
-        "nth-last-2:-mt-1 last:mt-0 [[data-variant=legend]+&]:-mt-1.5",
+        "last:mt-0 nth-last-2:-mt-1 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
         className
       )}
@@ -196,17 +196,21 @@ function FieldError({
       return children;
     }
 
-    if (!errors) {
+    if (!errors?.length) {
       return null;
     }
 
-    if (errors?.length === 1 && errors[0]?.message) {
-      return errors[0].message;
+    const uniqueErrors = [
+      ...new Map(errors.map((error) => [error?.message, error])).values(),
+    ];
+
+    if (uniqueErrors?.length == 1) {
+      return uniqueErrors[0]?.message;
     }
 
     return (
       <ul className="flex flex-col gap-1 ml-4 list-disc">
-        {errors.map(
+        {uniqueErrors.map(
           (error, index) =>
             error?.message && <li key={index}>{error.message}</li>
         )}

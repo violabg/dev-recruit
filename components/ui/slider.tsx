@@ -31,7 +31,7 @@ function Slider({
       min={min}
       max={max}
       className={cn(
-        "relative flex data-[orientation=vertical]:flex-col items-center data-[disabled]:opacity-50 w-full data-[orientation=vertical]:w-auto data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 touch-none select-none",
+        "relative flex data-[orientation=vertical]:flex-col items-center data-disabled:opacity-50 w-full data-[orientation=vertical]:w-auto data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 touch-none select-none",
         className
       )}
       {...props}
@@ -39,7 +39,7 @@ function Slider({
       <SliderPrimitive.Track
         data-slot="slider-track"
         className={cn(
-          "relative bg-secondary rounded-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-1.5 data-[orientation=horizontal]:h-1.5 data-[orientation=vertical]:h-full overflow-hidden grow"
+          "relative bg-muted rounded-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-1.5 data-[orientation=horizontal]:h-1.5 data-[orientation=vertical]:h-full overflow-hidden grow"
         )}
       >
         <SliderPrimitive.Range
@@ -53,7 +53,7 @@ function Slider({
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
-          className="block bg-background disabled:opacity-50 shadow border border-primary rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring size-4 transition-colors disabled:pointer-events-none"
+          className="block bg-white disabled:opacity-50 shadow-sm border border-primary rounded-full focus-visible:outline-hidden ring-ring/50 hover:ring-4 focus-visible:ring-4 size-4 transition-[color,box-shadow] disabled:pointer-events-none shrink-0"
         />
       ))}
     </SliderPrimitive.Root>

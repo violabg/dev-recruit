@@ -7,10 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  getCandidatePositions,
-  getCandidateWithDetails,
-} from "@/lib/data/candidates";
+import { getCandidateWithDetails } from "@/lib/data/candidates";
+import { getPositionsForSelect } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -35,7 +33,7 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
   const { id } = await params;
   const [candidate, positions] = await Promise.all([
     getCandidateWithDetails(id),
-    getCandidatePositions(),
+    getPositionsForSelect(),
   ]);
 
   if (!candidate) {

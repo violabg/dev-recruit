@@ -1,7 +1,8 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
-import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
+import { CacheTags } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
+import { cache } from "react";
 import { Position } from "../prisma/client";
 
 export type PaginatedPositions = {
@@ -60,18 +61,15 @@ export const getPositions = async (params?: {
   };
 };
 
-export const getPositionById = async (
-  positionId: string
-): Promise<Position | null> => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(entityTag.position(positionId));
-  return prisma.position.findFirst({
-    where: {
-      id: positionId,
-    },
-  });
-};
+export const getPositionById = cache(
+  async (positionId: string): Promise<Position | null> => {
+    return prisma.position.findFirst({
+      where: {
+        id: positionId,
+      },
+    });
+  }
+);
 
 export const getPositionsCount = async () => {
   "use cache";
@@ -117,13 +115,34 @@ export const getRecentPositions = async (limit = 5) => {
  * Returns positions with only id and title for select/dropdown components.
  * Sorted alphabetically by title.
  */
-export const getPositionsForSelect = async () => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.POSITIONS);
-
+export const getPositionsForSelect = cache(async () => {
   return prisma.position.findMany({
     select: { id: true, title: true },
     orderBy: { title: "asc" },
   });
-};
+});
+
+/**
+ * Cached filter options for quiz list page
+ */
+export const getPositionLevelsForSelect = cache(async () => {
+  try {
+    const positions = await prisma.position.findMany({
+      where: {},
+      select: { experienceLevel: true },
+    });
+
+    const uniqueLevels = Array.from(
+      new Set(
+        positions
+          .map((item) => item.experienceLevel)
+          .filter((level): level is string => Boolean(level))
+      )
+    );
+
+    return uniqueLevels;
+  } catch (error) {
+    console.error("Failed to fetch filter options:", error);
+    return [];
+  }
+});
