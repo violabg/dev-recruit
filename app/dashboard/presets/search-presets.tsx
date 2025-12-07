@@ -8,15 +8,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
-export function SearchPresets({ defaultValue }: { defaultValue?: string }) {
+export function SearchPresets() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const q = searchParams.get("search") || "";
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   // Track local input separately from URL - only sync on mount
   const urlSearch = searchParams.get("search") || "";
-  const [inputValue, setInputValue] = useState(defaultValue ?? urlSearch);
+  const [inputValue, setInputValue] = useState(q ?? urlSearch);
   // Track the last URL value to detect external changes (e.g., reset button)
   const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch);
 

@@ -59,8 +59,7 @@ async function PresetsContent({
   } = result;
 
   return (
-    <div className="space-y-4">
-      <SearchPresets defaultValue={search} />
+    <>
       {presets.length === 0 ? (
         <Card>
           <CardContent className="py-6">
@@ -107,7 +106,7 @@ async function PresetsContent({
           />
         </>
       )}
-    </div>
+    </>
   );
 }
 
@@ -118,8 +117,8 @@ export default async function PresetsPage({
 }) {
   return (
     <div className="space-y-6 w-full">
-      <div className="flex flex-wrap items-center gap-2 w-full">
-        <div className="flex-1">
+      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4">
+        <div>
           <h1 className="font-bold text-3xl tracking-tight">Gestione Preset</h1>
           <p className="mt-2 text-muted-foreground">
             Crea e gestisci preset per la generazione di domande per le tue
@@ -133,10 +132,12 @@ export default async function PresetsPage({
           </Link>
         </Button>
       </div>
-
-      <Suspense fallback={<PresetsListSkeleton />}>
-        <PresetsContent searchParams={searchParams} />
-      </Suspense>
+      <div className="space-y-6">
+        <SearchPresets />
+        <Suspense fallback={<PresetsListSkeleton />}>
+          <PresetsContent searchParams={searchParams} />
+        </Suspense>
+      </div>
     </div>
   );
 }

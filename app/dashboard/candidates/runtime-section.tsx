@@ -18,7 +18,6 @@ import {
 import { getFilteredCandidates } from "@/lib/data/candidates";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
-import { CandidatesListSkeleton } from "./fallbacks";
 import type { CandidatesSearchParams } from "./page";
 
 type CandidateStatus =
@@ -69,8 +68,6 @@ const normalizePageValue = (value: string | undefined, fallback: number) => {
 
   return Math.floor(parsed);
 };
-
-export const CandidatesRuntimeFallback = () => <CandidatesListSkeleton />;
 
 export const CandidatesRuntimeSection = async ({
   searchParams,

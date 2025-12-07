@@ -4,11 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { FiltersSkeleton } from "./fallbacks";
-import {
-  CandidatesRuntimeFallback,
-  CandidatesRuntimeSection,
-} from "./runtime-section";
+import { CandidatesListSkeleton, FiltersSkeleton } from "./fallbacks";
+import { CandidatesRuntimeSection } from "./runtime-section";
 
 export type CandidatesSearchParams = Promise<{
   search?: string;
@@ -47,7 +44,7 @@ export default async function CandidatesPage({
           <SearchAndFilterCandidates positionOptions={<PositionOptions />} />
         </Suspense>
 
-        <Suspense fallback={<CandidatesRuntimeFallback />}>
+        <Suspense fallback={<CandidatesListSkeleton />}>
           <CandidatesRuntimeSection searchParams={searchParams} />
         </Suspense>
       </div>

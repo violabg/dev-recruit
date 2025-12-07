@@ -2,7 +2,7 @@ import PositionLevelOptions from "@/components/positions/position-level-options"
 import PositionOptions from "@/components/positions/position-options";
 import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
 import { Suspense } from "react";
-import { FiltersSkeleton, QuizzesRuntimeFallback } from "./fallbacks";
+import { FiltersSkeleton, QuizListSkeleton } from "./fallbacks";
 import { NewQuizButton } from "./new-quiz-button";
 import {
   QuizzesRuntimeSection,
@@ -35,31 +35,27 @@ export default async function QuizzesPage({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-2">
+      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="font-bold text-3xl tracking-tight">Quiz</h1>
           <p className="text-muted-foreground">
             Gestisci i quiz per le tue posizioni aperte
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <NewQuizButton />
-        </div>
+        <NewQuizButton />
       </div>
 
-      <div className="@container">
-        <div className="space-y-4">
-          <Suspense fallback={<FiltersSkeleton />}>
-            <SearchAndFilterQuizzes
-              levelsOptions={<PositionLevelOptions />}
-              positionOptions={<PositionOptions />}
-            />
-          </Suspense>
+      <div className="@container space-y-6">
+        <Suspense fallback={<FiltersSkeleton />}>
+          <SearchAndFilterQuizzes
+            levelsOptions={<PositionLevelOptions />}
+            positionOptions={<PositionOptions />}
+          />
+        </Suspense>
 
-          <Suspense fallback={<QuizzesRuntimeFallback />}>
-            <QuizzesRuntimeSection searchParams={searchParams} />
-          </Suspense>
-        </div>
+        <Suspense fallback={<QuizListSkeleton />}>
+          <QuizzesRuntimeSection searchParams={searchParams} />
+        </Suspense>
       </div>
     </div>
   );

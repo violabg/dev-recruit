@@ -9,7 +9,9 @@ import { Suspense } from "react";
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
     <NextThemesProvider {...props}>
-      <Suspense>{children}</Suspense>
+      <Suspense fallback={<div className="w-svw h-svh"></div>}>
+        {children}
+      </Suspense>
     </NextThemesProvider>
   );
 }
