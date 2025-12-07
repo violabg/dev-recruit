@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuizzesForPosition } from "@/lib/data/quizzes";
 import { Plus } from "lucide-react";
-import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
 type Props = {
@@ -10,10 +9,7 @@ type Props = {
 };
 
 export default async function Quizes({ params }: Props) {
-  "use cache";
-  cacheLife("hours");
   const { id } = await params;
-  cacheTag(`positions-${id}`);
   const quizzes = await getQuizzesForPosition(id);
 
   return (

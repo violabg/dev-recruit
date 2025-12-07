@@ -328,7 +328,7 @@ export const getQuizzesForPosition = async (
 > => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.QUIZZES);
+  cacheTag(CacheTags.QUIZZES, entityTag.position(positionId));
 
   const quizzes = await prisma.quiz.findMany({
     where: {

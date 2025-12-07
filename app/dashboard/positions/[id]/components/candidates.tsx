@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidatesByPosition } from "@/lib/data/candidates";
 import { Plus, Users } from "lucide-react";
-import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
 type Props = {
@@ -11,10 +10,7 @@ type Props = {
 };
 
 export default async function Candidates({ params }: Props) {
-  "use cache";
-  cacheLife("hours");
   const { id } = await params;
-  cacheTag(`positions-${id}`);
   const candidates = await getCandidatesByPosition(id);
 
   return (

@@ -13,17 +13,12 @@ import {
   getRecentPositions,
 } from "@/lib/data/dashboard";
 import { BarChart3, Briefcase, Eye, Plus, Users } from "lucide-react";
-import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
 import { DashboardStatsSkeleton, RecentPositionsSkeleton } from "./fallbacks";
 
 // Server component for dashboard stats
 async function OpenPositions() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("positions");
-
   const positionsCount = await getPositionsCount();
 
   return (
@@ -46,9 +41,6 @@ async function OpenPositions() {
   );
 }
 async function Candidates() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("candidates");
   const candidatesCount = await getCandidatesCount();
 
   return (
@@ -69,9 +61,6 @@ async function Candidates() {
   );
 }
 async function Interviews() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("interviews");
   const interviewsCount = await getCompletedInterviewsCount();
 
   return (
@@ -96,9 +85,6 @@ async function Interviews() {
 
 // Server component for recent positions
 async function RecentPositions() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("positions");
   const positions = await getRecentPositions(5);
 
   return (

@@ -1,7 +1,7 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import { CacheTags } from "@/lib/utils/cache-utils";
+import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
 // Prisma type for candidate with position and interviews
@@ -175,7 +175,7 @@ export async function getFilteredCandidates(
 export const getCandidatesByPosition = async (positionId: string) => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.CANDIDATES);
+  cacheTag(CacheTags.CANDIDATES, entityTag.position(positionId));
 
   return prisma.candidate.findMany({
     where: {
