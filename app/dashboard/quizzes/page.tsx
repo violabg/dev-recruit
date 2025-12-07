@@ -1,4 +1,6 @@
-import { SearchAndFilterQuizzesWrapper } from "@/components/quiz/search-and-filter-quizzes-wrapper";
+import PositionLevelOptions from "@/components/positions/position-level-options";
+import PositionOptions from "@/components/positions/position-options";
+import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
 import { Suspense } from "react";
 import { FiltersSkeleton, QuizzesRuntimeFallback } from "./fallbacks";
 import { NewQuizButton } from "./new-quiz-button";
@@ -48,7 +50,10 @@ export default async function QuizzesPage({
       <div className="@container">
         <div className="space-y-4">
           <Suspense fallback={<FiltersSkeleton />}>
-            <SearchAndFilterQuizzesWrapper />
+            <SearchAndFilterQuizzes
+              levelsOptions={<PositionLevelOptions />}
+              positionOptions={<PositionOptions />}
+            />
           </Suspense>
 
           <Suspense fallback={<QuizzesRuntimeFallback />}>

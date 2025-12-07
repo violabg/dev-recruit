@@ -119,6 +119,10 @@ export const getRecentPositions = async (limit = 5) => {
  * Sorted alphabetically by title.
  */
 export const getPositionsForSelect = cache(async () => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTags.POSITIONS);
+
   return prisma.position.findMany({
     select: { id: true, title: true },
     orderBy: { title: "asc" },
@@ -129,6 +133,9 @@ export const getPositionsForSelect = cache(async () => {
  * Cached filter options for quiz list page
  */
 export const getPositionLevelsForSelect = cache(async () => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTags.POSITIONS);
   try {
     const positions = await prisma.position.findMany({
       where: {},

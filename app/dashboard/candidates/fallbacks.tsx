@@ -20,9 +20,9 @@ export const StatsSkeleton = () => (
 export const FiltersSkeleton = () => (
   <div className="flex md:flex-row flex-col gap-4">
     <Skeleton className="flex-1 h-10" />
-    <Skeleton className="w-full md:w-[180px] h-10" />
-    <Skeleton className="w-full md:w-[180px] h-10" />
-    <Skeleton className="w-full md:w-[180px] h-10" />
+    <Skeleton className="w-full md:w-[153px] h-10" />
+    <Skeleton className="w-full md:w-[182px] h-10" />
+    <Skeleton className="w-full md:w-[142px] h-10" />
   </div>
 );
 

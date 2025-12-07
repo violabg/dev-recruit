@@ -1,3 +1,5 @@
+import { SearchAndFilterCandidates } from "@/components/candidates/search-and-filter-candidates";
+import PositionOptions from "@/components/positions/position-options";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -7,7 +9,6 @@ import {
   CandidatesRuntimeFallback,
   CandidatesRuntimeSection,
 } from "./runtime-section";
-import { SearchAndFilterQuizzesWrapper } from "./search-and-filter-quizzes-wrapper";
 
 export type CandidatesSearchParams = Promise<{
   search?: string;
@@ -43,7 +44,7 @@ export default async function CandidatesPage({
 
       <div className="space-y-6">
         <Suspense fallback={<FiltersSkeleton />}>
-          <SearchAndFilterQuizzesWrapper />
+          <SearchAndFilterCandidates positionOptions={<PositionOptions />} />
         </Suspense>
 
         <Suspense fallback={<CandidatesRuntimeFallback />}>

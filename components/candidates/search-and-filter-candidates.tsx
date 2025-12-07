@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowUpDown,
+  Briefcase,
   ClockFading,
   Loader2,
   Search as SearchIcon,
@@ -16,23 +17,20 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  ReactNode,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useDebouncedCallback } from "use-debounce";
-import PositionsSelect from "../positions/positions-select";
 import { Button } from "../ui/button";
 
 type StatusOption = {
   value: string;
   label: string;
-};
-
-type PositionOption = {
-  id: string;
-  title: string;
-};
-
-type SearchAndFilterCandidatesProps = {
-  positions: PositionOption[];
 };
 
 const statusOptions: StatusOption[] = [
@@ -45,8 +43,10 @@ const statusOptions: StatusOption[] = [
 ];
 
 export const SearchAndFilterCandidates = ({
-  positions,
-}: SearchAndFilterCandidatesProps) => {
+  positionOptions,
+}: {
+  positionOptions: ReactNode;
+}) => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
@@ -183,12 +183,27 @@ export const SearchAndFilterCandidates = ({
             ))}
           </SelectContent>
         </Select>
-        <PositionsSelect
-          positions={positions}
-          currentPosition={currentPosition}
-          handlePosition={handlePosition}
-          isPending={isPending}
-        />
+        <Select
+          name="position"
+          value={currentPosition}
+          onValueChange={handlePosition}
+          disabled={isPending}
+        >
+          <SelectTrigger>
+            <div className="flex items-center gap-2">
+              <Briefcase className="size-4" />
+              <SelectValue placeholder={"Posizione"} />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{"Tutte le posizioni"}</SelectItem>
+            <Suspense
+              fallback={<SelectItem value="">Caricamento...</SelectItem>}
+            >
+              {positionOptions}
+            </Suspense>
+          </SelectContent>
+        </Select>
         <Select
           name="sort"
           value={currentSort}

@@ -8,13 +8,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown, Loader2, Search as SearchIcon } from "lucide-react";
+import {
+  ArrowUpDown,
+  Briefcase,
+  Loader2,
+  Search as SearchIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  ReactNode,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { PositionLevelsSelect } from "../positions/position-levels-select";
-import PositionsSelect from "../positions/positions-select";
 
 type PositionOption = {
   id: string;
@@ -27,9 +37,12 @@ type SearchAndFilterQuizzesProps = {
 };
 
 export const SearchAndFilterQuizzes = ({
-  levels,
-  positions,
-}: SearchAndFilterQuizzesProps) => {
+  levelsOptions,
+  positionOptions,
+}: {
+  levelsOptions: ReactNode;
+  positionOptions: ReactNode;
+}) => {
   const searchParams = useSearchParams();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -152,18 +165,48 @@ export const SearchAndFilterQuizzes = ({
             <SelectItem value="z-a">Z-A</SelectItem>
           </SelectContent>
         </Select>
-        <PositionLevelsSelect
-          levels={levels}
-          currentFilter={currentFilter}
-          handleFilter={handleFilter}
-          isPending={isPending}
-        />
-        <PositionsSelect
-          positions={positions}
-          currentPosition={currentPosition}
-          handlePosition={handlePosition}
-          isPending={isPending}
-        />
+        <Select
+          name="filter"
+          value={currentFilter}
+          onValueChange={handleFilter}
+          disabled={isPending}
+        >
+          <SelectTrigger>
+            <div className="flex items-center gap-2">
+              <Briefcase className="size-4" />
+              <SelectValue placeholder={"Livello"} />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{"Tutti i livelli"}</SelectItem>
+            <Suspense
+              fallback={<SelectItem value="">Caricamento...</SelectItem>}
+            >
+              {levelsOptions}
+            </Suspense>
+          </SelectContent>
+        </Select>
+        <Select
+          name="position"
+          value={currentPosition}
+          onValueChange={handlePosition}
+          disabled={isPending}
+        >
+          <SelectTrigger>
+            <div className="flex items-center gap-2">
+              <Briefcase className="size-4" />
+              <SelectValue placeholder={"Posizione"} />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{"Tutte le posizioni"}</SelectItem>
+            <Suspense
+              fallback={<SelectItem value="">Caricamento...</SelectItem>}
+            >
+              {positionOptions}
+            </Suspense>
+          </SelectContent>
+        </Select>
         {(currentSearch ||
           currentFilter !== "all" ||
           currentPosition !== "all") && (
