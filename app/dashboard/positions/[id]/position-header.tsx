@@ -4,9 +4,7 @@ import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deletePosition } from "@/lib/actions/positions";
 import { getPositionById } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
-import { entityTag } from "@/lib/utils/cache-utils";
 import { Edit } from "lucide-react";
-import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
 type Props = {
@@ -14,10 +12,7 @@ type Props = {
 };
 
 export async function PositionHeader({ params }: Props) {
-  "use cache";
   const { id } = await params;
-  cacheLife("hours");
-  cacheTag(entityTag.position(id));
   const position = await getPositionById(id);
 
   if (!position) {

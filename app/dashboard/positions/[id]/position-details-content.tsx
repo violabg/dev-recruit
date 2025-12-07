@@ -1,18 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPositionById } from "@/lib/data/positions";
-import { entityTag } from "@/lib/utils/cache-utils";
-import { cacheLife, cacheTag } from "next/cache";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export async function PositionDetailsContent({ params }: Props) {
-  "use cache";
   const { id } = await params;
-  cacheLife("hours");
-  cacheTag(entityTag.position(id));
   const position = await getPositionById(id);
 
   if (!position) {

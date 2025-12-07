@@ -8,9 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getPositionById } from "@/lib/data/positions";
-import { entityTag } from "@/lib/utils/cache-utils";
 import { ArrowLeft } from "lucide-react";
-import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
 export default async function EditPositionPage({
@@ -18,11 +16,7 @@ export default async function EditPositionPage({
 }: {
   params: { id: string };
 }) {
-  "use cache";
   const params = await incomingParams;
-
-  cacheLife("hours");
-  cacheTag(entityTag.position(params.id));
   const position = await getPositionById(params.id);
 
   if (!position) {
