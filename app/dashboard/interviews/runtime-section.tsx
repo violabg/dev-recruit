@@ -2,8 +2,6 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import type { ComponentType, SVGProps } from "react";
 
 import { InterviewsTable } from "@/components/interviews/interviews-table";
-import { SearchAndFilterInterviews } from "@/components/interviews/search-and-filter-interviews";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -24,7 +22,7 @@ export type InterviewsSearchParams = {
   page?: string;
 };
 
-const STATUS_CONFIG: Record<
+export const STATUS_CONFIG: Record<
   InterviewStatus,
   {
     label: string;
@@ -54,12 +52,13 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const normalizeStatus = (
+export const normalizeStatus = (
   value?: InterviewStatus | "all"
 ): InterviewStatus | "all" => value || "all";
-const normalizeLanguage = (value?: string): string => value || "all";
-const normalizePosition = (value?: string): string => value?.trim() || "all";
-const normalizePage = (value?: string) => {
+export const normalizeLanguage = (value?: string): string => value || "all";
+export const normalizePosition = (value?: string): string =>
+  value?.trim() || "all";
+export const normalizePage = (value?: string) => {
   if (!value) return 1;
   const parsed = Number(value);
   if (Number.isNaN(parsed) || parsed < 1) {
@@ -82,9 +81,6 @@ export const InterviewsRuntimeSection = async ({
 
   const {
     interviews,
-    positions,
-    programmingLanguages,
-    statusCounts,
     totalCount,
     currentPage,
     totalPages,
@@ -100,58 +96,12 @@ export const InterviewsRuntimeSection = async ({
   });
 
   return (
-    <div className="space-y-6">
-      <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-          const count = statusCounts[key as InterviewStatus] ?? 0;
-          const Icon = config.icon;
-
-          return (
-            <Card key={key} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row justify-between items-center space-y-0 pb-2">
-                <CardTitle className="font-medium text-sm">
-                  {config.label}
-                </CardTitle>
-                <Icon className={`h-4 w-4 ${config.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="font-bold text-2xl">{count}</div>
-                <p className="text-muted-foreground text-xs">
-                  {count === 1 ? "colloquio" : "colloqui"}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <SearchAndFilterInterviews
-        positions={positions}
-        programmingLanguages={programmingLanguages}
-        initialSearch={search}
-        initialStatus={status}
-        initialPosition={positionId}
-        initialLanguage={programmingLanguage}
-      />
-
+    <>
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm">
             {totalCount} colloqui trovati
           </span>
-          {status !== "all" && (
-            <Badge variant="outline">
-              {STATUS_CONFIG[status as InterviewStatus]?.label || status}
-            </Badge>
-          )}
-          {positionId !== "all" && (
-            <Badge variant="outline">
-              {positions.find((p) => p.id === positionId)?.title}
-            </Badge>
-          )}
-          {programmingLanguage !== "all" && (
-            <Badge variant="outline">{programmingLanguage}</Badge>
-          )}
         </div>
       </div>
 
@@ -178,6 +128,6 @@ export const InterviewsRuntimeSection = async ({
           />
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 };

@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  normalizeLanguage,
+  normalizePage,
+  normalizePosition,
+  normalizeStatus,
+} from "@/app/dashboard/interviews/runtime-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,38 +15,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { InterviewStatus } from "@/lib/schemas";
 import { Briefcase, ClockFading, Code, Loader2, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useDebouncedCallback } from "use-debounce";
-
-type Position = {
-  id: string;
-  title: string;
-  skills: string[];
-};
+import { programmingLanguages } from "../positions/data";
 
 type SearchAndFilterInterviewsProps = {
-  positions: Position[];
-  programmingLanguages: string[];
-  initialSearch: string;
-  initialStatus: string;
-  initialPosition: string;
-  initialLanguage: string;
+  positionOptions: ReactNode;
 };
 
 export function SearchAndFilterInterviews({
-  positions,
-  programmingLanguages,
-  initialSearch,
-  initialStatus,
-  initialPosition,
-  initialLanguage,
+  positionOptions,
 }: SearchAndFilterInterviewsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  const initialStatus = normalizeStatus(
+    searchParams.get("status") as InterviewStatus | "all"
+  );
+  const initialPosition = normalizePosition(searchParams.get("position") || "");
+  const initialLanguage = normalizeLanguage(searchParams.get("language") || "");
+  const page = normalizePage(searchParams.get("page") || "");
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -130,7 +136,7 @@ export function SearchAndFilterInterviews({
       <div className="flex flex-wrap gap-4">
         <Select
           value={status}
-          onValueChange={(value) => {
+          onValueChange={(value: InterviewStatus | "all") => {
             setStatus(value);
             updateFilters({ search, status: value, position, language });
           }}
@@ -160,11 +166,7 @@ export function SearchAndFilterInterviews({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutte le posizioni</SelectItem>
-            {positions.map((pos) => (
-              <SelectItem key={pos.id} value={pos.id}>
-                {pos.title}
-              </SelectItem>
-            ))}
+            {positionOptions}
           </SelectContent>
         </Select>
         <Select

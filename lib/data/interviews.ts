@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
 import { CacheTags } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
+import { cache } from "react";
 import { InterviewStatus } from "../schemas";
 
 // Include pattern for quiz with linked questions + extended position details for interviews
@@ -674,185 +675,172 @@ export const getRecentInterviewIds = async (limit = 100): Promise<string[]> => {
   return interviews.map((i) => i.id);
 };
 
-export async function getFilteredInterviews(filters: {
-  search?: string;
-  status?: InterviewStatus | "all";
-  positionId?: string;
-  programmingLanguage?: string;
-  page?: number;
-  pageSize?: number;
-}) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.INTERVIEWS);
+export const getFilteredInterviews = cache(
+  async (filters: {
+    search?: string;
+    status?: InterviewStatus | "all";
+    positionId?: string;
+    programmingLanguage?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    "use cache";
+    cacheLife("hours");
+    cacheTag(CacheTags.INTERVIEWS);
 
-  const {
-    search = "",
-    status = "all",
-    positionId = "all",
-    programmingLanguage = "all",
-    page = 1,
-    pageSize = DEFAULT_PAGE_SIZE,
-  } = filters;
+    const {
+      search = "",
+      status = "all",
+      positionId = "all",
+      programmingLanguage = "all",
+      page = 1,
+      pageSize = DEFAULT_PAGE_SIZE,
+    } = filters;
 
-  // Avoid Math.max() which calls .valueOf() and fails with temporary client references
-  const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
-  const normalizedPageSize =
-    typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
-  const searchTerm = search.trim();
+    // Avoid Math.max() which calls .valueOf() and fails with temporary client references
+    const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
+    const normalizedPageSize =
+      typeof pageSize === "number" && pageSize > 0
+        ? pageSize
+        : DEFAULT_PAGE_SIZE;
+    const searchTerm = search.trim();
 
-  const whereClauses: Prisma.InterviewWhereInput[] = [
-    {
-      candidate: {},
-    },
-  ];
-
-  if (status !== "all") {
-    whereClauses.push({ status });
-  }
-
-  if (positionId !== "all") {
-    whereClauses.push({ quiz: { positionId } });
-  }
-
-  if (programmingLanguage !== "all") {
-    whereClauses.push({
-      quiz: {
-        position: {
-          skills: {
-            has: programmingLanguage,
-          },
-        },
+    const whereClauses: Prisma.InterviewWhereInput[] = [
+      {
+        candidate: {},
       },
-    });
-  }
+    ];
 
-  if (searchTerm) {
-    const searchFilter: Prisma.InterviewWhereInput = {
-      OR: [
-        {
-          candidate: {
-            firstName: {
-              contains: searchTerm,
-              mode: "insensitive",
+    if (status !== "all") {
+      whereClauses.push({ status });
+    }
+
+    if (positionId !== "all") {
+      whereClauses.push({ quiz: { positionId } });
+    }
+
+    if (programmingLanguage !== "all") {
+      whereClauses.push({
+        quiz: {
+          position: {
+            skills: {
+              has: programmingLanguage,
             },
           },
         },
-        {
-          candidate: {
-            lastName: {
-              contains: searchTerm,
-              mode: "insensitive",
+      });
+    }
+
+    if (searchTerm) {
+      const searchFilter: Prisma.InterviewWhereInput = {
+        OR: [
+          {
+            candidate: {
+              firstName: {
+                contains: searchTerm,
+                mode: "insensitive",
+              },
             },
           },
-        },
-        {
-          candidate: {
-            email: {
-              contains: searchTerm,
-              mode: "insensitive",
+          {
+            candidate: {
+              lastName: {
+                contains: searchTerm,
+                mode: "insensitive",
+              },
             },
           },
-        },
-        {
-          quiz: {
-            title: {
-              contains: searchTerm,
-              mode: "insensitive",
+          {
+            candidate: {
+              email: {
+                contains: searchTerm,
+                mode: "insensitive",
+              },
             },
           },
-        },
-        {
-          quiz: {
-            position: {
+          {
+            quiz: {
               title: {
                 contains: searchTerm,
                 mode: "insensitive",
               },
             },
           },
+          {
+            quiz: {
+              position: {
+                title: {
+                  contains: searchTerm,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        ],
+      };
+
+      whereClauses.push(searchFilter);
+    }
+
+    const where: Prisma.InterviewWhereInput = whereClauses.length
+      ? { AND: whereClauses }
+      : {};
+
+    const interviewRecords = await prisma.interview.findMany({
+      where,
+      include: {
+        candidate: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
         },
-      ],
-    };
-
-    whereClauses.push(searchFilter);
-  }
-
-  const where: Prisma.InterviewWhereInput = whereClauses.length
-    ? { AND: whereClauses }
-    : {};
-
-  const interviewRecords = await prisma.interview.findMany({
-    where,
-    include: {
-      candidate: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-      quiz: {
-        select: {
-          id: true,
-          title: true,
-          positionId: true,
-          timeLimit: true,
-          position: {
-            select: {
-              id: true,
-              title: true,
-              skills: true,
+        quiz: {
+          select: {
+            id: true,
+            title: true,
+            positionId: true,
+            timeLimit: true,
+            position: {
+              select: {
+                id: true,
+                title: true,
+                skills: true,
+              },
             },
           },
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    skip: (normalizedPage - 1) * normalizedPageSize,
-    take: normalizedPageSize,
-  });
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip: (normalizedPage - 1) * normalizedPageSize,
+      take: normalizedPageSize,
+    });
 
-  const interviews = interviewRecords.map(mapInterviewListItem);
+    const interviews = interviewRecords.map(mapInterviewListItem);
 
-  const statusCounts = interviews.reduce<Record<string, number>>(
-    (acc, item) => {
-      acc[item.status] = (acc[item.status] ?? 0) + 1;
-      return acc;
-    },
-    {}
-  );
+    const statusCounts = interviews.reduce<Record<string, number>>(
+      (acc, item) => {
+        acc[item.status] = (acc[item.status] ?? 0) + 1;
+        return acc;
+      },
+      {}
+    );
 
-  const totalCount = await prisma.interview.count({ where });
-  const totalPages = Math.max(1, Math.ceil(totalCount / normalizedPageSize));
+    const totalCount = await prisma.interview.count({ where });
+    const totalPages = Math.max(1, Math.ceil(totalCount / normalizedPageSize));
 
-  const positions = await prisma.position.findMany({
-    select: {
-      id: true,
-      title: true,
-      skills: true,
-    },
-    orderBy: {
-      title: "asc",
-    },
-  });
-
-  const programmingLanguages = Array.from(
-    new Set(positions.flatMap((position) => position.skills ?? []))
-  ).sort((a, b) => a.localeCompare(b));
-
-  return {
-    interviews,
-    positions,
-    programmingLanguages,
-    statusCounts,
-    totalCount,
-    currentPage: normalizedPage,
-    totalPages,
-    hasNextPage: normalizedPage < totalPages,
-    hasPrevPage: normalizedPage > 1,
-  };
-}
+    return {
+      interviews,
+      statusCounts,
+      totalCount,
+      currentPage: normalizedPage,
+      totalPages,
+      hasNextPage: normalizedPage < totalPages,
+      hasPrevPage: normalizedPage > 1,
+    };
+  }
+);

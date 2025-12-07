@@ -1,36 +1,38 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const StatsFallback = () => (
+  <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+    {Array.from({ length: 4 }).map((_, index) => (
+      <Card key={index} className="animate-pulse">
+        <CardHeader className="flex flex-row justify-between items-center pb-2">
+          <CardTitle>
+            <Skeleton className="w-20 h-4" />
+          </CardTitle>
+          <Skeleton className="size-4" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="mb-2 w-16 h-8" />
+          <Skeleton className="w-24 h-3" />
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+);
+
+export const FiltersSkeleton = () => (
+  <div className="flex sm:flex-row flex-col gap-4">
+    <Skeleton className="flex-1 h-10" />
+    <div className="flex flex-wrap gap-4">
+      <Skeleton className="w-[140px] h-10" />
+      <Skeleton className="w-[140px] h-10" />
+      <Skeleton className="w-[140px] h-10" />
+    </div>
+  </div>
+);
+
 export const InterviewsSkeleton = () => (
-  <div className="space-y-6">
-    {/* Stats Grid */}
-    <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <Card key={index} className="animate-pulse">
-          <CardHeader className="flex flex-row justify-between items-center pb-2">
-            <CardTitle>
-              <Skeleton className="w-20 h-4" />
-            </CardTitle>
-            <Skeleton className="size-4" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="mb-2 w-16 h-8" />
-            <Skeleton className="w-24 h-3" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-
-    {/* Filters */}
-    <div className="flex sm:flex-row flex-col gap-4">
-      <Skeleton className="flex-1 h-10" />
-      <div className="flex flex-wrap gap-4">
-        <Skeleton className="w-[140px] h-10" />
-        <Skeleton className="w-[140px] h-10" />
-        <Skeleton className="w-[140px] h-10" />
-      </div>
-    </div>
-
+  <>
     {/* Summary Line */}
     <div className="flex items-center gap-2">
       <Skeleton className="w-32 h-4" />
@@ -71,5 +73,5 @@ export const InterviewsSkeleton = () => (
         </div>
       </CardContent>
     </Card>
-  </div>
+  </>
 );

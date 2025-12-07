@@ -1,10 +1,17 @@
 import { Suspense } from "react";
 
-import { InterviewsSkeleton } from "./fallbacks";
+import { SearchAndFilterInterviews } from "@/components/interviews/search-and-filter-interviews";
+import PositionOptions from "@/components/positions/position-options";
+import {
+  FiltersSkeleton,
+  InterviewsSkeleton,
+  StatsFallback,
+} from "./fallbacks";
 import {
   InterviewsRuntimeSection,
   type InterviewsSearchParams,
 } from "./runtime-section";
+import { Stats } from "./stats";
 
 export default function InterviewsPage({
   searchParams,
@@ -22,9 +29,18 @@ export default function InterviewsPage({
         </div>
       </div>
 
-      <Suspense fallback={<InterviewsSkeleton />}>
-        <InterviewsRuntimeSection searchParams={searchParams} />
-      </Suspense>
+      <div className="@container space-y-6">
+        <Suspense fallback={<StatsFallback />}>
+          <Stats />
+        </Suspense>
+        <Suspense fallback={<FiltersSkeleton />}>
+          <SearchAndFilterInterviews positionOptions={<PositionOptions />} />
+        </Suspense>
+
+        <Suspense fallback={<InterviewsSkeleton />}>
+          <InterviewsRuntimeSection searchParams={searchParams} />
+        </Suspense>
+      </div>
     </div>
   );
 }
