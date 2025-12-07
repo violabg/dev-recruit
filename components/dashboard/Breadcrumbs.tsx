@@ -8,6 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const DASHBOARD_LABELS: Record<string, string> = {
@@ -57,8 +58,8 @@ const Breadcrumbs = () => {
         {isLast || isNewQuiz ? (
           <BreadcrumbPage>{getBreadcrumbLabel(segment)}</BreadcrumbPage>
         ) : (
-          <BreadcrumbLink href={href}>
-            {getBreadcrumbLabel(segment)}
+          <BreadcrumbLink asChild>
+            <Link href={href as any}>{getBreadcrumbLabel(segment)}</Link>
           </BreadcrumbLink>
         )}
         {!isLast && <BreadcrumbSeparator />}

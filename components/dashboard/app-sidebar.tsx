@@ -88,9 +88,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="px-2 py-2">
         <Suspense
           fallback={
-            <div className="space-y-3 p-4">
+            <div className="space-y-3 mt-4">
               {data.navSecondary.map((_, idx) => (
-                <Skeleton key={idx} className="rounded w-28 h-3" />
+                <Skeleton
+                  key={idx}
+                  className="bg-foreground/10 rounded w-full h-8"
+                />
               ))}
             </div>
           }
