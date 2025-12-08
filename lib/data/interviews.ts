@@ -844,7 +844,6 @@ export const getInteviewsStatus = cache(
     "use cache";
     cacheLife("hours");
     cacheTag(CacheTags.INTERVIEWS);
-
     const interviews = await prisma.interview.findMany({
       select: {
         status: true,

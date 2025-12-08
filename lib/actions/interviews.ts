@@ -1,29 +1,11 @@
 "use server";
 
-import { getFilteredInterviews } from "@/lib/data/interviews";
 import { candidateQuizSelectionSchema } from "@/lib/schemas";
 import { generateInterviewToken } from "@/lib/utils/token";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
-import { InterviewStatus, Prisma } from "../prisma/client";
+import { Prisma } from "../prisma/client";
 import { invalidateInterviewCache } from "../utils/cache-utils";
-
-/**
- * Legacy wrapper for backward compatibility
- * Delegates to getFilteredInterviews in data layer
- */
-export async function getInterviews(
-  filters: {
-    search?: string;
-    status?: InterviewStatus | "all";
-    positionId?: string;
-    programmingLanguage?: string;
-    page?: number;
-    pageSize?: number;
-  } = {}
-) {
-  return getFilteredInterviews(filters);
-}
 
 export async function startInterview(token: string) {
   const interview = await prisma.interview.findUnique({

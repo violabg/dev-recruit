@@ -4,7 +4,7 @@ import {
   normalizeLanguage,
   normalizePosition,
   normalizeStatus,
-} from "@/app/dashboard/interviews/runtime-section";
+} from "@/app/dashboard/interviews/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
