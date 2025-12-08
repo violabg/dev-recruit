@@ -9,14 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 // Tabs removed — rendering results directly
+import { deleteInterview } from "@/lib/actions/interviews";
 import { getEvaluationByInterviewId } from "@/lib/data/evaluations";
 import {
   getInterviewDetail,
   getRecentInterviewIds,
 } from "@/lib/data/interviews";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export async function generateStaticParams() {
@@ -76,15 +77,6 @@ export default async function InterviewDetailPage({
         timeLimit={quiz.timeLimit}
       />
 
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/dashboard/quizzes/${quiz.id}`}>
-            <ArrowLeft className="mr-1 size-4" />
-            Torna al quiz
-          </Link>
-        </Button>
-      </div>
-
       <div className="flex justify-between items-center">
         <div>
           <h1 className="font-bold text-3xl">Intervista: {quiz.title}</h1>
@@ -117,6 +109,18 @@ export default async function InterviewDetailPage({
             </Badge>
           </div>
         </div>
+        <DeleteWithConfirm
+          deleteAction={async () => {
+            "use server";
+            await deleteInterview(interview.id);
+          }}
+          title="Eliminare l'intervista?"
+          description="Questa azione eliminerà permanentemente l'intervista e tutte le risposte associate. L'azione non può essere annullata."
+          label="Elimina intervista"
+          successMessage="Intervista eliminata con successo"
+          errorMessage="Errore durante l'eliminazione dell'intervista"
+          disabled={interview.status === "completed"}
+        />
       </div>
 
       <div className="gap-4 grid md:grid-cols-3">

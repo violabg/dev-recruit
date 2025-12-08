@@ -1,6 +1,7 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import {
   Empty,
   EmptyDescription,
@@ -23,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { deleteInterview } from "@/lib/actions/interviews";
 import type { InterviewListItem } from "@/lib/data/interviews";
 import { isInterviewExpired } from "@/lib/utils/interview-utils";
 import {
@@ -221,6 +223,19 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      <DeleteWithConfirm
+                        deleteAction={async () => {
+                          await deleteInterview(interview.id);
+                        }}
+                        title="Eliminare il colloquio?"
+                        description="Questa azione eliminerà permanentemente il colloquio e tutte le risposte associate. L'azione non può essere annullata."
+                        label="Elimina"
+                        iconOnly
+                        successMessage="Colloquio eliminato con successo"
+                        errorMessage="Errore durante l'eliminazione del colloquio"
+                        disabled={interview.status === "completed"}
+                        variant="outline"
+                      />
                     </TableCell>
                   </TableRow>
                 );

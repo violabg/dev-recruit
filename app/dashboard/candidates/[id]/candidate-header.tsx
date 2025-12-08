@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deleteCandidate } from "@/lib/actions/candidates";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
-import { ClipboardCheck, Edit } from "lucide-react";
+import { ClipboardCheck, Edit, Link2 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
@@ -45,6 +45,12 @@ export async function CandidateHeader({ params }: Props) {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <Button asChild variant="outline">
+          <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
+            <Link2 className="mr-1 size-4" />
+            Associa quiz
+          </Link>
+        </Button>
         <Button asChild variant="outline">
           <Link
             href={

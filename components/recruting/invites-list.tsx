@@ -1,21 +1,12 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { Copy, Loader2, Trash2 } from "lucide-react";
-import { useEffect, useState, useTransition } from "react"; // Keep useEffect for potential refreshTrigger if needed
+import { Copy } from "lucide-react";
+import { useState } from "react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import {
   Table,
   TableBody,
@@ -29,63 +20,18 @@ import type { AssignedInterview } from "@/lib/data/interviews";
 import { toast } from "sonner";
 
 interface InvitesListProps {
-  // quizId: string; // No longer needed if interviews are passed directly
   assignedInterviews: AssignedInterview[];
-  refreshTrigger?: number; // Kept for now, might be removed if revalidation is sufficient
 }
 
-export function InvitesList({
-  assignedInterviews,
-  refreshTrigger = 0,
-}: InvitesListProps) {
+export function InvitesList({ assignedInterviews }: InvitesListProps) {
   const [interviews, setInterviews] =
     useState<AssignedInterview[]>(assignedInterviews);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  // Update interviews if the prop changes (e.g., after revalidation)
-  useEffect(() => {
-    setInterviews(
-      assignedInterviews.filter((interview) => interview.createdAt)
-    );
-  }, [assignedInterviews, refreshTrigger]);
 
   const copyInterviewLink = (token: string) => {
     const link = `${window.location.origin}/recruting/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copied", {
       description: "The interview link has been copied to your clipboard",
-    });
-  };
-
-  const handleDelete = async () => {
-    if (!deleteId) return;
-
-    startTransition(async () => {
-      try {
-        setDeleting(true);
-        await deleteInterview(deleteId); // This server action should revalidate the path
-
-        // Optimistically update UI or rely on revalidation from parent
-        setInterviews(
-          interviews.filter((interview) => interview.id !== deleteId)
-        );
-
-        toast.success("Interview deleted", {
-          description: "The interview has been deleted successfully",
-        });
-      } catch (error: unknown) {
-        toast.error("Error", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "Failed to delete interview",
-        });
-      } finally {
-        setDeleting(false);
-        setDeleteId(null);
-      }
     });
   };
 
@@ -155,15 +101,22 @@ export function InvitesList({
                     >
                       <Copy className="size-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteId(interview.id)}
-                      title="Delete interview"
+                    <DeleteWithConfirm
+                      deleteAction={async () => {
+                        await deleteInterview(interview.id);
+                        setInterviews(
+                          interviews.filter((i) => i.id !== interview.id)
+                        );
+                      }}
+                      title="Are you sure?"
+                      description="This will permanently delete the interview. This action cannot be undone."
+                      label="Delete"
+                      iconOnly
+                      successMessage="Interview deleted successfully"
+                      errorMessage="Failed to delete interview"
                       disabled={interview.status === "completed"}
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                      variant="outline"
+                    />
                   </div>
                 </TableCell>
               </TableRow>
@@ -171,33 +124,6 @@ export function InvitesList({
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the interview. This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={deleting || isPending}
-            >
-              {deleting ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : null}
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

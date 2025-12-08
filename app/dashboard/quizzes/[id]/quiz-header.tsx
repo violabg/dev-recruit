@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { getAllPositions } from "@/lib/data/positions";
 import { getQuizById } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import Link from "next/link";
 import { QuizDetailActionsClient } from "./quiz-detail-actions-client";
 
@@ -47,39 +47,28 @@ export async function QuizHeader({ params }: Props) {
   }));
 
   return (
-    <>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/dashboard/positions/${position.id}`}>
-            <ArrowLeft className="mr-1 size-4" />
-            Vai alla posizione
-          </Link>
-        </Button>
-      </div>
-
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="font-bold text-3xl">{quiz.title}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline">{position.title}</Badge>
-            <Badge variant="outline">{position.experienceLevel}</Badge>
-            {quiz.timeLimit && (
-              <Badge variant="secondary">
-                <Clock className="mr-1 w-3 h-3" />
-                {quiz.timeLimit} minuti
-              </Badge>
-            )}
-            <span className="text-muted-foreground text-sm">
-              Creato il {formatDate(quiz.createdAt)}
-            </span>
-          </div>
+    <div className="flex justify-between items-center">
+      <div>
+        <h1 className="font-bold text-3xl">{quiz.title}</h1>
+        <div className="flex items-center gap-2 mt-1">
+          <Badge variant="outline">{position.title}</Badge>
+          <Badge variant="outline">{position.experienceLevel}</Badge>
+          {quiz.timeLimit && (
+            <Badge variant="secondary">
+              <Clock className="mr-1 w-3 h-3" />
+              {quiz.timeLimit} minuti
+            </Badge>
+          )}
+          <span className="text-muted-foreground text-sm">
+            Creato il {formatDate(quiz.createdAt)}
+          </span>
         </div>
-        <QuizDetailActionsClient
-          quizId={quiz.id}
-          quizTitle={quiz.title}
-          positions={positionsForDialog}
-        />
       </div>
-    </>
+      <QuizDetailActionsClient
+        quizId={quiz.id}
+        quizTitle={quiz.title}
+        positions={positionsForDialog}
+      />
+    </div>
   );
 }

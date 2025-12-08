@@ -32,12 +32,6 @@ export function QuizDetailActionsClient({
             Modifica
           </Link>
         </Button>
-        <Button variant="default" size="sm" asChild>
-          <Link href={`/dashboard/quizzes/${quizId}/invite`}>
-            <Send className="mr-1 size-4" />
-            Assicia a candidati
-          </Link>
-        </Button>
         <Button
           variant="secondary"
           size="sm"
@@ -45,6 +39,12 @@ export function QuizDetailActionsClient({
         >
           <Copy className="mr-1 size-4" />
           Duplica
+        </Button>
+        <Button variant="default" size="sm" asChild>
+          <Link href={`/dashboard/quizzes/${quizId}/invite`}>
+            <Send className="mr-1 size-4" />
+            Assicia a candidati
+          </Link>
         </Button>
         <DeleteWithConfirm
           deleteAction={deleteQuizById.bind(null, quizId)}
