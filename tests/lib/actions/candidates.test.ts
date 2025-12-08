@@ -37,6 +37,7 @@ vi.mock("../../../lib/services/r2-storage", () => ({
 
 vi.mock("../../../lib/utils/cache-utils", () => ({
   invalidateCandidateCache: vi.fn(),
+  invalidateInterviewCache: vi.fn(),
 }));
 
 vi.mock("../../../lib/services/logger", () => ({
@@ -451,9 +452,8 @@ describe("candidates actions", () => {
 
     it("invalidates cache after deletion", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
-      const { invalidateCandidateCache } = await import(
-        "../../../lib/utils/cache-utils"
-      );
+      const { invalidateCandidateCache, invalidateInterviewCache } =
+        await import("../../../lib/utils/cache-utils");
       const mockFindUnique = prisma.candidate.findUnique as any;
       const mockDelete = prisma.candidate.delete as any;
 
@@ -469,6 +469,7 @@ describe("candidates actions", () => {
         candidateId: "cand-123",
         positionIds: ["pos-123"],
       });
+      expect(invalidateInterviewCache).toHaveBeenCalled();
     });
   });
 });

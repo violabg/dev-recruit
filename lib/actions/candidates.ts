@@ -16,7 +16,10 @@ import {
   uploadResumeToR2,
   validateResumeFile,
 } from "../services/r2-storage";
-import { invalidateCandidateCache } from "../utils/cache-utils";
+import {
+  invalidateCandidateCache,
+  invalidateInterviewCache,
+} from "../utils/cache-utils";
 
 const readFormValue = (formData: FormData, key: string) => {
   const value = formData.get(key);
@@ -150,11 +153,11 @@ export async function updateCandidate(
   const payload: CandidateUpdateData = candidateUpdateSchema.parse(rawPayload);
 
   const candidate = await getCandidateById(id);
-  const positionsToInvalidate = new Set<string>();
+  const existingPositionIds = new Set<string>();
 
-  // Collect existing position IDs for cache invalidation
+  // Collect existing position IDs for cache invalidation and comparison
   for (const pos of candidate.positions) {
-    positionsToInvalidate.add(pos.positionId);
+    existingPositionIds.add(pos.positionId);
   }
 
   const updateData: Prisma.CandidateUpdateInput = {};
@@ -190,6 +193,39 @@ export async function updateCandidate(
       throw new Error("Una o più posizioni selezionate non sono valide");
     }
 
+    // Determine which positions are being removed
+    const newPositionIds = new Set(payload.positionIds);
+    const removedPositionIds = Array.from(existingPositionIds).filter(
+      (posId) => !newPositionIds.has(posId)
+    );
+
+    // Delete non-completed interviews for removed positions
+    if (removedPositionIds.length > 0) {
+      try {
+        await prisma.interview.deleteMany({
+          where: {
+            candidateId: id,
+            quiz: {
+              positionId: { in: removedPositionIds },
+            },
+            status: { notIn: ["completed"] },
+          },
+        });
+        // Invalidate interview cache since we deleted interviews
+        invalidateInterviewCache();
+      } catch (deleteError) {
+        storageLogger.error(
+          "Failed to delete interviews for removed positions",
+          {
+            error: deleteError,
+            candidateId: id,
+            removedPositionIds,
+          }
+        );
+        // Continue with update anyway
+      }
+    }
+
     // Delete existing position relationships and create new ones
     updateData.positions = {
       deleteMany: {},
@@ -199,9 +235,9 @@ export async function updateCandidate(
       })),
     };
 
-    // Add new positions to invalidation set
+    // Add new positions to existing set for cache invalidation
     for (const positionId of payload.positionIds) {
-      positionsToInvalidate.add(positionId);
+      existingPositionIds.add(positionId);
     }
   }
 
@@ -262,10 +298,10 @@ export async function updateCandidate(
     data: updateData,
   });
 
-  // Invalidate cache for all affected positions
+  // Invalidate cache for all affected positions (old + new)
   invalidateCandidateCache({
     candidateId: id,
-    positionIds: Array.from(positionsToInvalidate),
+    positionIds: Array.from(existingPositionIds),
   });
 
   return { success: true };
@@ -296,6 +332,9 @@ export async function deleteCandidate(id: string) {
     candidateId: id,
     positionIds: candidate.positions.map((p) => p.positionId),
   });
+
+  // Invalidate interview cache since candidate deletion cascades to interviews
+  invalidateInterviewCache();
 
   redirect("/dashboard/candidates");
 }
