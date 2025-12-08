@@ -12,7 +12,7 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 ### Core Functionality
 
 - **📋 Position Management** - Create and manage job positions with detailed skill requirements and AI-generated descriptions
-- **👥 Candidate Tracking** - Track candidates through the recruitment pipeline with status management and resume storage
+- **👥 Candidate Tracking** - Track candidates through the recruitment pipeline with status management, resume storage, and **multi-position assignment** (candidates can be associated with multiple positions with primary designation)
 - **📝 AI-Powered Quiz Generation** - Generate technical assessments tailored to specific positions using advanced LLMs
 - **🎯 Interview System** - Send quiz invitations to candidates via unique tokens for remote technical assessments. Features time-limited quizzes with user confirmation dialogs for completion when time expires.
 - **📊 AI Evaluation** - Dual evaluation system:
@@ -266,18 +266,20 @@ See `lib/auth.ts` for configuration and `lib/auth-server.ts` for server-side hel
 
 The core entities in DevRecruit:
 
-| Entity           | Description                                                          |
-| ---------------- | -------------------------------------------------------------------- |
-| **User**         | Application users (recruiters)                                       |
-| **Position**     | Job positions with skill requirements                                |
-| **Candidate**    | Applicants linked to positions with resume storage                   |
-| **Quiz**         | Technical assessments composed of reusable questions                 |
-| **Question**     | Reusable question library (multiple choice, open, code snippet)      |
-| **QuizQuestion** | Join table linking questions to quizzes with ordering                |
-| **Interview**    | Quiz assignments to candidates with answers and results              |
-| **Evaluation**   | AI-generated assessments (polymorphic: interview or candidate-based) |
-| **Preset**       | Question generation templates with type-specific parameters          |
-| **Preset**       | Reusable question generation templates                               |
+| Entity                | Description                                                                   |
+| --------------------- | ----------------------------------------------------------------------------- |
+| **User**              | Application users (recruiters)                                                |
+| **Position**          | Job positions with skill requirements                                         |
+| **Candidate**         | Applicants with multi-position support and resume storage                     |
+| **CandidatePosition** | Join table for many-to-many candidate-position relationship with primary flag |
+| **Quiz**              | Technical assessments composed of reusable questions                          |
+| **Question**          | Reusable question library (multiple choice, open, code snippet)               |
+| **QuizQuestion**      | Join table linking questions to quizzes with ordering                         |
+| **Interview**         | Quiz assignments to candidates with answers and results                       |
+| **Evaluation**        | AI-generated assessments (polymorphic: interview or candidate-based)          |
+| **Preset**            | Question generation templates with type-specific parameters                   |
+
+For detailed information on the candidate-position relationship, see [`docs/CANDIDATE_POSITIONS.md`](docs/CANDIDATE_POSITIONS.md).
 
 ## 🎨 Styling Guidelines
 

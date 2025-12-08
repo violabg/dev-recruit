@@ -103,15 +103,26 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             <div className="space-y-2">
               <div className="flex items-center text-sm">
                 <Briefcase className="mr-2 size-4 text-muted-foreground" />
-                {candidate.position ? (
-                  <div>
-                    <span>{candidate.position.title}</span>
-                    {candidate.position.experienceLevel && (
-                      <span className="text-muted-foreground text-xs">
-                        {" "}
-                        • {candidate.position.experienceLevel}
-                      </span>
-                    )}
+                {candidate.positions && candidate.positions.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {candidate.positions.map((cp) => (
+                      <div key={cp.id}>
+                        <div className="flex items-center gap-1">
+                          <span>{cp.position.title}</span>
+                          {cp.isPrimary && (
+                            <span className="bg-primary/10 px-1.5 py-0.5 rounded text-primary text-xs">
+                              Primaria
+                            </span>
+                          )}
+                        </div>
+                        {cp.position.experienceLevel && (
+                          <span className="text-muted-foreground text-xs">
+                            {" "}
+                            • {cp.position.experienceLevel}
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <span className="text-muted-foreground">

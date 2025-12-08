@@ -3,6 +3,7 @@
 import {
   FileUploadField,
   InputField,
+  MultiSelectField,
   SelectField,
 } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
@@ -47,10 +48,11 @@ type CandidateFormProps =
         | "lastName"
         | "email"
         | "dateOfBirth"
-        | "positionId"
         | "status"
         | "resumeUrl"
-      >;
+      > & {
+        positionIds: string[];
+      };
     };
 
 export const CandidateForm = (props: CandidateFormProps) => {
@@ -78,7 +80,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
           lastName: props.candidate.lastName,
           email: props.candidate.email,
           dateOfBirth: props.candidate.dateOfBirth ?? undefined,
-          positionId: props.candidate.positionId,
+          positionIds: props.candidate.positionIds,
           status: props.candidate.status as
             | "pending"
             | "contacted"
@@ -90,7 +92,11 @@ export const CandidateForm = (props: CandidateFormProps) => {
           firstName: "",
           lastName: "",
           email: "",
-          positionId: props.defaultPositionId || props.positions[0]?.id || "",
+          positionIds: props.defaultPositionId
+            ? [props.defaultPositionId]
+            : props.positions[0]?.id
+            ? [props.positions[0].id]
+            : [],
         },
   });
 
@@ -106,7 +112,11 @@ export const CandidateForm = (props: CandidateFormProps) => {
         firstName: "",
         lastName: "",
         email: "",
-        positionId: defaultPositionId || firstPositionId || "",
+        positionIds: defaultPositionId
+          ? [defaultPositionId]
+          : firstPositionId
+          ? [firstPositionId]
+          : [],
       });
       setSelectedFile(null);
       setRemoveExistingResume(false);
@@ -141,8 +151,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
       formData.append("email", String(values.email));
     }
 
-    if (values.positionId !== undefined) {
-      formData.append("positionId", String(values.positionId));
+    if (values.positionIds !== undefined && Array.isArray(values.positionIds)) {
+      formData.append("positionIds", JSON.stringify(values.positionIds));
     }
 
     if (values.dateOfBirth !== undefined && values.dateOfBirth !== null) {
@@ -274,12 +284,12 @@ export const CandidateForm = (props: CandidateFormProps) => {
         type="date"
         className="w-auto"
       />
-      <SelectField
+      <MultiSelectField
         control={form.control}
-        name="positionId"
-        label="Posizione"
+        name="positionIds"
+        label="Posizioni"
         required
-        placeholder="Seleziona posizione"
+        placeholder="Seleziona una o più posizioni"
         options={props.positions.map((position) => ({
           value: position.id,
           label: position.title,

@@ -34,8 +34,10 @@ export async function CandidateHeader({ params }: Props) {
         <h1 className="font-bold text-3xl">{fullName}</h1>
         <div className="flex items-center gap-2 mt-1">
           <Badge variant="outline">{candidate.status}</Badge>
-          {candidate.position && (
-            <Badge variant="secondary">{candidate.position.title}</Badge>
+          {candidate.positions && candidate.positions.length > 0 && (
+            <Badge variant="secondary">
+              {candidate.positions[0]?.position?.title}
+            </Badge>
           )}
           <span className="text-muted-foreground text-sm">
             {candidate.email}

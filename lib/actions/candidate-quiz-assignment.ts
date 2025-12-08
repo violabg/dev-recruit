@@ -54,12 +54,16 @@ export async function assignQuizzesToCandidate(
       firstName: true,
       lastName: true,
       email: true,
-      positionId: true,
+      positions: {
+        select: {
+          positionId: true,
+        },
+      },
     },
   });
 
-  if (!candidate) {
-    return { message: "Candidate not found." };
+  if (!candidate || !candidate.positions || candidate.positions.length === 0) {
+    return { message: "Candidate not found or has no positions." };
   }
 
   const quizzes = await prisma.quiz.findMany({
@@ -84,14 +88,18 @@ export async function assignQuizzesToCandidate(
     };
   }
 
+  // Get candidate's position IDs
+  const candidatePositionIds = candidate.positions.map((p) => p.positionId);
+
+  // Check if all quizzes match one of the candidate's positions
   const invalidQuizzes = quizzes.filter(
-    (quiz) => quiz.positionId !== candidate.positionId
+    (quiz) => !candidatePositionIds.includes(quiz.positionId)
   );
 
   if (invalidQuizzes.length > 0) {
     return {
       message:
-        "Some quizzes are not valid for this candidate's position or you don't have permission.",
+        "Some quizzes are not valid for this candidate's positions or you don't have permission.",
     };
   }
 

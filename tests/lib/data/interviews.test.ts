@@ -146,8 +146,12 @@ describe("interviews data layer", () => {
       lastName: "Doe",
       email: "john@example.com",
       status: "active",
-      positionId: "p1",
-      position: { id: "p1", title: "Position 1" },
+      positions: [
+        {
+          position: { id: "p1", title: "Position 1" },
+          isPrimary: true,
+        },
+      ],
     };
     const fakeInterviews = [
       {

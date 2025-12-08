@@ -26,7 +26,15 @@ const readFormValue = (formData: FormData, key: string) => {
 const getCandidateById = async (id: string) => {
   const candidate = await prisma.candidate.findUnique({
     where: { id },
-    select: { positionId: true, resumeUrl: true },
+    select: {
+      resumeUrl: true,
+      positions: {
+        select: {
+          positionId: true,
+          isPrimary: true,
+        },
+      },
+    },
   });
 
   if (!candidate) {
@@ -41,22 +49,24 @@ export async function createCandidate(formData: FormData) {
   const user = await requireUser();
 
   const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
+  const positionIdsRaw = readFormValue(formData, "positionIds");
 
   const payload: CandidateFormData = candidateFormSchema.parse({
     firstName: readFormValue(formData, "firstName"),
     lastName: readFormValue(formData, "lastName"),
     email: readFormValue(formData, "email"),
-    positionId: readFormValue(formData, "positionId"),
+    positionIds: positionIdsRaw ? JSON.parse(positionIdsRaw) : [],
     dateOfBirth: dateOfBirthRaw ? new Date(dateOfBirthRaw) : undefined,
   });
 
-  const position = await prisma.position.findUnique({
-    where: { id: payload.positionId },
+  // Validate all positions exist
+  const positions = await prisma.position.findMany({
+    where: { id: { in: payload.positionIds } },
     select: { id: true },
   });
 
-  if (!position) {
-    throw new Error("Seleziona una posizione valida");
+  if (positions.length !== payload.positionIds.length) {
+    throw new Error("Una o più posizioni selezionate non sono valide");
   }
 
   // Create candidate first to get ID for file naming
@@ -66,11 +76,21 @@ export async function createCandidate(formData: FormData) {
       lastName: payload.lastName.trim(),
       email: payload.email.trim(),
       dateOfBirth: payload.dateOfBirth ?? null,
-      positionId: position.id,
       status: "pending",
       createdBy: user.id,
+      positions: {
+        create: payload.positionIds.map((positionId, index) => ({
+          positionId,
+          isPrimary: index === 0, // First position is primary
+        })),
+      },
     },
-    select: { id: true, positionId: true },
+    select: {
+      id: true,
+      positions: {
+        select: { positionId: true },
+      },
+    },
   });
 
   // Handle file upload if present
@@ -101,7 +121,7 @@ export async function createCandidate(formData: FormData) {
 
   invalidateCandidateCache({
     candidateId: candidate.id,
-    positionId: candidate.positionId,
+    positionIds: candidate.positions.map((p) => p.positionId),
   });
 
   return { success: true as const, candidateId: candidate.id };
@@ -115,12 +135,13 @@ export async function updateCandidate(
 
   const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
   const removeResume = readFormValue(formData, "removeResume") === "true";
+  const positionIdsRaw = readFormValue(formData, "positionIds");
 
   const rawPayload = {
     firstName: readFormValue(formData, "firstName"),
     lastName: readFormValue(formData, "lastName"),
     email: readFormValue(formData, "email"),
-    positionId: readFormValue(formData, "positionId"),
+    positionIds: positionIdsRaw ? JSON.parse(positionIdsRaw) : undefined,
     status: readFormValue(formData, "status"),
     dateOfBirth: dateOfBirthRaw ? new Date(dateOfBirthRaw) : undefined,
     removeResume,
@@ -130,12 +151,13 @@ export async function updateCandidate(
 
   const candidate = await getCandidateById(id);
   const positionsToInvalidate = new Set<string>();
-  if (candidate.positionId) {
-    positionsToInvalidate.add(candidate.positionId);
+
+  // Collect existing position IDs for cache invalidation
+  for (const pos of candidate.positions) {
+    positionsToInvalidate.add(pos.positionId);
   }
 
   const updateData: Prisma.CandidateUpdateInput = {};
-  let newPositionId: string | undefined;
 
   if (payload.firstName) {
     updateData.firstName = payload.firstName.trim();
@@ -157,21 +179,30 @@ export async function updateCandidate(
     updateData.dateOfBirth = payload.dateOfBirth ?? null;
   }
 
-  if (payload.positionId) {
-    const position = await prisma.position.findUnique({
-      where: { id: payload.positionId },
+  if (payload.positionIds) {
+    // Validate all positions exist
+    const positions = await prisma.position.findMany({
+      where: { id: { in: payload.positionIds } },
       select: { id: true },
     });
 
-    if (!position) {
-      throw new Error("Seleziona una posizione valida");
+    if (positions.length !== payload.positionIds.length) {
+      throw new Error("Una o più posizioni selezionate non sono valide");
     }
 
-    updateData.position = {
-      connect: { id: position.id },
+    // Delete existing position relationships and create new ones
+    updateData.positions = {
+      deleteMany: {},
+      create: payload.positionIds.map((positionId, index) => ({
+        positionId,
+        isPrimary: index === 0, // First position is primary
+      })),
     };
-    newPositionId = position.id;
-    positionsToInvalidate.add(position.id);
+
+    // Add new positions to invalidation set
+    for (const positionId of payload.positionIds) {
+      positionsToInvalidate.add(positionId);
+    }
   }
 
   // Handle resume file upload or removal
@@ -232,9 +263,10 @@ export async function updateCandidate(
   });
 
   // Invalidate cache for all affected positions
-  for (const positionId of positionsToInvalidate) {
-    invalidateCandidateCache({ candidateId: id, positionId });
-  }
+  invalidateCandidateCache({
+    candidateId: id,
+    positionIds: Array.from(positionsToInvalidate),
+  });
 
   return { success: true };
 }
@@ -262,7 +294,7 @@ export async function deleteCandidate(id: string) {
 
   invalidateCandidateCache({
     candidateId: id,
-    positionId: candidate.positionId ?? undefined,
+    positionIds: candidate.positions.map((p) => p.positionId),
   });
 
   redirect("/dashboard/candidates");

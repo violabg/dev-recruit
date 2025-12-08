@@ -10,6 +10,7 @@ vi.mock("../../../lib/prisma", () => ({
   default: {
     position: {
       findUnique: vi.fn(),
+      findMany: vi.fn(),
     },
     candidate: {
       findUnique: vi.fn(),
@@ -56,20 +57,20 @@ describe("candidates actions", () => {
   describe("createCandidate", () => {
     it("creates candidate successfully", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
-      const mockFindUnique = prisma.position.findUnique as any;
+      const mockFindMany = prisma.position.findMany as any;
       const mockCreate = prisma.candidate.create as any;
 
-      mockFindUnique.mockResolvedValueOnce({ id: "pos-123" });
+      mockFindMany.mockResolvedValueOnce([{ id: "pos-123" }]);
       mockCreate.mockResolvedValueOnce({
         id: "cand-123",
-        positionId: "pos-123",
+        positions: [{ positionId: "pos-123" }],
       });
 
       const formData = new FormData();
       formData.append("firstName", "Mario");
       formData.append("lastName", "Rossi");
       formData.append("email", "mario.rossi@example.com");
-      formData.append("positionId", "pos-123");
+      formData.append("positionIds", JSON.stringify(["pos-123"]));
 
       const result = await createCandidate(formData);
 
@@ -80,46 +81,45 @@ describe("candidates actions", () => {
           firstName: "Mario",
           lastName: "Rossi",
           email: "mario.rossi@example.com",
-          positionId: "pos-123",
           status: "pending",
         }),
-        select: { id: true, positionId: true },
+        select: { id: true, positions: { select: { positionId: true } } },
       });
     });
 
     it("throws error when position not found", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
-      const mockFindUnique = prisma.position.findUnique as any;
+      const mockFindMany = prisma.position.findMany as any;
 
-      mockFindUnique.mockResolvedValueOnce(null);
+      mockFindMany.mockResolvedValueOnce([]);
 
       const formData = new FormData();
       formData.append("firstName", "Mario");
       formData.append("lastName", "Rossi");
       formData.append("email", "mario@example.com");
-      formData.append("positionId", "invalid-id");
+      formData.append("positionIds", JSON.stringify(["invalid-id"]));
 
       await expect(createCandidate(formData)).rejects.toThrow(
-        "Seleziona una posizione valida"
+        "Una o più posizioni selezionate non sono valide"
       );
     });
 
     it("creates candidate with date of birth", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
-      const mockFindUnique = prisma.position.findUnique as any;
+      const mockFindMany = prisma.position.findMany as any;
       const mockCreate = prisma.candidate.create as any;
 
-      mockFindUnique.mockResolvedValueOnce({ id: "pos-123" });
+      mockFindMany.mockResolvedValueOnce([{ id: "pos-123" }]);
       mockCreate.mockResolvedValueOnce({
         id: "cand-123",
-        positionId: "pos-123",
+        positions: [{ positionId: "pos-123" }],
       });
 
       const formData = new FormData();
       formData.append("firstName", "Mario");
       formData.append("lastName", "Rossi");
       formData.append("email", "mario@example.com");
-      formData.append("positionId", "pos-123");
+      formData.append("positionIds", JSON.stringify(["pos-123"]));
       formData.append("dateOfBirth", "1990-01-15");
 
       await createCandidate(formData);
@@ -128,7 +128,7 @@ describe("candidates actions", () => {
         data: expect.objectContaining({
           dateOfBirth: new Date("1990-01-15"),
         }),
-        select: { id: true, positionId: true },
+        select: { id: true, positions: { select: { positionId: true } } },
       });
     });
 
@@ -137,14 +137,14 @@ describe("candidates actions", () => {
       const { uploadResumeToR2, validateResumeFile } = await import(
         "../../../lib/services/r2-storage"
       );
-      const mockFindUnique = prisma.position.findUnique as any;
+      const mockFindMany = prisma.position.findMany as any;
       const mockCreate = prisma.candidate.create as any;
       const mockUpdate = prisma.candidate.update as any;
 
-      mockFindUnique.mockResolvedValueOnce({ id: "pos-123" });
+      mockFindMany.mockResolvedValueOnce([{ id: "pos-123" }]);
       mockCreate.mockResolvedValueOnce({
         id: "cand-123",
-        positionId: "pos-123",
+        positions: [{ positionId: "pos-123" }],
       });
       mockUpdate.mockResolvedValueOnce({ id: "cand-123" });
 
@@ -155,7 +155,7 @@ describe("candidates actions", () => {
       formData.append("firstName", "Mario");
       formData.append("lastName", "Rossi");
       formData.append("email", "mario@example.com");
-      formData.append("positionId", "pos-123");
+      formData.append("positionIds", JSON.stringify(["pos-123"]));
       formData.append("resumeFile", mockFile);
 
       await createCandidate(formData);
@@ -173,14 +173,14 @@ describe("candidates actions", () => {
       const { validateResumeFile } = await import(
         "../../../lib/services/r2-storage"
       );
-      const mockFindUnique = prisma.position.findUnique as any;
+      const mockFindMany = prisma.position.findMany as any;
       const mockCreate = prisma.candidate.create as any;
       const mockDelete = prisma.candidate.delete as any;
 
-      mockFindUnique.mockResolvedValueOnce({ id: "pos-123" });
+      mockFindMany.mockResolvedValueOnce([{ id: "pos-123" }]);
       mockCreate.mockResolvedValueOnce({
         id: "cand-123",
-        positionId: "pos-123",
+        positions: [{ positionId: "pos-123" }],
       });
 
       (validateResumeFile as any).mockReturnValueOnce({
@@ -195,7 +195,7 @@ describe("candidates actions", () => {
       formData.append("firstName", "Mario");
       formData.append("lastName", "Rossi");
       formData.append("email", "mario@example.com");
-      formData.append("positionId", "pos-123");
+      formData.append("positionIds", JSON.stringify(["pos-123"]));
       formData.append("resumeFile", mockFile);
 
       await expect(createCandidate(formData)).rejects.toThrow("File too large");
@@ -207,26 +207,26 @@ describe("candidates actions", () => {
       const { invalidateCandidateCache } = await import(
         "../../../lib/utils/cache-utils"
       );
-      const mockFindUnique = prisma.position.findUnique as any;
+      const mockFindMany = prisma.position.findMany as any;
       const mockCreate = prisma.candidate.create as any;
 
-      mockFindUnique.mockResolvedValueOnce({ id: "pos-123" });
+      mockFindMany.mockResolvedValueOnce([{ id: "pos-123" }]);
       mockCreate.mockResolvedValueOnce({
         id: "cand-123",
-        positionId: "pos-123",
+        positions: [{ positionId: "pos-123" }],
       });
 
       const formData = new FormData();
       formData.append("firstName", "Mario");
       formData.append("lastName", "Rossi");
       formData.append("email", "mario@example.com");
-      formData.append("positionId", "pos-123");
+      formData.append("positionIds", JSON.stringify(["pos-123"]));
 
       await createCandidate(formData);
 
       expect(invalidateCandidateCache).toHaveBeenCalledWith({
         candidateId: "cand-123",
-        positionId: "pos-123",
+        positionIds: ["pos-123"],
       });
     });
   });
@@ -238,9 +238,8 @@ describe("candidates actions", () => {
       const mockUpdate = prisma.candidate.update as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: null,
+        positions: [{ positionId: "pos-123" }],
       });
       mockUpdate.mockResolvedValueOnce({ id: "cand-123" });
 
@@ -280,30 +279,24 @@ describe("candidates actions", () => {
         "../../../lib/utils/cache-utils"
       );
       const mockCandidateFindUnique = prisma.candidate.findUnique as any;
-      const mockPositionFindUnique = prisma.position.findUnique as any;
       const mockUpdate = prisma.candidate.update as any;
 
       mockCandidateFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-old",
         resumeUrl: null,
+        positions: [{ positionId: "pos-old" }],
       });
-      mockPositionFindUnique.mockResolvedValueOnce({ id: "pos-new" });
+      const mockFindMany = prisma.position.findMany as any;
+      mockFindMany.mockResolvedValueOnce([{ id: "pos-new" }]);
       mockUpdate.mockResolvedValueOnce({ id: "cand-123" });
 
       const formData = new FormData();
-      formData.append("positionId", "pos-new");
+      formData.append("positionIds", JSON.stringify(["pos-new"]));
 
       await updateCandidate("cand-123", formData);
 
-      expect(invalidateCandidateCache).toHaveBeenCalledTimes(2);
       expect(invalidateCandidateCache).toHaveBeenCalledWith({
         candidateId: "cand-123",
-        positionId: "pos-old",
-      });
-      expect(invalidateCandidateCache).toHaveBeenCalledWith({
-        candidateId: "cand-123",
-        positionId: "pos-new",
+        positionIds: ["pos-old", "pos-new"],
       });
     });
 
@@ -316,9 +309,8 @@ describe("candidates actions", () => {
       const mockUpdate = prisma.candidate.update as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: "https://r2.example.com/old-resume.pdf",
+        positions: [{ positionId: "pos-123" }],
       });
       mockUpdate.mockResolvedValueOnce({ id: "cand-123" });
 
@@ -345,9 +337,8 @@ describe("candidates actions", () => {
       const mockUpdate = prisma.candidate.update as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: "https://r2.example.com/resume.pdf",
+        positions: [{ positionId: "pos-123" }],
       });
       mockUpdate.mockResolvedValueOnce({ id: "cand-123" });
 
@@ -372,9 +363,8 @@ describe("candidates actions", () => {
       const mockFindUnique = prisma.candidate.findUnique as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: null,
+        positions: [{ positionId: "pos-123" }],
       });
 
       const formData = new FormData();
@@ -393,9 +383,8 @@ describe("candidates actions", () => {
       const mockDelete = prisma.candidate.delete as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: null,
+        positions: [{ positionId: "pos-123" }],
       });
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
 
@@ -425,9 +414,8 @@ describe("candidates actions", () => {
       const mockDelete = prisma.candidate.delete as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: "https://r2.example.com/resume.pdf",
+        positions: [{ positionId: "pos-123" }],
       });
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
 
@@ -449,9 +437,8 @@ describe("candidates actions", () => {
       const mockDelete = prisma.candidate.delete as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: "https://r2.example.com/resume.pdf",
+        positions: [{ positionId: "pos-123" }],
       });
       (deleteResumeFromR2 as any).mockRejectedValueOnce(new Error("S3 error"));
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
@@ -471,9 +458,8 @@ describe("candidates actions", () => {
       const mockDelete = prisma.candidate.delete as any;
 
       mockFindUnique.mockResolvedValueOnce({
-        id: "cand-123",
-        positionId: "pos-123",
         resumeUrl: null,
+        positions: [{ positionId: "pos-123" }],
       });
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
 
@@ -481,7 +467,7 @@ describe("candidates actions", () => {
 
       expect(invalidateCandidateCache).toHaveBeenCalledWith({
         candidateId: "cand-123",
-        positionId: "pos-123",
+        positionIds: ["pos-123"],
       });
     });
   });

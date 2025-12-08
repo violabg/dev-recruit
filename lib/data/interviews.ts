@@ -287,7 +287,11 @@ export const getQuizAssignmentData = async (
 
   const unassignedCandidates = await prisma.candidate.findMany({
     where: {
-      positionId: quiz.positionId,
+      positions: {
+        some: {
+          positionId: quiz.positionId,
+        },
+      },
       id: {
         notIn: assignedCandidateIds,
       },
@@ -340,16 +344,31 @@ export const getCandidateQuizData = async (
       id: candidateId,
     },
     include: {
-      position: {
-        select: {
-          id: true,
-          title: true,
+      positions: {
+        include: {
+          position: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+        orderBy: {
+          isPrimary: "desc",
         },
       },
     },
   });
 
-  if (!candidate) {
+  if (!candidate || !candidate.positions || candidate.positions.length === 0) {
+    return null;
+  }
+
+  // Get primary position (first in ordered list)
+  const primaryPosition = candidate.positions[0]?.position;
+  const primaryPositionId = candidate.positions[0]?.position?.id;
+
+  if (!primaryPosition || !primaryPositionId) {
     return null;
   }
 
@@ -391,9 +410,16 @@ export const getCandidateQuizData = async (
     .map((interview) => interview.quizId)
     .filter(Boolean);
 
+  // Get all position IDs for the candidate (not just primary)
+  const allPositionIds = candidate.positions
+    .map((cp) => cp.position.id)
+    .filter(Boolean);
+
   const availableQuizzes = await prisma.quiz.findMany({
     where: {
-      positionId: candidate.positionId,
+      positionId: {
+        in: allPositionIds,
+      },
       id: {
         notIn: assignedQuizIds,
       },
@@ -416,14 +442,12 @@ export const getCandidateQuizData = async (
       name: getFullName(candidate.firstName, candidate.lastName),
       email: candidate.email,
       status: candidate.status,
-      positionId: candidate.positionId,
+      positionId: primaryPositionId,
     },
-    position: candidate.position
-      ? {
-          id: candidate.position.id,
-          title: candidate.position.title,
-        }
-      : null,
+    position: {
+      id: primaryPosition.id,
+      title: primaryPosition.title,
+    },
     availableQuizzes: availableQuizzes.map((quiz) => ({
       id: quiz.id,
       title: quiz.title,

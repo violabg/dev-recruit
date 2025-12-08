@@ -51,8 +51,23 @@ export async function CandidateDetailsContent({ params }: Props) {
             <CandidateStatusBadge status={candidate.status} />
           </div>
           <div>
-            <div className="font-semibold">Posizione</div>
-            <div>{candidate.position?.title || "-"}</div>
+            <div className="font-semibold">Posizioni</div>
+            {candidate.positions && candidate.positions.length > 0 ? (
+              <div className="flex flex-col gap-1">
+                {candidate.positions.map((cp) => (
+                  <div key={cp.id} className="flex items-center gap-2">
+                    <span>{cp.position.title}</span>
+                    {cp.isPrimary && (
+                      <span className="bg-primary/10 px-2 py-0.5 rounded text-primary text-xs">
+                        Primaria
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="text-muted-foreground">Nessuna posizione</span>
+            )}
           </div>
           <div className="md:col-span-2">
             <div className="font-semibold">Curriculum</div>

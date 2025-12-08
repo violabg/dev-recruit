@@ -7,11 +7,15 @@ import { cacheLife, cacheTag } from "next/cache";
 // Prisma type for candidate with position and interviews
 export type CandidateWithRelations = Prisma.CandidateGetPayload<{
   include: {
-    position: {
-      select: {
-        id: true;
-        title: true;
-        experienceLevel: true;
+    positions: {
+      include: {
+        position: {
+          select: {
+            id: true;
+            title: true;
+            experienceLevel: true;
+          };
+        };
       };
     };
     interviews: {
@@ -32,11 +36,18 @@ export type CandidateStatusSummary = {
 
 // Reusable include pattern for candidate queries
 const CANDIDATE_INCLUDE = {
-  position: {
-    select: {
-      id: true,
-      title: true,
-      experienceLevel: true,
+  positions: {
+    include: {
+      position: {
+        select: {
+          id: true,
+          title: true,
+          experienceLevel: true,
+        },
+      },
+    },
+    orderBy: {
+      isPrimary: "desc" as const, // Primary position first
     },
   },
   interviews: {
@@ -89,7 +100,11 @@ const buildCandidateWhere = ({
   }
 
   if (positionId !== "all") {
-    where.positionId = positionId;
+    where.positions = {
+      some: {
+        positionId: positionId,
+      },
+    };
   }
 
   if (search) {
@@ -179,7 +194,11 @@ export const getCandidatesByPosition = async (positionId: string) => {
 
   return prisma.candidate.findMany({
     where: {
-      positionId,
+      positions: {
+        some: {
+          positionId,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });

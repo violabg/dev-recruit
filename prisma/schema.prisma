@@ -121,10 +121,10 @@ model Position {
   createdBy       String
   createdAt       DateTime @default(now())
 
-  creator     User         @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
-  candidates  Candidate[]
-  quizzes     Quiz[]
-  evaluations Evaluation[]
+  creator            User                @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
+  candidatePositions CandidatePosition[]
+  quizzes            Quiz[]
+  evaluations        Evaluation[]
 
   @@map("positions")
 }
@@ -135,18 +135,34 @@ model Candidate {
   lastName    String
   email       String
   dateOfBirth DateTime?
-  positionId  String
   status      String    @default("pending")
   resumeUrl   String?
   createdBy   String
   createdAt   DateTime  @default(now())
 
-  position    Position     @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  creator     User         @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
-  interviews  Interview[]
-  evaluations Evaluation[]
+  positions          CandidatePosition[]
+  creator            User                @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
+  interviews         Interview[]
+  evaluations        Evaluation[]
 
   @@map("candidates")
+}
+
+// Join table for Candidate-Position many-to-many relationship
+model CandidatePosition {
+  id          String   @id @default(cuid())
+  candidateId String
+  positionId  String
+  isPrimary   Boolean  @default(false) // Flag to mark the primary position
+  createdAt   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  position  Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, positionId])
+  @@index([candidateId])
+  @@index([positionId])
+  @@map("candidate_positions")
 }
 
 model Quiz {

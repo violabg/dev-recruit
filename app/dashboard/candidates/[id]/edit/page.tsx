@@ -86,7 +86,7 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
             lastName: candidate.lastName,
             email: candidate.email,
             dateOfBirth: candidate.dateOfBirth,
-            positionId: candidate.positionId,
+            positionIds: candidate.positions.map((cp) => cp.position.id),
             status: candidate.status,
             resumeUrl: candidate.resumeUrl,
           }}

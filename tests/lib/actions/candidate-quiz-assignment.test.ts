@@ -64,7 +64,11 @@ describe("candidate-quiz-assignment actions", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario@example.com",
-        positionId: "position-123",
+        positions: [
+          {
+            positionId: "position-123",
+          },
+        ],
       };
 
       const quizzes = [
@@ -121,7 +125,7 @@ describe("candidate-quiz-assignment actions", () => {
       const result = await assignQuizzesToCandidate(prevState, formData);
 
       expect(result.success).toBeUndefined();
-      expect(result.message).toBe("Candidate not found.");
+      expect(result.message).toBe("Candidate not found or has no positions.");
     });
 
     it("returns error when no valid quizzes selected", async () => {
@@ -134,7 +138,11 @@ describe("candidate-quiz-assignment actions", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario@example.com",
-        positionId: "position-123",
+        positions: [
+          {
+            positionId: "position-123",
+          },
+        ],
       };
 
       mockFindUnique.mockResolvedValueOnce(candidate);
@@ -166,19 +174,21 @@ describe("candidate-quiz-assignment actions", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario@example.com",
-        positionId: "position-123",
+        positions: [
+          {
+            positionId: "position-123",
+          },
+        ],
       };
 
-      const quizzes = [
+      mockFindUnique.mockResolvedValueOnce(candidate);
+      mockFindMany.mockResolvedValueOnce([
         {
           id: "quiz-1",
           title: "JavaScript Quiz",
           positionId: "position-999", // Different position
         },
-      ];
-
-      mockFindUnique.mockResolvedValueOnce(candidate);
-      mockFindMany.mockResolvedValueOnce(quizzes);
+      ]);
 
       const formData = new FormData();
       formData.append("quizIds", "quiz-1");
@@ -191,7 +201,7 @@ describe("candidate-quiz-assignment actions", () => {
       const result = await assignQuizzesToCandidate(prevState, formData);
 
       expect(result.message).toBe(
-        "Some quizzes are not valid for this candidate's position or you don't have permission."
+        "Some quizzes are not valid for this candidate's positions or you don't have permission."
       );
     });
 
@@ -207,7 +217,11 @@ describe("candidate-quiz-assignment actions", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario@example.com",
-        positionId: "position-123",
+        positions: [
+          {
+            positionId: "position-123",
+          },
+        ],
       };
 
       const quizzes = [
@@ -224,7 +238,18 @@ describe("candidate-quiz-assignment actions", () => {
       ];
 
       mockFindUnique.mockResolvedValueOnce(candidate);
-      mockFindMany.mockResolvedValueOnce(quizzes);
+      mockFindMany.mockResolvedValueOnce([
+        {
+          id: "quiz-1",
+          title: "JavaScript Quiz",
+          positionId: "position-123",
+        },
+        {
+          id: "quiz-2",
+          title: "React Quiz",
+          positionId: "position-123",
+        },
+      ]);
 
       // First quiz already has interview
       mockFindFirst.mockResolvedValueOnce({ id: "existing-interview" });
@@ -292,7 +317,11 @@ describe("candidate-quiz-assignment actions", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario@example.com",
-        positionId: "position-123",
+        positions: [
+          {
+            positionId: "position-123",
+          },
+        ],
       };
 
       // Return empty quizzes array but form has quiz IDs
@@ -328,19 +357,21 @@ describe("candidate-quiz-assignment actions", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario@example.com",
-        positionId: "position-123",
+        positions: [
+          {
+            positionId: "position-123",
+          },
+        ],
       };
 
-      const quizzes = [
+      mockFindUnique.mockResolvedValueOnce(candidate);
+      mockFindMany.mockResolvedValueOnce([
         {
           id: "quiz-1",
           title: "JavaScript Quiz",
           positionId: "position-123",
         },
-      ];
-
-      mockFindUnique.mockResolvedValueOnce(candidate);
-      mockFindMany.mockResolvedValueOnce(quizzes);
+      ]);
       mockFindFirst.mockResolvedValue(null);
       mockCreate.mockResolvedValue({
         token: "test-token-123",
@@ -377,7 +408,11 @@ describe("candidate-quiz-assignment actions", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario@example.com",
-        positionId: "position-123",
+        positions: [
+          {
+            positionId: "position-123",
+          },
+        ],
       };
 
       const quizzes = [

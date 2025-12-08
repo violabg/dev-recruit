@@ -212,14 +212,25 @@ export const mockCandidate = (
   overrides: Partial<MockCandidate> = {}
 ): MockCandidate => ({
   id: "candidate-123",
-  name: "Mario Rossi",
+  firstName: "Mario",
+  lastName: "Rossi",
   email: "mario.rossi@example.com",
   phone: "+39 123 456 7890",
   resumeUrl: "https://example.com/resume.pdf",
   resumeText: "Esperienza: 5 anni come sviluppatore...",
   notes: "Ottimo candidato",
   status: "pending",
-  positionId: "position-123",
+  positions: [
+    {
+      candidateId: "candidate-123",
+      positionId: "position-123",
+      isPrimary: true,
+      position: {
+        id: "position-123",
+        title: "Senior Frontend Developer",
+      },
+    },
+  ],
   createdBy: "user-123",
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
@@ -228,14 +239,23 @@ export const mockCandidate = (
 
 export interface MockCandidate {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string | null;
   resumeUrl: string | null;
   resumeText: string | null;
   notes: string | null;
   status: string;
-  positionId: string | null;
+  positions: Array<{
+    candidateId: string;
+    positionId: string;
+    isPrimary: boolean;
+    position: {
+      id: string;
+      title: string;
+    };
+  }>;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

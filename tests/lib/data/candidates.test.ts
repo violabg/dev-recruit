@@ -27,7 +27,7 @@ describe("candidates data layer", () => {
 
   it("getFilteredCandidates returns paginated data and applies filters", async () => {
     const fake = [
-      { id: "c1", createdAt: new Date(), interviews: [], position: null },
+      { id: "c1", createdAt: new Date(), interviews: [], positions: [] },
     ];
     (prisma.candidate.findMany as any).mockResolvedValueOnce(fake);
     (prisma.candidate.count as any).mockResolvedValueOnce(1);

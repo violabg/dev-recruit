@@ -15,7 +15,7 @@ describe("candidateFormSchema", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario.rossi@example.com",
-        positionId: "position-123",
+        positionIds: ["position-123"],
       };
 
       const result = candidateFormSchema.safeParse(validData);
@@ -27,7 +27,7 @@ describe("candidateFormSchema", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "mario.rossi@example.com",
-        positionId: "position-123",
+        positionIds: ["position-123"],
         dateOfBirth: new Date("1990-01-01"),
       };
 
@@ -47,7 +47,7 @@ describe("candidateFormSchema", () => {
           firstName: "Test",
           lastName: "User",
           email,
-          positionId: "pos-1",
+          positionIds: ["pos-1"],
         });
         expect(result.success).toBe(true);
       });
@@ -60,7 +60,7 @@ describe("candidateFormSchema", () => {
         firstName: "Mario",
         lastName: "Rossi",
         email: "not-an-email",
-        positionId: "position-123",
+        positionIds: ["position-123"],
       };
 
       const result = candidateFormSchema.safeParse(invalidData);
@@ -72,7 +72,7 @@ describe("candidateFormSchema", () => {
         firstName: "",
         lastName: "Rossi",
         email: "test@example.com",
-        positionId: "position-123",
+        positionIds: ["position-123"],
       };
 
       const result = candidateFormSchema.safeParse(invalidData);
@@ -84,19 +84,19 @@ describe("candidateFormSchema", () => {
         firstName: "Mario",
         lastName: "",
         email: "test@example.com",
-        positionId: "position-123",
+        positionIds: ["position-123"],
       };
 
       const result = candidateFormSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
     });
 
-    it("should reject empty position ID", () => {
+    it("should reject empty position IDs array", () => {
       const invalidData = {
         firstName: "Mario",
         lastName: "Rossi",
         email: "test@example.com",
-        positionId: "",
+        positionIds: [],
       };
 
       const result = candidateFormSchema.safeParse(invalidData);
@@ -115,8 +115,32 @@ describe("candidateFormSchema", () => {
         firstName: "Young",
         lastName: "Person",
         email: "young@example.com",
-        positionId: "position-123",
+        positionIds: ["position-123"],
         dateOfBirth: underageBirthday,
+      };
+
+      const result = candidateFormSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+    });
+
+    it("should accept multiple positions", () => {
+      const validData = {
+        firstName: "Mario",
+        lastName: "Rossi",
+        email: "mario.rossi@example.com",
+        positionIds: ["position-123", "position-456", "position-789"],
+      };
+
+      const result = candidateFormSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject more than 10 positions", () => {
+      const invalidData = {
+        firstName: "Mario",
+        lastName: "Rossi",
+        email: "mario.rossi@example.com",
+        positionIds: Array.from({ length: 11 }, (_, i) => `pos-${i}`),
       };
 
       const result = candidateFormSchema.safeParse(invalidData);

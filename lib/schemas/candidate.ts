@@ -41,9 +41,14 @@ export const candidateFormSchema = z.object({
   lastName: baseSchemas.name,
   email: baseSchemas.email,
   dateOfBirth: dateOfBirthSchema.optional(),
-  positionId: z.string().min(1, {
-    error: "Seleziona una posizione.",
-  }),
+  positionIds: z
+    .array(z.string())
+    .min(1, {
+      error: "Seleziona almeno una posizione.",
+    })
+    .max(10, {
+      error: "Massimo 10 posizioni.",
+    }),
   // Resume file is handled separately via FormData
 });
 
@@ -53,10 +58,13 @@ export const candidateUpdateSchema = z
     lastName: baseSchemas.name.optional(),
     email: baseSchemas.email.optional(),
     dateOfBirth: dateOfBirthSchema.optional().nullable(),
-    positionId: z
-      .string()
+    positionIds: z
+      .array(z.string())
       .min(1, {
-        error: "Seleziona una posizione valida.",
+        error: "Seleziona almeno una posizione valida.",
+      })
+      .max(10, {
+        error: "Massimo 10 posizioni.",
       })
       .optional(),
     status: z

@@ -150,6 +150,7 @@ export function invalidatePositionCache(positionId?: string) {
 export function invalidateCandidateCache(options?: {
   candidateId?: string;
   positionId?: string;
+  positionIds?: string[];
 }) {
   updateTag(CacheTags.CANDIDATES);
 
@@ -161,6 +162,13 @@ export function invalidateCandidateCache(options?: {
   if (options?.positionId) {
     updateTag(entityTag.position(options.positionId));
     revalidatePath(`/dashboard/positions/${options.positionId}`);
+  }
+
+  if (options?.positionIds) {
+    for (const positionId of options.positionIds) {
+      updateTag(entityTag.position(positionId));
+      revalidatePath(`/dashboard/positions/${positionId}`);
+    }
   }
 
   revalidatePath("/dashboard/candidates");
