@@ -1,5 +1,6 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/services/logger";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
@@ -152,7 +153,7 @@ export const getPositionLevelsForSelect = cache(async () => {
 
     return uniqueLevels;
   } catch (error) {
-    console.error("Failed to fetch filter options:", error);
+    logger.error("Failed to fetch filter options:", { error });
     return [];
   }
 });

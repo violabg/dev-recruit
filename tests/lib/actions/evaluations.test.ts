@@ -43,7 +43,7 @@ describe("evaluations actions", () => {
         strengths: ["Correct"],
         weaknesses: ["None"],
       },
-    });
+    } as any);
 
     const result = await evaluateAnswer(question, answer);
 
@@ -75,7 +75,7 @@ describe("evaluations actions", () => {
         recommendation: "Proceed",
         fitScore: 80,
       },
-    });
+    } as any);
 
     await generateOverallEvaluation("John", 1, 1, 80, evaluations);
 

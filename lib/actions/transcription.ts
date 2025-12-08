@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/lib/services/logger";
 import { LLM_MODELS } from "@/lib/utils";
 import { groq } from "@ai-sdk/groq";
 import { experimental_transcribe as transcribe } from "ai";
@@ -18,7 +19,7 @@ export async function transcribeAudioAction(
 
     return { success: true, text: transcript };
   } catch (error) {
-    console.error("Transcription error:", error);
+    logger.error("Transcription error:", { error });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Transcription failed",

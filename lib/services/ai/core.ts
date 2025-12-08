@@ -52,7 +52,6 @@ export class AIQuizService {
               system: buildQuizSystemPrompt(),
               schema: aiQuizGenerationSchema,
               temperature: 0.7,
-              mode: "json",
               providerOptions: {
                 groq: {
                   structuredOutputs: false,
@@ -140,7 +139,6 @@ export class AIQuizService {
               system: systemPrompt,
               schema: questionSchemas.flexible, // Use questionSchemas.flexible for single question
               temperature: 0.7,
-              mode: "json",
               providerOptions: {
                 groq: {
                   structuredOutputs: false,

@@ -176,7 +176,6 @@ export async function evaluateAnswer(
       system:
         "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
       schema: evaluationResultSchema,
-      mode: "json",
       temperature: 0.0, // Zero temperature for deterministic, reproducible evaluations
       seed: 42, // Fixed seed for reproducible results
       providerOptions: {
@@ -206,7 +205,6 @@ export async function evaluateAnswer(
         system:
           "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
         schema: evaluationResultSchema,
-        mode: "json",
         temperature: 0.0, // Zero temperature for deterministic evaluations
         seed: 42, // Fixed seed for reproducible results
         providerOptions: {
@@ -299,7 +297,6 @@ export async function generateOverallEvaluation(
       system:
         "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
       schema: overallEvaluationSchema,
-      mode: "json",
       temperature: 0.0, // Zero temperature for deterministic evaluations
       seed: 42, // Fixed seed for reproducible results
       providerOptions: {
@@ -326,7 +323,6 @@ export async function generateOverallEvaluation(
         system:
           "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
         schema: overallEvaluationSchema,
-        mode: "json",
         temperature: 0.0, // Zero temperature for deterministic evaluations
         seed: 42, // Fixed seed for reproducible results
         providerOptions: {

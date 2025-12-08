@@ -1,3 +1,4 @@
+import { logger } from "@/lib/services/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import {
@@ -260,7 +261,7 @@ export function withValidation<T extends ValidationConfig>(
 
       return response;
     } catch (error) {
-      console.error("API middleware error:", error);
+      logger.error("API middleware error:", { error });
 
       const response: ApiResponse<never> = {
         success: false,

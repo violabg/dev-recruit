@@ -6,6 +6,7 @@ import prisma from "../prisma";
 import { FlexibleQuestion, questionSchemas } from "../schemas";
 import { aiQuizService, GenerateQuestionParams } from "../services/ai-service";
 import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
+import { logger } from "../services/logger";
 import {
   handleActionError,
   isRedirectError,
@@ -111,7 +112,7 @@ export async function generateNewQuestionAction(
   } catch (error) {
     // Handle Zod validation errors specially
     if (error instanceof z.ZodError) {
-      console.error("Question validation failed:", error.issues);
+      logger.error("Question validation failed:", { issues: error.issues });
       throw new QuizSystemError(
         "Generated question failed validation",
         QuizErrorCode.INVALID_INPUT,

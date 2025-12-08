@@ -4,6 +4,7 @@ import {
   getUserFriendlyErrorMessage,
   QuizSystemError,
 } from "@/lib/services/error-handler";
+import { logger } from "@/lib/services/logger";
 
 /**
  * Options for the action error handler
@@ -50,7 +51,7 @@ export function handleActionError(
     rethrowKnownErrors = false,
   } = options;
 
-  console.debug(`${operation} failed`);
+  logger.debug(`${operation} failed`, context);
 
   // Re-throw known errors directly if specified (for AI generation flows)
   if (rethrowKnownErrors) {

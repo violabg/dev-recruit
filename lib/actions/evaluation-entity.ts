@@ -5,7 +5,7 @@ import { generateObject } from "ai";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { overallEvaluationSchema, type OverallEvaluation } from "../schemas";
-import { aiLogger } from "../services/logger";
+import { aiLogger, logger } from "../services/logger";
 import { getOptimalModel } from "../utils";
 import { invalidateEvaluationCache } from "../utils/cache-utils";
 
@@ -87,7 +87,6 @@ async function generateResumeEvaluation(
       system:
         "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
       schema: overallEvaluationSchema,
-      mode: "json",
       temperature: 0.0, // Zero temperature for deterministic, reproducible evaluations
       seed: 42, // Fixed seed for reproducible results
       providerOptions: {
@@ -117,7 +116,6 @@ async function generateResumeEvaluation(
         system:
           "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
         schema: overallEvaluationSchema,
-        mode: "json",
         temperature: 0.0, // Zero temperature for deterministic evaluations
         seed: 42, // Fixed seed for reproducible results
         providerOptions: {
@@ -129,7 +127,7 @@ async function generateResumeEvaluation(
 
       return result;
     } catch (fallbackError) {
-      console.error("Fallback model also failed:", fallbackError);
+      logger.error("Fallback model also failed:", { error: fallbackError });
       throw new Error(
         "Servizio di valutazione temporaneamente non disponibile. Riprova più tardi."
       );
