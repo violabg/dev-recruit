@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import {
   AIErrorCode,
   AIGenerationError,
@@ -8,8 +9,7 @@ import {
   streamPositionDescription,
   withRetry,
   withTimeout,
-} from "@/lib/services/ai-service";
-import { describe, expect, it } from "vitest";
+} from "../../../lib/services/ai-service";
 
 describe("ai-service re-exports", () => {
   it("re-exports AIErrorCode", () => {
