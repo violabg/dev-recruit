@@ -167,6 +167,10 @@ export async function getQuizzes({
   page?: number;
   pageSize?: number;
 }): Promise<PaginatedQuizzes> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTags.QUIZZES);
+
   let quizzes: QuizResponse[] = [];
   let fetchError: string | null = null;
   let uniqueLevels: string[] = [];
@@ -250,28 +254,6 @@ export async function getQuizzes({
     hasNextPage: normalizedPage < totalPages,
     hasPrevPage: normalizedPage > 1,
   };
-}
-
-export async function CachedQuizzesContent({
-  search,
-  sort,
-  filter,
-  positionId,
-  page,
-  pageSize,
-}: {
-  search: string;
-  sort: string;
-  filter: string;
-  positionId?: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<PaginatedQuizzes> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.QUIZZES);
-
-  return await getQuizzes({ search, sort, filter, positionId, page, pageSize });
 }
 
 /**

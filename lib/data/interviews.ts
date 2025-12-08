@@ -230,9 +230,9 @@ export const mapInterviewListItem = (
   };
 };
 
-async function getQuizAssignmentDataCached(
+export const getQuizAssignmentData = async (
   quizId: string
-): Promise<QuizAssignmentData | null> {
+): Promise<QuizAssignmentData | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag(CacheTags.INTERVIEWS);
@@ -326,17 +326,11 @@ async function getQuizAssignmentDataCached(
       status: c.status,
     })),
   };
-}
-
-export const getQuizAssignmentData = async (
-  quizId: string
-): Promise<QuizAssignmentData | null> => {
-  return getQuizAssignmentDataCached(quizId);
 };
 
-async function getCandidateQuizDataCached(
+export const getCandidateQuizData = async (
   candidateId: string
-): Promise<CandidateQuizData | null> {
+): Promise<CandidateQuizData | null> => {
   "use cache";
   cacheLife("hours");
   cacheTag(CacheTags.INTERVIEWS);
@@ -439,12 +433,6 @@ async function getCandidateQuizDataCached(
     })),
     assignedInterviews,
   };
-}
-
-export const getCandidateQuizData = async (
-  candidateId: string
-): Promise<CandidateQuizData | null> => {
-  return getCandidateQuizDataCached(candidateId);
 };
 
 type InterviewAnswer = string | { code: string } | null;

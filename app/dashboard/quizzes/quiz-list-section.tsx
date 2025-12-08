@@ -10,7 +10,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { UrlPagination } from "@/components/ui/url-pagination";
-import { CachedQuizzesContent } from "@/lib/data/quizzes";
+import { getQuizzes } from "@/lib/data/quizzes";
 import { FileQuestion } from "lucide-react";
 
 import { NewQuizButton } from "./new-quiz-button";
@@ -40,7 +40,7 @@ export async function QuizListSection({
     totalPages,
     hasNextPage,
     hasPrevPage,
-  } = await CachedQuizzesContent({
+  } = await getQuizzes({
     search,
     sort,
     filter,
