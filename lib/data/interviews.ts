@@ -822,6 +822,35 @@ export const getFilteredInterviews = cache(
 
     const interviews = interviewRecords.map(mapInterviewListItem);
 
+    const totalCount = await prisma.interview.count({ where });
+    const totalPages = Math.max(1, Math.ceil(totalCount / normalizedPageSize));
+
+    return {
+      interviews,
+      totalCount,
+      currentPage: normalizedPage,
+      totalPages,
+      hasNextPage: normalizedPage < totalPages,
+      hasPrevPage: normalizedPage > 1,
+    };
+  }
+);
+
+/**
+ * Computes counts of interviews grouped by status from an array of InterviewListItem
+ */
+export const getInteviewsStatus = cache(
+  async (): Promise<Record<string, number>> => {
+    "use cache";
+    cacheLife("hours");
+    cacheTag(CacheTags.INTERVIEWS);
+
+    const interviews = await prisma.interview.findMany({
+      select: {
+        status: true,
+      },
+    });
+
     const statusCounts = interviews.reduce<Record<string, number>>(
       (acc, item) => {
         acc[item.status] = (acc[item.status] ?? 0) + 1;
@@ -829,18 +858,6 @@ export const getFilteredInterviews = cache(
       },
       {}
     );
-
-    const totalCount = await prisma.interview.count({ where });
-    const totalPages = Math.max(1, Math.ceil(totalCount / normalizedPageSize));
-
-    return {
-      interviews,
-      statusCounts,
-      totalCount,
-      currentPage: normalizedPage,
-      totalPages,
-      hasNextPage: normalizedPage < totalPages,
-      hasPrevPage: normalizedPage > 1,
-    };
+    return statusCounts;
   }
 );

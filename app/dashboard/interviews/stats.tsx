@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getInterviews } from "@/lib/actions/interviews";
+import { getInteviewsStatus } from "@/lib/data/interviews";
 import { InterviewStatus } from "@/lib/schemas";
 import { STATUS_CONFIG } from "./runtime-section";
 
@@ -12,7 +12,7 @@ export type InterviewsSearchParams = {
 };
 
 export const Stats = async () => {
-  const { statusCounts } = await getInterviews();
+  const statusCounts = await getInteviewsStatus();
 
   return (
     <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">

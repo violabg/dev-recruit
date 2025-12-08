@@ -2,7 +2,6 @@
 
 import {
   normalizeLanguage,
-  normalizePage,
   normalizePosition,
   normalizeStatus,
 } from "@/app/dashboard/interviews/runtime-section";
@@ -46,7 +45,6 @@ export function SearchAndFilterInterviews({
   );
   const initialPosition = normalizePosition(searchParams.get("position") || "");
   const initialLanguage = normalizeLanguage(searchParams.get("language") || "");
-  const page = normalizePage(searchParams.get("page") || "");
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
