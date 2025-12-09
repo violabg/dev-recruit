@@ -32,6 +32,7 @@ import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod/v4";
+import { programmingLanguages } from "../positions/data";
 
 const getDifficultyLabel = (value: number) => {
   const labels = {
@@ -272,14 +273,11 @@ export const AIQuestionGenerationDialog = ({
                 label="Linguaggio di Programmazione"
                 placeholder="Seleziona linguaggio"
               >
-                <SelectItem value="javascript">JavaScript</SelectItem>
-                <SelectItem value="typescript">TypeScript</SelectItem>
-                <SelectItem value="python">Python</SelectItem>
-                <SelectItem value="java">Java</SelectItem>
-                <SelectItem value="csharp">C#</SelectItem>
-                <SelectItem value="php">PHP</SelectItem>
-                <SelectItem value="go">Go</SelectItem>
-                <SelectItem value="rust">Rust</SelectItem>
+                {programmingLanguages.map((lang) => (
+                  <SelectItem key={lang} value={lang}>
+                    {lang}
+                  </SelectItem>
+                ))}
               </SelectField>
 
               <SelectField

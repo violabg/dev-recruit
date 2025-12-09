@@ -62,35 +62,10 @@ export function SelectField<T extends FieldValues>({
     >
       {({ field, fieldState }) => (
         <Select
-          value={
-            field.value === undefined ||
-            field.value === null ||
-            field.value === ""
-              ? EMPTY_SELECT_VALUE
-              : String(field.value)
-          }
+          value={field.value}
           onValueChange={(value) => {
-            if (value === EMPTY_SELECT_VALUE) {
-              field.onChange(undefined);
-              onValueChange?.("");
-              return;
-            }
-
-            if (value === "") {
-              field.onChange(undefined);
-              onValueChange?.(value);
-              return;
-            }
-
-            // Try to parse as number, otherwise keep as string
-            const numValue = parseInt(value);
-            if (isNaN(numValue)) {
-              field.onChange(value);
-              onValueChange?.(value);
-            } else {
-              field.onChange(numValue);
-              onValueChange?.(numValue);
-            }
+            field.onChange(value);
+            onValueChange?.(value);
           }}
           {...selectProps}
         >
@@ -105,11 +80,8 @@ export function SelectField<T extends FieldValues>({
           <SelectContent>
             {options
               ? options.map((option) => {
-                  const optionValue =
-                    option.value === "" ? EMPTY_SELECT_VALUE : option.value;
-
                   return (
-                    <SelectItem key={optionValue} value={optionValue}>
+                    <SelectItem key={option.value} value={option.value}>
                       {option.leading ? (
                         <span className="flex items-center gap-2">
                           {option.leading}

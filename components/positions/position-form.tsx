@@ -11,7 +11,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { InputField } from "../rhf-inputs/input-field";
@@ -87,6 +87,19 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
   });
 
   const { control, handleSubmit, getValues, setValue } = form;
+
+  useEffect(() => {
+    if (!isEditing) {
+      form.reset({
+        title: "",
+        description: "",
+        experienceLevel: "",
+        skills: [],
+        softSkills: [],
+        contractType: "",
+      });
+    }
+  }, [isEditing, form]);
 
   async function onSubmit(values: PositionFormData) {
     startTransition(async () => {

@@ -92,11 +92,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
           firstName: "",
           lastName: "",
           email: "",
-          positionIds: props.defaultPositionId
-            ? [props.defaultPositionId]
-            : props.positions[0]?.id
-            ? [props.positions[0].id]
-            : [],
+          positionIds: props.defaultPositionId ? [props.defaultPositionId] : [],
         },
   });
 
@@ -112,11 +108,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
         firstName: "",
         lastName: "",
         email: "",
-        positionIds: defaultPositionId
-          ? [defaultPositionId]
-          : firstPositionId
-          ? [firstPositionId]
-          : [],
+        positionIds: defaultPositionId ? [defaultPositionId] : [],
       });
       setSelectedFile(null);
       setRemoveExistingResume(false);

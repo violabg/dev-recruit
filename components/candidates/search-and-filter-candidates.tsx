@@ -198,7 +198,7 @@ export const SearchAndFilterCandidates = ({
           <SelectContent>
             <SelectItem value="all">{"Tutte le posizioni"}</SelectItem>
             <Suspense
-              fallback={<SelectItem value="">Caricamento...</SelectItem>}
+              fallback={<SelectItem value="_">Caricamento...</SelectItem>}
             >
               {positionOptions}
             </Suspense>

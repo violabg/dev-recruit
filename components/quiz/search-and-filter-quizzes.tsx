@@ -180,7 +180,7 @@ export const SearchAndFilterQuizzes = ({
           <SelectContent>
             <SelectItem value="all">{"Tutti i livelli"}</SelectItem>
             <Suspense
-              fallback={<SelectItem value="">Caricamento...</SelectItem>}
+              fallback={<SelectItem value="_">Caricamento...</SelectItem>}
             >
               {levelsOptions}
             </Suspense>
@@ -201,7 +201,7 @@ export const SearchAndFilterQuizzes = ({
           <SelectContent>
             <SelectItem value="all">{"Tutte le posizioni"}</SelectItem>
             <Suspense
-              fallback={<SelectItem value="">Caricamento...</SelectItem>}
+              fallback={<SelectItem value="_">Caricamento...</SelectItem>}
             >
               {positionOptions}
             </Suspense>

@@ -53,14 +53,12 @@ const DISTRACTOR_COMPLEXITY_OPTIONS = [
 ];
 
 const EXPECTED_RESPONSE_LENGTH_OPTIONS = [
-  { value: "", label: "Non specificato" },
   { value: "short", label: "Breve" },
   { value: "medium", label: "Media" },
   { value: "long", label: "Lunga" },
 ];
 
 const BUG_TYPE_OPTIONS = [
-  { value: "", label: "Non specificato" },
   { value: "syntax", label: "Sintassi" },
   { value: "logic", label: "Logica" },
   { value: "performance", label: "Performance" },
@@ -68,7 +66,6 @@ const BUG_TYPE_OPTIONS = [
 ];
 
 const CODE_COMPLEXITY_OPTIONS = [
-  { value: "", label: "Non specificato" },
   { value: "basic", label: "Base" },
   { value: "intermediate", label: "Intermedio" },
   { value: "advanced", label: "Avanzato" },
@@ -280,6 +277,7 @@ export function PresetForm({ preset }: PresetFormProps) {
             label="Lunghezza risposta attesa"
             options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
             description="Lascia che l'AI sappia quanto dettagliata dovrebbe essere la risposta"
+            placeholder="Seleziona una lunghezza"
           />
           <InputWithTagField
             control={form.control}
@@ -308,6 +306,7 @@ export function PresetForm({ preset }: PresetFormProps) {
             label="Tipo di bug"
             options={BUG_TYPE_OPTIONS}
             description="Che tipo di problema dovrebbe includere lo snippet"
+            placeholder="Seleziona un tipo di bug"
           />
 
           <SelectField
@@ -316,6 +315,7 @@ export function PresetForm({ preset }: PresetFormProps) {
             label="Complessità codice"
             options={CODE_COMPLEXITY_OPTIONS}
             description="Aiuta a regolare la lunghezza e la difficoltà dello snippet"
+            placeholder="Seleziona una complessità"
           />
 
           <SwitchField
