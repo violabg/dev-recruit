@@ -1,7 +1,7 @@
 "use client";
-
 import {
   CheckboxField,
+  InputWithTagField,
   SelectField,
   SliderField,
   TextareaField,
@@ -22,16 +22,14 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LLMModelSelect } from "@/components/ui/llm-model-select";
 import { SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { QuestionType } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod/v4";
 
@@ -90,9 +88,6 @@ export const AIQuestionGenerationDialog = ({
   loading,
   defaultDifficulty = 3,
 }: AIGenerationDialogProps) => {
-  const [focusAreaInput, setFocusAreaInput] = useState("");
-  const [evaluationCriteriaInput, setEvaluationCriteriaInput] = useState("");
-
   const form = useForm<GenerationFormData>({
     resolver: zodResolver(generationSchema),
     defaultValues: {
@@ -119,8 +114,6 @@ export const AIQuestionGenerationDialog = ({
         focusAreas: [],
         evaluationCriteria: [],
       });
-      setFocusAreaInput("");
-      setEvaluationCriteriaInput("");
     }
   }, [open, questionType, defaultDifficulty, form]);
 
@@ -128,41 +121,6 @@ export const AIQuestionGenerationDialog = ({
     if (!questionType) return;
     await onGenerate(questionType, data);
     onOpenChange(false);
-  };
-
-  const addFocusArea = () => {
-    if (focusAreaInput.trim()) {
-      const currentAreas = form.getValues("focusAreas") || [];
-      form.setValue("focusAreas", [...currentAreas, focusAreaInput.trim()]);
-      setFocusAreaInput("");
-    }
-  };
-
-  const removeFocusArea = (index: number) => {
-    const currentAreas = form.getValues("focusAreas") || [];
-    form.setValue(
-      "focusAreas",
-      currentAreas.filter((_, i) => i !== index)
-    );
-  };
-
-  const addEvaluationCriteria = () => {
-    if (evaluationCriteriaInput.trim()) {
-      const currentCriteria = form.getValues("evaluationCriteria") || [];
-      form.setValue("evaluationCriteria", [
-        ...currentCriteria,
-        evaluationCriteriaInput.trim(),
-      ]);
-      setEvaluationCriteriaInput("");
-    }
-  };
-
-  const removeEvaluationCriteria = (index: number) => {
-    const currentCriteria = form.getValues("evaluationCriteria") || [];
-    form.setValue(
-      "evaluationCriteria",
-      currentCriteria.filter((_, i) => i !== index)
-    );
   };
 
   const getQuestionTypeLabel = (type: QuestionType | null) => {
@@ -253,49 +211,13 @@ export const AIQuestionGenerationDialog = ({
                 Impostazioni Scelta Multipla
               </h3>
               <Separator className="my-4" />
-              <div className="space-y-4">
-                <Label>Aree di Focus</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="es. React Hooks, TypeScript"
-                    value={focusAreaInput}
-                    onChange={(e) => setFocusAreaInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addFocusArea();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    onClick={addFocusArea}
-                    variant="outline"
-                  >
-                    Aggiungi
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(form.watch("focusAreas") || []).map((area, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      {area}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-4 hover:text-destructive"
-                        onClick={() => removeFocusArea(index)}
-                      >
-                        <X size={12} />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
+              <InputWithTagField
+                control={form.control}
+                name="focusAreas"
+                label="Aree di Focus"
+                description="Aggiungi aree specifiche su cui focalizzare la domanda es. React Hooks, TypeScript"
+                placeholder="Premi invio dopo ogni area"
+              />
               <SelectField
                 control={form.control}
                 name="distractorComplexity"
@@ -328,50 +250,13 @@ export const AIQuestionGenerationDialog = ({
                 </SelectItem>
               </SelectField>
 
-              <div className="space-y-4">
-                <Label>Criteri di Valutazione</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="es. Qualità del codice, Best practices"
-                    value={evaluationCriteriaInput}
-                    onChange={(e) => setEvaluationCriteriaInput(e.target.value)}
-                    onKeyUp={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addEvaluationCriteria();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    onClick={addEvaluationCriteria}
-                    variant="outline"
-                  >
-                    Aggiungi
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(form.watch("evaluationCriteria") || []).map(
-                    (criteria, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="flex items-center gap-1"
-                      >
-                        {criteria}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-4 hover:text-destructive"
-                          onClick={() => removeEvaluationCriteria(index)}
-                        >
-                          <X size={12} />
-                        </Button>
-                      </Badge>
-                    )
-                  )}
-                </div>
-              </div>
+              <InputWithTagField
+                control={form.control}
+                name="evaluationCriteria"
+                label="Criteri di Valutazione"
+                description="es. Qualità del codice, Best practices"
+                placeholder="Premi invio dopo ogni criterio"
+              />
             </div>
           )}
 

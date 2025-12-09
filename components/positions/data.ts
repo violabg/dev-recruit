@@ -14,6 +14,8 @@ export const programmingLanguages = [
   "C",
   "Dart",
   "SQL",
+  "CSS",
+  "HTML",
 ];
 
 export const frameworks = [
@@ -28,6 +30,9 @@ export const frameworks = [
   "Laravel",
   "ASP.NET",
   "Ruby on Rails",
+  "React Native",
+  "Flutter",
+  "Svelte",
 ];
 
 export const databases = [
