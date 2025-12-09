@@ -140,7 +140,10 @@ export function MultiSelect({
               ([category, categoryOptions]) => (
                 <React.Fragment key={category || "default"}>
                   {grouped && category && (
-                    <CommandGroup heading={category}>
+                    <CommandGroup className="relative [&]:overflow-visible">
+                      <div className="top-0 right-0 left-0 z-10 sticky bg-background px-2 py-1.5 w-full font-bold text-muted-foreground text-xs">
+                        {category}
+                      </div>
                       {categoryOptions.map((option) => {
                         const isSelected = selected.includes(option.value);
                         return (

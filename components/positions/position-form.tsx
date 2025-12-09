@@ -212,6 +212,7 @@ export function PositionForm({ position, onCancel }: PositionFormProps) {
         description="Seleziona le competenze tecniche richieste per questa posizione"
         options={allSkills}
         placeholder="Seleziona competenze..."
+        grouped
       />
       <MultiSelectField<PositionFormData>
         control={control}

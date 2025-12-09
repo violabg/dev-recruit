@@ -5,6 +5,7 @@ import { BaseController, BaseControllerProps } from "./base-controller";
 type FieldSelectProps<T extends FieldValues> = {
   placeholder?: string;
   options: OptionType[];
+  grouped?: boolean;
 } & Omit<BaseControllerProps<T>, "children">;
 
 export function MultiSelectField<T extends FieldValues>({
@@ -15,6 +16,7 @@ export function MultiSelectField<T extends FieldValues>({
   disableFieldError = false,
   required,
   options,
+  grouped,
   placeholder,
 }: FieldSelectProps<T>) {
   return (
@@ -22,9 +24,9 @@ export function MultiSelectField<T extends FieldValues>({
       control={control}
       name={name}
       label={label}
-      required={required}
       description={description}
       disableFieldError={disableFieldError}
+      required={required}
     >
       {({ field, fieldState }) => (
         <MultiSelect
@@ -33,6 +35,7 @@ export function MultiSelectField<T extends FieldValues>({
           onChange={field.onChange}
           placeholder={placeholder}
           invalid={!!fieldState.error}
+          grouped={grouped}
         />
       )}
     </BaseController>
