@@ -9,6 +9,9 @@ const nextConfig = {
   cacheComponents: true,
   reactCompiler: true,
   typedRoutes: true,
+  serverActions: {
+    bodySizeLimit: '50mb',
+  },
 }
 
 export default nextConfig

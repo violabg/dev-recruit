@@ -1,6 +1,6 @@
 "use client";
 import { CodeHighlight } from "@/components/quiz/code-highlight";
-import { Button } from "@/components/ui/button";
+import { VoiceTextarea } from "@/components/recruting/voice-textarea";
 import {
   Card,
   CardContent,
@@ -10,13 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
-import { transcribeAudioAction } from "@/lib/actions/transcription";
 import { FlexibleQuestion } from "@/lib/schemas";
 import Editor from "@monaco-editor/react";
-import { Loader2, Speech, Square } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 
 type QuestionAnswer = string | { code: string } | null;
 
@@ -58,11 +55,6 @@ export function InterviewQuestion({
   // Reset answer and code when question changes
   const [answer, setAnswer] = useState<string | null>(getInitialAnswer);
   const [code, setCode] = useState<string>(getInitialCode);
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
-  const [isPending, startTransition] = useTransition();
 
   // Track question.dbId to detect when question changes
   const [lastQuestionId, setLastQuestionId] = useState(question.dbId);
@@ -95,60 +87,6 @@ export function InterviewQuestion({
       onAnswerChange(answer && answer.trim() ? answer : null);
     }
   }, [answer, code, question.type, onAnswerChange]);
-
-  // Audio recording and transcription logic
-  const handleStartRecording = async () => {
-    setIsRecording(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new window.MediaRecorder(stream);
-      const chunks: Blob[] = [];
-
-      setMediaRecorder(recorder);
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunks.push(e.data);
-        }
-      };
-      recorder.onstop = async () => {
-        setIsRecording(false);
-        // Use transition to indicate pending state for transcription
-        startTransition(async () => {
-          // Stop all tracks to release the microphone
-          stream.getTracks().forEach((track) => track.stop());
-
-          const audioBlob = new Blob(chunks, { type: "audio/webm" });
-
-          // Convert Blob to Uint8Array for server action
-          const arrayBuffer = await audioBlob.arrayBuffer();
-          const uint8Array = new Uint8Array(arrayBuffer);
-          // Convert to regular array for server action serialization
-          const audioArray = Array.from(uint8Array);
-
-          try {
-            const result = await transcribeAudioAction(audioArray);
-            if (result.success && result.text) {
-              setAnswer(result.text);
-            }
-          } catch {
-            // Transcription error is handled silently - user sees no transcription text
-          }
-        });
-      };
-      recorder.start();
-    } catch (err) {
-      setIsRecording(false);
-      console.error("Impossibile avviare la registrazione:", err);
-      // Gestione errore opzionale
-    }
-  };
-
-  const handleStopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      // mediaRecorder will be cleaned up in the onstop handler
-    }
-  };
 
   return (
     <Card key={questionNumber}>
@@ -187,43 +125,7 @@ export function InterviewQuestion({
         )}
 
         {question.type === "open_question" && (
-          <div className="space-y-2">
-            <Textarea
-              placeholder="Scrivi la tua risposta qui..."
-              className="min-h-32"
-              value={answer || ""}
-              onChange={(e) => setAnswer(e.target.value)}
-              disabled={isPending}
-            />
-            <div className="flex items-center gap-2">
-              {!isRecording && !isPending && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleStartRecording}
-                >
-                  <Speech className="mr-2 size-4" />
-                  Registra risposta
-                </Button>
-              )}
-              {isRecording && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleStopRecording}
-                >
-                  <Square className="mr-2 size-4" />
-                  Ferma registrazione
-                </Button>
-              )}
-              {isPending && (
-                <span className="text-muted-foreground text-sm">
-                  <Loader2 className="inline-block mr-2 size-4 animate-spin" />
-                  Trascrizione in corso...
-                </span>
-              )}
-            </div>
-          </div>
+          <VoiceTextarea value={answer} onChange={setAnswer} />
         )}
 
         {question.type === "code_snippet" && (

@@ -6,11 +6,21 @@ import { groq } from "@ai-sdk/groq";
 import { experimental_transcribe as transcribe } from "ai";
 
 export async function transcribeAudioAction(
-  audioData: number[]
+  formData: FormData
 ): Promise<{ success: boolean; text?: string; error?: string }> {
   try {
-    // Convert the number array back to Uint8Array
-    const uint8Array = new Uint8Array(audioData);
+    const audioFile = formData.get("audio");
+
+    if (!audioFile || !(audioFile instanceof Blob)) {
+      return {
+        success: false,
+        error: "No audio file provided",
+      };
+    }
+
+    // Convert Blob to Uint8Array for transcription
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
 
     const { text: transcript } = await transcribe({
       model: groq.transcription(LLM_MODELS.WHISPER_LARGE_V3_TURBO),
