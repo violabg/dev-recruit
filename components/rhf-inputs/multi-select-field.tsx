@@ -6,6 +6,7 @@ type FieldSelectProps<T extends FieldValues> = {
   placeholder?: string;
   options: OptionType[];
   grouped?: boolean;
+  onChange?: (values: string[]) => void;
 } & Omit<BaseControllerProps<T>, "children">;
 
 export function MultiSelectField<T extends FieldValues>({
@@ -18,6 +19,7 @@ export function MultiSelectField<T extends FieldValues>({
   options,
   grouped,
   placeholder,
+  onChange,
 }: FieldSelectProps<T>) {
   return (
     <BaseController
@@ -32,7 +34,10 @@ export function MultiSelectField<T extends FieldValues>({
         <MultiSelect
           options={options}
           selected={field.value || []}
-          onChange={field.onChange}
+          onChange={(values) => {
+            field.onChange(values);
+            onChange?.(values);
+          }}
           placeholder={placeholder}
           invalid={!!fieldState.error}
           grouped={grouped}
