@@ -1,159 +1,142 @@
-# Copilot Instructions
+# Copilot Instructions — DevRecruit
 
-## Architecture Snapshot
+An AI-powered technical recruitment platform for generating quizzes, evaluating candidates, and managing interviews.
 
-- **App Router + cache components:** every route under `app/` renders as a server component. Keep Prisma/AI calls in `'use cache'` scopes, use `cacheLife`, and wrap any runtime data (`cookies()`, `headers()`, etc.) inside Suspense boundaries (see `app/dashboard/candidates/page.tsx`).
-- **Dashboard shell:** `app/dashboard/layout.tsx` wires the sidebar, breadcrumbs, theme toggle, and content surface. Shared navigation and helpers live under `components/dashboard/`.
-- **Lib layer:** `lib/actions/` contains server actions for quiz/question management, candidate management, interviews, evaluations, and presets. `lib/services/ai/` provides modular AI service (core, prompts, retry, streaming, sanitize). `lib/services/r2-storage.ts` handles resume uploads to Cloudflare R2. `lib/prisma.ts` exposes the Neon-backed Prisma client used everywhere.
-- **Environment:** `lib/env.ts` provides validated environment variables with lazy loading (Proxy-based) to prevent client-side import errors.
-- **Logging:** `lib/services/logger.ts` provides centralized logging with scoped loggers (`aiLogger`, `storageLogger`, `authLogger`, `dbLogger`).
-- **Cache Utilities:** `lib/utils/cache-utils.ts` provides centralized cache invalidation helpers (`invalidateQuizCache`, `invalidateCandidateCache`, etc.).
-- **Data model:** Questions are now reusable entities linked to quizzes via `QuizQuestion` join table. Evaluations are polymorphic (interview-based or candidate-based). Presets define question generation templates with type-specific parameters.
-- **UI/design system:** base primitives in `components/ui/` power buttons, cards, tabs, skeletons, etc. Styling relies on Tailwind v4 utilities, OKLCH tokens in `app/globals.css`.
+## Architecture at a Glance
 
-## Data & Flow Patterns
+| Layer            | Key Files                                                                     | Pattern                                                                         |
+| ---------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Routing**      | `app/dashboard/layout.tsx`, `app/dashboard/[section]/page.tsx`                | Next.js 16 App Router, server components by default                             |
+| **Data queries** | `lib/data/*.ts`                                                               | `"use cache"` + `cacheLife()` + `cacheTag()` for cache components               |
+| **Mutations**    | `lib/actions/*.ts`                                                            | Server actions (`"use server"`) with Zod validation, `requireUser()` for auth   |
+| **AI service**   | `lib/services/ai/` (core.ts, prompts.ts, retry.ts, streaming.ts, sanitize.ts) | Multi-model LLM generation, validation with Zod schemas, error retry logic      |
+| **Storage**      | `lib/services/r2-storage.ts`, unpdf                                           | Resume uploads to Cloudflare R2, PDF text extraction for evaluations            |
+| **Database**     | Prisma (Neon PostgreSQL)                                                      | Reusable Question entity with QuizQuestion join table, polymorphic Evaluation   |
+| **Styling**      | Tailwind v4 + OKLCH colors                                                    | Base primitives in `components/ui/`, dashboard shell in `components/dashboard/` |
 
-- **Server actions + Prisma:** mutate state inside `lib/actions/*`, calling `requireUser()` from `lib/auth-server.ts` for authentication only (not ownership filtering). Reuse helpers from `lib/data/` when filtering/aggregating dashboard data (e.g., `lib/data/dashboard.ts`).
-- **Question management:** Questions are reusable entities. Use `lib/actions/questions.ts` for CRUD operations. Link questions to quizzes via `QuizQuestion` join table with ordering support. Favorites system allows marking questions for quick access.
-- **Evaluations:** Two types via polymorphic relationship - interview evaluations (quiz-based with answers) and candidate evaluations (resume-based against position requirements). Both use AI-generated assessments with structured schemas.
-- **AI prompts:** `AIQuizService` (in `lib/services/ai/core.ts`) builds prompts, selects models via `getOptimalModel`, validates responses with schemas under `lib/schemas/`, and applies retries/fallbacks. Streaming responses for position descriptions via `streamPositionDescription`. Audio transcription via `transcribeAudioAction` using Whisper models. Refer to `docs/AI_QUIZ_GENERATION.md` for the full flow and error-handling knobs.
-- **Presets system:** `Preset` entity stores question generation templates with type-specific parameters (focusAreas, distractorComplexity, language, etc.). Used during AI question generation to provide consistent configurations.
-- **File storage:** Candidate resumes uploaded to Cloudflare R2 via `lib/services/r2-storage.ts`. Resume text extraction using unpdf for AI-based candidate evaluation.
-- **Dashboard pages:** split UI into Suspense-backed sections that fetch data independently so cached parts stay in the static shell while runtime segments stream separately.
+## Critical Patterns
 
-## Workflows & Commands
+### 1. Cache Components (Static Shell + Streaming Content)
 
-- Dev server: `pnpm dev` (Next.js MCP enabled).
-- Build/lint/test: `pnpm build`, `pnpm lint`, `pnpm test` (if available).
-- Database migrations: `pnpm prisma migrate deploy` (prod) or `pnpm prisma db push` (local dev).
-- Cache invalidation should use helpers from `lib/utils/cache-utils.ts` (e.g., `invalidateQuizCache()`, `invalidateCandidateCache()`).
+Every dashboard page uses Suspense with cache components. Example structure:
 
-## Project-Specific Conventions
+```tsx
+// Static tab shell (cached)
+<Tabs defaultValue="questions">
+  <TabsList>Domande</TabsList>
+  // Streaming content per tab (inside Suspense)
+  <TabsContent value="questions">
+    <Suspense fallback={<Skeleton />}>
+      <QuestionContent /> // Inside: 'use cache' for data
+    </Suspense>
+  </TabsContent>
+</Tabs>
+```
 
-- **Styling:** favor Tailwind v4 utilities. CSS files must declare colors in OKLCH format (`oklch(...)`). Compose classes with `clsx`, `cn`, or `tailwind-merge` helpers.
-- **Forms:** always pair `react-hook-form` with Zod resolvers using schemas from `lib/schemas/`; validate before invoking server actions. Use rhf-input components from `components/` when using forms, create new components there as needed.
-- **Data fetching:** keep Prisma queries in server components. Only mark components `use client` when necessary for interactivity, and wrap runtime APIs inside Suspense with skeleton fallbacks.
-- **Authentication:** Better Auth config lives in `lib/auth.ts`; prefer `getCurrentUser()`/`requireUser()` helpers to verify user is authenticated. Note: this project does NOT filter entities by ownership (`createdBy`)—all authenticated users can access all entities.
-- **Logging:** use scoped loggers from `lib/services/logger.ts` (`aiLogger`, `storageLogger`, `authLogger`) instead of raw `console.error/warn/log`.
-- **Cache invalidation:** use centralized helpers from `lib/utils/cache-utils.ts` instead of direct `updateTag()` calls.
+**Rule:** Keep Prisma/AI calls in `'use cache'` scopes. Wrap runtime APIs (`cookies()`, `headers()`) in Suspense boundaries with skeleton fallbacks (see `app/dashboard/candidates/page.tsx` for live example).
+
+### 2. Reusable Questions via Join Table
+
+Questions are now **database entities** linked to quizzes via `QuizQuestion` join table:
+
+- Create/update questions: use `lib/actions/questions.ts` (e.g., `createQuestionAction`, `updateQuestionAction`)
+- Link to quiz: use `addQuestionsToQuizAction()` which creates `QuizQuestion` records with ordering
+- Fetch with ordering: see `lib/data/quizzes.ts` — loads with `quizQuestions.include.question` + `orderBy.order`
+- Favorites: `isFavorite` boolean on Question entity
+
+### 3. Polymorphic Evaluations
+
+`Evaluation` entity supports two patterns:
+
+- **Interview evals** (quiz-based): `interviewId` 1:1 relationship + answers → fit score + quiz score
+- **Candidate evals** (resume-based): `candidateId` + `positionId` many-to-one → fit score + recommendation
+- Creation: `lib/actions/evaluation-entity.ts`
+- Candidate answer evaluation: `lib/actions/evaluations.ts`
+
+### 4. AI Quiz Generation Flow
+
+1. User fills form (position, difficulty, question types) in `components/quiz/`
+2. Calls `generateNewQuizAction()` from `lib/actions/quizzes.ts`
+3. AI service builds prompts in `lib/services/ai/prompts.ts` (system message enforces Italian)
+4. Calls `aiQuizService.generateQuiz()` → validates with `aiQuizGenerationSchema` (Zod)
+5. Returns structured JSON with title + questions array
+6. Questions are saved to DB, linked via `QuizQuestion` join table
+
+**Language rule:** All quiz/question text is in **Italian**. System prompts in `lib/services/ai/core.ts` enforce this.
+
+### 5. Preset-Driven Generation
+
+`Preset` entity defines question generation templates:
+
+- Fields: `focusAreas`, `distractorComplexity`, `language`, `bugType`, `codeComplexity`, `expectedResponseLength`, etc.
+- Usage: fetch `getPresetData(presetId)`, pass parameters to `aiQuizService.generateQuestions()`
+- Types: multiple_choice, code_snippet, open_question
 
 ## Essential References
 
-- `lib/services/ai/` – Modular AI service (core.ts, prompts.ts, retry.ts, streaming.ts, sanitize.ts, types.ts).
-- `lib/services/ai-service.ts` – Re-exports from `lib/services/ai/` for backward compatibility.
-- `lib/services/logger.ts` – Centralized logging with scoped loggers.
-- `lib/services/r2-storage.ts` – Cloudflare R2 file upload/delete for resume storage.
-- `lib/env.ts` – Validated environment variables with lazy loading.
-- `lib/utils/cache-utils.ts` – Centralized cache invalidation helpers.
-- `lib/schemas/` – Zod validation schemas (v4) for questions, evaluations, presets, positions, etc.
-- `lib/schemas/questionEntity.ts` – Database Question entity schemas (separate from inline quiz questions).
-- `app/dashboard/layout.tsx` + `components/dashboard/` – layout, navigation, and theme wiring.
-- `prisma/schema.prisma` – data model with Question, QuizQuestion, Evaluation, Preset entities.
-- `lib/data/` + `lib/actions/` – shared helpers to reuse instead of duplicating logic.
-- `lib/utils/question-utils.ts` – Question transformation utilities.
-- `app/globals.css` – color tokens (OKLCH format).
+| What            | Where                                                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Authentication  | `lib/auth.ts` (config), `lib/auth-server.ts` (requireUser/getCurrentUser), note: **NO ownership filtering by createdBy**    |
+| AI service      | `lib/services/ai-service.ts` (re-exports), `lib/services/ai/core.ts` (main), `lib/services/ai/prompts.ts` (prompt builders) |
+| Logging         | `lib/services/logger.ts` (use `aiLogger`, `storageLogger`, `authLogger`, `dbLogger` — avoid raw console)                    |
+| Cache helpers   | `lib/utils/cache-utils.ts` (e.g., `invalidateQuizCache()`, `invalidateCandidateCache()`, `updateTag()`)                     |
+| Validation      | `lib/schemas/` (Zod v4), key: `questionSchemas.strict` for runtime, `aiQuizGenerationSchema` for AI output                  |
+| Question utils  | `lib/utils/question-utils.ts` (mapQuizQuestionsToFlexible, prepareQuestionForCreate)                                        |
+| Dashboard shell | `app/dashboard/layout.tsx` (SidebarProvider, Breadcrumbs in Suspense), `components/dashboard/` (nav, sidebar, theme)        |
+| Data layer      | `lib/data/quizzes.ts`, `lib/data/candidates.ts`, etc. (cached queries with cacheLife/cacheTag)                              |
 
-## Handling Requests
+## Developer Workflows
 
-1. Inspect the affected route (`layout.tsx`, `page.tsx`, `error.tsx`) before editing.
-2. Keep Prisma/AI calls inside `'use cache'` scopes and wrap runtime APIs with Suspense + skeleton fallbacks.
-3. Reuse UI primitives from `components/ui` or existing dashboard components before building new ones.
-4. Document substantial behavior changes in `docs/` (e.g., caching, AI flows, layout shifts).
-5. Follow the constitutional governance in `.specify/memory/constitution.md` for all architectural decisions.
-6. Use centralized cache invalidation helpers from `lib/utils/cache-utils.ts`.
-7. Use scoped loggers from `lib/services/logger.ts` instead of raw console calls.
-8. **Update documentation for architectural changes**: Any major or architectural changes MUST be reflected in the relevant documentation files under `docs/` (see `docs/AI_QUIZ_GENERATION.md`, `docs/CACHE_IMPLEMENTATION.md`, `docs/QUESTION_SCHEMAS.md`).
+```bash
+# Start dev server (Next.js MCP enabled for fast runtime diagnostics)
+pnpm dev
 
-## Cache & Streaming Patterns
+# Database setup (local development)
+pnpm db:push              # Push schema changes to Neon
+pnpm db:generate          # Generate Prisma client
+pnpm db:seed              # Seed sample data
 
-### Data Layer Caching
+# Production database
+pnpm prisma migrate deploy
 
-All data queries in `lib/data/` follow this pattern:
+# Quality checks
+pnpm build                # Full build
+pnpm lint                 # ESLint check
+pnpm test                 # Run tests
+```
 
-# Copilot Instructions (Concise, repo-specific)
+## Before Editing — Key Checklist
 
-## Quick Orientation
+1. **Inspect the route first** — Read `layout.tsx`, `page.tsx`, and `error.tsx` for Suspense structure and caching decisions
+2. **No ownership filtering** — All authenticated users can access all entities; don't filter by `createdBy`
+3. **Data fetching location** — Prisma queries ONLY in server components; wrap runtime APIs in Suspense
+4. **After mutations** — Call `updateTag(...)` for cache components (e.g., `updateTag('quizzes')`); avoid direct revalidatePath unless legacy
+5. **Schemas first** — Before server action: validate input shape with Zod schema from `lib/schemas/`
+6. **Test credentials ready** — Set `DATABASE_URL` and AI env vars (Groq API key) before running local actions
+7. **Forms pair correctly** — Always use `react-hook-form` + Zod resolver from `lib/schemas/`, validate before calling server action
 
-- **Repo type:** Next.js App Router (Next 16), server components by default. Heavy use of Prisma (Neon) and AI services under `lib/services`.
-- **Primary goal for agents:** Make safe, cached server-side changes (keep AI/DB calls in `"use cache"` scopes), follow Zod (v4) schemas in `lib/schemas`, and preserve UI primitives from `components/ui/`.
+## Styling Guidelines
 
-## Architecture Snapshot (what matters)
+- **Colors:** must use OKLCH format in CSS (see `app/globals.css`), e.g., `color: oklch(...)`
+- **Utilities:** prefer Tailwind v4 classes; compose with `cn()`, `clsx()`, or `tailwind-merge`
+- **Components:** reuse UI primitives from `components/ui/` and dashboard helpers from `components/dashboard/` instead of building new low-level components
 
-- **Routes & rendering:** every page under `app/` is a server component; interactive pieces use `use client` sparingly (see `app/dashboard/layout.tsx`).
-- **Cache Components:** code uses `"use cache"`, `cacheLife(...)`, and `cacheTag(...)` patterns (see `lib/data/`).
-- **Server actions:** mutation logic lives in `lib/actions/*` and is invoked from forms (`"use server"`). Use `requireUser()` from `lib/auth-server.ts` to verify authentication (not ownership—no entity filtering by `createdBy`).
-- **AI layer:** `lib/services/ai-service.ts` (exported `aiQuizService`) builds prompts, applies `sanitizeInput`, retries (`withRetry`), timeouts, model selection (`getOptimalModel`) and validates via Zod schemas. Questions are expected in Italian and strict JSON structure.
-- **DB:** `lib/prisma.ts` builds a Prisma client with `PrismaPg` adapter (expects `DATABASE_URL`); Neon/Postgres-backed.
+## Documentation Requirements
 
-## Project-specific patterns (concrete)
+**Mandatory for architectural changes:**
 
-- **AI outputs:** Generated quiz JSON must match the schemas in `lib/schemas` (see `aiQuizGenerationSchema` and `questionSchemas.flexible`). Example enforcement: `aiQuizService.generateQuiz` validates presence of `title` and `questions`.
-- **Language rule:** quiz/question text must be in Italian (system prompts in `lib/services/ai-service.ts`).
-- **Question entity:** Questions are stored as reusable database entities. Use `createQuestionAction`, `updateQuestionAction`, `deleteQuestionAction` from `lib/actions/questions.ts`. Link to quizzes via `addQuestionsToQuizAction` which creates `QuizQuestion` records with ordering.
-- **Evaluation polymorphism:** `Evaluation` entity uses polymorphic pattern - either `interviewId` (1:1, quiz-based) or `candidateId` + `positionId` (many-to-one, resume-based). Use `lib/actions/evaluation-entity.ts` for creation, `lib/actions/evaluations.ts` for interview answer evaluation.
-- **Presets usage:** When generating questions, fetch preset configuration from `getPresetData` and pass parameters to AI service. Presets define focusAreas, distractorComplexity, language, bugType, etc.
-- **Form-server contract:** `upsertQuizAction(formData)` no longer accepts inline questions - questions are linked separately. Use question management actions to add/remove/reorder questions in quizzes.
-- **Cache invalidation:** after mutations update cache tags (e.g., `updateTag("quizzes")`, `updateTag("questions")`, `updateTag("evaluations")`) and call helper revalidation functions when needed.
-- **Validation:** prefer Zod strict parsing in server actions. Use `questionSchemas.strict` for runtime validation, `createQuestionSchema`/`updateQuestionSchema` for entity operations.
+- `docs/AI_QUIZ_GENERATION.md` — AI service changes, prompt modifications, model selection updates
+- `docs/CACHE_IMPLEMENTATION.md` — Cache patterns, cacheLife/cacheTag strategy changes
+- `docs/QUESTION_SCHEMAS.md` — Schema changes, new question types, validation updates
+- `README.md` — Major features, setup changes, new dependencies
 
-## Developer workflows & commands (run these)
+## Common Patterns by Module
 
-- **Dev server (MCP enabled):** `pnpm dev` (Next 16 MCP; fast feedback).
-- **Build / lint / tests:** `pnpm build`, `pnpm lint`, `pnpm test` (if present).
-- **DB (local vs prod):** local: `pnpm prisma db push`; prod migrations: `pnpm prisma migrate deploy`.
-- **Environment:** ensure `DATABASE_URL` and AI credentials are set in env before running server actions that touch DB/AI.
-
-## Editing guidance (practical rules for agents)
-
-- Inspect the route's `layout.tsx`, `page.tsx`, and `error.tsx` before changing behavior. Example: `app/dashboard/layout.tsx` uses `SidebarProvider` and `Suspense` for `Breadcrumbs`.
-- Keep Prisma/AI calls inside `'use cache'` or server actions and wrap runtime APIs (`cookies()`, `headers()`) in Suspense boundaries when used in server components.
-- Reuse UI primitives from `components/ui/` and existing dashboard components in `components/dashboard/` — avoid creating new low-level primitives.
-- When mutating data: call `updateTag(...)` for cache components and the repo helper `revalidateQuizCache(...)` for legacy revalidation (see `lib/actions/quizzes.ts`).
-
-# Copilot instructions — dev-recruit (concise)
-
-This file gives an agent the minimal, actionable knowledge to be productive in this repo.
-
-**Architecture Snapshot**
-
-- **App Router (Next.js App)**: every route under `app/` is a server component by default. Inspect `layout.tsx`, `page.tsx`, and `error.tsx` for the route's surface before editing.
-- **Cache Components**: code uses `"use cache"`, `cacheLife(...)`, `cacheTag(...)` and Suspense boundaries. See `docs/CACHE_IMPLEMENTATION.md` and `app/dashboard/candidates/page.tsx` for examples.
-- **Server actions & DB**: mutations live in `lib/actions/` (use `"use server"`). Use `requireUser()` from `lib/auth-server.ts` for auth checks only (no entity ownership filtering). Prisma is centralized in `lib/prisma.ts` (Neon/Postgres).
-- **AI layer**: `lib/services/ai-service.ts` (exported as `aiQuizService`) builds prompts, picks models via `getOptimalModel`, retries/fallbacks and validates outputs against Zod schemas in `lib/schemas/`.
-
-**Key Developer Workflows**
-
-- **Run dev**: `pnpm dev` (Next 16 with MCP enabled for fast runtime diagnostics).
-- **Build / lint / tests:** `pnpm build`, `pnpm lint`, `pnpm test` (if present).
-- **Database**: local iterative schema: `pnpm prisma db push`. Production migrations: `pnpm prisma migrate deploy`.
-- **Env**: set `DATABASE_URL` and AI credentials before running server actions that call DB/AI.
-
-**Project-Specific Conventions**
-
-- **Cache-first edits**: Keep Prisma/AI calls inside `'use cache'` or server actions. Wrap runtime APIs (`cookies()`, `headers()`) in Suspense with skeletons for client-visible routes.
-- **Zod validation**: AI and form payloads must match schemas in `lib/schemas/`. Example: `aiQuizGenerationSchema` and `questionSchemas` validate `aiQuizService` outputs.
-- **AI language rule**: quiz content is generated in Italian — prompts and system messages enforce this in `lib/services/ai-service.ts`.
-- **Form contracts**: server action `upsertQuizAction(formData)` expects `title`, `questions` (JSON string), optional `timeLimit`, and `positionId` — see `lib/actions/quizzes.ts`.
-- **Cache invalidation**: after mutations update cache tags (e.g., `updateTag('quizzes')`) and call `utils/revalidateQuizCache()` when needed.
-- **Styling**: CSS files must use OKLCH color values (see `app/globals.css`). In code, prefer Tailwind v4 utilities and UI primitives in `components/ui/`.
-
-**Files to Inspect First (examples)**
-
-- `app/dashboard/layout.tsx` — dashboard shell, Suspense usage, sidebar wiring.
-- `lib/services/ai-service.ts` — prompt construction, model selection, retries.
-- `lib/actions/quizzes.ts` — server action contracts and cache invalidation.
-- `lib/prisma.ts` — Prisma client and DB conventions.
-- `lib/schemas/` — Zod schemas for AI and forms.
-
-**Editing Guidance (practical rules)**
-
-- Always run the dev server (`pnpm dev`) and use Next.js MCP runtime when changing routes or debugging hydration/runtime errors.
-- Reuse existing UI primitives in `components/ui/` and `components/dashboard/` instead of creating new low-level components.
-- When adding or modifying server actions: validate inputs with Zod, call `requireUser()` for authentication (not ownership filtering), update cache tags, and document the change in `docs/`.
-- **Documentation updates are mandatory** for architectural or major changes. Update the relevant docs:
-  - `docs/AI_QUIZ_GENERATION.md` — AI service changes, prompt modifications, model updates
-  - `docs/CACHE_IMPLEMENTATION.md` — Caching strategy changes, new cache patterns
-  - `docs/QUESTION_SCHEMAS.md` — Schema changes, new question types, validation updates
-  - `README.md` — New features, setup changes, dependency updates
-
-If a section is unclear or you want examples (exact schema fields, sample prompts, or a pre-commit lint hook), say which area to expand and I will iterate.
+| Module                  | Example                                                                                    | Where                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| Generate quiz           | form → `generateNewQuizAction()` → save questions via `QuizQuestion`                       | `lib/actions/quizzes.ts`, `components/quiz/` |
+| Create question         | `createQuestionAction(params)` validates with `createQuestionSchema`                       | `lib/actions/questions.ts`                   |
+| Evaluate interview      | fetch Interview + answers → call `evaluateInterviewAnswersAction()` → generates Evaluation | `lib/actions/evaluations.ts`                 |
+| Evaluate candidate      | fetch resume text → call `evaluateCandidateAction()` → generates resume-based Evaluation   | `lib/actions/evaluations.ts`                 |
+| Upload resume           | Candidate form → `handleResumeUpload()` → Cloudflare R2 via `lib/services/r2-storage.ts`   | `components/candidates/candidate-form.tsx`   |
+| Streaming position desc | Triggered from position form → `streamPositionDescription()` from AI service               | `lib/services/ai/streaming.ts`               |
