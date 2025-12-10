@@ -12,7 +12,7 @@ import {
   getPositionsCount,
   getRecentPositions,
 } from "@/lib/data/dashboard";
-import { BarChart3, Briefcase, Eye, Plus, Users } from "lucide-react";
+import { BarChart3, Briefcase, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { DashboardStatsSkeleton, RecentPositionsSkeleton } from "./fallbacks";
@@ -95,29 +95,21 @@ async function RecentPositions() {
       </CardHeader>
       <CardContent>
         {positions.length > 0 ? (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {positions.map((position) => (
-              <div
+              <Link
                 key={position.id}
-                className="flex justify-between items-center p-3 border rounded-lg"
+                href={`/dashboard/positions/${position.id}`}
               >
-                <div>
-                  <div className="font-medium">{position.title}</div>
-                  <div className="text-muted-foreground text-sm">
-                    {position.experienceLevel ?? "Esperienza non indicata"}
+                <div className="flex justify-between items-center hover:bg-foreground/10 px-3 py-2 border rounded-lg transition-colors duration-300 ease-in-out">
+                  <div>
+                    <div className="font-medium">{position.title}</div>
+                    <div className="text-muted-foreground text-sm">
+                      {position.experienceLevel ?? "Esperienza non indicata"}
+                    </div>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  title="Vai al dettaglio"
-                >
-                  <Link href={`/dashboard/positions/${position.id}`}>
-                    <Eye className="mr-1 size-4 text-primary" />
-                  </Link>
-                </Button>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
