@@ -18,6 +18,7 @@ import {
 import { deleteInterview } from "@/lib/actions/interviews";
 import type { AssignedInterview } from "@/lib/data/interviews";
 import { toast } from "sonner";
+import { TableRowLink } from "../ui/table-row-link";
 
 interface InvitesListProps {
   assignedInterviews: AssignedInterview[];
@@ -85,13 +86,16 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
           <TableBody>
             {interviews.map((interview) => (
               <TableRow key={interview.id}>
-                <TableCell className="font-medium">
+                <TableCell className="relative font-medium">
+                  <TableRowLink
+                    href={`/dashboard/interviews/${interview.id}`}
+                  />
                   {interview.candidateName}
                 </TableCell>
                 <TableCell>{interview.quizTitle}</TableCell>
                 <TableCell>{getStatusBadge(interview.status)}</TableCell>
                 <TableCell>{formatDate(interview.createdAt)}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="z-10 relative text-right">
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"
