@@ -15,8 +15,12 @@ export async function proxy(request: NextRequest) {
       : NextResponse.next();
   }
 
-  // Protected routes: if user is not authenticated and not in auth paths, redirect
-  if (!session?.user && !pathname.startsWith("/auth")) {
+  // Protected routes: if user is not authenticated and not in auth or recruiting paths, redirect
+  if (
+    !session?.user &&
+    !pathname.startsWith("/auth") &&
+    !pathname.startsWith("/recruting")
+  ) {
     // Preserve the intended destination for redirect after login
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);

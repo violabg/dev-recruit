@@ -1,5 +1,3 @@
-"use cache";
-
 import { CandidateForm } from "@/components/candidates/candidate-form";
 import {
   Card,
@@ -9,12 +7,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getPositionsForSelect } from "@/lib/data/positions";
-import { CacheTags } from "@/lib/utils/cache-utils";
-import { cacheLife, cacheTag } from "next/cache";
 import { Suspense } from "react";
 import { ApplyFormSkeleton } from "./fallbacks";
 
-export default async function ApplyPage() {
+type PageProps = {
+  searchParams: Promise<{ positionId?: string }>;
+};
+
+export default async function ApplyPage({ searchParams }: PageProps) {
   return (
     <div className="flex flex-col justify-center items-center bg-background px-4 py-8 min-h-dvh">
       <Card className="w-full max-w-xl">
@@ -48,7 +48,7 @@ export default async function ApplyPage() {
         </CardHeader>
         <CardContent>
           <Suspense fallback={<ApplyFormSkeleton />}>
-            <ApplyFormContent />
+            <ApplyFormContent searchParams={searchParams} />
           </Suspense>
         </CardContent>
       </Card>
@@ -56,12 +56,17 @@ export default async function ApplyPage() {
   );
 }
 
-async function ApplyFormContent() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.POSITIONS);
+async function ApplyFormContent({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const positionId = params.positionId;
 
   const positions = await getPositionsForSelect();
+
+  // Validate that the positionId exists if provided
+  const validPositionId =
+    positionId && positions.some((p) => p.id === positionId)
+      ? positionId
+      : undefined;
 
   if (positions.length === 0) {
     return (
@@ -72,5 +77,11 @@ async function ApplyFormContent() {
     );
   }
 
-  return <CandidateForm mode="apply" positions={positions} />;
+  return (
+    <CandidateForm
+      mode="apply"
+      positions={positions}
+      defaultPositionId={validPositionId}
+    />
+  );
 }
