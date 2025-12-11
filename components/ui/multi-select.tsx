@@ -34,6 +34,7 @@ interface MultiSelectProps {
   className?: string;
   grouped?: boolean;
   invalid?: boolean;
+  disabled?: boolean;
 }
 
 export function MultiSelect({
@@ -44,6 +45,7 @@ export function MultiSelect({
   className,
   grouped = false,
   invalid = false,
+  disabled = false,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -80,6 +82,7 @@ export function MultiSelect({
           role="combobox"
           aria-expanded={open}
           aria-invalid={invalid}
+          disabled={disabled}
           className={cn(
             "justify-between w-full h-auto min-h-10",
             "aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]",

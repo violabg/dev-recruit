@@ -32,11 +32,15 @@ type CandidateFormProps =
       mode: "new";
       positions: { id: string; title: string }[];
       defaultPositionId?: string;
+      disabled?: boolean;
+      onPositionSelect?: (positionIds: string[]) => void;
     }
   | {
       mode: "apply";
       positions: { id: string; title: string }[];
       defaultPositionId?: string;
+      disabled?: boolean;
+      onPositionSelect?: (positionIds: string[]) => void;
     }
   | {
       mode: "edit";
@@ -53,6 +57,8 @@ type CandidateFormProps =
       > & {
         positionIds: string[];
       };
+      disabled?: boolean;
+      onPositionSelect?: (positionIds: string[]) => void;
     };
 
 export const CandidateForm = (props: CandidateFormProps) => {
@@ -281,11 +287,17 @@ export const CandidateForm = (props: CandidateFormProps) => {
         name="positionIds"
         label="Posizioni"
         required
+        disabled={props.disabled}
         placeholder="Seleziona una o più posizioni"
         options={props.positions.map((position) => ({
           value: position.id,
           label: position.title,
         }))}
+        onChange={(values) => {
+          if (props.onPositionSelect) {
+            props.onPositionSelect(values);
+          }
+        }}
       />
       {isEditMode && (
         <SelectField
