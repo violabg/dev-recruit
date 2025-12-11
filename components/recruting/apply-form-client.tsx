@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { fetchPositionData } from "@/lib/actions/positions";
 import type { Position } from "@/lib/prisma/client";
 import { useEffect, useState, useTransition } from "react";
+import { PositionDetailSkeleton } from "../positions/position-detail-skeleton";
 
 type ApplyFormClientProps = {
   positions: { id: string; title: string }[];
@@ -80,11 +81,7 @@ export function ApplyFormClient({
           reversedPositionIds.map((positionId) => {
             const positionData = positionsData[positionId];
             if (!positionData && isPending) {
-              return (
-                <Card key={positionId} className="h-96">
-                  <CardContent className="animate-pulse" />
-                </Card>
-              );
+              return <PositionDetailSkeleton key={positionId} />;
             }
             if (!positionData) return null;
 

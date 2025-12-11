@@ -2,9 +2,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function ApplyFormSkeleton() {
   return (
-    <div className="gap-6 grid grid-cols-1 lg:grid-cols-3 w-full">
+    <div className="gap-6 grid grid-cols-1 lg:grid-cols-2 h-full">
       {/* Form skeleton - left column */}
-      <div className="space-y-6 lg:col-span-1">
+      <div className="space-y-6">
         {/* Name fields */}
         <div className="gap-4 grid sm:grid-cols-2">
           <div className="space-y-2">
@@ -45,7 +45,7 @@ export function ApplyFormSkeleton() {
       </div>
 
       {/* Position detail skeleton - right column */}
-      <div className="space-y-6 lg:col-span-2 p-6">
+      <div className="space-y-4">
         {/* Title */}
         <div className="space-y-3">
           <Skeleton className="w-3/4 h-8" />
