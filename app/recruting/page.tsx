@@ -16,7 +16,9 @@ type PageProps = {
 
 export default async function ApplyPage({ searchParams }: PageProps) {
   return (
-    <div className="flex flex-col justify-center items-center bg-background px-4 py-8 min-h-dvh">
+    <div
+      className="flex flex-col items-center bg-background px-4 py-8 min-h-dvh"
+    >
       <div className="w-full max-w-6xl">
         {/* Header Card */}
         <Card className="mb-6 w-full">
