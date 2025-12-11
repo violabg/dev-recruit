@@ -1,6 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
+import { getPositionById } from "../data/positions";
 import prisma from "../prisma";
 import { PositionFormData, positionFormSchema } from "../schemas";
 import { invalidatePositionCache } from "../utils/cache-utils";
@@ -101,4 +102,8 @@ export async function updatePosition(id: string, formData: FormData) {
   invalidatePositionCache(id);
 
   redirect(`/dashboard/positions/${id}`);
+}
+
+export async function fetchPositionData(positionId: string) {
+  return getPositionById(positionId);
 }

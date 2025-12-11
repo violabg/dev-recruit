@@ -1,29 +1,18 @@
+"use client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getPositionById } from "@/lib/data/positions";
+import type { Position } from "@/lib/prisma/client";
 import { BriefcaseIcon, CalendarIcon, CodeIcon, HeartIcon } from "lucide-react";
 
-type PositionDetailCardProps = {
-  positionId: string;
+type PositionDetailCardClientProps = {
+  position: Position;
 };
 
-export async function PositionDetailCard({
-  positionId,
-}: PositionDetailCardProps) {
-  const position = await getPositionById(positionId);
-
-  if (!position) {
-    return (
-      <Card className="flex justify-center items-center border-dashed h-full">
-        <CardContent className="text-center">
-          <p className="text-muted-foreground">Posizione non trovata</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
+export function PositionDetailCardClient({
+  position,
+}: PositionDetailCardClientProps) {
   return (
-    <Card className="flex flex-col h-full overflow-hidden">
+    <Card className="flex flex-col overflow-hidden">
       <CardHeader className="pb-4">
         <div className="space-y-3">
           <CardTitle className="text-2xl line-clamp-2">
