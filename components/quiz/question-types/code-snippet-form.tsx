@@ -1,6 +1,4 @@
 "use client";
-
-import { programmingLanguages } from "@/components/positions/data";
 import { SelectField } from "@/components/rhf-inputs";
 import {
   Field,
@@ -22,9 +20,14 @@ const CodeEditor = dynamic(
 type CodeSnippetFormProps = {
   index: number;
   field: Question;
+  languageOptions?: { value: string; label: string }[];
 };
 
-export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
+export const CodeSnippetForm = ({
+  index,
+  field,
+  languageOptions,
+}: CodeSnippetFormProps) => {
   const { resolvedTheme } = useTheme();
   const form = useFormContext();
 
@@ -51,10 +54,7 @@ export const CodeSnippetForm = ({ index, field }: CodeSnippetFormProps) => {
         placeholder="Seleziona linguaggio"
         selectProps={{}} // kept for future customizations
         triggerProps={{ id: `questions-${index}-language`, className: "w-48" }}
-        options={programmingLanguages.map((lang) => ({
-          value: lang.toLowerCase(),
-          label: lang,
-        }))}
+        options={languageOptions ?? []}
       />
       <Field>
         <FieldLabel htmlFor={`questions-${index}-code`}>

@@ -180,8 +180,61 @@ async function seedPresets() {
     console.error("Error seeding presets:", error);
     process.exit(1);
   } finally {
+    // Do not disconnect here; handled in main
+  }
+}
+
+// Reference data imports from static arrays
+import {
+  contractTypes,
+  databases,
+  experienceLevels,
+  frameworks,
+  programmingLanguages,
+  softSkills,
+  tools,
+} from "../components/positions/data";
+
+async function seedReferenceData() {
+  console.log("Starting reference data seeding...");
+  const referenceDataSeed = [
+    { category: "programmingLanguage", items: programmingLanguages },
+    { category: "framework", items: frameworks },
+    { category: "database", items: databases },
+    { category: "tool", items: tools },
+    { category: "soft_skill", items: softSkills },
+    { category: "contract_type", items: contractTypes },
+    { category: "experience_level", items: experienceLevels },
+  ];
+
+  for (const { category, items } of referenceDataSeed) {
+    for (let i = 0; i < items.length; i++) {
+      await prisma.referenceData.upsert({
+        where: { category_label: { category, label: items[i] } },
+        update: {},
+        create: {
+          category,
+          label: items[i],
+          order: i,
+          isActive: true,
+        },
+      });
+    }
+  }
+
+  console.log("✓ Reference data seeded");
+}
+
+async function main() {
+  try {
+    await seedPresets();
+    await seedReferenceData();
+  } catch (error) {
+    console.error("Error during seeding:", error);
+    process.exit(1);
+  } finally {
     await prisma.$disconnect();
   }
 }
 
-seedPresets();
+main();

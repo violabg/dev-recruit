@@ -53,6 +53,7 @@ type AIDialogsProps = {
 
   aiLoading: boolean;
   defaultDifficulty?: number;
+  languageOptions?: { value: string; label: string }[];
   position: {
     id: string;
     title: string;
@@ -75,6 +76,7 @@ export const AIDialogs = ({
   setFullQuizDialogOpen,
   aiLoading,
   defaultDifficulty = 3,
+  languageOptions,
   position,
   quizId,
 }: AIDialogsProps) => {
@@ -90,6 +92,7 @@ export const AIDialogs = ({
         onGenerate={onGenerateQuestion}
         loading={aiLoading}
         defaultDifficulty={defaultDifficulty}
+        languageOptions={languageOptions}
       />
       {/* Dialogo Rigenerazione Domanda */}
       <AIQuestionGenerationDialog
@@ -101,6 +104,7 @@ export const AIDialogs = ({
         onGenerate={onRegenerateQuestion}
         loading={aiLoading}
         defaultDifficulty={defaultDifficulty}
+        languageOptions={languageOptions}
       />
 
       <AIQuizGenerationDialog

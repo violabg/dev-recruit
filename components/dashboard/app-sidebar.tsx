@@ -5,6 +5,7 @@ import {
   Briefcase,
   FileQuestion,
   MessageSquareMore,
+  Settings,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -55,6 +56,11 @@ const data = {
       href: "/dashboard/interviews",
       label: "Colloqui",
       icon: MessageSquareMore,
+    },
+    {
+      href: "/dashboard/settings/reference-data",
+      label: "Impostazioni",
+      icon: Settings,
     },
   ],
 };

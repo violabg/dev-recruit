@@ -41,6 +41,7 @@ type QuestionItemProps = {
   onRemove: (index: number) => void;
   aiLoading: boolean;
   hasQuestionChanges: boolean;
+  languageOptions?: { value: string; label: string }[];
 };
 
 export const QuestionItem = ({
@@ -54,6 +55,7 @@ export const QuestionItem = ({
   onRemove,
   aiLoading,
   hasQuestionChanges,
+  languageOptions,
 }: QuestionItemProps) => {
   // Track local optimistic update state for favorite toggle
   // null means use the field value, boolean means we have a pending/optimistic update
@@ -274,6 +276,7 @@ export const QuestionItem = ({
                 <CodeSnippetForm
                   index={actualIndex}
                   field={field as CodeSnippetQuestion}
+                  languageOptions={languageOptions}
                 />
               )}
             </div>

@@ -18,47 +18,24 @@ import { InputField } from "../rhf-inputs/input-field";
 import { MultiSelectField } from "../rhf-inputs/multi-select-field";
 import { SelectField } from "../rhf-inputs/select-field";
 import { TextareaField } from "../rhf-inputs/textarea-field";
-import {
-  contractTypes,
-  databases,
-  experienceLevels,
-  frameworks,
-  programmingLanguages,
-  softSkills,
-  tools,
-} from "./data";
-
-// Combine all skills for the MultiSelect component
-const allSkills = [
-  ...programmingLanguages.map((skill) => ({
-    label: skill,
-    value: skill,
-    category: "Linguaggi",
-  })),
-  ...frameworks.map((skill) => ({
-    label: skill,
-    value: skill,
-    category: "Framework",
-  })),
-  ...databases.map((skill) => ({
-    label: skill,
-    value: skill,
-    category: "Database",
-  })),
-  ...tools.map((skill) => ({ label: skill, value: skill, category: "Tool" })),
-];
-
-const allSoftSkills = softSkills.map((skill) => ({
-  label: skill,
-  value: skill,
-}));
 
 type PositionFormProps = {
   position?: Position;
   onCancel?: () => void;
+  allSkills?: { label: string; value: string; category: string }[];
+  allSoftSkills?: { label: string; value: string }[];
+  experienceLevels?: string[];
+  contractTypes?: string[];
 };
 
-export function PositionForm({ position, onCancel }: PositionFormProps) {
+export function PositionForm({
+  position,
+  onCancel,
+  allSkills = [],
+  allSoftSkills = [],
+  experienceLevels = [],
+  contractTypes = [],
+}: PositionFormProps) {
   const router = useRouter();
   const [isSubmitting, startTransition] = useTransition();
   const [isGeneratingDescription, startDescriptionGeneration] = useTransition();

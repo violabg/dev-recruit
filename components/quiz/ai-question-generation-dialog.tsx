@@ -32,7 +32,6 @@ import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import { programmingLanguages } from "../positions/data";
 
 const getDifficultyLabel = (value: number) => {
   const labels = {
@@ -77,6 +76,7 @@ type AIGenerationDialogProps = {
   onGenerate: (type: QuestionType, data: GenerationFormData) => Promise<void>;
   loading: boolean;
   defaultDifficulty?: number;
+  languageOptions?: { value: string; label: string }[];
 };
 
 export const AIQuestionGenerationDialog = ({
@@ -88,6 +88,7 @@ export const AIQuestionGenerationDialog = ({
   onGenerate,
   loading,
   defaultDifficulty = 3,
+  languageOptions = [],
 }: AIGenerationDialogProps) => {
   const form = useForm<GenerationFormData>({
     resolver: zodResolver(generationSchema),
@@ -273,9 +274,9 @@ export const AIQuestionGenerationDialog = ({
                 label="Linguaggio di Programmazione"
                 placeholder="Seleziona linguaggio"
               >
-                {programmingLanguages.map((lang) => (
-                  <SelectItem key={lang} value={lang}>
-                    {lang}
+                {languageOptions.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.label}>
+                    {lang.label}
                   </SelectItem>
                 ))}
               </SelectField>

@@ -27,14 +27,15 @@ import {
   useTransition,
 } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { programmingLanguages } from "../positions/data";
 
 type SearchAndFilterInterviewsProps = {
   positionOptions: ReactNode;
+  languageOptions?: ReactNode;
 };
 
 export function SearchAndFilterInterviews({
   positionOptions,
+  languageOptions,
 }: SearchAndFilterInterviewsProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -180,11 +181,7 @@ export function SearchAndFilterInterviews({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutti i linguaggi</SelectItem>
-            {programmingLanguages.map((lang) => (
-              <SelectItem key={lang} value={lang}>
-                {lang}
-              </SelectItem>
-            ))}
+            {languageOptions}
           </SelectContent>
         </Select>
       </div>

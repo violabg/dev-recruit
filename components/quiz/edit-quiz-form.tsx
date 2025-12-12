@@ -44,6 +44,7 @@ type EditQuizFormProps = {
   };
   mode?: "edit" | "create";
   onSaveSuccess?: (result?: SaveQuizResult) => void;
+  languageOptions?: { value: string; label: string }[];
 };
 
 export function EditQuizForm({
@@ -51,6 +52,7 @@ export function EditQuizForm({
   position,
   mode = "edit",
   onSaveSuccess,
+  languageOptions,
 }: EditQuizFormProps) {
   const router = useRouter();
 
@@ -229,6 +231,7 @@ export function EditQuizForm({
               onRemove={remove}
               aiLoading={aiLoading}
               hasQuestionChanges={hasQuestionChanges}
+              languageOptions={languageOptions}
             />
           </div>
 
@@ -282,6 +285,7 @@ export function EditQuizForm({
         fullQuizDialogOpen={fullQuizDialogOpen}
         setFullQuizDialogOpen={setFullQuizDialogOpen}
         aiLoading={aiLoading}
+        languageOptions={languageOptions}
         position={position}
         quizId={mode === "edit" ? quiz.id : undefined}
       />

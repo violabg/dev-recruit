@@ -21,6 +21,7 @@ type QuestionsListProps = {
   onRemove: (index: number) => void;
   aiLoading: boolean;
   hasQuestionChanges: (index: number) => boolean;
+  languageOptions?: { value: string; label: string }[];
 };
 
 export const QuestionsList = ({
@@ -35,6 +36,7 @@ export const QuestionsList = ({
   onRemove,
   aiLoading,
   hasQuestionChanges,
+  languageOptions,
 }: QuestionsListProps) => {
   form.watch("questions");
 
@@ -67,6 +69,7 @@ export const QuestionsList = ({
             onRemove={onRemove}
             aiLoading={aiLoading}
             hasQuestionChanges={hasQuestionChanges(actualIndex)}
+            languageOptions={languageOptions}
           />
         );
       })}

@@ -1,4 +1,4 @@
-import { PositionForm } from "@/components/positions/position-form";
+import { PositionFormLoading } from "@/components/positions/position-form-with-data";
 import {
   Card,
   CardContent,
@@ -18,7 +18,7 @@ export default async function NewPositionPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <PositionForm />
+        <PositionFormLoading />
       </CardContent>
     </Card>
   );

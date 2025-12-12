@@ -1,4 +1,4 @@
-import { PositionForm } from "@/components/positions/position-form";
+import { PositionFormWithData } from "@/components/positions/position-form-with-data";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -46,7 +46,7 @@ export default async function EditPositionPage({
         </div>
       </CardHeader>
       <CardContent>
-        <PositionForm position={position} />
+        <PositionFormWithData position={position} />
       </CardContent>
     </Card>
   );

@@ -178,6 +178,11 @@ export function invalidateCandidateCache(options?: {
 // Interview Cache Invalidation
 // ============================================================================
 
+// Reference data cache invalidation
+export function invalidateReferenceDataCache(category?: string) {
+  updateTag("reference-data");
+  if (category) updateTag(`reference-data-${category}`);
+}
 /**
  * Invalidate interview cache after create/update/delete operations
  * Use this in Server Actions only. For Route Handlers, use invalidateInterviewCacheInRouteHandler.

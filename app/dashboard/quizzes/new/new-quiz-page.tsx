@@ -25,11 +25,13 @@ export type PositionOption = {
 type NewQuizPageProps = {
   positions?: PositionOption[];
   fixedPosition?: PositionOption;
+  languageOptions?: { value: string; label: string }[];
 };
 
 export const NewQuizCreationPage = ({
   positions = [],
   fixedPosition,
+  languageOptions,
 }: NewQuizPageProps) => {
   const [selectedPositionId, setSelectedPositionId] = useState(
     fixedPosition?.id ?? ""
@@ -113,6 +115,7 @@ export const NewQuizCreationPage = ({
           position={selectedPosition}
           mode="create"
           onSaveSuccess={handleSaveSuccess}
+          languageOptions={languageOptions}
         />
       )}
     </>

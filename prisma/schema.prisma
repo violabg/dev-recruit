@@ -330,3 +330,18 @@ enum ExpectedResponseLength {
   long
 }
 
+// Reference data for positions (skills, frameworks, etc.)
+model ReferenceData {
+  id        String   @id @default(cuid())
+  category  String
+  label     String
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([category, label], map: "category_label")
+  @@index([category, isActive, order])
+  @@map("reference_data")
+}
+

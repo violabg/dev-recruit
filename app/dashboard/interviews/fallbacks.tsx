@@ -24,9 +24,9 @@ export const FiltersSkeleton = () => (
   <div className="flex sm:flex-row flex-col gap-4">
     <Skeleton className="flex-1 h-10" />
     <div className="flex flex-wrap gap-4">
-      <Skeleton className="w-[140px] h-10" />
-      <Skeleton className="w-[140px] h-10" />
-      <Skeleton className="w-[140px] h-10" />
+      <Skeleton className="w-[153px] h-10" />
+      <Skeleton className="w-[183px] h-10" />
+      <Skeleton className="w-[172px] h-10" />
     </div>
   </div>
 );

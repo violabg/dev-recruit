@@ -1,4 +1,5 @@
 import { getAllPositions } from "@/lib/data/positions";
+import { getReferenceDataByCategory } from "@/lib/data/reference-data";
 import type { Position } from "@/lib/prisma/client";
 import { Suspense } from "react";
 import { NewQuizCreationPage, PositionOption } from "./new-quiz-page";
@@ -35,7 +36,10 @@ async function PositionsContent({
 }: {
   positionsPromise: Promise<Position[]>;
 }) {
-  const positions = await positionsPromise;
+  const [positions, languagesData] = await Promise.all([
+    positionsPromise,
+    getReferenceDataByCategory("programmingLanguage"),
+  ]);
 
   const serializedPositions: PositionOption[] = positions.map((position) => ({
     id: position.id,
@@ -44,5 +48,15 @@ async function PositionsContent({
     skills: position.skills,
   }));
 
-  return <NewQuizCreationPage positions={serializedPositions} />;
+  const languages = languagesData.map((item) => ({
+    value: item.label.toLowerCase(),
+    label: item.label,
+  }));
+
+  return (
+    <NewQuizCreationPage
+      positions={serializedPositions}
+      languageOptions={languages}
+    />
+  );
 }
