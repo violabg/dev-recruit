@@ -16,10 +16,12 @@ const PageHeader = ({
       <div>
         <h1 className="font-bold text-3xl tracking-tight">{title}</h1>
         {description && <p className="text-muted-foreground">{description}</p>}
-        {info && <div className="flex items-center gap-2 mt-1">{info}</div>}
+        {info && (
+          <div className="flex flex-wrap items-center gap-2 mt-1">{info}</div>
+        )}
       </div>
       {actionBtns && (
-        <div className="flex items-center gap-2 text-wrap">{actionBtns}</div>
+        <div className="flex flex-wrap items-center gap-2">{actionBtns}</div>
       )}
     </div>
   );

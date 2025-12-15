@@ -25,33 +25,31 @@ export function QuizDetailActionsClient({
 
   return (
     <>
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/dashboard/quizzes/${quizId}/edit`}>
-            <Edit className="mr-1 size-4" />
-            Modifica
-          </Link>
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setIsDuplicateDialogOpen(true)}
-        >
-          <Copy className="mr-1 size-4" />
-          Duplica
-        </Button>
-        <Button variant="default" size="sm" asChild>
-          <Link href={`/dashboard/quizzes/${quizId}/invite`}>
-            <Send className="mr-1 size-4" />
-            Assicia a candidati
-          </Link>
-        </Button>
-        <DeleteWithConfirm
-          deleteAction={deleteQuizById.bind(null, quizId)}
-          description="Questa azione non può essere annullata. Il quiz verrà eliminato permanentemente."
-          errorMessage="Errore durante l'eliminazione del quiz"
-        />
-      </div>
+      <Button variant="outline" size="sm" asChild>
+        <Link href={`/dashboard/quizzes/${quizId}/edit`}>
+          <Edit className="mr-1 size-4" />
+          Modifica
+        </Link>
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => setIsDuplicateDialogOpen(true)}
+      >
+        <Copy className="mr-1 size-4" />
+        Duplica
+      </Button>
+      <Button variant="default" size="sm" asChild>
+        <Link href={`/dashboard/quizzes/${quizId}/invite`}>
+          <Send className="mr-1 size-4" />
+          Assicia a candidati
+        </Link>
+      </Button>
+      <DeleteWithConfirm
+        deleteAction={deleteQuizById.bind(null, quizId)}
+        description="Questa azione non può essere annullata. Il quiz verrà eliminato permanentemente."
+        errorMessage="Errore durante l'eliminazione del quiz"
+      />
 
       <DuplicateQuizDialog
         open={isDuplicateDialogOpen}
