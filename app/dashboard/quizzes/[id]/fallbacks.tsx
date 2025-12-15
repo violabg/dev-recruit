@@ -3,28 +3,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function QuizHeaderSkeleton() {
   return (
-    <>
-      <div className="flex items-center gap-2">
-        <Skeleton className="w-48 h-8" />
-      </div>
-
-      <div className="flex justify-between items-center">
-        <div>
-          <Skeleton className="mb-2 w-64 h-10" />
-          <div className="flex items-center gap-2">
-            <Skeleton className="w-24 h-6" />
-            <Skeleton className="w-24 h-6" />
-            <Skeleton className="w-28 h-6" />
-            <Skeleton className="w-32 h-4" />
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="w-28 h-10" />
-          <Skeleton className="w-36 h-10" />
-          <Skeleton className="w-28 h-10" />
+    <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-4">
+      <div>
+        <Skeleton className="mb-1 w-64 h-9" />
+        <div className="flex items-center gap-2 mt-1">
+          <Skeleton className="w-28 h-6" />
+          <Skeleton className="w-28 h-6" />
+          <Skeleton className="w-28 h-6" />
+          <Skeleton className="w-40 h-4" />
         </div>
       </div>
-    </>
+      <div className="flex items-center gap-2 text-wrap">
+        <Skeleton className="w-24 h-8" />
+        <Skeleton className="w-24 h-8" />
+        <Skeleton className="w-36 h-8" />
+        <Skeleton className="w-24 h-8" />
+      </div>
+    </div>
   );
 }
 

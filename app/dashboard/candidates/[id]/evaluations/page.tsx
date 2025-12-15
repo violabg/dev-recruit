@@ -21,7 +21,7 @@ export default async function CandidateEvaluationsPage({
 
   if (!candidate) {
     return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
+      <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Candidato non trovato</p>
         <Button className="mt-4" asChild>
           <Link href="/dashboard/candidates">Torna ai candidati</Link>

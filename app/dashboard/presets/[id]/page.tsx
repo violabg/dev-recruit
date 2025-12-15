@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -102,36 +103,30 @@ export default async function PresetDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-start gap-4">
-        <div>
-          <p className="text-muted-foreground text-xs uppercase tracking-wide">
-            Dettagli preset
-          </p>
-          <h1 className="font-bold text-3xl tracking-tight">{preset.label}</h1>
-          <p className="mt-2 text-muted-foreground">
-            {preset.description || "Nessuna descrizione fornita."}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" variant="outline">
-            <Link
-              href={
-                `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
-              }
-            >
-              <Edit className="mr-1 size-4" />
-              Modifica
-            </Link>
-          </Button>
-          <DeleteWithConfirm
-            deleteAction={deletePresetAction.bind(null, preset.id)}
-            description="Questa azione non può essere annullata. Il preset verrà rimosso da tutte le posizioni che ne dipendono."
-            successMessage="Preset eliminato con successo"
-            errorMessage="Errore nell'eliminazione del preset"
-          />
-        </div>
-      </div>
-
+      <PageHeader
+        title={preset.label}
+        description={preset.description || "Nessuna descrizione fornita."}
+        actionBtns={
+          <>
+            <Button asChild size="sm" variant="outline">
+              <Link
+                href={
+                  `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
+                }
+              >
+                <Edit className="mr-1 size-4" />
+                Modifica
+              </Link>
+            </Button>
+            <DeleteWithConfirm
+              deleteAction={deletePresetAction.bind(null, preset.id)}
+              description="Questa azione non può essere annullata. Il preset verrà rimosso da tutte le posizioni che ne dipendono."
+              successMessage="Preset eliminato con successo"
+              errorMessage="Errore nell'eliminazione del preset"
+            />
+          </>
+        }
+      />
       <div className="space-y-4">
         <Card>
           <CardHeader className="flex flex-col gap-1">

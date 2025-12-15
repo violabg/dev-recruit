@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { PresetsClient } from "@/components/presets/presets-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -117,21 +118,19 @@ export default async function PresetsPage({
 }) {
   return (
     <div className="space-y-6 w-full">
-      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="font-bold text-3xl tracking-tight">Gestione Preset</h1>
-          <p className="mt-2 text-muted-foreground">
-            Crea e gestisci preset per la generazione di domande per le tue
-            posizioni
-          </p>
-        </div>
-        <Button asChild variant="default" size="sm">
-          <Link href="/dashboard/presets/new">
-            <Plus className="mr-1 size-4" />
-            Nuovo preset
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Preset"
+        description="Crea e gestisci preset per la generazione di domande per le tue
+            posizioni"
+        actionBtns={
+          <Button asChild size="sm" variant="default">
+            <Link href="/dashboard/presets/new">
+              <Plus className="mr-1 size-4" />
+              Nuovo preset
+            </Link>
+          </Button>
+        }
+      />
       <div className="space-y-6">
         <SearchPresets />
         <Suspense fallback={<PresetsListSkeleton />}>

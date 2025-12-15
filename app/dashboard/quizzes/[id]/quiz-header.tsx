@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getAllPositions } from "@/lib/data/positions";
@@ -17,7 +18,7 @@ export async function QuizHeader({ params }: Props) {
 
   if (!quiz) {
     return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
+      <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Quiz non trovato</p>
         <Button className="mt-4" asChild>
           <Link href="/dashboard/quizzes">Torna ai quiz</Link>
@@ -30,7 +31,7 @@ export async function QuizHeader({ params }: Props) {
 
   if (!position) {
     return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
+      <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Posizione non trovata</p>
         <Button className="mt-4" asChild>
           <Link href="/dashboard/quizzes">Torna ai quiz</Link>
@@ -47,10 +48,10 @@ export async function QuizHeader({ params }: Props) {
   }));
 
   return (
-    <div className="flex justify-between items-center">
-      <div>
-        <h1 className="font-bold text-3xl">{quiz.title}</h1>
-        <div className="flex items-center gap-2 mt-1">
+    <PageHeader
+      title={quiz.title}
+      info={
+        <>
           <Badge variant="outline">{position.title}</Badge>
           <Badge variant="outline">{position.experienceLevel}</Badge>
           {quiz.timeLimit && (
@@ -62,13 +63,15 @@ export async function QuizHeader({ params }: Props) {
           <span className="text-muted-foreground text-sm">
             Creato il {formatDate(quiz.createdAt)}
           </span>
-        </div>
-      </div>
-      <QuizDetailActionsClient
-        quizId={quiz.id}
-        quizTitle={quiz.title}
-        positions={positionsForDialog}
-      />
-    </div>
+        </>
+      }
+      actionBtns={
+        <QuizDetailActionsClient
+          quizId={quiz.id}
+          quizTitle={quiz.title}
+          positions={positionsForDialog}
+        />
+      }
+    />
   );
 }

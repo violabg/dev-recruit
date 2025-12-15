@@ -1,4 +1,5 @@
 import { SearchAndFilterInterviews } from "@/components/interviews/search-and-filter-interviews";
+import PageHeader from "@/components/page-header";
 import PositionOptions from "@/components/positions/position-options";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { Suspense } from "react";
@@ -20,15 +21,10 @@ export default function InterviewsPage({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-4">
-        <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Colloqui</h1>
-          <p className="text-muted-foreground text-sm">
-            Gestisci tutti i colloqui tecnici
-          </p>
-        </div>
-      </div>
-
+      <PageHeader
+        title="Colloqui"
+        description="Gestisci tutti i colloqui tecnici"
+      />
       <div className="@container space-y-6">
         <Suspense fallback={<StatsFallback />}>
           <Stats />

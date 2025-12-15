@@ -1,4 +1,5 @@
 import { InterviewExpiryChecker } from "@/components/interviews/interview-expiry-checker";
+import PageHeader from "@/components/page-header";
 import { InterviewResults } from "@/components/recruting/interview-results";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,8 +57,8 @@ export default async function InterviewDetailPage({
 
   if (!interviewData) {
     return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
-        <p className="font-medium text-lg">Intervista non trovata</p>
+      <div className="flex flex-col justify-center items-center h-100">
+        <p className="font-medium text-lg">Colloquio non trovata</p>
         <Button className="mt-4" asChild>
           <Link href="/dashboard/quizzes">Torna ai quiz</Link>
         </Button>
@@ -76,11 +77,10 @@ export default async function InterviewDetailPage({
         startedAt={interview.startedAt}
         timeLimit={quiz.timeLimit}
       />
-
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="font-bold text-3xl">Intervista: {quiz.title}</h1>
-          <div className="flex items-center gap-2 mt-1">
+      <PageHeader
+        title={`Colloquio: ${quiz.title}`}
+        info={
+          <>
             <Badge variant="outline">
               {quiz.positions?.title ?? "Senza ruolo"}
             </Badge>
@@ -107,22 +107,23 @@ export default async function InterviewDetailPage({
                 ? "In corso"
                 : interview.status}
             </Badge>
-          </div>
-        </div>
-        <DeleteWithConfirm
-          deleteAction={async () => {
-            "use server";
-            await deleteInterview(interview.id);
-          }}
-          title="Eliminare l'intervista?"
-          description="Questa azione eliminerà permanentemente l'intervista e tutte le risposte associate. L'azione non può essere annullata."
-          label="Elimina intervista"
-          successMessage="Intervista eliminata con successo"
-          errorMessage="Errore durante l'eliminazione dell'intervista"
-          disabled={interview.status === "completed"}
-        />
-      </div>
-
+          </>
+        }
+        actionBtns={
+          <DeleteWithConfirm
+            deleteAction={async () => {
+              "use server";
+              await deleteInterview(interview.id);
+            }}
+            title="Eliminare l'colloquio?"
+            description="Questa azione eliminerà permanentemente l'colloquio e tutte le risposte associate. L'azione non può essere annullata."
+            label="Elimina colloquio"
+            successMessage="Colloquio eliminata con successo"
+            errorMessage="Errore durante l'eliminazione dell'intervista"
+            disabled={interview.status === "completed"}
+          />
+        }
+      />
       <div className="gap-4 grid md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">

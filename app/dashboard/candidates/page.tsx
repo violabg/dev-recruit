@@ -1,4 +1,5 @@
 import { SearchAndFilterCandidates } from "@/components/candidates/search-and-filter-candidates";
+import PageHeader from "@/components/page-header";
 import PositionOptions from "@/components/positions/position-options";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -24,20 +25,18 @@ export default async function CandidatesPage({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-4">
-        <div>
-          <h1 className="font-bold text-3xl tracking-tight">Candidati</h1>
-          <p className="text-muted-foreground">
-            Gestisci i candidati per le tue posizioni aperte
-          </p>
-        </div>
-        <Button asChild size="sm" variant="default">
-          <Link href="/dashboard/candidates/new">
-            <Plus className="mr-1 size-4" />
-            Nuovo Candidato
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Candidati"
+        description="Gestisci i candidati per le tue posizioni aperte"
+        actionBtns={
+          <Button asChild size="sm" variant="default">
+            <Link href="/dashboard/candidates/new">
+              <Plus className="mr-1 size-4" />
+              Nuovo Candidato
+            </Link>
+          </Button>
+        }
+      />
 
       <div className="space-y-6">
         <Suspense fallback={<FiltersSkeleton />}>

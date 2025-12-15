@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { SearchPositions } from "@/components/positions/search-positions";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,15 +40,18 @@ export default async function PositionsPage({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="font-bold text-3xl">Posizioni</h1>
-        <Button asChild size="sm" variant={"default"}>
-          <Link href="/dashboard/positions/new">
-            <Plus className="mr-1 size-4" />
-            Nuova Posizione
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Posizioni"
+        description="Gestisci le posizioni"
+        actionBtns={
+          <Button asChild size="sm" variant="default">
+            <Link href="/dashboard/positions">
+              <Plus className="mr-1 size-4" />
+              Nuova Posizione
+            </Link>
+          </Button>
+        }
+      />
       <div className="flex items-center gap-4">
         <Suspense fallback={<SearchPositionsSkeleton />}>
           <SearchPositions />
@@ -120,7 +124,7 @@ const PositionsTable = async ({
           />
         </>
       ) : (
-        <Empty className="border h-[400px]">
+        <Empty className="border h-100">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Briefcase />

@@ -43,7 +43,7 @@ export default async function CandidateQuizPage({
 
   if (!candidate || !position) {
     return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
+      <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Candidate or Position not found</p>
         <Button className="mt-4" asChild>
           <Link href="/dashboard/candidates">Return to candidates</Link>

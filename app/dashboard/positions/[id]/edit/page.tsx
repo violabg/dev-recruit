@@ -21,7 +21,7 @@ export default async function EditPositionPage({
 
   if (!position) {
     return (
-      <div className="flex flex-col justify-center items-center h-[400px]">
+      <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Posizione non trovata</p>
         <Button className="mt-4" asChild>
           <Link href="/dashboard/positions">Torna alle posizioni</Link>

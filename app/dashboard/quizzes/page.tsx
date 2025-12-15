@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import PositionLevelOptions from "@/components/positions/position-level-options";
 import PositionOptions from "@/components/positions/position-options";
 import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
@@ -35,16 +36,11 @@ export default async function QuizzesPage({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="font-bold text-3xl tracking-tight">Quiz</h1>
-          <p className="text-muted-foreground">
-            Gestisci i quiz per le tue posizioni aperte
-          </p>
-        </div>
-        <NewQuizButton />
-      </div>
-
+      <PageHeader
+        title="Quiz"
+        description="Gestisci i quiz per le tue posizioni aperte"
+        actionBtns={<NewQuizButton />}
+      />
       <div className="@container space-y-6">
         <Suspense fallback={<FiltersSkeleton />}>
           <SearchAndFilterQuizzes
