@@ -4,7 +4,7 @@ import { cache } from "react";
 import { ReferenceCategory } from "../constants/reference-categories";
 import prisma from "../prisma";
 
-export async function getAllReferenceData() {
+export const getAllReferenceData = cache(async () => {
   "use cache";
   cacheLife("hours");
   cacheTag("reference-data");
@@ -13,7 +13,7 @@ export async function getAllReferenceData() {
     where: { isActive: true },
     orderBy: [{ category: "asc" }, { order: "asc" }],
   });
-}
+});
 
 export const getReferenceDataByCategory = cache(
   async (category: ReferenceCategory) => {
@@ -36,7 +36,7 @@ export const getReferenceDataByCategory = cache(
   }
 );
 
-export async function getAllReferenceDataGrouped() {
+export const getAllReferenceDataGrouped = cache(async () => {
   "use cache";
   cacheLife("hours");
   cacheTag("reference-data");
@@ -51,4 +51,4 @@ export async function getAllReferenceDataGrouped() {
     acc[item.category].push(item);
     return acc;
   }, {} as Record<string, typeof data>);
-}
+});

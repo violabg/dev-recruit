@@ -2,7 +2,7 @@ import {
   NewQuizCreationPage,
   PositionOption,
 } from "@/app/dashboard/quizzes/new/new-quiz-page";
-import { ProgrammingLanguageSelect } from "@/components/quiz/programming-language-select";
+import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getPositionById } from "@/lib/data/positions";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -46,7 +46,7 @@ async function QuizGeneratorContent({
       fixedPosition={positionOption}
       languageOptions={
         <Suspense fallback={<div>Loading...</div>}>
-          <ProgrammingLanguageSelect />
+          <ProgrammingLanguageSelectItems />
         </Suspense>
       }
     />

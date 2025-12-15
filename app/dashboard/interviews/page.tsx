@@ -1,6 +1,6 @@
-import ProgrammingLanguageOptions from "@/components/interviews/programming-language-options";
 import { SearchAndFilterInterviews } from "@/components/interviews/search-and-filter-interviews";
 import PositionOptions from "@/components/positions/position-options";
+import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { Suspense } from "react";
 import {
   FiltersSkeleton,
@@ -36,7 +36,11 @@ export default function InterviewsPage({
         <Suspense fallback={<FiltersSkeleton />}>
           <SearchAndFilterInterviews
             positionOptions={<PositionOptions />}
-            languageOptions={<ProgrammingLanguageOptions />}
+            languageOptions={
+              <Suspense fallback={<div>Loading...</div>}>
+                <ProgrammingLanguageSelectItems />
+              </Suspense>
+            }
           />
         </Suspense>
 

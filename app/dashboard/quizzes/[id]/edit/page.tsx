@@ -1,5 +1,5 @@
 import { EditQuizForm } from "@/components/quiz/edit-quiz-form";
-import { ProgrammingLanguageSelect } from "@/components/quiz/programming-language-select";
+import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getQuizData } from "@/lib/data/quizzes";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -35,7 +35,7 @@ async function EditQuizContent({
       position={position}
       languageOptions={
         <Suspense fallback={<div>Loading...</div>}>
-          <ProgrammingLanguageSelect />
+          <ProgrammingLanguageSelectItems />
         </Suspense>
       }
     />

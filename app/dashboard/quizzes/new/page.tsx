@@ -1,4 +1,4 @@
-import { ProgrammingLanguageSelect } from "@/components/quiz/programming-language-select";
+import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getAllPositions } from "@/lib/data/positions";
 import type { Position } from "@/lib/prisma/client";
 import { Suspense } from "react";
@@ -50,7 +50,7 @@ async function PositionsContent({
       positions={serializedPositions}
       languageOptions={
         <Suspense fallback={<div>Loading...</div>}>
-          <ProgrammingLanguageSelect />
+          <ProgrammingLanguageSelectItems />
         </Suspense>
       }
     />
