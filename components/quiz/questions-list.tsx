@@ -21,7 +21,7 @@ type QuestionsListProps = {
   onRemove: (index: number) => void;
   aiLoading: boolean;
   hasQuestionChanges: (index: number) => boolean;
-  languageOptions?: { value: string; label: string }[];
+  languageOptions?: React.ReactNode;
 };
 
 export const QuestionsList = ({

@@ -41,7 +41,7 @@ type QuestionItemProps = {
   onRemove: (index: number) => void;
   aiLoading: boolean;
   hasQuestionChanges: boolean;
-  languageOptions?: { value: string; label: string }[];
+  languageOptions?: React.ReactNode;
 };
 
 export const QuestionItem = ({

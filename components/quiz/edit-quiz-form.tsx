@@ -44,7 +44,7 @@ type EditQuizFormProps = {
   };
   mode?: "edit" | "create";
   onSaveSuccess?: (result?: SaveQuizResult) => void;
-  languageOptions?: { value: string; label: string }[];
+  languageOptions?: React.ReactNode;
 };
 
 export function EditQuizForm({

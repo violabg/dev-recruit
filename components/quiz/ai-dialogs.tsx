@@ -53,7 +53,7 @@ type AIDialogsProps = {
 
   aiLoading: boolean;
   defaultDifficulty?: number;
-  languageOptions?: { value: string; label: string }[];
+  languageOptions?: React.ReactNode;
   position: {
     id: string;
     title: string;

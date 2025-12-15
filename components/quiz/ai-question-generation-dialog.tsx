@@ -76,7 +76,7 @@ type AIGenerationDialogProps = {
   onGenerate: (type: QuestionType, data: GenerationFormData) => Promise<void>;
   loading: boolean;
   defaultDifficulty?: number;
-  languageOptions?: { value: string; label: string }[];
+  languageOptions?: React.ReactNode;
 };
 
 export const AIQuestionGenerationDialog = ({
@@ -88,7 +88,7 @@ export const AIQuestionGenerationDialog = ({
   onGenerate,
   loading,
   defaultDifficulty = 3,
-  languageOptions = [],
+  languageOptions,
 }: AIGenerationDialogProps) => {
   const form = useForm<GenerationFormData>({
     resolver: zodResolver(generationSchema),
@@ -274,11 +274,7 @@ export const AIQuestionGenerationDialog = ({
                 label="Linguaggio di Programmazione"
                 placeholder="Seleziona linguaggio"
               >
-                {languageOptions.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.label}>
-                    {lang.label}
-                  </SelectItem>
-                ))}
+                {languageOptions}
               </SelectField>
 
               <SelectField

@@ -25,7 +25,7 @@ export type PositionOption = {
 type NewQuizPageProps = {
   positions?: PositionOption[];
   fixedPosition?: PositionOption;
-  languageOptions?: { value: string; label: string }[];
+  languageOptions?: React.ReactNode;
 };
 
 export const NewQuizCreationPage = ({

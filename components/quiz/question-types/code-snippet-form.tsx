@@ -9,6 +9,7 @@ import {
 import { Question } from "@/lib/schemas";
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
+import { ReactNode } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { getLanguageCode } from ".";
 
@@ -20,7 +21,7 @@ const CodeEditor = dynamic(
 type CodeSnippetFormProps = {
   index: number;
   field: Question;
-  languageOptions?: { value: string; label: string }[];
+  languageOptions?: ReactNode;
 };
 
 export const CodeSnippetForm = ({
@@ -54,8 +55,9 @@ export const CodeSnippetForm = ({
         placeholder="Seleziona linguaggio"
         selectProps={{}} // kept for future customizations
         triggerProps={{ id: `questions-${index}-language`, className: "w-48" }}
-        options={languageOptions ?? []}
-      />
+      >
+        {languageOptions}
+      </SelectField>
       <Field>
         <FieldLabel htmlFor={`questions-${index}-code`}>
           Snippet di codice
