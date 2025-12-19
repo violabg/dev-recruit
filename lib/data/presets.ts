@@ -5,10 +5,9 @@ import { Prisma } from "@/lib/prisma/client";
 import { CacheTags } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import prisma from "../prisma";
-import { Preset } from "../prisma/client";
 
 // Re-export Prisma Preset type for consumers
-export type { Preset };
+export type Preset = Prisma.PresetModel;
 
 export type PaginatedPresets = {
   presets: Preset[];
