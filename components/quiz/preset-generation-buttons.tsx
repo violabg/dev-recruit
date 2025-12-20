@@ -1,4 +1,5 @@
 "use client";
+import { getPresetsAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { QuestionType } from "@/lib/schemas";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
@@ -47,18 +48,17 @@ export function PresetGenerationButtons(props: Props) {
 
     const loadPresets = async () => {
       try {
-        const response = await fetch("/api/presets", { cache: "no-store" });
+        const result = await getPresetsAction();
 
-        if (!response.ok) {
-          throw new Error("Failed to load presets");
+        if (!result.success) {
+          throw new Error(result.error || "Failed to load presets");
         }
-
-        const data: Preset[] = await response.json();
 
         if (isMounted) {
-          setPresets(data);
+          setPresets(result.presets);
         }
       } catch (error) {
+        // Silent fail - component will show empty state
       } finally {
         if (isMounted) {
           setIsLoading(false);

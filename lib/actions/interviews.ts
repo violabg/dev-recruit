@@ -193,6 +193,92 @@ export async function cancelInterviewById(id: string) {
   return { success: true };
 }
 
+/**
+ * Server action to check if an interview has expired and cancel it if so.
+ * Replaces POST /api/interviews/[id]/cancel-expired route.
+ */
+export async function cancelExpiredInterviewAction(interviewId: string) {
+  await requireUser();
+
+  try {
+    const interview = await prisma.interview.findFirst({
+      where: { id: interviewId },
+      select: {
+        id: true,
+        status: true,
+        startedAt: true,
+        completedAt: true,
+        quiz: {
+          select: {
+            timeLimit: true,
+          },
+        },
+      },
+    });
+
+    if (!interview) {
+      return {
+        success: false,
+        error: "Interview not found",
+        cancelled: false,
+        status: null,
+      };
+    }
+
+    // Check if interview should be cancelled due to expiry
+    const shouldCancel =
+      interview.startedAt &&
+      !interview.completedAt &&
+      interview.status !== "cancelled" &&
+      interview.status !== "completed" &&
+      interview.quiz.timeLimit &&
+      interview.quiz.timeLimit > 0;
+
+    if (!shouldCancel) {
+      return {
+        success: true,
+        cancelled: false,
+        status: interview.status,
+      };
+    }
+
+    const startTime = new Date(interview.startedAt!).getTime();
+    const now = Date.now();
+    const elapsedMinutes = (now - startTime) / (1000 * 60);
+
+    if (elapsedMinutes > interview.quiz.timeLimit!) {
+      await prisma.interview.update({
+        where: { id: interview.id },
+        data: {
+          status: "cancelled",
+        },
+      });
+
+      invalidateInterviewCache({ interviewId: interview.id });
+
+      return {
+        success: true,
+        cancelled: true,
+        status: "cancelled" as const,
+      };
+    }
+
+    return {
+      success: true,
+      cancelled: false,
+      status: interview.status,
+    };
+  } catch (error) {
+    console.error("Error checking interview expiry:", error);
+    return {
+      success: false,
+      error: "Failed to check interview expiry",
+      cancelled: false,
+      status: null,
+    };
+  }
+}
+
 export type AssignCandidatesToQuizState = {
   message: string;
   errors?: {

@@ -20,6 +20,15 @@ DevRecruit uses Next.js 16's experimental Cache Components feature for server-si
 - **Configurable cache lifetimes** for different data types
 - **Streaming compatibility** with Suspense boundaries
 
+### Architecture Guidelines
+
+DevRecruit follows these architectural patterns:
+
+- **Server actions over API routes**: All non-streaming CRUD operations use server actions (see `lib/actions/`) for better type safety, integrated cache invalidation, and simpler error handling
+- **API routes for streaming only**: Keep API routes only for streaming responses (e.g., [app/api/evaluations/stream/route.ts](app/api/evaluations/stream/route.ts), [app/api/positions/generate-description/route.ts](app/api/positions/generate-description/route.ts)) or when required by external libraries (e.g., [app/api/auth/[...all]/route.ts](app/api/auth/%5B...all%5D/route.ts) for better-auth)
+- **Cached data layer**: All Prisma queries in `lib/data/` use `"use cache"` directive with appropriate `cacheLife()` and `cacheTag()` configuration
+- **Client components call server actions**: Use direct imports and calls instead of `fetch()` for type-safe communication
+
 ```mermaid
 graph TB
     subgraph "Client Request"
@@ -316,15 +325,28 @@ export function revalidateQuizCache(quizId?: string) {
 
 ### Do's ✅
 
-1. **Keep cache scope small** - Cache at the data layer, not components
+1. **Prefer server actions over API routes** - Use server actions for all non-streaming operations
 
-2. **Use specific tags** - Enable targeted invalidation
+   ```typescript
+   // Good ✅ - Server action with type safety
+   const result = await createQuizAction(data);
+
+   // Avoid ❌ - Unnecessary API route
+   const response = await fetch("/api/quizzes", {
+     method: "POST",
+     body: JSON.stringify(data),
+   });
+   ```
+
+2. **Keep cache scope small** - Cache at the data layer, not components
+
+3. **Use specific tags** - Enable targeted invalidation
 
    ```typescript
    cacheTag("quizzes", `quiz-${quizId}`, `positions-${positionId}`);
    ```
 
-3. **Wrap runtime APIs** - Isolate dynamic data in Suspense
+4. **Wrap runtime APIs** - Isolate dynamic data in Suspense
 
    ```tsx
    <Suspense fallback={<Skeleton />}>
@@ -332,7 +354,7 @@ export function revalidateQuizCache(quizId?: string) {
    </Suspense>
    ```
 
-4. **Invalidate after mutations** - Always update relevant tags
+5. **Invalidate after mutations** - Always update relevant tags
 
    ```typescript
    await prisma.quiz.update({ ... });
@@ -340,15 +362,40 @@ export function revalidateQuizCache(quizId?: string) {
    updateTag(`quiz-${quizId}`);
    ```
 
-5. **Use appropriate lifetimes** - Match cache duration to data volatility
+6. **Use appropriate lifetimes** - Match cache duration to data volatility
+
    ```typescript
    cacheLife("minutes"); // Dashboard data
    cacheLife("hours"); // Reference data
    ```
 
+7. **Use API routes only for streaming or external libraries**
+
+   ```typescript
+   // API routes are appropriate for:
+   // - Streaming AI responses (ReadableStream)
+   // - External library requirements (better-auth)
+   // - Public webhooks
+   ```
+
 ### Don'ts ❌
 
-1. **Don't cache user-specific runtime data**
+1. **Don't create API routes for simple CRUD operations**
+
+   ```typescript
+   // Bad ❌ - Unnecessary API route
+   // app/api/quizzes/route.ts
+   export async function GET() {
+     const quizzes = await getQuizzes();
+     return NextResponse.json(quizzes);
+   }
+
+   // Good ✅ - Direct server action call from client
+   // components/quiz-list.tsx
+   const result = await getQuizzesAction();
+   ```
+
+2. **Don't cache user-specific runtime data**
 
    ```typescript
    // Bad - session data shouldn't be cached
@@ -358,7 +405,7 @@ export function revalidateQuizCache(quizId?: string) {
    }
    ```
 
-2. **Don't forget to invalidate**
+3. **Don't forget to invalidate**
 
    ```typescript
    // Bad - cache will be stale
@@ -366,14 +413,15 @@ export function revalidateQuizCache(quizId?: string) {
    // Missing: updateTag("quizzes") ❌
    ```
 
-3. **Don't over-cache**
+4. **Don't over-cache**
 
    ```typescript
    // Bad - too aggressive
    cacheLife("max"); // ❌ for frequently changing data
    ```
 
-4. **Don't mix cached and uncached in one function**
+5. **Don't mix cached and uncached in one function**
+
    ```typescript
    // Bad - unclear caching behavior
    async function getData() {
@@ -382,6 +430,17 @@ export function revalidateQuizCache(quizId?: string) {
      const fresh = await getFreshData(); // ❌ This is also cached!
      return { cached, fresh };
    }
+   ```
+
+6. **Don't use fetch() for internal server actions**
+
+   ```typescript
+   // Bad ❌ - Loses type safety
+   const response = await fetch("/api/internal-action");
+   const data = await response.json();
+
+   // Good ✅ - Type-safe server action
+   const result = await internalAction();
    ```
 
 ## Examples
@@ -451,6 +510,69 @@ export async function upsertQuizAction(formData: FormData) {
 
   // Also revalidate paths for legacy support
   revalidateQuizCache(quizId || "");
+}
+```
+
+### Client Component Calling Server Action
+
+```tsx
+// components/quiz/quiz-form.tsx
+"use client";
+
+import { createQuizAction } from "@/lib/actions/quizzes";
+import { useState } from "react";
+
+export function QuizForm() {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (data: QuizFormData) => {
+    setLoading(true);
+    try {
+      // Type-safe server action call - no fetch() needed
+      const result = await createQuizAction(data);
+
+      if (result.success) {
+        // Handle success
+      } else {
+        // Handle error with type-safe error property
+        console.error(result.error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+```
+
+### When to Use API Routes vs Server Actions
+
+```typescript
+// ✅ Use API routes for:
+// 1. Streaming responses
+// app/api/evaluations/stream/route.ts
+export async function POST(request: Request) {
+  const stream = await generateEvaluationStream();
+  return new Response(stream); // ReadableStream
+}
+
+// 2. External library requirements
+// app/api/auth/[...all]/route.ts
+export const { GET, POST } = authHandler; // Required by better-auth
+
+// ❌ Don't use API routes for:
+// Simple CRUD operations - use server actions instead
+// app/api/quizzes/route.ts - DELETE THIS
+export async function GET() {
+  return NextResponse.json(await getQuizzes());
+}
+
+// ✅ Replace with server action:
+// lib/actions/quizzes.ts
+export async function getQuizzesAction() {
+  "use server";
+  return await getQuizzes();
 }
 ```
 
