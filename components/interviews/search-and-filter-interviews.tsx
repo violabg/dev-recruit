@@ -28,6 +28,14 @@ import {
 } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
+const statusOptions = [
+  { value: "all", label: "Tutti gli stati" },
+  { value: "pending", label: "Pendenti" },
+  { value: "in_progress", label: "In corso" },
+  { value: "completed", label: "Completati" },
+  { value: "cancelled", label: "Annullati" },
+];
+
 type SearchAndFilterInterviewsProps = {
   languageOptions?: ReactNode;
   positionItems?: { value: string; label: string }[];
@@ -82,7 +90,7 @@ export function SearchAndFilterInterviews({
       const params = new URLSearchParams(searchParams.toString());
 
       Object.entries(updates).forEach(([key, value]) => {
-        if (value && value !== "all") {
+        if (value && value !== "all" && value !== "Tutti i linguaggi") {
           params.set(key, value);
         } else {
           params.delete(key);
@@ -105,11 +113,14 @@ export function SearchAndFilterInterviews({
     setSearch("");
     setStatus("all");
     setPosition("all");
-    setLanguage("all");
+    setLanguage("Tutti i linguaggi");
   };
 
   const hasActiveFilters =
-    search || status !== "all" || position !== "all" || language !== "all";
+    search ||
+    status !== "all" ||
+    position !== "all" ||
+    language !== "Tutti i linguaggi";
 
   return (
     <div className="flex sm:flex-row flex-col gap-4">
@@ -134,6 +145,7 @@ export function SearchAndFilterInterviews({
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
         <Select
+          items={statusOptions}
           value={status}
           onValueChange={(value: InterviewStatus | "all" | null) => {
             const newStatus = value || "all";
@@ -146,11 +158,11 @@ export function SearchAndFilterInterviews({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tutti gli stati</SelectItem>
-            <SelectItem value="pending">Pendenti</SelectItem>
-            <SelectItem value="in_progress">In corso</SelectItem>
-            <SelectItem value="completed">Completati</SelectItem>
-            <SelectItem value="cancelled">Annullati</SelectItem>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select
@@ -181,7 +193,7 @@ export function SearchAndFilterInterviews({
         <Select
           value={language}
           onValueChange={(value) => {
-            const newLanguage = value || "all";
+            const newLanguage = value || "Tutti i linguaggi";
             setLanguage(newLanguage);
             updateFilters({ search, status, position, language: newLanguage });
           }}
@@ -191,7 +203,7 @@ export function SearchAndFilterInterviews({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tutti i linguaggi</SelectItem>
+            <SelectItem value="Tutti i linguaggi">Tutti i linguaggi</SelectItem>
             {languageOptions}
           </SelectContent>
         </Select>

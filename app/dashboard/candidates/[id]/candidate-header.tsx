@@ -62,7 +62,7 @@ export async function CandidateHeader({ params }: Props) {
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/edit`}
-            className={`${buttonVariants({ variant: "ghost" })} inline-flex`}
+            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
           >
             <Edit className="mr-1 size-4" />
             Modifica

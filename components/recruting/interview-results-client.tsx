@@ -11,7 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+import {
+  Progress,
+  ProgressIndicator,
+  ProgressTrack,
+} from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -24,8 +28,9 @@ import {
 } from "@/lib/actions/evaluations";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import { SavedQuestion } from "@/lib/schemas";
+import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
+
 import { Loader2, Save, Sparkles } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -72,7 +77,6 @@ export function InterviewResultsClient({
     useState(false);
   const [notes, setNotes] = useState(initialEvaluation?.notes ?? "");
   const [isSavingNotes, startSavingNotes] = useTransition();
-  const { theme, resolvedTheme } = useTheme();
 
   const evaluateAnswers = async () => {
     setLoading(true);
@@ -322,18 +326,26 @@ export function InterviewResultsClient({
 
             <div className="space-y-2">
               <div className="font-medium text-sm">Punteggio complessivo</div>
-              <Progress
+              <ProgressPrimitive.Root
                 value={overallScore || 0}
-                className={`h-2 ${
-                  overallScore !== null
-                    ? overallScore >= 70
-                      ? "bg-green-500"
-                      : overallScore >= 40
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                    : ""
-                }`}
-              />
+                data-slot="progress"
+                className="flex flex-wrap gap-3 h-2"
+              >
+                <ProgressTrack
+                  className={`${
+                    overallScore !== null
+                      ? overallScore >= 70
+                        ? "bg-green-500"
+                        : overallScore >= 40
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                      : ""
+                  }`}
+                >
+                  <ProgressIndicator />
+                </ProgressTrack>
+              </ProgressPrimitive.Root>
+
               <div className="text-muted-foreground text-sm">
                 {overallScore !== null ? `${overallScore}%` : "N/A"}
               </div>
