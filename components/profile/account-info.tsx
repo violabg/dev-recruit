@@ -96,24 +96,22 @@ export const AccountInfo = ({
               <Button
                 variant="outline"
                 className="justify-start w-full"
-                asChild
+                render={<Link href="/dashboard/profile/edit" />}
                 size="sm"
+                nativeButton={false}
               >
-                <Link href="/dashboard/profile/edit">
-                  <Edit className="mr-1 size-4" />
-                  Modifica Profilo
-                </Link>
+                <Edit className="mr-1 size-4" />
+                Modifica Profilo
               </Button>
               <Button
                 variant="outline"
                 className="justify-start w-full"
-                asChild
+                render={<Link href="/dashboard/profile/change-password" />}
                 size="sm"
+                nativeButton={false}
               >
-                <Link href="/dashboard/profile/change-password">
-                  <Lock className="mr-1 size-4" />
-                  Cambia Password
-                </Link>
+                <Lock className="mr-1 size-4" />
+                Cambia Password
               </Button>
             </div>
           </div>

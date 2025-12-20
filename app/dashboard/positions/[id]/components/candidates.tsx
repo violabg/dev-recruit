@@ -17,12 +17,17 @@ export default async function Candidates({ params }: Props) {
     <>
       <div className="flex justify-between">
         <h2 className="font-semibold text-xl">Candidati</h2>
-        <Button asChild size="sm" variant="default">
-          <Link href={`/dashboard/candidates/new?positionId=${id}`}>
-            <Plus className="mr-1 size-4" />
-            Aggiungi Candidato
-          </Link>
-        </Button>
+        <Button
+          size="sm"
+          variant="default"
+          nativeButton={false}
+          render={
+            <Link href={`/dashboard/candidates/new?positionId=${id}`}>
+              <Plus className="mr-1 size-4" />
+              Aggiungi Candidato
+            </Link>
+          }
+        />
       </div>
 
       {candidates.length > 0 ? (
@@ -59,16 +64,28 @@ export default async function Candidates({ params }: Props) {
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/dashboard/candidates/${candidate.id}`}>
-                        Dettagli
-                      </Link>
-                    </Button>
-                    <Button variant="secondary" size="sm" asChild>
-                      <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-                        Associa quiz
-                      </Link>
-                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      nativeButton={false}
+                      render={
+                        <Link href={`/dashboard/candidates/${candidate.id}`}>
+                          Dettagli
+                        </Link>
+                      }
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      nativeButton={false}
+                      render={
+                        <Link
+                          href={`/dashboard/candidates/${candidate.id}/quiz`}
+                        >
+                          Associa quiz
+                        </Link>
+                      }
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -81,12 +98,17 @@ export default async function Candidates({ params }: Props) {
             <p className="text-muted-foreground text-sm">
               Nessun candidato aggiunto per questa posizione
             </p>
-            <Button className="mt-2" size="sm" asChild>
-              <Link href={`/dashboard/candidates/new?positionId=${id}`}>
-                <Users className="mr-1 size-4" />
-                Aggiungi candidato
-              </Link>
-            </Button>
+            <Button
+              className="mt-2"
+              size="sm"
+              nativeButton={false}
+              render={
+                <Link href={`/dashboard/candidates/new?positionId=${id}`}>
+                  <Users className="mr-1 size-4" />
+                  Aggiungi candidato
+                </Link>
+              }
+            />
           </div>
         </div>
       )}

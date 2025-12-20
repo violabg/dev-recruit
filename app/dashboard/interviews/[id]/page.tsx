@@ -59,9 +59,9 @@ export default async function InterviewDetailPage({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Colloquio non trovata</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/quizzes">Torna ai quiz</Link>
-        </Button>
+        <Link href="/dashboard/quizzes" className="mt-4">
+          <Button>Torna ai quiz</Button>
+        </Link>
       </div>
     );
   }

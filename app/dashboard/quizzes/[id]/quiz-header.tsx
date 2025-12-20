@@ -20,8 +20,12 @@ export async function QuizHeader({ params }: Props) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Quiz non trovato</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/quizzes">Torna ai quiz</Link>
+        <Button
+          className="mt-4"
+          render={<Link href="/dashboard/quizzes" />}
+          nativeButton={false}
+        >
+          Torna ai quiz
         </Button>
       </div>
     );
@@ -33,8 +37,12 @@ export async function QuizHeader({ params }: Props) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Posizione non trovata</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/quizzes">Torna ai quiz</Link>
+        <Button
+          className="mt-4"
+          render={<Link href="/dashboard/quizzes" />}
+          nativeButton={false}
+        >
+          Torna ai quiz
         </Button>
       </div>
     );

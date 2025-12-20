@@ -56,37 +56,39 @@ export function EvaluationItem({
       <Card className="py-0">
         <CardHeader className="gap-0 p-0">
           <div className="flex items-center">
-            <CollapsibleTrigger asChild>
-              <button className="flex flex-1 items-center gap-3 hover:bg-muted/50 p-6 rounded-t-lg text-left transition-colors">
-                <ChevronDown
-                  className={cn(
-                    "w-5 h-5 text-muted-foreground transition-transform duration-200 shrink-0",
-                    isExpanded && "rotate-180"
-                  )}
-                />
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-primary text-lg">
-                    {evaluation.title}
-                  </CardTitle>
-                  <CardDescription>
-                    Creata il{" "}
-                    {new Date(evaluation.createdAt).toLocaleDateString(
-                      "it-IT",
-                      {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      }
+            <CollapsibleTrigger
+              render={
+                <button className="flex flex-1 items-center gap-3 hover:bg-muted/50 p-6 rounded-t-lg text-left transition-colors">
+                  <ChevronDown
+                    className={cn(
+                      "w-5 h-5 text-muted-foreground transition-transform duration-200 shrink-0",
+                      isExpanded && "rotate-180"
                     )}
-                    {evaluation.fitScore !== null && (
-                      <span className="ml-2">
-                        • Punteggio: {evaluation.fitScore}/10
-                      </span>
-                    )}
-                  </CardDescription>
-                </div>
-              </button>
-            </CollapsibleTrigger>
+                  />
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-primary text-lg">
+                      {evaluation.title}
+                    </CardTitle>
+                    <CardDescription>
+                      Creata il{" "}
+                      {new Date(evaluation.createdAt).toLocaleDateString(
+                        "it-IT",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
+                      {evaluation.fitScore !== null && (
+                        <span className="ml-2">
+                          • Punteggio: {evaluation.fitScore}/10
+                        </span>
+                      )}
+                    </CardDescription>
+                  </div>
+                </button>
+              }
+            />
             <div className="pr-4">
               <DeleteWithConfirm
                 deleteAction={() => handleDeleteEvaluation(evaluation.id)}

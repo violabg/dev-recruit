@@ -3,11 +3,6 @@ import { getPresetsAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { QuestionType } from "@/lib/schemas";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@radix-ui/react-collapsible";
 import { ChevronsUpDown, Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "../ui/badge";
@@ -19,6 +14,11 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
 
 export type Props = {
   onGeneratePreset: (
@@ -102,13 +102,15 @@ export function PresetGenerationButtons(props: Props) {
             Smart Question Presets
           </CardTitle>
           <CardDescription>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline">
-                Genera domande automaticamente utilizzando preset predefiniti
-                <ChevronsUpDown />
-                <span className="sr-only">Toggle</span>
-              </Button>
-            </CollapsibleTrigger>
+            <CollapsibleTrigger
+              render={
+                <Button variant="outline">
+                  Genera domande automaticamente utilizzando preset predefiniti
+                  <ChevronsUpDown />
+                  <span className="sr-only">Toggle</span>
+                </Button>
+              }
+            />
           </CardDescription>
         </CardHeader>
         <CollapsibleContent>

@@ -58,14 +58,18 @@ export const QuestionsHeader = ({
           </div>
           <div className="flex items-center space-x-2">
             <Select
+              items={questionTypes}
               value={questionTypeFilter}
-              onValueChange={setQuestionTypeFilter}
+              onValueChange={(value) => {
+                if (value !== null) {
+                  setQuestionTypeFilter(value);
+                }
+              }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtra per tipo" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tutti i tipi</SelectItem>
                 {questionTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
@@ -113,17 +117,19 @@ export const QuestionsHeader = ({
             ))}
             {onOpenFavorites && (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onOpenFavorites}
-                    className="gap-2"
-                  >
-                    <Heart className="size-4 text-red-500" />
-                    Preferite
-                  </Button>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={onOpenFavorites}
+                      className="gap-2"
+                    />
+                  }
+                >
+                  <Heart className="size-4 text-red-500" />
+                  Preferite
                 </TooltipTrigger>
                 <TooltipContent>Aggiungi domande dai preferiti</TooltipContent>
               </Tooltip>

@@ -131,6 +131,27 @@ export const getPositionsForSelect = cache(async () => {
 });
 
 /**
+ * Returns positions formatted for Base UI Select items prop.
+ * Format: { value: string, label: string }[]
+ * Sorted alphabetically by title.
+ */
+export const getPositionItemsForSelect = cache(async () => {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTags.POSITIONS);
+
+  const positions = await prisma.position.findMany({
+    select: { id: true, title: true },
+    orderBy: { title: "asc" },
+  });
+
+  return positions.map((position) => ({
+    value: position.id,
+    label: position.title,
+  }));
+});
+
+/**
  * Cached filter options for quiz list page
  */
 export const getPositionLevelsForSelect = cache(async () => {

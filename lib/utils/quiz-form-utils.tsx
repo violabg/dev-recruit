@@ -53,6 +53,7 @@ export const getSaveButtonVariant = (saveStatus: SaveStatus) => {
 
 // Question type filter configuration
 export const questionTypes = [
+  { value: "all", label: "Filtra per tipologia" },
   { value: "multiple_choice", label: "Scelta multipla" },
   { value: "open_question", label: "Domanda aperta" },
   { value: "code_snippet", label: "Snippet di codice" },

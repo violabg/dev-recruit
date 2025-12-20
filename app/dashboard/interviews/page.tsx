@@ -1,7 +1,7 @@
 import { SearchAndFilterInterviews } from "@/components/interviews/search-and-filter-interviews";
 import PageHeader from "@/components/page-header";
-import PositionOptions from "@/components/positions/position-options";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
+import { getPositionItemsForSelect } from "@/lib/data/positions";
 import { Suspense } from "react";
 import {
   FiltersSkeleton,
@@ -14,11 +14,13 @@ import {
 } from "./runtime-section";
 import { Stats } from "./stats";
 
-export default function InterviewsPage({
+export default async function InterviewsPage({
   searchParams,
 }: {
   searchParams: Promise<InterviewsSearchParams>;
 }) {
+  const positionItems = await getPositionItemsForSelect();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -31,12 +33,12 @@ export default function InterviewsPage({
         </Suspense>
         <Suspense fallback={<FiltersSkeleton />}>
           <SearchAndFilterInterviews
-            positionOptions={<PositionOptions />}
             languageOptions={
               <Suspense fallback={<div>Loading...</div>}>
                 <ProgrammingLanguageSelectItems />
               </Suspense>
             }
+            positionItems={positionItems}
           />
         </Suspense>
 

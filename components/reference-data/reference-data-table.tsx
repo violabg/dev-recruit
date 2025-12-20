@@ -90,14 +90,16 @@ export function ReferenceDataTable({
         <TableCell>
           <div className="flex gap-2">
             <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditItem(item)}
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
+              <DialogTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditItem(item)}
+                  />
+                }
+              >
+                <Pencil className="w-4 h-4" />
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -205,14 +207,16 @@ export function ReferenceDataTable({
                 <TableCell>
                   <div className="flex gap-2">
                     <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditItem(item)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
+                      <DialogTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditItem(item)}
+                          />
+                        }
+                      >
+                        <Pencil className="w-4 h-4" />
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>

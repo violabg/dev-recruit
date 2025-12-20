@@ -135,24 +135,26 @@ export const QuestionItem = ({
           </div>
           <div className="flex items-center space-x-1">
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="w-8 h-8"
-                  onClick={handleToggleFavorite}
-                  disabled={isPending || !hasDbId}
-                >
-                  <Heart
-                    className={cn(
-                      "size-4 transition-colors",
-                      isFavorite
-                        ? "fill-red-500 text-red-500"
-                        : "text-muted-foreground"
-                    )}
+              <TooltipTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8"
+                    onClick={handleToggleFavorite}
+                    disabled={isPending || !hasDbId}
                   />
-                </Button>
+                }
+              >
+                <Heart
+                  className={cn(
+                    "size-4 transition-colors",
+                    isFavorite
+                      ? "fill-red-500 text-red-500"
+                      : "text-muted-foreground"
+                  )}
+                />
               </TooltipTrigger>
               <TooltipContent>
                 {!hasDbId
@@ -164,17 +166,19 @@ export const QuestionItem = ({
             </Tooltip>
 
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="w-8 h-8"
-                  onClick={() => onRegenerate(actualIndex)}
-                  disabled={aiLoading}
-                >
-                  <Sparkles className="size-4 text-primary" />
-                </Button>
+              <TooltipTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8"
+                    onClick={() => onRegenerate(actualIndex)}
+                    disabled={aiLoading}
+                  />
+                }
+              >
+                <Sparkles className="size-4 text-primary" />
               </TooltipTrigger>
               <TooltipContent>Rigenera domanda con AI</TooltipContent>
             </Tooltip>
@@ -213,16 +217,18 @@ export const QuestionItem = ({
               />
             ) : (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="w-8 h-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => onRemove(actualIndex)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => onRemove(actualIndex)}
+                    />
+                  }
+                >
+                  <Trash2 className="size-4" />
                 </TooltipTrigger>
                 <TooltipContent>Rimuovi domanda</TooltipContent>
               </Tooltip>

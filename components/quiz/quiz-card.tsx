@@ -63,17 +63,23 @@ export function QuizCard({
       </CardContent>
       <CardFooter className="mt-auto pt-2">
         <div className="flex justify-between gap-2 w-full">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/dashboard/quizzes/${id}`}>
-              <Eye className="mr-1 size-4 text-primary" />
-              Visualizza
-            </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href={`/dashboard/quizzes/${id}`} />}
+            nativeButton={false}
+          >
+            <Eye className="mr-1 size-4 text-primary" />
+            Visualizza
           </Button>
-          <Button variant="secondary" size="sm" asChild>
-            <Link href={`/dashboard/quizzes/${id}/invite`}>
-              <Link2 className="mr-1 size-4" />
-              Associa candidato
-            </Link>
+          <Button
+            variant="secondary"
+            size="sm"
+            render={<Link href={`/dashboard/quizzes/${id}/invite`} />}
+            nativeButton={false}
+          >
+            <Link2 className="mr-1 size-4" />
+            Associa candidato
           </Button>
         </div>
       </CardFooter>

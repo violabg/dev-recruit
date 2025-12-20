@@ -101,20 +101,26 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                   deleteDescription="Sei sicuro di voler eliminare questo candidato? Questa azione non può essere annullata."
                   deleteErrorMessage="Errore durante l'eliminazione del candidato"
                 >
-                  <DropdownMenuItem asChild>
-                    <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-                      <Link2 className="mr-1 size-4" />
-                      Associa quiz
-                    </Link>
+                  <DropdownMenuItem
+                    render={
+                      <Link
+                        href={`/dashboard/candidates/${candidate.id}/quiz`}
+                      />
+                    }
+                  >
+                    <Link2 className="mr-1 size-4" />
+                    Associa quiz
                   </DropdownMenuItem>
                   {candidate.interviews && candidate.interviews.length > 0 && (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/dashboard/interviews/${candidate.interviews[0].id}`}
-                      >
-                        <FileText className="mr-1 size-4" />
-                        Visualizza risultati
-                      </Link>
+                    <DropdownMenuItem
+                      render={
+                        <Link
+                          href={`/dashboard/interviews/${candidate.interviews[0].id}`}
+                        />
+                      }
+                    >
+                      <FileText className="mr-1 size-4" />
+                      Visualizza risultati
                     </DropdownMenuItem>
                   )}
                 </EntityActionsMenu>

@@ -17,23 +17,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  ReactNode,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { Suspense, useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "../ui/button";
 
-type StatusOption = {
+type SelectOption = {
   value: string;
   label: string;
 };
 
-const statusOptions: StatusOption[] = [
+const statusOptions: SelectOption[] = [
   { value: "all", label: "Tutti gli stati" },
   { value: "pending", label: "In attesa" },
   { value: "contacted", label: "Contattato" },
@@ -42,10 +35,17 @@ const statusOptions: StatusOption[] = [
   { value: "rejected", label: "Rifiutato" },
 ];
 
+const sortOptions: SelectOption[] = [
+  { value: "newest", label: "Più recenti" },
+  { value: "oldest", label: "Più vecchi" },
+  { value: "a-z", label: "A-Z" },
+  { value: "z-a", label: "Z-A" },
+];
+
 export const SearchAndFilterCandidates = ({
-  positionOptions,
+  positionItems = [],
 }: {
-  positionOptions: ReactNode;
+  positionItems?: SelectOption[];
 }) => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -86,7 +86,7 @@ export const SearchAndFilterCandidates = ({
     });
   }, 800);
 
-  const handleStatus = (value: string) => {
+  const handleStatus = (value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
     if (value && value !== "all") {
@@ -101,7 +101,7 @@ export const SearchAndFilterCandidates = ({
     });
   };
 
-  const handlePosition = (value: string) => {
+  const handlePosition = (value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
     if (value && value !== "all") {
@@ -116,7 +116,7 @@ export const SearchAndFilterCandidates = ({
     });
   };
 
-  const handleSort = (value: string) => {
+  const handleSort = (value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
     if (value) {
@@ -167,13 +167,14 @@ export const SearchAndFilterCandidates = ({
         </div>
         <Select
           name="status"
+          items={statusOptions}
           value={currentStatus}
           onValueChange={handleStatus}
           disabled={isPending}
         >
           <SelectTrigger className="w-auto @[800px]w-full">
             <ClockFading className="size-4" />
-            <SelectValue placeholder="Stato" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {statusOptions.map((option) => (
@@ -188,11 +189,15 @@ export const SearchAndFilterCandidates = ({
           value={currentPosition}
           onValueChange={handlePosition}
           disabled={isPending}
+          items={[
+            { value: "all", label: "Tutte le posizioni" },
+            ...positionItems,
+          ]}
         >
           <SelectTrigger>
             <div className="flex items-center gap-2">
               <Briefcase className="size-4" />
-              <SelectValue placeholder={"Posizione"} />
+              <SelectValue />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -200,33 +205,42 @@ export const SearchAndFilterCandidates = ({
             <Suspense
               fallback={<SelectItem value="_">Caricamento...</SelectItem>}
             >
-              {positionOptions}
+              {positionItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
             </Suspense>
           </SelectContent>
         </Select>
         <Select
           name="sort"
+          items={sortOptions}
           value={currentSort}
           onValueChange={handleSort}
           disabled={isPending}
         >
           <SelectTrigger className="w-auto @[800px]w-full">
             <ArrowUpDown className="size-4" />
-            <SelectValue placeholder="Ordinamento" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Più recenti</SelectItem>
-            <SelectItem value="oldest">Più vecchi</SelectItem>
-            <SelectItem value="name">Nome</SelectItem>
-            <SelectItem value="status">Stato</SelectItem>
+            {sortOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {hasActiveFilters && (
-          <Button variant="outlineDestructive" asChild disabled={isPending}>
-            <Link href={pathname as "/dashboard/candidates"}>
-              <X className="mr-1 size-4" />
-              Reset
-            </Link>
+          <Button
+            variant="outlineDestructive"
+            render={<Link href={pathname as "/dashboard/candidates"} />}
+            disabled={isPending}
+            nativeButton={false}
+          >
+            <X className="mr-1 size-4" />
+            Reset
           </Button>
         )}
       </div>

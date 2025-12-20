@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import * as React from "react";
 
 export type OptionType = {
@@ -76,63 +76,64 @@ export function MultiSelect({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          aria-invalid={invalid}
-          disabled={disabled}
-          className={cn(
-            "justify-between w-full h-auto min-h-10",
-            "aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]",
-            selected.length > 0 ? "px-3 py-2" : "",
-            className
-          )}
-        >
-          <div className="flex flex-wrap gap-1">
-            {selected.length === 0 && placeholder}
-            {selected.map((item) => (
-              <Badge
-                variant="secondary"
-                key={item}
-                className="mr-1 mb-1"
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            aria-invalid={invalid}
+            disabled={disabled}
+            className={cn(
+              "justify-between w-full h-auto min-h-10",
+              "aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]",
+              selected.length > 0 ? "px-3 py-2" : "",
+              className
+            )}
+          />
+        }
+      >
+        <div className="flex flex-wrap gap-1">
+          {selected.length === 0 && placeholder}
+          {selected.map((item) => (
+            <Badge
+              variant="secondary"
+              key={item}
+              className="mr-1 mb-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUnselect(item);
+              }}
+            >
+              {options.find((option) => option.value === item)?.label || item}
+              <span
+                role="button"
+                tabIndex={0}
+                aria-label={`Remove ${
+                  options.find((option) => option.value === item)?.label || item
+                }`}
+                className="ml-1 rounded-full outline-hidden focus:ring-2 focus:ring-ring ring-offset-background focus:ring-offset-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleUnselect(item);
+                  }
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleUnselect(item);
                 }}
               >
-                {options.find((option) => option.value === item)?.label || item}
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Remove ${
-                    options.find((option) => option.value === item)?.label ||
-                    item
-                  }`}
-                  className="ml-1 rounded-full outline-hidden focus:ring-2 focus:ring-ring ring-offset-background focus:ring-offset-2"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleUnselect(item);
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleUnselect(item);
-                  }}
-                >
-                  <X className="w-3 h-3 hover:text-foreground" />
-                </span>
-              </Badge>
-            ))}
-          </div>
-          <ChevronsUpDown className="opacity-50 size-4 shrink-0" />
-        </Button>
+                <X className="w-3 h-3 hover:text-foreground" />
+              </span>
+            </Badge>
+          ))}
+        </div>
+        <ChevronDown className="opacity-50 ml-2 w-4 h-4 shrink-0" />
       </PopoverTrigger>
       <PopoverContent className="p-0 w-full" align="start">
         <Command className="w-full">

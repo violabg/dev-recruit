@@ -41,8 +41,12 @@ async function InviteCandidatesContent({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Quiz or Position not found</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/quizzes">Return to quizzes</Link>
+        <Button
+          className="mt-4"
+          render={<Link href="/dashboard/quizzes" />}
+          nativeButton={false}
+        >
+          Return to quizzes
         </Button>
       </div>
     );
@@ -53,11 +57,14 @@ async function InviteCandidatesContent({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/dashboard/quizzes/${quizId}`}>
-            <ArrowLeft className="mr-1 size-4" />
-            Back to quiz
-          </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          render={<Link href={`/dashboard/quizzes/${quizId}`} />}
+          nativeButton={false}
+        >
+          <ArrowLeft className="mr-1 size-4" />
+          Back to quiz
         </Button>
       </div>
 

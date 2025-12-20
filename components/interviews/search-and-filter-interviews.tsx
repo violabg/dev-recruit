@@ -29,13 +29,13 @@ import {
 import { useDebouncedCallback } from "use-debounce";
 
 type SearchAndFilterInterviewsProps = {
-  positionOptions: ReactNode;
   languageOptions?: ReactNode;
+  positionItems?: { value: string; label: string }[];
 };
 
 export function SearchAndFilterInterviews({
-  positionOptions,
   languageOptions,
+  positionItems = [],
 }: SearchAndFilterInterviewsProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -135,14 +135,15 @@ export function SearchAndFilterInterviews({
       <div className="flex flex-wrap gap-4">
         <Select
           value={status}
-          onValueChange={(value: InterviewStatus | "all") => {
-            setStatus(value);
-            updateFilters({ search, status: value, position, language });
+          onValueChange={(value: InterviewStatus | "all" | null) => {
+            const newStatus = value || "all";
+            setStatus(newStatus);
+            updateFilters({ search, status: newStatus, position, language });
           }}
         >
           <SelectTrigger>
             <ClockFading className="size-4" />
-            <SelectValue placeholder="Stato" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutti gli stati</SelectItem>
@@ -155,29 +156,39 @@ export function SearchAndFilterInterviews({
         <Select
           value={position}
           onValueChange={(value) => {
-            setPosition(value);
-            updateFilters({ search, status, position: value, language });
+            const newPosition = value || "all";
+            setPosition(newPosition);
+            updateFilters({ search, status, position: newPosition, language });
           }}
+          items={[
+            { value: "all", label: "Tutte le posizioni" },
+            ...positionItems,
+          ]}
         >
           <SelectTrigger>
             <Briefcase className="size-4" />
-            <SelectValue placeholder="Posizione" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutte le posizioni</SelectItem>
-            {positionOptions}
+            {positionItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select
           value={language}
           onValueChange={(value) => {
-            setLanguage(value);
-            updateFilters({ search, status, position, language: value });
+            const newLanguage = value || "all";
+            setLanguage(newLanguage);
+            updateFilters({ search, status, position, language: newLanguage });
           }}
         >
           <SelectTrigger>
             <Code className="size-4" />
-            <SelectValue placeholder="Linguaggio" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutti i linguaggi</SelectItem>
@@ -188,16 +199,14 @@ export function SearchAndFilterInterviews({
 
       {hasActiveFilters && (
         <Button
-          type="button"
           variant="outlineDestructive"
           onClick={clearAllFilters}
           disabled={isPending}
-          asChild
+          render={<Link href={pathname as "/dashboard/interviews"} />}
+          nativeButton={false}
         >
-          <Link href={pathname as "/dashboard/interviews"}>
-            <X className="mr-2 size-4" />
-            Reset
-          </Link>
+          <X className="mr-2 size-4" />
+          Reset
         </Button>
       )}
     </div>

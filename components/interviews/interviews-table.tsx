@@ -202,19 +202,23 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                     <TableCell className="z-10 relative text-right">
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => copyInterviewLink(interview.token)}
-                              className={
-                                copiedToken === interview.token
-                                  ? "bg-green-50 border-green-200"
-                                  : ""
-                              }
-                            >
-                              <Copy className="size-4" />
-                            </Button>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() =>
+                                  copyInterviewLink(interview.token)
+                                }
+                                className={
+                                  copiedToken === interview.token
+                                    ? "bg-green-50 border-green-200"
+                                    : ""
+                                }
+                              />
+                            }
+                          >
+                            <Copy className="size-4" />
                           </TooltipTrigger>
                           <TooltipContent>
                             {copiedToken === interview.token

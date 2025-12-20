@@ -62,7 +62,7 @@ export function FavoriteQuestionsDialog({
   const [questions, setQuestions] = useState<QuestionWithMetadata[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string | null>("all");
   const [isPending, startTransition] = useTransition();
 
   // Load favorite questions when dialog opens
@@ -142,12 +142,15 @@ export function FavoriteQuestionsDialog({
               className="pl-9"
             />
           </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <Select
+            items={questionTypes}
+            value={typeFilter}
+            onValueChange={setTypeFilter}
+          >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Tipo" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tutti i tipi</SelectItem>
               {questionTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}

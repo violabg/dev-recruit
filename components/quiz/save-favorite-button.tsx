@@ -46,21 +46,21 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleToggleFavorite}
-          disabled={isPending || !hasDbId}
-          className={isFavorite ? "text-red-500" : ""}
-        >
-          <Heart
-            className={`size-4 ${
-              isFavorite ? "fill-red-500 text-red-500" : ""
-            }`}
+      <TooltipTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleFavorite}
+            disabled={isPending || !hasDbId}
+            className={isFavorite ? "text-red-500" : ""}
           />
-        </Button>
+        }
+      >
+        <Heart
+          className={`size-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
+        />
       </TooltipTrigger>
       <TooltipContent>
         {!hasDbId

@@ -57,20 +57,18 @@ export function EntityActionsMenu({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="p-0 w-8 h-8">
-            <span className="sr-only">Apri menu</span>
-            <MoreHorizontal className="size-4" />
-          </Button>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" className="p-0 w-8 h-8" />}
+        >
+          <span className="sr-only">Apri menu</span>
+          <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{actionsLabel}</DropdownMenuLabel>
           {editHref && (
-            <DropdownMenuItem asChild>
-              <Link href={editHref as never}>
-                <Edit className="mr-1 size-4" />
-                {editLabel}
-              </Link>
+            <DropdownMenuItem render={<Link href={editHref as never} />}>
+              <Edit className="mr-1 size-4" />
+              {editLabel}
             </DropdownMenuItem>
           )}
           {deleteAction && (

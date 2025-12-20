@@ -25,11 +25,14 @@ export function QuizDetailActionsClient({
 
   return (
     <>
-      <Button variant="outline" size="sm" asChild>
-        <Link href={`/dashboard/quizzes/${quizId}/edit`}>
-          <Edit className="mr-1 size-4" />
-          Modifica
-        </Link>
+      <Button
+        variant="outline"
+        size="sm"
+        render={<Link href={`/dashboard/quizzes/${quizId}/edit`} />}
+        nativeButton={false}
+      >
+        <Edit className="mr-1 size-4" />
+        Modifica
       </Button>
       <Button
         variant="secondary"
@@ -39,11 +42,14 @@ export function QuizDetailActionsClient({
         <Copy className="mr-1 size-4" />
         Duplica
       </Button>
-      <Button variant="default" size="sm" asChild>
-        <Link href={`/dashboard/quizzes/${quizId}/invite`}>
-          <Send className="mr-1 size-4" />
-          Assicia a candidati
-        </Link>
+      <Button
+        variant="default"
+        size="sm"
+        render={<Link href={`/dashboard/quizzes/${quizId}/invite`} />}
+        nativeButton={false}
+      >
+        <Send className="mr-1 size-4" />
+        Assicia a candidati
       </Button>
       <DeleteWithConfirm
         deleteAction={deleteQuizById.bind(null, quizId)}

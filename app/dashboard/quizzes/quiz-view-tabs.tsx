@@ -40,7 +40,7 @@ export function QuizViewTabs({
 
   return (
     <Tabs
-      defaultValue={defaultValue}
+      value={defaultValue}
       className="w-full"
       onValueChange={handleViewChange}
     >

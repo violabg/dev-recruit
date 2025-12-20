@@ -23,9 +23,9 @@ export default async function CandidateEvaluationsPage({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Candidato non trovato</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/candidates">Torna ai candidati</Link>
-        </Button>
+        <Link href="/dashboard/candidates" className="mt-4">
+          <Button>Torna ai candidati</Button>
+        </Link>
       </div>
     );
   }
@@ -35,12 +35,12 @@ export default async function CandidateEvaluationsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/dashboard/candidates/${id}`}>
+        <Link href={`/dashboard/candidates/${id}`}>
+          <Button variant="ghost" size="sm" className="inline-flex">
             <ArrowLeft className="mr-1 size-4" />
             Torna al candidato
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
 
       <div>

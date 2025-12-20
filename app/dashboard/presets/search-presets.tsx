@@ -77,11 +77,14 @@ export function SearchPresets() {
         />
       </div>
       {hasFilters && (
-        <Button variant="outlineDestructive" asChild disabled={isPending}>
-          <Link href={pathname as "/dashboard/presets"}>
-            <X className="mr-1 size-4" />
-            Reset
-          </Link>
+        <Button
+          variant="outlineDestructive"
+          render={<Link href={pathname as "/dashboard/presets"} />}
+          disabled={isPending}
+          nativeButton={false}
+        >
+          <X className="mr-1 size-4" />
+          Reset
         </Button>
       )}
     </div>

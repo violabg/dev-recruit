@@ -9,7 +9,7 @@ export async function ProgrammingLanguageSelectItems() {
   return (
     <>
       {programmingLanguage.map((lang) => (
-        <SelectItem key={lang.id} value={lang.label.toLowerCase()}>
+        <SelectItem key={lang.id} value={lang.label}>
           {lang.label}
         </SelectItem>
       ))}

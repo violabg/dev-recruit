@@ -108,15 +108,20 @@ export default async function PresetDetailPage({
         description={preset.description || "Nessuna descrizione fornita."}
         actionBtns={
           <>
-            <Button asChild size="sm" variant="outline">
-              <Link
-                href={
-                  `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
-                }
-              >
-                <Edit className="mr-1 size-4" />
-                Modifica
-              </Link>
+            <Button
+              size="sm"
+              variant="outline"
+              render={
+                <Link
+                  href={
+                    `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
+                  }
+                />
+              }
+              nativeButton={false}
+            >
+              <Edit className="mr-1 size-4" />
+              Modifica
             </Button>
             <DeleteWithConfirm
               deleteAction={deletePresetAction.bind(null, preset.id)}

@@ -44,7 +44,6 @@ export function NavMain({
             return (
               <SidebarMenuItem key={route.label}>
                 <SidebarMenuButton
-                  asChild
                   size="default"
                   className={cn(
                     "group relative rounded-md overflow-hidden transition-all duration-200",

@@ -44,12 +44,17 @@ export default async function PositionsPage({
         title="Posizioni"
         description="Gestisci le posizioni"
         actionBtns={
-          <Button asChild size="sm" variant="default">
-            <Link href="/dashboard/positions">
-              <Plus className="mr-1 size-4" />
-              Nuova Posizione
-            </Link>
-          </Button>
+          <Button
+            size="sm"
+            variant="default"
+            render={
+              <Link href="/dashboard/positions/new">
+                <Plus className="mr-1 size-4" />
+                Nuova Posizione
+              </Link>
+            }
+            nativeButton={false}
+          />
         }
       />
       <div className="flex items-center gap-4">
@@ -140,12 +145,17 @@ const PositionsTable = async ({
           </EmptyHeader>
           {!query && (
             <EmptyContent>
-              <Button size="sm" asChild>
-                <Link href="/dashboard/positions/new">
-                  <Plus className="mr-1 size-4" />
-                  Crea posizione
-                </Link>
-              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                render={
+                  <Link href="/dashboard/positions/new">
+                    <Plus className="mr-1 size-4" />
+                    Crea posizione
+                  </Link>
+                }
+                nativeButton={false}
+              />
             </EmptyContent>
           )}
         </Empty>

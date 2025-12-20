@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trash2 } from "lucide-react";
-import { ReactNode, useTransition } from "react";
+import { ReactElement, useTransition } from "react";
 import { toast } from "sonner";
 
 type DeleteWithConfirmProps = {
@@ -45,7 +45,7 @@ type DeleteWithConfirmProps = {
   /** Whether the button is disabled */
   disabled?: boolean;
   /** Custom trigger element (overrides default button) */
-  children?: ReactNode;
+  children?: ReactElement;
   /** Control open state externally */
   open?: boolean;
   /** Callback when open state changes */
@@ -119,9 +119,7 @@ export function DeleteWithConfirm({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild>
-        {children !== undefined ? children : defaultTrigger}
-      </AlertDialogTrigger>
+      <AlertDialogTrigger render={children ? children : defaultTrigger} />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

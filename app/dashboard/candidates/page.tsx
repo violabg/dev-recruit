@@ -1,7 +1,7 @@
 import { SearchAndFilterCandidates } from "@/components/candidates/search-and-filter-candidates";
 import PageHeader from "@/components/page-header";
-import PositionOptions from "@/components/positions/position-options";
 import { Button } from "@/components/ui/button";
+import { getPositionItemsForSelect } from "@/lib/data/positions";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -23,24 +23,31 @@ export default async function CandidatesPage({
 }: {
   searchParams: CandidatesSearchParams;
 }) {
+  const positionItems = await getPositionItemsForSelect();
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Candidati"
         description="Gestisci i candidati per le tue posizioni aperte"
         actionBtns={
-          <Button asChild size="sm" variant="default">
-            <Link href="/dashboard/candidates/new">
-              <Plus className="mr-1 size-4" />
-              Nuovo Candidato
-            </Link>
-          </Button>
+          <Button
+            size="sm"
+            variant="default"
+            nativeButton={false}
+            render={
+              <Link href="/dashboard/candidates/new">
+                <Plus className="mr-1 size-4" />
+                Nuovo Candidato
+              </Link>
+            }
+          />
         }
       />
 
       <div className="space-y-6">
         <Suspense fallback={<FiltersSkeleton />}>
-          <SearchAndFilterCandidates positionOptions={<PositionOptions />} />
+          <SearchAndFilterCandidates positionItems={positionItems} />
         </Suspense>
 
         <Suspense fallback={<CandidatesListSkeleton />}>

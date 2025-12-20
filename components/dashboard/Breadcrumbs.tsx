@@ -58,8 +58,8 @@ const Breadcrumbs = () => {
         {isLast || isNewQuiz ? (
           <BreadcrumbPage>{getBreadcrumbLabel(segment)}</BreadcrumbPage>
         ) : (
-          <BreadcrumbLink asChild>
-            <Link href={href as any}>{getBreadcrumbLabel(segment)}</Link>
+          <BreadcrumbLink render={<Link href={href as any} />}>
+            {getBreadcrumbLabel(segment)}
           </BreadcrumbLink>
         )}
         {!isLast && <BreadcrumbSeparator />}

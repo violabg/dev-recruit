@@ -61,9 +61,17 @@ export const NewQuizCreationPage = ({
     };
   }, [selectedPosition]);
 
-  const availablePositions = fixedPosition ? [fixedPosition] : positions;
-  const shouldShowSelectPrompt =
-    !fixedPosition && availablePositions.length > 0 && !selectedPositionId;
+  const availablePositions = [
+    {
+      value: null,
+      label: "Seleziona una posizione",
+    },
+    ...(fixedPosition ? [fixedPosition] : positions).map((position) => ({
+      value: position.id,
+      label: `${position.title} (${position.experienceLevel})`,
+    })),
+  ];
+
   const noPositionsAvailable =
     !fixedPosition && availablePositions.length === 0;
 
@@ -77,17 +85,18 @@ export const NewQuizCreationPage = ({
     <>
       {!fixedPosition && (
         <Select
-          value={selectedPositionId}
-          onValueChange={setSelectedPositionId}
+          value={selectedPositionId || null}
+          items={availablePositions}
+          onValueChange={(value: string | null) => setSelectedPositionId(value ?? "")}
           disabled={availablePositions.length === 0}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Seleziona posizione" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {availablePositions.map((position) => (
-              <SelectItem key={position.id} value={position.id}>
-                {position.title} ({position.experienceLevel})
+              <SelectItem key={String(position.value ?? "none")} value={position.value}>
+                {position.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -100,8 +109,14 @@ export const NewQuizCreationPage = ({
             Non ci sono ancora posizioni disponibili. Crea una posizione prima
             di costruire il quiz.
           </p>
-          <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href="/dashboard/positions">Vai alle posizioni</Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            render={<Link href="/dashboard/positions" />}
+            nativeButton={false}
+          >
+            Vai alle posizioni
           </Button>
         </div>
       ) : !selectedPosition || !blankQuiz ? (

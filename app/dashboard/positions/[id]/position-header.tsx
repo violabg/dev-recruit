@@ -20,9 +20,9 @@ export async function PositionHeader({ params }: Props) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Posizione non trovata</p>
-        <Button className="mt-4" asChild size="sm">
-          <Link href="/dashboard/positions">Torna alle posizioni</Link>
-        </Button>
+        <Link href="/dashboard/positions" className="mt-4">
+          <Button size="sm">Torna alle posizioni</Button>
+        </Link>
       </div>
     );
   }
@@ -43,12 +43,12 @@ export async function PositionHeader({ params }: Props) {
       }
       actionBtns={
         <>
-          <Button variant="outline" asChild size="sm">
-            <Link href={`/dashboard/positions/${position.id}/edit`}>
+          <Link href={`/dashboard/positions/${position.id}/edit`}>
+            <Button variant="outline" size="sm" className="inline-flex">
               <Edit className="mr-1 size-4" />
               Modifica
-            </Link>
-          </Button>
+            </Button>
+          </Link>
           <DeleteWithConfirm
             deleteAction={deletePosition.bind(null, position.id)}
             description="Questa azione non può essere annullata. Verranno eliminati anche tutti i quiz e i candidati associati a questa posizione."

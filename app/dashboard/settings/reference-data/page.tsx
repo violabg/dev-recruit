@@ -44,11 +44,9 @@ export default async function ReferenceDataPage() {
           <TabsContent key={cat.value} value={cat.value}>
             <div className="space-y-4">
               <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 w-4 h-4" />
-                    Aggiungi {cat.label}
-                  </Button>
+                <DialogTrigger render={<Button />}>
+                  <Plus className="mr-2 w-4 h-4" />
+                  Aggiungi {cat.label}
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>

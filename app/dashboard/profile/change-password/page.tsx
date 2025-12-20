@@ -7,10 +7,13 @@ export default async function ChangePasswordPage() {
   return (
     <div className="space-y-6 mx-auto w-full max-w-2xl">
       <div className="flex items-center space-x-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/dashboard/profile">
-            <ArrowLeft className="size-4" />
-          </Link>
+        <Button
+          variant="outline"
+          size="icon"
+          render={<Link href="/dashboard/profile" />}
+          nativeButton={false}
+        >
+          <ArrowLeft className="size-4" />
         </Button>
         <div className="space-y-1">
           <h1 className="font-bold text-3xl tracking-tight">Cambia Password</h1>

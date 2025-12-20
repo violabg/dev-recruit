@@ -125,12 +125,16 @@ export const CandidatesRuntimeSection = async ({
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button asChild size="sm">
-                <Link href="/dashboard/candidates/new">
-                  <Plus className="mr-1 size-4" />
-                  Nuovo Candidato
-                </Link>
-              </Button>
+              <Button
+                size="sm"
+                render={
+                  <Link href="/dashboard/candidates/new">
+                    <Plus className="mr-1 size-4" />
+                    Nuovo Candidato
+                  </Link>
+                }
+                nativeButton={false}
+              />
             </EmptyContent>
           </Empty>
         ) : (

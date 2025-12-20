@@ -74,26 +74,32 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                 deleteDescription="Sei sicuro di voler eliminare questo candidato? Questa azione non può essere annullata."
                 deleteErrorMessage="Errore durante l'eliminazione del candidato"
               >
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/candidates/${candidate.id}`}>
-                    <User className="mr-1 size-4" />
-                    Visualizza profilo
-                  </Link>
+                <DropdownMenuItem
+                  render={
+                    <Link href={`/dashboard/candidates/${candidate.id}`} />
+                  }
+                >
+                  <User className="mr-1 size-4" />
+                  Visualizza profilo
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-                    <Link2 className="mr-1 size-4" />
-                    Associa quiz
-                  </Link>
+                <DropdownMenuItem
+                  render={
+                    <Link href={`/dashboard/candidates/${candidate.id}/quiz`} />
+                  }
+                >
+                  <Link2 className="mr-1 size-4" />
+                  Associa quiz
                 </DropdownMenuItem>
                 {candidate.interviews && candidate.interviews.length > 0 && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href={`/dashboard/interviews/${candidate.interviews[0].id}`}
-                    >
-                      <FileText className="mr-1 size-4" />
-                      Visualizza risultati
-                    </Link>
+                  <DropdownMenuItem
+                    render={
+                      <Link
+                        href={`/dashboard/interviews/${candidate.interviews[0].id}`}
+                      />
+                    }
+                  >
+                    <FileText className="mr-1 size-4" />
+                    Visualizza risultati
                   </DropdownMenuItem>
                 )}
               </EntityActionsMenu>
@@ -145,11 +151,14 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
           </CardContent>
           <CardFooter className="flex justify-between items-center p-4 border-t">
             <CandidateStatusBadge status={candidate.status} />
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/dashboard/candidates/${candidate.id}`}>
-                <Eye className="mr-1 size-4 text-primary" />
-                Visualizza
-              </Link>
+            <Button
+              render={<Link href={`/dashboard/candidates/${candidate.id}`} />}
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+            >
+              <Eye className="mr-1 size-4 text-primary" />
+              Visualizza
             </Button>
           </CardFooter>
         </Card>

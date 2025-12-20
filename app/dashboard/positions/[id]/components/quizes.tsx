@@ -16,12 +16,17 @@ export default async function Quizes({ params }: Props) {
     <>
       <div className="flex justify-between">
         <h2 className="font-semibold text-xl">Quiz</h2>
-        <Button asChild size="sm" variant="default">
-          <Link href={`/dashboard/positions/${id}/quiz/new`}>
-            <Plus className="mr-1 size-4" />
-            New Quiz
-          </Link>
-        </Button>
+        <Button
+          size="sm"
+          variant="default"
+          nativeButton={false}
+          render={
+            <Link href={`/dashboard/positions/${id}/quiz/new`}>
+              <Plus className="mr-1 size-4" />
+              New Quiz
+            </Link>
+          }
+        />
       </div>
 
       {quizzes.length > 0 ? (
@@ -44,16 +49,26 @@ export default async function Quizes({ params }: Props) {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/dashboard/quizzes/${quiz.id}`}>
-                        Visualizza
-                      </Link>
-                    </Button>
-                    <Button variant="secondary" size="sm" asChild>
-                      <Link href={`/dashboard/quizzes/${quiz.id}/invite`}>
-                        Associa candidati
-                      </Link>
-                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      nativeButton={false}
+                      render={
+                        <Link href={`/dashboard/quizzes/${quiz.id}`}>
+                          Visualizza
+                        </Link>
+                      }
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      nativeButton={false}
+                      render={
+                        <Link href={`/dashboard/quizzes/${quiz.id}/invite`}>
+                          Associa candidati
+                        </Link>
+                      }
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -66,12 +81,18 @@ export default async function Quizes({ params }: Props) {
             <p className="text-muted-foreground text-sm">
               Nessun quiz creato per questa posizione
             </p>
-            <Button className="mt-2" size="sm" asChild>
-              <Link href={`/dashboard/positions/${id}/quiz/new`}>
-                <Plus className="mr-1 size-4" />
-                New Quiz
-              </Link>
-            </Button>
+            <Button
+              className="mt-2"
+              size="sm"
+              variant="default"
+              nativeButton={false}
+              render={
+                <Link href={`/dashboard/positions/${id}/quiz/new`}>
+                  <Plus className="mr-1 size-4" />
+                  New Quiz
+                </Link>
+              }
+            />
           </div>
         </div>
       )}

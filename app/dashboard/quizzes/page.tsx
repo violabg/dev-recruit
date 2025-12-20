@@ -1,7 +1,7 @@
 import PageHeader from "@/components/page-header";
 import PositionLevelOptions from "@/components/positions/position-level-options";
-import PositionOptions from "@/components/positions/position-options";
 import { SearchAndFilterQuizzes } from "@/components/quiz/search-and-filter-quizzes";
+import { getPositionItemsForSelect } from "@/lib/data/positions";
 import { Suspense } from "react";
 import { FiltersSkeleton, QuizListSkeleton } from "./fallbacks";
 import { NewQuizButton } from "./new-quiz-button";
@@ -34,6 +34,8 @@ export default async function QuizzesPage({
 }: {
   searchParams: QuizzesSearchParams;
 }) {
+  const positionItems = await getPositionItemsForSelect();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -45,7 +47,7 @@ export default async function QuizzesPage({
         <Suspense fallback={<FiltersSkeleton />}>
           <SearchAndFilterQuizzes
             levelsOptions={<PositionLevelOptions />}
-            positionOptions={<PositionOptions />}
+            positionItems={positionItems}
           />
         </Suspense>
 

@@ -89,11 +89,13 @@ export function QuizTable({ quizzes }: QuizTableProps) {
                   deleteDescription="Sei sicuro di voler eliminare questo quiz? Questa azione non può essere annullata."
                   deleteErrorMessage="Errore durante l'eliminazione del quiz"
                 >
-                  <DropdownMenuItem asChild>
-                    <Link href={`/dashboard/quizzes/${quiz.id}/invite`}>
-                      <Link2 className="mr-1 size-4" />
-                      Associa candidato
-                    </Link>
+                  <DropdownMenuItem
+                    render={
+                      <Link href={`/dashboard/quizzes/${quiz.id}/invite`} />
+                    }
+                  >
+                    <Link2 className="mr-1 size-4" />
+                    Associa candidato
                   </DropdownMenuItem>
                 </EntityActionsMenu>
               </TableCell>

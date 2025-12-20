@@ -80,12 +80,17 @@ async function PresetsContent({
               </EmptyHeader>
               {!search && (
                 <EmptyContent>
-                  <Button asChild variant="default" size="sm">
-                    <Link href="/dashboard/presets/new">
-                      <Plus className="mr-1 size-4" />
-                      Nuovo preset
-                    </Link>
-                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    render={
+                      <Link href="/dashboard/presets/new">
+                        <Plus className="mr-1 size-4" />
+                        Nuovo preset
+                      </Link>
+                    }
+                    nativeButton={false}
+                  />
                 </EmptyContent>
               )}
             </Empty>
@@ -123,12 +128,17 @@ export default async function PresetsPage({
         description="Crea e gestisci preset per la generazione di domande per le tue
             posizioni"
         actionBtns={
-          <Button asChild size="sm" variant="default">
-            <Link href="/dashboard/presets/new">
-              <Plus className="mr-1 size-4" />
-              Nuovo preset
-            </Link>
-          </Button>
+          <Button
+            size="sm"
+            variant="default"
+            render={
+              <Link href="/dashboard/presets/new">
+                <Plus className="mr-1 size-4" />
+                Nuovo preset
+              </Link>
+            }
+            nativeButton={false}
+          />
         }
       />
       <div className="space-y-6">

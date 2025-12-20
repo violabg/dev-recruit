@@ -30,14 +30,19 @@ export default async function EditPresetPage({ params }: EditPresetPageProps) {
   return (
     <Card>
       <CardHeader className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link
-            href={
-              `/dashboard/presets/${result.preset.id}` as Route<`/dashboard/presets/${string}`>
-            }
-          >
-            <ArrowLeft className="size-4" />
-          </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          render={
+            <Link
+              href={
+                `/dashboard/presets/${result.preset.id}` as Route<`/dashboard/presets/${string}`>
+              }
+            />
+          }
+          nativeButton={false}
+        >
+          <ArrowLeft className="size-4" />
         </Button>
         <div>
           <CardTitle className="text-2xl">Modifica preset</CardTitle>

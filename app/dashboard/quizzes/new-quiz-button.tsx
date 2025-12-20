@@ -18,11 +18,15 @@ export function NewQuizButton({
   className,
 }: NewQuizButtonProps) {
   return (
-    <Button variant={variant} size={size} className={className} asChild>
-      <Link href="/dashboard/quizzes/new">
-        <Plus className="mr-1 size-4" />
-        Nuovo quiz
-      </Link>
+    <Button
+      variant={variant}
+      size={size}
+      className={className}
+      render={<Link href="/dashboard/quizzes/new" />}
+      nativeButton={false}
+    >
+      <Plus className="mr-1 size-4" />
+      Nuovo quiz
     </Button>
   );
 }

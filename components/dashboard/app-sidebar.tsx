@@ -73,20 +73,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              asChild
+              render={
+                <Link href="/dashboard" className="flex items-center gap-3" />
+              }
               className="group data-[state=open]:bg-sidebar-accent hover:bg-transparent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Link href="/dashboard" className="flex items-center gap-3">
-                <div className="flex justify-center items-center bg-primary shadow-sm rounded-lg size-8 aspect-square text-primary-foreground">
-                  <BrainCircuit className="size-5" />
-                </div>
-                <div className="flex-1 grid text-sm text-left leading-tight">
-                  <span className="font-semibold truncate">DevRecruit AI</span>
-                  <span className="text-muted-foreground text-xs truncate">
-                    Enterprise
-                  </span>
-                </div>
-              </Link>
+              <div className="flex justify-center items-center bg-primary shadow-sm rounded-lg size-8 aspect-square text-primary-foreground">
+                <BrainCircuit className="size-5" />
+              </div>
+              <div className="flex-1 grid text-sm text-left leading-tight">
+                <span className="font-semibold truncate">DevRecruit AI</span>
+                <span className="text-muted-foreground text-xs truncate">
+                  Enterprise
+                </span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

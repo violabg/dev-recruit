@@ -1,11 +1,10 @@
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deleteCandidate } from "@/lib/actions/candidates";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { ClipboardCheck, Edit, Link2 } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
 
 type Props = {
@@ -20,9 +19,9 @@ export async function CandidateHeader({ params }: Props) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Candidato non trovato</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/candidates">Torna ai candidati</Link>
-        </Button>
+        <Link href="/dashboard/candidates" className="mt-4">
+          <Button>Torna ai candidati</Button>
+        </Link>
       </div>
     );
   }
@@ -47,32 +46,27 @@ export async function CandidateHeader({ params }: Props) {
       }
       actionBtns={
         <>
-          <Button asChild variant="outline">
-            <Link href={`/dashboard/candidates/${candidate.id}/quiz`}>
-              <Link2 className="mr-1 size-4" />
-              Associa quiz
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link
-              href={
-                `/dashboard/candidates/${candidate.id}/evaluations` as Route<`/dashboard/candidates/${string}/evaluations`>
-              }
-            >
-              <ClipboardCheck className="mr-1 size-4" />
-              Valutazioni
-            </Link>
-          </Button>
-          <Button asChild variant="ghost">
-            <Link
-              href={
-                `/dashboard/candidates/${candidate.id}/edit` as Route<`/dashboard/candidates/${string}/edit`>
-              }
-            >
-              <Edit className="mr-1 size-4" />
-              Modifica
-            </Link>
-          </Button>
+          <Link
+            href={`/dashboard/candidates/${candidate.id}/quiz`}
+            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
+          >
+            <Link2 className="mr-1 size-4" />
+            Associa quiz
+          </Link>
+          <Link
+            href={`/dashboard/candidates/${candidate.id}/evaluations`}
+            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
+          >
+            <ClipboardCheck className="mr-1 size-4" />
+            Valutazioni
+          </Link>
+          <Link
+            href={`/dashboard/candidates/${candidate.id}/edit`}
+            className={`${buttonVariants({ variant: "ghost" })} inline-flex`}
+          >
+            <Edit className="mr-1 size-4" />
+            Modifica
+          </Link>
           <DeleteWithConfirm
             deleteAction={deleteCandidate.bind(null, candidate.id)}
             description="Questa azione non può essere annullata. Il candidato e tutti i dati associati verranno eliminati permanentemente."

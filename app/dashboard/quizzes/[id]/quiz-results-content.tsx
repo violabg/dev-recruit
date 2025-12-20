@@ -20,11 +20,14 @@ export async function QuizResultsContent({ params }: Props) {
           <p className="text-muted-foreground text-sm">
             Nessun candidato ha ancora completato questo quiz
           </p>
-          <Button className="mt-2" size="sm" asChild>
-            <Link href={`/dashboard/quizzes/${quizId}/invite`}>
-              <Link2 className="mr-1 size-4" />
-              Associa a candidati
-            </Link>
+          <Button
+            className="mt-2"
+            size="sm"
+            render={<Link href={`/dashboard/quizzes/${quizId}/invite`} />}
+            nativeButton={false}
+          >
+            <Link2 className="mr-1 size-4" />
+            Associa a candidati
           </Button>
         </div>
       </div>
@@ -94,10 +97,15 @@ export async function QuizResultsContent({ params }: Props) {
                     : "—"}
                 </td>
                 <td className="p-2 text-center">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/dashboard/interviews/${interview.id}`}>
-                      <Eye className="size-4 text-primary" />
-                    </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    render={
+                      <Link href={`/dashboard/interviews/${interview.id}`} />
+                    }
+                    nativeButton={false}
+                  >
+                    <Eye className="size-4 text-primary" />
                   </Button>
                 </td>
               </tr>

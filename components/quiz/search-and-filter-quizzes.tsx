@@ -26,22 +26,24 @@ import {
 } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
-type PositionOption = {
-  id: string;
-  title: string;
+type SelectOption = {
+  value: string;
+  label: string;
 };
 
-type SearchAndFilterQuizzesProps = {
-  levels: string[];
-  positions: PositionOption[];
-};
+const sortOptions: SelectOption[] = [
+  { value: "newest", label: "Più recenti" },
+  { value: "oldest", label: "Più vecchi" },
+  { value: "a-z", label: "A-Z" },
+  { value: "z-a", label: "Z-A" },
+];
 
 export const SearchAndFilterQuizzes = ({
   levelsOptions,
-  positionOptions,
+  positionItems = [],
 }: {
   levelsOptions: ReactNode;
-  positionOptions: ReactNode;
+  positionItems?: SelectOption[];
 }) => {
   const searchParams = useSearchParams();
   const { replace } = useRouter();
@@ -79,7 +81,7 @@ export const SearchAndFilterQuizzes = ({
     });
   }, 800);
 
-  const handleSort = (value: string) => {
+  const handleSort = (value: string | null) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", "1");
     if (value) {
@@ -92,7 +94,7 @@ export const SearchAndFilterQuizzes = ({
     });
   };
 
-  const handleFilter = (value: string) => {
+  const handleFilter = (value: string | null) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", "1");
     if (value && value !== "all") {
@@ -105,7 +107,7 @@ export const SearchAndFilterQuizzes = ({
     });
   };
 
-  const handlePosition = (value: string) => {
+  const handlePosition = (value: string | null) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", "1");
     if (value && value !== "all") {
@@ -148,6 +150,7 @@ export const SearchAndFilterQuizzes = ({
       <div className="flex gap-2">
         <Select
           name="sort"
+          items={sortOptions}
           value={currentSort}
           onValueChange={handleSort}
           disabled={isPending}
@@ -155,14 +158,15 @@ export const SearchAndFilterQuizzes = ({
           <SelectTrigger>
             <div className="flex items-center gap-2">
               <ArrowUpDown className="size-4" />
-              <SelectValue placeholder="Ordina" />
+              <SelectValue />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Più recenti</SelectItem>
-            <SelectItem value="oldest">Meno recenti</SelectItem>
-            <SelectItem value="a-z">A-Z</SelectItem>
-            <SelectItem value="z-a">Z-A</SelectItem>
+            {sortOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select
@@ -174,7 +178,7 @@ export const SearchAndFilterQuizzes = ({
           <SelectTrigger>
             <div className="flex items-center gap-2">
               <Briefcase className="size-4" />
-              <SelectValue placeholder={"Livello"} />
+              <SelectValue />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -191,11 +195,15 @@ export const SearchAndFilterQuizzes = ({
           value={currentPosition}
           onValueChange={handlePosition}
           disabled={isPending}
+          items={[
+            { value: "all", label: "Tutte le posizioni" },
+            ...positionItems,
+          ]}
         >
           <SelectTrigger>
             <div className="flex items-center gap-2">
               <Briefcase className="size-4" />
-              <SelectValue placeholder={"Posizione"} />
+              <SelectValue />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -203,15 +211,24 @@ export const SearchAndFilterQuizzes = ({
             <Suspense
               fallback={<SelectItem value="_">Caricamento...</SelectItem>}
             >
-              {positionOptions}
+              {positionItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
             </Suspense>
           </SelectContent>
         </Select>
         {(currentSearch ||
           currentFilter !== "all" ||
           currentPosition !== "all") && (
-          <Button variant="outlineDestructive" asChild disabled={isPending}>
-            <Link href="/dashboard/quizzes">Resetta</Link>
+          <Button
+            variant="outlineDestructive"
+            render={<Link href="/dashboard/quizzes" />}
+            disabled={isPending}
+            nativeButton={false}
+          >
+            Resetta
           </Button>
         )}
       </div>

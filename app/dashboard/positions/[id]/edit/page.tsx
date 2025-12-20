@@ -23,9 +23,9 @@ export default async function EditPositionPage({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Posizione non trovata</p>
-        <Button className="mt-4" asChild>
-          <Link href="/dashboard/positions">Torna alle posizioni</Link>
-        </Button>
+        <Link href="/dashboard/positions" className="mt-4">
+          <Button>Torna alle posizioni</Button>
+        </Link>
       </div>
     );
   }
@@ -33,11 +33,16 @@ export default async function EditPositionPage({
   return (
     <Card>
       <CardHeader className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href={`/dashboard/positions/${params.id}`}>
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          render={
+            <Link href={`/dashboard/positions/${params.id}`}>
+              <ArrowLeft className="size-4" />
+            </Link>
+          }
+          nativeButton={false}
+        />
         <div>
           <CardTitle className="text-2xl"> Posizione</CardTitle>
           <CardDescription>
