@@ -5,6 +5,7 @@ import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -64,7 +65,9 @@ export function EntityActionsMenu({
           <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{actionsLabel}</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{actionsLabel}</DropdownMenuLabel>
+          </DropdownMenuGroup>
           {editHref && (
             <DropdownMenuItem render={<Link href={editHref as never} />}>
               <Edit className="mr-1 size-4" />
