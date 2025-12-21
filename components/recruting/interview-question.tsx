@@ -103,8 +103,8 @@ export function InterviewQuestion({
       <CardContent className="space-y-4">
         {question.type === "multiple_choice" && (
           <RadioGroup
-            value={answer?.toString()}
-            onValueChange={(value) => setAnswer(value)}
+            value={answer?.toString() ?? ""}
+            onValueChange={(value) => setAnswer(value as string)}
             className="space-y-3"
           >
             {question.options?.map((option: string, index: number) => (

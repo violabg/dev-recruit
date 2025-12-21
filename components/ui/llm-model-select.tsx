@@ -9,6 +9,38 @@ import {
 } from "@/components/ui/select";
 import { LLM_MODELS } from "@/lib/utils";
 
+const llmModelOptions = [
+  {
+    value: LLM_MODELS.KIMI,
+    label: "🔬 Kimi K2 - 262K contesto (Raccomandato per quiz)",
+  },
+  {
+    value: LLM_MODELS.VERSATILE,
+    label: "🚀 Versatile - Llama 3.3 70B (Affidabile)",
+  },
+  {
+    value: LLM_MODELS.INSTANT,
+    label: "⚡ Instant - Llama 3.1 8B (Velocissimo)",
+  },
+  {
+    value: LLM_MODELS.GPT_OSS_120B,
+    label: "🧠 GPT OSS 120B - Ragionamento + JSON Mode",
+  },
+  {
+    value: LLM_MODELS.GPT_OSS_20B,
+    label: "💨 GPT OSS 20B - Ragionamento Veloce",
+  },
+  {
+    value: LLM_MODELS.MAVERICK,
+    label: "🎯 Maverick - Llama 4 17B (Sperimentale)",
+  },
+  { value: LLM_MODELS.SCOUT, label: "🏃 Scout - Llama 4 Scout 17B (Veloce)" },
+  {
+    value: LLM_MODELS.QWEN3_32B,
+    label: "🌟 Qwen3 32B - Multilingue (Alibaba)",
+  },
+];
+
 type LLMModelSelectProps = {
   value: string;
   onValueChange: (value: string) => void;
@@ -18,41 +50,32 @@ type LLMModelSelectProps = {
 export const LLMModelSelect = ({
   value,
   onValueChange,
-  placeholder = "Seleziona un modello LLM",
+  placeholder,
 }: LLMModelSelectProps) => {
+  const options = placeholder
+    ? [
+        {
+          value: "",
+          label: placeholder,
+        },
+        ...llmModelOptions,
+      ]
+    : llmModelOptions;
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select
+      items={options}
+      value={value}
+      onValueChange={(value) => onValueChange(value || "")}
+    >
       <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {/* Production Models - Recommended for reliability */}
-        <SelectItem value={LLM_MODELS.VERSATILE}>
-          🚀 Versatile - Llama 3.3 70B (Affidabile)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.INSTANT}>
-          ⚡ Instant - Llama 3.1 8B (Velocissimo)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.GPT_OSS_120B}>
-          🧠 GPT OSS 120B - Ragionamento + JSON Mode
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.GPT_OSS_20B}>
-          💨 GPT OSS 20B - Ragionamento Veloce
-        </SelectItem>
-
-        {/* Preview Models - Larger context, experimental */}
-        <SelectItem value={LLM_MODELS.KIMI}>
-          🔬 Kimi K2 - 262K contesto (Raccomandato per quiz)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.MAVERICK}>
-          🎯 Maverick - Llama 4 17B (Sperimentale)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.SCOUT}>
-          🏃 Scout - Llama 4 Scout 17B (Veloce)
-        </SelectItem>
-        <SelectItem value={LLM_MODELS.QWEN3_32B}>
-          🌟 Qwen3 32B - Multilingue (Alibaba)
-        </SelectItem>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

@@ -51,7 +51,7 @@ export function SwitchField<T extends FieldValues>({
             )}
             {description && <FieldDescription>{description}</FieldDescription>}
           </div>
-          <FieldContent className="flex justify-end items-center">
+          <FieldContent className="flex justify-end items-end">
             <Switch
               checked={field.value}
               onCheckedChange={field.onChange}

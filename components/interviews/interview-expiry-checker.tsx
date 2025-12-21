@@ -2,7 +2,7 @@
 
 import { cancelExpiredInterviewAction } from "@/lib/actions/interviews";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 
 type Props = {
   interviewId: string;
@@ -23,7 +23,7 @@ export function InterviewExpiryChecker({
   timeLimit,
 }: Props) {
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(false);
+  const isCheckingRef = useRef(false);
 
   useEffect(() => {
     // Only check for in_progress interviews with a time limit
@@ -48,8 +48,8 @@ export function InterviewExpiryChecker({
 
     // Interview appears expired, call server action to cancel
     const checkExpiry = async () => {
-      if (isChecking) return;
-      setIsChecking(true);
+      if (isCheckingRef.current) return;
+      isCheckingRef.current = true;
 
       try {
         const result = await cancelExpiredInterviewAction(interviewId);
@@ -61,7 +61,7 @@ export function InterviewExpiryChecker({
       } catch (error) {
         console.error("Failed to check interview expiry:", error);
       } finally {
-        setIsChecking(false);
+        isCheckingRef.current = false;
       }
     };
 

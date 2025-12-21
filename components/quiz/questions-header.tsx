@@ -66,7 +66,7 @@ export const QuestionsHeader = ({
                 }
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-45">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -102,19 +102,21 @@ export const QuestionsHeader = ({
           </Button>
 
           <div className="flex gap-2 ml-auto">
-            {questionTypes.map((type) => (
-              <Button
-                key={type.value}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onAddQuestion(type.value as QuestionType)}
-                className="gap-2"
-              >
-                <Plus className="mr-1 size-4 text-primary" />
-                {getQuestionTypeLabel(type.value as QuestionType)}
-              </Button>
-            ))}
+            {questionTypes.map((type) => {
+              return type.value !== "all" ? (
+                <Button
+                  key={type.value}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAddQuestion(type.value as QuestionType)}
+                  className="gap-2"
+                >
+                  <Plus className="mr-1 size-4 text-primary" />
+                  {getQuestionTypeLabel(type.value as QuestionType)}
+                </Button>
+              ) : null;
+            })}
             {onOpenFavorites && (
               <Tooltip>
                 <TooltipTrigger

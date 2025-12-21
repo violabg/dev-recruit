@@ -38,6 +38,14 @@ export function GenerateEvaluationCard({
   onGenerate,
   hasResume,
 }: GenerateEvaluationCardProps) {
+  const positionOptions = [
+    { value: null, label: "Seleziona una posizione" },
+    ...availablePositions.map((position) => ({
+      value: position.id,
+      label: position.title,
+    })),
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -71,16 +79,17 @@ export function GenerateEvaluationCard({
             <div className="flex-1 space-y-2">
               <Label htmlFor="position">Posizione</Label>
               <Select
+                items={positionOptions}
                 value={selectedPositionId}
-                onValueChange={setSelectedPositionId}
+                onValueChange={(value) => setSelectedPositionId(value || "")}
               >
                 <SelectTrigger id="position">
-                  <SelectValue placeholder="Seleziona una posizione" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {availablePositions.map((position) => (
-                    <SelectItem key={position.id} value={position.id}>
-                      {position.title}
+                  {positionOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

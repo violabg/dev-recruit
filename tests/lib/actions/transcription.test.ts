@@ -35,8 +35,10 @@ describe("transcription action", () => {
         text: "This is the transcribed text from the audio file.",
       });
 
-      const audioData = [1, 2, 3, 4, 5];
-      const result = await transcribeAudioAction(audioData);
+      const audioBlob = new Blob([new Uint8Array([1, 2, 3, 4, 5])]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      const result = await transcribeAudioAction(formData);
 
       expect(result.success).toBe(true);
       expect(result.text).toBe(
@@ -56,15 +58,17 @@ describe("transcription action", () => {
         text: "",
       });
 
-      const audioData: number[] = [];
-      const result = await transcribeAudioAction(audioData);
+      const audioBlob = new Blob([new Uint8Array([])]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      const result = await transcribeAudioAction(formData);
 
       expect(result.success).toBe(true);
       expect(result.text).toBe("");
       expect(mockTranscribe).toHaveBeenCalled();
     });
 
-    it("converts number array to Uint8Array", async () => {
+    it("converts Blob to Uint8Array", async () => {
       const { experimental_transcribe } = await import("ai");
       const mockTranscribe = experimental_transcribe as any;
 
@@ -73,7 +77,10 @@ describe("transcription action", () => {
       });
 
       const audioData = [10, 20, 30, 40, 50];
-      await transcribeAudioAction(audioData);
+      const audioBlob = new Blob([new Uint8Array(audioData)]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      await transcribeAudioAction(formData);
 
       const callArgs = mockTranscribe.mock.calls[0][0];
       expect(callArgs.audio).toBeInstanceOf(Uint8Array);
@@ -88,8 +95,10 @@ describe("transcription action", () => {
         new Error("Transcription service unavailable")
       );
 
-      const audioData = [1, 2, 3];
-      const result = await transcribeAudioAction(audioData);
+      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      const result = await transcribeAudioAction(formData);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Transcription service unavailable");
@@ -105,7 +114,10 @@ describe("transcription action", () => {
       });
 
       const largeAudioData = Array(10000).fill(1);
-      const result = await transcribeAudioAction(largeAudioData);
+      const audioBlob = new Blob([new Uint8Array(largeAudioData)]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      const result = await transcribeAudioAction(formData);
 
       expect(result.success).toBe(true);
       expect(result.text).toBe(longText);
@@ -120,8 +132,10 @@ describe("transcription action", () => {
         text: "Test",
       });
 
-      const audioData = [1, 2, 3];
-      await transcribeAudioAction(audioData);
+      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      await transcribeAudioAction(formData);
 
       const callArgs = mockTranscribe.mock.calls[0][0];
       expect(callArgs.model).toBeDefined();
@@ -135,8 +149,10 @@ describe("transcription action", () => {
         text: "Text with special chars: é, ñ, ü, @, #, $, %, &",
       });
 
-      const audioData = [1, 2, 3];
-      const result = await transcribeAudioAction(audioData);
+      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      const result = await transcribeAudioAction(formData);
 
       expect(result.success).toBe(true);
       expect(result.text).toContain("é");
@@ -151,13 +167,23 @@ describe("transcription action", () => {
         text: "English and Italian: Ciao, hello, buongiorno",
       });
 
-      const audioData = [1, 2, 3];
-      const result = await transcribeAudioAction(audioData);
+      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+      const result = await transcribeAudioAction(formData);
 
       expect(result.success).toBe(true);
       expect(result.text).toContain("English");
       expect(result.text).toContain("Italian");
       expect(result.text).toContain("Ciao");
+    });
+
+    it("returns error when no audio file is provided", async () => {
+      const formData = new FormData();
+      const result = await transcribeAudioAction(formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("No audio file provided");
     });
   });
 });
