@@ -97,7 +97,7 @@ export const SearchAndFilterQuizzes = ({
   const handleFilter = (value: string | null) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", "1");
-    if (value && value !== "all") {
+    if (value && value !== "Tutti i livelli") {
       params.set("filter", value);
     } else {
       params.delete("filter");
@@ -122,7 +122,7 @@ export const SearchAndFilterQuizzes = ({
 
   const currentSearch = searchParams.get("search") || "";
   const currentSort = searchParams.get("sort") || "newest";
-  const currentFilter = searchParams.get("filter") || "all";
+  const currentFilter = searchParams.get("filter") || "Tutti i livelli";
   const currentPosition = searchParams.get("positionId") || "all";
 
   return (
@@ -182,7 +182,7 @@ export const SearchAndFilterQuizzes = ({
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{"Tutti i livelli"}</SelectItem>
+            <SelectItem value="Tutti i livelli">{"Tutti i livelli"}</SelectItem>
             <Suspense
               fallback={<SelectItem value="_">Caricamento...</SelectItem>}
             >
@@ -220,7 +220,7 @@ export const SearchAndFilterQuizzes = ({
           </SelectContent>
         </Select>
         {(currentSearch ||
-          currentFilter !== "all" ||
+          currentFilter !== "Tutti i livelli" ||
           currentPosition !== "all") && (
           <Button
             variant="outlineDestructive"
