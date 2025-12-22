@@ -203,7 +203,7 @@ export function SearchAndFilterInterviews({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Tutti i linguaggi">Tutti i linguaggi</SelectItem>
+            <SelectItem value="all">Tutti i linguaggi</SelectItem>
             {languageOptions}
           </SelectContent>
         </Select>

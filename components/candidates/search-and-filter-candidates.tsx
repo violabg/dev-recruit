@@ -201,7 +201,6 @@ export const SearchAndFilterCandidates = ({
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{"Tutte le posizioni"}</SelectItem>
             <Suspense
               fallback={<SelectItem value="_">Caricamento...</SelectItem>}
             >
