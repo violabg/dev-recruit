@@ -345,7 +345,7 @@ export const mockPreset = (
   name: "JavaScript Basics",
   description: "Preset per domande JavaScript base",
   questionType: "multiple_choice",
-  parameters: {
+  inputSchema: {
     difficulty: 3,
     focusAreas: ["syntax", "functions", "arrays"],
     language: "javascript",
@@ -361,7 +361,7 @@ export interface MockPreset {
   name: string;
   description: string | null;
   questionType: string;
-  parameters: Record<string, unknown>;
+  inputSchema: Record<string, unknown>;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
