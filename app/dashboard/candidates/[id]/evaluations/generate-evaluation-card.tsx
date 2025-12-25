@@ -39,7 +39,7 @@ export function GenerateEvaluationCard({
   hasResume,
 }: GenerateEvaluationCardProps) {
   const positionOptions = [
-    { value: null, label: "Seleziona una posizione" },
+    { value: "", label: "Seleziona una posizione" },
     ...availablePositions.map((position) => ({
       value: position.id,
       label: position.title,
