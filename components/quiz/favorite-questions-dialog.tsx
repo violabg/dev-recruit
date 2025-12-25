@@ -120,7 +120,7 @@ export function FavoriteQuestionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-w-2xl max-h-[80vh] overflow-hidden">
+      <DialogContent className="flex flex-col sm:max-w-2xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Heart className="fill-red-500 w-5 h-5 text-red-500" />
