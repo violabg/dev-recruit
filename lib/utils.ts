@@ -275,3 +275,5 @@ export const getStatusColor = (status: string) => {
       return "bg-gray-500";
   }
 };
+
+export const isDevelopment = process.env.NODE_ENV === "development";

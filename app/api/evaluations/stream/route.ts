@@ -1,10 +1,11 @@
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { overallEvaluationSchema } from "@/lib/schemas";
-import { getOptimalModel } from "@/lib/utils";
+import { getOptimalModel, isDevelopment } from "@/lib/utils";
 import { invalidateEvaluationCacheInRouteHandler } from "@/lib/utils/cache-utils";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { groq } from "@ai-sdk/groq";
-import { streamText } from "ai";
+import { streamText, wrapLanguageModel } from "ai";
 
 /** Remove markdown code blocks from AI response if present */
 function cleanJsonResponse(text: string): string {
@@ -181,8 +182,15 @@ export async function POST(request: Request) {
             "fitScore": numero da 0 a 100
           }`;
 
+    const aiModel = groq(model);
+
+    const devToolsEnabledModel = wrapLanguageModel({
+      model: aiModel,
+      middleware: devToolsMiddleware(),
+    });
+
     const result = streamText({
-      model: groq(model),
+      model: isDevelopment ? devToolsEnabledModel : aiModel,
       prompt: prompt + jsonFormatInstructions,
       system:
         "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano. Rispondi SOLO con JSON valido.",

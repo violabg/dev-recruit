@@ -43,3 +43,4 @@ dist/
 
 # generated prisma client (regenerate with: pnpm db:generate)
 lib/prisma/
+.devtools

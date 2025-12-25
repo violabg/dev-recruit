@@ -1,12 +1,13 @@
 "use server";
 
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { groq } from "@ai-sdk/groq";
-import { generateObject } from "ai";
+import { generateText, Output, wrapLanguageModel } from "ai";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { overallEvaluationSchema, type OverallEvaluation } from "../schemas";
 import { aiLogger, logger } from "../services/logger";
-import { getOptimalModel } from "../utils";
+import { getOptimalModel, isDevelopment } from "../utils";
 import { invalidateEvaluationCache } from "../utils/cache-utils";
 
 // PDF parsing using unpdf (serverless-compatible)
@@ -80,13 +81,20 @@ async function generateResumeEvaluation(
     - fitScore: un punteggio da 0 a 100 che indica l'idoneità complessiva per la posizione
   `;
 
+  const aiModel = groq(getOptimalModel("resume_evaluation", specificModel));
+
+  const devToolsEnabledModel = wrapLanguageModel({
+    model: aiModel,
+    middleware: devToolsMiddleware(),
+  });
+
   try {
-    const { object: result } = await generateObject({
-      model: groq(getOptimalModel("resume_evaluation", specificModel)),
+    const { output: result } = await generateText({
+      model: isDevelopment ? devToolsEnabledModel : aiModel,
       prompt,
       system:
         "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
-      schema: overallEvaluationSchema,
+      output: Output.object({ schema: overallEvaluationSchema }),
       temperature: 0.0, // Zero temperature for deterministic, reproducible evaluations
       seed: 42, // Fixed seed for reproducible results
       providerOptions: {
@@ -109,13 +117,20 @@ async function generateResumeEvaluation(
     // Fallback model
     const fallbackModel = "llama-3.1-8b-instant";
 
+    const aiModel = groq(fallbackModel);
+
+    const devToolsEnabledModel = wrapLanguageModel({
+      model: aiModel,
+      middleware: devToolsMiddleware(),
+    });
+
     try {
-      const { object: result } = await generateObject({
-        model: groq(fallbackModel),
+      const { output: result } = await generateText({
+        model: isDevelopment ? devToolsEnabledModel : aiModel,
         prompt,
         system:
           "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
-        schema: overallEvaluationSchema,
+        output: Output.object({ schema: overallEvaluationSchema }),
         temperature: 0.0, // Zero temperature for deterministic evaluations
         seed: 42, // Fixed seed for reproducible results
         providerOptions: {

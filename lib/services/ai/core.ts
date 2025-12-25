@@ -5,15 +5,21 @@
  * Uses modular components from the ai/ directory.
  */
 
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { groq } from "@ai-sdk/groq";
-import { generateObject, NoObjectGeneratedError } from "ai";
+import {
+  generateText,
+  NoObjectGeneratedError,
+  Output,
+  wrapLanguageModel,
+} from "ai";
 import {
   aiQuizGenerationSchema,
   convertToStrictQuestions,
   Question,
   questionSchemas,
 } from "../../schemas";
-import { getOptimalModel } from "../../utils";
+import { getOptimalModel, isDevelopment } from "../../utils";
 import {
   buildQuestionPrompts,
   buildQuizPrompt,
@@ -43,14 +49,21 @@ export class AIQuizService {
       const model = getOptimalModel("quiz_generation", params.specificModel);
       const prompt = buildQuizPrompt(params);
 
+      const aiModel = groq(model);
+
+      const devToolsEnabledModel = wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      });
+
       const result = await withTimeout(
         withRetry(async () => {
           try {
-            const response = await generateObject({
-              model: groq(model),
+            const response = await generateText({
+              model: isDevelopment ? devToolsEnabledModel : aiModel,
               prompt,
               system: buildQuizSystemPrompt(),
-              schema: aiQuizGenerationSchema,
+              output: Output.object({ schema: aiQuizGenerationSchema }),
               temperature: 0.7,
               providerOptions: {
                 groq: {
@@ -60,9 +73,9 @@ export class AIQuizService {
             });
 
             if (
-              !response.object ||
-              !response.object.questions ||
-              !response.object.title
+              !response.output ||
+              !response.output.questions ||
+              !response.output.title
             ) {
               throw new AIGenerationError(
                 "Invalid response structure from AI model",
@@ -71,7 +84,7 @@ export class AIQuizService {
               );
             }
 
-            return response.object;
+            return response.output;
           } catch (error) {
             if (error instanceof NoObjectGeneratedError) {
               throw new AIGenerationError(
@@ -130,14 +143,21 @@ export class AIQuizService {
       // Build system and user prompts using the type-specific builder
       const { systemPrompt, userPrompt } = buildQuestionPrompts(params);
 
+      const aiModel = groq(model);
+
+      const devToolsEnabledModel = wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      });
+
       const result = await withTimeout(
         withRetry(async () => {
           try {
-            const response = await generateObject({
-              model: groq(model),
+            const response = await generateText({
+              model: isDevelopment ? devToolsEnabledModel : aiModel,
               prompt: userPrompt,
               system: systemPrompt,
-              schema: questionSchemas.flexible, // Use questionSchemas.flexible for single question
+              output: Output.object({ schema: questionSchemas.flexible }),
               temperature: 0.7,
               providerOptions: {
                 groq: {
@@ -146,7 +166,7 @@ export class AIQuizService {
               },
             });
 
-            if (!response.object) {
+            if (!response.output) {
               throw new AIGenerationError(
                 "Invalid response structure from AI model",
                 AIErrorCode.INVALID_RESPONSE,
@@ -154,7 +174,7 @@ export class AIQuizService {
               );
             }
 
-            return response.object;
+            return response.output;
           } catch (error) {
             if (error instanceof NoObjectGeneratedError) {
               throw new AIGenerationError(
