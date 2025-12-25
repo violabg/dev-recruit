@@ -389,17 +389,19 @@ The system uses different temperature settings based on the task type to balance
 
 ```typescript
 // High temperature for creative content
-const quizResult = await generateObject({
+const quizResult = await generateText({
   model: groq(model),
   prompt,
+  output: Output.object(quizSchema),
   temperature: 0.7, // Creative quiz generation
   // No seed — we want variety
 });
 
 // Zero temperature + seed for deterministic evaluations
-const evalResult = await generateObject({
+const evalResult = await generateText({
   model: groq(model),
   prompt,
+  output: Output.object(evalSchema),
   temperature: 0.0, // Deterministic
   seed: 42, // Fixed seed — same input = identical output
 });

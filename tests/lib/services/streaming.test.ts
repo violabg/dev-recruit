@@ -22,11 +22,16 @@ const mockStreamResult = {
 // Mock the ai SDK streamText
 vi.mock("ai", () => ({
   streamText: vi.fn(() => mockStreamResult),
+  Output: {
+    object: vi.fn((config) => config),
+  },
+  wrapLanguageModel: vi.fn((config) => config.model),
 }));
 
 // Mock utils for getOptimalModel
 vi.mock("@/lib/utils", () => ({
   getOptimalModel: vi.fn().mockReturnValue("llama3-8b-8192"),
+  isDevelopment: true,
   cn: vi.fn(),
 }));
 

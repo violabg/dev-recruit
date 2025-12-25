@@ -1,57 +1,53 @@
 import { describe, expect, it, vi } from "vitest";
 
+// Mock the entire ai module properly
 vi.mock("ai", async () => {
   const actual = await vi.importActual("ai");
   return {
-    generateObject: vi.fn(),
+    generateText: vi.fn().mockResolvedValue({
+      output: {
+        title: "Mock Quiz",
+        questions: [
+          {
+            type: "multiple_choice",
+            question: "Mock question?",
+            options: ["A", "B", "C"],
+            correctAnswer: 0,
+            explanation: "Mock explanation",
+          },
+        ],
+      },
+    }),
     NoObjectGeneratedError:
       (actual as any).NoObjectGeneratedError ||
       class NoObjectGeneratedError extends Error {},
-  };
-});
-
-import { generateObject, NoObjectGeneratedError } from "ai";
-
-// Mock utils used by AI core (relative imports inside lib/services/ai)
-vi.mock("@/lib/services/ai/retry", () => ({
-  withRetry: (fn: any) => fn,
-  withTimeout: (fn: any, timeout: any) => fn(),
-}));
-
-// Partially mock ai types module to expose DEFAULT_CONFIG and AIGenerationError
-vi.mock("@/lib/services/ai/types", async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    DEFAULT_CONFIG: { timeout: 5000, fallbackModels: [] },
-    AIGenerationError:
-      (actual as any).AIGenerationError ??
-      class AIGenerationError extends Error {},
-    AIErrorCode: (actual as any).AIErrorCode ?? {
-      INVALID_RESPONSE: "INVALID_RESPONSE",
-      GENERATION_FAILED: "GENERATION_FAILED",
+    wrapLanguageModel: vi.fn((config) => config.model),
+    Output: {
+      object: vi.fn((config) => config),
     },
   };
 });
 
-// Mock helpers used inside AI core
-vi.mock("@/lib/utils", async () => ({ getOptimalModel: () => "test-model" }));
-vi.mock("@/lib/schemas", async () => {
-  const actual = await vi.importActual("@/lib/schemas");
-  return {
-    convertToStrictQuestions: (q: any) =>
-      q.map((x: any) => ({ ...x, type: x.type || "open" })),
-  };
-});
-
-// Now import the service after mocks are in place
+vi.mock("@ai-sdk/groq");
+vi.mock("@ai-sdk/devtools");
+vi.mock("@/lib/services/ai/retry", () => ({
+  withRetry: (fn: any) => fn,
+  withTimeout: (fn: any, timeout: any) => fn(),
+}));
+vi.mock("@/lib/services/ai/types");
+vi.mock("@/lib/utils");
+vi.mock("@/lib/schemas");
+vi.mock("@/lib/services/ai/prompts");
 
 describe("AI core service", () => {
-  it.skip("generateQuiz returns converted questions when AI responds (skipped - needs integration mocks)", async () => {
-    // Placeholder: requires heavy mocking of ai.generateObject, retry/timeouts and schemas
-    expect(typeof generateObject).toBe("function");
+  it.skip("generateQuiz returns converted questions when AI responds (skipped - needs integration mocks)", () => {
+    // Placeholder test - the ai-core module has complex internal dependencies
+    // and proper testing requires integration-level mocking
+    expect(true).toBe(true);
   });
 
-  it.skip("generateQuiz retries fallback when NoObjectGeneratedError (skipped)", async () => {
-    expect(typeof NoObjectGeneratedError).toBe("function");
+  it.skip("generateQuiz retries fallback when NoObjectGeneratedError (skipped)", () => {
+    // Placeholder test
+    expect(true).toBe(true);
   });
 });

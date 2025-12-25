@@ -8,7 +8,7 @@ import {
 } from "@/lib/schemas";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { groq } from "@ai-sdk/groq";
-import { generateObject, generateText, Output, wrapLanguageModel } from "ai";
+import { generateText, Output, wrapLanguageModel } from "ai";
 import { aiLogger } from "../services/logger";
 import { getOptimalModel, isDevelopment } from "../utils";
 
@@ -167,16 +167,21 @@ export async function evaluateAnswer(
   The values of the fields must be in italian.
   Do not include any other fields, nested objects, or additional formatting.`;
 
-  // Use Groq to evaluate the answer with generateObject
+  // Use Groq to evaluate the answer with generateText
   // Use zero temperature for deterministic, reproducible evaluations
-  const model = groq(getOptimalModel("evaluation", specificModel));
+  const aiModel = groq(getOptimalModel("evaluation", specificModel));
+
+  const devToolsEnabledModel = wrapLanguageModel({
+    model: aiModel,
+    middleware: devToolsMiddleware(),
+  });
   try {
-    const { object: result } = await generateObject({
-      model,
+    const { output: result } = await generateText({
+      model: isDevelopment ? devToolsEnabledModel : aiModel,
       prompt,
       system:
         "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
-      schema: evaluationResultSchema,
+      output: Output.object({ schema: evaluationResultSchema }),
       temperature: 0.0, // Zero temperature for deterministic, reproducible evaluations
       seed: 42, // Fixed seed for reproducible results
       providerOptions: {

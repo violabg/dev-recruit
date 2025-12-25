@@ -239,7 +239,7 @@ sequenceDiagram
     A->>A: Validate user & position
     A->>AI: generateQuiz(params)
     AI->>AI: Build prompts
-    AI->>G: generateObject() with schema
+    AI->>G: generateText() with Output.object()
     G-->>AI: Structured JSON response
     AI->>AI: Validate with Zod
     AI-->>A: Questions array

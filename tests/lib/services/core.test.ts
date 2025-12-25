@@ -8,19 +8,45 @@ import {
 // Mock external dependencies
 vi.mock("@ai-sdk/groq");
 vi.mock("ai", () => ({
-  generateObject: vi.fn(),
+  generateText: vi.fn().mockResolvedValue({
+    output: {
+      title: "Mock Quiz",
+      questions: [
+        {
+          type: "multiple_choice",
+          question: "Mock question?",
+          options: ["A", "B", "C"],
+          correctAnswer: "A",
+        },
+      ],
+    },
+  }),
   NoObjectGeneratedError: class NoObjectGeneratedError extends Error {
     constructor(message: string) {
       super(message);
       this.name = "NoObjectGeneratedError";
     }
   },
+  wrapLanguageModel: vi.fn((config) => config.model),
+  Output: {
+    object: vi.fn((config) => config),
+  },
+}));
+
+vi.mock("@ai-sdk/devtools", () => ({
+  devToolsMiddleware: vi.fn(() => ({})),
 }));
 
 vi.mock("../../../lib/utils", () => ({
   getOptimalModel: vi.fn((type: string, specificModel?: string) => {
     return specificModel || "llama-3.3-70b-versatile";
   }),
+  isDevelopment: false,
+}));
+
+vi.mock("../../../lib/services/ai/retry", () => ({
+  withRetry: async (fn: any) => fn(),
+  withTimeout: async (promise: any, timeout: any) => promise,
 }));
 
 vi.mock("../../../lib/schemas", () => ({
@@ -68,11 +94,11 @@ describe("AIQuizService", () => {
 
   describe("generateQuiz", () => {
     it("returns questions array on success", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           title: "Test Quiz",
           questions: [
             {
@@ -104,11 +130,11 @@ describe("AIQuizService", () => {
     });
 
     it("throws on invalid response structure", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           // Missing required fields
         },
       });
@@ -130,11 +156,11 @@ describe("AIQuizService", () => {
     });
 
     it("accepts optional parameters", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           title: "Quiz",
           questions: [],
         },
@@ -161,11 +187,11 @@ describe("AIQuizService", () => {
     });
 
     it("uses timeout from config", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           title: "Quiz",
           questions: [],
         },
@@ -190,11 +216,11 @@ describe("AIQuizService", () => {
 
   describe("generateQuestion", () => {
     it("returns single question on success", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           type: "multiple_choice",
           question: "What is 2+2?",
           options: ["4", "5"],
@@ -216,11 +242,11 @@ describe("AIQuizService", () => {
     });
 
     it("accepts multiple choice parameters", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           type: "multiple_choice",
           question: "Test",
           options: ["A", "B"],
@@ -241,11 +267,11 @@ describe("AIQuizService", () => {
     });
 
     it("accepts open question parameters", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           type: "open_question",
           question: "Explain X",
           expectedAnswer: "Answer here",
@@ -265,11 +291,11 @@ describe("AIQuizService", () => {
     });
 
     it("accepts code snippet parameters", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           type: "code_snippet",
           question: "Fix the bug",
           codeSnippet: "const x = ",
@@ -291,11 +317,11 @@ describe("AIQuizService", () => {
     });
 
     it("handles optional parameters", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           type: "multiple_choice",
           question: "Test",
           options: ["A"],
@@ -329,11 +355,11 @@ describe("AIQuizService", () => {
     });
 
     it("allows timeout override", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: { title: "Quiz", questions: [] },
+        output: { title: "Quiz", questions: [] },
       });
 
       const customTimeout = 5000;
@@ -355,11 +381,11 @@ describe("AIQuizService", () => {
     });
 
     it("allows maxRetries override", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: { title: "Quiz", questions: [] },
+        output: { title: "Quiz", questions: [] },
       });
 
       const service = new AIQuizService({ maxRetries: 5 });
@@ -382,8 +408,8 @@ describe("AIQuizService", () => {
 
   describe("error handling", () => {
     it("throws AIGenerationError on generation failure", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockRejectedValueOnce(new Error("Generation failed"));
 
@@ -404,8 +430,8 @@ describe("AIQuizService", () => {
     });
 
     it("includes error details in thrown error", async () => {
-      const { generateObject } = await import("ai");
-      const mockGenerateObject = generateObject as any;
+      const { generateText } = await import("ai");
+      const mockGenerateObject = generateText as any;
 
       mockGenerateObject.mockResolvedValueOnce({
         object: null,

@@ -40,11 +40,16 @@ vi.mock("../../../lib/utils/cache-utils", () => ({
 
 vi.mock("@ai-sdk/groq");
 vi.mock("ai", () => ({
-  generateObject: vi.fn(),
+  generateText: vi.fn(),
+  Output: {
+    object: vi.fn((config) => config),
+  },
+  wrapLanguageModel: vi.fn((config) => config.model),
 }));
 
 vi.mock("../../../lib/utils", () => ({
   getOptimalModel: vi.fn(() => "test-model"),
+  isDevelopment: true,
 }));
 
 vi.mock("../../../lib/services/logger", () => ({
@@ -236,13 +241,13 @@ describe("evaluation-entity actions", () => {
   describe("createCandidateEvaluation", () => {
     it("creates candidate evaluation successfully", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
-      const { generateObject } = await import("ai");
+      const { generateText } = await import("ai");
 
       const mockCandidateFindUnique = prisma.candidate.findUnique as any;
       const mockPositionFindUnique = prisma.position.findUnique as any;
       const mockEvaluationFindFirst = prisma.evaluation.findFirst as any;
       const mockCreate = prisma.evaluation.create as any;
-      const mockGenerateObject = generateObject as any;
+      const mockGenerateObject = generateText as any;
 
       const candidate = {
         id: "candidate-123",
@@ -265,7 +270,7 @@ describe("evaluation-entity actions", () => {
       mockEvaluationFindFirst.mockResolvedValueOnce(null);
 
       mockGenerateObject.mockResolvedValueOnce({
-        object: {
+        output: {
           evaluation: "Strong candidate",
           strengths: ["Experienced"],
           weaknesses: ["Limited React"],
@@ -444,13 +449,13 @@ describe("evaluation-entity actions", () => {
 
     it("uses fallback model on primary failure", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
-      const { generateObject } = await import("ai");
+      const { generateText } = await import("ai");
 
       const mockCandidateFindUnique = prisma.candidate.findUnique as any;
       const mockPositionFindUnique = prisma.position.findUnique as any;
       const mockEvaluationFindFirst = prisma.evaluation.findFirst as any;
       const mockCreate = prisma.evaluation.create as any;
-      const mockGenerateObject = generateObject as any;
+      const mockGenerateObject = generateText as any;
 
       const candidate = {
         id: "candidate-123",
@@ -476,7 +481,7 @@ describe("evaluation-entity actions", () => {
       mockGenerateObject
         .mockRejectedValueOnce(new Error("Primary model failed"))
         .mockResolvedValueOnce({
-          object: {
+          output: {
             evaluation: "OK",
             strengths: [],
             weaknesses: [],

@@ -6,7 +6,11 @@ import {
 
 // Mock dependencies
 vi.mock("ai", () => ({
-  generateObject: vi.fn(),
+  generateText: vi.fn(),
+  Output: {
+    object: vi.fn((config) => config),
+  },
+  wrapLanguageModel: vi.fn((config) => config.model),
 }));
 
 vi.mock("@ai-sdk/groq", () => ({
@@ -15,6 +19,7 @@ vi.mock("@ai-sdk/groq", () => ({
 
 vi.mock("../../../lib/utils", () => ({
   getOptimalModel: vi.fn(() => "test-model"),
+  isDevelopment: true,
 }));
 
 vi.mock("../../../lib/services/logger", () => ({
@@ -32,10 +37,10 @@ describe("evaluations actions", () => {
   describe("evaluateAnswer", () => {
     describe("multiple choice questions", () => {
       it("evaluates correct answer", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation:
               "Risposta corretta che dimostra comprensione del concetto",
             score: 9,
@@ -62,7 +67,7 @@ describe("evaluations actions", () => {
         expect(result.score).toBe(9);
         expect(result.maxScore).toBe(10);
         expect(result.strengths).toContain("Scelta corretta");
-        expect(generateObject).toHaveBeenCalledWith(
+        expect(generateText).toHaveBeenCalledWith(
           expect.objectContaining({
             temperature: 0.0,
             seed: 42,
@@ -71,10 +76,10 @@ describe("evaluations actions", () => {
       });
 
       it("evaluates incorrect answer", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Risposta errata, il concetto non è stato compreso",
             score: 2,
             strengths: [],
@@ -101,10 +106,10 @@ describe("evaluations actions", () => {
       });
 
       it("handles invalid answer index", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Nessuna opzione valida selezionata",
             score: 0,
             strengths: [],
@@ -125,10 +130,10 @@ describe("evaluations actions", () => {
       });
 
       it("includes explanation in evaluation prompt", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Buona risposta",
             score: 8,
             strengths: ["Corretto"],
@@ -146,17 +151,17 @@ describe("evaluations actions", () => {
 
         await evaluateAnswer(question, "0");
 
-        const callArgs = (generateObject as any).mock.calls[0][0];
+        const callArgs = (generateText as any).mock.calls[0][0];
         expect(callArgs.prompt).toContain("Detailed explanation here");
       });
     });
 
     describe("open questions", () => {
       it("evaluates open question with keywords", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation:
               "Risposta completa e accurata che copre tutti i concetti chiave",
             score: 9,
@@ -191,10 +196,10 @@ describe("evaluations actions", () => {
       });
 
       it("includes keywords in prompt", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Test",
             score: 8,
             strengths: ["Good"],
@@ -213,17 +218,17 @@ describe("evaluations actions", () => {
           "React hooks allow functional components..."
         );
 
-        const callArgs = (generateObject as any).mock.calls[0][0];
+        const callArgs = (generateText as any).mock.calls[0][0];
         expect(callArgs.prompt).toContain("useState");
         expect(callArgs.prompt).toContain("useEffect");
         expect(callArgs.prompt).toContain("lifecycle");
       });
 
       it("evaluates depth and completeness", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Risposta superficiale",
             score: 4,
             strengths: ["Parzialmente corretto"],
@@ -248,10 +253,10 @@ describe("evaluations actions", () => {
 
     describe("code snippet questions", () => {
       it("evaluates code correctness", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Codice corretto e ben strutturato",
             score: 9,
             strengths: [
@@ -282,10 +287,10 @@ describe("evaluations actions", () => {
       });
 
       it("includes language in prompt", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Test",
             score: 8,
             strengths: ["Good"],
@@ -302,15 +307,15 @@ describe("evaluations actions", () => {
 
         await evaluateAnswer(question, "const x: number = 5;");
 
-        const callArgs = (generateObject as any).mock.calls[0][0];
+        const callArgs = (generateText as any).mock.calls[0][0];
         expect(callArgs.prompt).toContain("typescript");
       });
 
       it("evaluates bug fixes", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Bug identificato e corretto correttamente",
             score: 10,
             strengths: ["Bug identificato", "Soluzione corretta"],
@@ -358,13 +363,13 @@ describe("evaluations actions", () => {
       });
 
       it("uses fallback model when primary fails", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
         const { aiLogger } = await import("../../../lib/services/logger");
 
-        (generateObject as any)
+        (generateText as any)
           .mockRejectedValueOnce(new Error("Primary model failed"))
           .mockResolvedValueOnce({
-            object: {
+            output: {
               evaluation: "Fallback evaluation",
               score: 7,
               strengths: ["OK"],
@@ -389,10 +394,10 @@ describe("evaluations actions", () => {
       });
 
       it("throws error when both models fail", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
         const { aiLogger } = await import("../../../lib/services/logger");
 
-        (generateObject as any)
+        (generateText as any)
           .mockRejectedValueOnce(new Error("Primary failed"))
           .mockRejectedValueOnce(new Error("Fallback failed"));
 
@@ -414,9 +419,9 @@ describe("evaluations actions", () => {
       });
 
       it("handles rate limit errors", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any)
+        (generateText as any)
           .mockRejectedValueOnce(new Error("rate limit"))
           .mockRejectedValueOnce(new Error("rate limit exceeded"));
 
@@ -433,9 +438,9 @@ describe("evaluations actions", () => {
       });
 
       it("handles internal server errors", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any)
+        (generateText as any)
           .mockRejectedValueOnce(new Error("Internal Server Error"))
           .mockRejectedValueOnce(new Error("Internal Server Error"));
 
@@ -454,10 +459,10 @@ describe("evaluations actions", () => {
 
     describe("deterministic evaluation", () => {
       it("uses zero temperature for reproducibility", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Test",
             score: 8,
             strengths: ["Good"],
@@ -474,17 +479,17 @@ describe("evaluations actions", () => {
 
         await evaluateAnswer(question, "0");
 
-        const callArgs = (generateObject as any).mock.calls[0][0];
+        const callArgs = (generateText as any).mock.calls[0][0];
         expect(callArgs.temperature).toBe(0.0);
         expect(callArgs.seed).toBe(42);
       });
 
       it("uses specific model when provided", async () => {
-        const { generateObject } = await import("ai");
+        const { generateText } = await import("ai");
         const { getOptimalModel } = await import("../../../lib/utils");
 
-        (generateObject as any).mockResolvedValueOnce({
-          object: {
+        (generateText as any).mockResolvedValueOnce({
+          output: {
             evaluation: "Test",
             score: 8,
             strengths: ["Good"],
@@ -511,10 +516,10 @@ describe("evaluations actions", () => {
 
   describe("generateOverallEvaluation", () => {
     it("generates overall evaluation successfully", async () => {
-      const { generateObject } = await import("ai");
+      const { generateText } = await import("ai");
 
-      (generateObject as any).mockResolvedValueOnce({
-        object: {
+      (generateText as any).mockResolvedValueOnce({
+        output: {
           evaluation: "Valutazione complessiva positiva",
           strengths: ["Buona conoscenza tecnica", "Risponde bene"],
           weaknesses: ["Potrebbe approfondire alcuni concetti"],
@@ -540,14 +545,14 @@ describe("evaluations actions", () => {
 
       await generateOverallEvaluation("Mario Rossi", 2, 2, 85, evaluations);
 
-      expect(generateObject).toHaveBeenCalledWith(
+      expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
           temperature: 0.0,
           seed: 42,
         })
       );
 
-      const callArgs = (generateObject as any).mock.calls[0][0];
+      const callArgs = (generateText as any).mock.calls[0][0];
       expect(callArgs.prompt).toContain("Mario Rossi");
       expect(callArgs.prompt).toContain("85");
     });
