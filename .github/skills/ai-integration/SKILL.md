@@ -104,6 +104,7 @@ export async function generateText(prompt: string) {
 ```typescript
 import { streamText } from "ai";
 
+// Prefer server actions for AI operations
 export async function streamTextResponse(prompt: string) {
   const result = streamText({
     model: anthropic("claude-3-5-sonnet-20241022"),
@@ -113,10 +114,27 @@ export async function streamTextResponse(prompt: string) {
   return result.toTextStreamResponse();
 }
 
-// In Next.js API route
+// Use API route ONLY for streaming responses (server actions don't support streaming yet)
+// For non-streaming AI calls, use server actions instead
 export async function POST(request: Request) {
   const { prompt } = await request.json();
   return streamTextResponse(prompt);
+}
+
+// For non-streaming AI generation, use server action:
+("use server");
+export async function generateQuizAction(params: QuizParams) {
+  const user = await requireUser();
+
+  const { text } = await generateText({
+    model: anthropic("claude-3-5-sonnet-20241022"),
+    prompt: buildQuizPrompt(params),
+  });
+
+  const quiz = await saveQuiz(text);
+  updateTag("quizzes");
+
+  return { success: true, data: quiz };
 }
 ```
 
@@ -579,14 +597,17 @@ Prepare, validate, and process data for AI models to ensure quality inputs and r
 
 When integrating AI:
 
+- [ ] AI operations are in server actions (not API routes) unless streaming
 - [ ] API keys are stored securely in environment variables
 - [ ] API calls include proper error handling and retry logic
-- [ ] Input data is validated and normalized
+- [ ] Input data is validated and normalized with Zod
 - [ ] Output is parsed, validated, and sanitized
-- [ ] Response streaming is implemented for better UX
+- [ ] Response streaming uses API routes only (server actions don't support streaming)
+- [ ] Non-streaming AI calls use server actions for better type safety
 - [ ] Rate limiting is handled appropriately
 - [ ] Costs are tracked and optimized
 - [ ] Results are cached where appropriate
+- [ ] Cache invalidation (updateTag) is called after AI-generated mutations
 - [ ] Fallback mechanisms exist for API failures
 - [ ] Prompts are tested and version-controlled
 - [ ] Data privacy and compliance requirements are met

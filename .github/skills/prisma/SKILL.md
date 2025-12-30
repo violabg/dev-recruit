@@ -287,9 +287,10 @@ Write efficient database queries that minimize load and improve application perf
 
 ### Caching Strategies
 
-Combine Prisma queries with cache components:
+Combine Prisma queries with cache components in server components, and use server actions for mutations:
 
 ```typescript
+// Data fetching (in server component or cached function)
 "use cache";
 import { cacheLife, cacheTag } from "next/cache";
 
@@ -307,6 +308,24 @@ export async function getCachedQuiz(id: string) {
     },
   });
 }
+
+// Mutations (in server action, NOT API route)
+("use server");
+import { updateTag } from "@/lib/utils/cache-utils";
+
+export async function updateQuizAction(id: string, data: QuizInput) {
+  const user = await requireUser();
+
+  const quiz = await prisma.quiz.update({
+    where: { id },
+    data,
+  });
+
+  // Invalidate cache after mutation
+  updateTag("quizzes");
+
+  return { success: true, data: quiz };
+}
 ```
 
 ## Development Checklist
@@ -321,4 +340,5 @@ When working with Prisma:
 - [ ] Queries use select() or include() appropriately
 - [ ] N+1 query problems are avoided
 - [ ] Pagination is implemented for large datasets
-- [ ] Cache invalidation is handled after mutations
+- [ ] Mutations are in server actions, not API routes
+- [ ] Cache invalidation (updateTag) is called after mutations in server actions

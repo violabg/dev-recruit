@@ -101,6 +101,184 @@ export async function createQuiz(data) {
 }
 ```
 
+## Server Actions
+
+### Purpose
+
+Server actions provide a unified way to handle mutations and data operations directly from components without creating API routes. They are the preferred method for data mutations in Next.js 16.
+
+### Why Server Actions Over API Routes
+
+1. **Type Safety** - Direct TypeScript types from server to client
+2. **Colocation** - Actions defined near the components that use them
+3. **Progressive Enhancement** - Forms work without JavaScript
+4. **Simplified Auth** - Direct access to server-side authentication
+5. **No CORS** - No need for API endpoint configuration
+6. **Better DX** - Single file for component + action logic
+
+### When to Use Server Actions vs API Routes
+
+**Use Server Actions for:**
+
+- Form submissions and mutations
+- Database operations (create, update, delete)
+- User-triggered actions from UI components
+- Data revalidation after changes
+- File uploads
+- Most CRUD operations
+
+**Use API Routes only for:**
+
+- Webhooks from external services
+- Public APIs for third-party integrations
+- Non-browser clients (mobile apps, CLI tools)
+- Custom authentication callbacks
+- Server-Sent Events (SSE) or WebSocket connections
+
+### Basic Server Action Pattern
+
+```typescript
+// lib/actions/quizzes.ts
+"use server";
+
+import { z } from "zod";
+import { requireUser } from "@/lib/auth-server";
+import { updateTag } from "@/lib/utils/cache-utils";
+import { db } from "@/lib/prisma";
+
+const createQuizSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+});
+
+export async function createQuizAction(data: unknown) {
+  // 1. Authenticate
+  const user = await requireUser();
+
+  // 2. Validate input
+  const parsed = createQuizSchema.parse(data);
+
+  // 3. Perform operation
+  const quiz = await db.quiz.create({
+    data: {
+      ...parsed,
+      userId: user.id,
+    },
+  });
+
+  // 4. Invalidate cache
+  updateTag("quizzes");
+
+  // 5. Return result
+  return { success: true, data: quiz };
+}
+```
+
+### Using Server Actions in Components
+
+```typescript
+// components/quiz/create-quiz-form.tsx
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createQuizAction } from "@/lib/actions/quizzes";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export function CreateQuizForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(createQuizSchema),
+  });
+
+  const onSubmit = async (data) => {
+    const result = await createQuizAction(data);
+    if (result.success) {
+      // Handle success
+      router.push(`/dashboard/quizzes/${result.data.id}`);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Field label="Title" error={errors.title?.message}>
+        <Input {...register("title")} />
+      </Field>
+      <Button type="submit">Create Quiz</Button>
+    </form>
+  );
+}
+```
+
+### Progressive Enhancement with useActionState
+
+```typescript
+// lib/actions/quizzes.ts
+"use server";
+
+export async function createQuizAction(prevState: any, formData: FormData) {
+  const title = formData.get("title") as string;
+
+  if (!title) {
+    return { error: "Title is required" };
+  }
+
+  const quiz = await db.quiz.create({ data: { title } });
+  revalidatePath("/dashboard/quizzes");
+
+  return { success: true, quiz };
+}
+
+// Component
+("use client");
+import { useActionState } from "react";
+
+export function CreateQuizForm() {
+  const [state, formAction] = useActionState(createQuizAction, null);
+
+  return (
+    <form action={formAction}>
+      <input name="title" required />
+      {state?.error && <p className="text-destructive">{state.error}</p>}
+      <button type="submit">Create Quiz</button>
+    </form>
+  );
+}
+```
+
+### Error Handling in Server Actions
+
+```typescript
+"use server";
+
+export async function deleteQuizAction(quizId: string) {
+  try {
+    const user = await requireUser();
+
+    const quiz = await db.quiz.findUnique({ where: { id: quizId } });
+    if (!quiz) {
+      return { success: false, error: "Quiz not found" };
+    }
+
+    await db.quiz.delete({ where: { id: quizId } });
+    updateTag("quizzes");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Delete quiz error:", error);
+    return {
+      success: false,
+      error: "Failed to delete quiz",
+    };
+  }
+}
+```
+
 ## Server Components
 
 ### Purpose
@@ -260,11 +438,14 @@ export async function createQuiz(data: QuizInput) {
 
 When building Next.js 16 features:
 
+- [ ] Use server actions for all mutations instead of API routes
 - [ ] Use server components by default
 - [ ] Implement cache components with `'use cache'` and `cacheLife()`
 - [ ] Add Suspense boundaries for streaming content
 - [ ] Wrap runtime APIs in Suspense
 - [ ] Create error.tsx and not-found.tsx for error handling
-- [ ] Validate inputs with Zod schemas
+- [ ] Validate inputs with Zod schemas in server actions
+- [ ] Call `updateTag()` or `revalidatePath()` after mutations
 - [ ] Test cache invalidation after mutations
 - [ ] Minimize client-side JavaScript
+- [ ] Only create API routes for webhooks or external integrations

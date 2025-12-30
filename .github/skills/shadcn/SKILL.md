@@ -83,11 +83,20 @@ Seamlessly integrate shadcn/ui components into your application with proper setu
        },
      });
 
+     // Call server action on submit (preferred over API route)
+     const onSubmit = async (data) => {
+       const result = await createEntityAction(data);
+       if (result.success) {
+         // Handle success
+       }
+     };
+
      return (
        <form onSubmit={handleSubmit(onSubmit)}>
          <Field label="Email" error={errors.email?.message}>
            <Input placeholder="user@example.com" {...register("email")} />
          </Field>
+         <Button type="submit">Submit</Button>
        </form>
      );
    }
@@ -390,10 +399,9 @@ When using shadcn/ui:
 - [ ] Color theme is configured in globals.css
 - [ ] Dark mode is implemented with ThemeProvider
 - [ ] Forms use react-hook-form + Zod validation
-- [ ] All interactive elements have proper ARIA labels
-- [ ] Keyboard navigation is tested
-- [ ] Color contrast meets WCAG AA standards with Field components
+- [ ] Forms call server actions instead of API routes
 - [ ] Using Base UI components instead of Radix UI
+- [ ] Using Field components instead of Form/FormField
 - [ ] All interactive elements have proper ARIA labels
 - [ ] Keyboard navigation is tested
 - [ ] Color contrast meets WCAG AA standards
