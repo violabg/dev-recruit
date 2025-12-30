@@ -54,7 +54,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@ai-sdk/devtools": "^0.0.1",
+    "@ai-sdk/devtools": "^0.0.2",
     "@eslint/eslintrc": "^3.3.3",
     "@next/eslint-plugin-next": "^16.1.1",
     "@tailwindcss/postcss": "^4.1.18",
@@ -71,7 +71,7 @@
     "eslint-config-next": "^16.1.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "happy-dom": "^20.0.11",
-    "jsdom": "^27.3.0",
+    "jsdom": "^27.4.0",
     "postcss": "^8.5.6",
     "prisma": "^7.2.0",
     "shadcn": "^3.6.2",
