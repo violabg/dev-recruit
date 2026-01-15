@@ -105,7 +105,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
               </EntityActionsMenu>
             </div>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent className="flex-1 p-4 pt-0">
             <div className="space-y-2">
               <div className="flex items-center text-sm">
                 <Briefcase className="mr-2 size-4 text-muted-foreground" />
