@@ -56,12 +56,13 @@ export default function InputWithTag(props: Props) {
       placeholder={props.placeholder || "Aggiungi un tag..."}
       styleClasses={{
         inlineTagsContainer:
-          "border-input rounded-md bg-background shadow-xs transition-[color,box-shadow] focus-within:border-ring outline-none focus-within:ring-[3px] focus-within:ring-ring/50 p-1 gap-1",
-        input: "w-full min-w-[80px] shadow-none px-2 h-7",
+          "bg-muted/50 hover:bg-muted/80 border-2 border-transparent hover:border-ring/30 focus-within:border-ring/50 rounded-lg p-1 gap-1 shadow-sm transition-all focus-within:ring-4 focus-within:ring-ring/20 outline-none",
+        input:
+          "w-full min-w-[80px] shadow-none px-2 h-7 bg-transparent border-none focus:ring-0",
         tag: {
-          body: "h-7 relative bg-secondary border border-input hover:bg-secondary/70 rounded-md font-medium text-xs ps-2 pe-7 text-foreground",
+          body: "h-7 relative bg-secondary border border-none hover:bg-secondary rounded-md font-medium text-xs ps-2 pe-7 text-secondary-foreground transition-colors",
           closeButton:
-            "absolute -inset-y-px -end-px p-0 rounded-e-md flex size-7 transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] text-muted-foregroundhover:text-foreground",
+            "absolute -inset-y-px -end-px p-0 rounded-e-md flex size-7 transition-all outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer items-center justify-center bg-transparent",
         },
       }}
       activeTagIndex={activeTagIndex}

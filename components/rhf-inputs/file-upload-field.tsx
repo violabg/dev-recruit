@@ -138,11 +138,13 @@ export function FileUploadField({
 
       <div
         className={cn(
-          "relative p-4 border-2 border-dashed rounded-lg transition-colors",
+          "bg-muted/50 shadow-sm border-2 border-transparent border-dashed rounded-lg transition-all",
           isDragging && "border-primary bg-primary/5",
           displayError && "border-destructive",
           disabled && "opacity-50 cursor-not-allowed",
-          !disabled && !isUploading && "cursor-pointer hover:border-primary/50"
+          !disabled &&
+            !isUploading &&
+            "cursor-pointer hover:bg-muted/80 hover:border-ring/30"
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}

@@ -142,7 +142,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="font-bold text-3xl">Dashboard</h1>
+        <h1 className="font-bold text-gradient text-3xl">Dashboard</h1>
         <Button
           render={
             <Link href="/dashboard/positions/new">

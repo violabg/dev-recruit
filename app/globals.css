@@ -189,6 +189,9 @@
 }
 
 @layer utilities {
+  .text-gradient {
+    @apply bg-clip-text bg-linear-to-r from-primary to-sky-400/70 text-transparent w-max;
+  }
   .animate-equalizer-1 {
     animation: equalizer-bar-1 0.6s ease-in-out infinite;
   }

@@ -68,7 +68,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar variant="inset" {...props} className="bg-sidebar border-r-0">
-      <SidebarHeader className="p-4 border-sidebar-border/50 border-b">
+      <SidebarHeader className="p-2 border-sidebar-border/50 border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -91,7 +91,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="px-2 py-2">
+      <SidebarContent className="">
         <Suspense
           fallback={
             <div className="space-y-3 mt-4 p-2">
@@ -107,7 +107,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <NavMain items={data.navSecondary} />
         </Suspense>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-sidebar-border/50 border-t">
+      <SidebarFooter className="p-2 border-sidebar-border/50 border-t">
         <NavUser />
       </SidebarFooter>
     </Sidebar>
