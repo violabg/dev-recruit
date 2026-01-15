@@ -3,7 +3,7 @@
 // ====================
 // Types used by API middleware and validation layer
 
-import { z } from "zod/v4";
+import { z } from "zod";
 
 // Utility type for API responses with consistent structure
 export type ApiResponse<T> =

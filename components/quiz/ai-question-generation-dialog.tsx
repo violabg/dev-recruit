@@ -31,7 +31,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 const getDifficultyLabel = (value: number) => {
   const labels = {

@@ -29,7 +29,7 @@ import {
 import { quizGenerationConfigSchema } from "@/lib/schemas";
 import { LLM_MODELS } from "@/lib/utils";
 import { toast } from "sonner";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export type Position = {
   id: string;

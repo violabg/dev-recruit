@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { baseSchemas, formTransformers } from "./base";
 import { questionSchemas } from "./question";
 

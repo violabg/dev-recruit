@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { baseSchemas } from "./base";
 
 // ====================
@@ -15,27 +15,27 @@ export const signUpSchema = z
     first_name: z
       .string()
       .min(2, {
-          error: "Nome deve essere almeno 2 caratteri"
-    })
+        error: "Nome deve essere almeno 2 caratteri",
+      })
       .max(30, {
-          error: "Nome deve essere massimo 30 caratteri"
-    }),
+        error: "Nome deve essere massimo 30 caratteri",
+      }),
     last_name: z
       .string()
       .min(2, {
-          error: "Cognome deve essere almeno 2 caratteri"
-    })
+        error: "Cognome deve essere almeno 2 caratteri",
+      })
       .max(30, {
-          error: "Cognome deve essere massimo 30 caratteri"
-    }),
+        error: "Cognome deve essere massimo 30 caratteri",
+      }),
     email: baseSchemas.email,
     password: baseSchemas.password,
     repeatPassword: baseSchemas.password,
   })
   .refine((data) => data.password === data.repeatPassword, {
     path: ["repeatPassword"],
-      error: "Passwords do not match"
-});
+    error: "Passwords do not match",
+  });
 
 export const forgotPasswordSchema = z.object({
   email: baseSchemas.email,
@@ -51,21 +51,21 @@ export const changePasswordSchema = z
     new_password: z
       .string()
       .min(6, {
-          error: "Password deve essere almeno 6 caratteri"
-    })
+        error: "Password deve essere almeno 6 caratteri",
+      })
       .max(100, {
-          error: "Password deve essere massimo 100 caratteri"
-    }),
+        error: "Password deve essere massimo 100 caratteri",
+      }),
     confirm_password: baseSchemas.password,
   })
   .refine((data) => data.new_password === data.confirm_password, {
     path: ["confirm_password"],
-      error: "Le password non corrispondono"
-})
+    error: "Le password non corrispondono",
+  })
   .refine((data) => data.current_password !== data.new_password, {
     path: ["new_password"],
-      error: "La nuova password deve essere diversa da quella attuale"
-});
+    error: "La nuova password deve essere diversa da quella attuale",
+  });
 
 // ====================
 // TYPE EXPORTS

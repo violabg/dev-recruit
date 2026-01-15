@@ -10,7 +10,7 @@ import type {
   ValidationConfig,
 } from "@/lib/types/utilities";
 import { describe, expect, it } from "vitest";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 describe("ApiResponse type", () => {
   it("should accept success response with data", () => {

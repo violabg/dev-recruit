@@ -6,7 +6,7 @@ import {
   FlexibleQuestion,
   overallEvaluationSchema,
 } from "@/lib/schemas";
-import { devToolsMiddleware } from "@ai-sdk/devtools";
+
 import { groq } from "@ai-sdk/groq";
 import { generateText, Output, wrapLanguageModel } from "ai";
 import { aiLogger } from "../services/logger";
@@ -171,12 +171,14 @@ export async function evaluateAnswer(
   // Use zero temperature for deterministic, reproducible evaluations
   const aiModel = groq(getOptimalModel("evaluation", specificModel));
 
-  const model = isDevelopment
-    ? wrapLanguageModel({
-        model: aiModel,
-        middleware: devToolsMiddleware(),
-      })
-    : aiModel;
+  let model = aiModel;
+  if (isDevelopment) {
+    const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+    model = wrapLanguageModel({
+      model: aiModel,
+      middleware: devToolsMiddleware(),
+    });
+  }
 
   try {
     const { output: result } = await generateText({
@@ -194,6 +196,10 @@ export async function evaluateAnswer(
       },
     });
 
+    if (!result) {
+      throw new Error("AI failed to generate evaluation result");
+    }
+
     return {
       ...result,
       maxScore: 10,
@@ -209,12 +215,14 @@ export async function evaluateAnswer(
 
     const aiModel = groq(fallbackModel);
 
-    const model = isDevelopment
-      ? wrapLanguageModel({
-          model: aiModel,
-          middleware: devToolsMiddleware(),
-        })
-      : aiModel;
+    let model = aiModel;
+    if (isDevelopment) {
+      const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+      model = wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      });
+    }
 
     try {
       const { output: result } = await generateText({
@@ -231,6 +239,10 @@ export async function evaluateAnswer(
           },
         },
       });
+
+      if (!result) {
+        throw new Error("AI failed to generate evaluation result");
+      }
 
       return {
         ...result,
@@ -311,12 +323,14 @@ export async function generateOverallEvaluation(
   try {
     const aiModel = groq(getOptimalModel("overall_evaluation", specificModel));
 
-    const model = isDevelopment
-      ? wrapLanguageModel({
-          model: aiModel,
-          middleware: devToolsMiddleware(),
-        })
-      : aiModel;
+    let model = aiModel;
+    if (isDevelopment) {
+      const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+      model = wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      });
+    }
 
     const { output: result } = await generateText({
       model,
@@ -333,6 +347,10 @@ export async function generateOverallEvaluation(
       },
     });
 
+    if (!result) {
+      throw new Error("AI failed to generate overall evaluation");
+    }
+
     return result;
   } catch (error) {
     aiLogger.warn(
@@ -346,12 +364,14 @@ export async function generateOverallEvaluation(
     try {
       const aiModel = groq(fallbackModel);
 
-      const model = isDevelopment
-        ? wrapLanguageModel({
-            model: aiModel,
-            middleware: devToolsMiddleware(),
-          })
-        : aiModel;
+      let model = aiModel;
+      if (isDevelopment) {
+        const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+        model = wrapLanguageModel({
+          model: aiModel,
+          middleware: devToolsMiddleware(),
+        });
+      }
 
       const { output: result } = await generateText({
         model,
@@ -367,6 +387,10 @@ export async function generateOverallEvaluation(
           },
         },
       });
+
+      if (!result) {
+        throw new Error("AI failed to generate overall evaluation");
+      }
 
       return result;
     } catch (fallbackError) {

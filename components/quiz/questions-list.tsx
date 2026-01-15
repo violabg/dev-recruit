@@ -2,7 +2,7 @@
 
 import { questionSchemas } from "@/lib/schemas";
 import { UseFormReturn } from "react-hook-form";
-import * as z from "zod/v4";
+import * as z from "zod";
 import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
 import { QuestionTypeFilter } from "../../hooks/use-question-management";
 import { QuestionItem } from "./question-item";

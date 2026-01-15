@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 type DuplicateQuizDialogProps = {
   open: boolean;

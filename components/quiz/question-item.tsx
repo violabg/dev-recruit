@@ -25,7 +25,7 @@ import { ChevronDown, ChevronUp, Heart, Sparkles, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
-import * as z from "zod/v4";
+import * as z from "zod";
 import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
 
 type Question = z.infer<typeof questionSchemas.flexible>;

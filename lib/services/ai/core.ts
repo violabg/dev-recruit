@@ -5,7 +5,6 @@
  * Uses modular components from the ai/ directory.
  */
 
-import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { groq } from "@ai-sdk/groq";
 import {
   generateText,
@@ -14,8 +13,10 @@ import {
   wrapLanguageModel,
 } from "ai";
 import {
+  AIQuizGeneration,
   aiQuizGenerationSchema,
   convertToStrictQuestions,
+  FlexibleQuestion,
   Question,
   questionSchemas,
 } from "../../schemas";
@@ -53,12 +54,14 @@ export class AIQuizService {
 
       const result = await withTimeout(
         withRetry(async () => {
-          const model = isDevelopment
-            ? wrapLanguageModel({
-                model: aiModel,
-                middleware: devToolsMiddleware(),
-              })
-            : aiModel;
+          let model = aiModel;
+          if (isDevelopment) {
+            const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+            model = wrapLanguageModel({
+              model: aiModel,
+              middleware: devToolsMiddleware(),
+            });
+          }
 
           try {
             const response = await generateText({
@@ -74,11 +77,8 @@ export class AIQuizService {
               },
             });
 
-            if (
-              !response.output ||
-              !response.output.questions ||
-              !response.output.title
-            ) {
+            const output = response.output as AIQuizGeneration | undefined;
+            if (!output || !output.questions || !output.title) {
               throw new AIGenerationError(
                 "Invalid response structure from AI model",
                 AIErrorCode.INVALID_RESPONSE,
@@ -86,7 +86,7 @@ export class AIQuizService {
               );
             }
 
-            return response.output;
+            return output;
           } catch (error) {
             if (error instanceof NoObjectGeneratedError) {
               throw new AIGenerationError(
@@ -149,12 +149,14 @@ export class AIQuizService {
 
       const result = await withTimeout(
         withRetry(async () => {
-          const model = isDevelopment
-            ? wrapLanguageModel({
-                model: aiModel,
-                middleware: devToolsMiddleware(),
-              })
-            : aiModel;
+          let model = aiModel;
+          if (isDevelopment) {
+            const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+            model = wrapLanguageModel({
+              model: aiModel,
+              middleware: devToolsMiddleware(),
+            });
+          }
 
           try {
             const response = await generateText({
@@ -170,7 +172,8 @@ export class AIQuizService {
               },
             });
 
-            if (!response.output) {
+            const output = response.output as FlexibleQuestion | undefined;
+            if (!output) {
               throw new AIGenerationError(
                 "Invalid response structure from AI model",
                 AIErrorCode.INVALID_RESPONSE,
@@ -178,7 +181,7 @@ export class AIQuizService {
               );
             }
 
-            return response.output;
+            return output;
           } catch (error) {
             if (error instanceof NoObjectGeneratedError) {
               throw new AIGenerationError(

@@ -1,6 +1,6 @@
 import { logger } from "@/lib/services/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod/v4";
+import { z } from "zod";
 import {
   ApiResponse,
   ValidatedRequestData,

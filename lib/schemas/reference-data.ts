@@ -2,7 +2,7 @@ import {
   referenceCategories,
   type ReferenceCategory,
 } from "@/lib/constants/reference-categories";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const referenceDataFormSchema = z.object({
   category: z.enum(referenceCategories, {

@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { requireUser } from "../auth-server";
 import {
   getPresetData,

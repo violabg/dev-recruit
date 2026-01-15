@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { type z } from "zod/v4";
+import { type z } from "zod";
 
 const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Scelta multipla" },

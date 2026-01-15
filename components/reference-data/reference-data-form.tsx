@@ -29,7 +29,7 @@ export function ReferenceDataForm({
   onSuccess,
 }: ReferenceDataFormProps) {
   const form = useForm<ReferenceDataFormData>({
-    // Cast resolver to satisfy RHF types with zod/v4 defaults
+    // Cast resolver to satisfy RHF types with zod defaults
     resolver: zodResolver(referenceDataFormSchema) as any,
     defaultValues: {
       category,

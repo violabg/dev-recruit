@@ -12,7 +12,7 @@ import {
 } from "@/lib/middleware/validation";
 import { NextRequest, NextResponse } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 // Helper to create mock NextRequest
 function createMockRequest(
