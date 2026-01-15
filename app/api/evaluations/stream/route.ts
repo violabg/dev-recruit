@@ -184,13 +184,15 @@ export async function POST(request: Request) {
 
     const aiModel = groq(model);
 
-    const devToolsEnabledModel = wrapLanguageModel({
-      model: aiModel,
-      middleware: devToolsMiddleware(),
-    });
+    const modelForStream = isDevelopment
+      ? wrapLanguageModel({
+          model: aiModel,
+          middleware: devToolsMiddleware(),
+        })
+      : aiModel;
 
     const result = streamText({
-      model: isDevelopment ? devToolsEnabledModel : aiModel,
+      model: modelForStream,
       prompt: prompt + jsonFormatInstructions,
       system:
         "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano. Rispondi SOLO con JSON valido.",

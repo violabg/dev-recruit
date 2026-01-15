@@ -51,16 +51,18 @@ export class AIQuizService {
 
       const aiModel = groq(model);
 
-      const devToolsEnabledModel = wrapLanguageModel({
-        model: aiModel,
-        middleware: devToolsMiddleware(),
-      });
-
       const result = await withTimeout(
         withRetry(async () => {
+          const model = isDevelopment
+            ? wrapLanguageModel({
+                model: aiModel,
+                middleware: devToolsMiddleware(),
+              })
+            : aiModel;
+
           try {
             const response = await generateText({
-              model: isDevelopment ? devToolsEnabledModel : aiModel,
+              model,
               prompt,
               system: buildQuizSystemPrompt(),
               output: Output.object({ schema: aiQuizGenerationSchema }),
@@ -145,16 +147,18 @@ export class AIQuizService {
 
       const aiModel = groq(model);
 
-      const devToolsEnabledModel = wrapLanguageModel({
-        model: aiModel,
-        middleware: devToolsMiddleware(),
-      });
-
       const result = await withTimeout(
         withRetry(async () => {
+          const model = isDevelopment
+            ? wrapLanguageModel({
+                model: aiModel,
+                middleware: devToolsMiddleware(),
+              })
+            : aiModel;
+
           try {
             const response = await generateText({
-              model: isDevelopment ? devToolsEnabledModel : aiModel,
+              model,
               prompt: userPrompt,
               system: systemPrompt,
               output: Output.object({ schema: questionSchemas.flexible }),

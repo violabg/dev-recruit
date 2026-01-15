@@ -24,14 +24,17 @@ export async function streamPositionDescription(
   try {
     const aiModel = groq(getOptimalModel("simple_task", params.specificModel));
 
-    const devToolsEnabledModel = wrapLanguageModel({
-      model: aiModel,
-      middleware: devToolsMiddleware(),
-    });
+    const model = isDevelopment
+      ? wrapLanguageModel({
+          model: aiModel,
+          middleware: devToolsMiddleware(),
+        })
+      : aiModel;
+
     const prompt = buildPositionDescriptionPrompt(params);
 
     const result = streamText({
-      model: isDevelopment ? devToolsEnabledModel : aiModel,
+      model,
       prompt,
       temperature: 0.7,
     });

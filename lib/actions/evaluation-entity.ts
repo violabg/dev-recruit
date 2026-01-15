@@ -83,14 +83,16 @@ async function generateResumeEvaluation(
 
   const aiModel = groq(getOptimalModel("resume_evaluation", specificModel));
 
-  const devToolsEnabledModel = wrapLanguageModel({
-    model: aiModel,
-    middleware: devToolsMiddleware(),
-  });
+  const model = isDevelopment
+    ? wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      })
+    : aiModel;
 
   try {
     const { output: result } = await generateText({
-      model: isDevelopment ? devToolsEnabledModel : aiModel,
+      model,
       prompt,
       system:
         "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",
@@ -119,14 +121,16 @@ async function generateResumeEvaluation(
 
     const aiModel = groq(fallbackModel);
 
-    const devToolsEnabledModel = wrapLanguageModel({
-      model: aiModel,
-      middleware: devToolsMiddleware(),
-    });
+    const model = isDevelopment
+      ? wrapLanguageModel({
+          model: aiModel,
+          middleware: devToolsMiddleware(),
+        })
+      : aiModel;
 
     try {
       const { output: result } = await generateText({
-        model: isDevelopment ? devToolsEnabledModel : aiModel,
+        model,
         prompt,
         system:
           "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano.",

@@ -171,13 +171,16 @@ export async function evaluateAnswer(
   // Use zero temperature for deterministic, reproducible evaluations
   const aiModel = groq(getOptimalModel("evaluation", specificModel));
 
-  const devToolsEnabledModel = wrapLanguageModel({
-    model: aiModel,
-    middleware: devToolsMiddleware(),
-  });
+  const model = isDevelopment
+    ? wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      })
+    : aiModel;
+
   try {
     const { output: result } = await generateText({
-      model: isDevelopment ? devToolsEnabledModel : aiModel,
+      model,
       prompt,
       system:
         "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
@@ -206,14 +209,16 @@ export async function evaluateAnswer(
 
     const aiModel = groq(fallbackModel);
 
-    const devToolsEnabledModel = wrapLanguageModel({
-      model: aiModel,
-      middleware: devToolsMiddleware(),
-    });
+    const model = isDevelopment
+      ? wrapLanguageModel({
+          model: aiModel,
+          middleware: devToolsMiddleware(),
+        })
+      : aiModel;
 
     try {
       const { output: result } = await generateText({
-        model: isDevelopment ? devToolsEnabledModel : aiModel,
+        model,
         prompt,
         system:
           "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.",
@@ -306,12 +311,15 @@ export async function generateOverallEvaluation(
   try {
     const aiModel = groq(getOptimalModel("overall_evaluation", specificModel));
 
-    const devToolsEnabledModel = wrapLanguageModel({
-      model: aiModel,
-      middleware: devToolsMiddleware(),
-    });
+    const model = isDevelopment
+      ? wrapLanguageModel({
+          model: aiModel,
+          middleware: devToolsMiddleware(),
+        })
+      : aiModel;
+
     const { output: result } = await generateText({
-      model: isDevelopment ? devToolsEnabledModel : aiModel,
+      model,
       prompt,
       system:
         "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",
@@ -338,13 +346,15 @@ export async function generateOverallEvaluation(
     try {
       const aiModel = groq(fallbackModel);
 
-      const devToolsEnabledModel = wrapLanguageModel({
-        model: aiModel,
-        middleware: devToolsMiddleware(),
-      });
+      const model = isDevelopment
+        ? wrapLanguageModel({
+            model: aiModel,
+            middleware: devToolsMiddleware(),
+          })
+        : aiModel;
 
       const { output: result } = await generateText({
-        model: isDevelopment ? devToolsEnabledModel : aiModel,
+        model,
         prompt,
         system:
           "You are an expert technical recruiter who provides objective and constructive candidate evaluations. Base your evaluation exclusively on the provided information and return responses in Italian.",

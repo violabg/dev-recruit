@@ -8,96 +8,111 @@ import { baseSchemas } from "./base";
 // This is different from the inline question schemas used for AI generation
 
 /**
+ * Base schema for creating a new question in the database (without refinements)
+ * This is used by updateQuestionSchema.partial() which cannot handle refinements.
+ */
+const createQuestionBaseSchema = z.object({
+  type: baseSchemas.questionType,
+  question: z.string().min(1, "Question text is required"),
+  keywords: z.array(z.string()).default([]),
+  explanation: z.string().optional(),
+
+  // Multiple choice fields
+  options: z.array(z.string()).default([]),
+  correctAnswer: z.int().min(0).max(3).optional(),
+
+  // Open question fields
+  sampleAnswer: z.string().optional(),
+
+  // Code snippet fields
+  codeSnippet: z.string().optional(),
+  sampleSolution: z.string().optional(),
+  language: z.string().optional(),
+
+  // Favorites
+  isFavorite: z.boolean().default(false),
+});
+
+/**
+ * Refinement function for question type validation
+ */
+const questionRefinement = (
+  data: z.infer<typeof createQuestionBaseSchema>,
+  ctx: z.RefinementCtx<z.infer<typeof createQuestionBaseSchema>>
+) => {
+  // Validate multiple choice questions
+  if (data.type === "multiple_choice") {
+    if (!data.options || data.options.length < 4) {
+      ctx.issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["options"],
+        error: "Multiple choice questions require at least 4 options",
+        input: data.options,
+      });
+    }
+    if (data.correctAnswer === undefined) {
+      ctx.issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["correctAnswer"],
+        error: "Multiple choice questions require a correct answer",
+        input: data.correctAnswer,
+      });
+    }
+  }
+
+  // Validate open questions
+  if (data.type === "open_question") {
+    if (!data.sampleAnswer) {
+      ctx.issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["sampleAnswer"],
+        error: "Open questions require a sample answer",
+        input: data.sampleAnswer,
+      });
+    }
+  }
+
+  // Validate code snippet questions
+  if (data.type === "code_snippet") {
+    if (!data.codeSnippet) {
+      ctx.issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["codeSnippet"],
+        error: "Code snippet questions require a code snippet",
+        input: data.codeSnippet,
+      });
+    }
+    if (!data.sampleSolution) {
+      ctx.issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["sampleSolution"],
+        error: "Code snippet questions require a sample solution",
+        input: data.sampleSolution,
+      });
+    }
+    if (!data.language) {
+      ctx.issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["language"],
+        error: "Code snippet questions require a language",
+        input: data.language,
+      });
+    }
+  }
+};
+
+/**
  * Schema for creating a new question in the database
  */
-export const createQuestionSchema = z
-  .object({
-    type: baseSchemas.questionType,
-    question: z.string().min(1, "Question text is required"),
-    keywords: z.array(z.string()).default([]),
-    explanation: z.string().optional(),
-
-    // Multiple choice fields
-    options: z.array(z.string()).default([]),
-    correctAnswer: z.int().min(0).max(3).optional(),
-
-    // Open question fields
-    sampleAnswer: z.string().optional(),
-
-    // Code snippet fields
-    codeSnippet: z.string().optional(),
-    sampleSolution: z.string().optional(),
-    language: z.string().optional(),
-
-    // Favorites
-    isFavorite: z.boolean().default(false),
-  })
-  .superRefine((data, ctx) => {
-    // Validate multiple choice questions
-    if (data.type === "multiple_choice") {
-      if (!data.options || data.options.length < 4) {
-        ctx.issues.push({
-          code: z.ZodIssueCode.custom,
-          path: ["options"],
-          error: "Multiple choice questions require at least 4 options",
-          input: data.options,
-        });
-      }
-      if (data.correctAnswer === undefined) {
-        ctx.issues.push({
-          code: z.ZodIssueCode.custom,
-          path: ["correctAnswer"],
-          error: "Multiple choice questions require a correct answer",
-          input: data.correctAnswer,
-        });
-      }
-    }
-
-    // Validate open questions
-    if (data.type === "open_question") {
-      if (!data.sampleAnswer) {
-        ctx.issues.push({
-          code: z.ZodIssueCode.custom,
-          path: ["sampleAnswer"],
-          error: "Open questions require a sample answer",
-          input: data.sampleAnswer,
-        });
-      }
-    }
-
-    // Validate code snippet questions
-    if (data.type === "code_snippet") {
-      if (!data.codeSnippet) {
-        ctx.issues.push({
-          code: z.ZodIssueCode.custom,
-          path: ["codeSnippet"],
-          error: "Code snippet questions require a code snippet",
-          input: data.codeSnippet,
-        });
-      }
-      if (!data.sampleSolution) {
-        ctx.issues.push({
-          code: z.ZodIssueCode.custom,
-          path: ["sampleSolution"],
-          error: "Code snippet questions require a sample solution",
-          input: data.sampleSolution,
-        });
-      }
-      if (!data.language) {
-        ctx.issues.push({
-          code: z.ZodIssueCode.custom,
-          path: ["language"],
-          error: "Code snippet questions require a language",
-          input: data.language,
-        });
-      }
-    }
-  });
+export const createQuestionSchema =
+  createQuestionBaseSchema.superRefine(questionRefinement);
 
 /**
  * Schema for updating an existing question
+ * Note: Uses base schema (without refinements) because Zod 4.3.5+ disallows .partial() on refined schemas.
+ * Type-specific validation happens on the server side during update.
  */
-export const updateQuestionSchema = createQuestionSchema.partial().extend({
+export const updateQuestionSchema = createQuestionBaseSchema.partial().extend({
   id: z.string().min(1, "Question ID is required"),
 });
 
