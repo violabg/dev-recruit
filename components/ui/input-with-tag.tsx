@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 import { Tag, TagInput } from "emblor";
 import { RefAttributes, useEffect, useId, useRef, useState } from "react";
 
@@ -7,10 +8,11 @@ type Props = RefAttributes<HTMLInputElement> & {
   placeholder?: string;
   value: string[];
   onChange: (tags: string[]) => void;
+  invalid?: boolean;
 };
 
 export default function InputWithTag(props: Props) {
-  const { id: propsId, onChange, value, ...rest } = props;
+  const { id: propsId, onChange, value, invalid, ...rest } = props;
   const generatedId = useId();
   const id = propsId || generatedId;
 
@@ -55,8 +57,11 @@ export default function InputWithTag(props: Props) {
       setTags={handleSetTags}
       placeholder={props.placeholder || "Aggiungi un tag..."}
       styleClasses={{
-        inlineTagsContainer:
-          "bg-muted/50 hover:bg-muted/80 border-2 border-transparent hover:border-ring/30 focus-within:border-ring/50 rounded-lg p-1 gap-1 shadow-sm transition-all focus-within:ring-4 focus-within:ring-ring/20 outline-none",
+        inlineTagsContainer: cn(
+          "gap-1 bg-muted/50 hover:bg-muted/80 shadow-sm p-1 border border-transparent hover:border-ring/30 focus-within:border-ring/50 rounded-lg outline-none focus-within:ring-4 focus-within:ring-ring/20 transition-all",
+          invalid &&
+            "border-destructive focus-within:border-destructive focus-within:ring-destructive/20 focus-within:ring-[3px]"
+        ),
         input:
           "w-full min-w-[80px] shadow-none px-2 h-7 bg-transparent border-none focus:ring-0",
         tag: {

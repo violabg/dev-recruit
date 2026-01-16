@@ -86,8 +86,8 @@ export function MultiSelect({
             disabled={disabled}
             className={cn(
               "justify-between w-full h-auto min-h-10",
-              "bg-muted/50 border-transparent hover:bg-muted/80 hover:border-ring/30 shadow-sm text-foreground hover:text-foreground transition-all",
-              "aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]",
+              "bg-muted/50 border border-transparent hover:bg-muted/80 hover:border-ring/30 shadow-sm text-foreground hover:text-foreground transition-all",
+              "aria-invalid:border-destructive aria-invalid:focus-visible:ring-destructive/20 aria-invalid:focus-visible:ring-[3px] aria-invalid:focus-visible:border-destructive",
               selected.length > 0 ? "px-3 py-2" : "",
               className
             )}
