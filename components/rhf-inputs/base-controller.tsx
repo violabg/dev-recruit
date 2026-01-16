@@ -58,7 +58,7 @@ export function BaseController<T extends FieldValues>({
               )}
             </FieldLabel>
           )}
-          <FieldContent>
+          <FieldContent className="gap-1">
             {children({ field, fieldState, formState })}
             {description && <FieldDescription>{description}</FieldDescription>}
             {!disableFieldError && fieldState.invalid && (
