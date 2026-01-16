@@ -1,6 +1,6 @@
 import { CandidateGrid } from "@/components/candidates/candidate-grid";
 import { CandidateTable } from "@/components/candidates/candidate-table";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
@@ -125,16 +125,16 @@ export const CandidatesRuntimeSection = async ({
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button
-                size="sm"
-                render={
-                  <Link href="/dashboard/candidates/new">
-                    <Plus className="mr-1 size-4" />
-                    Nuovo Candidato
-                  </Link>
-                }
-                nativeButton={false}
-              />
+              <Link
+                href="/dashboard/candidates/new"
+                className={buttonVariants({
+                  variant: "default",
+                  size: "sm",
+                })}
+              >
+                <Plus className="mr-1 size-4" />
+                Nuovo Candidato
+              </Link>
             </EmptyContent>
           </Empty>
         ) : (

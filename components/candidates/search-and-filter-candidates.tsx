@@ -19,7 +19,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, useTransition } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { Button } from "../ui/button";
+import { buttonVariants } from "../ui/button";
 
 type SelectOption = {
   value: string;
@@ -232,15 +232,15 @@ export const SearchAndFilterCandidates = ({
           </SelectContent>
         </Select>
         {hasActiveFilters && (
-          <Button
-            variant="outlineDestructive"
-            render={<Link href={pathname as "/dashboard/candidates"} />}
-            disabled={isPending}
-            nativeButton={false}
+          <Link
+            href={pathname as "/dashboard/candidates"}
+            className={buttonVariants({
+              variant: "outlineDestructive",
+            })}
           >
             <X className="mr-1 size-4" />
             Reset
-          </Button>
+          </Link>
         )}
       </div>
     </div>

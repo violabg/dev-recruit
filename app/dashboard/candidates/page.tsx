@@ -1,6 +1,7 @@
 import { SearchAndFilterCandidates } from "@/components/candidates/search-and-filter-candidates";
 import PageHeader from "@/components/page-header";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import { getPositionItemsForSelect } from "@/lib/data/positions";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -31,17 +32,13 @@ export default async function CandidatesPage({
         title="Candidati"
         description="Gestisci i candidati per le tue posizioni aperte"
         actionBtns={
-          <Button
-            size="sm"
-            variant="default"
-            nativeButton={false}
-            render={
-              <Link href="/dashboard/candidates/new">
-                <Plus className="mr-1 size-4" />
-                Nuovo Candidato
-              </Link>
-            }
-          />
+          <Link
+            href="/dashboard/candidates/new"
+            className={buttonVariants({ variant: "default", size: "sm" })}
+          >
+            <Plus className="mr-1 size-4" />
+            Nuovo Candidato
+          </Link>
         }
       />
 

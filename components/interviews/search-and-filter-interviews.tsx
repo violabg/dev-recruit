@@ -5,7 +5,7 @@ import {
   normalizePosition,
   normalizeStatus,
 } from "@/app/dashboard/interviews/utils";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -210,16 +210,16 @@ export function SearchAndFilterInterviews({
       </div>
 
       {hasActiveFilters && (
-        <Button
-          variant="outlineDestructive"
+        <Link
+          href={pathname as "/dashboard/interviews"}
+          className={buttonVariants({
+            variant: "outlineDestructive",
+          })}
           onClick={clearAllFilters}
-          disabled={isPending}
-          render={<Link href={pathname as "/dashboard/interviews"} />}
-          nativeButton={false}
         >
           <X className="mr-2 size-4" />
           Reset
-        </Button>
+        </Link>
       )}
     </div>
   );

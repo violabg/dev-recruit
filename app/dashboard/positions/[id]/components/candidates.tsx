@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidatesByPosition } from "@/lib/data/candidates";
 import { Plus, Users } from "lucide-react";
@@ -17,17 +17,13 @@ export default async function Candidates({ params }: Props) {
     <>
       <div className="flex justify-between">
         <h2 className="font-semibold text-xl">Candidati</h2>
-        <Button
-          size="sm"
-          variant="default"
-          nativeButton={false}
-          render={
-            <Link href={`/dashboard/candidates/new?positionId=${id}`}>
-              <Plus className="mr-1 size-4" />
-              Aggiungi Candidato
-            </Link>
-          }
-        />
+        <Link
+          href={`/dashboard/candidates/new?positionId=${id}`}
+          className={`${buttonVariants({ variant: "default", size: "sm" })}`}
+        >
+          <Plus className="mr-1 size-4" />
+          Aggiungi Candidato
+        </Link>
       </div>
 
       {candidates.length > 0 ? (
@@ -64,28 +60,25 @@ export default async function Candidates({ params }: Props) {
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      nativeButton={false}
-                      render={
-                        <Link href={`/dashboard/candidates/${candidate.id}`}>
-                          Dettagli
-                        </Link>
-                      }
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      nativeButton={false}
-                      render={
-                        <Link
-                          href={`/dashboard/candidates/${candidate.id}/quiz`}
-                        >
-                          Associa quiz
-                        </Link>
-                      }
-                    />
+                    <Link
+                      href={`/dashboard/candidates/${candidate.id}`}
+                      className={`${buttonVariants({
+                        variant: "outline",
+                        size: "sm",
+                      })}`}
+                    >
+                      Dettagli
+                    </Link>
+
+                    <Link
+                      href={`/dashboard/candidates/${candidate.id}/quiz`}
+                      className={`${buttonVariants({
+                        variant: "secondary",
+                        size: "sm",
+                      })}`}
+                    >
+                      Associa quiz
+                    </Link>
                   </div>
                 </div>
               </CardContent>
@@ -98,17 +91,17 @@ export default async function Candidates({ params }: Props) {
             <p className="text-muted-foreground text-sm">
               Nessun candidato aggiunto per questa posizione
             </p>
-            <Button
-              className="mt-2"
-              size="sm"
-              nativeButton={false}
-              render={
-                <Link href={`/dashboard/candidates/new?positionId=${id}`}>
-                  <Users className="mr-1 size-4" />
-                  Aggiungi candidato
-                </Link>
-              }
-            />
+            <Link
+              href={`/dashboard/candidates/new?positionId=${id}`}
+              className={`${buttonVariants({
+                variant: "default",
+                size: "sm",
+                className: "mt-2",
+              })}`}
+            >
+              <Users className="mr-1 size-4" />
+              Aggiungi candidato
+            </Link>
           </div>
         </div>
       )}

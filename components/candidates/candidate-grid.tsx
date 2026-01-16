@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -151,15 +151,16 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
           </CardContent>
           <CardFooter className="flex justify-between items-center p-4 border-t">
             <CandidateStatusBadge status={candidate.status} />
-            <Button
-              render={<Link href={`/dashboard/candidates/${candidate.id}`} />}
-              variant="outline"
-              size="sm"
-              nativeButton={false}
+            <Link
+              href={`/dashboard/candidates/${candidate.id}`}
+              className={buttonVariants({
+                variant: "outline",
+                size: "sm",
+              })}
             >
               <Eye className="mr-1 size-4 text-primary" />
               Visualizza
-            </Button>
+            </Link>
           </CardFooter>
         </Card>
       ))}

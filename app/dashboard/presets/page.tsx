@@ -1,6 +1,7 @@
 import PageHeader from "@/components/page-header";
 import { PresetsClient } from "@/components/presets/presets-client";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
@@ -80,17 +81,16 @@ async function PresetsContent({
               </EmptyHeader>
               {!search && (
                 <EmptyContent>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    render={
-                      <Link href="/dashboard/presets/new">
-                        <Plus className="mr-1 size-4" />
-                        Nuovo preset
-                      </Link>
-                    }
-                    nativeButton={false}
-                  />
+                  <Link
+                    href="/dashboard/presets/new"
+                    className={buttonVariants({
+                      variant: "default",
+                      size: "sm",
+                    })}
+                  >
+                    <Plus className="mr-1 size-4" />
+                    Nuovo preset
+                  </Link>
                 </EmptyContent>
               )}
             </Empty>
@@ -128,17 +128,13 @@ export default async function PresetsPage({
         description="Crea e gestisci preset per la generazione di domande per le tue
             posizioni"
         actionBtns={
-          <Button
-            size="sm"
-            variant="default"
-            render={
-              <Link href="/dashboard/presets/new">
-                <Plus className="mr-1 size-4" />
-                Nuovo preset
-              </Link>
-            }
-            nativeButton={false}
-          />
+          <Link
+            href="/dashboard/presets/new"
+            className={buttonVariants({ variant: "default", size: "sm" })}
+          >
+            <Plus className="mr-1 size-4" />
+            Nuovo preset
+          </Link>
         }
       />
       <div className="space-y-6">

@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import { getInterviewsByQuiz } from "@/lib/data/interviews";
 import { formatDate } from "@/lib/utils";
 import { Eye, Link2 } from "lucide-react";
@@ -20,15 +21,16 @@ export async function QuizResultsContent({ params }: Props) {
           <p className="text-muted-foreground text-sm">
             Nessun candidato ha ancora completato questo quiz
           </p>
-          <Button
-            className="mt-2"
-            size="sm"
-            render={<Link href={`/dashboard/quizzes/${quizId}/invite`} />}
-            nativeButton={false}
+          <Link
+            href={`/dashboard/quizzes/${quizId}/invite`}
+            className={`mt-2 ${buttonVariants({
+              variant: "default",
+              size: "sm",
+            })}`}
           >
             <Link2 className="mr-1 size-4" />
             Associa a candidati
-          </Button>
+          </Link>
         </div>
       </div>
     );
@@ -97,16 +99,15 @@ export async function QuizResultsContent({ params }: Props) {
                     : "—"}
                 </td>
                 <td className="p-2 text-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    render={
-                      <Link href={`/dashboard/interviews/${interview.id}`} />
-                    }
-                    nativeButton={false}
+                  <Link
+                    href={`/dashboard/interviews/${interview.id}`}
+                    className={buttonVariants({
+                      variant: "ghost",
+                      size: "icon",
+                    })}
                   >
                     <Eye className="size-4 text-primary" />
-                  </Button>
+                  </Link>
                 </td>
               </tr>
             ))}

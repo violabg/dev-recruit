@@ -1,6 +1,7 @@
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deletePosition } from "@/lib/actions/positions";
 import { getPositionById } from "@/lib/data/positions";
@@ -20,8 +21,14 @@ export async function PositionHeader({ params }: Props) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Posizione non trovata</p>
-        <Link href="/dashboard/positions" className="mt-4">
-          <Button size="sm">Torna alle posizioni</Button>
+        <Link
+          href="/dashboard/positions"
+          className={`mt-4 ${buttonVariants({
+            variant: "default",
+            size: "sm",
+          })}`}
+        >
+          Torna alle posizioni
         </Link>
       </div>
     );
@@ -43,12 +50,17 @@ export async function PositionHeader({ params }: Props) {
       }
       actionBtns={
         <>
-          <Link href={`/dashboard/positions/${position.id}/edit`}>
-            <Button variant="outline" size="sm" className="inline-flex">
-              <Edit className="mr-1 size-4" />
-              Modifica
-            </Button>
+          <Link
+            href={`/dashboard/positions/${position.id}/edit`}
+            className={`${buttonVariants({
+              variant: "outline",
+              size: "sm",
+            })} inline-flex`}
+          >
+            <Edit className="mr-1 size-4" />
+            Modifica
           </Link>
+
           <DeleteWithConfirm
             deleteAction={deletePosition.bind(null, position.id)}
             description="Questa azione non può essere annullata. Verranno eliminati anche tutti i quiz e i candidati associati a questa posizione."

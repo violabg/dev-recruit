@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { getEvaluationsByCandidateId } from "@/lib/data/evaluations";
 import { getAllPositions } from "@/lib/data/positions";
@@ -23,8 +24,11 @@ export default async function CandidateEvaluationsPage({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Candidato non trovato</p>
-        <Link href="/dashboard/candidates" className="mt-4">
-          <Button>Torna ai candidati</Button>
+        <Link
+          href="/dashboard/candidates"
+          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+        >
+          Torna ai candidati
         </Link>
       </div>
     );
@@ -35,11 +39,15 @@ export default async function CandidateEvaluationsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Link href={`/dashboard/candidates/${id}`}>
-          <Button variant="ghost" size="sm" className="inline-flex">
-            <ArrowLeft className="mr-1 size-4" />
-            Torna al candidato
-          </Button>
+        <Link
+          href={`/dashboard/candidates/${id}`}
+          className={`${buttonVariants({
+            variant: "ghost",
+            size: "sm",
+          })} inline-flex`}
+        >
+          <ArrowLeft className="mr-1 size-4" />
+          Torna al candidato
         </Link>
       </div>
 

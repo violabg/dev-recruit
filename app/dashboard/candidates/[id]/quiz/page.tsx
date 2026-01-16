@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { QuizSelectionForm } from "@/components/quiz/quiz-selection-form";
 import { InvitesList } from "@/components/recruting/invites-list";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -45,13 +45,17 @@ export default async function CandidateQuizPage({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Candidate or Position not found</p>
-        <Button
-          className="mt-4"
-          nativeButton={false}
-          render={
-            <Link href="/dashboard/candidates">Return to candidates</Link>
-          }
-        />
+        <Link
+          href="/dashboard/candidates"
+          className={buttonVariants({
+            variant: "default",
+            size: "sm",
+            className: "mt-4",
+          })}
+        >
+          <ArrowLeft className="mr-1 size-4" />
+          Return to candidates
+        </Link>
       </div>
     );
   }
@@ -59,17 +63,16 @@ export default async function CandidateQuizPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          nativeButton={false}
-          render={
-            <Link href={`/dashboard/candidates/${candidateId}`}>
-              <ArrowLeft className="mr-1 size-4" />
-              Back to candidate
-            </Link>
-          }
-        />
+        <Link
+          href={`/dashboard/candidates/${candidateId}`}
+          className={buttonVariants({
+            variant: "ghost",
+            size: "sm",
+          })}
+        >
+          <ArrowLeft className="mr-1 size-4" />
+          Back to candidate
+        </Link>
       </div>
 
       <div>

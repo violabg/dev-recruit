@@ -1,7 +1,8 @@
 "use client";
 
 import { EditQuizForm } from "@/components/quiz/edit-quiz-form";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import {
   Select,
   SelectContent,
@@ -87,7 +88,9 @@ export const NewQuizCreationPage = ({
         <Select
           value={selectedPositionId || null}
           items={availablePositions}
-          onValueChange={(value: string | null) => setSelectedPositionId(value ?? "")}
+          onValueChange={(value: string | null) =>
+            setSelectedPositionId(value ?? "")
+          }
           disabled={availablePositions.length === 0}
         >
           <SelectTrigger className="w-full">
@@ -95,7 +98,10 @@ export const NewQuizCreationPage = ({
           </SelectTrigger>
           <SelectContent>
             {availablePositions.map((position) => (
-              <SelectItem key={String(position.value ?? "none")} value={position.value}>
+              <SelectItem
+                key={String(position.value ?? "none")}
+                value={position.value}
+              >
                 {position.label}
               </SelectItem>
             ))}
@@ -109,15 +115,15 @@ export const NewQuizCreationPage = ({
             Non ci sono ancora posizioni disponibili. Crea una posizione prima
             di costruire il quiz.
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-4"
-            render={<Link href="/dashboard/positions" />}
-            nativeButton={false}
+          <Link
+            href="/dashboard/positions"
+            className={`mt-4 ${buttonVariants({
+              variant: "outline",
+              size: "sm",
+            })}`}
           >
             Vai alle posizioni
-          </Button>
+          </Link>
         </div>
       ) : !selectedPosition || !blankQuiz ? (
         <div className="p-6 border border-muted/50 rounded-xl text-center">

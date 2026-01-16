@@ -2,7 +2,7 @@
 
 import { CurrentUserAvatar } from "@/components/auth/current-user-avatar";
 import { LogoutButton } from "@/components/auth/logout-button";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -93,26 +93,26 @@ export const AccountInfo = ({
           <div className="space-y-3">
             <h4 className="font-medium text-sm">Gestione Profilo</h4>
             <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="justify-start w-full"
-                render={<Link href="/dashboard/profile/edit" />}
-                size="sm"
-                nativeButton={false}
+              <Link
+                href="/dashboard/profile/edit"
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "sm",
+                })}
               >
                 <Edit className="mr-1 size-4" />
                 Modifica Profilo
-              </Button>
-              <Button
-                variant="outline"
-                className="justify-start w-full"
-                render={<Link href="/dashboard/profile/change-password" />}
-                size="sm"
-                nativeButton={false}
+              </Link>
+              <Link
+                href="/dashboard/profile/change-password"
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "sm",
+                })}
               >
                 <Lock className="mr-1 size-4" />
                 Cambia Password
-              </Button>
+              </Link>
             </div>
           </div>
 

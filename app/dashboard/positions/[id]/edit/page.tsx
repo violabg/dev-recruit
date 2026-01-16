@@ -1,5 +1,6 @@
 import { PositionFormWithData } from "@/components/positions/position-form-with-data";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -23,8 +24,11 @@ export default async function EditPositionPage({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Posizione non trovata</p>
-        <Link href="/dashboard/positions" className="mt-4">
-          <Button>Torna alle posizioni</Button>
+        <Link
+          href="/dashboard/positions"
+          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+        >
+          Torna alle posizioni
         </Link>
       </div>
     );
@@ -33,16 +37,13 @@ export default async function EditPositionPage({
   return (
     <Card>
       <CardHeader className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          render={
-            <Link href={`/dashboard/positions/${params.id}`}>
-              <ArrowLeft className="size-4" />
-            </Link>
-          }
-          nativeButton={false}
-        />
+        <Link
+          href={`/dashboard/positions/${params.id}`}
+          className={buttonVariants({ variant: "ghost", size: "icon" })}
+        >
+          <ArrowLeft className="size-4" />
+        </Link>
+
         <div>
           <CardTitle className="text-2xl"> Posizione</CardTitle>
           <CardDescription>

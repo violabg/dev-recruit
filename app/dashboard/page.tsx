@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -118,17 +118,16 @@ async function RecentPositions() {
               <p className="text-muted-foreground text-sm">
                 Nessuna posizione creata
               </p>
-              <Button
-                className="mt-2"
-                size="sm"
-                render={
-                  <Link href="/dashboard/positions/new">
-                    <Plus className="mr-1 size-4" />
-                    Crea posizione
-                  </Link>
-                }
-                nativeButton={false}
-              />
+              <Link
+                href="/dashboard/positions/new"
+                className={`mt-2 ${buttonVariants({
+                  variant: "default",
+                  size: "sm",
+                })}`}
+              >
+                <Plus className="mr-1 size-4" />
+                Crea posizione
+              </Link>
             </div>
           </div>
         )}
@@ -143,16 +142,16 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="font-bold text-gradient text-3xl">Dashboard</h1>
-        <Button
-          render={
-            <Link href="/dashboard/positions/new">
-              <Plus className="mr-1 size-4" />
-              Nuova Posizione
-            </Link>
-          }
-          variant={"default"}
-          nativeButton={false}
-        />
+        <Link
+          href="/dashboard/positions/new"
+          className={buttonVariants({
+            variant: "default",
+            size: "sm",
+          })}
+        >
+          <Plus className="mr-1 size-4" />
+          Nuova Posizione
+        </Link>
       </div>
 
       <div className="gap-4 grid md:grid-cols-3">

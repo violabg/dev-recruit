@@ -1,6 +1,7 @@
 import { CodeHighlight } from "@/components/quiz/code-highlight";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/lib/auth-server";
 import { ArrowRight, BrainCircuit, CheckCircle, Users } from "lucide-react";
@@ -11,11 +12,12 @@ async function StartButton() {
   const user = await getCurrentUser().catch(() => null);
   const href = user ? "/dashboard" : "/auth/login";
   return (
-    <Link href={href}>
-      <Button size="lg" className="gap-1.5">
-        Inizia ora
-        <ArrowRight className="size-4" />
-      </Button>
+    <Link
+      href={href}
+      className={buttonVariants({ size: "lg", className: "gap-1.5" })}
+    >
+      Inizia ora
+      <ArrowRight className="size-4" />
     </Link>
   );
 }

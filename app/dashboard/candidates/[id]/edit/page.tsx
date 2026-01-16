@@ -1,5 +1,5 @@
 import { CandidateForm } from "@/components/candidates/candidate-form";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -60,20 +60,17 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
   return (
     <Card>
       <CardHeader className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          nativeButton={false}
-          render={
-            <Link
-              href={
-                `/dashboard/candidates/${candidate.id}` as Route<`/dashboard/candidates/${string}`>
-              }
-            >
-              <ArrowLeft className="size-4" />
-            </Link>
+        <Link
+          href={
+            `/dashboard/candidates/${candidate.id}` as Route<`/dashboard/candidates/${string}`>
           }
-        />
+          className={buttonVariants({
+            variant: "ghost",
+            size: "icon",
+          })}
+        >
+          <ArrowLeft className="size-4" />
+        </Link>
         <div>
           <CardTitle className="text-2xl">Modifica Candidato</CardTitle>
           <CardDescription>

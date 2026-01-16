@@ -1,6 +1,7 @@
 "use client";
 import { DuplicateQuizDialog } from "@/components/quiz/duplicate-quiz-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deleteQuizById } from "@/lib/actions/quizzes";
 import { Copy, Edit, Send } from "lucide-react";
@@ -25,15 +26,14 @@ export function QuizDetailActionsClient({
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        render={<Link href={`/dashboard/quizzes/${quizId}/edit`} />}
-        nativeButton={false}
+      <Link
+        href={`/dashboard/quizzes/${quizId}/edit`}
+        className={buttonVariants({ variant: "outline", size: "sm" })}
       >
         <Edit className="mr-1 size-4" />
         Modifica
-      </Button>
+      </Link>
+
       <Button
         variant="secondary"
         size="sm"
@@ -42,15 +42,14 @@ export function QuizDetailActionsClient({
         <Copy className="mr-1 size-4" />
         Duplica
       </Button>
-      <Button
-        variant="default"
-        size="sm"
-        render={<Link href={`/dashboard/quizzes/${quizId}/invite`} />}
-        nativeButton={false}
+      <Link
+        href={`/dashboard/quizzes/${quizId}/invite`}
+        className={buttonVariants({ variant: "default", size: "sm" })}
       >
         <Send className="mr-1 size-4" />
-        Assicia a candidati
-      </Button>
+        Associa a candidati
+      </Link>
+
       <DeleteWithConfirm
         deleteAction={deleteQuizById.bind(null, quizId)}
         description="Questa azione non può essere annullata. Il quiz verrà eliminato permanentemente."

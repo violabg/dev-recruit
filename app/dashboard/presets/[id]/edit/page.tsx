@@ -1,5 +1,5 @@
 import { PresetForm } from "@/components/presets/preset-form";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -30,20 +30,17 @@ export default async function EditPresetPage({ params }: EditPresetPageProps) {
   return (
     <Card>
       <CardHeader className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          render={
-            <Link
-              href={
-                `/dashboard/presets/${result.preset.id}` as Route<`/dashboard/presets/${string}`>
-              }
-            />
+        <Link
+          href={
+            `/dashboard/presets/${result.preset.id}` as Route<`/dashboard/presets/${string}`>
           }
-          nativeButton={false}
+          className={buttonVariants({
+            variant: "ghost",
+            size: "icon",
+          })}
         >
           <ArrowLeft className="size-4" />
-        </Button>
+        </Link>
         <div>
           <CardTitle className="text-2xl">Modifica preset</CardTitle>
           <CardDescription>

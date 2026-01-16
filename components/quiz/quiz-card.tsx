@@ -1,6 +1,6 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -63,24 +63,26 @@ export function QuizCard({
       </CardContent>
       <CardFooter className="mt-auto pt-2">
         <div className="flex justify-between gap-2 w-full">
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link href={`/dashboard/quizzes/${id}`} />}
-            nativeButton={false}
+          <Link
+            href={`/dashboard/quizzes/${id}`}
+            className={buttonVariants({
+              size: "sm",
+              variant: "outline",
+            })}
           >
             <Eye className="mr-1 size-4 text-primary" />
             Visualizza
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            render={<Link href={`/dashboard/quizzes/${id}/invite`} />}
-            nativeButton={false}
+          </Link>
+          <Link
+            href={`/dashboard/quizzes/${id}/invite`}
+            className={buttonVariants({
+              size: "sm",
+              variant: "secondary",
+            })}
           >
             <Link2 className="mr-1 size-4" />
             Associa candidato
-          </Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>

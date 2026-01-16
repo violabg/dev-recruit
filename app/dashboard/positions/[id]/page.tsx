@@ -2,7 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAllPositions } from "@/lib/data/positions";
 import { Suspense } from "react";
 import Candidates from "./components/candidates";
-import Quizes from "./components/quizes";
+import Quizzes from "./components/quizzes";
+
 import {
   PositionCandidatesSkeleton,
   PositionDetailsSkeleton,
@@ -45,9 +46,10 @@ export default async function PositionDetailPage({
         </TabsContent>
         <TabsContent value="quizzes" className="space-y-4 pt-4">
           <Suspense fallback={<PositionQuizzesSkeleton />}>
-            <Quizes params={params} />
+            <Quizzes params={params} />
           </Suspense>
         </TabsContent>
+
         <TabsContent value="candidates" className="space-y-4 pt-4">
           <Suspense fallback={<PositionCandidatesSkeleton />}>
             <Candidates params={params} />

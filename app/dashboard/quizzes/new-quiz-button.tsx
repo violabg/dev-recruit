@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -18,15 +19,12 @@ export function NewQuizButton({
   className,
 }: NewQuizButtonProps) {
   return (
-    <Button
-      variant={variant}
-      size={size}
-      className={className}
-      render={<Link href="/dashboard/quizzes/new" />}
-      nativeButton={false}
+    <Link
+      href="/dashboard/quizzes/new"
+      className={buttonVariants({ variant, size, className })}
     >
       <Plus className="mr-1 size-4" />
       Nuovo quiz
-    </Button>
+    </Link>
   );
 }

@@ -1,6 +1,7 @@
 import PageHeader from "@/components/page-header";
 import { SearchPositions } from "@/components/positions/search-positions";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import {
   Empty,
   EmptyContent,
@@ -44,17 +45,13 @@ export default async function PositionsPage({
         title="Posizioni"
         description="Gestisci le posizioni"
         actionBtns={
-          <Button
-            size="sm"
-            variant="default"
-            render={
-              <Link href="/dashboard/positions/new">
-                <Plus className="mr-1 size-4" />
-                Nuova Posizione
-              </Link>
-            }
-            nativeButton={false}
-          />
+          <Link
+            href="/dashboard/positions/new"
+            className={buttonVariants({ variant: "default", size: "sm" })}
+          >
+            <Plus className="mr-1 size-4" />
+            Nuova Posizione
+          </Link>
         }
       />
       <div className="flex items-center gap-4">
@@ -145,17 +142,13 @@ const PositionsTable = async ({
           </EmptyHeader>
           {!query && (
             <EmptyContent>
-              <Button
-                size="sm"
-                variant="default"
-                render={
-                  <Link href="/dashboard/positions/new">
-                    <Plus className="mr-1 size-4" />
-                    Crea posizione
-                  </Link>
-                }
-                nativeButton={false}
-              />
+              <Link
+                href="/dashboard/positions/new"
+                className={buttonVariants({ variant: "default", size: "sm" })}
+              >
+                <Plus className="mr-1 size-4" />
+                Crea posizione
+              </Link>
             </EmptyContent>
           )}
         </Empty>

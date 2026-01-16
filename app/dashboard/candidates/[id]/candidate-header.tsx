@@ -1,6 +1,6 @@
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deleteCandidate } from "@/lib/actions/candidates";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
@@ -19,8 +19,11 @@ export async function CandidateHeader({ params }: Props) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Candidato non trovato</p>
-        <Link href="/dashboard/candidates" className="mt-4">
-          <Button>Torna ai candidati</Button>
+        <Link
+          href="/dashboard/candidates"
+          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+        >
+          Torna ai candidati
         </Link>
       </div>
     );

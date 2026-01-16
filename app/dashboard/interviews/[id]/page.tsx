@@ -2,7 +2,8 @@ import { InterviewExpiryChecker } from "@/components/interviews/interview-expiry
 import PageHeader from "@/components/page-header";
 import { InterviewResults } from "@/components/recruting/interview-results";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -59,8 +60,11 @@ export default async function InterviewDetailPage({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Colloquio non trovata</p>
-        <Link href="/dashboard/quizzes" className="mt-4">
-          <Button>Torna ai quiz</Button>
+        <Link
+          href="/dashboard/quizzes"
+          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+        >
+          Torna ai quiz
         </Link>
       </div>
     );

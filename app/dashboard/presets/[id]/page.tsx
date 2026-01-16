@@ -1,6 +1,6 @@
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -108,21 +108,18 @@ export default async function PresetDetailPage({
         description={preset.description || "Nessuna descrizione fornita."}
         actionBtns={
           <>
-            <Button
-              size="sm"
-              variant="outline"
-              render={
-                <Link
-                  href={
-                    `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
-                  }
-                />
+            <Link
+              href={
+                `/dashboard/presets/${preset.id}/edit` as Route<`/dashboard/presets/${string}/edit`>
               }
-              nativeButton={false}
+              className={buttonVariants({
+                variant: "outline",
+                size: "sm",
+              })}
             >
               <Edit className="mr-1 size-4" />
               Modifica
-            </Button>
+            </Link>
             <DeleteWithConfirm
               deleteAction={deletePresetAction.bind(null, preset.id)}
               description="Questa azione non può essere annullata. Il preset verrà rimosso da tutte le posizioni che ne dipendono."

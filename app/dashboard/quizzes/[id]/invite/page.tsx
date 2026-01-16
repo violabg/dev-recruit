@@ -4,7 +4,8 @@ import { Suspense } from "react";
 
 import { CandidateSelectionForm } from "@/components/recruting/candidate-selection-form";
 import { InvitesList } from "@/components/recruting/invites-list"; // Import AssignedInterview type
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -41,13 +42,12 @@ async function InviteCandidatesContent({
     return (
       <div className="flex flex-col justify-center items-center h-100">
         <p className="font-medium text-lg">Quiz or Position not found</p>
-        <Button
-          className="mt-4"
-          render={<Link href="/dashboard/quizzes" />}
-          nativeButton={false}
+        <Link
+          href="/dashboard/quizzes"
+          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
         >
           Return to quizzes
-        </Button>
+        </Link>
       </div>
     );
   }
@@ -57,15 +57,13 @@ async function InviteCandidatesContent({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          render={<Link href={`/dashboard/quizzes/${quizId}`} />}
-          nativeButton={false}
+        <Link
+          href={`/dashboard/quizzes/${quizId}`}
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
         >
           <ArrowLeft className="mr-1 size-4" />
           Back to quiz
-        </Button>
+        </Link>
       </div>
 
       <div>
