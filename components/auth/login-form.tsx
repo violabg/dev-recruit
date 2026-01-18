@@ -91,7 +91,9 @@ export function LoginForm({
             />
             <>
               <div className="flex items-center gap-2">
-                <FieldLabel htmlFor={passwordId}>Password</FieldLabel>
+                <FieldLabel className="text-primary" htmlFor={passwordId}>
+                  Password
+                </FieldLabel>
                 <Link
                   href="/auth/forgot-password"
                   className="inline-block ml-auto text-sm hover:underline underline-offset-4"

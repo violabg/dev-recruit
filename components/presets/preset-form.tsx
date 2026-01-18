@@ -144,7 +144,7 @@ export function PresetForm({ preset }: PresetFormProps) {
         }
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "Something went wrong"
+          error instanceof Error ? error.message : "Something went wrong",
         );
       }
     });
@@ -160,189 +160,228 @@ export function PresetForm({ preset }: PresetFormProps) {
       className="space-y-6"
       noValidate
     >
-      <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
-        <InputField
-          control={form.control}
-          name="name"
-          label="Nome preset"
-          required
-          placeholder="es. react-hooks"
-          description="Identificatore univoco per il preset"
-        />
+      <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
+        {/* Left Column: Core Info & AI Instructions */}
+        <div className="flex flex-col gap-6 lg:col-span-8">
+          <div className="bg-card/50 shadow-sm p-6 border rounded-xl">
+            <h3 className="mb-4 font-heading font-semibold text-foreground/90 text-lg">
+              Informazioni Principali
+            </h3>
+            <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
+              <InputField
+                control={form.control}
+                name="name"
+                label="Nome preset"
+                required
+                placeholder="es. react-hooks"
+                description="Identificatore univoco per il preset"
+              />
 
-        <InputField
-          control={form.control}
-          name="label"
-          label="Etichetta visualizzata"
-          required
-          placeholder="es. Esperto React Hooks"
-          description="Nome leggibile dall'uomo"
-        />
-      </div>
+              <InputField
+                control={form.control}
+                name="label"
+                label="Etichetta visualizzata"
+                required
+                placeholder="es. Esperto React Hooks"
+                description="Nome leggibile dall'uomo"
+              />
+            </div>
+            <div className="mt-6">
+              <TextareaField
+                control={form.control}
+                name="description"
+                label="Descrizione"
+                placeholder="Descrivi a cosa serve questo preset..."
+                description="Descrizione opzionale del preset"
+              />
+            </div>
+          </div>
 
-      <TextareaField
-        control={form.control}
-        name="description"
-        label="Descrizione"
-        placeholder="Descrivi a cosa serve questo preset..."
-        description="Descrizione opzionale del preset"
-      />
-
-      <TextareaField
-        control={form.control}
-        name="instructions"
-        label="Istruzioni AI"
-        placeholder="Ulteriori indicazioni per l'AI durante la generazione delle domande"
-        description="Aiuta l'AI a concentrarsi su requisiti o pattern specifici"
-      />
-
-      <div className="gap-6 grid grid-cols-1 md:grid-cols-3">
-        <SelectField
-          control={form.control}
-          name="icon"
-          label="Icona"
-          required
-          options={PRESET_ICON_OPTIONS.map((icon) => ({
-            value: icon.value,
-            label: icon.label,
-            leading: (
-              <icon.icon className="size-4 text-primary" aria-hidden="true" />
-            ),
-          }))}
-          description="Scegli un'icona da lucide-react"
-        />
-
-        <SelectField
-          control={form.control}
-          name="questionType"
-          label="Tipo di domanda"
-          required
-          options={QUESTION_TYPES}
-          description="Tipo di domande generate da questo preset"
-        />
-
-        <SliderField
-          control={form.control}
-          name="difficulty"
-          label="Livello difficoltà"
-          required
-          min={1}
-          max={5}
-          step={1}
-          description="1 = Principiante, 5 = Esperto"
-        />
-      </div>
-
-      <MultiSelectField
-        control={form.control}
-        name="tags"
-        label="Tag"
-        required
-        options={COMMON_TAGS.map((tag) => ({
-          value: tag,
-          label: tag,
-        }))}
-        description="Seleziona tag rilevanti per questo preset"
-      />
-
-      {questionType === "multiple_choice" && (
-        <div className="space-y-4 p-4 border rounded-lg">
-          <h3 className="font-medium text-base">Opzioni scelta multipla</h3>
-          <div>
-            <InputWithTagField
+          <div className="bg-card/50 shadow-sm p-6 border rounded-xl">
+            <h3 className="flex items-center gap-2 mb-4 font-heading font-semibold text-foreground/90 text-lg">
+              <span className="text-primary">✨</span> Istruzioni AI
+            </h3>
+            <TextareaField
               control={form.control}
-              name="focusAreas"
-              label="Aree di focus"
-              placeholder="Premi invio dopo ogni parola"
-              description="Aree tematiche su cui l'AI dovrebbe concentrarsi durante la generazione delle domande"
+              name="instructions"
+              label="Prompt di sistema"
+              placeholder="Ulteriori indicazioni per l'AI durante la generazione delle domande"
+              description="Aiuta l'AI a concentrarsi su requisiti o pattern specifici"
+              className="min-h-[150px] font-mono text-sm"
             />
           </div>
 
-          <SelectField
-            control={form.control}
-            name="distractorComplexity"
-            label="Complessità distrattori"
-            options={DISTRACTOR_COMPLEXITY_OPTIONS}
-            description="Quanto dovrebbero essere difficili da distinguere le opzioni sbagliate"
-          />
+          {/* Dynamic Sections Based on Type */}
+          {questionType === "multiple_choice" && (
+            <div className="group relative space-y-4 bg-card/30 p-6 border rounded-xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
+              <h3 className="z-10 relative font-heading font-medium text-base">
+                Configurazione Scelta Multipla
+              </h3>
+              <div className="z-10 relative space-y-4">
+                <InputWithTagField
+                  control={form.control}
+                  name="focusAreas"
+                  label="Aree di focus"
+                  placeholder="Premi invio dopo ogni parola"
+                  description="Aree tematiche su cui l'AI dovrebbe concentrarsi"
+                />
+                <SelectField
+                  control={form.control}
+                  name="distractorComplexity"
+                  label="Complessità distrattori"
+                  options={DISTRACTOR_COMPLEXITY_OPTIONS}
+                  description="Difficoltà nel distinguere le opzioni sbagliate"
+                />
+              </div>
+            </div>
+          )}
+
+          {questionType === "open_question" && (
+            <div className="space-y-4 bg-card/30 p-6 border rounded-xl">
+              <h3 className="font-heading font-medium text-base">
+                Configurazione Domanda Aperta
+              </h3>
+              <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
+                <SelectField
+                  control={form.control}
+                  name="expectedResponseLength"
+                  label="Lunghezza risposta"
+                  options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
+                  description="Dettaglio richiesto nella risposta"
+                  placeholder="Seleziona una lunghezza"
+                />
+                <InputWithTagField
+                  control={form.control}
+                  name="evaluationCriteria"
+                  label="Criteri di valutazione"
+                  placeholder="Premi invio dopo ogni criterio"
+                  description="Criteri per il rubric di punteggio automatico"
+                />
+              </div>
+            </div>
+          )}
+
+          {questionType === "code_snippet" && (
+            <div className="space-y-4 bg-card/30 p-6 border rounded-xl">
+              <h3 className="font-heading font-medium text-base">
+                Configurazione Snippet
+              </h3>
+              <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
+                <InputField
+                  control={form.control}
+                  name="language"
+                  label="Linguaggio"
+                  placeholder="es. typescript"
+                  description="Linguaggio dello snippet"
+                />
+                <SelectField
+                  control={form.control}
+                  name="bugType"
+                  label="Tipo di bug"
+                  options={BUG_TYPE_OPTIONS}
+                  description="Problema da includere"
+                  placeholder="Seleziona tipo bug"
+                />
+                <SelectField
+                  control={form.control}
+                  name="codeComplexity"
+                  label="Complessità"
+                  options={CODE_COMPLEXITY_OPTIONS}
+                  description="Lunghezza e difficoltà del codice"
+                  placeholder="Seleziona complessità"
+                />
+              </div>
+              <div className="pt-2">
+                <SwitchField
+                  control={form.control}
+                  name="includeComments"
+                  label="Includi commenti"
+                  description="Lo snippet dovrebbe contenere commenti inline?"
+                />
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
-      {questionType === "open_question" && (
-        <div className="space-y-4 p-4 border rounded-lg">
-          <h3 className="font-medium text-base">Opzioni domanda aperta</h3>
-          <SelectField
-            control={form.control}
-            name="expectedResponseLength"
-            label="Lunghezza risposta attesa"
-            options={EXPECTED_RESPONSE_LENGTH_OPTIONS}
-            description="Lascia che l'AI sappia quanto dettagliata dovrebbe essere la risposta"
-            placeholder="Seleziona una lunghezza"
-          />
-          <InputWithTagField
-            control={form.control}
-            name="evaluationCriteria"
-            label="Criteri di valutazione"
-            placeholder="Premi invio dopo ogni criterio"
-            description="Criteri per valutare le risposte aperte (es. correttezza, profondità, chiarezza). L'AI li userà per generare un rubric di punteggio."
-          />
+        {/* Right Column: Settings & Actions */}
+        <div className="flex flex-col gap-6 lg:col-span-4">
+          <div className="top-6 sticky bg-card/50 shadow-sm p-6 border rounded-xl">
+            <h3 className="mb-4 font-heading font-semibold text-foreground/90 text-lg">
+              Impostazioni
+            </h3>
+            <div className="space-y-6">
+              <SelectField
+                control={form.control}
+                name="icon"
+                label="Icona"
+                required
+                options={PRESET_ICON_OPTIONS.map((icon) => ({
+                  value: icon.value,
+                  label: icon.label,
+                  leading: (
+                    <icon.icon
+                      className="size-4 text-primary"
+                      aria-hidden="true"
+                    />
+                  ),
+                }))}
+                description="Visualizzata nelle card"
+              />
+
+              <SelectField
+                control={form.control}
+                name="questionType"
+                label="Tipo domanda"
+                required
+                options={QUESTION_TYPES}
+                description="Formato output generato"
+              />
+
+              <SliderField
+                control={form.control}
+                name="difficulty"
+                label="Livello difficoltà"
+                required
+                min={1}
+                max={5}
+                step={1}
+                description="1 = Principiante, 5 = Esperto"
+              />
+
+              <MultiSelectField
+                control={form.control}
+                name="tags"
+                label="Tag"
+                required
+                options={COMMON_TAGS.map((tag) => ({
+                  value: tag,
+                  label: tag,
+                }))}
+                description="Categoria del preset"
+              />
+
+              <div className="flex flex-col gap-3 pt-6 border-t">
+                <Button type="submit" disabled={isPending} className="w-full">
+                  {isPending
+                    ? "Salvataggio..."
+                    : preset
+                      ? "Aggiorna Preset"
+                      : "Crea Preset"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isPending}
+                  className="w-full"
+                >
+                  Annulla
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      {questionType === "code_snippet" && (
-        <div className="space-y-4 p-4 border rounded-lg">
-          <h3 className="font-medium text-base">Opzioni snippet di codice</h3>
-          <InputField
-            control={form.control}
-            name="language"
-            label="Linguaggio primario"
-            placeholder="es. typescript"
-            description="Linguaggio che lo snippet buggy dovrebbe usare"
-          />
-
-          <SelectField
-            control={form.control}
-            name="bugType"
-            label="Tipo di bug"
-            options={BUG_TYPE_OPTIONS}
-            description="Che tipo di problema dovrebbe includere lo snippet"
-            placeholder="Seleziona un tipo di bug"
-          />
-
-          <SelectField
-            control={form.control}
-            name="codeComplexity"
-            label="Complessità codice"
-            options={CODE_COMPLEXITY_OPTIONS}
-            description="Aiuta a regolare la lunghezza e la difficoltà dello snippet"
-            placeholder="Seleziona una complessità"
-          />
-
-          <SwitchField
-            control={form.control}
-            name="includeComments"
-            label="Includi commenti"
-            description="Se lo snippet dovrebbe contenere commenti inline"
-          />
-        </div>
-      )}
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleCancel}
-          disabled={isPending}
-        >
-          Annulla
-        </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending
-            ? "Salvataggio..."
-            : preset
-            ? "Aggiorna preset"
-            : "Crea preset"}
-        </Button>
       </div>
     </form>
   );

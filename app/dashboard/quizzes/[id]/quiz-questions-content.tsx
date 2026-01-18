@@ -44,8 +44,8 @@ export async function QuizQuestionsContent({ params }: Props) {
                   {question.type === "multiple_choice"
                     ? "Risposta multipla"
                     : question.type === "open_question"
-                    ? "Domanda aperta"
-                    : "Snippet di codice"}
+                      ? "Domanda aperta"
+                      : "Snippet di codice"}
                 </span>
               </div>
               <SaveFavoriteButton question={question} />

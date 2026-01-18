@@ -131,7 +131,7 @@ export const QuizForm = ({
           formData.append("questions", JSON.stringify(quizData.questions));
           formData.append(
             "timeLimit",
-            values.enableTimeLimit ? values.timeLimit.toString() : ""
+            values.enableTimeLimit ? values.timeLimit.toString() : "",
           );
 
           const saveResult = await upsertQuizAction(formData);
@@ -249,7 +249,7 @@ export const QuizForm = ({
       )}
 
       <Field>
-        <FieldLabel>Modello LLM</FieldLabel>
+        <FieldLabel className="text-primary">Modello LLM</FieldLabel>
         <FieldContent>
           <Controller
             control={control}

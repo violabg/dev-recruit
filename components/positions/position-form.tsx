@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SelectItem } from "@/components/ui/select";
 import { createPosition, updatePosition } from "@/lib/actions/positions";
 import { Position } from "@/lib/prisma/client";
@@ -9,7 +10,7 @@ import {
   type PositionDescriptionInput,
 } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Sparkles } from "lucide-react";
+import { Brain, Briefcase, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -89,7 +90,7 @@ export function PositionForm({
           formData.append("skills", JSON.stringify(values.skills));
           formData.append(
             "softSkills",
-            JSON.stringify(values.softSkills || [])
+            JSON.stringify(values.softSkills || []),
           );
           formData.append("contractType", values.contractType || "");
 
@@ -168,122 +169,169 @@ export function PositionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
-      <InputField<PositionFormData>
-        name="title"
-        control={control}
-        label="Titolo della posizione"
-        required
-        placeholder="es. Sviluppatore Frontend React"
-        description="Inserisci un titolo chiaro e descrittivo"
-      />
-      <SelectField<PositionFormData>
-        control={control}
-        name="experienceLevel"
-        label="Livello di esperienza"
-        required
-        description="Indica il livello di esperienza richiesto"
-        placeholder="Seleziona un livello"
-        triggerProps={{
-          className: "w-full",
-        }}
-      >
-        {experienceLevels.map((level) => (
-          <SelectItem key={level} value={level}>
-            {level}
-          </SelectItem>
-        ))}
-      </SelectField>
-      <MultiSelectField<PositionFormData>
-        control={control}
-        name="skills"
-        label="Competenze tecniche"
-        required
-        description="Seleziona le competenze tecniche richieste per questa posizione"
-        options={allSkills}
-        placeholder="Seleziona competenze..."
-        grouped
-      />
-      <MultiSelectField<PositionFormData>
-        control={control}
-        name="softSkills"
-        label="Soft skills"
-        description="Seleziona le soft skills richieste per questa posizione"
-        options={allSoftSkills}
-        placeholder="Seleziona soft skills..."
-      />
-      <SelectField<PositionFormData>
-        control={control}
-        name="contractType"
-        label="Tipo di contratto"
-        description="Indica il tipo di contratto previsto"
-        placeholder="Seleziona un contratto"
-        triggerProps={{
-          className: "w-full",
-        }}
-      >
-        {contractTypes.map((type) => (
-          <SelectItem key={type} value={type}>
-            {type}
-          </SelectItem>
-        ))}
-      </SelectField>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
+        {/* Left Column: Core Info & Description */}
+        <div className="flex flex-col gap-6 lg:col-span-8">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Briefcase className="size-5 text-primary" />
+                Dettagli Posizione
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="gap-6 grid grid-cols-1 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <InputField<PositionFormData>
+                  name="title"
+                  control={control}
+                  label="Titolo della posizione"
+                  required
+                  placeholder="es. Sviluppatore Frontend React"
+                  description="Inserisci un titolo chiaro e descrittivo"
+                />
+              </div>
 
-      <div className="space-y-2">
-        <TextareaField<PositionFormData>
-          control={control}
-          name="description"
-          label="Descrizione"
-          description="Forinisci dettagli sulla posizione e sulle responsabilità"
-          placeholder="Descrivi la posizione, le responsabilità e i requisiti"
-          className="min-h-32"
-        />
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleGenerateDescription}
-            disabled={isGeneratingDescription || isSubmitting}
-          >
-            {isGeneratingDescription ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Generazione in corso...
-              </>
-            ) : (
-              <>
-                <Sparkles className="ml-2 size-4 text-primary" />
-                Genera descrizione
-              </>
-            )}
-          </Button>
+              <SelectField<PositionFormData>
+                control={control}
+                name="contractType"
+                label="Tipo di contratto"
+                description="Indica il tipo di contratto previsto"
+                placeholder="Seleziona un contratto"
+                triggerProps={{
+                  className: "w-full",
+                }}
+              >
+                {contractTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectField>
+
+              <SelectField<PositionFormData>
+                control={control}
+                name="experienceLevel"
+                label="Livello di esperienza"
+                required
+                description="Indica il livello di esperienza richiesto"
+                placeholder="Seleziona un livello"
+                triggerProps={{
+                  className: "w-full",
+                }}
+              >
+                {experienceLevels.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectField>
+            </CardContent>
+          </Card>
+
+          <Card className="relative bg-primary/5 dark:bg-primary/10 border-primary/20 overflow-hidden">
+            <div className="top-0 right-0 absolute opacity-10 p-4">
+              <Sparkles className="size-24 text-primary" />
+            </div>
+            <CardHeader className="z-10 relative pb-0">
+              <CardTitle className="flex items-center gap-2 text-primary text-lg">
+                <Sparkles className="size-5" />
+                Descrizione IA
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="z-10 relative space-y-4 pt-4">
+              <TextareaField<PositionFormData>
+                control={control}
+                name="description"
+                label="Job Description"
+                description="Descrivi dettagliatamente la posizione. L'IA può aiutarti."
+                placeholder="Descrivi la posizione, le responsabilità e i requisiti..."
+                className="bg-background/50 backdrop-blur-sm min-h-48"
+              />
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleGenerateDescription}
+                  disabled={isGeneratingDescription || isSubmitting}
+                  className="bg-primary/10 hover:bg-primary/20 shadow-none border border-primary/20 text-primary"
+                >
+                  {isGeneratingDescription ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Generazione in corso...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 size-4" />
+                      Genera con IA
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
 
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleCancel}
-          disabled={isSubmitting}
-        >
-          Annulla
-        </Button>
-        <Button type="submit" size="sm" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 size-4 animate-spin" />
-              {isEditing
-                ? "Aggiornamento in corso..."
-                : "Creazione in corso..."}
-            </>
-          ) : isEditing ? (
-            "Aggiorna posizione"
-          ) : (
-            "Crea posizione"
-          )}
-        </Button>
+        {/* Right Column: Skills & Actions */}
+        <div className="flex flex-col gap-6 lg:col-span-4">
+          <Card className="top-6 sticky">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Brain className="size-5 text-primary" />
+                Competenze
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <MultiSelectField<PositionFormData>
+                control={control}
+                name="skills"
+                label="Tech Stack"
+                required
+                description="Competenze tecniche richieste"
+                options={allSkills}
+                placeholder="Seleziona tech..."
+                grouped
+              />
+              <MultiSelectField<PositionFormData>
+                control={control}
+                name="softSkills"
+                label="Soft Skills"
+                description="Competenze traversali"
+                options={allSoftSkills}
+                placeholder="Seleziona soft skills..."
+              />
+
+              <div className="flex flex-col gap-3 pt-6 border-t">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      {isEditing ? "Salvataggio..." : "Creazione..."}
+                    </>
+                  ) : isEditing ? (
+                    "Aggiorna posizione"
+                  ) : (
+                    "Crea posizione"
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  Annulla
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </form>
   );

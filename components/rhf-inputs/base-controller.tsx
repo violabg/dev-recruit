@@ -49,7 +49,7 @@ export function BaseController<T extends FieldValues>({
       render={({ field, fieldState, formState }) => (
         <Field data-invalid={fieldState.invalid}>
           {label && (
-            <FieldLabel htmlFor={field.name}>
+            <FieldLabel htmlFor={field.name} className="text-primary">
               {label}
               {required && (
                 <span aria-hidden className="ps-1 text-destructive">

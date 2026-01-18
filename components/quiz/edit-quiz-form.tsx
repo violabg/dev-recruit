@@ -1,10 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { getSaveButtonContent } from "@/lib/utils/quiz-form-utils";
-import { X } from "lucide-react";
+import { AlertCircle, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
@@ -74,7 +75,7 @@ export function EditQuizForm({
   const handleCancel = () => {
     if (isDirty) {
       const confirmed = window.confirm(
-        "Hai modifiche non salvate. Sei sicuro di voler abbandonare la pagina?"
+        "Hai modifiche non salvate. Sei sicuro di voler abbandonare la pagina?",
       );
       if (!confirmed) return;
       // Reset form to prevent popstate handler from blocking navigation
@@ -145,14 +146,14 @@ export function EditQuizForm({
         return newSet;
       });
     },
-    [prepend, fields, setExpandedQuestions]
+    [prepend, fields, setExpandedQuestions],
   );
 
   // Handle preset generation
   const handleGeneratePreset = async (
     type: QuestionType,
     presetId: string,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ) => {
     // Use enhanced generation if available
     const enhancedOptions = {
@@ -174,7 +175,7 @@ export function EditQuizForm({
         bugType?: "syntax" | "logic" | "performance" | "security";
         codeComplexity?: "basic" | "intermediate" | "advanced";
         includeComments?: boolean;
-      }
+      },
     );
   };
 
@@ -183,7 +184,7 @@ export function EditQuizForm({
       setRegeneratingQuestionIndex(index);
       setRegenerateDialogOpen(true);
     },
-    [setRegeneratingQuestionIndex]
+    [setRegeneratingQuestionIndex],
   );
 
   return (
@@ -194,82 +195,98 @@ export function EditQuizForm({
           className="space-y-6"
           noValidate
         >
-          {/* Quiz Settings */}
-          <QuizSettings
-            form={form}
-            onGenerateFullQuiz={() => setFullQuizDialogOpen(true)}
-            aiLoading={aiLoading}
-          />
+          <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
+            {/* Left Column: Form Content */}
+            <div className="flex flex-col gap-6 lg:col-span-8">
+              {/* Quiz Settings */}
+              <QuizSettings
+                form={form}
+                onGenerateFullQuiz={() => setFullQuizDialogOpen(true)}
+                aiLoading={aiLoading}
+              />
 
-          {/* Smart Question Presets */}
-          <PresetGenerationButtons
-            onGeneratePreset={handleGeneratePreset}
-            loading={aiLoading}
-          />
+              {/* Smart Question Presets */}
+              <PresetGenerationButtons
+                onGeneratePreset={handleGeneratePreset}
+                loading={aiLoading}
+              />
 
-          <div className="space-y-6">
-            {/* Questions Management */}
-            <QuestionsHeader
-              fieldsLength={fields.length}
-              questionTypeFilter={questionTypeFilter}
-              setQuestionTypeFilter={setQuestionTypeFilter}
-              expandAllQuestions={expandAllQuestions}
-              collapseAllQuestions={collapseAllQuestions}
-              onAddQuestion={addBlankQuestion}
-              onOpenFavorites={() => setFavoritesDialogOpen(true)}
-            />
-            {/* Questions List */}
-            <QuestionsList
-              quizId={mode === "edit" ? quiz.id : undefined}
-              filteredQuestions={filteredQuestions}
-              fields={fields}
-              expandedQuestions={expandedQuestions}
-              questionTypeFilter={questionTypeFilter}
-              form={form}
-              onToggleExpansion={toggleQuestionExpansion}
-              onRegenerate={handleRegenerate}
-              onRemove={remove}
-              aiLoading={aiLoading}
-              hasQuestionChanges={hasQuestionChanges}
-              languageOptions={languageOptions}
-            />
-          </div>
-
-          {/* Sticky Save Bar - visible only when form is dirty */}
-          {isDirty && (
-            <div className="right-0 bottom-0 left-0 z-50 fixed flex justify-center items-center gap-4 bg-background/95 supports-backdrop-filter:bg-background/80 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)] backdrop-blur px-6 py-4 border-t">
-              <div className="flex items-center gap-3">
-                <span className="font-medium text-amber-600 dark:text-amber-500 text-sm animate-pulse">
-                  Modifiche non salvate
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancel}
-                  disabled={saveStatus === "saving"}
-                >
-                  <X className="mr-1.5 size-4" />
-                  Annulla
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={saveStatus === "saving"}
-                  className={cn(
-                    "transition-all",
-                    saveStatus === "success"
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : saveStatus === "error"
-                      ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                      : "bg-amber-600 hover:bg-amber-700 text-white"
-                  )}
-                >
-                  {getSaveButtonContent(saveStatus)}
-                </Button>
+              <div className="space-y-6">
+                {/* Questions Management */}
+                <QuestionsHeader
+                  fieldsLength={fields.length}
+                  questionTypeFilter={questionTypeFilter}
+                  setQuestionTypeFilter={setQuestionTypeFilter}
+                  expandAllQuestions={expandAllQuestions}
+                  collapseAllQuestions={collapseAllQuestions}
+                  onAddQuestion={addBlankQuestion}
+                  onOpenFavorites={() => setFavoritesDialogOpen(true)}
+                />
+                {/* Questions List */}
+                <QuestionsList
+                  quizId={mode === "edit" ? quiz.id : undefined}
+                  filteredQuestions={filteredQuestions}
+                  fields={fields}
+                  expandedQuestions={expandedQuestions}
+                  questionTypeFilter={questionTypeFilter}
+                  form={form}
+                  onToggleExpansion={toggleQuestionExpansion}
+                  onRegenerate={handleRegenerate}
+                  onRemove={remove}
+                  aiLoading={aiLoading}
+                  hasQuestionChanges={hasQuestionChanges}
+                  languageOptions={languageOptions}
+                />
               </div>
             </div>
-          )}
+
+            {/* Right Column: Actions (Sticky) */}
+            <div className="flex flex-col gap-6 lg:col-span-4">
+              <Card className="top-6 sticky">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Settings className="size-5 text-primary" />
+                    Azioni
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      type="submit"
+                      disabled={saveStatus === "saving"}
+                      className={cn(
+                        "w-full transition-all",
+                        saveStatus === "success"
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : saveStatus === "error"
+                            ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                            : "",
+                      )}
+                    >
+                      {getSaveButtonContent(saveStatus)}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCancel}
+                      disabled={saveStatus === "saving"}
+                      className="w-full"
+                    >
+                      <X className="mr-1.5 size-4" />
+                      Annulla
+                    </Button>
+                  </div>
+
+                  {isDirty && (
+                    <div className="flex justify-center items-center gap-2 pt-2 border-t font-medium text-amber-600 dark:text-amber-500 text-sm animate-pulse">
+                      <AlertCircle className="size-4" />
+                      Modifiche non salvate
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </form>
       </FormProvider>
 

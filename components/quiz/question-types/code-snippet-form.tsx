@@ -15,7 +15,7 @@ import { getLanguageCode } from ".";
 
 const CodeEditor = dynamic(
   () => import("@uiw/react-textarea-code-editor").then((mod) => mod.default),
-  { ssr: false }
+  { ssr: false },
 );
 
 type CodeSnippetFormProps = {
@@ -59,7 +59,10 @@ export const CodeSnippetForm = ({
         {languageOptions}
       </SelectField>
       <Field>
-        <FieldLabel htmlFor={`questions-${index}-code`}>
+        <FieldLabel
+          htmlFor={`questions-${index}-code`}
+          className="text-primary"
+        >
           Snippet di codice
           <span aria-hidden className="ps-1 text-destructive">
             *
@@ -101,7 +104,10 @@ export const CodeSnippetForm = ({
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor={`questions-${index}-solution`}>
+        <FieldLabel
+          htmlFor={`questions-${index}-solution`}
+          className="text-primary"
+        >
           Soluzione di esempio
           <span aria-hidden className="ps-1 text-destructive">
             *

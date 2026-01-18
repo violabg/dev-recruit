@@ -1,11 +1,22 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata, Viewport } from "next";
-import { Figtree, Geist, Geist_Mono } from "next/font/google";
+import {
+  Figtree,
+  Geist,
+  Geist_Mono,
+  Outfit,
+  Space_Grotesk,
+} from "next/font/google";
 import type React from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-heading" });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-tech",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +52,7 @@ export default function RootLayout({
     <html lang="it" className={figtree.variable} suppressHydrationWarning>
       <link rel="icon" href="/favicon.ico" sizes="any" />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-background min-h-dvh font-sans text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${spaceGrotesk.variable} ${figtree.variable} bg-background min-h-dvh font-sans text-foreground antialiased`}
       >
         <ThemeProvider
           attribute="class"

@@ -7,6 +7,7 @@ import {
   SelectField,
 } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createCandidate, updateCandidate } from "@/lib/actions/candidates";
 import { Candidate } from "@/lib/prisma/client";
 import {
@@ -14,7 +15,7 @@ import {
   candidateUpdateSchema,
 } from "@/lib/schemas/candidate";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Briefcase, Loader2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -158,7 +159,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
         "dateOfBirth",
         values.dateOfBirth instanceof Date
           ? values.dateOfBirth.toISOString()
-          : String(values.dateOfBirth)
+          : String(values.dateOfBirth),
       );
     }
 
@@ -188,7 +189,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
           setError(
             submitError instanceof Error
               ? submitError.message
-              : "Errore durante l'aggiornamento del candidato"
+              : "Errore durante l'aggiornamento del candidato",
           );
         }
       });
@@ -212,7 +213,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
         setError(
           submitError instanceof Error
             ? submitError.message
-            : "Errore nella creazione del candidato"
+            : "Errore nella creazione del candidato",
         );
       }
     });
@@ -251,106 +252,145 @@ export const CandidateForm = (props: CandidateFormProps) => {
       onSubmit={form.handleSubmit(handleFormSubmission)}
       className="space-y-6"
     >
-      <div className="gap-4 grid sm:grid-cols-2">
-        <InputField
-          control={form.control}
-          name="firstName"
-          label="Nome"
-          required
-          placeholder="Nome"
-        />
-        <InputField
-          control={form.control}
-          name="lastName"
-          label="Cognome"
-          required
-          placeholder="Cognome"
-        />
-      </div>
-      <InputField
-        control={form.control}
-        name="email"
-        label="Email"
-        required
-        placeholder="Email candidato"
-        type="email"
-      />
-      <InputField
-        control={form.control}
-        name="dateOfBirth"
-        label="Data di nascita"
-        type="date"
-        className="w-auto"
-      />
-      <MultiSelectField
-        control={form.control}
-        name="positionIds"
-        label="Posizioni"
-        required
-        disabled={props.disabled}
-        placeholder="Seleziona una o più posizioni"
-        options={props.positions.map((position) => ({
-          value: position.id,
-          label: position.title,
-        }))}
-        onChange={(values) => {
-          if (props.onPositionSelect) {
-            props.onPositionSelect(values);
-          }
-        }}
-      />
-      {isEditMode && (
-        <SelectField
-          control={form.control}
-          name="status"
-          label="Stato"
-          placeholder="Seleziona stato"
-          options={STATUS_OPTIONS}
-          triggerProps={{ disabled: isPending, size: "default" }}
-        />
-      )}
-      <FileUploadField
-        currentFileUrl={
-          isEditMode && !removeExistingResume
-            ? props.candidate.resumeUrl
-            : undefined
-        }
-        onFileSelect={handleFileSelect}
-        onRemoveExisting={isEditMode ? handleRemoveExisting : undefined}
-        isUploading={isPending}
-        disabled={isPending}
-      />
+      <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
+        {/* Left Column: Personal Info & Resume */}
+        <div className="flex flex-col gap-6 lg:col-span-8">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="size-5 text-primary" />
+                Dati Personali
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="gap-6 grid grid-cols-1 md:grid-cols-2">
+              <InputField
+                control={form.control}
+                name="firstName"
+                label="Nome"
+                required
+                placeholder="Nome"
+              />
+              <InputField
+                control={form.control}
+                name="lastName"
+                label="Cognome"
+                required
+                placeholder="Cognome"
+              />
+              <InputField
+                control={form.control}
+                name="email"
+                label="Email"
+                required
+                placeholder="Email candidato"
+                type="email"
+              />
+              <InputField
+                control={form.control}
+                name="dateOfBirth"
+                label="Data di nascita"
+                type="date"
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
 
-      {error && <p className="text-destructive text-sm">{error}</p>}
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleCancel}
-          disabled={isPending}
-        >
-          Annulla
-        </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 size-4 animate-spin" />
-              {isEditMode
-                ? "Salvataggio in corso..."
-                : isApplyMode
-                ? "Invio candidatura..."
-                : "Creazione in corso..."}
-            </>
-          ) : isEditMode ? (
-            "Aggiorna candidato"
-          ) : isApplyMode ? (
-            "Invia candidatura"
-          ) : (
-            "Crea candidato"
-          )}
-        </Button>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <span className="text-primary">📄</span> Curriculum Vitae
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FileUploadField
+                currentFileUrl={
+                  isEditMode && !removeExistingResume
+                    ? props.candidate.resumeUrl
+                    : undefined
+                }
+                onFileSelect={handleFileSelect}
+                onRemoveExisting={isEditMode ? handleRemoveExisting : undefined}
+                isUploading={isPending}
+                disabled={isPending}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Position & Status */}
+        <div className="flex flex-col gap-6 lg:col-span-4">
+          <Card className="top-6 sticky">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Briefcase className="size-5 text-primary" />
+                Candidatura
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <MultiSelectField
+                control={form.control}
+                name="positionIds"
+                label="Posizioni"
+                required
+                disabled={props.disabled}
+                placeholder="Seleziona posizioni"
+                options={props.positions.map((position) => ({
+                  value: position.id,
+                  label: position.title,
+                }))}
+                onChange={(values) => {
+                  if (props.onPositionSelect) {
+                    props.onPositionSelect(values);
+                  }
+                }}
+              />
+
+              {isEditMode && (
+                <SelectField
+                  control={form.control}
+                  name="status"
+                  label="Stato candidatura"
+                  placeholder="Seleziona stato"
+                  options={STATUS_OPTIONS}
+                  triggerProps={{ disabled: isPending, size: "default" }}
+                />
+              )}
+
+              <div className="flex flex-col gap-3 pt-4 border-t">
+                <Button type="submit" disabled={isPending} className="w-full">
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      {isEditMode
+                        ? "Salvataggio..."
+                        : isApplyMode
+                          ? "Invio..."
+                          : "Creazione..."}
+                    </>
+                  ) : isEditMode ? (
+                    "Aggiorna candidato"
+                  ) : isApplyMode ? (
+                    "Invia candidatura"
+                  ) : (
+                    "Crea candidato"
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isPending}
+                  className="w-full"
+                >
+                  Annulla
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      {error && <p className="font-medium text-destructive text-sm">{error}</p>}
     </form>
   );
 };
