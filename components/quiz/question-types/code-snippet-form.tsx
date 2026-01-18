@@ -59,10 +59,7 @@ export const CodeSnippetForm = ({
         {languageOptions}
       </SelectField>
       <Field>
-        <FieldLabel
-          htmlFor={`questions-${index}-code`}
-          className="text-primary"
-        >
+        <FieldLabel htmlFor={`questions-${index}-code`} className="font-bold">
           Snippet di codice
           <span aria-hidden className="ps-1 text-destructive">
             *
@@ -106,7 +103,7 @@ export const CodeSnippetForm = ({
       <Field>
         <FieldLabel
           htmlFor={`questions-${index}-solution`}
-          className="text-primary"
+          className="font-bold"
         >
           Soluzione di esempio
           <span aria-hidden className="ps-1 text-destructive">

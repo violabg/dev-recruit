@@ -197,7 +197,7 @@ export function EditQuizForm({
         >
           <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
             {/* Left Column: Form Content */}
-            <div className="flex flex-col gap-6 lg:col-span-8">
+            <div className="flex flex-col gap-6 lg:col-span-9">
               {/* Quiz Settings */}
               <QuizSettings
                 form={form}
@@ -241,8 +241,14 @@ export function EditQuizForm({
             </div>
 
             {/* Right Column: Actions (Sticky) */}
-            <div className="flex flex-col gap-6 lg:col-span-4">
-              <Card className="top-6 sticky">
+            <div className="flex flex-col gap-6 lg:col-span-3">
+              <Card
+                className={cn(
+                  "top-6 sticky transition-colors",
+                  isDirty &&
+                    "border-amber-500 border shadow-lg shadow-amber-500/10",
+                )}
+              >
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Settings className="size-5 text-primary" />

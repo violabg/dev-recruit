@@ -166,7 +166,7 @@ export const AIQuestionGenerationDialog = ({
               name="llmModel"
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel className="text-primary">
+                  <FieldLabel className="font-bold">
                     Modello AI
                     <span aria-hidden className="ps-1 text-destructive">
                       *

@@ -91,7 +91,7 @@ export function LoginForm({
             />
             <>
               <div className="flex items-center gap-2">
-                <FieldLabel className="text-primary" htmlFor={passwordId}>
+                <FieldLabel htmlFor={passwordId} className="font-bold">
                   Password
                 </FieldLabel>
                 <Link

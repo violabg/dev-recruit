@@ -74,7 +74,7 @@ export const QuestionItem = ({
   const handleToggleFavorite = () => {
     if (!hasDbId) {
       toast.error(
-        "Salva prima il quiz per poter aggiungere la domanda ai preferiti"
+        "Salva prima il quiz per poter aggiungere la domanda ai preferiti",
       );
       return;
     }
@@ -87,7 +87,7 @@ export const QuestionItem = ({
         toast.success(
           result.isFavorite
             ? "Domanda aggiunta ai preferiti"
-            : "Domanda rimossa dai preferiti"
+            : "Domanda rimossa dai preferiti",
         );
       } else {
         toast.error("Errore nel salvataggio della domanda");
@@ -100,21 +100,19 @@ export const QuestionItem = ({
       key={field.id}
       className={cn(
         "relative pt-0 overflow-hidden transition-all duration-200",
+        isExpanded ? "shadow-md" : "shadow-sm",
         hasQuestionChanges
-          ? "border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.15)] dark:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
-          : "hover:border-primary/50 border-muted",
-        isExpanded
-          ? cn(
-              "shadow-md ring-1 ring-primary/10",
-              !hasQuestionChanges && "border-primary/20"
-            )
-          : "shadow-sm"
+          ? "border-amber-500 border shadow-[0_0_15px_rgba(245,158,11,0.15)] dark:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
+          : cn(
+              "border border-transparent hover:border-primary/50",
+              isExpanded && "border-primary/20",
+            ),
       )}
     >
       <CardHeader
         className={cn(
           "gap-0 pt-4 [.border-b]:pb-4 transition-colors",
-          isExpanded ? "bg-primary/10 border-b" : "bg-muted/10"
+          isExpanded ? "bg-primary/10 border-b" : "bg-muted/10",
         )}
       >
         <div className="flex justify-between items-center">
@@ -152,7 +150,7 @@ export const QuestionItem = ({
                     "size-4 transition-colors",
                     isFavorite
                       ? "fill-red-500 text-red-500"
-                      : "text-muted-foreground"
+                      : "text-muted-foreground",
                   )}
                 />
               </TooltipTrigger>
@@ -160,8 +158,8 @@ export const QuestionItem = ({
                 {!hasDbId
                   ? "Salva il quiz per abilitare i preferiti"
                   : isFavorite
-                  ? "Rimuovi dai preferiti"
-                  : "Aggiungi ai preferiti"}
+                    ? "Rimuovi dai preferiti"
+                    : "Aggiungi ai preferiti"}
               </TooltipContent>
             </Tooltip>
 
@@ -188,7 +186,7 @@ export const QuestionItem = ({
                 deleteAction={async () => {
                   const result = await deleteQuestionFromQuizAction(
                     quizId,
-                    field.dbId!
+                    field.dbId!,
                   );
                   if (result?.success) {
                     // Remove from form state after successful deletion

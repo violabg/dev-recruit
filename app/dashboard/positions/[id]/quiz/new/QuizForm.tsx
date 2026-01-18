@@ -249,7 +249,7 @@ export const QuizForm = ({
       )}
 
       <Field>
-        <FieldLabel className="text-primary">Modello LLM</FieldLabel>
+        <FieldLabel className="font-bold">Modello LLM</FieldLabel>
         <FieldContent>
           <Controller
             control={control}

@@ -34,7 +34,7 @@ async function EditQuizContent({
       quiz={quiz}
       position={position}
       languageOptions={
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense key="languages" fallback={<div>Loading...</div>}>
           <ProgrammingLanguageSelectItems />
         </Suspense>
       }
