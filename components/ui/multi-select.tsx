@@ -87,9 +87,9 @@ export function MultiSelect({
             className={cn(
               "justify-between w-full h-auto min-h-10",
               "bg-muted/50 border border-transparent hover:bg-muted/80 hover:border-ring/30 shadow-sm text-foreground hover:text-foreground transition-all",
-              "aria-invalid:border-destructive aria-invalid:focus-visible:ring-destructive/20 aria-invalid:focus-visible:ring-[3px] aria-invalid:focus-visible:border-destructive",
+              "aria-invalid:border-destructive aria-invalid:ring-0 aria-invalid:focus-visible:ring-[3px] aria-invalid:focus-visible:ring-destructive/20 aria-invalid:focus-visible:border-destructive",
               selected.length > 0 ? "px-3 py-2" : "",
-              className
+              className,
             )}
           />
         }
@@ -162,7 +162,7 @@ export function MultiSelect({
                                 "flex justify-center items-center border border-primary rounded-sm size-4",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
-                                  : "opacity-50 [&_svg]:invisible"
+                                  : "opacity-50 [&_svg]:invisible",
                               )}
                             >
                               <Check className="w-3 h-3 text-white" />
@@ -188,7 +188,7 @@ export function MultiSelect({
                                 "flex justify-center items-center border border-primary rounded-sm size-4",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
-                                  : "opacity-50 [&_svg]:invisible"
+                                  : "opacity-50 [&_svg]:invisible",
                               )}
                             >
                               <Check className="w-3 h-3 text-white" />
@@ -203,7 +203,7 @@ export function MultiSelect({
                     <CommandSeparator />
                   )}
                 </React.Fragment>
-              )
+              ),
             )}
           </CommandList>
         </Command>
