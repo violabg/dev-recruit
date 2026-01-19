@@ -31,20 +31,33 @@ export function SliderField<T extends FieldValues>({
       description={description}
       disableFieldError={disableFieldError}
     >
-      {({ field }) => (
-        <div className="space-y-2">
-          <Slider
-            value={[field.value]}
-            onValueChange={(values) => field.onChange(values[0])}
-            {...sliderProps}
-          />
-          {showValue && (
-            <div className="text-muted-foreground text-sm text-center">
-              {valueFormatter ? valueFormatter(field.value) : field.value}
-            </div>
-          )}
-        </div>
-      )}
+      {({ field }) => {
+        // Base UI Slider requires a valid number array.
+        // Fallback to min (or 0) when field value is undefined.
+        const min = sliderProps.min ?? 0;
+        const sliderValue = field.value ?? min;
+
+        return (
+          <div className="space-y-2">
+            <Slider
+              {...sliderProps}
+              value={[sliderValue]}
+              onValueChange={(newValue) => {
+                // Base UI can return number or number[] depending on how it's set
+                const actualValue = Array.isArray(newValue)
+                  ? newValue[0]
+                  : newValue;
+                field.onChange(actualValue);
+              }}
+            />
+            {showValue && (
+              <div className="text-muted-foreground text-sm text-center">
+                {valueFormatter ? valueFormatter(sliderValue) : sliderValue}
+              </div>
+            )}
+          </div>
+        );
+      }}
     </BaseController>
   );
 }
