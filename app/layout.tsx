@@ -1,18 +1,19 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata, Viewport } from "next";
 import {
-  Figtree,
   Geist,
   Geist_Mono,
-  Outfit,
+  Plus_Jakarta_Sans,
   Space_Grotesk,
 } from "next/font/google";
 import type React from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-heading" });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-tech",
@@ -38,8 +39,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "oklch(0.98 0.005 210)" },
-    { media: "(prefers-color-scheme: dark)", color: "oklch(0.12 0.015 240)" },
+    {
+      media: "(prefers-color-scheme: light)",
+      color: "oklch(0.984 0.003 247.858)",
+    },
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: "oklch(0.208 0.042 265.755)",
+    },
   ],
 };
 
@@ -49,10 +56,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="it" className={figtree.variable} suppressHydrationWarning>
+    <html
+      lang="it"
+      className={plusJakartaSans.variable}
+      suppressHydrationWarning
+    >
       <link rel="icon" href="/favicon.ico" sizes="any" />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${spaceGrotesk.variable} ${figtree.variable} bg-background min-h-dvh font-sans text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${plusJakartaSans.variable} bg-background min-h-dvh font-sans text-foreground antialiased`}
       >
         <ThemeProvider
           attribute="class"
