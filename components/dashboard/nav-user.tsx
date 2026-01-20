@@ -82,9 +82,9 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/dashboard/profile" />}>
                 <BadgeCheck />
-                <Link href="/dashboard/profile">Profilo</Link>
+                Profilo
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
