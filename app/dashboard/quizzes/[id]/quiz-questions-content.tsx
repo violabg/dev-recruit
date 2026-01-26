@@ -1,4 +1,5 @@
 import {
+  BehavioralScenarioDisplay,
   CodeSnippetDisplay,
   MultipleChoiceDisplay,
   OpenQuestionDisplay,
@@ -45,7 +46,9 @@ export async function QuizQuestionsContent({ params }: Props) {
                     ? "Risposta multipla"
                     : question.type === "open_question"
                       ? "Domanda aperta"
-                      : "Snippet di codice"}
+                      : question.type === "behavioral_scenario"
+                        ? "Scenario comportamentale"
+                        : "Snippet di codice"}
                 </span>
               </div>
               <SaveFavoriteButton question={question} />
@@ -67,6 +70,10 @@ export async function QuizQuestionsContent({ params }: Props) {
 
             {question.type === "code_snippet" && (
               <CodeSnippetDisplay question={question} />
+            )}
+
+            {question.type === "behavioral_scenario" && (
+              <BehavioralScenarioDisplay question={question} />
             )}
           </CardContent>
         </Card>

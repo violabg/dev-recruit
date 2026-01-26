@@ -5,7 +5,11 @@ import { groq } from "@ai-sdk/groq";
 import { generateText, Output, wrapLanguageModel } from "ai";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
-import { overallEvaluationSchema, type OverallEvaluation } from "../schemas";
+import {
+  hiringNotesSchema,
+  overallEvaluationSchema,
+  type OverallEvaluation,
+} from "../schemas";
 import { aiLogger, logger } from "../services/logger";
 import { getOptimalModel, isDevelopment } from "../utils";
 import { invalidateEvaluationCache } from "../utils/cache-utils";
@@ -32,7 +36,7 @@ async function extractTextFromPDF(pdfUrl: string): Promise<string> {
     throw new Error(
       `Impossibile leggere il curriculum: ${
         error instanceof Error ? error.message : "Errore sconosciuto"
-      }`
+      }`,
     );
   }
 }
@@ -48,15 +52,15 @@ async function generateResumeEvaluation(
     softSkills: string[];
   },
   candidateName: string,
-  specificModel?: string
+  specificModel?: string,
 ): Promise<OverallEvaluation> {
   const prompt = `
     Analizza il seguente curriculum vitae e valuta l'idoneità del candidato per la posizione specificata.
 
     CURRICULUM DEL CANDIDATO (${candidateName}):
     ${resumeText.substring(0, 8000)} ${
-    resumeText.length > 8000 ? "... [troncato]" : ""
-  }
+      resumeText.length > 8000 ? "... [troncato]" : ""
+    }
 
     POSIZIONE DA VALUTARE:
     - Titolo: ${position.title}
@@ -113,7 +117,7 @@ async function generateResumeEvaluation(
       {
         error,
         candidateName,
-      }
+      },
     );
 
     // Fallback model
@@ -148,7 +152,7 @@ async function generateResumeEvaluation(
     } catch (fallbackError) {
       logger.error("Fallback model also failed:", { error: fallbackError });
       throw new Error(
-        "Servizio di valutazione temporaneamente non disponibile. Riprova più tardi."
+        "Servizio di valutazione temporaneamente non disponibile. Riprova più tardi.",
       );
     }
   }
@@ -164,7 +168,7 @@ async function generateResumeEvaluation(
 export async function createInterviewEvaluation(
   interviewId: string,
   aiEvaluation: OverallEvaluation,
-  quizScore?: number
+  quizScore?: number,
 ) {
   const user = await requireUser();
 
@@ -212,7 +216,7 @@ export async function createInterviewEvaluation(
  */
 export async function createCandidateEvaluation(
   candidateId: string,
-  positionId: string
+  positionId: string,
 ) {
   const user = await requireUser();
 
@@ -233,7 +237,7 @@ export async function createCandidateEvaluation(
 
   if (!candidate.resumeUrl) {
     throw new Error(
-      "Il candidato non ha un curriculum caricato. Carica un curriculum prima di generare la valutazione."
+      "Il candidato non ha un curriculum caricato. Carica un curriculum prima di generare la valutazione.",
     );
   }
 
@@ -265,7 +269,7 @@ export async function createCandidateEvaluation(
 
   if (existingEvaluation) {
     throw new Error(
-      "Esiste già una valutazione per questo candidato e questa posizione"
+      "Esiste già una valutazione per questo candidato e questa posizione",
     );
   }
 
@@ -274,7 +278,7 @@ export async function createCandidateEvaluation(
 
   if (!resumeText || resumeText.trim().length < 50) {
     throw new Error(
-      "Impossibile estrarre testo sufficiente dal curriculum. Assicurati che il PDF contenga testo selezionabile."
+      "Impossibile estrarre testo sufficiente dal curriculum. Assicurati che il PDF contenga testo selezionabile.",
     );
   }
 
@@ -283,7 +287,7 @@ export async function createCandidateEvaluation(
   const aiEvaluation = await generateResumeEvaluation(
     resumeText,
     position,
-    candidateName
+    candidateName,
   );
 
   // Create evaluation record
@@ -331,6 +335,44 @@ export async function updateEvaluationNotes(id: string, notes: string) {
 
   invalidateEvaluationCache({
     evaluationId: id,
+    interviewId: evaluation.interviewId ?? undefined,
+    candidateId: evaluation.candidateId ?? undefined,
+  });
+
+  return updated;
+}
+
+/**
+ * Update hiring manager notes on an evaluation
+ */
+export async function updateHiringManagerNotesAction(input: unknown) {
+  const user = await requireUser();
+  const data = hiringNotesSchema.parse(input);
+
+  const evaluation = await prisma.evaluation.findUnique({
+    where: { id: data.evaluationId },
+    select: { id: true, interviewId: true, candidateId: true },
+  });
+
+  if (!evaluation) {
+    throw new Error("Valutazione non trovata");
+  }
+
+  const updated = await prisma.evaluation.update({
+    where: { id: data.evaluationId },
+    data: {
+      interviewNotes: data.interviewNotes,
+      redFlags: data.redFlags ?? [],
+      standoutMoments: data.standoutMoments ?? [],
+      hireRecommendation: data.hireRecommendation,
+      nextSteps: data.nextSteps,
+      assessedBy: user.id,
+      assessedAt: new Date(),
+    },
+  });
+
+  invalidateEvaluationCache({
+    evaluationId: updated.id,
     interviewId: evaluation.interviewId ?? undefined,
     candidateId: evaluation.candidateId ?? undefined,
   });

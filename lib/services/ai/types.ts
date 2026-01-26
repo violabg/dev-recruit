@@ -9,7 +9,7 @@ export class AIGenerationError extends Error {
   constructor(
     message: string,
     public code: AIErrorCode,
-    public details?: Record<string, unknown>
+    public details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "AIGenerationError";
@@ -59,6 +59,7 @@ export interface GenerateQuizParams {
   includeMultipleChoice: boolean;
   includeOpenQuestions: boolean;
   includeCodeSnippets: boolean;
+  includeBehavioralScenarios: boolean;
   instructions?: string;
   previousQuestions?: { question: string }[];
   specificModel?: string;
@@ -98,11 +99,18 @@ export interface CodeSnippetQuestionParams extends BaseQuestionParams {
   includeComments?: boolean;
 }
 
+export interface BehavioralScenarioQuestionParams extends BaseQuestionParams {
+  type: "behavioral_scenario";
+  expectedResponseLength?: "short" | "medium" | "long";
+  evaluationCriteria?: string[];
+}
+
 // Union type for all question generation parameters
 export type GenerateQuestionParams =
   | MultipleChoiceQuestionParams
   | OpenQuestionParams
-  | CodeSnippetQuestionParams;
+  | CodeSnippetQuestionParams
+  | BehavioralScenarioQuestionParams;
 
 // Position description generation parameters
 export interface GeneratePositionDescriptionParams {

@@ -211,6 +211,27 @@ Code analysis, bug fixing, or improvement tasks.
 - `codeComplexity?: "basic" | "intermediate" | "advanced"` - Code difficulty level
 - `includeComments?: boolean` - Whether to include code comments
 
+### 4. Behavioral Scenario (`behavioral_scenario`)
+
+Situational questions focused on judgment, communication, and collaboration.
+
+**Schema Requirements:**
+
+```typescript
+{
+  type: "behavioral_scenario",
+  question: "Italian scenario question text",
+  sampleAnswer: "Strong example response",  // Required
+  keywords: ["collaboration", "trade-offs"], // Optional
+  explanation: "Evaluation guidance"         // Optional
+}
+```
+
+**Type-Specific Parameters:**
+
+- `expectedResponseLength?: "short" | "medium" | "long"` - Expected response length
+- `evaluationCriteria?: string[]` - What to look for in answers
+
 ## Prompt Engineering
 
 ### System Prompt Structure
@@ -278,7 +299,7 @@ The system dynamically selects the optimal LLM model based on task type:
 ```typescript
 export const getOptimalModel = (
   taskType: LLMTaskType,
-  specificModel?: string
+  specificModel?: string,
 ): string => {
   if (specificModel) return specificModel; // User override
 
@@ -484,10 +505,14 @@ graph LR
 
 ```typescript
 export const convertToStrictQuestion = (
-  flexibleQuestion: FlexibleQuestion
+  flexibleQuestion: FlexibleQuestion,
 ): Question => {
   // Normalize missing fields
   if (question.type === "open_question" && !question.sampleAnswer) {
+    question.sampleAnswer = "Sample answer to be provided";
+  }
+
+  if (question.type === "behavioral_scenario" && !question.sampleAnswer) {
     question.sampleAnswer = "Sample answer to be provided";
   }
 
@@ -518,6 +543,7 @@ const result = await generateNewQuizAction({
   includeMultipleChoice: true,
   includeOpenQuestions: true,
   includeCodeSnippets: true,
+  includeBehavioralScenarios: true,
   instructions: "Focus on React Hooks and TypeScript",
   specificModel: "llama-3.3-70b-versatile",
 });
@@ -563,6 +589,7 @@ const quiz = await aiQuizService.generateQuiz({
   includeMultipleChoice: true,
   includeOpenQuestions: false,
   includeCodeSnippets: true,
+  includeBehavioralScenarios: false,
 });
 ```
 
@@ -610,7 +637,7 @@ import { evaluateAnswer } from "@/lib/actions/evaluations";
 const result = await evaluateAnswer(
   question, // FlexibleQuestion
   candidateAnswer, // string
-  "llama-3.3-70b-versatile" // optional model override
+  "llama-3.3-70b-versatile", // optional model override
 );
 
 // Result: { evaluation, score, strengths, weaknesses, maxScore }

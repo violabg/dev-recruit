@@ -29,6 +29,11 @@ const openQuestionSchema = baseQuestionSchema.extend({
   codeSnippet: z.string().optional(),
 });
 
+const behavioralScenarioQuestionSchema = baseQuestionSchema.extend({
+  type: z.literal("behavioral_scenario"),
+  sampleAnswer: z.string().min(1, "Sample answer required"),
+});
+
 const codeSnippetQuestionSchema = baseQuestionSchema.extend({
   type: z.literal("code_snippet"),
   codeSnippet: z.string().min(1, "Code snippet required"),
@@ -41,6 +46,7 @@ const questionTypeSchemas = [
   multipleChoiceQuestionSchema,
   openQuestionSchema,
   codeSnippetQuestionSchema,
+  behavioralScenarioQuestionSchema,
 ] as const;
 
 // Discriminated union for type safety
@@ -71,7 +77,7 @@ export const questionSchemas = {
       if (data.type === "multiple_choice") {
         if (!data.options || data.options.length < 4) {
           ctx.issues.push({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             path: ["options"],
             error:
               "Multiple choice questions require at least 4 options (each with at least 3 characters) and correct answer within bounds",
@@ -82,7 +88,7 @@ export const questionSchemas = {
           data.options.forEach((option, index) => {
             if (option.length < 3) {
               ctx.issues.push({
-                code: z.ZodIssueCode.custom,
+                code: "custom",
                 path: ["options", index],
                 error: "Each option must be at least 3 characters long",
                 input: "",
@@ -96,7 +102,7 @@ export const questionSchemas = {
           data.correctAnswer >= data.options.length
         ) {
           ctx.issues.push({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             path: ["correctAnswer"],
             error:
               "Multiple choice questions require at least 4 options (each with at least 3 characters) and correct answer within bounds",
@@ -110,6 +116,7 @@ export const questionSchemas = {
   multipleChoice: multipleChoiceQuestionSchema,
   openQuestion: openQuestionSchema,
   codeSnippet: codeSnippetQuestionSchema,
+  behavioralScenario: behavioralScenarioQuestionSchema,
 
   // Base schema for common fields
   base: baseQuestionSchema,
@@ -123,26 +130,33 @@ export type MultipleChoiceQuestion = z.infer<
 >;
 export type OpenQuestion = z.infer<typeof openQuestionSchema>;
 export type CodeSnippetQuestion = z.infer<typeof codeSnippetQuestionSchema>;
+export type BehavioralScenarioQuestion = z.infer<
+  typeof behavioralScenarioQuestionSchema
+>;
 
 // SavedQuestion is a FlexibleQuestion with required dbId (for questions loaded from DB)
 export type SavedQuestion = FlexibleQuestion & { dbId: string };
 
 // Type guards for runtime type checking
 export const isMultipleChoiceQuestion = (
-  q: Question | FlexibleQuestion
+  q: Question | FlexibleQuestion,
 ): q is MultipleChoiceQuestion => q.type === "multiple_choice";
 
 export const isOpenQuestion = (
-  q: Question | FlexibleQuestion
+  q: Question | FlexibleQuestion,
 ): q is OpenQuestion => q.type === "open_question";
 
 export const isCodeSnippetQuestion = (
-  q: Question | FlexibleQuestion
+  q: Question | FlexibleQuestion,
 ): q is CodeSnippetQuestion => q.type === "code_snippet";
+
+export const isBehavioralScenarioQuestion = (
+  q: Question | FlexibleQuestion,
+): q is BehavioralScenarioQuestion => q.type === "behavioral_scenario";
 
 // Question conversion utilities
 export const convertToStrictQuestion = (
-  flexibleQuestion: FlexibleQuestion
+  flexibleQuestion: FlexibleQuestion,
 ): Question => {
   // Ensure required fields are present for strict validation
   const normalizedQuestion = { ...flexibleQuestion };
@@ -150,6 +164,13 @@ export const convertToStrictQuestion = (
   // For open questions, ensure sampleAnswer is present
   if (
     normalizedQuestion.type === "open_question" &&
+    !normalizedQuestion.sampleAnswer
+  ) {
+    normalizedQuestion.sampleAnswer = "Sample answer to be provided";
+  }
+
+  if (
+    normalizedQuestion.type === "behavioral_scenario" &&
     !normalizedQuestion.sampleAnswer
   ) {
     normalizedQuestion.sampleAnswer = "Sample answer to be provided";
@@ -172,7 +193,7 @@ export const convertToStrictQuestion = (
 };
 
 export const convertToStrictQuestions = (
-  flexibleQuestions: FlexibleQuestion[]
+  flexibleQuestions: FlexibleQuestion[],
 ): Question[] => {
   return flexibleQuestions.map(convertToStrictQuestion);
 };

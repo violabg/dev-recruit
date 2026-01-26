@@ -120,6 +120,11 @@ export const useEditQuizForm = ({
           sampleSolution: "// TODO: add solution",
           language: "javascript",
         };
+      case "behavioral_scenario":
+        return {
+          ...base,
+          sampleAnswer: "Sample answer to be provided",
+        };
       default:
         return base;
     }
@@ -224,7 +229,7 @@ export const useEditQuizForm = ({
         JSON.stringify(currentNormalized) !== JSON.stringify(originalNormalized)
       );
     },
-    [form, quiz.questions]
+    [form, quiz.questions],
   );
 
   // Save a specific question
@@ -279,7 +284,7 @@ export const useEditQuizForm = ({
             ...prev,
             questions: { ...prev.questions, [questionId]: "idle" },
           })),
-        3000
+        3000,
       );
 
       // Store timeout ID for potential cleanup
@@ -304,7 +309,7 @@ export const useEditQuizForm = ({
     const handlePopState = () => {
       if (isDirty) {
         const confirmed = window.confirm(
-          "Hai modifiche non salvate. Sei sicuro di voler abbandonare la pagina?"
+          "Hai modifiche non salvate. Sei sicuro di voler abbandonare la pagina?",
         );
         if (!confirmed) {
           // Push current state back to prevent navigation

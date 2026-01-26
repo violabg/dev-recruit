@@ -74,6 +74,7 @@ export const QuizForm = ({
       includeMultipleChoice: true,
       includeOpenQuestions: true,
       includeCodeSnippets: true,
+      includeBehavioralScenarios: false,
       difficulty: 3,
       timeLimit: 30,
       enableTimeLimit: true,
@@ -99,6 +100,7 @@ export const QuizForm = ({
             includeMultipleChoice: values.includeMultipleChoice,
             includeOpenQuestions: values.includeOpenQuestions,
             includeCodeSnippets: values.includeCodeSnippets,
+            includeBehavioralScenarios: values.includeBehavioralScenarios,
             instructions: values.instructions || undefined,
             specificModel: values.specificModel,
           });
@@ -117,6 +119,7 @@ export const QuizForm = ({
             includeMultipleChoice: values.includeMultipleChoice,
             includeOpenQuestions: values.includeOpenQuestions,
             includeCodeSnippets: values.includeCodeSnippets,
+            includeBehavioralScenarios: values.includeBehavioralScenarios,
             instructions: values.instructions || undefined,
             specificModel: values.specificModel,
           });
@@ -225,6 +228,13 @@ export const QuizForm = ({
             name="includeCodeSnippets"
             label="Snippet di codice"
             description="Sfide di programmazione e analisi di codice"
+          />
+
+          <SwitchField
+            control={control}
+            name="includeBehavioralScenarios"
+            label="Scenari comportamentali"
+            description="Domande situazionali su giudizio e collaborazione"
           />
         </div>
       </div>

@@ -133,6 +133,8 @@ export const AIQuestionGenerationDialog = ({
         return "Domanda Aperta";
       case "code_snippet":
         return "Domanda con Snippet di Codice";
+      case "behavioral_scenario":
+        return "Scenario Comportamentale";
       default:
         return "Domanda";
     }
@@ -233,10 +235,11 @@ export const AIQuestionGenerationDialog = ({
             </div>
           )}
 
-          {questionType === "open_question" && (
+          {(questionType === "open_question" ||
+            questionType === "behavioral_scenario") && (
             <div className="space-y-4">
               <h3 className="font-medium text-sm">
-                Impostazioni Domanda Aperta
+                Impostazioni Domanda Aperta / Scenario
               </h3>
               <Separator className="my-4" />
 

@@ -30,6 +30,7 @@ export const CacheTags = {
   CANDIDATES: "candidates",
   INTERVIEWS: "interviews",
   EVALUATIONS: "evaluations",
+  BEHAVIORAL_RUBRICS: "behavioral-rubrics",
   PRESETS: "presets",
 
   // Aggregate views
@@ -60,6 +61,8 @@ export const entityTag = {
     `evaluation-interview-${interviewId}`,
   evaluationCandidate: (candidateId: string) =>
     `evaluation-candidate-${candidateId}`,
+  behavioralRubric: (candidateId: string, positionId: string) =>
+    `behavioral-rubric-${candidateId}-${positionId}`,
   preset: (id: string) => `preset-${id}`,
 } as const;
 
@@ -260,6 +263,24 @@ export function invalidateEvaluationCache(options?: {
     revalidatePath(`/dashboard/candidates/${options.candidateId}`);
     revalidatePath(`/dashboard/candidates/${options.candidateId}/evaluations`);
   }
+}
+
+// ============================================================================
+// Behavioral Rubric Cache Invalidation
+// ============================================================================
+
+export function invalidateBehavioralRubricCache(options: {
+  candidateId: string;
+  positionId: string;
+}) {
+  updateTag(CacheTags.BEHAVIORAL_RUBRICS);
+  updateTag(
+    entityTag.behavioralRubric(options.candidateId, options.positionId),
+  );
+  revalidatePath(`/dashboard/candidates/${options.candidateId}`);
+  revalidatePath(
+    `/dashboard/candidates/${options.candidateId}/evaluation-dashboard`,
+  );
 }
 
 /**

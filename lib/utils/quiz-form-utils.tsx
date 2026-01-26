@@ -57,6 +57,7 @@ export const questionTypes = [
   { value: "multiple_choice", label: "Scelta multipla" },
   { value: "open_question", label: "Domanda aperta" },
   { value: "code_snippet", label: "Snippet di codice" },
+  { value: "behavioral_scenario", label: "Scenario comportamentale" },
 ] as const;
 
 export const getQuestionTypeLabel = (type: string) => {
@@ -67,6 +68,8 @@ export const getQuestionTypeLabel = (type: string) => {
       return "Aperta";
     case "code_snippet":
       return "Codice";
+    case "behavioral_scenario":
+      return "Scenario";
     default:
       return type;
   }

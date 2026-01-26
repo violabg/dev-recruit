@@ -1,3 +1,4 @@
+export { BehavioralScenarioForm } from "./behavioral-scenario-form";
 export { CodeSnippetForm } from "./code-snippet-form";
 export { MultipleChoiceForm } from "./multiple-choice-form";
 export { OpenQuestionForm } from "./open-question-form";

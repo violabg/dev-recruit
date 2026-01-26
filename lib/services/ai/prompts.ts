@@ -8,6 +8,7 @@
 import { sanitizeInput } from "./sanitize";
 import type {
   BaseQuestionParams,
+  BehavioralScenarioQuestionParams,
   CodeSnippetQuestionParams,
   GeneratePositionDescriptionParams,
   GenerateQuestionParams,
@@ -110,7 +111,7 @@ export const questionPromptBuilders = {
       }
       if (params.distractorComplexity) {
         requirements.push(
-          `Distractor complexity: ${params.distractorComplexity}`
+          `Distractor complexity: ${params.distractorComplexity}`,
         );
       }
 
@@ -178,12 +179,12 @@ export const questionPromptBuilders = {
 
       if (params.expectedResponseLength) {
         requirements.push(
-          `Expected response length: ${params.expectedResponseLength}`
+          `Expected response length: ${params.expectedResponseLength}`,
         );
       }
       if (params.evaluationCriteria?.length) {
         requirements.push(
-          `Evaluation criteria: ${params.evaluationCriteria.join(", ")}`
+          `Evaluation criteria: ${params.evaluationCriteria.join(", ")}`,
         );
       }
 
@@ -267,7 +268,9 @@ export const questionPromptBuilders = {
         if (
           skills.some(
             (s) =>
-              s.includes("javascript") || s.includes("js") || s.includes("node")
+              s.includes("javascript") ||
+              s.includes("js") ||
+              s.includes("node"),
           )
         ) {
           targetLanguage = "javascript";
@@ -314,7 +317,7 @@ export const questionPromptBuilders = {
       }
       if (params.includeComments !== undefined) {
         requirements.push(
-          `Include comments: ${params.includeComments ? "yes" : "no"}`
+          `Include comments: ${params.includeComments ? "yes" : "no"}`,
         );
       }
 
@@ -332,6 +335,71 @@ export const questionPromptBuilders = {
           ${requirements.map((r) => `- ${r}`).join("\n")}
 
           Generate exactly 1 code snippet question following these specifications.`;
+    },
+  },
+  behavioral_scenario: {
+    system: () => `
+          You are a technical recruitment expert specializing in behavioral and scenario-based assessment questions.
+
+          Generate a valid JSON object for a single behavioral scenario question (NOT an array) that adheres to these specifications:
+
+          REQUIRED FIELDS:
+          - type: "behavioral_scenario"
+          - question: Italian text describing a realistic workplace scenario and asking how the candidate would respond
+          - sampleAnswer: Italian text providing an example of a strong, thoughtful response
+          - keywords: Array of relevant evaluation themes (optional)
+          - explanation: Italian text with evaluation guidance (optional)
+
+          QUALITY REQUIREMENTS:
+          - Scenario must be realistic and role-relevant
+          - Focus on decision-making, trade-offs, communication, and collaboration
+          - Encourage structured reasoning, not trivia knowledge
+          - Avoid requiring code or implementation details
+          - Appropriate for the stated experience level
+
+          Example Structure:
+          \`\`\`json
+          {
+            "type": "behavioral_scenario",
+            "question": "Sei in una squadra con scadenze aggressive e un collega propone di saltare i test per consegnare prima. Come gestisci la situazione?",
+            "sampleAnswer": "Una risposta efficace dovrebbe bilanciare urgenza e qualità, proporre alternative (scope ridotto, test minimi critici), comunicare rischi al team e al PM, e cercare allineamento su priorità e impatto.",
+            "keywords": ["collaborazione", "gestione rischi", "comunicazione", "qualità"],
+            "explanation": "Valutare capacità di negoziazione, consapevolezza dei rischi, e orientamento alla qualità senza compromettere la consegna."
+          }
+          \`\`\``,
+
+    user: (params: BehavioralScenarioQuestionParams): string => {
+      const context = buildCommonContext(params);
+      const requirements: string[] = [];
+
+      if (params.expectedResponseLength) {
+        requirements.push(
+          `Expected response length: ${params.expectedResponseLength}`,
+        );
+      }
+      if (params.evaluationCriteria?.length) {
+        requirements.push(
+          `Evaluation criteria: ${params.evaluationCriteria.join(", ")}`,
+        );
+      }
+
+      return `${context}
+
+          Create a behavioral scenario question with the following requirements:
+          - Must be practical and role-relevant
+          - Focus on judgment, communication, and collaboration
+          - Appropriate for ${params.experienceLevel} level
+          - No code implementation required
+
+          ${
+            requirements.length > 0
+              ? `Additional Requirements:\n${requirements
+                  .map((r) => `- ${r}`)
+                  .join("\n")}`
+              : ""
+          }
+
+          Generate exactly 1 behavioral scenario question following these specifications.`;
     },
   },
 } as const;
@@ -360,9 +428,14 @@ export function buildQuestionPrompts(params: GenerateQuestionParams): {
         systemPrompt: questionPromptBuilders.code_snippet.system(),
         userPrompt: questionPromptBuilders.code_snippet.user(params),
       };
+    case "behavioral_scenario":
+      return {
+        systemPrompt: questionPromptBuilders.behavioral_scenario.system(),
+        userPrompt: questionPromptBuilders.behavioral_scenario.user(params),
+      };
     default:
       throw new Error(
-        `Unsupported question type: ${(params as GenerateQuestionParams).type}`
+        `Unsupported question type: ${(params as GenerateQuestionParams).type}`,
       );
   }
 }
@@ -412,6 +485,13 @@ export function buildQuizSystemPrompt(): string {
           - codeSnippet: Valid code string, must be relevant to the question and contain a bug if the question is about fixing bugs,
           - sampleSolution: Valid code string, must be the corrected version of the code snippet
           - language: Programming language of the code snippet (e.g., "javascript", "python", "java") MUST be always included
+
+        4. Behavioral Scenario Questions (\`type: "behavioral_scenario"\`)
+          - type: "behavioral_scenario"
+          - question: Italian text describing a realistic workplace scenario
+          - sampleAnswer: Italian text with a strong example response
+          - keywords: Array of relevant evaluation themes (optional)
+          - explanation: Italian text with evaluation guidance (optional)
   
         Content Rules:
   
@@ -466,6 +546,7 @@ export function buildQuizPrompt(params: GenerateQuizParams): string {
     includeMultipleChoice,
     includeOpenQuestions,
     includeCodeSnippets,
+    includeBehavioralScenarios,
     instructions,
     previousQuestions = [],
   } = params;
@@ -480,6 +561,7 @@ export function buildQuizPrompt(params: GenerateQuizParams): string {
   if (includeMultipleChoice) questionTypes.push("multiple_choice");
   if (includeOpenQuestions) questionTypes.push("open_question");
   if (includeCodeSnippets) questionTypes.push("code_snippet");
+  if (includeBehavioralScenarios) questionTypes.push("behavioral_scenario");
 
   const prompt = `Create a technical quiz for the position "${sanitizedTitle}" with ${questionCount} questions.
 
@@ -535,7 +617,7 @@ export function buildQuizPrompt(params: GenerateQuizParams): string {
  * Builds prompt for position description generation
  */
 export function buildPositionDescriptionPrompt(
-  params: GeneratePositionDescriptionParams
+  params: GeneratePositionDescriptionParams,
 ): string {
   const sanitizedTitle = sanitizeInput(params.title);
   const sanitizedSkills = params.skills.map(sanitizeInput).join(", ");

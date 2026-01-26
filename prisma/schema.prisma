@@ -34,6 +34,8 @@ model User {
   quizzes     Quiz[]       @relation("UserQuizzes")
   questions   Question[]   @relation("UserQuestions")
   evaluations Evaluation[] @relation("UserEvaluations")
+  assessmentEvaluations Evaluation[] @relation("UserEvaluationAssessments")
+  behavioralRubrics BehavioralRubric[] @relation("UserBehavioralRubrics")
 
   isAnonymous Boolean?
 
@@ -125,6 +127,7 @@ model Position {
   candidatePositions CandidatePosition[]
   quizzes            Quiz[]
   evaluations        Evaluation[]
+  behavioralRubrics  BehavioralRubric[]
 
   @@map("positions")
 }
@@ -144,6 +147,7 @@ model Candidate {
   creator            User                @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
   interviews         Interview[]
   evaluations        Evaluation[]
+  behavioralRubrics  BehavioralRubric[]
 
   @@map("candidates")
 }
@@ -260,6 +264,7 @@ enum QuestionType {
   multiple_choice
   open_question
   code_snippet
+  behavioral_scenario
 }
 
 // AI-generated evaluations for interviews (quiz-based) and candidates (resume-based)
@@ -280,7 +285,16 @@ model Evaluation {
   fitScore       Int?     // 0-10 scale (AI's candidate fit assessment)
   quizScore      Int?     // 0-100 percentage score from quiz answers (interview evals only)
 
-  // Manual notes field
+  // Hiring manager notes and decision
+  interviewNotes    String?
+  redFlags          String[] @default([])
+  standoutMoments   String[] @default([])
+  hireRecommendation String?
+  nextSteps         String?
+  assessedBy        String?
+  assessedAt        DateTime?
+
+  // Manual notes field (legacy)
   notes String?
 
   // Metadata
@@ -293,10 +307,40 @@ model Evaluation {
   candidate Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   position  Position?  @relation(fields: [positionId], references: [id], onDelete: SetNull)
   creator   User       @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
+  assessor  User?      @relation("UserEvaluationAssessments", fields: [assessedBy], references: [id], onDelete: SetNull)
 
   @@index([candidateId])
   @@index([positionId])
   @@map("evaluations")
+}
+
+model BehavioralRubric {
+  id            String   @id @default(cuid())
+  candidateId   String
+  positionId    String
+
+  communicationScore  Int
+  collaborationScore  Int
+  problemSolvingScore Int
+  cultureFitScore     Int
+  leadershipScore     Int?
+
+  strengthExamples String[] @default([])
+  improvementAreas String[] @default([])
+  overallComments  String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  position  Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator   User      @relation("UserBehavioralRubrics", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, positionId])
+  @@index([candidateId])
+  @@index([positionId])
+  @@map("behavioral_rubrics")
 }
 
 model Preset {

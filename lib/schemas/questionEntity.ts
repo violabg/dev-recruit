@@ -38,13 +38,13 @@ const createQuestionBaseSchema = z.object({
  */
 const questionRefinement = (
   data: z.infer<typeof createQuestionBaseSchema>,
-  ctx: z.RefinementCtx<z.infer<typeof createQuestionBaseSchema>>
+  ctx: z.RefinementCtx<z.infer<typeof createQuestionBaseSchema>>,
 ) => {
   // Validate multiple choice questions
   if (data.type === "multiple_choice") {
     if (!data.options || data.options.length < 4) {
       ctx.issues.push({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["options"],
         error: "Multiple choice questions require at least 4 options",
         input: data.options,
@@ -52,7 +52,7 @@ const questionRefinement = (
     }
     if (data.correctAnswer === undefined) {
       ctx.issues.push({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["correctAnswer"],
         error: "Multiple choice questions require a correct answer",
         input: data.correctAnswer,
@@ -61,10 +61,10 @@ const questionRefinement = (
   }
 
   // Validate open questions
-  if (data.type === "open_question") {
+  if (data.type === "open_question" || data.type === "behavioral_scenario") {
     if (!data.sampleAnswer) {
       ctx.issues.push({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["sampleAnswer"],
         error: "Open questions require a sample answer",
         input: data.sampleAnswer,
@@ -76,7 +76,7 @@ const questionRefinement = (
   if (data.type === "code_snippet") {
     if (!data.codeSnippet) {
       ctx.issues.push({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["codeSnippet"],
         error: "Code snippet questions require a code snippet",
         input: data.codeSnippet,
@@ -84,7 +84,7 @@ const questionRefinement = (
     }
     if (!data.sampleSolution) {
       ctx.issues.push({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["sampleSolution"],
         error: "Code snippet questions require a sample solution",
         input: data.sampleSolution,
@@ -92,7 +92,7 @@ const questionRefinement = (
     }
     if (!data.language) {
       ctx.issues.push({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["language"],
         error: "Code snippet questions require a language",
         input: data.language,

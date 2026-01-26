@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deleteCandidate } from "@/lib/actions/candidates";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
-import { ClipboardCheck, Edit, Link2 } from "lucide-react";
+import { ClipboardCheck, Edit, LayoutGrid, Link2 } from "lucide-react";
 import Link from "next/link";
 
 type Props = {
@@ -62,6 +62,15 @@ export async function CandidateHeader({ params }: Props) {
           >
             <ClipboardCheck className="mr-1 size-4" />
             Valutazioni
+          </Link>
+          <Link
+            href={
+              `/dashboard/candidates/${candidate.id}/evaluation-dashboard` as any
+            }
+            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
+          >
+            <LayoutGrid className="mr-1 size-4" />
+            Dashboard valutazione
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/edit`}

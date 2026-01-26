@@ -97,7 +97,7 @@ const EVALUATION_INCLUDE = {
  * Get evaluation for a specific interview (1:1 relationship)
  */
 export async function getEvaluationByInterviewId(
-  interviewId: string
+  interviewId: string,
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
@@ -113,7 +113,7 @@ export async function getEvaluationByInterviewId(
  * Get all evaluations for a candidate (multiple per candidate, one per position)
  */
 export async function getEvaluationsByCandidateId(
-  candidateId: string
+  candidateId: string,
 ): Promise<EvaluationWithRelations[]> {
   "use cache";
   cacheLife("hours");
@@ -130,7 +130,7 @@ export async function getEvaluationsByCandidateId(
  * Get a single evaluation by ID
  */
 export async function getEvaluationById(
-  id: string
+  id: string,
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
@@ -143,11 +143,32 @@ export async function getEvaluationById(
 }
 
 /**
+ * Get latest interview evaluation for a candidate
+ */
+export async function getLatestInterviewEvaluationByCandidateId(
+  candidateId: string,
+): Promise<EvaluationWithRelations | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationCandidate(candidateId));
+
+  return prisma.evaluation.findFirst({
+    where: {
+      interview: {
+        candidateId,
+      },
+    },
+    include: EVALUATION_INCLUDE,
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+/**
  * Check if a candidate already has an evaluation for a specific position
  */
 export async function hasEvaluationForPosition(
   candidateId: string,
-  positionId: string
+  positionId: string,
 ): Promise<boolean> {
   "use cache";
   cacheLife("minutes");
