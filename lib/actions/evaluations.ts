@@ -16,7 +16,7 @@ import { getOptimalModel, isDevelopment } from "../utils";
 export async function evaluateAnswer(
   question: FlexibleQuestion,
   answer: string,
-  specificModel?: string
+  specificModel?: string,
 ) {
   if (!question || !answer) {
     throw new Error("Missing required fields");
@@ -153,6 +153,33 @@ export async function evaluateAnswer(
           
           Note: Minor syntax differences from the sample solution are acceptable if the logic is correct.
           `;
+  } else if (question.type === "behavioral_scenario") {
+    prompt = `
+          Evaluate this behavioral scenario response:
+
+          Scenario: ${question.question}
+          Candidate's answer: "${answer}"
+          ${
+            question.sampleAnswer
+              ? `Sample strong response: "${question.sampleAnswer}"`
+              : ""
+          }
+          ${
+            question.keywords && question.keywords.length > 0
+              ? `Evaluation themes: ${question.keywords.join(", ")}`
+              : ""
+          }
+
+          EVALUATION CONTEXT:
+          This is a behavioral or situational question. Evaluate:
+          1. Judgment and decision-making
+          2. Communication and clarity
+          3. Collaboration and stakeholder awareness
+          4. Risk awareness and trade-offs
+          5. Practicality of the proposed approach
+
+          Focus on reasoning and maturity appropriate to the role.
+          `;
   }
 
   prompt += ` 
@@ -279,7 +306,7 @@ export async function generateOverallEvaluation(
   totalCount: number,
   percentageScore: number,
   evaluations: Record<string, EvaluationResult>,
-  specificModel?: string
+  specificModel?: string,
 ) {
   // Extract strengths and weaknesses from evaluations
   const allStrengths: string[] = [];
@@ -355,7 +382,7 @@ export async function generateOverallEvaluation(
   } catch (error) {
     aiLogger.warn(
       "Primary model failed for overall evaluation, trying fallback",
-      { error, candidateName }
+      { error, candidateName },
     );
 
     // Fallback to a different stable model if the primary fails

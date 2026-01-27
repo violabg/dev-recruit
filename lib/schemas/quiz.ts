@@ -33,6 +33,7 @@ export const quizGenerationConfigSchema = z.object({
   includeMultipleChoice: z.boolean(),
   includeOpenQuestions: z.boolean(),
   includeCodeSnippets: z.boolean(),
+  includeBehavioralScenarios: z.boolean(),
 
   // Optional generation parameters
   specificModel: z.string().optional(),
@@ -41,7 +42,7 @@ export const quizGenerationConfigSchema = z.object({
       z.object({
         question: z.string().min(1, "Question text required"),
         type: z.string().optional(),
-      })
+      }),
     )
     .optional(),
 });
@@ -85,7 +86,7 @@ export const quizApiSchemas = {
         z.object({
           question: z.string().min(1, "Question text required"),
           type: z.string().optional(),
-        })
+        }),
       )
       .optional(),
     specificModel: z.string().optional(),
@@ -126,6 +127,7 @@ export const quizFormSchemas = {
     includeMultipleChoice: formTransformers.stringToBoolean,
     includeOpenQuestions: formTransformers.stringToBoolean,
     includeCodeSnippets: formTransformers.stringToBoolean,
+    includeBehavioralScenarios: formTransformers.stringToBoolean,
     instructions: z.string().max(2000).optional(),
     enableTimeLimit: formTransformers.stringToBoolean.optional(),
     timeLimit: baseSchemas.timeLimit.optional(),
@@ -140,6 +142,7 @@ export const quizFormSchemas = {
     includeMultipleChoice: z.boolean(),
     includeOpenQuestions: z.boolean(),
     includeCodeSnippets: z.boolean(),
+    includeBehavioralScenarios: z.boolean(),
     difficulty: baseSchemas.difficulty,
     timeLimit: baseSchemas.timeLimit,
     enableTimeLimit: z.boolean(),

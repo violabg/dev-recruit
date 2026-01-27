@@ -123,6 +123,7 @@ describe("AIQuizService", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
       });
 
       expect(result).toHaveProperty("questions");
@@ -151,7 +152,8 @@ describe("AIQuizService", () => {
           includeMultipleChoice: true,
           includeOpenQuestions: false,
           includeCodeSnippets: false,
-        })
+          includeBehavioralScenarios: false,
+        }),
       ).rejects.toThrow();
     });
 
@@ -177,6 +179,7 @@ describe("AIQuizService", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: true,
         includeCodeSnippets: true,
+        includeBehavioralScenarios: false,
         description: "Test description",
         instructions: "Test instructions",
         previousQuestions: [{ question: "Previous q" }],
@@ -208,6 +211,7 @@ describe("AIQuizService", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
       });
 
       expect(mockGenerateObject).toHaveBeenCalled();
@@ -425,7 +429,7 @@ describe("AIQuizService", () => {
           includeMultipleChoice: true,
           includeOpenQuestions: false,
           includeCodeSnippets: false,
-        })
+        }),
       ).rejects.toThrow();
     });
 

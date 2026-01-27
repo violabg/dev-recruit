@@ -1,5 +1,6 @@
 "use client";
 import {
+  BehavioralScenarioForm,
   CodeSnippetForm,
   MultipleChoiceForm,
   OpenQuestionForm,
@@ -275,6 +276,9 @@ export const QuestionItem = ({
               )}
               {field.type === "open_question" && (
                 <OpenQuestionForm index={actualIndex} />
+              )}
+              {field.type === "behavioral_scenario" && (
+                <BehavioralScenarioForm index={actualIndex} />
               )}
               {field.type === "code_snippet" && (
                 <CodeSnippetForm

@@ -130,6 +130,7 @@ describe("quizzes actions", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
       });
 
       expect(result).toEqual(mockQuizData);
@@ -139,7 +140,7 @@ describe("quizzes actions", () => {
           experienceLevel: "Senior",
           questionCount: 5,
           difficulty: 3,
-        })
+        }),
       );
     });
 
@@ -155,7 +156,8 @@ describe("quizzes actions", () => {
           includeMultipleChoice: true,
           includeOpenQuestions: false,
           includeCodeSnippets: false,
-        })
+          includeBehavioralScenarios: false,
+        }),
       ).rejects.toThrow();
     });
 
@@ -173,13 +175,14 @@ describe("quizzes actions", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
         previousQuestions,
       });
 
       expect(aiQuizService.generateQuiz).toHaveBeenCalledWith(
         expect.objectContaining({
           previousQuestions,
-        })
+        }),
       );
     });
 
@@ -195,13 +198,14 @@ describe("quizzes actions", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
         specificModel: "claude-3-5-sonnet-20241022",
       });
 
       expect(aiQuizService.generateQuiz).toHaveBeenCalledWith(
         expect.objectContaining({
           specificModel: "claude-3-5-sonnet-20241022",
-        })
+        }),
       );
     });
   });
@@ -218,7 +222,7 @@ describe("quizzes actions", () => {
       };
 
       vi.mocked(aiQuizService.generateQuestion).mockResolvedValueOnce(
-        mockQuestion
+        mockQuestion,
       );
 
       const result = await generateNewQuestionAction({
@@ -248,7 +252,7 @@ describe("quizzes actions", () => {
       };
 
       vi.mocked(aiQuizService.generateQuestion).mockResolvedValueOnce(
-        mockQuestion
+        mockQuestion,
       );
 
       const result = await generateNewQuestionAction({
@@ -273,7 +277,7 @@ describe("quizzes actions", () => {
       };
 
       vi.mocked(aiQuizService.generateQuestion).mockResolvedValueOnce(
-        mockQuestion
+        mockQuestion,
       );
 
       const result = await generateNewQuestionAction({
@@ -296,7 +300,7 @@ describe("quizzes actions", () => {
       };
 
       vi.mocked(aiQuizService.generateQuestion).mockResolvedValueOnce(
-        invalidQuestion as any
+        invalidQuestion as any,
       );
 
       await expect(
@@ -306,7 +310,7 @@ describe("quizzes actions", () => {
           experienceLevel: "Mid",
           skills: ["JavaScript"],
           difficulty: 3,
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -535,6 +539,7 @@ describe("quizzes actions", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
       });
 
       expect(result?.id).toBe("quiz1");
@@ -555,7 +560,8 @@ describe("quizzes actions", () => {
           includeMultipleChoice: true,
           includeOpenQuestions: false,
           includeCodeSnippets: false,
-        })
+          includeBehavioralScenarios: false,
+        }),
       ).rejects.toThrow();
     });
 
@@ -572,7 +578,8 @@ describe("quizzes actions", () => {
           includeMultipleChoice: true,
           includeOpenQuestions: false,
           includeCodeSnippets: false,
-        })
+          includeBehavioralScenarios: false,
+        }),
       ).rejects.toThrow();
     });
 
@@ -602,6 +609,7 @@ describe("quizzes actions", () => {
         includeMultipleChoice: false,
         includeOpenQuestions: true,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
       });
 
       expect(prisma.question.deleteMany).toHaveBeenCalled();

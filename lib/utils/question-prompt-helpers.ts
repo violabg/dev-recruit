@@ -14,6 +14,7 @@ import {
   MultipleChoiceQuestionParams,
   OpenQuestionParams,
 } from "../services/ai-service";
+import { BehavioralScenarioQuestionParams } from "../services/ai/types";
 
 // ====================
 // PARAMETER BUILDERS
@@ -23,7 +24,7 @@ import {
  * Creates base question parameters shared across all question types
  */
 export const createBaseParams = (
-  config: BaseQuestionParams
+  config: BaseQuestionParams,
 ): BaseQuestionParams => ({
   quizTitle: config.quizTitle,
   positionTitle: config.positionTitle,
@@ -43,7 +44,7 @@ export const createMultipleChoiceParams = (
   options: {
     focusAreas?: string[];
     distractorComplexity?: "simple" | "moderate" | "complex";
-  } = {}
+  } = {},
 ): MultipleChoiceQuestionParams => ({
   ...createBaseParams(baseConfig),
   type: "multiple_choice",
@@ -59,7 +60,7 @@ export const createOpenQuestionParams = (
   options: {
     expectedResponseLength?: "short" | "medium" | "long";
     evaluationCriteria?: string[];
-  } = {}
+  } = {},
 ): OpenQuestionParams => ({
   ...createBaseParams(baseConfig),
   type: "open_question",
@@ -77,7 +78,7 @@ export const createCodeSnippetParams = (
     bugType?: "syntax" | "logic" | "performance" | "security";
     codeComplexity?: "basic" | "intermediate" | "advanced";
     includeComments?: boolean;
-  } = {}
+  } = {},
 ): CodeSnippetQuestionParams => ({
   ...createBaseParams(baseConfig),
   type: "code_snippet",
@@ -85,6 +86,22 @@ export const createCodeSnippetParams = (
   bugType: options.bugType,
   codeComplexity: options.codeComplexity,
   includeComments: options.includeComments,
+});
+
+/**
+ * Creates parameters for behavioral scenario question generation
+ */
+export const createBehavioralScenarioParams = (
+  baseConfig: BaseQuestionParams,
+  options: {
+    expectedResponseLength?: "short" | "medium" | "long";
+    evaluationCriteria?: string[];
+  } = {},
+): BehavioralScenarioQuestionParams => ({
+  ...createBaseParams(baseConfig),
+  type: "behavioral_scenario",
+  expectedResponseLength: options.expectedResponseLength,
+  evaluationCriteria: options.evaluationCriteria,
 });
 
 // ====================
@@ -97,7 +114,7 @@ export const createCodeSnippetParams = (
 export const createQuestionParams = (
   type: QuestionType,
   baseConfig: BaseQuestionParams,
-  typeSpecificOptions?: Record<string, unknown>
+  typeSpecificOptions?: Record<string, unknown>,
 ): GenerateQuestionParams => {
   switch (type) {
     case "multiple_choice":
@@ -106,6 +123,8 @@ export const createQuestionParams = (
       return createOpenQuestionParams(baseConfig, typeSpecificOptions);
     case "code_snippet":
       return createCodeSnippetParams(baseConfig, typeSpecificOptions);
+    case "behavioral_scenario":
+      return createBehavioralScenarioParams(baseConfig, typeSpecificOptions);
     default:
       throw new Error(`Unsupported question type: ${type}`);
   }
@@ -116,7 +135,7 @@ export const createQuestionParams = (
  */
 export const createFrontendQuestionParams = (
   type: QuestionType,
-  baseConfig: BaseQuestionParams
+  baseConfig: BaseQuestionParams,
 ): GenerateQuestionParams => {
   const frontendDefaults = {
     multiple_choice: {
@@ -137,6 +156,10 @@ export const createFrontendQuestionParams = (
       codeComplexity: "intermediate" as const,
       includeComments: true,
     },
+    behavioral_scenario: {
+      expectedResponseLength: "medium" as const,
+      evaluationCriteria: ["collaboration", "decision-making", "communication"],
+    },
   };
 
   return createQuestionParams(type, baseConfig, frontendDefaults[type]);
@@ -147,7 +170,7 @@ export const createFrontendQuestionParams = (
  */
 export const createBackendQuestionParams = (
   type: QuestionType,
-  baseConfig: BaseQuestionParams
+  baseConfig: BaseQuestionParams,
 ): GenerateQuestionParams => {
   const backendDefaults = {
     multiple_choice: {
@@ -167,6 +190,14 @@ export const createBackendQuestionParams = (
       bugType: "security" as const,
       codeComplexity: "advanced" as const,
       includeComments: true,
+    },
+    behavioral_scenario: {
+      expectedResponseLength: "medium" as const,
+      evaluationCriteria: [
+        "decision-making",
+        "communication",
+        "risk awareness",
+      ],
     },
   };
 

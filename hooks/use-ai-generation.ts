@@ -12,6 +12,7 @@ import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { GenerateQuestionParams } from "@/lib/services/ai-service";
 import {
   createBackendQuestionParams,
+  createBehavioralScenarioParams,
   createCodeSnippetParams,
   createFrontendQuestionParams,
   createMultipleChoiceParams,
@@ -38,7 +39,7 @@ type UseAIGenerationProps = {
   remove: (index: number) => void;
   update: (index: number, value: Question) => void;
   setExpandedQuestions: (
-    value: Set<string> | ((prev: Set<string>) => Set<string>)
+    value: Set<string> | ((prev: Set<string>) => Set<string>),
   ) => void;
 };
 
@@ -89,7 +90,7 @@ export const useAIGeneration = ({
    */
   const handleGenerateQuestion = async (
     type: QuestionType,
-    options: GenerationOptions
+    options: GenerationOptions,
   ) => {
     setAiLoading(true);
     setGeneratingQuestionType(type);
@@ -118,6 +119,12 @@ export const useAIGeneration = ({
             bugType: options.bugType,
             codeComplexity: options.codeComplexity || "intermediate",
             includeComments: options.includeComments ?? true,
+          });
+          break;
+        case "behavioral_scenario":
+          params = createBehavioralScenarioParams(baseConfig, {
+            expectedResponseLength: options.expectedResponseLength || "medium",
+            evaluationCriteria: options.evaluationCriteria,
           });
           break;
       }
@@ -167,7 +174,7 @@ export const useAIGeneration = ({
    */
   const generateFrontendQuestion = async (
     type: QuestionType,
-    options: Omit<GenerationOptions, "language" | "bugType" | "codeComplexity">
+    options: Omit<GenerationOptions, "language" | "bugType" | "codeComplexity">,
   ) => {
     const baseConfig = createBaseConfig();
     const params = createFrontendQuestionParams(type, baseConfig);
@@ -185,7 +192,7 @@ export const useAIGeneration = ({
    */
   const generateBackendQuestion = async (
     type: QuestionType,
-    options: Omit<GenerationOptions, "focusAreas" | "distractorComplexity">
+    options: Omit<GenerationOptions, "focusAreas" | "distractorComplexity">,
   ) => {
     const baseConfig = createBaseConfig();
     const params = createBackendQuestionParams(type, baseConfig);
@@ -236,7 +243,7 @@ export const useAIGeneration = ({
    */
   const handleRegenerateQuestion = async (
     type: QuestionType,
-    options: GenerationOptions
+    options: GenerationOptions,
   ) => {
     if (regeneratingQuestionIndex === null) return;
 
@@ -270,6 +277,14 @@ export const useAIGeneration = ({
             includeComments: options.includeComments ?? true,
           });
           break;
+        case "behavioral_scenario":
+          params = createBehavioralScenarioParams(baseConfig, {
+            expectedResponseLength: options.expectedResponseLength || "medium",
+            evaluationCriteria: options.evaluationCriteria,
+          });
+          break;
+        default:
+          throw new Error("Tipo di domanda non supportato");
       }
 
       // Add common options
@@ -321,7 +336,7 @@ export const useAIGeneration = ({
         (skill) =>
           skill.includes("javascript") ||
           skill.includes("react") ||
-          skill.includes("node")
+          skill.includes("node"),
       )
     ) {
       return "javascript";

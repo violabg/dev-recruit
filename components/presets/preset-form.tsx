@@ -24,6 +24,7 @@ const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Scelta multipla" },
   { value: "code_snippet", label: "Snippet di codice" },
   { value: "open_question", label: "Domanda aperta" },
+  { value: "behavioral_scenario", label: "Scenario comportamentale" },
 ];
 
 const COMMON_TAGS = [
@@ -237,10 +238,11 @@ export function PresetForm({ preset }: PresetFormProps) {
             </div>
           )}
 
-          {questionType === "open_question" && (
+          {(questionType === "open_question" ||
+            questionType === "behavioral_scenario") && (
             <div className="space-y-4 bg-card/30 p-6 border rounded-xl">
               <h3 className="font-heading font-medium text-base">
-                Configurazione Domanda Aperta
+                Configurazione Domanda Aperta / Scenario
               </h3>
               <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
                 <SelectField

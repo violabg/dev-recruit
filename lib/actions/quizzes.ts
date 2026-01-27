@@ -27,6 +27,7 @@ type GenerateNewQuizActionParams = {
   includeMultipleChoice: boolean;
   includeOpenQuestions: boolean;
   includeCodeSnippets: boolean;
+  includeBehavioralScenarios: boolean;
   instructions?: string;
   previousQuestions?: { question: string }[];
   specificModel?: string;
@@ -40,6 +41,7 @@ export async function generateNewQuizAction({
   includeMultipleChoice,
   includeOpenQuestions,
   includeCodeSnippets,
+  includeBehavioralScenarios,
   instructions,
   previousQuestions,
   specificModel,
@@ -66,7 +68,7 @@ export async function generateNewQuizAction({
       throw new QuizSystemError(
         "Position not found or access denied",
         QuizErrorCode.POSITION_NOT_FOUND,
-        { positionId }
+        { positionId },
       );
     }
 
@@ -82,6 +84,7 @@ export async function generateNewQuizAction({
       includeMultipleChoice,
       includeOpenQuestions,
       includeCodeSnippets,
+      includeBehavioralScenarios,
       instructions,
       previousQuestions,
       specificModel,
@@ -99,7 +102,7 @@ export async function generateNewQuizAction({
 }
 
 export async function generateNewQuestionAction(
-  params: GenerateQuestionParams
+  params: GenerateQuestionParams,
 ) {
   try {
     // Generate question using AI service with the new parameter structure
@@ -116,7 +119,7 @@ export async function generateNewQuestionAction(
       throw new QuizSystemError(
         "Generated question failed validation",
         QuizErrorCode.INVALID_INPUT,
-        { zodErrors: error.issues }
+        { zodErrors: error.issues },
       );
     }
 
@@ -139,7 +142,7 @@ export async function deleteQuizById(quizId: string) {
     if (!quizId) {
       throw new QuizSystemError(
         "Quiz ID is required",
-        QuizErrorCode.INVALID_INPUT
+        QuizErrorCode.INVALID_INPUT,
       );
     }
 
@@ -154,7 +157,7 @@ export async function deleteQuizById(quizId: string) {
       throw new QuizSystemError(
         "Quiz not found",
         QuizErrorCode.QUIZ_NOT_FOUND,
-        { quizId }
+        { quizId },
       );
     }
 
@@ -207,7 +210,7 @@ export async function upsertQuizAction(formData: FormData) {
     if (!title || !questionsRaw) {
       throw new QuizSystemError(
         "Title and questions are required",
-        QuizErrorCode.INVALID_INPUT
+        QuizErrorCode.INVALID_INPUT,
       );
     }
 
@@ -222,7 +225,7 @@ export async function upsertQuizAction(formData: FormData) {
       throw new QuizSystemError(
         "Invalid questions format",
         QuizErrorCode.INVALID_INPUT,
-        { parseError }
+        { parseError },
       );
     }
 
@@ -233,7 +236,7 @@ export async function upsertQuizAction(formData: FormData) {
       if (!positionId) {
         throw new QuizSystemError(
           "Position ID is required for quiz creation",
-          QuizErrorCode.INVALID_INPUT
+          QuizErrorCode.INVALID_INPUT,
         );
       }
 
@@ -249,7 +252,7 @@ export async function upsertQuizAction(formData: FormData) {
         throw new QuizSystemError(
           "Position not found or access denied",
           QuizErrorCode.POSITION_NOT_FOUND,
-          { positionId }
+          { positionId },
         );
       }
 
@@ -314,7 +317,7 @@ export async function upsertQuizAction(formData: FormData) {
       if (!quiz) {
         throw new QuizSystemError(
           "Failed to save quiz to database",
-          QuizErrorCode.DATABASE_ERROR
+          QuizErrorCode.DATABASE_ERROR,
         );
       }
 
@@ -336,7 +339,7 @@ export async function upsertQuizAction(formData: FormData) {
         throw new QuizSystemError(
           "Quiz not found",
           QuizErrorCode.QUIZ_NOT_FOUND,
-          { quizId }
+          { quizId },
         );
       }
 
@@ -361,7 +364,7 @@ export async function upsertQuizAction(formData: FormData) {
         const keepQuestionIds = new Set(
           questions
             .filter((q: FlexibleQuestion) => q.dbId)
-            .map((q: FlexibleQuestion) => q.dbId)
+            .map((q: FlexibleQuestion) => q.dbId),
         );
 
         // Delete existing quiz-question links
@@ -455,6 +458,7 @@ type RegenerateQuizActionParams = {
   includeMultipleChoice: boolean;
   includeOpenQuestions: boolean;
   includeCodeSnippets: boolean;
+  includeBehavioralScenarios: boolean;
   instructions?: string;
   previousQuestions?: { question: string }[];
   specificModel?: string;
@@ -475,6 +479,7 @@ export async function regenerateQuizAction({
   includeMultipleChoice,
   includeOpenQuestions,
   includeCodeSnippets,
+  includeBehavioralScenarios,
   instructions,
   previousQuestions,
   specificModel,
@@ -492,7 +497,7 @@ export async function regenerateQuizAction({
       throw new QuizSystemError(
         "Quiz not found",
         QuizErrorCode.QUIZ_NOT_FOUND,
-        { quizId }
+        { quizId },
       );
     }
 
@@ -515,7 +520,7 @@ export async function regenerateQuizAction({
       throw new QuizSystemError(
         "Position not found or access denied",
         QuizErrorCode.POSITION_NOT_FOUND,
-        { positionId }
+        { positionId },
       );
     }
 
@@ -531,6 +536,7 @@ export async function regenerateQuizAction({
       includeMultipleChoice,
       includeOpenQuestions,
       includeCodeSnippets,
+      includeBehavioralScenarios,
       instructions,
       previousQuestions,
       specificModel,
@@ -625,7 +631,7 @@ export async function duplicateQuizAction(formData: FormData) {
     if (!quizId || !newPositionId || !newTitle) {
       throw new QuizSystemError(
         "Quiz ID, position ID, and title are required",
-        QuizErrorCode.INVALID_INPUT
+        QuizErrorCode.INVALID_INPUT,
       );
     }
 
@@ -650,7 +656,7 @@ export async function duplicateQuizAction(formData: FormData) {
       throw new QuizSystemError(
         "Quiz not found",
         QuizErrorCode.QUIZ_NOT_FOUND,
-        { quizId }
+        { quizId },
       );
     }
 
@@ -664,7 +670,7 @@ export async function duplicateQuizAction(formData: FormData) {
       throw new QuizSystemError(
         "Position not found",
         QuizErrorCode.POSITION_NOT_FOUND,
-        { newPositionId }
+        { newPositionId },
       );
     }
 
@@ -722,7 +728,7 @@ export async function duplicateQuizAction(formData: FormData) {
     if (!newQuiz) {
       throw new QuizSystemError(
         "Failed to create duplicated quiz",
-        QuizErrorCode.DATABASE_ERROR
+        QuizErrorCode.DATABASE_ERROR,
       );
     }
 

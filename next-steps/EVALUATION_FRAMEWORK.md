@@ -58,27 +58,37 @@ Your DevRecruit system currently evaluates candidates via:
 
 ## Recommended Framework
 
+### Implementation Status (Current)
+
+**Implemented now**:
+
+- Technical Quiz
+- Behavioral/Scenario
+- Hiring Manager Notes
+- Unified Evaluation Dashboard
+
+**Deferred (not implemented)**:
+
+- Work Sample / Mini-Project
+- Growth Signals & Career Trajectory
+
 ### Overview
 
-**Replace single-signal evaluation with integrated multi-dimensional assessment:**
+**Current assessment stack (implemented):**
 
-| Signal                   | Weight | What It Measures                            | Why It Matters                   |
-| ------------------------ | ------ | ------------------------------------------- | -------------------------------- |
-| **Work Sample**          | 45%    | Code quality, architecture, problem-solving | Real code is strongest predictor |
-| **Technical Quiz**       | 20%    | Breadth of knowledge, specific skills       | Validates baseline competency    |
-| **Behavioral/Scenario**  | 20%    | Judgment, communication, cultural fit       | Teamwork > raw skills            |
-| **Hiring Manager Notes** | 10%    | Nuance, red flags, interaction quality      | Domain expert gut feeling        |
-| **Growth Signals**       | 5%     | Career trajectory, continuous learning      | Predictor of long-term retention |
+| Signal                   | Weight | What It Measures                       | Why It Matters                |
+| ------------------------ | ------ | -------------------------------------- | ----------------------------- |
+| **Technical Quiz**       | 50%    | Breadth of knowledge, specific skills  | Validates baseline competency |
+| **Behavioral/Scenario**  | 30%    | Judgment, communication, cultural fit  | Teamwork > raw skills         |
+| **Hiring Manager Notes** | 20%    | Nuance, red flags, interaction quality | Domain expert gut feeling     |
 
 ### Final Evaluation Equation
 
 ```
 overallFitScore = (
-  0.45 × workSampleScore +
-  0.20 × quizScore +
-  0.20 × behavioralScore +
-  0.10 × hiringNotesScore +
-  0.05 × growthSignalScore
+  0.50 × quizScore +
+  0.30 × behavioralScore +
+  0.20 × hiringNotesScore
 )
 
 recommendation = {
@@ -94,7 +104,7 @@ recommendation = {
 
 ## Detailed Implementation
 
-### 1. Work Sample / Mini-Project Evaluation ⭐ Highest Impact
+### 1. Work Sample / Mini-Project Evaluation (Deferred)
 
 **Why it matters:** Code quality, architecture decisions, debugging approach reveal more than Q&A.
 
@@ -885,7 +895,7 @@ function ScoreOverview({ scores, overallScore }) {
 
 ---
 
-### 6. Growth Signals & Career Trajectory
+### 6. Growth Signals & Career Trajectory (Deferred)
 
 **Why it matters:** Trajectory and self-directed growth predict long-term retention.
 
@@ -982,43 +992,23 @@ export async function analyzeGrowthSignals(params: {
 ### Unified Evaluation Dashboard
 
 ```tsx
-// app/dashboard/candidates/[id]/evaluation-summary.tsx
+// app/dashboard/candidates/[id]/evaluation-dashboard/page.tsx
 export async function CandidateEvaluationSummary({ candidateId, positionId }) {
   "use cache";
   cacheTag(entityTag.candidate(candidateId));
   cacheLife("hours");
 
   // Fetch all evaluation signals in parallel
-  const [
-    quizEval,
-    workSampleEval,
-    behavioralRubric,
-    hiringDecision,
-    profileSignals,
-  ] = await Promise.all([
-    getInterviewEvaluation(candidateId, positionId),
-    getWorkSampleEvaluation(candidateId, positionId),
+  const [quizEval, behavioralRubric] = await Promise.all([
+    getLatestInterviewEvaluationByCandidateId(candidateId),
     getBehavioralRubric(candidateId, positionId),
-    getHiringDecision(candidateId, positionId),
-    getGrowthSignals(candidateId),
   ]);
 
   // Compute weighted overall score
   const overallScore = calculateWeightedScore({
     quiz: {
       score: quizEval?.quizScore ? Math.round(quizEval.quizScore / 10) : null,
-      weight: 0.2,
-    },
-    workSample: {
-      score: workSampleEval?.codeQualityScore
-        ? Math.round(
-            (workSampleEval.codeQualityScore +
-              workSampleEval.architectureScore +
-              workSampleEval.completenessScore) /
-              3,
-          )
-        : null,
-      weight: 0.45,
+      weight: 0.5,
     },
     behavioral: {
       score: behavioralRubric
@@ -1031,11 +1021,11 @@ export async function CandidateEvaluationSummary({ candidateId, positionId }) {
               2,
           ) // Scale 1-5 to 0-10
         : null,
-      weight: 0.2,
+      weight: 0.3,
     },
-    growthSignals: {
-      score: profileSignals?.growthScore || null,
-      weight: 0.05,
+    hiringNotes: {
+      score: mapHiringRecommendationToScore(quizEval?.hireRecommendation),
+      weight: 0.2,
     },
   });
 
@@ -1050,10 +1040,9 @@ export async function CandidateEvaluationSummary({ candidateId, positionId }) {
 
       {/* Four-part evaluation grid */}
       <div className="grid grid-cols-2 gap-4">
-        <QuizScoreCard eval={quizEval} weight={0.2} />
-        <WorkSampleCard eval={workSampleEval} weight={0.45} />
-        <BehavioralFitCard eval={behavioralRubric} weight={0.2} />
-        <GrowthSignalsCard eval={profileSignals} weight={0.05} />
+        <QuizScoreCard eval={quizEval} weight={0.5} />
+        <BehavioralFitCard eval={behavioralRubric} weight={0.3} />
+        <HiringNotesCard eval={quizEval} weight={0.2} />
       </div>
 
       {/* Timeline of evaluations */}
@@ -1064,19 +1053,14 @@ export async function CandidateEvaluationSummary({ candidateId, positionId }) {
             date: quizEval.createdAt,
             title: "Quiz Completed",
           },
-          workSampleEval && {
-            type: "work_sample",
-            date: workSampleEval.evaluatedAt,
-            title: "Work Sample Evaluated",
-          },
           behavioralRubric && {
             type: "behavioral",
             date: behavioralRubric.createdAt,
             title: "Behavioral Assessment",
           },
-          hiringDecision && {
+          quizEval?.assessedAt && {
             type: "hiring",
-            date: hiringDecision.assessedAt,
+            date: quizEval.assessedAt,
             title: "Hiring Decision",
           },
         ].filter(Boolean)}
@@ -1084,19 +1068,10 @@ export async function CandidateEvaluationSummary({ candidateId, positionId }) {
 
       {/* Insights from all signals */}
       <InsightsPanel
-        topStrengths={aggregateStrengths([
-          quizEval,
-          workSampleEval,
-          behavioralRubric,
-        ])}
-        growthAreas={aggregateWeaknesses([
-          quizEval,
-          workSampleEval,
-          behavioralRubric,
-        ])}
-        redFlags={hiringDecision?.redFlags || []}
-        standoutMoments={hiringDecision?.standoutMoments || []}
-        trajectoryInsight={profileSignals?.trajectoryInsight}
+        topStrengths={aggregateStrengths([quizEval, behavioralRubric])}
+        growthAreas={aggregateWeaknesses([quizEval, behavioralRubric])}
+        redFlags={quizEval?.redFlags || []}
+        standoutMoments={quizEval?.standoutMoments || []}
       />
     </div>
   );
@@ -1110,7 +1085,7 @@ export async function CandidateEvaluationSummary({ candidateId, positionId }) {
 export function invalidateEvaluationCache(options: {
   candidateId?: string;
   positionId?: string;
-  evaluationType?: "quiz" | "work_sample" | "behavioral" | "hiring";
+  evaluationType?: "quiz" | "behavioral" | "hiring";
 }): void {
   // Invalidate all evaluations for candidate
   if (options.candidateId) {
@@ -1140,22 +1115,19 @@ export function invalidateEvaluationCache(options: {
 
 ### Recommended Workload Distribution
 
-| Signal                   | Weight | Effort | Impact    | When Ready         |
-| ------------------------ | ------ | ------ | --------- | ------------------ |
-| **Work Sample**          | 45%    | Medium | Very High | Phase 2            |
-| **Technical Quiz**       | 20%    | Low    | Medium    | Phase 1 (existing) |
-| **Behavioral/Scenario**  | 20%    | Medium | High      | Phase 1            |
-| **Hiring Manager Notes** | 10%    | Low    | Medium    | Phase 1            |
-| **Growth Signals**       | 5%     | Low    | Low       | Phase 2            |
+| Signal                   | Weight | Effort | Impact | When Ready         |
+| ------------------------ | ------ | ------ | ------ | ------------------ |
+| **Technical Quiz**       | 50%    | Low    | Medium | Phase 1 (existing) |
+| **Behavioral/Scenario**  | 30%    | Medium | High   | Phase 1            |
+| **Hiring Manager Notes** | 20%    | Low    | Medium | Phase 1            |
 
 ### Final Recommendation Logic
 
 ```typescript
 export function calculateFinalRecommendation(scores: {
   quizScore?: number; // 0-10
-  workSampleScore?: number; // 0-10
   behavioralScore?: number; // 0-10
-  growthScore?: number; // 0-10
+  hiringNotesScore?: number; // 0-10
   managersOverride?: string; // "strong_yes" | "yes" | "maybe" | "no" | "strong_no"
 }): string {
   // If manager provided explicit override, use it
@@ -1168,20 +1140,16 @@ export function calculateFinalRecommendation(scores: {
   let totalWeight = 0;
 
   if (scores.quizScore !== undefined) {
-    overallScore += scores.quizScore * 0.2;
-    totalWeight += 0.2;
-  }
-  if (scores.workSampleScore !== undefined) {
-    overallScore += scores.workSampleScore * 0.45;
-    totalWeight += 0.45;
+    overallScore += scores.quizScore * 0.5;
+    totalWeight += 0.5;
   }
   if (scores.behavioralScore !== undefined) {
-    overallScore += scores.behavioralScore * 0.2;
-    totalWeight += 0.2;
+    overallScore += scores.behavioralScore * 0.3;
+    totalWeight += 0.3;
   }
-  if (scores.growthScore !== undefined) {
-    overallScore += scores.growthScore * 0.05;
-    totalWeight += 0.05;
+  if (scores.hiringNotesScore !== undefined) {
+    overallScore += scores.hiringNotesScore * 0.2;
+    totalWeight += 0.2;
   }
 
   // Normalize if not all signals present

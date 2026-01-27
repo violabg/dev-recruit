@@ -85,9 +85,12 @@ export const baseSchemas = {
   stringArray: z.array(z.string()),
 
   // Enum schemas
-  questionType: z.enum(["multiple_choice", "open_question", "code_snippet"], {
-    error: () => "Invalid question type",
-  }),
+  questionType: z.enum(
+    ["multiple_choice", "open_question", "code_snippet", "behavioral_scenario"],
+    {
+      error: () => "Invalid question type",
+    },
+  ),
 
   experienceLevel: z.enum(["junior", "mid", "senior", "lead"], {
     error: () => "Invalid experience level",
@@ -101,14 +104,14 @@ export const baseSchemas = {
     ["pending", "in_progress", "completed", "cancelled"],
     {
       error: () => "Invalid interview status",
-    }
+    },
   ),
 
   candidateStatus: z.enum(
     ["pending", "in_progress", "completed", "hired", "rejected"],
     {
       error: () => "Invalid candidate status",
-    }
+    },
   ),
 } as const;
 
@@ -147,7 +150,7 @@ export const formTransformers = {
     val
       .split(",")
       .map((item) => item.trim())
-      .filter(Boolean)
+      .filter(Boolean),
   ),
 
   // Coerce string to number (for FormData)

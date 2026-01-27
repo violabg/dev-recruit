@@ -158,6 +158,32 @@ const codeSnippetQuestionSchema = baseQuestionSchema.extend({
 }
 ```
 
+### Behavioral Scenario Schema
+
+```typescript
+const behavioralScenarioQuestionSchema = baseQuestionSchema.extend({
+  type: z.literal("behavioral_scenario"),
+  sampleAnswer: z.string().min(1, "Sample answer required"),
+});
+```
+
+| Field          | Type                    | Required | Description                         |
+| -------------- | ----------------------- | -------- | ----------------------------------- |
+| `type`         | `"behavioral_scenario"` | ✅       | Literal discriminator               |
+| `sampleAnswer` | `string`                | ✅       | Strong example response for scoring |
+
+**Example:**
+
+```json
+{
+  "type": "behavioral_scenario",
+  "question": "Un collega propone di saltare i test per rispettare la scadenza. Come ti comporti?",
+  "sampleAnswer": "Bilancio urgenza e qualità: propongo scope ridotto, test minimi critici e allineo il team sui rischi.",
+  "keywords": ["comunicazione", "trade-off", "qualità"],
+  "explanation": "Valutare capacità di mediazione, consapevolezza dei rischi e orientamento alla qualità."
+}
+```
+
 ## Flexible vs Strict
 
 ### Flexible Schema
@@ -354,6 +380,9 @@ export type MultipleChoiceQuestion = z.infer<
 >;
 export type OpenQuestion = z.infer<typeof openQuestionSchema>;
 export type CodeSnippetQuestion = z.infer<typeof codeSnippetQuestionSchema>;
+export type BehavioralScenarioQuestion = z.infer<
+  typeof behavioralScenarioQuestionSchema
+>;
 ```
 
 ## Question Entity (Database Model)
@@ -402,6 +431,7 @@ enum QuestionType {
   multiple_choice
   open_question
   code_snippet
+  behavioral_scenario
 }
 ```
 

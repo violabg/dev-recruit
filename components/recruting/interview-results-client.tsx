@@ -62,13 +62,13 @@ export function InterviewResultsClient({
           recommendation: initialEvaluation.recommendation,
           fitScore: initialEvaluation.fitScore,
         }
-      : null
+      : null,
   );
   // Note: overallScore is the quiz percentage score (from evaluating answers)
   // This is different from fitScore which is the AI's candidate fit assessment
   // quizScore is persisted in the database for interview evaluations
   const [overallScore, setOverallScore] = useState<number | null>(
-    (initialEvaluation as any)?.quizScore ?? null
+    (initialEvaluation as any)?.quizScore ?? null,
   );
   const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
   const [totalQuestionsToEvaluate, setTotalQuestionsToEvaluate] = useState(0);
@@ -96,7 +96,7 @@ export function InterviewResultsClient({
         setCurrentEvaluationIndex(i + 1);
         setCurrentQuestionTitle(
           question.question.slice(0, 60) +
-            (question.question.length > 60 ? "..." : "")
+            (question.question.length > 60 ? "..." : ""),
         );
 
         let answer = "";
@@ -145,7 +145,7 @@ export function InterviewResultsClient({
           toast.error("Errore valutazione", {
             description: `Errore nella valutazione della domanda: ${question.question.slice(
               0,
-              50
+              50,
             )}...`,
           });
           evaluatedQuestions[question.dbId] = {
@@ -180,7 +180,7 @@ export function InterviewResultsClient({
           answeredQuestions.length,
           quizQuestions.length,
           percentageScore,
-          evaluatedQuestions
+          evaluatedQuestions,
         );
 
         // Normalize fitScore from 0-100 (AI output) to 0-10 (display scale)
@@ -198,7 +198,7 @@ export function InterviewResultsClient({
           const saved = await createInterviewEvaluation(
             interviewId,
             result,
-            percentageScore
+            percentageScore,
           );
           setSavedEvaluation({
             ...saved,
@@ -337,8 +337,8 @@ export function InterviewResultsClient({
                       ? overallScore >= 70
                         ? "bg-green-500"
                         : overallScore >= 40
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
                       : ""
                   }`}
                 >
@@ -449,190 +449,195 @@ export function InterviewResultsClient({
           <TabsTrigger value="multiple_choice">Scelta multipla</TabsTrigger>
           <TabsTrigger value="open_question">Domande aperte</TabsTrigger>
           <TabsTrigger value="code_snippet">Snippet di codice</TabsTrigger>
+          <TabsTrigger value="behavioral_scenario">
+            Scenari comportamentali
+          </TabsTrigger>
         </TabsList>
 
-        {["all", "multiple_choice", "open_question", "code_snippet"].map(
-          (tabValue) => (
-            <TabsContent
-              key={tabValue}
-              value={tabValue}
-              className="space-y-4 pt-4"
-            >
-              {quizQuestions
-                .filter((q) => tabValue === "all" || q.type === tabValue)
-                .map((question, index) => {
-                  const { dbId, question: questionText, type } = question;
-                  const isAnswered = !!answers[dbId];
-                  const evaluation = evaluations[dbId];
+        {[
+          "all",
+          "multiple_choice",
+          "open_question",
+          "code_snippet",
+          "behavioral_scenario",
+        ].map((tabValue) => (
+          <TabsContent
+            key={tabValue}
+            value={tabValue}
+            className="space-y-4 pt-4"
+          >
+            {quizQuestions
+              .filter((q) => tabValue === "all" || q.type === tabValue)
+              .map((question, index) => {
+                const { dbId, question: questionText, type } = question;
+                const isAnswered = !!answers[dbId];
+                const evaluation = evaluations[dbId];
 
-                  return (
-                    <Card key={dbId}>
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-center">
-                          <CardTitle className="text-lg">
-                            {index + 1}. {questionText}
-                          </CardTitle>
-                          {evaluation && (
-                            <div
-                              className={`rounded-full px-2 py-1 text-xs font-medium ${
-                                evaluation.score >= 7
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                  : evaluation.score >= 4
+                return (
+                  <Card key={dbId}>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-lg">
+                          {index + 1}. {questionText}
+                        </CardTitle>
+                        {evaluation && (
+                          <div
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${
+                              evaluation.score >= 7
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                : evaluation.score >= 4
                                   ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
                                   : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                              }`}
-                            >
-                              {evaluation.score}/{evaluation.maxScore}
+                            }`}
+                          >
+                            {evaluation.score}/{evaluation.maxScore}
+                          </div>
+                        )}
+                      </div>
+                      <CardDescription>
+                        {type === "multiple_choice"
+                          ? "Risposta multipla"
+                          : type === "open_question"
+                            ? "Domanda aperta"
+                            : "Snippet di codice"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {isAnswered ? (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="font-medium">
+                              Risposta del candidato:
+                            </div>
+                            {type === "multiple_choice" &&
+                              question.options &&
+                              (() => {
+                                const answerIdx = Number.parseInt(
+                                  String(answers[dbId]),
+                                  10,
+                                );
+                                const isValidIdx =
+                                  !isNaN(answerIdx) &&
+                                  answerIdx >= 0 &&
+                                  answerIdx < question.options.length;
+                                const selectedOption = isValidIdx
+                                  ? question.options[answerIdx]
+                                  : null;
+                                const isCorrectAnswer =
+                                  isValidIdx &&
+                                  answerIdx === question.correctAnswer;
+
+                                return (
+                                  <div
+                                    className={`rounded-md border p-3 ${
+                                      isCorrectAnswer
+                                        ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                                        : "border-red-500 bg-red-50 dark:bg-red-950/20"
+                                    }`}
+                                  >
+                                    {selectedOption ?? "Risposta non valida"}
+                                  </div>
+                                );
+                              })()}
+
+                            {type === "open_question" && (
+                              <div className="p-3 border rounded-md whitespace-pre-wrap">
+                                {String(answers[dbId] ?? "")}
+                              </div>
+                            )}
+
+                            {type === "code_snippet" && (
+                              <CodeHighlight
+                                code={
+                                  typeof answers[dbId] === "object" &&
+                                  answers[dbId] !== null &&
+                                  "code" in answers[dbId]
+                                    ? answers[dbId].code
+                                    : String(answers[dbId] ?? "")
+                                }
+                                language={question.language ?? "javascript"}
+                                className="bg-[oklch(0.18_0.02_260)] p-4 border border-[oklch(0.3_0.02_260)] rounded-lg font-mono text-[oklch(0.95_0_0)] text-sm"
+                              />
+                            )}
+                          </div>
+
+                          {type === "multiple_choice" &&
+                            question.options &&
+                            question.correctAnswer !== undefined &&
+                            question.correctAnswer >= 0 &&
+                            question.correctAnswer <
+                              question.options.length && (
+                              <div className="space-y-2">
+                                <div className="font-medium">
+                                  Risposta corretta:
+                                </div>
+                                <div className="bg-green-50 dark:bg-green-950/20 p-3 border border-green-500 rounded-md">
+                                  {question.options[question.correctAnswer]}
+                                </div>
+                                {question.explanation && (
+                                  <div className="text-muted-foreground text-sm">
+                                    {question.explanation}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                          {evaluation && (
+                            <div className="space-y-2">
+                              <div className="font-medium">Valutazione AI:</div>
+                              <div className="p-3 border rounded-md whitespace-pre-wrap">
+                                {evaluation.evaluation}
+                              </div>
+
+                              {evaluation.strengths &&
+                                evaluation.strengths.length > 0 && (
+                                  <div className="mt-2">
+                                    <div className="font-medium text-green-600 dark:text-green-400">
+                                      Punti di forza:
+                                    </div>
+                                    <ul className="space-y-1 mt-1 pl-5 list-disc">
+                                      {evaluation.strengths.map(
+                                        (strength: any, idx: number) => (
+                                          <li key={idx} className="text-sm">
+                                            {strength}
+                                          </li>
+                                        ),
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
+
+                              {evaluation.weaknesses &&
+                                evaluation.weaknesses.length > 0 && (
+                                  <div className="mt-2">
+                                    <div className="font-medium text-amber-600 dark:text-amber-400">
+                                      Aree di miglioramento:
+                                    </div>
+                                    <ul className="space-y-1 mt-1 pl-5 list-disc">
+                                      {evaluation.weaknesses.map(
+                                        (weakness: any, idx: number) => (
+                                          <li key={idx} className="text-sm">
+                                            {weakness}
+                                          </li>
+                                        ),
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
                             </div>
                           )}
                         </div>
-                        <CardDescription>
-                          {type === "multiple_choice"
-                            ? "Risposta multipla"
-                            : type === "open_question"
-                            ? "Domanda aperta"
-                            : "Snippet di codice"}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {isAnswered ? (
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <div className="font-medium">
-                                Risposta del candidato:
-                              </div>
-                              {type === "multiple_choice" &&
-                                question.options &&
-                                (() => {
-                                  const answerIdx = Number.parseInt(
-                                    String(answers[dbId]),
-                                    10
-                                  );
-                                  const isValidIdx =
-                                    !isNaN(answerIdx) &&
-                                    answerIdx >= 0 &&
-                                    answerIdx < question.options.length;
-                                  const selectedOption = isValidIdx
-                                    ? question.options[answerIdx]
-                                    : null;
-                                  const isCorrectAnswer =
-                                    isValidIdx &&
-                                    answerIdx === question.correctAnswer;
-
-                                  return (
-                                    <div
-                                      className={`rounded-md border p-3 ${
-                                        isCorrectAnswer
-                                          ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                          : "border-red-500 bg-red-50 dark:bg-red-950/20"
-                                      }`}
-                                    >
-                                      {selectedOption ?? "Risposta non valida"}
-                                    </div>
-                                  );
-                                })()}
-
-                              {type === "open_question" && (
-                                <div className="p-3 border rounded-md whitespace-pre-wrap">
-                                  {String(answers[dbId] ?? "")}
-                                </div>
-                              )}
-
-                              {type === "code_snippet" && (
-                                <CodeHighlight
-                                  code={
-                                    typeof answers[dbId] === "object" &&
-                                    answers[dbId] !== null &&
-                                    "code" in answers[dbId]
-                                      ? answers[dbId].code
-                                      : String(answers[dbId] ?? "")
-                                  }
-                                  language={question.language ?? "javascript"}
-                                  className="bg-[oklch(0.18_0.02_260)] p-4 border border-[oklch(0.3_0.02_260)] rounded-lg font-mono text-[oklch(0.95_0_0)] text-sm"
-                                />
-                              )}
-                            </div>
-
-                            {type === "multiple_choice" &&
-                              question.options &&
-                              question.correctAnswer !== undefined &&
-                              question.correctAnswer >= 0 &&
-                              question.correctAnswer <
-                                question.options.length && (
-                                <div className="space-y-2">
-                                  <div className="font-medium">
-                                    Risposta corretta:
-                                  </div>
-                                  <div className="bg-green-50 dark:bg-green-950/20 p-3 border border-green-500 rounded-md">
-                                    {question.options[question.correctAnswer]}
-                                  </div>
-                                  {question.explanation && (
-                                    <div className="text-muted-foreground text-sm">
-                                      {question.explanation}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                            {evaluation && (
-                              <div className="space-y-2">
-                                <div className="font-medium">
-                                  Valutazione AI:
-                                </div>
-                                <div className="p-3 border rounded-md whitespace-pre-wrap">
-                                  {evaluation.evaluation}
-                                </div>
-
-                                {evaluation.strengths &&
-                                  evaluation.strengths.length > 0 && (
-                                    <div className="mt-2">
-                                      <div className="font-medium text-green-600 dark:text-green-400">
-                                        Punti di forza:
-                                      </div>
-                                      <ul className="space-y-1 mt-1 pl-5 list-disc">
-                                        {evaluation.strengths.map(
-                                          (strength: any, idx: number) => (
-                                            <li key={idx} className="text-sm">
-                                              {strength}
-                                            </li>
-                                          )
-                                        )}
-                                      </ul>
-                                    </div>
-                                  )}
-
-                                {evaluation.weaknesses &&
-                                  evaluation.weaknesses.length > 0 && (
-                                    <div className="mt-2">
-                                      <div className="font-medium text-amber-600 dark:text-amber-400">
-                                        Aree di miglioramento:
-                                      </div>
-                                      <ul className="space-y-1 mt-1 pl-5 list-disc">
-                                        {evaluation.weaknesses.map(
-                                          (weakness: any, idx: number) => (
-                                            <li key={idx} className="text-sm">
-                                              {weakness}
-                                            </li>
-                                          )
-                                        )}
-                                      </ul>
-                                    </div>
-                                  )}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-muted-foreground">
-                            Nessuna risposta
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-            </TabsContent>
-          )
-        )}
+                      ) : (
+                        <div className="text-muted-foreground">
+                          Nessuna risposta
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
