@@ -36,8 +36,8 @@ export const behavioralRubricSchema = z.object({
   problemSolvingScore: z.number().int().min(1).max(5),
   cultureFitScore: z.number().int().min(1).max(5),
   leadershipScore: z.number().int().min(1).max(5).optional(),
-  strengthExamples: z.array(z.string().min(2)).optional().default([]),
-  improvementAreas: z.array(z.string().min(2)).optional().default([]),
+  strengthExamples: z.array(z.string().min(2)),
+  improvementAreas: z.array(z.string().min(2)),
   overallComments: z.string().optional(),
 });
 

@@ -10,7 +10,7 @@ import { upsertBehavioralRubricAction } from "@/lib/actions/behavioral-rubrics";
 import { behavioralRubricSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
-import { Resolver, SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -31,7 +31,7 @@ export const BehavioralRubricForm = ({
 }: BehavioralRubricFormProps) => {
   const [isPending, startTransition] = useTransition();
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema) as unknown as Resolver<FormData>,
+    resolver: zodResolver(formSchema),
     defaultValues: {
       candidateId,
       positionId,
