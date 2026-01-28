@@ -1,6 +1,6 @@
 "use client";
 
-import { InputWithTagField, TextareaField } from "@/components/rhf-inputs";
+import { InputWithTagField, TextareaField } from "@/components/ui/rhf-inputs";
 import { useFormContext } from "react-hook-form";
 
 type OpenQuestionFormProps = {

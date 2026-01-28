@@ -15,10 +15,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { InputField } from "../rhf-inputs/input-field";
-import { MultiSelectField } from "../rhf-inputs/multi-select-field";
-import { SelectField } from "../rhf-inputs/select-field";
-import { TextareaField } from "../rhf-inputs/textarea-field";
+import { InputField } from "../ui/rhf-inputs/input-field";
+import { MultiSelectField } from "../ui/rhf-inputs/multi-select-field";
+import { SelectField } from "../ui/rhf-inputs/select-field";
+import { TextareaField } from "../ui/rhf-inputs/textarea-field";
 
 type PositionFormProps = {
   position?: Position;

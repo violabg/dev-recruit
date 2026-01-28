@@ -1,11 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   InputWithTagField,
   SliderField,
   TextareaField,
-} from "@/components/rhf-inputs";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/rhf-inputs";
 import { upsertBehavioralRubricAction } from "@/lib/actions/behavioral-rubrics";
 import { behavioralRubricSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";

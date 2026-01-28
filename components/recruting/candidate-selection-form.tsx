@@ -6,8 +6,8 @@ import { useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { MultiSelectField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
+import { MultiSelectField } from "@/components/ui/rhf-inputs";
 import {
   assignCandidatesToQuiz,
   AssignCandidatesToQuizState,
@@ -41,7 +41,7 @@ export function CandidateSelectionForm({
   const [formState, formAction, isPending] = useActionState(
     // Use useActionState
     assignCandidatesToQuiz,
-    initialState
+    initialState,
   );
   const [createdLinks, setCreatedLinks] = useState<
     {

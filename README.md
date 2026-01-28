@@ -62,12 +62,12 @@ dev-recruit/
 │   └── api/                # API routes (streaming, uploads)
 ├── components/             # React components
 │   ├── ui/                 # Base UI primitives (shadcn/ui)
+│   │   ├── rhf-inputs/     # React Hook Form input components
 │   ├── dashboard/          # Dashboard-specific components
 │   ├── quiz/               # Quiz editing components (AI dialogs, question management)
 │   ├── candidates/         # Candidate management components
 │   ├── interviews/         # Interview tracking components
 │   ├── presets/            # Preset management components
-│   ├── rhf-inputs/         # React Hook Form input components
 │   └── recruting/          # Interview taking components
 ├── lib/                    # Core business logic
 │   ├── actions/            # Server actions (quizzes, candidates, evaluations, etc.)

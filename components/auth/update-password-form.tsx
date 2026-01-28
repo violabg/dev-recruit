@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { PasswordField } from "../rhf-inputs/password-field";
+import { PasswordField } from "../ui/rhf-inputs/password-field";
 
 export function UpdatePasswordForm({
   className,
@@ -38,7 +38,7 @@ export function UpdatePasswordForm({
 
         if (result.error) {
           throw new Error(
-            result.error.message ?? "Errore nell'aggiornamento della password"
+            result.error.message ?? "Errore nell'aggiornamento della password",
           );
         }
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { InputField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputField } from "@/components/ui/rhf-inputs";
 import { Sparkles } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";

@@ -1,6 +1,5 @@
 "use client";
 
-import { InputField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { InputField } from "@/components/ui/rhf-inputs";
 import { updateProfile, type Profile } from "@/lib/actions/profile";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -60,7 +60,7 @@ export const ProfileForm = ({
         toast.error(
           error instanceof Error
             ? error.message
-            : "Errore nell'aggiornamento del profilo"
+            : "Errore nell'aggiornamento del profilo",
         );
       }
     });

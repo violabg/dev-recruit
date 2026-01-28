@@ -6,12 +6,6 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-import {
-  InputField,
-  SliderField,
-  SwitchField,
-  TextareaField,
-} from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -21,6 +15,12 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { LLMModelSelect } from "@/components/ui/llm-model-select";
+import {
+  InputField,
+  SliderField,
+  SwitchField,
+  TextareaField,
+} from "@/components/ui/rhf-inputs";
 import {
   generateNewQuizAction,
   regenerateQuizAction,

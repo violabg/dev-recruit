@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { InputField } from "../rhf-inputs/input-field";
+import { InputField } from "../ui/rhf-inputs/input-field";
 
 export function ForgotPasswordForm({
   className,
@@ -39,7 +39,7 @@ export function ForgotPasswordForm({
 
         if (result.error) {
           throw new Error(
-            result.error.message ?? "Errore durante l'invio dell'email"
+            result.error.message ?? "Errore durante l'invio dell'email",
           );
         }
 

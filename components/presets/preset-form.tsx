@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import {
   InputField,
   InputWithTagField,
@@ -7,8 +8,7 @@ import {
   SliderField,
   SwitchField,
   TextareaField,
-} from "@/components/rhf-inputs";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/rhf-inputs";
 import { createPresetAction, updatePresetAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { createPresetSchema, type CreatePresetInput } from "@/lib/schemas";

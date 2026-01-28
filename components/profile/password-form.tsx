@@ -1,6 +1,5 @@
 "use client";
 
-import { PasswordField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PasswordField } from "@/components/ui/rhf-inputs";
 import { updatePassword } from "@/lib/actions/profile";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,7 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Errore nell&apos;aggiornamento della password"
+            : "Errore nell&apos;aggiornamento della password",
         );
       }
     });

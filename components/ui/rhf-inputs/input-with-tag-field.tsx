@@ -1,5 +1,5 @@
-import InputWithTags from "@/components/ui/input-with-tag";
 import { FieldValues } from "react-hook-form";
+import { TagInput } from "../tag-input";
 import { BaseController, BaseControllerProps } from "./base-controller";
 
 type Props<T extends FieldValues> = {
@@ -25,14 +25,14 @@ export function InputWithTagField<T extends FieldValues>({
       disableFieldError={disableFieldError}
     >
       {({ field, fieldState }) => (
-        <InputWithTags
+        <TagInput
           id={field.name}
           // The TagInput component expects an array of tags
           // Ensure we always pass an array, defaulting to empty if undefined
           placeholder={placeholder}
           value={(field.value as string[] | undefined) || []}
-          onChange={(newTags: string[]) => field.onChange(newTags)}
-          invalid={!!fieldState.error}
+          onValueChange={(newTags: string[]) => field.onChange(newTags)}
+          aria-invalid={!!fieldState.error}
         />
       )}
     </BaseController>

@@ -25,10 +25,13 @@ const optionalBoolean = z
   .transform((value) => (typeof value === "boolean" ? value : undefined));
 
 const optionalEnum = <T extends string>(schema: z.ZodType<T, any, any>) =>
-  schema
-    .optional()
-    .nullable()
-    .transform((value) => (value ? value : undefined));
+  z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    schema
+      .optional()
+      .nullable()
+      .transform((value) => (value ? value : undefined)),
+  );
 
 const distractorComplexitySchema = z.enum(["simple", "moderate", "complex"]);
 const expectedResponseLengthSchema = z.enum(["short", "medium", "long"]);

@@ -1,24 +1,25 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  FileUploadField,
   InputField,
   MultiSelectField,
   SelectField,
-} from "@/components/rhf-inputs";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from "@/components/ui/rhf-inputs";
 import { createCandidate, updateCandidate } from "@/lib/actions/candidates";
 import { Candidate } from "@/lib/prisma/client";
 import {
   candidateFormSchema,
   candidateUpdateSchema,
 } from "@/lib/schemas/candidate";
+import { validateResumeFile } from "@/lib/services/r2-storage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Briefcase, Loader2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { FileUpload } from "../ui/file-upload";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "pending", label: "In attesa" },
@@ -302,7 +303,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <FileUploadField
+              <FileUpload
                 currentFileUrl={
                   isEditMode && !removeExistingResume
                     ? props.candidate.resumeUrl
@@ -312,6 +313,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
                 onRemoveExisting={isEditMode ? handleRemoveExisting : undefined}
                 isUploading={isPending}
                 disabled={isPending}
+                validateFile={validateResumeFile}
               />
             </CardContent>
           </Card>

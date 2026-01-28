@@ -8,8 +8,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { InputField } from "../rhf-inputs/input-field";
-import { PasswordField } from "../rhf-inputs/password-field";
 import {
   Card,
   CardContent,
@@ -18,6 +16,8 @@ import {
   CardTitle,
 } from "../ui/card";
 import { FieldLabel } from "../ui/field";
+import { InputField } from "../ui/rhf-inputs/input-field";
+import { PasswordField } from "../ui/rhf-inputs/password-field";
 import { Separator } from "../ui/separator";
 
 export function LoginForm({

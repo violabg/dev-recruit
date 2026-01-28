@@ -14,7 +14,7 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-} from "../ui/field";
+} from "../field";
 
 type ControllerRenderParams<T extends FieldValues> = {
   field: ControllerRenderProps<T, FieldPath<T>>;

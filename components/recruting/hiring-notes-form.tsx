@@ -1,11 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   InputWithTagField,
   SelectField,
   TextareaField,
-} from "@/components/rhf-inputs";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/rhf-inputs";
 import { SelectItem } from "@/components/ui/select";
 import { updateHiringManagerNotesAction } from "@/lib/actions/evaluation-entity";
 import { hiringNotesSchema } from "@/lib/schemas";

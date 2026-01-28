@@ -1,7 +1,5 @@
 "use client";
 
-import { InputField } from "@/components/rhf-inputs/input-field";
-import { SelectField } from "@/components/rhf-inputs/select-field";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { InputField } from "@/components/ui/rhf-inputs/input-field";
+import { SelectField } from "@/components/ui/rhf-inputs/select-field";
 import { duplicateQuizAction } from "@/lib/actions/quizzes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";

@@ -1,5 +1,5 @@
 import { FieldValues } from "react-hook-form";
-import { Slider } from "../ui/slider";
+import { Slider } from "../slider";
 import { BaseController, BaseControllerProps } from "./base-controller";
 
 type FieldSliderProps<T extends FieldValues> = Omit<

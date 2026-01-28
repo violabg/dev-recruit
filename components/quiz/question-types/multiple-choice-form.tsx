@@ -1,6 +1,6 @@
 "use client";
-import { InputField, TextareaField } from "@/components/rhf-inputs";
 import { Button } from "@/components/ui/button";
+import { InputField, TextareaField } from "@/components/ui/rhf-inputs";
 import { useEffect } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
