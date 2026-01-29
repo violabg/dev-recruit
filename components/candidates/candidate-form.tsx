@@ -16,8 +16,8 @@ import {
 import { validateResumeFile } from "@/lib/services/r2-storage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Briefcase, Loader2, User } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { FileUpload } from "../ui/file-upload";
 
@@ -76,52 +76,53 @@ export const CandidateForm = (props: CandidateFormProps) => {
   // Use appropriate schema and type based on mode
   const schema = isEditMode ? candidateUpdateSchema : candidateFormSchema;
 
+  const pathname = usePathname();
+
+  // Reset form when entering the page with current props
+  const defaultPositionId =
+    !isEditMode && "defaultPositionId" in props
+      ? props.defaultPositionId
+      : undefined;
+
+  const initialValues = useMemo(
+    () =>
+      isEditMode
+        ? {
+            firstName: props.candidate.firstName,
+            lastName: props.candidate.lastName,
+            email: props.candidate.email,
+            dateOfBirth: props.candidate.dateOfBirth ?? undefined,
+            positionIds: props.candidate.positionIds,
+            status: props.candidate.status as
+              | "pending"
+              | "contacted"
+              | "interviewing"
+              | "hired"
+              | "rejected",
+          }
+        : {
+            firstName: "",
+            lastName: "",
+            email: "",
+            positionIds: defaultPositionId ? [defaultPositionId] : [],
+          },
+    [defaultPositionId, isEditMode, props],
+  );
+
   const handleCancel = () => {
     router.back();
   };
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: isEditMode
-      ? {
-          firstName: props.candidate.firstName,
-          lastName: props.candidate.lastName,
-          email: props.candidate.email,
-          dateOfBirth: props.candidate.dateOfBirth ?? undefined,
-          positionIds: props.candidate.positionIds,
-          status: props.candidate.status as
-            | "pending"
-            | "contacted"
-            | "interviewing"
-            | "hired"
-            | "rejected",
-        }
-      : {
-          firstName: "",
-          lastName: "",
-          email: "",
-          positionIds: props.defaultPositionId ? [props.defaultPositionId] : [],
-        },
+    defaultValues: initialValues,
   });
 
-  // Reset form when mode changes or when defaultPositionId changes
-  const defaultPositionId =
-    !isEditMode && "defaultPositionId" in props
-      ? props.defaultPositionId
-      : undefined;
-  const firstPositionId = props.positions[0]?.id;
   useEffect(() => {
-    if (!isEditMode) {
-      form.reset({
-        firstName: "",
-        lastName: "",
-        email: "",
-        positionIds: defaultPositionId ? [defaultPositionId] : [],
-      });
-      setSelectedFile(null);
-      setRemoveExistingResume(false);
-    }
-  }, [isEditMode, defaultPositionId, firstPositionId, form]);
+    form.reset(initialValues);
+    setSelectedFile(null);
+    setRemoveExistingResume(false);
+  }, [form, initialValues, pathname]);
 
   const handleFileSelect = (file: File | null) => {
     setSelectedFile(file);

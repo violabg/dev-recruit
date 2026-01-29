@@ -14,8 +14,8 @@ import { type Preset } from "@/lib/data/presets";
 import { createPresetSchema, type CreatePresetInput } from "@/lib/schemas";
 import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { type z } from "zod";
@@ -81,33 +81,41 @@ type PresetFormValues = z.input<typeof createPresetSchema>;
 export function PresetForm({ preset }: PresetFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const pathname = usePathname();
 
-  const defaultValues: PresetFormValues = {
-    name: preset?.name ?? "",
-    label: preset?.label ?? "",
-    description: preset?.description ?? "",
-    icon: preset?.icon ?? "Code",
-    questionType:
-      (preset?.questionType as CreatePresetInput["questionType"]) ??
-      "multiple_choice",
-    tags: preset?.tags ?? [],
-    difficulty: preset?.difficulty ?? 3,
-    instructions: preset?.instructions ?? "",
-    focusAreas: preset?.focusAreas ?? [],
-    evaluationCriteria: preset?.evaluationCriteria ?? [],
-    language: preset?.language ?? "",
-    includeComments: preset?.includeComments ?? true,
-    distractorComplexity:
-      preset?.distractorComplexity ?? DISTRACTOR_COMPLEXITY_OPTIONS[1].value,
-    expectedResponseLength: preset?.expectedResponseLength ?? "",
-    bugType: preset?.bugType ?? "",
-    codeComplexity: preset?.codeComplexity ?? "",
-  };
+  const defaultValues = useMemo<PresetFormValues>(
+    () => ({
+      name: preset?.name ?? "",
+      label: preset?.label ?? "",
+      description: preset?.description ?? "",
+      icon: preset?.icon ?? "Code",
+      questionType:
+        (preset?.questionType as CreatePresetInput["questionType"]) ??
+        "multiple_choice",
+      tags: preset?.tags ?? [],
+      difficulty: preset?.difficulty ?? 3,
+      instructions: preset?.instructions ?? "",
+      focusAreas: preset?.focusAreas ?? [],
+      evaluationCriteria: preset?.evaluationCriteria ?? [],
+      language: preset?.language ?? "",
+      includeComments: preset?.includeComments ?? true,
+      distractorComplexity:
+        preset?.distractorComplexity ?? DISTRACTOR_COMPLEXITY_OPTIONS[1].value,
+      expectedResponseLength: preset?.expectedResponseLength ?? "",
+      bugType: preset?.bugType ?? "",
+      codeComplexity: preset?.codeComplexity ?? "",
+    }),
+    [preset],
+  );
 
   const form = useForm<PresetFormValues>({
     resolver: zodResolver(createPresetSchema),
     defaultValues,
   });
+
+  useEffect(() => {
+    form.reset(defaultValues);
+  }, [defaultValues, form, pathname]);
 
   const questionType = form.watch("questionType");
 

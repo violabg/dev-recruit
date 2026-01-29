@@ -10,7 +10,8 @@ import {
 } from "@/lib/schemas";
 import { generateId } from "@/lib/utils/quiz-form-utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -59,14 +60,21 @@ export const useEditQuizForm = ({
     questions: {},
   });
 
-  const form = useForm<EditQuizFormData>({
-    resolver: zodResolver(editQuizFormSchema),
-    defaultValues: {
+  const pathname = usePathname();
+
+  const initialValues = useMemo(
+    () => ({
       title: quiz.title,
       positionId: position.id,
       timeLimit: quiz.timeLimit,
       questions: quiz.questions,
-    },
+    }),
+    [position.id, quiz.questions, quiz.timeLimit, quiz.title],
+  );
+
+  const form = useForm<EditQuizFormData>({
+    resolver: zodResolver(editQuizFormSchema),
+    defaultValues: initialValues,
   });
 
   const { fields, append, prepend, remove, update } = useFieldArray({
@@ -74,21 +82,10 @@ export const useEditQuizForm = ({
     name: "questions",
   });
 
-  // Reset form after initial mount to establish clean baseline for dirty tracking
-  // useFieldArray modifies the form state by adding internal 'id' fields, which can make isDirty true
+  // Reset form on entry to ensure clean state
   useEffect(() => {
-    // Small delay to ensure useFieldArray has finished initializing
-    const timeoutId = setTimeout(() => {
-      form.reset(form.getValues(), {
-        keepValues: true,
-        keepDirty: false,
-        keepDefaultValues: false,
-      });
-    }, 0);
-    return () => clearTimeout(timeoutId);
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    form.reset(initialValues);
+  }, [form, initialValues, pathname]);
 
   const createEmptyQuestion = (type: QuestionType): FlexibleQuestion => {
     const base = {

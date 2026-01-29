@@ -11,8 +11,8 @@ import {
 } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Brain, Briefcase, Loader2, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { InputField } from "../ui/rhf-inputs/input-field";
@@ -43,41 +43,40 @@ export function PositionForm({
 
   const isEditing = !!position;
 
+  const pathname = usePathname();
+
+  const defaultValues = useMemo(
+    () =>
+      isEditing
+        ? {
+            title: position.title,
+            description: position.description || "",
+            experienceLevel: position.experienceLevel,
+            skills: position.skills || [],
+            softSkills: position.softSkills || [],
+            contractType: position.contractType || "",
+          }
+        : {
+            title: "",
+            description: "",
+            experienceLevel: "",
+            skills: [],
+            softSkills: [],
+            contractType: "",
+          },
+    [isEditing, position],
+  );
+
   const form = useForm<PositionFormData>({
     resolver: zodResolver(positionFormSchema),
-    defaultValues: isEditing
-      ? {
-          title: position.title,
-          description: position.description || "",
-          experienceLevel: position.experienceLevel,
-          skills: position.skills || [],
-          softSkills: position.softSkills || [],
-          contractType: position.contractType || "",
-        }
-      : {
-          title: "",
-          description: "",
-          experienceLevel: "",
-          skills: [],
-          softSkills: [],
-          contractType: "",
-        },
+    defaultValues,
   });
 
   const { control, handleSubmit, getValues, setValue } = form;
 
   useEffect(() => {
-    if (!isEditing) {
-      form.reset({
-        title: "",
-        description: "",
-        experienceLevel: "",
-        skills: [],
-        softSkills: [],
-        contractType: "",
-      });
-    }
-  }, [isEditing, form]);
+    form.reset(defaultValues);
+  }, [defaultValues, form, pathname]);
 
   async function onSubmit(values: PositionFormData) {
     startTransition(async () => {
