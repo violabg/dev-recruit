@@ -73,6 +73,20 @@ export const CandidateForm = (props: CandidateFormProps) => {
   const isEditMode = props.mode === "edit";
   const isApplyMode = props.mode === "apply";
 
+  const formatDateForInput = (value?: Date | string | null) => {
+    if (!value) {
+      return undefined;
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return undefined;
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Use appropriate schema and type based on mode
   const schema = isEditMode ? candidateUpdateSchema : candidateFormSchema;
 
@@ -91,7 +105,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
             firstName: props.candidate.firstName,
             lastName: props.candidate.lastName,
             email: props.candidate.email,
-            dateOfBirth: props.candidate.dateOfBirth ?? undefined,
+            dateOfBirth: formatDateForInput(props.candidate.dateOfBirth),
             positionIds: props.candidate.positionIds,
             status: props.candidate.status as
               | "pending"
