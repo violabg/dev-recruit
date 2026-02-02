@@ -28,6 +28,7 @@ export const BehavioralScenarioForm = ({
         label="Temi di valutazione"
         placeholder="Premi invio dopo ogni tema"
         description="Temi chiave da cercare nella risposta (es. comunicazione, trade-off, collaborazione)."
+        showClear
       />
     </div>
   );

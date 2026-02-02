@@ -177,10 +177,7 @@ function ComboboxLabel({
   return (
     <ComboboxPrimitive.GroupLabel
       data-slot="combobox-label"
-      className={cn(
-        "-top-1 z-10 sticky bg-popover px-2 py-1.5 text-muted-foreground text-xs",
-        className,
-      )}
+      className={cn("px-2 py-1.5 text-muted-foreground text-xs", className)}
       {...props}
     />
   );
@@ -252,14 +249,14 @@ function ComboboxChip({
       )}
       {...props}
     >
-      <span className="max-w-56 truncate">{children}</span>
+      {children}
       {showRemove && (
         <ComboboxPrimitive.ChipRemove
           render={<Button variant="ghost" size="icon-xs" />}
-          className="text-muted-foreground hover:text-foreground"
+          className="opacity-50 hover:opacity-100 -ml-1"
           data-slot="combobox-chip-remove"
         >
-          <XIcon className="size-3.5 pointer-events-none" />
+          <XIcon className="pointer-events-none" />
         </ComboboxPrimitive.ChipRemove>
       )}
     </ComboboxPrimitive.Chip>
@@ -288,6 +285,7 @@ export {
   ComboboxChip,
   ComboboxChips,
   ComboboxChipsInput,
+  ComboboxClear,
   ComboboxCollection,
   ComboboxContent,
   ComboboxEmpty,

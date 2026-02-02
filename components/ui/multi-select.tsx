@@ -5,6 +5,7 @@ import {
   ComboboxChip,
   ComboboxChips,
   ComboboxChipsInput,
+  ComboboxClear,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxGroup,
@@ -33,6 +34,7 @@ interface MultiSelectProps {
   grouped?: boolean;
   invalid?: boolean;
   disabled?: boolean;
+  showClear?: boolean;
 }
 
 export function MultiSelect({
@@ -44,6 +46,7 @@ export function MultiSelect({
   grouped = false,
   invalid = false,
   disabled = false,
+  showClear = false,
 }: MultiSelectProps) {
   const anchor = useComboboxAnchor();
 
@@ -96,6 +99,9 @@ export function MultiSelect({
           ))}
         </ComboboxValue>
         <ComboboxChipsInput placeholder={placeholder} />
+        {showClear && selected.length > 0 && (
+          <ComboboxClear disabled={disabled} className="ms-auto" />
+        )}
       </ComboboxChips>
       <ComboboxContent anchor={anchor}>
         <ComboboxEmpty>No results found.</ComboboxEmpty>

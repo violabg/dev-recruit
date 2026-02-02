@@ -351,6 +351,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
                 required
                 disabled={props.disabled}
                 placeholder="Seleziona posizioni"
+                showClear
                 options={props.positions.map((position) => ({
                   value: position.id,
                   label: position.title,

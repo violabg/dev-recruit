@@ -221,6 +221,7 @@ export const AIQuestionGenerationDialog = ({
                 label="Aree di Focus"
                 description="Aggiungi aree specifiche su cui focalizzare la domanda es. React Hooks, TypeScript"
                 placeholder="Premi invio dopo ogni area"
+                showClear
               />
               <SelectField
                 control={form.control}
@@ -261,6 +262,7 @@ export const AIQuestionGenerationDialog = ({
                 label="Criteri di Valutazione"
                 description="es. Qualità del codice, Best practices"
                 placeholder="Premi invio dopo ogni criterio"
+                showClear
               />
             </div>
           )}

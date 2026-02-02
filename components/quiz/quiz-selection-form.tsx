@@ -123,6 +123,7 @@ export function QuizSelectionForm({
             required
             options={quizOptions}
             placeholder="Select quizzes to assign to this candidate"
+            showClear
           />
 
           <Button type="submit" size="sm" disabled={isPending}>

@@ -15,6 +15,7 @@ export type TagInputProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   maxTags?: number;
   allowDuplicates?: boolean;
   disabled?: boolean;
+  showClear?: boolean;
 };
 
 export function TagInput({
@@ -24,6 +25,7 @@ export function TagInput({
   maxTags,
   allowDuplicates = false,
   disabled = false,
+  showClear = false,
   className,
   ...props
 }: TagInputProps) {
@@ -31,23 +33,37 @@ export function TagInput({
 
   const addTag = React.useCallback(
     (raw: string) => {
-      const next = raw.trim();
+      const tagsToAdd = raw
+        .split(/[,,]/)
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
 
-      if (!next) {
+      if (tagsToAdd.length === 0) {
         return;
       }
 
-      if (!allowDuplicates && value.includes(next)) {
-        setInputValue("");
-        return;
+      const newValue = [...value];
+      let tagsAdded = false;
+
+      for (const next of tagsToAdd) {
+        if (
+          !allowDuplicates &&
+          newValue.some((t) => t.toLowerCase() === next.toLowerCase())
+        ) {
+          continue;
+        }
+
+        if (typeof maxTags === "number" && newValue.length >= maxTags) {
+          break;
+        }
+
+        newValue.push(next);
+        tagsAdded = true;
       }
 
-      if (typeof maxTags === "number" && value.length >= maxTags) {
-        setInputValue("");
-        return;
+      if (tagsAdded) {
+        onValueChange(newValue);
       }
-
-      onValueChange([...value, next]);
       setInputValue("");
     },
     [allowDuplicates, maxTags, onValueChange, value],
@@ -119,8 +135,21 @@ export function TagInput({
         }}
         placeholder={placeholder}
         disabled={disabled}
-        className="flex-1 bg-transparent shadow-none p-0 border-0 focus-visible:ring-0 w-[10ch] min-w-[10ch] h-7"
+        className="flex-1 bg-transparent shadow-none p-0 border-0 focus-visible:ring-0 w-[18ch] min-w-[18ch] h-7"
       />
+      {showClear && value.length > 0 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="ms-auto text-muted-foreground hover:text-foreground"
+          onClick={() => onValueChange([])}
+          disabled={disabled}
+          aria-label="Clear all tags"
+        >
+          <X className="size-3.5" />
+        </Button>
+      )}
     </div>
   );
 }

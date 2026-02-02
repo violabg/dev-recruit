@@ -291,6 +291,7 @@ export function PositionForm({
                 options={allSkills}
                 placeholder="Seleziona tech..."
                 grouped
+                showClear
               />
               <MultiSelectField<PositionFormData>
                 control={control}
@@ -299,6 +300,7 @@ export function PositionForm({
                 description="Competenze traversali"
                 options={allSoftSkills}
                 placeholder="Seleziona soft skills..."
+                showClear
               />
 
               <div className="flex flex-col gap-3 pt-6 border-t">

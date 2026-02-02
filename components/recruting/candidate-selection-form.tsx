@@ -132,6 +132,7 @@ export function CandidateSelectionForm({
             required
             options={candidateOptions}
             placeholder="Select candidates to assign this quiz"
+            showClear
           />
 
           <Button type="submit" size="sm" disabled={isPending}>

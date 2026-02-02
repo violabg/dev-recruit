@@ -234,6 +234,7 @@ export function PresetForm({ preset }: PresetFormProps) {
                   label="Aree di focus"
                   placeholder="Premi invio dopo ogni parola"
                   description="Aree tematiche su cui l'AI dovrebbe concentrarsi"
+                  showClear
                 />
                 <SelectField
                   control={form.control}
@@ -267,6 +268,7 @@ export function PresetForm({ preset }: PresetFormProps) {
                   label="Criteri di valutazione"
                   placeholder="Premi invio dopo ogni criterio"
                   description="Criteri per il rubric di punteggio automatico"
+                  showClear
                 />
               </div>
             </div>
@@ -369,6 +371,7 @@ export function PresetForm({ preset }: PresetFormProps) {
                   label: tag,
                 }))}
                 description="Categoria del preset"
+                showClear
               />
 
               <div className="flex flex-col gap-3 pt-6 border-t">

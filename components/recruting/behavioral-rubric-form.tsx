@@ -123,6 +123,7 @@ export const BehavioralRubricForm = ({
         label="Esempi di punti di forza"
         placeholder="Premi invio dopo ogni esempio"
         description="Episodi concreti osservati durante il colloquio"
+        showClear
       />
 
       <InputWithTagField
@@ -131,6 +132,7 @@ export const BehavioralRubricForm = ({
         label="Aree di miglioramento"
         placeholder="Premi invio dopo ogni area"
         description="Aspetti su cui il candidato potrebbe crescere"
+        showClear
       />
 
       <TextareaField

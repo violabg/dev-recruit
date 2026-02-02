@@ -74,6 +74,7 @@ export const HiringNotesForm = ({
         label="Momenti di rilievo"
         placeholder="Premi invio dopo ogni punto"
         description="Esempi concreti di risposte o comportamenti positivi"
+        showClear
       />
 
       <InputWithTagField
@@ -82,6 +83,7 @@ export const HiringNotesForm = ({
         label="Red flags"
         placeholder="Premi invio dopo ogni punto"
         description="Rischi, segnali di allarme o dubbi"
+        showClear
       />
 
       <SelectField

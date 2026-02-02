@@ -31,6 +31,7 @@ export const OpenQuestionForm = ({ index }: OpenQuestionFormProps) => {
         label="Parole chiave"
         placeholder="Premi invio dopo ogni parola"
         description="Parole chiave importanti che la risposta dovrebbe contenere."
+        showClear
       />
     </div>
   );
