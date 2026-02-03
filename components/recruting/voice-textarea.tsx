@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { transcribeAudioAction } from "@/lib/actions/transcription";
 import { Loader2, Speech, Square, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import { LiveWaveform } from "../ui/live-waveform";
 
 interface VoiceTextareaProps {
   value: string | null;
@@ -20,10 +21,9 @@ export function VoiceTextarea({
 }: VoiceTextareaProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
+    null,
   );
   const [isPending, startTransition] = useTransition();
-  const [audioLevels, setAudioLevels] = useState<number[]>([0, 0, 0, 0, 0]);
   const [error, setError] = useState<string | null>(null);
 
   // Refs for audio analysis
@@ -32,65 +32,8 @@ export function VoiceTextarea({
   const streamRef = useRef<MediaStream | null>(null);
   const animationIdRef = useRef<number | null>(null);
 
-  // Audio equalizer analysis loop
-  useEffect(() => {
-    if (!isRecording || !analyserRef.current) return;
-
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-
-    const updateLevels = () => {
-      if (!analyserRef.current) return;
-
-      analyserRef.current.getByteFrequencyData(dataArray);
-
-      // Create 5 frequency bands from low to high
-      // Low frequencies on left, medium in middle, high on right
-      const bandCount = 5;
-      const levels = Array.from({ length: bandCount }, (_, i) => {
-        // Linear distribution across entire spectrum
-        const bandSize = Math.floor(dataArray.length / bandCount);
-        const start = i * bandSize;
-        const end = (i + 1) * bandSize;
-
-        const bandData = dataArray.slice(
-          start,
-          Math.min(end, dataArray.length)
-        );
-
-        if (bandData.length === 0) return 0;
-
-        // Get max value in this band
-        const maxValue = Math.max(...bandData);
-
-        // Normalize to 0-1
-        let normalized = maxValue / 255;
-
-        // Apply logarithmic scaling for better sensitivity to quiet sounds
-        normalized = Math.log10(normalized * 9 + 1) / Math.log10(10);
-
-        // Amplify higher frequencies more (right side bars should be more sensitive)
-        const amplification = 1.2 + i * 0.5; // Increases from 1.2 to 3.2
-        normalized = Math.min(normalized * amplification, 1);
-
-        return normalized;
-      });
-
-      setAudioLevels(levels);
-      animationIdRef.current = requestAnimationFrame(updateLevels);
-    };
-
-    updateLevels();
-
-    return () => {
-      if (animationIdRef.current) {
-        cancelAnimationFrame(animationIdRef.current);
-      }
-    };
-  }, [isRecording]);
-
   // Audio recording and transcription logic
   const handleStartRecording = async () => {
-    setAudioLevels([0, 0, 0, 0, 0]);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -119,7 +62,6 @@ export function VoiceTextarea({
       };
       recorder.onstop = async () => {
         setIsRecording(false);
-        setAudioLevels([0, 0, 0, 0, 0]);
 
         if (audioContextRef.current) {
           audioContextRef.current.close();
@@ -147,7 +89,7 @@ export function VoiceTextarea({
               onChange(
                 value && value.trim()
                   ? `${value.trim()} ${result.text}`
-                  : result.text || null
+                  : result.text || null,
               );
             } else if (result.error) {
               setError(result.error);
@@ -211,17 +153,17 @@ export function VoiceTextarea({
               Ferma
             </Button>
             <div className="flex flex-1 items-center gap-2 px-3 py-2 min-w-[200px]">
-              <div className="flex items-end gap-1 h-9">
-                {audioLevels.map((level, index) => (
-                  <div
-                    key={index}
-                    className="flex-1 bg-white rounded-sm min-w-1 transition-all duration-100"
-                    style={{
-                      height: `${Math.max(3, level * 36)}px`,
-                    }}
-                  />
-                ))}
-              </div>
+              <LiveWaveform
+                active={isRecording}
+                processing={false}
+                height={40}
+                barWidth={3}
+                barGap={2}
+                mode={"static"}
+                fadeEdges={true}
+                barColor="gray"
+                historySize={120}
+              />
             </div>
           </>
         )}
