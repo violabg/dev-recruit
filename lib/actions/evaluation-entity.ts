@@ -1,6 +1,5 @@
 "use server";
 
-import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { groq } from "@ai-sdk/groq";
 import { generateText, Output, wrapLanguageModel } from "ai";
 import { requireUser } from "../auth-server";
@@ -87,12 +86,14 @@ async function generateResumeEvaluation(
 
   const aiModel = groq(getOptimalModel("resume_evaluation", specificModel));
 
-  const model = isDevelopment
-    ? wrapLanguageModel({
-        model: aiModel,
-        middleware: devToolsMiddleware(),
-      })
-    : aiModel;
+  let model = aiModel;
+  if (isDevelopment) {
+    const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+    model = wrapLanguageModel({
+      model: aiModel,
+      middleware: devToolsMiddleware(),
+    });
+  }
 
   try {
     const { output: result } = await generateText({
@@ -125,12 +126,14 @@ async function generateResumeEvaluation(
 
     const aiModel = groq(fallbackModel);
 
-    const model = isDevelopment
-      ? wrapLanguageModel({
-          model: aiModel,
-          middleware: devToolsMiddleware(),
-        })
-      : aiModel;
+    let model = aiModel;
+    if (isDevelopment) {
+      const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+      model = wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      });
+    }
 
     try {
       const { output: result } = await generateText({

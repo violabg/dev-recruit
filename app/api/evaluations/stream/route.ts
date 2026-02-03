@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 import { overallEvaluationSchema } from "@/lib/schemas";
 import { getOptimalModel, isDevelopment } from "@/lib/utils";
 import { invalidateEvaluationCacheInRouteHandler } from "@/lib/utils/cache-utils";
-import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { groq } from "@ai-sdk/groq";
 import { streamText, wrapLanguageModel } from "ai";
 
@@ -184,12 +183,14 @@ export async function POST(request: Request) {
 
     const aiModel = groq(model);
 
-    const modelForStream = isDevelopment
-      ? wrapLanguageModel({
-          model: aiModel,
-          middleware: devToolsMiddleware(),
-        })
-      : aiModel;
+    let modelForStream = aiModel;
+    if (isDevelopment) {
+      const { devToolsMiddleware } = await import("@ai-sdk/devtools");
+      modelForStream = wrapLanguageModel({
+        model: aiModel,
+        middleware: devToolsMiddleware(),
+      });
+    }
 
     const result = streamText({
       model: modelForStream,

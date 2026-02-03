@@ -26,6 +26,19 @@ const readFormValue = (formData: FormData, key: string) => {
   return typeof value === "string" ? value : undefined;
 };
 
+const parsePositionIds = (raw: string | undefined) => {
+  if (!raw) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : undefined;
+  } catch {
+    throw new Error("Formato posizioni non valido");
+  }
+};
+
 const getCandidateById = async (id: string) => {
   const candidate = await prisma.candidate.findUnique({
     where: { id },
@@ -53,12 +66,13 @@ export async function createCandidate(formData: FormData) {
 
   const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
   const positionIdsRaw = readFormValue(formData, "positionIds");
+  const positionIds = parsePositionIds(positionIdsRaw) ?? [];
 
   const payload: CandidateFormData = candidateFormSchema.parse({
     firstName: readFormValue(formData, "firstName"),
     lastName: readFormValue(formData, "lastName"),
     email: readFormValue(formData, "email"),
-    positionIds: positionIdsRaw ? JSON.parse(positionIdsRaw) : [],
+    positionIds,
     dateOfBirth: dateOfBirthRaw ? new Date(dateOfBirthRaw) : undefined,
   });
 
@@ -139,12 +153,13 @@ export async function updateCandidate(
   const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
   const removeResume = readFormValue(formData, "removeResume") === "true";
   const positionIdsRaw = readFormValue(formData, "positionIds");
+  const positionIds = parsePositionIds(positionIdsRaw);
 
   const rawPayload = {
     firstName: readFormValue(formData, "firstName"),
     lastName: readFormValue(formData, "lastName"),
     email: readFormValue(formData, "email"),
-    positionIds: positionIdsRaw ? JSON.parse(positionIdsRaw) : undefined,
+    positionIds,
     status: readFormValue(formData, "status"),
     dateOfBirth: dateOfBirthRaw ? new Date(dateOfBirthRaw) : undefined,
     removeResume,
@@ -244,6 +259,8 @@ export async function updateCandidate(
   // Handle resume file upload or removal
   const resumeFile = formData.get("resumeFile");
   const hasNewFile = resumeFile instanceof File && resumeFile.size > 0;
+  const existingResumeUrl = candidate.resumeUrl;
+  let shouldDeleteOldResume = false;
 
   if (hasNewFile) {
     const validation = validateResumeFile(resumeFile);
@@ -251,23 +268,13 @@ export async function updateCandidate(
       throw new Error(validation.error || "File non valido");
     }
 
-    // Delete old file if exists
-    if (candidate.resumeUrl) {
-      try {
-        await deleteResumeFromR2(candidate.resumeUrl);
-      } catch (deleteError) {
-        storageLogger.error("Failed to delete old resume", {
-          error: deleteError,
-          candidateId: id,
-        });
-        // Continue anyway
-      }
-    }
-
     // Upload new file
     try {
       const resumeUrl = await uploadResumeToR2(resumeFile, id);
       updateData.resumeUrl = resumeUrl;
+      if (existingResumeUrl) {
+        shouldDeleteOldResume = true;
+      }
     } catch (uploadError) {
       storageLogger.error("Failed to upload resume during candidate update", {
         error: uploadError,
@@ -275,18 +282,10 @@ export async function updateCandidate(
       });
       throw new Error("Errore durante il caricamento del curriculum");
     }
-  } else if (removeResume && candidate.resumeUrl) {
+  } else if (removeResume && existingResumeUrl) {
     // User wants to remove existing resume without uploading a new one
-    try {
-      await deleteResumeFromR2(candidate.resumeUrl);
-    } catch (deleteError) {
-      storageLogger.error("Failed to delete resume during removal", {
-        error: deleteError,
-        candidateId: id,
-      });
-      // Continue anyway
-    }
     updateData.resumeUrl = null;
+    shouldDeleteOldResume = true;
   }
 
   if (Object.keys(updateData).length === 0) {
@@ -297,6 +296,17 @@ export async function updateCandidate(
     where: { id },
     data: updateData,
   });
+
+  if (shouldDeleteOldResume && existingResumeUrl) {
+    try {
+      await deleteResumeFromR2(existingResumeUrl);
+    } catch (deleteError) {
+      storageLogger.error("Failed to delete old resume after update", {
+        error: deleteError,
+        candidateId: id,
+      });
+    }
+  }
 
   // Invalidate cache for all affected positions (old + new)
   invalidateCandidateCache({
