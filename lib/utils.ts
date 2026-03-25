@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { ENV } from "varlock/env";
 
 // Available LLM models with their capabilities
 // Updated: December 2025 - Synced with Groq documentation
@@ -152,7 +153,7 @@ export const getModelsByCategory = () => {
  */
 export const getOptimalModel = (
   taskType: LLMTaskType,
-  specificModel?: string
+  specificModel?: string,
 ): string => {
   // If a specific model is provided, use it
   if (specificModel) {
@@ -276,4 +277,4 @@ export const getStatusColor = (status: string) => {
   }
 };
 
-export const isDevelopment = process.env.NODE_ENV === "development";
+export const isDevelopment = ENV.APP_ENV === "development";

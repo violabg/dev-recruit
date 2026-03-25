@@ -1,3 +1,4 @@
+import { ENV } from "varlock/env";
 import { AIErrorCode } from "./ai-service";
 import { logger } from "./logger";
 
@@ -6,7 +7,7 @@ export class QuizSystemError extends Error {
   constructor(
     message: string,
     public code: QuizErrorCode,
-    public context?: Record<string, any>
+    public context?: Record<string, any>,
   ) {
     super(message);
     this.name = "QuizSystemError";
@@ -87,7 +88,7 @@ export class ErrorHandler {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === "development";
+    this.isDevelopment = ENV.APP_ENV === "development";
   }
 
   /**
@@ -172,42 +173,42 @@ export class ErrorHandler {
           return new QuizSystemError(
             "AI generation failed",
             QuizErrorCode.AI_GENERATION_FAILED,
-            { aiError: aiError.message }
+            { aiError: aiError.message },
           );
 
         case AIErrorCode.MODEL_UNAVAILABLE:
           return new QuizSystemError(
             "AI model unavailable",
             QuizErrorCode.AI_MODEL_UNAVAILABLE,
-            { aiError: aiError.message }
+            { aiError: aiError.message },
           );
 
         case AIErrorCode.TIMEOUT:
           return new QuizSystemError(
             "AI generation timeout",
             QuizErrorCode.TIMEOUT,
-            { aiError: aiError.message }
+            { aiError: aiError.message },
           );
 
         case AIErrorCode.RATE_LIMITED:
           return new QuizSystemError(
             "AI service rate limited",
             QuizErrorCode.RATE_LIMITED,
-            { aiError: aiError.message }
+            { aiError: aiError.message },
           );
 
         case AIErrorCode.QUOTA_EXCEEDED:
           return new QuizSystemError(
             "AI service quota exceeded",
             QuizErrorCode.SERVICE_UNAVAILABLE,
-            { aiError: aiError.message }
+            { aiError: aiError.message },
           );
 
         default:
           return new QuizSystemError(
             "AI generation failed",
             QuizErrorCode.AI_GENERATION_FAILED,
-            { aiError: aiError.message }
+            { aiError: aiError.message },
           );
       }
     }
@@ -216,7 +217,7 @@ export class ErrorHandler {
     return new QuizSystemError(
       "AI generation failed",
       QuizErrorCode.AI_GENERATION_FAILED,
-      { aiError: String(aiError) }
+      { aiError: String(aiError) },
     );
   }
 }
@@ -228,7 +229,7 @@ export const errorHandler = new ErrorHandler();
 export function createQuizError(
   message: string,
   code: QuizErrorCode,
-  context?: Record<string, any>
+  context?: Record<string, any>,
 ): QuizSystemError {
   return new QuizSystemError(message, code, context);
 }

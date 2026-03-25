@@ -1,5 +1,6 @@
 import { logger } from "@/lib/services/logger";
 import { NextRequest, NextResponse } from "next/server";
+import { ENV } from "varlock/env";
 import { z } from "zod";
 import {
   ApiResponse,
@@ -15,7 +16,7 @@ import {
 type APIHandler<T extends ValidationConfig> = (
   req: NextRequest,
   validated: Partial<ValidatedRequestData<T>>,
-  context?: { params?: Record<string, string> }
+  context?: { params?: Record<string, string> },
 ) => Promise<NextResponse>;
 
 type MiddlewareConfig = {
@@ -33,7 +34,7 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 function checkRateLimit(
   identifier: string,
-  config: { requests: number; window: number }
+  config: { requests: number; window: number },
 ): boolean {
   const now = Date.now();
   const entry = rateLimitMap.get(identifier);
@@ -54,11 +55,11 @@ function checkRateLimit(
 export function withValidation<T extends ValidationConfig>(
   validationConfig: T,
   middlewareConfig: MiddlewareConfig = {},
-  handler: APIHandler<T>
+  handler: APIHandler<T>,
 ) {
   return async (
     req: NextRequest,
-    context?: { params?: Record<string, string> }
+    context?: { params?: Record<string, string> },
   ) => {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
@@ -268,7 +269,7 @@ export function withValidation<T extends ValidationConfig>(
         error: {
           message: "Internal server error",
           code: "INTERNAL_ERROR",
-          details: process.env.NODE_ENV === "development" ? error : undefined,
+          details: ENV.APP_ENV === "development" ? error : undefined,
         },
         meta: {
           timestamp: new Date().toISOString(),
@@ -293,7 +294,7 @@ export function createApiResponse<T>(
   meta?: {
     requestId?: string;
     performance?: { duration: number; model?: string };
-  }
+  },
 ): ApiResponse<T> {
   return {
     success: true,
@@ -309,7 +310,7 @@ export function createApiError(
   message: string,
   code?: string,
   details?: unknown,
-  meta?: { requestId?: string }
+  meta?: { requestId?: string },
 ): ApiResponse<never> {
   return {
     success: false,
@@ -328,7 +329,7 @@ export function createApiError(
 // Additional helper for simple JSON validation
 export function validateJson<T>(
   schema: z.ZodType<T>,
-  data: unknown
+  data: unknown,
 ): { success: true; data: T } | { success: false; error: unknown } {
   try {
     const result = schema.safeParse(data);
@@ -343,7 +344,7 @@ export function validateJson<T>(
 // Alternative: More specific error typing for better error messages
 export function validateJsonWithErrors<T>(
   schema: z.ZodType<T>,
-  data: unknown
+  data: unknown,
 ): { success: true; data: T } | { success: false; error: string } {
   try {
     const result = schema.safeParse(data);

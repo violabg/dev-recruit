@@ -1,5 +1,3 @@
-"use cache";
-
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { Prisma } from "@/lib/prisma/client";
 import { CacheTags } from "@/lib/utils/cache-utils";
@@ -30,8 +28,9 @@ export type PresetsFilterParams = {
  * Cache is invalidated via updateTag("presets") after mutations
  */
 export async function getPresetsData(
-  params?: PresetsFilterParams
+  params?: PresetsFilterParams,
 ): Promise<PaginatedPresets> {
+  "use cache";
   cacheLife("minutes");
   cacheTag(CacheTags.PRESETS);
 
@@ -81,6 +80,7 @@ export async function getPresetsData(
  * Cache is invalidated granularly via updateTag("presets", presetId) after mutations
  */
 export async function getPresetData(presetId: string): Promise<Preset | null> {
+  "use cache";
   cacheLife("minutes");
   cacheTag(CacheTags.PRESETS, presetId);
 
@@ -94,6 +94,7 @@ export async function getPresetData(presetId: string): Promise<Preset | null> {
  * Used to pre-render most recent preset detail pages at build time.
  */
 export async function getRecentPresetIds(limit = 100): Promise<string[]> {
+  "use cache";
   cacheLife("minutes");
   cacheTag(CacheTags.PRESETS);
 
