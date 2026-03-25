@@ -87,6 +87,9 @@
   "overrides": {
     "next": {
       "@next/env": "npm:@varlock/nextjs-integration"
+    },
+    "other-dep": {
+      "dotenv": "npm:varlock"
     }
   }
 }

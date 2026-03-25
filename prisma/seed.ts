@@ -1,6 +1,5 @@
-import "dotenv/config";
-
 import { PrismaPg } from "@prisma/adapter-pg";
+import "varlock/auto-load";
 import { Prisma, PrismaClient } from "../lib/prisma/client.js";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
@@ -165,8 +164,8 @@ async function seedPresets() {
       PRESETS.map((preset) =>
         prisma.preset.create({
           data: preset,
-        })
-      )
+        }),
+      ),
     );
 
     console.log(`✓ Successfully seeded ${createdPresets.length} presets`);
