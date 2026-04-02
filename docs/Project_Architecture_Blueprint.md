@@ -1022,13 +1022,13 @@ export const getOptimalModel = (
 
   switch (taskType) {
     case "quiz_generation":
-      return "moonshotai/kimi-k2-instruct-0905"; // 262K context
+      return "openai/gpt-oss-120b"; // 262K context
     case "question_generation":
       return "llama-3.3-70b-versatile"; // Reliable
     case "evaluation":
       return "openai/gpt-oss-120b"; // JSON Mode + Reasoning
     case "resume_evaluation":
-      return "moonshotai/kimi-k2-instruct-0905"; // Large context
+      return "openai/gpt-oss-120b"; // Large context
     case "simple_task":
       return "llama-3.1-8b-instant"; // Fast
     default:

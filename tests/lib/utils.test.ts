@@ -179,7 +179,7 @@ describe("LLM_MODELS", () => {
     expect(LLM_MODELS.VERSATILE).toBe("llama-3.3-70b-versatile");
     expect(LLM_MODELS.INSTANT).toBe("llama-3.1-8b-instant");
     expect(LLM_MODELS.GPT_OSS_120B).toBe("openai/gpt-oss-120b");
-    expect(LLM_MODELS.KIMI).toBe("moonshotai/kimi-k2-instruct-0905");
+    expect(LLM_MODELS.KIMI).toBe("openai/gpt-oss-120b");
   });
 
   it("should have whisper models", () => {

@@ -57,7 +57,7 @@ export const LLM_MODELS = {
   // Moonshot AI Kimi K2 - Largest context window available
   // Context: 262K, Output: 16K, Speed: 200 tps
   // Best for: Long documents, resume analysis, multi-question generation
-  KIMI: "moonshotai/kimi-k2-instruct-0905",
+  KIMI: "openai/gpt-oss-120b",
 
   // Meta Llama 4 Maverick 17B - Fast preview model
   // Context: 131K, Output: 8K, Speed: 600 tps

@@ -339,7 +339,6 @@ export const getOptimalModel = (
 
 | Model ID                                        | Context | Output | Speed   | Best For                                |
 | ----------------------------------------------- | ------- | ------ | ------- | --------------------------------------- |
-| `moonshotai/kimi-k2-instruct-0905`              | 262K    | 16K    | 200 tps | Quiz gen, resume analysis (largest ctx) |
 | `meta-llama/llama-4-maverick-17b-128e-instruct` | 131K    | 8K     | 600 tps | Fast preview tasks                      |
 | `meta-llama/llama-4-scout-17b-16e-instruct`     | 131K    | 8K     | 750 tps | Fastest Llama 4                         |
 | `qwen/qwen3-32b`                                | 131K    | 40K    | 400 tps | Multilingual tasks                      |
