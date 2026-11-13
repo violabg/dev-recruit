@@ -402,7 +402,7 @@ export const useAIGeneration = ({
  *
  * // Generate a complex multiple choice question
  * await handleGenerateQuestion("multiple_choice", {
- *   llmModel: "llama-3.3-70b-versatile",
+ *   llmModel: "openai/gpt-oss-120b",
  *   difficulty: 4,
  *   focusAreas: ["React Hooks", "State Management"],
  *   distractorComplexity: "complex",
@@ -411,7 +411,7 @@ export const useAIGeneration = ({
  *
  * // Generate a frontend-optimized open question
  * await generateFrontendQuestion("open_question", {
- *   llmModel: "llama-3.3-70b-versatile",
+ *   llmModel: "openai/gpt-oss-120b",
  *   difficulty: 3,
  *   expectedResponseLength: "medium",
  *   evaluationCriteria: ["conceptual understanding", "best practices"]
@@ -419,7 +419,7 @@ export const useAIGeneration = ({
  *
  * // Generate a backend code snippet question
  * await generateBackendQuestion("code_snippet", {
- *   llmModel: "llama-3.3-70b-versatile",
+ *   llmModel: "openai/gpt-oss-120b",
  *   difficulty: 4,
  *   language: "javascript",
  *   bugType: "security",

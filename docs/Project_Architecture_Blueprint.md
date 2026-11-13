@@ -686,9 +686,8 @@ const DEFAULT_CONFIG = {
   retryDelay: 1000, // Exponential: 1s, 2s, 4s
   timeout: 60000,
   fallbackModels: [
-    "llama-3.3-70b-versatile",
     "openai/gpt-oss-20b",
-    "llama-3.1-8b-instant",
+    "qwen/qwen3.8-27b",
   ],
 };
 ```
@@ -839,7 +838,7 @@ export function QuizForm() {
 import { groq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 
-const model = groq("llama-3.3-70b-versatile");
+const model = groq("openai/gpt-oss-120b");
 const result = await generateText({
   model,
   prompt: buildQuizPrompt(params),
@@ -1022,17 +1021,17 @@ export const getOptimalModel = (
 
   switch (taskType) {
     case "quiz_generation":
-      return "openai/gpt-oss-120b"; // 262K context
+      return "openai/gpt-oss-120b"; // Best reasoning + JSON schema
     case "question_generation":
-      return "llama-3.3-70b-versatile"; // Reliable
+      return "openai/gpt-oss-120b"; // Reliable
     case "evaluation":
       return "openai/gpt-oss-120b"; // JSON Mode + Reasoning
     case "resume_evaluation":
       return "openai/gpt-oss-120b"; // Large context
     case "simple_task":
-      return "llama-3.1-8b-instant"; // Fast
+      return "openai/gpt-oss-20b"; // Fastest
     default:
-      return "llama-3.3-70b-versatile";
+      return "openai/gpt-oss-120b";
   }
 };
 ```

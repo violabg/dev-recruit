@@ -27,7 +27,7 @@ import {
   upsertQuizAction,
 } from "@/lib/actions/quizzes";
 import { quizGenerationConfigSchema } from "@/lib/schemas";
-import { LLM_MODELS } from "@/lib/utils";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -78,7 +78,7 @@ export const QuizForm = ({
       difficulty: 3,
       timeLimit: 30,
       enableTimeLimit: true,
-      specificModel: LLM_MODELS.KIMI,
+      specificModel: DEFAULT_GENERATION_MODEL,
     },
   });
 
@@ -270,7 +270,7 @@ export const QuizForm = ({
             render={({ field, fieldState }) => (
               <>
                 <LLMModelSelect
-                  value={field.value || LLM_MODELS.KIMI}
+                  value={field.value || DEFAULT_GENERATION_MODEL}
                   onValueChange={field.onChange}
                 />
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}

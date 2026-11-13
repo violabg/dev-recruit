@@ -2,83 +2,46 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ENV } from "varlock/env";
 
-// Available LLM models with their capabilities
-// Updated: December 2025 - Synced with Groq documentation
+// Available LLM models with their capabilities.
+// Only models available on Groq's FREE plan (verified against the Groq
+// models API and docs, November 2026). Free-plan limits per chat model:
+// 30 RPM · 1K RPD · 8K TPM · 200K TPD (check console.groq.com/settings/limits).
 export const LLM_MODELS = {
   // ============================================================================
-  // PRODUCTION MODELS - Stable and reliable for production use
+  // PRODUCTION MODELS
   // ============================================================================
 
-  // Meta Llama 3.3 70B - Best for complex tasks requiring high capability
-  // Context: 131K, Output: 32K, Speed: 280 tps
-  VERSATILE: "llama-3.3-70b-versatile",
-
-  // Meta Llama 3.1 8B - Fastest text model for simple tasks
-  // Context: 131K, Output: 131K, Speed: 560 tps
-  INSTANT: "llama-3.1-8b-instant",
-
-  // Meta Llama Guard 4 12B - Content moderation and safety
-  // Context: 131K, Output: 1K, Speed: 1200 tps
-  LLAMA_GUARD_4_12B: "meta-llama/llama-guard-4-12b",
-
-  // OpenAI GPT OSS 120B - Reasoning, Tool Use, JSON Mode, Code Execution
-  // Context: 131K, Output: 65K, Speed: 500 tps
-  // Best for: Structured outputs, evaluations, complex reasoning
+  // OpenAI GPT-OSS 120B - strongest reasoning model on Groq
+  // Context: 131K, Output: 65K, Speed: ~500 tps, strict JSON-schema outputs
+  // Best for: quiz/question generation, evaluations, resume analysis
   GPT_OSS_120B: "openai/gpt-oss-120b",
 
-  // OpenAI GPT OSS 20B - Faster reasoning with same capabilities
-  // Context: 131K, Output: 65K, Speed: 1000 tps
+  // OpenAI GPT-OSS 20B - same family, about 2x faster
+  // Context: 131K, Output: 65K, Speed: ~1000 tps, strict JSON-schema outputs
+  // Best for: short/simple text tasks, first fallback for GPT-OSS 120B
   GPT_OSS_20B: "openai/gpt-oss-20b",
 
-  // OpenAI GPT OSS Safeguard 20B - Safety-focused model
-  // Context: 131K, Output: 65K, Speed: 1000 tps
-  GPT_OSS_SAFEGUARD_20B: "openai/gpt-oss-safeguard-20b",
-
-  // Audio transcription models
-  WHISPER_LARGE_V3: "whisper-large-v3", // Audio transcription
-  WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo", // Fast audio transcription
+  // Audio transcription
+  WHISPER_LARGE_V3: "whisper-large-v3", // Highest accuracy
+  WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo", // Faster, used for interviews
 
   // ============================================================================
-  // PRODUCTION SYSTEMS - Compound AI systems with tool use
+  // PREVIEW MODELS - may be discontinued by Groq at short notice
   // ============================================================================
 
-  // Groq Compound - Agentic system with tool use
-  // Context: 131K, Output: 8K, Speed: 450 tps
-  COMPOUND: "groq/compound",
+  // Alibaba Qwen3.8 27B - strong multilingual model (different family:
+  // useful fallback when GPT-OSS is rate limited)
+  // Context: 131K, Output: 16K, Speed: ~450 tps, strict JSON-schema outputs
+  QWEN3_8_27B: "qwen/qwen3.8-27b",
 
-  // Groq Compound Mini - Lightweight agentic system
-  // Context: 131K, Output: 8K, Speed: 450 tps
-  COMPOUND_MINI: "groq/compound-mini",
-
-  // ============================================================================
-  // PREVIEW MODELS - Experimental, evaluate before production use
-  // ============================================================================
-
-  // Moonshot AI Kimi K2 - Largest context window available
-  // Context: 262K, Output: 16K, Speed: 200 tps
-  // Best for: Long documents, resume analysis, multi-question generation
-  KIMI: "openai/gpt-oss-120b",
-
-  // Meta Llama 4 Maverick 17B - Fast preview model
-  // Context: 131K, Output: 8K, Speed: 600 tps
-  MAVERICK: "meta-llama/llama-4-maverick-17b-128e-instruct",
-
-  // Meta Llama 4 Scout 17B - Fastest Llama 4 model
-  // Context: 131K, Output: 8K, Speed: 750 tps
-  SCOUT: "meta-llama/llama-4-scout-17b-16e-instruct",
-
-  // Alibaba Cloud Qwen3 32B - Strong multilingual model
-  // Context: 131K, Output: 40K, Speed: 400 tps
-  QWEN3_32B: "qwen/qwen3-32b",
-
-  // Safety models for prompt injection detection
-  LLAMA_PROMPT_GUARD_2_22M: "meta-llama/llama-prompt-guard-2-22m", // Context: 512
-  LLAMA_PROMPT_GUARD_2_86M: "meta-llama/llama-prompt-guard-2-86m", // Context: 512
-
-  // Text-to-speech models
-  PLAYAI_TTS: "playai-tts", // Context: 8K
-  PLAYAI_TTS_ARABIC: "playai-tts-arabic", // Context: 8K
+  // Safety / moderation
+  GPT_OSS_SAFEGUARD_20B: "openai/gpt-oss-safeguard-20b", // Policy-based moderation
+  LLAMA_PROMPT_GUARD_2_22M: "meta-llama/llama-prompt-guard-2-22m", // Prompt-injection check, ctx 512
+  LLAMA_PROMPT_GUARD_2_86M: "meta-llama/llama-prompt-guard-2-86m", // Prompt-injection check, ctx 512
 } as const;
+
+// Default model for AI generation in forms (quiz + question generation)
+export const DEFAULT_GENERATION_MODEL = LLM_MODELS.GPT_OSS_120B;
 
 // Task types for model selection
 export type LLMTaskType =
@@ -101,52 +64,44 @@ export const getAllAvailableModels = (): LLMModelName[] => {
 
 /**
  * Returns an object with model categories for easier selection
- * Updated: December 2025 - Synced with Groq documentation
  */
 export const getModelsByCategory = () => {
   return {
     production: {
-      text: [
-        LLM_MODELS.VERSATILE, // llama-3.3-70b - Complex tasks
-        LLM_MODELS.INSTANT, // llama-3.1-8b - Fast simple tasks
-        LLM_MODELS.GPT_OSS_120B, // Reasoning + JSON Mode
-        LLM_MODELS.GPT_OSS_20B, // Faster reasoning
-      ],
-      moderation: [
-        LLM_MODELS.LLAMA_GUARD_4_12B,
-        LLM_MODELS.GPT_OSS_SAFEGUARD_20B,
-      ],
+      text: [LLM_MODELS.GPT_OSS_120B, LLM_MODELS.GPT_OSS_20B],
       audio: [LLM_MODELS.WHISPER_LARGE_V3, LLM_MODELS.WHISPER_LARGE_V3_TURBO],
-      systems: [
-        LLM_MODELS.COMPOUND, // Agentic with tools
-        LLM_MODELS.COMPOUND_MINI, // Lightweight agentic
-      ],
     },
     preview: {
-      text: [
-        LLM_MODELS.KIMI, // 262K context - largest
-        LLM_MODELS.MAVERICK, // Llama 4 - fast
-        LLM_MODELS.SCOUT, // Llama 4 - fastest
-        LLM_MODELS.QWEN3_32B, // Multilingual
-      ],
+      text: [LLM_MODELS.QWEN3_8_27B],
       safety: [
+        LLM_MODELS.GPT_OSS_SAFEGUARD_20B,
         LLM_MODELS.LLAMA_PROMPT_GUARD_2_22M,
         LLM_MODELS.LLAMA_PROMPT_GUARD_2_86M,
       ],
-      tts: [LLM_MODELS.PLAYAI_TTS, LLM_MODELS.PLAYAI_TTS_ARABIC],
     },
   };
 };
 
 /**
+ * Fallback chain used when the primary model fails (errors, rate limits):
+ * GPT-OSS 20B first (same family, fast), then Qwen3.8 27B (different family,
+ * separate rate-limit bucket).
+ */
+export const FALLBACK_MODELS: readonly LLMModelName[] = [
+  LLM_MODELS.GPT_OSS_20B,
+  LLM_MODELS.QWEN3_8_27B,
+];
+
+/**
  * Returns the optimal LLM model for a given task type.
- * Balances performance, cost, and reliability based on task complexity.
  *
- * Model Selection Rationale (December 2025):
- * - KIMI (262K context, 16K output): Best for long documents and multi-question generation
- * - GPT_OSS_120B (131K context, 65K output): Best for structured outputs, reasoning, JSON mode
- * - VERSATILE (131K context, 32K output): Reliable production model for general tasks
- * - INSTANT (131K context, 131K output, 560 tps): Fastest for simple tasks
+ * Model Selection Rationale (Groq free plan, November 2026):
+ * - GPT_OSS_120B: best reasoning + strict JSON schema + 65K output. Used for
+ *   everything where quality matters (Italian technical content, scoring).
+ *   All free chat models share the same rate limits, so the strongest model
+ *   costs nothing extra.
+ * - GPT_OSS_20B: ~2x faster, used for short free-text tasks (position
+ *   descriptions) and as first fallback.
  *
  * @param taskType - The type of task to perform
  * @param specificModel - Optional specific model to use instead of the optimal one
@@ -160,37 +115,31 @@ export const getOptimalModel = (
     return specificModel;
   }
 
-  // Otherwise, return the optimal model for the task type
   switch (taskType) {
     case "quiz_generation":
-      // Complex multi-question generation needs large context and output
-      // KIMI: 262K context for position context + 16K output for multiple questions
-      return LLM_MODELS.KIMI;
+      // Many structured questions in one response: needs the strongest
+      // reasoning and a large output budget (65K)
+      return LLM_MODELS.GPT_OSS_120B;
 
     case "question_generation":
-      // Single question generation - use reliable production model
-      // VERSATILE: 32K output is plenty, 280 tps is fast enough
-      return LLM_MODELS.VERSATILE;
+      // Single structured question - quality of distractors/code matters
+      return LLM_MODELS.GPT_OSS_120B;
 
     case "evaluation":
     case "overall_evaluation":
-      // Answer evaluation benefits from reasoning capabilities and JSON mode
-      // GPT_OSS_120B: Native JSON Mode, reasoning, 65K output for detailed feedback
+      // Scoring needs careful reasoning and reliable JSON
       return LLM_MODELS.GPT_OSS_120B;
 
     case "resume_evaluation":
-      // Resume analysis needs large context for full resume text
-      // KIMI: 262K context ideal for resume + position requirements
-      return LLM_MODELS.KIMI;
+      // Full resume + position requirements fit easily in 131K context
+      return LLM_MODELS.GPT_OSS_120B;
 
     case "simple_task":
-      // Basic tasks use fastest model
-      // INSTANT: 560 tps, cheapest, fast responses
-      return LLM_MODELS.INSTANT;
+      // Short free text (e.g. streamed position descriptions): fastest model
+      return LLM_MODELS.GPT_OSS_20B;
 
     default:
-      // Default to versatile model for unknown tasks
-      return LLM_MODELS.VERSATILE;
+      return LLM_MODELS.GPT_OSS_120B;
   }
 };
 

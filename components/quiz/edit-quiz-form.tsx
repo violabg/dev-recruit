@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
+import { cn, DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 import { getSaveButtonContent } from "@/lib/utils/quiz-form-utils";
 import { AlertCircle, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -157,7 +157,7 @@ export function EditQuizForm({
   ) => {
     // Use enhanced generation if available
     const enhancedOptions = {
-      llmModel: "llama-3.3-70b-versatile",
+      llmModel: DEFAULT_GENERATION_MODEL,
       difficulty: 3,
       ...options,
     };

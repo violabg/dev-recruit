@@ -10,7 +10,7 @@ import {
 import { groq } from "@ai-sdk/groq";
 import { generateText, Output, wrapLanguageModel } from "ai";
 import { aiLogger } from "../services/logger";
-import { getOptimalModel, isDevelopment } from "../utils";
+import { FALLBACK_MODELS, getOptimalModel, isDevelopment } from "../utils";
 
 // Evaluation actions
 export async function evaluateAnswer(
@@ -238,7 +238,7 @@ export async function evaluateAnswer(
     });
 
     // Fallback to a different stable model if the primary fails
-    const fallbackModel = "llama-3.1-8b-instant"; // Fast and reliable model
+    const fallbackModel = FALLBACK_MODELS[0];
 
     const aiModel = groq(fallbackModel);
 
@@ -386,7 +386,7 @@ export async function generateOverallEvaluation(
     );
 
     // Fallback to a different stable model if the primary fails
-    const fallbackModel = "llama-3.1-8b-instant";
+    const fallbackModel = FALLBACK_MODELS[0];
 
     try {
       const aiModel = groq(fallbackModel);

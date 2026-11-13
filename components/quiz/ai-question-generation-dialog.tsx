@@ -26,7 +26,7 @@ import {
 import { SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { QuestionType } from "@/lib/schemas";
-import { LLM_MODELS } from "@/lib/utils";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
@@ -93,7 +93,7 @@ export const AIQuestionGenerationDialog = ({
   const form = useForm<GenerationFormData>({
     resolver: zodResolver(generationSchema),
     defaultValues: {
-      llmModel: LLM_MODELS.KIMI,
+      llmModel: DEFAULT_GENERATION_MODEL,
       difficulty: defaultDifficulty,
       distractorComplexity: "moderate",
       expectedResponseLength: "medium",
@@ -108,7 +108,7 @@ export const AIQuestionGenerationDialog = ({
   useEffect(() => {
     if (open && questionType) {
       form.reset({
-        llmModel: LLM_MODELS.KIMI,
+        llmModel: DEFAULT_GENERATION_MODEL,
         difficulty: defaultDifficulty,
         distractorComplexity: "moderate",
         expectedResponseLength: "medium",

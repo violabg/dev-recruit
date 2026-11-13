@@ -9,32 +9,19 @@ import {
 } from "@/components/ui/select";
 import { LLM_MODELS } from "@/lib/utils";
 
+// Groq free-plan chat models (see LLM_MODELS in lib/utils.ts)
 const llmModelOptions = [
-  // LLM_MODELS.KIMI is an alias of GPT_OSS_120B (default for quiz generation)
   {
     value: LLM_MODELS.GPT_OSS_120B,
-    label: "🧠 GPT OSS 120B - Ragionamento + JSON Mode (Raccomandato per quiz)",
-  },
-  {
-    value: LLM_MODELS.VERSATILE,
-    label: "🚀 Versatile - Llama 3.3 70B (Affidabile)",
-  },
-  {
-    value: LLM_MODELS.INSTANT,
-    label: "⚡ Instant - Llama 3.1 8B (Velocissimo)",
+    label: "🧠 GPT-OSS 120B - Ragionamento avanzato (Raccomandato)",
   },
   {
     value: LLM_MODELS.GPT_OSS_20B,
-    label: "💨 GPT OSS 20B - Ragionamento Veloce",
+    label: "⚡ GPT-OSS 20B - Veloce",
   },
   {
-    value: LLM_MODELS.MAVERICK,
-    label: "🎯 Maverick - Llama 4 17B (Sperimentale)",
-  },
-  { value: LLM_MODELS.SCOUT, label: "🏃 Scout - Llama 4 Scout 17B (Veloce)" },
-  {
-    value: LLM_MODELS.QWEN3_32B,
-    label: "🌟 Qwen3 32B - Multilingue (Alibaba)",
+    value: LLM_MODELS.QWEN3_8_27B,
+    label: "🌍 Qwen3.8 27B - Multilingue (Anteprima)",
   },
 ];
 

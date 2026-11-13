@@ -19,6 +19,7 @@ vi.mock("@ai-sdk/groq", () => ({
 
 vi.mock("../../../lib/utils", () => ({
   getOptimalModel: vi.fn(() => "test-model"),
+  FALLBACK_MODELS: ["fallback-model"],
   isDevelopment: true,
 }));
 

@@ -39,8 +39,9 @@ vi.mock("@ai-sdk/devtools", () => ({
 
 vi.mock("../../../lib/utils", () => ({
   getOptimalModel: vi.fn((type: string, specificModel?: string) => {
-    return specificModel || "llama-3.3-70b-versatile";
+    return specificModel || "openai/gpt-oss-120b";
   }),
+  FALLBACK_MODELS: ["openai/gpt-oss-20b", "qwen/qwen3.8-27b"],
   isDevelopment: false,
 }));
 
