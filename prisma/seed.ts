@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import "varlock/auto-load";
+import "./load-env";
 import { Prisma, PrismaClient } from "../lib/prisma/client.js";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });

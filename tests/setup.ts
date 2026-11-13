@@ -117,19 +117,16 @@ vi.mock("@/lib/auth-server", () => ({
   requireUser: vi.fn(() => ({ id: "user1" })),
 }));
 
-// Mock environment variables (varlock's typed ENV proxy)
-vi.mock("varlock/env", () => ({
-  ENV: {
-    DATABASE_URL: "postgresql://test:test@localhost:5432/test",
-    GROQ_API_KEY: "test-api-key",
-    BETTER_AUTH_SECRET: "test-secret",
-    BETTER_AUTH_URL: "http://localhost:3000",
-    R2_ACCESS_KEY_ID: "test-r2-key",
-    R2_SECRET_ACCESS_KEY: "test-r2-secret",
-    R2_ENDPOINT: "https://test.r2.cloudflarestorage.com",
-    R2_BUCKET_NAME: "test-bucket",
-  },
-}));
+// Test environment variables
+vi.stubEnv("DATABASE_URL", "postgresql://test:test@localhost:5432/test");
+vi.stubEnv("GROQ_API_KEY", "test-api-key");
+vi.stubEnv("BETTER_AUTH_SECRET", "test-secret");
+vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
+vi.stubEnv("R2_ACCESS_KEY_ID", "test-r2-key");
+vi.stubEnv("R2_SECRET_ACCESS_KEY", "test-r2-secret");
+vi.stubEnv("R2_ENDPOINT", "https://test.r2.cloudflarestorage.com");
+vi.stubEnv("R2_BUCKET_NAME", "test-bucket");
+
 
 // Reset all mocks before each test
 beforeEach(() => {

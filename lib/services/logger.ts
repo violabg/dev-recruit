@@ -1,4 +1,3 @@
-import { ENV } from "varlock/env";
 /**
  * Centralized Logger Service
  *
@@ -40,8 +39,8 @@ interface LogEntry {
 // Configuration
 // ============================================================================
 
-const isDevelopment = ENV.APP_ENV === "development";
-const isTest = ENV.APP_ENV === "test";
+const isDevelopment = process.env.NODE_ENV === "development";
+const isTest = process.env.NODE_ENV === "test";
 
 // Minimum log level to output (debug < info < warn < error)
 const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {

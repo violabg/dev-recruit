@@ -1,8 +1,5 @@
 packages:
   - .
-overrides:
-  "@next/env": "npm:@varlock/nextjs-integration"
-  "dotenv": "npm:varlock"
 # eslint-config-next still pulls these plugins, whose peer ranges stop at
 # ESLint 9. Their rules were verified to run correctly on ESLint 10.
 peerDependencyRules:

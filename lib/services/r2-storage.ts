@@ -13,7 +13,6 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { ENV } from "varlock/env";
 import { storageLogger } from "./logger";
 
 // Lazy import to avoid validation at module load time
@@ -25,10 +24,10 @@ import { storageLogger } from "./logger";
 function getR2Client(): S3Client {
   return new S3Client({
     region: "auto",
-    endpoint: `https://${ENV.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
-      accessKeyId: ENV.R2_ACCESS_KEY_ID!,
-      secretAccessKey: ENV.R2_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
     },
     // Use path-style addressing instead of virtual-hosted-style
     forcePathStyle: true,
@@ -59,8 +58,8 @@ export function extractKeyFromResumeUrl(url: string): string | null {
     // Remove leading slash and bucket name if present
     let key = pathname.startsWith("/") ? pathname.slice(1) : pathname;
     // If the URL includes the bucket name, remove it
-    if (key.startsWith(`${ENV.R2_BUCKET_NAME}/`)) {
-      key = key.slice(ENV.R2_BUCKET_NAME!.length + 1);
+    if (key.startsWith(`${process.env.R2_BUCKET_NAME}/`)) {
+      key = key.slice(process.env.R2_BUCKET_NAME!.length + 1);
     }
     return key;
   } catch {
@@ -87,7 +86,7 @@ export async function uploadResumeToR2(
   const fileBody = new Uint8Array(fileBuffer);
 
   const command = new PutObjectCommand({
-    Bucket: ENV.R2_BUCKET_NAME,
+    Bucket: process.env.R2_BUCKET_NAME,
     Key: key,
     Body: fileBody,
     ContentType: file.type || "application/octet-stream",
@@ -106,12 +105,12 @@ export async function uploadResumeToR2(
   }
 
   // Return the public URL
-  if (ENV.R2_PUBLIC_URL) {
-    return `${ENV.R2_PUBLIC_URL}/${key}`;
+  if (process.env.R2_PUBLIC_URL) {
+    return `${process.env.R2_PUBLIC_URL}/${key}`;
   }
 
   // Fallback to R2.dev public URL (requires public bucket)
-  return `https://${ENV.R2_BUCKET_NAME}.${ENV.R2_ACCOUNT_ID}.r2.dev/${key}`;
+  return `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.dev/${key}`;
 }
 
 /**
@@ -123,7 +122,7 @@ export async function deleteFileFromR2(key: string): Promise<void> {
   const client = getR2Client();
 
   const command = new DeleteObjectCommand({
-    Bucket: ENV.R2_BUCKET_NAME,
+    Bucket: process.env.R2_BUCKET_NAME,
     Key: key,
   });
 

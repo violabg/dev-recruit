@@ -1,4 +1,3 @@
-import { ENV } from "varlock/env";
 import { AIErrorCode } from "./ai-service";
 import { logger } from "./logger";
 
@@ -88,7 +87,7 @@ export class ErrorHandler {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = ENV.APP_ENV === "development";
+    this.isDevelopment = process.env.NODE_ENV === "development";
   }
 
   /**

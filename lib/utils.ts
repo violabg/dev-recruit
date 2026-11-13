@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ENV } from "varlock/env";
 
 // Available LLM models with their capabilities.
 // Only models available on Groq's FREE plan (verified against the Groq
@@ -226,4 +225,4 @@ export const getStatusColor = (status: string) => {
   }
 };
 
-export const isDevelopment = ENV.APP_ENV === "development";
+export const isDevelopment = process.env.NODE_ENV === "development";

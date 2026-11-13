@@ -1,6 +1,5 @@
 import { logger } from "@/lib/services/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { ENV } from "varlock/env";
 import { z } from "zod";
 import {
   ApiResponse,
@@ -269,7 +268,7 @@ export function withValidation<T extends ValidationConfig>(
         error: {
           message: "Internal server error",
           code: "INTERNAL_ERROR",
-          details: ENV.APP_ENV === "development" ? error : undefined,
+          details: process.env.NODE_ENV === "development" ? error : undefined,
         },
         meta: {
           timestamp: new Date().toISOString(),

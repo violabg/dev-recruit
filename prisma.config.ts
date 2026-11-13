@@ -1,5 +1,5 @@
 import { defineConfig, env } from "prisma/config";
-import "varlock/auto-load";
+import "./prisma/load-env";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
