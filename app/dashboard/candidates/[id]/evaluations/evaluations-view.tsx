@@ -188,7 +188,7 @@ export function CandidateEvaluationsView({
         </Card>
       ) : (
         <div className="space-y-4">
-          <h2 className="font-semibold text-heading text-lg">
+          <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
             Valutazioni esistenti ({evaluations.length}
             {streamingEvaluation ? " + 1 in corso" : ""})
           </h2>

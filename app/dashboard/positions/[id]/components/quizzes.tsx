@@ -15,7 +15,7 @@ export default async function Quizzes({ params }: Props) {
   return (
     <>
       <div className="flex justify-between">
-        <h2 className="font-semibold text-heading text-xl">Quiz</h2>
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">Quiz</h2>
         <Link
           href={`/dashboard/positions/${id}/quiz/new`}
           className={buttonVariants({ variant: "default", size: "sm" })}

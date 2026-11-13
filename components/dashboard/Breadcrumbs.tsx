@@ -39,8 +39,9 @@ const getBreadcrumbSegments = (pathname: string) => {
 
 const getBreadcrumbLabel = (segment: string) => {
   if (DASHBOARD_LABELS[segment]) return DASHBOARD_LABELS[segment];
-  if (/^\d+$/.test(segment)) return `ID: ${segment}`;
-  if (/^[a-z0-9\-]{8,}$/.test(segment)) return segment.slice(0, 8) + "...";
+  // Record ids (cuid / numeric) mean nothing to a recruiter
+  if (/^\d+$/.test(segment) || /^[a-z0-9]{20,}$/.test(segment))
+    return "Dettaglio";
   return segment.charAt(0).toUpperCase() + segment.slice(1);
 };
 
@@ -68,7 +69,9 @@ const Breadcrumbs = () => {
             </BreadcrumbLink>
           )}
         </BreadcrumbItem>
-        {!isLast && <BreadcrumbSeparator />}
+        {!isLast && (
+          <BreadcrumbSeparator className="text-muted-foreground/60">/</BreadcrumbSeparator>
+        )}
       </Fragment>
     );
   });
@@ -76,7 +79,7 @@ const Breadcrumbs = () => {
   if (items.length <= 1) return null; // Don't show on root dashboard
 
   return (
-    <Breadcrumb className="ml-2">
+    <Breadcrumb>
       <BreadcrumbList className="flex-nowrap">{items}</BreadcrumbList>
     </Breadcrumb>
   );

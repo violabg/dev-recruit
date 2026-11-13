@@ -33,7 +33,7 @@ export default async function QuizDetailPage({
 
       {/* Tabs shell - static, content loaded via Suspense */}
       <Tabs defaultValue="questions">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="questions">Domande</TabsTrigger>
           <TabsTrigger value="settings">Impostazioni</TabsTrigger>
           <TabsTrigger value="results">Risultati</TabsTrigger>

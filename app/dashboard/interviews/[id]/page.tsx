@@ -21,6 +21,8 @@ import {
 } from "@/lib/data/interviews";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
+import { Suspense } from "react";
+import { InterviewDetailSkeleton } from "./fallbacks";
 
 export async function generateStaticParams() {
   const interviewIds = await getRecentInterviewIds(100);
@@ -45,10 +47,28 @@ function calculateDuration(startDate: string | null, endDate: string | null) {
   return `${minutes}m ${seconds}s`;
 }
 
-export default async function InterviewDetailPage({
+type InterviewDetailParams = Promise<{ id: string }>;
+
+/**
+ * Static shell: `params` is only read inside the Suspense boundary, so the
+ * route can navigate instantly and stream the interview in.
+ */
+export default function InterviewDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: InterviewDetailParams;
+}) {
+  return (
+    <Suspense fallback={<InterviewDetailSkeleton />}>
+      <InterviewDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+async function InterviewDetailContent({
+  params,
+}: {
+  params: InterviewDetailParams;
 }) {
   const unwrappedParams = await params;
   const [interviewData, evaluation] = await Promise.all([

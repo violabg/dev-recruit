@@ -8,6 +8,8 @@ import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { getLatestInterviewEvaluationByCandidateId } from "@/lib/data/evaluations";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { CandidateEvaluationDashboardSkeleton } from "../sub-page-fallbacks";
 
 const hiringRecommendationScores: Record<string, number> = {
   strong_yes: 10,
@@ -17,7 +19,22 @@ const hiringRecommendationScores: Record<string, number> = {
   strong_no: 2,
 };
 
-export default async function CandidateEvaluationDashboardPage({
+/**
+ * Static shell: the route `params` are only read inside the Suspense
+ * boundary, so navigations into this page are instant (see
+ * https://nextjs.org/docs/messages/instant-shell-url-data).
+ */
+export default function CandidateEvaluationDashboardPage(
+  props: Parameters<typeof CandidateEvaluationDashboardContent>[0]
+) {
+  return (
+    <Suspense fallback={<CandidateEvaluationDashboardSkeleton />}>
+      <CandidateEvaluationDashboardContent {...props} />
+    </Suspense>
+  );
+}
+
+async function CandidateEvaluationDashboardContent({
   params,
 }: {
   params: Promise<{ id: string }>;

@@ -46,3 +46,4 @@ lib/prisma/
 .devtools
 
 !.env.schema
+.env*.local

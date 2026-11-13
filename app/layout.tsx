@@ -2,27 +2,26 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata, Viewport } from "next";
 import {
-  Geist,
+  Bricolage_Grotesque,
   Geist_Mono,
-  Plus_Jakarta_Sans,
-  Space_Grotesk,
+  IBM_Plex_Sans,
 } from "next/font/google";
 import type React from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+/** UI + body text: engineered, highly legible, tabular figures available */
+const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
-});
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-tech",
+  axes: ["wdth"],
 });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/** Display: titles and pipeline numbers (set condensed via font-stretch) */
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
+  variable: "--font-display",
+  axes: ["opsz", "wdth"],
 });
 
 const geistMono = Geist_Mono({
@@ -42,11 +41,11 @@ export const viewport: Viewport = {
   themeColor: [
     {
       media: "(prefers-color-scheme: light)",
-      color: "oklch(0.984 0.003 247.858)",
+      color: "oklch(0.962 0.009 247)",
     },
     {
       media: "(prefers-color-scheme: dark)",
-      color: "oklch(0.208 0.042 265.755)",
+      color: "oklch(0.185 0.028 257)",
     },
   ],
 };
@@ -59,12 +58,11 @@ export default function RootLayout({
   return (
     <html
       lang="it"
-      className={plusJakartaSans.variable}
+      className={`${plexSans.variable} ${bricolage.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <link rel="icon" href="/favicon.ico" sizes="any" />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${plusJakartaSans.variable} bg-background min-h-dvh font-sans text-foreground antialiased`}
+        className="bg-background min-h-dvh font-sans text-foreground antialiased"
       >
         <ThemeProvider
           attribute="class"

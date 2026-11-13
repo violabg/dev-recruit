@@ -16,7 +16,7 @@ export default async function ChangePasswordPage() {
         </Link>
 
         <div className="space-y-1">
-          <h1 className="font-bold text-3xl tracking-tight">Cambia Password</h1>
+          <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Cambia Password</h1>
           <p className="text-muted-foreground">
             Aggiorna la password del tuo account
           </p>

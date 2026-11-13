@@ -94,7 +94,7 @@ function PositionTabCardsSkeleton({
   return (
     <>
       <div className="flex justify-between">
-        <h2 className="font-semibold text-heading text-xl">{title}</h2>
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">{title}</h2>
         <ButtonSkeleton size="sm" className={actionClassName} />
       </div>
       <div className="gap-4 grid md:grid-cols-2">

@@ -15,11 +15,28 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCandidateQuizData } from "@/lib/data/interviews";
+import { Suspense } from "react";
+import { CandidateQuizSkeleton } from "../sub-page-fallbacks";
 
-export default async function CandidateQuizPage({
+/**
+ * Static shell: the route `params` are only read inside the Suspense
+ * boundary, so navigations into this page are instant (see
+ * https://nextjs.org/docs/messages/instant-shell-url-data).
+ */
+export default function CandidateQuizPage(
+  props: Parameters<typeof CandidateQuizContent>[0]
+) {
+  return (
+    <Suspense fallback={<CandidateQuizSkeleton />}>
+      <CandidateQuizContent {...props} />
+    </Suspense>
+  );
+}
+
+async function CandidateQuizContent({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id: candidateId } = await params;
 
@@ -76,7 +93,7 @@ export default async function CandidateQuizPage({
       </div>
 
       <div>
-        <h1 className="font-bold text-3xl">Assign quizzes to candidate</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assign quizzes to candidate</h1>
         <p className="text-muted-foreground">
           Assign quizzes for the position &quot;{position.title}&quot; to &quot;
           {candidate.name}&quot; ({candidate.email})
@@ -84,7 +101,7 @@ export default async function CandidateQuizPage({
       </div>
 
       <Tabs defaultValue="quizzes">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="quizzes">Assign quizzes</TabsTrigger>
           <TabsTrigger value="interviews">Existing interviews</TabsTrigger>
         </TabsList>

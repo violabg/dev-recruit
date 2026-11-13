@@ -34,7 +34,7 @@ export default async function PositionDetailPage({
       </Suspense>
 
       <Tabs defaultValue="details">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="details">Dettagli</TabsTrigger>
           <TabsTrigger value="quizzes">Quiz</TabsTrigger>
           <TabsTrigger value="candidates">Candidati</TabsTrigger>

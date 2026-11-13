@@ -1,3 +1,4 @@
+import { InterviewPipelineSkeleton } from "@/components/dashboard/interview-pipeline";
 import { PaginationSkeleton, TableSkeleton, TextSkeleton } from "@/components/skeletons";
 import {
   Card,
@@ -9,26 +10,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { STATUS_CONFIG } from "./runtime-section";
 
-/** Mirrors Stats: static status labels/icons, only the counts are skeletons. */
-export const StatsFallback = () => (
-  <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-    {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-      const Icon = config.icon;
-      return (
-        <Card key={key}>
-          <CardHeader className="flex flex-row justify-between items-center space-y-0 pb-2">
-            <CardTitle className="font-medium text-foreground text-sm">{config.label}</CardTitle>
-            <Icon className={`h-4 w-4 ${config.color}`} />
-          </CardHeader>
-          <CardContent>
-            <TextSkeleton lineClassName="h-8" className="w-10 h-7" />
-            <p className="text-muted-foreground text-xs">colloqui</p>
-          </CardContent>
-        </Card>
-      );
-    })}
-  </div>
-);
+/** Mirrors Stats: the shared pipeline skeleton. */
+export const StatsFallback = InterviewPipelineSkeleton;
 
 /** Mirrors SearchAndFilterInterviews: search + wrapped [status, position, language]. */
 export const FiltersSkeleton = () => (

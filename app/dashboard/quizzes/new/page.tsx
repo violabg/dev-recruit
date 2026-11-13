@@ -28,7 +28,7 @@ export default function NewQuizPage() {
     <div className="space-y-6">
       <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="font-bold text-3xl">Crea un nuovo quiz</h1>
+          <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Crea un nuovo quiz</h1>
           <p className="text-muted-foreground text-sm">
             Seleziona una posizione e costruisci il quiz con le domande che
             preferisci o fai partire la generazione AI completa.
