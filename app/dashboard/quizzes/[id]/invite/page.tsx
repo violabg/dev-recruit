@@ -67,7 +67,7 @@ async function InviteCandidatesContent({
       </div>
 
       <div>
-        <h1 className="font-bold text-3xl">Assign quiz to candidates</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assign quiz to candidates</h1>
         <p className="text-muted-foreground">
           Assign the quiz &quot;{quiz.title}&quot; for the position &quot;
           {position?.title}&quot; to candidates
@@ -75,7 +75,7 @@ async function InviteCandidatesContent({
       </div>
 
       <Tabs defaultValue="candidates">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="candidates">Assign to candidates</TabsTrigger>
           <TabsTrigger value="interviews">Created interviews</TabsTrigger>
         </TabsList>

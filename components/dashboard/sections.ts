@@ -33,6 +33,8 @@ export type Section = {
   text: string;
   /** Soft tinted background for icon tiles */
   tile: string;
+  /** Solid fill for the page-title rule */
+  rule: string;
 };
 
 export const SECTIONS: Record<SectionKey, Section> = {
@@ -43,6 +45,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
     icon: Briefcase,
     text: "text-section-positions",
     tile: "bg-section-positions/12 ring-section-positions/20",
+    rule: "bg-section-positions",
   },
   candidates: {
     key: "candidates",
@@ -51,6 +54,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
     icon: Users,
     text: "text-section-candidates",
     tile: "bg-section-candidates/12 ring-section-candidates/20",
+    rule: "bg-section-candidates",
   },
   quizzes: {
     key: "quizzes",
@@ -59,6 +63,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
     icon: FileQuestion,
     text: "text-section-quizzes",
     tile: "bg-section-quizzes/12 ring-section-quizzes/20",
+    rule: "bg-section-quizzes",
   },
   presets: {
     key: "presets",
@@ -67,6 +72,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
     icon: Sparkles,
     text: "text-section-presets",
     tile: "bg-section-presets/12 ring-section-presets/20",
+    rule: "bg-section-presets",
   },
   interviews: {
     key: "interviews",
@@ -75,6 +81,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
     icon: MessageSquareMore,
     text: "text-section-interviews",
     tile: "bg-section-interviews/12 ring-section-interviews/20",
+    rule: "bg-section-interviews",
   },
   settings: {
     key: "settings",
@@ -83,15 +90,21 @@ export const SECTIONS: Record<SectionKey, Section> = {
     icon: Settings,
     text: "text-section-settings",
     tile: "bg-section-settings/12 ring-section-settings/20",
+    rule: "bg-section-settings",
   },
 };
 
-/** Sidebar order */
-export const NAV_SECTIONS: Section[] = [
-  SECTIONS.positions,
-  SECTIONS.candidates,
-  SECTIONS.quizzes,
-  SECTIONS.presets,
-  SECTIONS.interviews,
-  SECTIONS.settings,
+/** Sidebar groups: the hiring workflow first, reusable material second. */
+export const NAV_GROUPS: { label: string; items: Section[] }[] = [
+  {
+    label: "Selezione",
+    items: [SECTIONS.positions, SECTIONS.candidates, SECTIONS.interviews],
+  },
+  {
+    label: "Libreria",
+    items: [SECTIONS.quizzes, SECTIONS.presets],
+  },
 ];
+
+/** Pinned above the user menu */
+export const NAV_FOOTER: Section[] = [SECTIONS.settings];

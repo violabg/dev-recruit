@@ -23,7 +23,7 @@ function EditProfileSkeleton() {
       <div className="flex items-center space-x-4">
         <Skeleton className="rounded-lg size-8" />
         <div className="space-y-1">
-          <h1 className="font-bold text-3xl tracking-tight">Modifica Profilo</h1>
+          <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Modifica Profilo</h1>
           <p className="text-muted-foreground">
             Aggiorna le informazioni del tuo profilo
           </p>
@@ -76,7 +76,7 @@ async function EditProfileContent() {
         </Link>
 
         <div className="space-y-1">
-          <h1 className="font-bold text-3xl tracking-tight">
+          <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">
             Modifica Profilo
           </h1>
           <p className="text-muted-foreground">

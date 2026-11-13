@@ -1,95 +1,82 @@
+import {
+  InterviewPipeline,
+  InterviewPipelineSkeleton,
+} from "@/components/dashboard/interview-pipeline";
 import { SECTIONS, type SectionKey } from "@/components/dashboard/sections";
-import PageHeader, { SectionTile } from "@/components/page-header";
+import PageHeader from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import {
   getCandidatesCount,
-  getCompletedInterviewsCount,
+  getInteviewsStatus,
   getPositionsCount,
   getRecentPositions,
 } from "@/lib/data/dashboard";
+import { cn } from "@/lib/utils";
 import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { RecentPositionsSkeleton, StatValueSkeleton } from "./fallbacks";
 
-const STAT_CARDS: {
+async function Pipeline() {
+  const counts = await getInteviewsStatus();
+  return <InterviewPipeline counts={counts} />;
+}
+
+const ARCHIVE: {
   section: SectionKey;
   label: string;
-  caption: string;
-  href: string;
+  load: () => Promise<number>;
 }[] = [
-  {
-    section: "positions",
-    label: "Posizioni aperte",
-    caption: "Posizioni attualmente aperte",
-    href: SECTIONS.positions.href,
-  },
-  {
-    section: "candidates",
-    label: "Candidati",
-    caption: "Candidati totali nel sistema",
-    href: SECTIONS.candidates.href,
-  },
-  {
-    section: "interviews",
-    label: "Colloqui completati",
-    caption: "Colloqui conclusi",
-    href: `${SECTIONS.interviews.href}?status=completed`,
-  },
+  { section: "positions", label: "Posizioni aperte", load: getPositionsCount },
+  { section: "candidates", label: "Candidati in archivio", load: getCandidatesCount },
 ];
 
-/** Linked stat: the whole tile navigates to its section. */
-function StatCard({
-  stat,
-  value,
-}: {
-  stat: (typeof STAT_CARDS)[number];
-  value: React.ReactNode;
-}) {
+async function Count({ load }: { load: () => Promise<number> }) {
+  const n = await load();
   return (
-    <Link
-      href={stat.href as never}
-      className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <Card className="flex-row items-center gap-4 px-4 h-full group-hover:ring-primary/50 transition-[box-shadow]">
-        <SectionTile section={stat.section} />
-        <div className="flex-1 min-w-0">
-          <p className="text-muted-foreground text-sm truncate" title={stat.label}>
-            {stat.label}
-          </p>
-          {value}
-        </div>
-        <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-      </Card>
-    </Link>
+    <span className="font-display font-bold text-heading text-2xl tabular-nums leading-8 tracking-[-0.02em]">
+      {n || 0}
+    </span>
   );
 }
 
-async function Stat({
-  stat,
-  load,
-}: {
-  stat: (typeof STAT_CARDS)[number];
-  load: () => Promise<number>;
-}) {
-  const count = await load();
+/** Compact linked rows: section icon, label, count. */
+function Archive() {
   return (
-    <StatCard
-      stat={stat}
-      value={
-        <p className="font-semibold tabular-nums text-2xl leading-8">
-          {count || 0}
-        </p>
-      }
-    />
+    <Card>
+      <CardHeader>
+        <CardTitle>Archivio</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="-mx-2">
+          {ARCHIVE.map(({ section, label, load }) => {
+            const { icon: Icon, text, href } = SECTIONS[section];
+            return (
+              <li key={section}>
+                <Link
+                  href={href as never}
+                  className="group flex items-center gap-3 hover:bg-muted/70 focus-visible:bg-muted/70 px-2 py-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                >
+                  <Icon className={cn("size-4 shrink-0", text)} />
+                  <span className="flex-1 min-w-0 truncate">{label}</span>
+                  <Suspense fallback={<StatValueSkeleton />}>
+                    <Count load={load} />
+                  </Suspense>
+                  <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -100,7 +87,6 @@ async function RecentPositions() {
     <Card>
       <CardHeader>
         <CardTitle>Posizioni recenti</CardTitle>
-        <CardDescription>Le ultime cinque posizioni create</CardDescription>
         <CardAction>
           <Link
             href="/dashboard/positions"
@@ -112,12 +98,12 @@ async function RecentPositions() {
       </CardHeader>
       <CardContent>
         {positions.length > 0 ? (
-          <ul className="border rounded-lg divide-y">
+          <ul className="-mx-2">
             {positions.map((position) => (
               <li key={position.id}>
                 <Link
                   href={`/dashboard/positions/${position.id}`}
-                  className="group flex items-center gap-3 hover:bg-muted/60 focus-visible:bg-muted/60 px-3 py-2.5 focus-visible:outline-none transition-colors"
+                  className="group flex items-center gap-3 hover:bg-muted/70 focus-visible:bg-muted/70 px-2 py-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{position.title}</p>
@@ -131,9 +117,10 @@ async function RecentPositions() {
             ))}
           </ul>
         ) : (
-          <div className="flex flex-col justify-center items-center gap-3 border border-dashed rounded-lg h-35">
+          <div className="flex flex-col justify-center items-start gap-3 bg-muted/60 px-4 py-5 rounded-lg">
             <p className="text-muted-foreground text-sm">
-              Nessuna posizione ancora. Crea la prima per iniziare.
+              Nessuna posizione ancora. Crea la prima per generare quiz e
+              invitare candidati.
             </p>
             <Link
               href="/dashboard/positions/new"
@@ -149,18 +136,16 @@ async function RecentPositions() {
   );
 }
 
-const LOADERS = [getPositionsCount, getCandidatesCount, getCompletedInterviewsCount];
-
 export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
         title="Panoramica"
-        description="Posizioni, candidati e colloqui a colpo d'occhio"
+        description="Lo stato della selezione: dove si trova ogni candidato e cosa aspetta una tua azione."
         actionBtns={
           <Link
             href="/dashboard/positions/new"
-            className={buttonVariants({ variant: "default", size: "sm" })}
+            className={buttonVariants({ variant: "default" })}
           >
             <Plus className="mr-1 size-4" />
             Nuova posizione
@@ -168,22 +153,18 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="gap-4 grid md:grid-cols-3">
-        {STAT_CARDS.map((stat, i) => (
-          <Suspense
-            key={stat.section}
-            fallback={
-              <StatCard stat={stat} value={<StatValueSkeleton />} />
-            }
-          >
-            <Stat stat={stat} load={LOADERS[i]} />
-          </Suspense>
-        ))}
-      </div>
-
-      <Suspense fallback={<RecentPositionsSkeleton />}>
-        <RecentPositions />
+      <Suspense fallback={<InterviewPipelineSkeleton />}>
+        <Pipeline />
       </Suspense>
+
+      <div className="items-start gap-6 grid lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Suspense fallback={<RecentPositionsSkeleton />}>
+            <RecentPositions />
+          </Suspense>
+        </div>
+        <Archive />
+      </div>
     </div>
   );
 }

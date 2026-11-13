@@ -1,5 +1,5 @@
 import { getCandidatesCount } from "./candidates";
-import { getCompletedInterviewsCount } from "./interviews";
+import { getCompletedInterviewsCount, getInteviewsStatus } from "./interviews";
 import { getPositionsCount, getRecentPositions } from "./positions";
 
 /**
@@ -11,6 +11,7 @@ import { getPositionsCount, getRecentPositions } from "./positions";
 export {
   getCandidatesCount,
   getCompletedInterviewsCount,
+  getInteviewsStatus,
   getPositionsCount,
   getRecentPositions,
 };

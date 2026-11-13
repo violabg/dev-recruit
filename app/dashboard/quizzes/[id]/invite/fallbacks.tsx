@@ -29,13 +29,15 @@ export function InviteCandidatesSkeleton() {
       </div>
 
       <div>
-        <h1 className="font-bold text-3xl">Assign quiz to candidates</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assign quiz to candidates</h1>
         <TextSkeleton lineClassName="h-6" className="w-96 max-w-full h-4" />
       </div>
 
       <div className="flex flex-col gap-2">
-        {/* TabsList (h-8): "Assign to candidates" / "Created interviews" */}
-        <Skeleton className="rounded-lg w-80 h-8" />
+        {/* Line TabsList (h-10, full width, bottom border) */}
+        <div className="flex items-center border-b h-10">
+          <Skeleton className="w-72 h-4" />
+        </div>
         <div className="space-y-4 pt-4">
           <Card>
             <CardHeader>

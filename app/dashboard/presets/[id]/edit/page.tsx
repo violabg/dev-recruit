@@ -12,6 +12,8 @@ import { ArrowLeft } from "lucide-react";
 import { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { EditPresetSkeleton } from "../fallbacks";
 
 type EditPresetPageProps = {
   params: Promise<{
@@ -19,7 +21,22 @@ type EditPresetPageProps = {
   }>;
 };
 
-export default async function EditPresetPage({ params }: EditPresetPageProps) {
+/**
+ * Static shell: the route `params` are only read inside the Suspense
+ * boundary, so navigations into this page are instant (see
+ * https://nextjs.org/docs/messages/instant-shell-url-data).
+ */
+export default function EditPresetPage(
+  props: Parameters<typeof EditPresetContent>[0]
+) {
+  return (
+    <Suspense fallback={<EditPresetSkeleton />}>
+      <EditPresetContent {...props} />
+    </Suspense>
+  );
+}
+
+async function EditPresetContent({ params }: EditPresetPageProps) {
   const { id } = await params;
   const result = await getPresetAction(id);
 

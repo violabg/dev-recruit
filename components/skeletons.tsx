@@ -12,7 +12,7 @@
  *   rhythm matches.
  */
 import type { SectionKey } from "@/components/dashboard/sections";
-import { SectionTile } from "@/components/page-header";
+import { PAGE_TITLE_CLASS, SectionRule } from "@/components/page-header";
 import { SelectItem } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -180,9 +180,8 @@ export function PaginationSkeleton() {
 }
 
 /**
- * Mirrors <PageHeader>: optional section tile, text-3xl title (h-9 line),
- * optional description (text-sm, h-5) or info row (mt-2, gap-2), and the
- * action buttons row.
+ * Mirrors <PageHeader>: section rule, display title (38px line), optional
+ * description (text-base, h-6, mt-2), bottom divider or info row (mt-3), and the actions row.
  */
 export function PageHeaderSkeleton({
   title,
@@ -202,34 +201,32 @@ export function PageHeaderSkeleton({
   section?: SectionKey;
 }) {
   return (
-    <div className="flex md:flex-row flex-col md:justify-between md:items-start gap-4">
-      <div className="flex items-start gap-3 min-w-0">
-        {section && <SectionTile section={section} />}
-        <div className="min-w-0">
+    <div className="flex lg:flex-row flex-col lg:justify-between lg:items-end gap-4 mb-8 pb-6 border-b">
+      <div className="flex gap-4 min-w-0">
+        <SectionRule section={section} />
+        <div className="py-0.5 min-w-0">
           {title ? (
-            <h1 className="font-bold text-heading text-3xl text-balance tracking-tight">
-              {title}
-            </h1>
+            <h1 className={PAGE_TITLE_CLASS}>{title}</h1>
           ) : (
             <TextSkeleton
-              lineClassName="h-9"
+              lineClassName="h-10 lg:h-[2.875rem]"
               className={cn("h-7", titleClassName)}
             />
           )}
           {typeof description === "string" ? (
-            <p className="max-w-prose text-muted-foreground text-sm">
+            <p className="mt-2 max-w-prose text-muted-foreground text-base">
               {description}
             </p>
           ) : description ? (
-            <TextSkeleton lineClassName="h-5" className="w-72 h-3.5" />
+            <TextSkeleton lineClassName="mt-2 h-6" className="w-72 h-4" />
           ) : null}
           {info && (
-            <div className="flex flex-wrap items-center gap-2 mt-2">{info}</div>
+            <div className="flex flex-wrap items-center gap-2 mt-3">{info}</div>
           )}
         </div>
       </div>
       {actions && (
-        <div className="flex flex-wrap items-center gap-2 md:pt-1">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {actions}
         </div>
       )}

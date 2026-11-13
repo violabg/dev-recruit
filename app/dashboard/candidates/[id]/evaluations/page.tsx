@@ -6,8 +6,25 @@ import { getAllPositions } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { CandidateEvaluationsView } from "./evaluations-view";
+import { Suspense } from "react";
+import { CandidateEvaluationsSkeleton } from "../sub-page-fallbacks";
 
-export default async function CandidateEvaluationsPage({
+/**
+ * Static shell: the route `params` are only read inside the Suspense
+ * boundary, so navigations into this page are instant (see
+ * https://nextjs.org/docs/messages/instant-shell-url-data).
+ */
+export default function CandidateEvaluationsPage(
+  props: Parameters<typeof CandidateEvaluationsContent>[0]
+) {
+  return (
+    <Suspense fallback={<CandidateEvaluationsSkeleton />}>
+      <CandidateEvaluationsContent {...props} />
+    </Suspense>
+  );
+}
+
+async function CandidateEvaluationsContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -52,7 +69,7 @@ export default async function CandidateEvaluationsPage({
       </div>
 
       <div>
-        <h1 className="font-bold text-3xl">Valutazioni: {fullName}</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Valutazioni: {fullName}</h1>
         <p className="mt-1 text-muted-foreground">
           Valutazioni del curriculum per diverse posizioni
         </p>

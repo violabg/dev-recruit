@@ -15,6 +15,8 @@ import { Edit } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { PresetDetailSkeleton } from "./fallbacks";
 
 export async function generateStaticParams() {
   const presetIds = await getRecentPresetIds(100);
@@ -42,7 +44,22 @@ const formatBoolean = (value?: boolean | null) => {
   return value ? "Sì" : "No";
 };
 
-export default async function PresetDetailPage({
+/**
+ * Static shell: the route `params` are only read inside the Suspense
+ * boundary, so navigations into this page are instant (see
+ * https://nextjs.org/docs/messages/instant-shell-url-data).
+ */
+export default function PresetDetailPage(
+  props: Parameters<typeof PresetDetailContent>[0]
+) {
+  return (
+    <Suspense fallback={<PresetDetailSkeleton />}>
+      <PresetDetailContent {...props} />
+    </Suspense>
+  );
+}
+
+async function PresetDetailContent({
   params,
 }: PresetDetailPageProps) {
   const { id } = await params;

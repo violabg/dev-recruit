@@ -6,11 +6,28 @@ type PageHeaderProps = {
   description?: string;
   info?: React.ReactNode;
   actionBtns?: React.ReactNode;
-  /** Dashboard section this page belongs to: shows its tinted icon tile */
+  /** Dashboard section this page belongs to: colours the title rule */
   section?: SectionKey;
 };
 
-/** Tinted icon tile identifying a dashboard section (shared with skeletons). */
+/** Vertical rule in the section hue, spanning the title block. */
+export function SectionRule({ section }: { section?: SectionKey }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "rounded-full w-1.5 shrink-0 self-stretch",
+        section ? SECTIONS[section].rule : "bg-primary"
+      )}
+    />
+  );
+}
+
+/** Shared title styling (also used by PageHeaderSkeleton). */
+export const PAGE_TITLE_CLASS =
+  "font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]";
+
+/** Tinted icon tile identifying a dashboard section. */
 export function SectionTile({
   section,
   className,
@@ -23,7 +40,7 @@ export function SectionTile({
     <div
       aria-hidden
       className={cn(
-        "flex justify-center items-center rounded-lg ring-1 ring-inset size-9 shrink-0",
+        "flex justify-center items-center rounded-lg ring-1 ring-inset size-10 shrink-0",
         tile,
         text,
         className
@@ -42,25 +59,23 @@ const PageHeader = ({
   section,
 }: PageHeaderProps) => {
   return (
-    <div className="flex md:flex-row flex-col md:justify-between md:items-start gap-4">
-      <div className="flex items-start gap-3 min-w-0">
-        {section && <SectionTile section={section} />}
-        <div className="min-w-0">
-          <h1 className="font-bold text-heading text-3xl text-balance tracking-tight">
-            {title}
-          </h1>
+    <div className="flex lg:flex-row flex-col lg:justify-between lg:items-end gap-4 mb-8 pb-6 border-b">
+      <div className="flex gap-4 min-w-0">
+        <SectionRule section={section} />
+        <div className="py-0.5 min-w-0">
+          <h1 className={PAGE_TITLE_CLASS}>{title}</h1>
           {description && (
-            <p className="max-w-prose text-muted-foreground text-sm">
+            <p className="mt-2 max-w-prose text-muted-foreground text-base">
               {description}
             </p>
           )}
           {info && (
-            <div className="flex flex-wrap items-center gap-2 mt-2">{info}</div>
+            <div className="flex flex-wrap items-center gap-2 mt-3">{info}</div>
           )}
         </div>
       </div>
       {actionBtns && (
-        <div className="flex flex-wrap items-center gap-2 md:pt-1">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {actionBtns}
         </div>
       )}

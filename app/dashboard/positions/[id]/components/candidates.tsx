@@ -16,7 +16,7 @@ export default async function Candidates({ params }: Props) {
   return (
     <>
       <div className="flex justify-between">
-        <h2 className="font-semibold text-heading text-xl">Candidati</h2>
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">Candidati</h2>
         <Link
           href={`/dashboard/candidates/new?positionId=${id}`}
           className={`${buttonVariants({ variant: "default", size: "sm" })}`}

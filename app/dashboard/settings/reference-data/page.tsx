@@ -36,7 +36,7 @@ export default async function ReferenceDataPage() {
       />
 
       <Tabs defaultValue="programmingLanguage" className="space-y-6">
-        <TabsList>
+        <TabsList variant="line">
           {categories.map((cat) => (
             <TabsTrigger key={cat.value} value={cat.value}>
               {cat.label}
