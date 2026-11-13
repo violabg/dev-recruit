@@ -16,7 +16,7 @@ import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { type z } from "zod";
 
@@ -117,7 +117,7 @@ export function PresetForm({ preset }: PresetFormProps) {
     form.reset(defaultValues);
   }, [defaultValues, form, pathname]);
 
-  const questionType = form.watch("questionType");
+  const questionType = useWatch({ control: form.control, name: "questionType" });
 
   const onSubmit = (data: PresetFormValues) => {
     startTransition(async () => {

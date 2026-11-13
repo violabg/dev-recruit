@@ -1,4 +1,5 @@
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata, Viewport } from "next";
 import {
   Geist,
@@ -71,7 +72,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative min-h-dvh">{children}</div>
+          {/* shadcn: a single app-wide provider shares tooltip delay state */}
+          <TooltipProvider>
+            <div className="relative min-h-dvh">{children}</div>
+          </TooltipProvider>
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>

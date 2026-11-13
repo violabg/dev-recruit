@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import type React from "react";
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
 
 export default async function DashboardLayout({
   children,
@@ -36,7 +36,11 @@ export default async function DashboardLayout({
             </div>
           </div>
         </header>
-        <div className="p-4 h-full">{children}</div>
+        {/* React 19.3 View Transition: route navigations are Transitions, so the
+            content area cross-fades between pages (header/sidebar stay put). */}
+        <ViewTransition default="none" update="page-fade">
+          <div className="p-4 h-full">{children}</div>
+        </ViewTransition>
       </SidebarInset>
     </SidebarProvider>
   );

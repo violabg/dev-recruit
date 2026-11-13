@@ -10,7 +10,7 @@ import {
   type OverallEvaluation,
 } from "../schemas";
 import { aiLogger, logger } from "../services/logger";
-import { getOptimalModel, isDevelopment } from "../utils";
+import { FALLBACK_MODELS, getOptimalModel, isDevelopment } from "../utils";
 import { invalidateEvaluationCache } from "../utils/cache-utils";
 
 // PDF parsing using unpdf (serverless-compatible)
@@ -106,7 +106,7 @@ async function generateResumeEvaluation(
       seed: 42, // Fixed seed for reproducible results
       providerOptions: {
         groq: {
-          structuredOutputs: false, // Disable for preview models like KIMI
+          structuredOutputs: false, // JSON mode (works with every model in the fallback chain)
         },
       },
     });
@@ -122,7 +122,7 @@ async function generateResumeEvaluation(
     );
 
     // Fallback model
-    const fallbackModel = "llama-3.1-8b-instant";
+    const fallbackModel = FALLBACK_MODELS[0];
 
     const aiModel = groq(fallbackModel);
 

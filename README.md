@@ -2,10 +2,10 @@
 
 A modern, AI-powered technical recruitment platform built with Next.js 16 that streamlines the candidate assessment process through intelligent quiz generation, automated evaluations, and comprehensive candidate management.
 
-![Next.js](https://img.shields.io/badge/Next.js-16.0.4-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?style=flat-square&logo=typescript)
-![Prisma](https://img.shields.io/badge/Prisma-7.0.1-2D3748?style=flat-square&logo=prisma)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.17-38B2AC?style=flat-square&logo=tailwind-css)
+![Next.js](https://img.shields.io/badge/Next.js-16.4.6-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-7.0.2-blue?style=flat-square&logo=typescript)
+![Prisma](https://img.shields.io/badge/Prisma-7.10.1-2D3748?style=flat-square&logo=prisma)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3.5-38B2AC?style=flat-square&logo=tailwind-css)
 
 ## 🚀 Features
 
@@ -85,21 +85,21 @@ dev-recruit/
 
 | Category           | Technology                    |
 | ------------------ | ----------------------------- |
-| **Framework**      | Next.js 16 (App Router)       |
-| **Language**       | TypeScript 5.9                |
-| **Database**       | PostgreSQL (Neon) + Prisma 7  |
-| **AI/LLM**         | Groq API (Vercel AI SDK)      |
+| **Framework**      | Next.js 16.4 (App Router) + React 19.3 |
+| **Language**       | TypeScript 7 (native `tsc`; typescript-eslint uses the TS 6 API via `.pnpmfile.cjs`) |
+| **Database**       | PostgreSQL (Neon) + Prisma 7.10 (`pg` pool + `attachDatabasePool`) |
+| **AI/LLM**         | Groq API (Vercel AI SDK 7)    |
 | **Styling**        | Tailwind CSS 4 + OKLCH colors |
-| **UI Components**  | Radix UI + shadcn/ui          |
-| **Forms**          | React Hook Form + Zod v4      |
+| **UI Components**  | Base UI + shadcn/ui (base-nova) |
+| **Forms**          | React Hook Form 7.9 (`useWatch`) + Zod 4.6 (Italian locale) |
 | **Authentication** | Better Auth                   |
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have:
 
-- **Node.js** 20.x or later
-- **pnpm** 8.x or later (recommended)
+- **Node.js** 22.12+ or 24.x LTS (Prisma 7 requirement)
+- **pnpm** 10.x or later (build approvals live in `pnpm-workspace.yaml` → `allowBuilds`)
 - **PostgreSQL** database (Neon recommended)
 - **Groq API Key** for AI features
 

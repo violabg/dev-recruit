@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { BrainCircuit, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,7 @@ import {
   upsertQuizAction,
 } from "@/lib/actions/quizzes";
 import { quizGenerationConfigSchema } from "@/lib/schemas";
-import { LLM_MODELS } from "@/lib/utils";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -78,13 +78,16 @@ export const QuizForm = ({
       difficulty: 3,
       timeLimit: 30,
       enableTimeLimit: true,
-      specificModel: LLM_MODELS.KIMI,
+      specificModel: DEFAULT_GENERATION_MODEL,
     },
   });
 
-  const { control, handleSubmit, watch } = form;
+  const { control, handleSubmit } = form;
 
-  const enableTimeLimit = watch("enableTimeLimit");
+  const [enableTimeLimit, questionCount, difficulty, timeLimit] = useWatch({
+    control,
+    name: ["enableTimeLimit", "questionCount", "difficulty", "timeLimit"],
+  });
 
   async function onSubmit(values: FormData) {
     startTransition(async () => {
@@ -184,7 +187,7 @@ export const QuizForm = ({
         <SliderField
           control={control}
           name="questionCount"
-          label={`Numero di domande: ${watch("questionCount")}`}
+          label={`Numero di domande: ${questionCount}`}
           min={3}
           max={20}
           step={1}
@@ -196,7 +199,7 @@ export const QuizForm = ({
           name="difficulty"
           label={`Difficoltà: ${
             ["Molto facile", "Facile", "Media", "Difficile", "Molto difficile"][
-              watch("difficulty") - 1
+              difficulty - 1
             ]
           }`}
           min={1}
@@ -250,7 +253,7 @@ export const QuizForm = ({
         <SliderField
           control={control}
           name="timeLimit"
-          label={`Limite di tempo: ${watch("timeLimit")} minuti`}
+          label={`Limite di tempo: ${timeLimit} minuti`}
           min={5}
           max={120}
           step={5}
@@ -267,7 +270,7 @@ export const QuizForm = ({
             render={({ field, fieldState }) => (
               <>
                 <LLMModelSelect
-                  value={field.value || LLM_MODELS.KIMI}
+                  value={field.value || DEFAULT_GENERATION_MODEL}
                   onValueChange={field.onChange}
                 />
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}

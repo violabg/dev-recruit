@@ -9,37 +9,28 @@ import {
 } from "@/components/ui/select";
 import { LLM_MODELS } from "@/lib/utils";
 
+// Groq free-plan chat models (see LLM_MODELS in lib/utils.ts)
 const llmModelOptions = [
   {
-    value: LLM_MODELS.KIMI,
-    label: "🔬 Kimi K2 - 262K contesto (Raccomandato per quiz)",
-  },
-  {
-    value: LLM_MODELS.VERSATILE,
-    label: "🚀 Versatile - Llama 3.3 70B (Affidabile)",
-  },
-  {
-    value: LLM_MODELS.INSTANT,
-    label: "⚡ Instant - Llama 3.1 8B (Velocissimo)",
-  },
-  {
     value: LLM_MODELS.GPT_OSS_120B,
-    label: "🧠 GPT OSS 120B - Ragionamento + JSON Mode",
+    label: "🧠 GPT-OSS 120B - Ragionamento avanzato (Raccomandato)",
   },
   {
     value: LLM_MODELS.GPT_OSS_20B,
-    label: "💨 GPT OSS 20B - Ragionamento Veloce",
+    label: "⚡ GPT-OSS 20B - Veloce",
   },
   {
-    value: LLM_MODELS.MAVERICK,
-    label: "🎯 Maverick - Llama 4 17B (Sperimentale)",
-  },
-  { value: LLM_MODELS.SCOUT, label: "🏃 Scout - Llama 4 Scout 17B (Veloce)" },
-  {
-    value: LLM_MODELS.QWEN3_32B,
-    label: "🌟 Qwen3 32B - Multilingue (Alibaba)",
+    value: LLM_MODELS.QWEN3_8_27B,
+    label: "🌍 Qwen3.8 27B - Multilingue (Anteprima)",
   },
 ];
+
+// Guard against two LLM_MODELS keys pointing at the same model id
+// (duplicate <SelectItem> values/keys): keep the first occurrence.
+const uniqueModelOptions = llmModelOptions.filter(
+  (option, index, all) =>
+    all.findIndex((o) => o.value === option.value) === index,
+);
 
 type LLMModelSelectProps = {
   value: string;
@@ -58,9 +49,9 @@ export const LLMModelSelect = ({
           value: "",
           label: placeholder,
         },
-        ...llmModelOptions,
+        ...uniqueModelOptions,
       ]
-    : llmModelOptions;
+    : uniqueModelOptions;
   return (
     <Select
       items={options}

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, Loader2, Plus } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,17 @@ export function QuizSelectionForm({
     },
   });
 
-  const { control, watch } = form;
+  const { control } = form;
+  const selectedIds = useWatch({ control, name: "quizIds" });
+
+  // Derive the created links from the latest action result during render
+  const [prevFormState, setPrevFormState] = useState(formState);
+  if (formState !== prevFormState) {
+    setPrevFormState(formState);
+    if (formState.success) {
+      setCreatedLinks(formState.createdInterviews || []);
+    }
+  }
 
   useEffect(() => {
     if (formState.success) {
@@ -67,7 +77,6 @@ export function QuizSelectionForm({
         } interview links have been created successfully`,
       });
       form.reset();
-      setCreatedLinks(formState.createdInterviews || []);
       if (onSuccess) {
         onSuccess();
       }
@@ -112,7 +121,7 @@ export function QuizSelectionForm({
       ) : (
         <form action={formAction} className="space-y-6" noValidate>
           <input type="hidden" name="candidateId" value={candidateId} />
-          {watch("quizIds").map((quizId) => (
+          {selectedIds.map((quizId) => (
             <input key={quizId} type="hidden" name="quizIds" value={quizId} />
           ))}
 

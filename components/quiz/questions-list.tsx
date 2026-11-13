@@ -1,7 +1,7 @@
 "use client";
 
 import { questionSchemas } from "@/lib/schemas";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import * as z from "zod";
 import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
 import { QuestionTypeFilter } from "../../hooks/use-question-management";
@@ -38,7 +38,8 @@ export const QuestionsList = ({
   hasQuestionChanges,
   languageOptions,
 }: QuestionsListProps) => {
-  form.watch("questions");
+  // Re-render when any question changes (fine-grained subscription)
+  useWatch({ control: form.control, name: "questions" });
 
   if (filteredQuestions.length === 0) {
     return (

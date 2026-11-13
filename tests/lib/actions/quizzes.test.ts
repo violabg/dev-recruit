@@ -230,6 +230,7 @@ describe("quizzes actions", () => {
         positionTitle: "Frontend Developer",
         experienceLevel: "Mid",
         skills: ["React"],
+        quizTitle: "Test Quiz",
         difficulty: 3,
       });
 
@@ -239,6 +240,7 @@ describe("quizzes actions", () => {
         positionTitle: "Frontend Developer",
         experienceLevel: "Mid",
         skills: ["React"],
+        quizTitle: "Test Quiz",
         difficulty: 3,
       });
     });
@@ -260,6 +262,7 @@ describe("quizzes actions", () => {
         positionTitle: "JavaScript Developer",
         experienceLevel: "Senior",
         skills: ["JavaScript"],
+        quizTitle: "Test Quiz",
         difficulty: 4,
       });
 
@@ -285,6 +288,7 @@ describe("quizzes actions", () => {
         positionTitle: "Backend Developer",
         experienceLevel: "Senior",
         skills: ["Node.js"],
+        quizTitle: "Test Quiz",
         difficulty: 5,
       });
 
@@ -309,6 +313,7 @@ describe("quizzes actions", () => {
           positionTitle: "Developer",
           experienceLevel: "Mid",
           skills: ["JavaScript"],
+          quizTitle: "Test Quiz",
           difficulty: 3,
         }),
       ).rejects.toThrow();

@@ -294,7 +294,9 @@ export function sanitizeInput(input: string): string {
 
 ## Model Selection
 
-The system dynamically selects the optimal LLM model based on task type:
+Only models available on Groq's **free plan** are used (verified against the
+Groq models API, November 2026). All free chat models share the same limits
+(30 RPM · 1K RPD · 8K TPM · 200K TPD), so the strongest model is the default.
 
 ```typescript
 export const getOptimalModel = (
@@ -305,61 +307,49 @@ export const getOptimalModel = (
 
   switch (taskType) {
     case "quiz_generation":
-      return LLM_MODELS.KIMI; // 262K context, 16K output
     case "question_generation":
-      return LLM_MODELS.VERSATILE; // Reliable production model
     case "evaluation":
     case "overall_evaluation":
-      return LLM_MODELS.GPT_OSS_120B; // Reasoning + JSON Mode
     case "resume_evaluation":
-      return LLM_MODELS.KIMI; // Large context for full resume
+      return LLM_MODELS.GPT_OSS_120B; // Best reasoning + strict JSON schema
     case "simple_task":
-      return LLM_MODELS.INSTANT; // Fastest
+      return LLM_MODELS.GPT_OSS_20B; // ~2x faster for short free text
     default:
-      return LLM_MODELS.VERSATILE;
+      return LLM_MODELS.GPT_OSS_120B;
   }
 };
 ```
 
-### Available Models (December 2025)
+Forms default to `DEFAULT_GENERATION_MODEL` (GPT-OSS 120B). On failure the
+service retries with `FALLBACK_MODELS`: GPT-OSS 20B, then Qwen3.8 27B (a
+different model family with its own rate-limit bucket).
 
-#### Production Models
+### Available Models (Groq free plan, November 2026)
 
-| Model ID                       | Context | Output | Speed    | Best For                           |
-| ------------------------------ | ------- | ------ | -------- | ---------------------------------- |
-| `llama-3.3-70b-versatile`      | 131K    | 32K    | 280 tps  | Complex tasks, single question gen |
-| `llama-3.1-8b-instant`         | 131K    | 131K   | 560 tps  | Simple tasks, fast responses       |
-| `openai/gpt-oss-120b`          | 131K    | 65K    | 500 tps  | Evaluation, reasoning, JSON Mode   |
-| `openai/gpt-oss-20b`           | 131K    | 65K    | 1000 tps | Faster reasoning, fallback         |
-| `meta-llama/llama-guard-4-12b` | 131K    | 1K     | 1200 tps | Content moderation                 |
-| `groq/compound`                | 131K    | 8K     | 450 tps  | Agentic tasks with tools           |
-| `groq/compound-mini`           | 131K    | 8K     | 450 tps  | Lightweight agentic tasks          |
+| Model ID                       | Status     | Context | Output | Speed     | Used for                                   |
+| ------------------------------ | ---------- | ------- | ------ | --------- | ------------------------------------------ |
+| `openai/gpt-oss-120b`          | Production | 131K    | 65K    | ~500 tps  | Quiz/question generation, all evaluations  |
+| `openai/gpt-oss-20b`           | Production | 131K    | 65K    | ~1000 tps | Position descriptions, first fallback      |
+| `qwen/qwen3.8-27b`             | Preview    | 131K    | 16K    | ~450 tps  | Second fallback, selectable (multilingual) |
+| `whisper-large-v3-turbo`       | Production | -       | -      | -         | Interview audio transcription              |
+| `whisper-large-v3`             | Production | -       | -      | -         | Higher-accuracy transcription              |
+| `openai/gpt-oss-safeguard-20b` | Preview    | 131K    | 65K    | ~1000 tps | Moderation (available, not used yet)       |
+| `meta-llama/llama-prompt-guard-2-22m` / `-86m` | Preview | 512 | 512 | - | Prompt-injection detection (available, not used yet) |
 
-#### Preview Models (Evaluate before production)
-
-| Model ID                                        | Context | Output | Speed   | Best For                                |
-| ----------------------------------------------- | ------- | ------ | ------- | --------------------------------------- |
-| `meta-llama/llama-4-maverick-17b-128e-instruct` | 131K    | 8K     | 600 tps | Fast preview tasks                      |
-| `meta-llama/llama-4-scout-17b-16e-instruct`     | 131K    | 8K     | 750 tps | Fastest Llama 4                         |
-| `qwen/qwen3-32b`                                | 131K    | 40K    | 400 tps | Multilingual tasks                      |
-
-#### Audio Models
-
-| Model ID                 | Best For                 |
-| ------------------------ | ------------------------ |
-| `whisper-large-v3`       | Audio transcription      |
-| `whisper-large-v3-turbo` | Fast audio transcription |
+All three chat models support strict JSON-schema structured outputs.
+Removed (no longer on the free plan / discontinued): Llama 3.1/3.3/4, Llama Guard 4,
+Kimi K2, Qwen3 32B, Groq Compound, PlayAI TTS.
 
 ### Task-Model Mapping Rationale
 
-| Task Type             | Model        | Why                                               |
-| --------------------- | ------------ | ------------------------------------------------- |
-| `quiz_generation`     | KIMI         | 262K context for position + multi-question output |
-| `question_generation` | VERSATILE    | Reliable, 32K output sufficient for 1 question    |
-| `evaluation`          | GPT_OSS_120B | Native JSON Mode, reasoning capabilities          |
-| `overall_evaluation`  | GPT_OSS_120B | Structured assessment with detailed feedback      |
-| `resume_evaluation`   | KIMI         | 262K context for full resume + position match     |
-| `simple_task`         | INSTANT      | 560 tps, cheapest, fast responses                 |
+| Task Type             | Model        | Why                                                       |
+| --------------------- | ------------ | --------------------------------------------------------- |
+| `quiz_generation`     | GPT_OSS_120B | Many structured questions, 65K output, best reasoning     |
+| `question_generation` | GPT_OSS_120B | Distractor/code quality matters; same free limits as 20B  |
+| `evaluation`          | GPT_OSS_120B | Careful scoring with reliable JSON                        |
+| `overall_evaluation`  | GPT_OSS_120B | Structured assessment with detailed feedback              |
+| `resume_evaluation`   | GPT_OSS_120B | 131K context fits full resume + position                  |
+| `simple_task`         | GPT_OSS_20B  | Fastest model for short streamed text                     |
 
 ## Temperature Configuration
 
@@ -451,11 +441,7 @@ const DEFAULT_CONFIG = {
   maxRetries: 3,
   retryDelay: 1000, // 1s base, exponential: 1s, 2s, 4s
   timeout: 60000, // 60 seconds
-  fallbackModels: [
-    "llama-3.3-70b-versatile", // Production - reliable
-    "openai/gpt-oss-20b", // Production - fast reasoning
-    "llama-3.1-8b-instant", // Production - fastest
-  ],
+  fallbackModels: [...FALLBACK_MODELS], // gpt-oss-20b → qwen3.8-27b
 };
 ```
 
@@ -544,7 +530,7 @@ const result = await generateNewQuizAction({
   includeCodeSnippets: true,
   includeBehavioralScenarios: true,
   instructions: "Focus on React Hooks and TypeScript",
-  specificModel: "llama-3.3-70b-versatile",
+  specificModel: "openai/gpt-oss-120b",
 });
 
 // Result: { questions: Question[] }
@@ -557,7 +543,7 @@ const { handleGenerateQuestion } = useAIGeneration({ ... });
 
 // Multiple choice with focus areas
 await handleGenerateQuestion("multiple_choice", {
-  llmModel: "llama-3.3-70b-versatile",
+  llmModel: "openai/gpt-oss-120b",
   difficulty: 4,
   focusAreas: ["React Hooks", "State Management"],
   distractorComplexity: "complex",
@@ -565,7 +551,7 @@ await handleGenerateQuestion("multiple_choice", {
 
 // Code snippet with bug fixing
 await handleGenerateQuestion("code_snippet", {
-  llmModel: "llama-3.3-70b-versatile",
+  llmModel: "openai/gpt-oss-120b",
   difficulty: 4,
   language: "typescript",
   bugType: "security",
@@ -636,7 +622,7 @@ import { evaluateAnswer } from "@/lib/actions/evaluations";
 const result = await evaluateAnswer(
   question, // FlexibleQuestion
   candidateAnswer, // string
-  "llama-3.3-70b-versatile", // optional model override
+  "openai/gpt-oss-120b", // optional model override
 );
 
 // Result: { evaluation, score, strengths, weaknesses, maxScore }

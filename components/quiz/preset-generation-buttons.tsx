@@ -19,6 +19,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 
 export type Props = {
   onGeneratePreset: (
@@ -39,7 +40,7 @@ export function PresetGenerationButtons(props: Props) {
   const handlePresetClick = async (preset: Preset) => {
     await onGeneratePreset(preset.questionType as QuestionType, preset.id, {
       ...preset,
-      llmModel: "llama-3.3-70b-versatile",
+      llmModel: DEFAULT_GENERATION_MODEL,
     });
   };
 

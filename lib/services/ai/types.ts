@@ -4,6 +4,8 @@
  * Shared types and interfaces for the AI service modules.
  */
 
+import { FALLBACK_MODELS } from "../../utils";
+
 // AI-specific error types
 export class AIGenerationError extends Error {
   constructor(
@@ -34,17 +36,12 @@ export interface AIGenerationConfig {
   fallbackModels: string[];
 }
 
-// Default configuration
-// Updated: December 2025 - Synced with Groq documentation
+// Default configuration (Groq free-plan models, see LLM_MODELS)
 export const DEFAULT_CONFIG: AIGenerationConfig = {
   maxRetries: 3,
   retryDelay: 1000, // 1 second base delay
   timeout: 60000, // 60 seconds
-  fallbackModels: [
-    "llama-3.3-70b-versatile", // Production - reliable
-    "openai/gpt-oss-20b", // Production - fast reasoning
-    "llama-3.1-8b-instant", // Production - fastest
-  ],
+  fallbackModels: [...FALLBACK_MODELS],
 };
 
 // Quiz generation parameters

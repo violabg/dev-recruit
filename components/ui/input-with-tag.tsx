@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { Tag, TagInput } from "emblor";
-import { RefAttributes, useEffect, useId, useRef, useState } from "react";
+import { XIcon } from "lucide-react";
+import { RefAttributes, useId, useState } from "react";
 
 type Props = RefAttributes<HTMLInputElement> & {
   id?: string;
@@ -11,67 +11,98 @@ type Props = RefAttributes<HTMLInputElement> & {
   invalid?: boolean;
 };
 
-export default function InputWithTag(props: Props) {
-  const { id: propsId, onChange, value, invalid, ...rest } = props;
+/** Splits pasted/typed text into trimmed, non-empty tags. */
+const splitTags = (raw: string) =>
+  raw
+    .split(/[,\n]/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+/**
+ * Controlled tag input (Enter or "," adds a tag, Backspace on an empty
+ * field removes the last one, pasted lists are split on commas/newlines).
+ * Duplicates are ignored. Fully controlled by `value` / `onChange`.
+ */
+export default function InputWithTag({
+  id: propsId,
+  placeholder,
+  value,
+  onChange,
+  invalid,
+  ref,
+}: Props) {
   const generatedId = useId();
   const id = propsId || generatedId;
+  const tags = value ?? [];
+  const [draft, setDraft] = useState("");
 
-  const [tags, setTags] = useState<Tag[]>(
-    value?.map((tag) => ({ id: tag, text: tag })) || []
-  );
-  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
-
-  // Track if this is initial mount - skip notifying parent on mount
-  const isInitialMount = useRef(true);
-  // Store pending tags to notify parent about (after render completes)
-  const pendingNotify = useRef<Tag[] | null>(null);
-
-  const handleSetTags = (newTags: Tag[] | ((prev: Tag[]) => Tag[])) => {
-    setTags((prev) => {
-      const resolved = typeof newTags === "function" ? newTags(prev) : newTags;
-      // Schedule parent notification for after render
-      pendingNotify.current = resolved;
-      return resolved;
-    });
+  const addTags = (raw: string) => {
+    const next = [...tags];
+    for (const tag of splitTags(raw)) {
+      if (!next.includes(tag)) next.push(tag);
+    }
+    if (next.length !== tags.length) onChange(next);
+    setDraft("");
   };
 
-  // Notify parent after render completes (not during render)
-  useEffect(() => {
-    // Skip initial mount
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    // If we have pending changes, notify parent
-    if (pendingNotify.current !== null) {
-      onChange(pendingNotify.current.map((t) => t.text));
-      pendingNotify.current = null;
-    }
-  }, [tags, onChange]);
+  const removeTag = (index: number) =>
+    onChange(tags.filter((_, i) => i !== index));
 
   return (
-    <TagInput
-      id={id}
-      tags={tags}
-      setTags={handleSetTags}
-      placeholder={props.placeholder || "Aggiungi un tag..."}
-      styleClasses={{
-        inlineTagsContainer: cn(
-          "gap-1 bg-muted/50 hover:bg-muted/80 shadow-sm p-1 border border-transparent hover:border-ring/30 focus-within:border-ring/50 rounded-lg outline-none focus-within:ring-4 focus-within:ring-ring/20 transition-all",
-          invalid &&
-            "border-destructive focus-within:border-destructive focus-within:ring-destructive/20 focus-within:ring-[3px]"
-        ),
-        input:
-          "w-full min-w-[80px] shadow-none px-2 h-7 bg-transparent border-none focus:ring-0",
-        tag: {
-          body: "h-7 relative bg-secondary border border-none hover:bg-secondary rounded-md font-medium text-xs ps-2 pe-7 text-secondary-foreground transition-colors",
-          closeButton:
-            "absolute -inset-y-px -end-px p-0 rounded-e-md flex size-7 transition-all outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer items-center justify-center bg-transparent",
-        },
-      }}
-      activeTagIndex={activeTagIndex}
-      setActiveTagIndex={setActiveTagIndex}
-    />
+    <div
+      data-slot="input-with-tag"
+      data-invalid={invalid || undefined}
+      className={cn(
+        "flex flex-wrap items-center gap-1 rounded-lg border border-transparent bg-muted/50 p-1 shadow-sm transition-all outline-none focus-within:border-ring/50 focus-within:ring-4 focus-within:ring-ring/20 hover:border-ring/30 hover:bg-muted/80",
+        invalid &&
+          "border-destructive focus-within:border-destructive focus-within:ring-3 focus-within:ring-destructive/20",
+      )}
+    >
+      {tags.map((tag, index) => (
+        <span
+          key={tag}
+          data-slot="input-with-tag-chip"
+          className="relative flex h-7 items-center rounded-md bg-secondary ps-2 pe-7 text-xs font-medium text-secondary-foreground transition-colors"
+        >
+          {tag}
+          <button
+            type="button"
+            onClick={() => removeTag(index)}
+            aria-label={`Rimuovi ${tag}`}
+            className="absolute -inset-y-px -end-px flex size-7 cursor-pointer items-center justify-center rounded-e-md bg-transparent p-0 text-secondary-foreground/70 transition-all outline-none hover:bg-black/5 hover:text-secondary-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:hover:bg-white/5"
+          >
+            <XIcon className="size-3.5" />
+          </button>
+        </span>
+      ))}
+      <input
+        ref={ref}
+        id={id}
+        value={draft}
+        aria-invalid={invalid || undefined}
+        placeholder={placeholder || "Aggiungi un tag..."}
+        onChange={(e) => {
+          const next = e.target.value;
+          if (next.includes(",")) addTags(next);
+          else setDraft(next);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addTags(draft);
+          } else if (e.key === "Backspace" && draft === "" && tags.length) {
+            removeTag(tags.length - 1);
+          }
+        }}
+        onPaste={(e) => {
+          const text = e.clipboardData.getData("text");
+          if (/[,\n]/.test(text)) {
+            e.preventDefault();
+            addTags(draft + text);
+          }
+        }}
+        className="h-7 min-w-20 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground"
+      />
+    </div>
   );
 }

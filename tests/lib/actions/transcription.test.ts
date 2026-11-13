@@ -8,7 +8,7 @@ vi.mock("@ai-sdk/groq", () => ({
   },
 }));
 vi.mock("ai", () => ({
-  experimental_transcribe: vi.fn(),
+  transcribe: vi.fn(),
 }));
 vi.mock("../../../lib/services/logger", () => ({
   logger: {
@@ -28,8 +28,8 @@ describe("transcription action", () => {
 
   describe("transcribeAudioAction", () => {
     it("transcribes audio successfully", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       mockTranscribe.mockResolvedValueOnce({
         text: "This is the transcribed text from the audio file.",
@@ -51,8 +51,8 @@ describe("transcription action", () => {
     });
 
     it("handles empty audio data", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       mockTranscribe.mockResolvedValueOnce({
         text: "",
@@ -69,8 +69,8 @@ describe("transcription action", () => {
     });
 
     it("converts Blob to Uint8Array", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       mockTranscribe.mockResolvedValueOnce({
         text: "Test transcription",
@@ -88,8 +88,8 @@ describe("transcription action", () => {
     });
 
     it("returns error when transcription fails", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       mockTranscribe.mockRejectedValueOnce(
         new Error("Transcription service unavailable")
@@ -105,8 +105,8 @@ describe("transcription action", () => {
     });
 
     it("handles long audio files", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       const longText = "This is a very long transcription. ".repeat(100);
       mockTranscribe.mockResolvedValueOnce({
@@ -125,8 +125,8 @@ describe("transcription action", () => {
     });
 
     it("uses Groq Whisper model", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       mockTranscribe.mockResolvedValueOnce({
         text: "Test",
@@ -142,8 +142,8 @@ describe("transcription action", () => {
     });
 
     it("handles special characters in transcription", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       mockTranscribe.mockResolvedValueOnce({
         text: "Text with special chars: é, ñ, ü, @, #, $, %, &",
@@ -160,8 +160,8 @@ describe("transcription action", () => {
     });
 
     it("handles multi-language transcription", async () => {
-      const { experimental_transcribe } = await import("ai");
-      const mockTranscribe = experimental_transcribe as any;
+      const { transcribe } = await import("ai");
+      const mockTranscribe = transcribe as any;
 
       mockTranscribe.mockResolvedValueOnce({
         text: "English and Italian: Ciao, hello, buongiorno",

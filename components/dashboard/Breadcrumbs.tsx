@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import Link from "next/link";
+import { Fragment } from "react";
 import { usePathname } from "next/navigation";
 
 const DASHBOARD_LABELS: Record<string, string> = {
@@ -53,17 +54,20 @@ const Breadcrumbs = () => {
     const href = "/" + segments.slice(0, idx + 1).join("/");
     const isLast = idx === segments.length - 1;
     const isNewQuiz = segment === "quiz" && idx === 3;
+    // Separator is a sibling <li> of the item (valid list markup)
     return (
-      <BreadcrumbItem key={href}>
-        {isLast || isNewQuiz ? (
-          <BreadcrumbPage>{getBreadcrumbLabel(segment)}</BreadcrumbPage>
-        ) : (
-          <BreadcrumbLink render={<Link href={href as any} />}>
-            {getBreadcrumbLabel(segment)}
-          </BreadcrumbLink>
-        )}
+      <Fragment key={href}>
+        <BreadcrumbItem>
+          {isLast || isNewQuiz ? (
+            <BreadcrumbPage>{getBreadcrumbLabel(segment)}</BreadcrumbPage>
+          ) : (
+            <BreadcrumbLink render={<Link href={href as any} />}>
+              {getBreadcrumbLabel(segment)}
+            </BreadcrumbLink>
+          )}
+        </BreadcrumbItem>
         {!isLast && <BreadcrumbSeparator />}
-      </BreadcrumbItem>
+      </Fragment>
     );
   });
 

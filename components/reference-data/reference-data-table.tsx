@@ -30,7 +30,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+
+const noopSubscribe = () => () => {};
 import { toast } from "sonner";
 import { ReferenceDataForm } from "./reference-data-form";
 
@@ -54,16 +56,18 @@ export function ReferenceDataTable({
   const [editItem, setEditItem] = useState<Item | null>(null);
   // Local ordered state for drag & drop
   const [items, setItems] = useState<Item[]>(data);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
+  const [prevData, setPrevData] = useState<Item[]>(data);
+  if (data !== prevData) {
+    setPrevData(data);
     setItems(data);
-  }, [data]);
+  }
 
-  // Avoid SSR hydration mismatches by enabling DnD only after client mounts
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Avoid SSR hydration mismatches by enabling DnD only on the client
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
 
   // Sortable row component
   function SortableRow({ item }: { item: Item }) {

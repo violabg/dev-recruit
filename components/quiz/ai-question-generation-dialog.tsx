@@ -26,11 +26,11 @@ import {
 import { SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { QuestionType } from "@/lib/schemas";
-import { LLM_MODELS } from "@/lib/utils";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 const getDifficultyLabel = (value: number) => {
@@ -93,7 +93,7 @@ export const AIQuestionGenerationDialog = ({
   const form = useForm<GenerationFormData>({
     resolver: zodResolver(generationSchema),
     defaultValues: {
-      llmModel: LLM_MODELS.KIMI,
+      llmModel: DEFAULT_GENERATION_MODEL,
       difficulty: defaultDifficulty,
       distractorComplexity: "moderate",
       expectedResponseLength: "medium",
@@ -103,11 +103,12 @@ export const AIQuestionGenerationDialog = ({
       evaluationCriteria: [],
     },
   });
+  const difficulty = useWatch({ control: form.control, name: "difficulty" });
 
   useEffect(() => {
     if (open && questionType) {
       form.reset({
-        llmModel: LLM_MODELS.KIMI,
+        llmModel: DEFAULT_GENERATION_MODEL,
         difficulty: defaultDifficulty,
         distractorComplexity: "moderate",
         expectedResponseLength: "medium",
@@ -191,8 +192,8 @@ export const AIQuestionGenerationDialog = ({
               control={form.control}
               name="difficulty"
               label={`Livello di Difficoltà: ${
-                form.watch("difficulty")
-                  ? getDifficultyLabel(form.watch("difficulty")!)
+                difficulty
+                  ? getDifficultyLabel(difficulty)
                   : "Medio"
               }`}
               min={1}

@@ -7,6 +7,8 @@
 import {
   cn,
   formatDate,
+  DEFAULT_GENERATION_MODEL,
+  FALLBACK_MODELS,
   getAllAvailableModels,
   getInitials,
   getModelsByCategory,
@@ -175,39 +177,38 @@ describe("getStatusColor", () => {
 });
 
 describe("LLM_MODELS", () => {
-  it("should have all expected model keys", () => {
-    expect(LLM_MODELS.VERSATILE).toBe("llama-3.3-70b-versatile");
-    expect(LLM_MODELS.INSTANT).toBe("llama-3.1-8b-instant");
+  it("should only contain Groq free-plan models", () => {
     expect(LLM_MODELS.GPT_OSS_120B).toBe("openai/gpt-oss-120b");
-    expect(LLM_MODELS.KIMI).toBe("openai/gpt-oss-120b");
+    expect(LLM_MODELS.GPT_OSS_20B).toBe("openai/gpt-oss-20b");
+    expect(LLM_MODELS.QWEN3_8_27B).toBe("qwen/qwen3.8-27b");
   });
 
   it("should have whisper models", () => {
     expect(LLM_MODELS.WHISPER_LARGE_V3).toBe("whisper-large-v3");
     expect(LLM_MODELS.WHISPER_LARGE_V3_TURBO).toBe("whisper-large-v3-turbo");
   });
+
+  it("should not map two keys to the same model id", () => {
+    const ids = Object.values(LLM_MODELS);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
 });
 
 describe("getOptimalModel", () => {
-  it("should return KIMI for quiz_generation", () => {
-    expect(getOptimalModel("quiz_generation")).toBe(LLM_MODELS.KIMI);
+  it("should use GPT_OSS_120B for generation and evaluation tasks", () => {
+    for (const task of [
+      "quiz_generation",
+      "question_generation",
+      "evaluation",
+      "overall_evaluation",
+      "resume_evaluation",
+    ] as const) {
+      expect(getOptimalModel(task)).toBe(LLM_MODELS.GPT_OSS_120B);
+    }
   });
 
-  it("should return VERSATILE for question_generation", () => {
-    expect(getOptimalModel("question_generation")).toBe(LLM_MODELS.VERSATILE);
-  });
-
-  it("should return GPT_OSS_120B for evaluation tasks", () => {
-    expect(getOptimalModel("evaluation")).toBe(LLM_MODELS.GPT_OSS_120B);
-    expect(getOptimalModel("overall_evaluation")).toBe(LLM_MODELS.GPT_OSS_120B);
-  });
-
-  it("should return KIMI for resume_evaluation", () => {
-    expect(getOptimalModel("resume_evaluation")).toBe(LLM_MODELS.KIMI);
-  });
-
-  it("should return INSTANT for simple_task", () => {
-    expect(getOptimalModel("simple_task")).toBe(LLM_MODELS.INSTANT);
+  it("should use the faster GPT_OSS_20B for simple_task", () => {
+    expect(getOptimalModel("simple_task")).toBe(LLM_MODELS.GPT_OSS_20B);
   });
 
   it("should use specific model when provided", () => {
@@ -217,13 +218,22 @@ describe("getOptimalModel", () => {
   });
 });
 
+describe("FALLBACK_MODELS", () => {
+  it("should fall back to other free models, never the primary", () => {
+    expect(FALLBACK_MODELS).toEqual([
+      LLM_MODELS.GPT_OSS_20B,
+      LLM_MODELS.QWEN3_8_27B,
+    ]);
+    expect(FALLBACK_MODELS).not.toContain(DEFAULT_GENERATION_MODEL);
+  });
+});
+
 describe("getAllAvailableModels", () => {
   it("should return array of all models", () => {
     const models = getAllAvailableModels();
     expect(Array.isArray(models)).toBe(true);
-    expect(models.length).toBeGreaterThan(0);
-    expect(models).toContain(LLM_MODELS.VERSATILE);
-    expect(models).toContain(LLM_MODELS.INSTANT);
+    expect(models).toContain(LLM_MODELS.GPT_OSS_120B);
+    expect(models).toContain(LLM_MODELS.GPT_OSS_20B);
   });
 });
 
@@ -231,11 +241,8 @@ describe("getModelsByCategory", () => {
   it("should return models organized by category", () => {
     const categories = getModelsByCategory();
 
-    expect(categories.production).toBeDefined();
-    expect(categories.preview).toBeDefined();
-
-    expect(categories.production.text).toContain(LLM_MODELS.VERSATILE);
+    expect(categories.production.text).toContain(LLM_MODELS.GPT_OSS_120B);
     expect(categories.production.audio).toContain(LLM_MODELS.WHISPER_LARGE_V3);
-    expect(categories.preview.text).toContain(LLM_MODELS.KIMI);
+    expect(categories.preview.text).toContain(LLM_MODELS.QWEN3_8_27B);
   });
 });

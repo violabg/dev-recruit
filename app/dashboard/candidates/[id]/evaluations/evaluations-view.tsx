@@ -11,7 +11,7 @@ import GenerateEvaluationCard from "./generate-evaluation-card";
 import StreamingEvaluationCard from "./streaming-evaluation-card";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { parsePartialEvaluation } from "./streaming-utils";
 import type { Position } from "./types";
@@ -52,22 +52,22 @@ export function CandidateEvaluationsView({
     string | null
   >(null);
   const router = useRouter();
-  const prevEvaluationsLengthRef = useRef(initialEvaluations.length);
-  const isStreamingRef = useRef(false);
+  const [prevInitialEvaluations, setPrevInitialEvaluations] =
+    useState(initialEvaluations);
 
-  // Update evaluations when prop changes (after router.refresh())
-  useEffect(() => {
-    const prevLength = prevEvaluationsLengthRef.current;
-    const newLength = initialEvaluations.length;
-
+  // Sync local state when the prop changes (after router.refresh()).
+  // Adjusting state during render avoids an extra effect-driven render pass.
+  if (initialEvaluations !== prevInitialEvaluations) {
+    const hasNewEvaluation =
+      initialEvaluations.length > prevInitialEvaluations.length;
+    setPrevInitialEvaluations(initialEvaluations);
     setEvaluations(initialEvaluations);
 
     // Clear streaming state when new data arrives from server (new evaluation added)
-    if (isStreamingRef.current && newLength > prevLength) {
+    if (isGenerating && hasNewEvaluation) {
       setStreamingEvaluation(null);
       setStreamingPositionTitle(null);
       setIsGenerating(false);
-      isStreamingRef.current = false;
 
       // Expand the newly added evaluation (first one since sorted by createdAt desc)
       const newEval = initialEvaluations[0];
@@ -76,9 +76,7 @@ export function CandidateEvaluationsView({
         setNotes((prev) => ({ ...prev, [newEval.id]: newEval.notes ?? "" }));
       }
     }
-
-    prevEvaluationsLengthRef.current = newLength;
-  }, [initialEvaluations]);
+  }
 
   // Filter out positions that already have an evaluation
   const evaluatedPositionIds = new Set(
@@ -105,7 +103,6 @@ export function CandidateEvaluationsView({
     setStreamingPositionTitle(position?.title ?? "Valutazione");
     setStreamingEvaluation({});
     setIsGenerating(true);
-    isStreamingRef.current = true;
 
     try {
       const response = await fetch("/api/evaluations/stream", {
@@ -148,7 +145,6 @@ export function CandidateEvaluationsView({
       setStreamingEvaluation(null);
       setStreamingPositionTitle(null);
       setIsGenerating(false);
-      isStreamingRef.current = false;
     }
   }, [selectedPositionId, hasResume, positions, candidateId, router]);
 
