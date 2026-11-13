@@ -117,9 +117,9 @@ vi.mock("@/lib/auth-server", () => ({
   requireUser: vi.fn(() => ({ id: "user1" })),
 }));
 
-// Mock environment variables
-vi.mock("@/lib/env", () => ({
-  env: {
+// Mock environment variables (varlock's typed ENV proxy)
+vi.mock("varlock/env", () => ({
+  ENV: {
     DATABASE_URL: "postgresql://test:test@localhost:5432/test",
     GROQ_API_KEY: "test-api-key",
     BETTER_AUTH_SECRET: "test-secret",

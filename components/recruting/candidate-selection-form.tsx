@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, Loader2, Plus } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,17 @@ export function CandidateSelectionForm({
     },
   });
 
-  const { control, watch } = form;
+  const { control } = form;
+  const selectedIds = useWatch({ control, name: "candidateIds" });
+
+  // Derive the created links from the latest action result during render
+  const [prevFormState, setPrevFormState] = useState(formState);
+  if (formState !== prevFormState) {
+    setPrevFormState(formState);
+    if (formState.success) {
+      setCreatedLinks(formState.createdInterviews || []);
+    }
+  }
 
   useEffect(() => {
     if (formState.success) {
@@ -69,8 +79,6 @@ export function CandidateSelectionForm({
         } interview links have been created successfully`,
       });
       form.reset();
-      // Now we can use the candidate information directly from the server response
-      setCreatedLinks(formState.createdInterviews || []);
       if (onSuccess) {
         onSuccess(); // Consider if this is still needed with server-side revalidation
       }
@@ -116,7 +124,7 @@ export function CandidateSelectionForm({
       ) : (
         <form action={formAction} className="space-y-6" noValidate>
           <input type="hidden" name="quizId" value={quizId} />
-          {watch("candidateIds").map((candidateId) => (
+          {selectedIds.map((candidateId) => (
             <input
               key={candidateId}
               type="hidden"

@@ -90,7 +90,7 @@ function formatForDev(entry: LogEntry): string {
   const reset = "\x1b[0m";
 
   const coloredLevel = `${levelColors[level]}[${level.toUpperCase()}]${reset}`;
-  const timestamp = new Date().toLocaleTimeString();
+  const timestamp = new Date(entry.timestamp).toLocaleTimeString();
 
   let output = `${timestamp} ${coloredLevel} ${message}`;
 
@@ -130,7 +130,9 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
   if (!shouldLog(level)) return;
 
   const entry: LogEntry = {
-    timestamp: new Date().toISOString(),
+    // performance.* instead of `new Date()`: reading the current time during
+    // prerender is flagged by Cache Components; timing APIs are allowed.
+    timestamp: new Date(performance.timeOrigin + performance.now()).toISOString(),
     level,
     message,
   };

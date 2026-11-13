@@ -30,7 +30,7 @@ import { LLM_MODELS } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 const getDifficultyLabel = (value: number) => {
@@ -103,6 +103,7 @@ export const AIQuestionGenerationDialog = ({
       evaluationCriteria: [],
     },
   });
+  const difficulty = useWatch({ control: form.control, name: "difficulty" });
 
   useEffect(() => {
     if (open && questionType) {
@@ -191,8 +192,8 @@ export const AIQuestionGenerationDialog = ({
               control={form.control}
               name="difficulty"
               label={`Livello di Difficoltà: ${
-                form.watch("difficulty")
-                  ? getDifficultyLabel(form.watch("difficulty")!)
+                difficulty
+                  ? getDifficultyLabel(difficulty)
                   : "Medio"
               }`}
               min={1}

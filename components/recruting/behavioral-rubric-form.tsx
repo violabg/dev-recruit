@@ -10,7 +10,7 @@ import { upsertBehavioralRubricAction } from "@/lib/actions/behavioral-rubrics";
 import { behavioralRubricSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -63,13 +63,30 @@ export const BehavioralRubricForm = ({
     });
   };
 
+  const [
+    communicationScore,
+    collaborationScore,
+    problemSolvingScore,
+    cultureFitScore,
+    leadershipScore,
+  ] = useWatch({
+    control: form.control,
+    name: [
+      "communicationScore",
+      "collaborationScore",
+      "problemSolvingScore",
+      "cultureFitScore",
+      "leadershipScore",
+    ],
+  });
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <div className="gap-4 grid md:grid-cols-2">
         <SliderField
           control={form.control}
           name="communicationScore"
-          label={`Comunicazione: ${form.watch("communicationScore") ?? 3}`}
+          label={`Comunicazione: ${communicationScore ?? 3}`}
           min={1}
           max={5}
           step={1}
@@ -79,7 +96,7 @@ export const BehavioralRubricForm = ({
         <SliderField
           control={form.control}
           name="collaborationScore"
-          label={`Collaborazione: ${form.watch("collaborationScore") ?? 3}`}
+          label={`Collaborazione: ${collaborationScore ?? 3}`}
           min={1}
           max={5}
           step={1}
@@ -89,7 +106,7 @@ export const BehavioralRubricForm = ({
         <SliderField
           control={form.control}
           name="problemSolvingScore"
-          label={`Problem Solving: ${form.watch("problemSolvingScore") ?? 3}`}
+          label={`Problem Solving: ${problemSolvingScore ?? 3}`}
           min={1}
           max={5}
           step={1}
@@ -99,7 +116,7 @@ export const BehavioralRubricForm = ({
         <SliderField
           control={form.control}
           name="cultureFitScore"
-          label={`Culture Fit: ${form.watch("cultureFitScore") ?? 3}`}
+          label={`Culture Fit: ${cultureFitScore ?? 3}`}
           min={1}
           max={5}
           step={1}
@@ -110,7 +127,7 @@ export const BehavioralRubricForm = ({
       <SliderField
         control={form.control}
         name="leadershipScore"
-        label={`Leadership (opzionale): ${form.watch("leadershipScore") ?? "—"}`}
+        label={`Leadership (opzionale): ${leadershipScore ?? "—"}`}
         min={1}
         max={5}
         step={1}

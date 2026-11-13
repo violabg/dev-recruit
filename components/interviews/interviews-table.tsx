@@ -21,7 +21,6 @@ import { TableRowLink } from "@/components/ui/table-row-link";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { deleteInterview } from "@/lib/actions/interviews";
@@ -169,7 +168,6 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                           </Badge>
                         ))}
                         {interview.positionSkills.length > 3 && (
-                          <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger>
                                 <Badge variant="outline" className="text-xs">
@@ -186,7 +184,6 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                                 </div>
                               </TooltipContent>
                             </Tooltip>
-                          </TooltipProvider>
                         )}
                       </div>
                     </TableCell>
@@ -200,7 +197,6 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="z-10 relative text-right">
-                      <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger
                             render={
@@ -226,7 +222,6 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                               : "Copia link colloquio"}
                           </TooltipContent>
                         </Tooltip>
-                      </TooltipProvider>
                       <DeleteWithConfirm
                         deleteAction={async () => {
                           await deleteInterview(interview.id);

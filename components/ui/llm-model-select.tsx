@@ -10,9 +10,10 @@ import {
 import { LLM_MODELS } from "@/lib/utils";
 
 const llmModelOptions = [
+  // LLM_MODELS.KIMI is an alias of GPT_OSS_120B (default for quiz generation)
   {
-    value: LLM_MODELS.KIMI,
-    label: "🔬 Kimi K2 - 262K contesto (Raccomandato per quiz)",
+    value: LLM_MODELS.GPT_OSS_120B,
+    label: "🧠 GPT OSS 120B - Ragionamento + JSON Mode (Raccomandato per quiz)",
   },
   {
     value: LLM_MODELS.VERSATILE,
@@ -21,10 +22,6 @@ const llmModelOptions = [
   {
     value: LLM_MODELS.INSTANT,
     label: "⚡ Instant - Llama 3.1 8B (Velocissimo)",
-  },
-  {
-    value: LLM_MODELS.GPT_OSS_120B,
-    label: "🧠 GPT OSS 120B - Ragionamento + JSON Mode",
   },
   {
     value: LLM_MODELS.GPT_OSS_20B,
@@ -40,6 +37,13 @@ const llmModelOptions = [
     label: "🌟 Qwen3 32B - Multilingue (Alibaba)",
   },
 ];
+
+// Guard against two LLM_MODELS keys pointing at the same model id
+// (duplicate <SelectItem> values/keys): keep the first occurrence.
+const uniqueModelOptions = llmModelOptions.filter(
+  (option, index, all) =>
+    all.findIndex((o) => o.value === option.value) === index,
+);
 
 type LLMModelSelectProps = {
   value: string;
@@ -58,9 +62,9 @@ export const LLMModelSelect = ({
           value: "",
           label: placeholder,
         },
-        ...llmModelOptions,
+        ...uniqueModelOptions,
       ]
-    : llmModelOptions;
+    : uniqueModelOptions;
   return (
     <Select
       items={options}

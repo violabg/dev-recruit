@@ -12,6 +12,14 @@ This document provides a comprehensive reference for the Zod validation schemas 
 - [Conversion Utilities](#conversion-utilities)
 - [Usage Patterns](#usage-patterns)
 
+## Validation Messages Locale
+
+Zod is configured globally with the Italian locale (`z.config(z.locales.it())`) in
+`lib/zod-config.ts`, loaded once per runtime by `instrumentation.ts` (server) and
+`instrumentation-client.ts` (browser). Schemas without a custom message therefore
+produce Italian errors (e.g. `Input non valido: indirizzo email`). Custom messages
+defined in schemas still take precedence.
+
 ## Schema Overview
 
 ```mermaid

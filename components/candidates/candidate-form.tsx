@@ -132,10 +132,20 @@ export const CandidateForm = (props: CandidateFormProps) => {
     defaultValues: initialValues,
   });
 
-  useEffect(() => {
-    form.reset(initialValues);
+  // Reset local file state when the form source changes (adjust during render)
+  const [resetKey, setResetKey] = useState({ initialValues, pathname });
+  if (
+    resetKey.initialValues !== initialValues ||
+    resetKey.pathname !== pathname
+  ) {
+    setResetKey({ initialValues, pathname });
     setSelectedFile(null);
     setRemoveExistingResume(false);
+  }
+
+  // Sync react-hook-form (external store) with the latest initial values
+  useEffect(() => {
+    form.reset(initialValues);
   }, [form, initialValues, pathname]);
 
   const handleFileSelect = (file: File | null) => {

@@ -19,7 +19,7 @@ import {
   createOpenQuestionParams,
 } from "@/lib/utils/question-prompt-helpers";
 import { generateId } from "ai";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { EditQuizFormData } from "./use-edit-quiz-form";
@@ -368,13 +368,10 @@ export const useAIGeneration = ({
 
   const setRegeneratingIndex = (index: number | null) => {
     setRegeneratingQuestionIndex(index);
+    if (index !== null) {
+      setGeneratingQuestionType(fields[index]?.type || null);
+    }
   };
-
-  useEffect(() => {
-    if (regeneratingQuestionIndex === null) return;
-    const questioType = fields[regeneratingQuestionIndex]?.type || null;
-    setGeneratingQuestionType(questioType);
-  }, [regeneratingQuestionIndex, fields]);
 
   return {
     aiLoading,

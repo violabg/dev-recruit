@@ -379,6 +379,7 @@ describe("AIQuizService", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
       });
 
       expect(mockGenerateObject).toHaveBeenCalled();
@@ -404,6 +405,7 @@ describe("AIQuizService", () => {
         includeMultipleChoice: true,
         includeOpenQuestions: false,
         includeCodeSnippets: false,
+        includeBehavioralScenarios: false,
       });
 
       expect(mockGenerateObject).toHaveBeenCalled();
@@ -429,6 +431,7 @@ describe("AIQuizService", () => {
           includeMultipleChoice: true,
           includeOpenQuestions: false,
           includeCodeSnippets: false,
+          includeBehavioralScenarios: false,
         }),
       ).rejects.toThrow();
     });
@@ -453,6 +456,7 @@ describe("AIQuizService", () => {
           includeMultipleChoice: true,
           includeOpenQuestions: false,
           includeCodeSnippets: false,
+          includeBehavioralScenarios: false,
         });
         expect.fail("Should have thrown");
       } catch (error: any) {

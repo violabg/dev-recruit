@@ -336,6 +336,7 @@ describe("buildQuizPrompt", () => {
       includeMultipleChoice: true,
       includeOpenQuestions: true,
       includeCodeSnippets: true,
+      includeBehavioralScenarios: false,
       instructions: "Focus on advanced patterns",
     };
 
@@ -364,6 +365,7 @@ describe("buildQuizPrompt", () => {
       includeMultipleChoice: true,
       includeOpenQuestions: false,
       includeCodeSnippets: false,
+      includeBehavioralScenarios: false,
     };
 
     const prompt = buildQuizPrompt(params);
@@ -387,6 +389,7 @@ describe("buildQuizPrompt", () => {
       includeMultipleChoice: true,
       includeOpenQuestions: false,
       includeCodeSnippets: false,
+      includeBehavioralScenarios: false,
       previousQuestions: [
         { question: "What is a list comprehension?" },
         { question: "Explain decorators in Python" },

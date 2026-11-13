@@ -75,6 +75,22 @@ async function getCachedData() {
 }
 ```
 
+### Partial Prefetching (Next.js 16.3+)
+
+`next.config.ts` sets `partialPrefetching: true` alongside `cacheComponents: true`.
+`<Link>` now prefetches each route's **App Shell** (static + URL-independent cached
+content), shared by every link to that route. The app has no `prefetch={true}` links,
+so no legacy full-prefetch behavior needed migrating. Both options become the default
+in the next Next.js major.
+
+Prerender rules to keep in mind:
+
+- Don't read the current time (`new Date()`, `Date.now()`) in code that runs during
+  prerender. `lib/services/logger.ts` builds timestamps from
+  `performance.timeOrigin + performance.now()` for this reason.
+- Dashboard navigations cross-fade via React 19.3 `<ViewTransition>` in
+  `app/dashboard/layout.tsx` (`page-fade` class in `app/globals.css`).
+
 ### Cache Lifetime Configuration
 
 Use `cacheLife()` to set cache duration:

@@ -1,6 +1,13 @@
 "use client";
 import { Clock } from "lucide-react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useState,
+  useSyncExternalStore,
+} from "react";
+
+const noopSubscribe = () => () => {};
 
 interface InterviewTimerProps {
   timeRemaining: number | null;
@@ -23,41 +30,53 @@ export function InterviewTimer({
   onTimeExpired,
   totalTimeSeconds,
 }: InterviewTimerProps) {
-  const [hydrationComplete, setHydrationComplete] = useState(false);
-
-  // Set hydration flag on client-side after mount to show timer
-  // Defer state update to avoid cascading render warning
-  useLayoutEffect(() => {
-    Promise.resolve().then(() => {
-      setHydrationComplete(true);
-    });
-  }, []);
+  // true on the client after hydration, false during SSR — avoids mismatches
+  const hydrationComplete = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
 
   // Timer countdown effect
   const [displayTime, setDisplayTime] = useState<number | null>(timeRemaining);
+  const [prevTimeRemaining, setPrevTimeRemaining] = useState(timeRemaining);
 
-  // Update display time when timeRemaining changes
-  useEffect(() => {
+  // Update display time when timeRemaining changes (adjust state during render)
+  if (timeRemaining !== prevTimeRemaining) {
+    setPrevTimeRemaining(timeRemaining);
     setDisplayTime(timeRemaining);
-  }, [timeRemaining]);
+  }
 
-  // Timer interval for countdown
+  // Effect Event: always calls the latest `onTimeExpired` without making the
+  // countdown effect re-subscribe when the parent passes a new callback.
+  const onExpire = useEffectEvent(() => {
+    onTimeExpired();
+  });
+
+  const isRunning =
+    displayTime !== null &&
+    displayTime > 0 &&
+    isStarted &&
+    !isCompleted &&
+    !isTimeExpired;
+
+  // Single interval for the whole countdown (not recreated every tick)
   useEffect(() => {
-    if (!displayTime || !isStarted || isCompleted || isTimeExpired) return;
+    if (!isRunning) return;
 
     const timer = setInterval(() => {
-      setDisplayTime((prev) => {
-        if (prev === null || prev <= 1) {
-          clearInterval(timer);
-          onTimeExpired();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setDisplayTime((prev) => (prev === null ? prev : Math.max(prev - 1, 0)));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [displayTime, isStarted, isCompleted, isTimeExpired, onTimeExpired]);
+  }, [isRunning]);
+
+  // Notify the parent once when the countdown reaches zero
+  useEffect(() => {
+    if (displayTime === 0 && isStarted && !isCompleted && !isTimeExpired) {
+      onExpire();
+    }
+  }, [displayTime, isStarted, isCompleted, isTimeExpired]);
 
   const formatTimeRemaining = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
