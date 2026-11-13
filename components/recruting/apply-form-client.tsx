@@ -4,37 +4,32 @@ import { PositionDetailCardClient } from "@/components/positions/position-detail
 import { Card, CardContent } from "@/components/ui/card";
 import { fetchPositionData } from "@/lib/actions/positions";
 import type { Position } from "@/lib/prisma/client";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { PositionDetailSkeleton } from "../positions/position-detail-skeleton";
 
 type ApplyFormClientProps = {
   positions: { id: string; title: string }[];
   defaultPositionId?: string;
+  /** Details of the preselected position, loaded (cached) on the server */
+  defaultPosition?: Position | null;
 };
 
 export function ApplyFormClient({
   positions,
   defaultPositionId,
+  defaultPosition,
 }: ApplyFormClientProps) {
   const [selectedPositionIds, setSelectedPositionIds] = useState<string[]>(
     defaultPositionId ? [defaultPositionId] : []
   );
+  // Seeded from the server render: no client fetch waterfall on mount.
   const [positionsData, setPositionsData] = useState<Record<string, Position>>(
-    {}
+    () =>
+      defaultPositionId && defaultPosition
+        ? { [defaultPositionId]: defaultPosition }
+        : {}
   );
   const [isPending, startTransition] = useTransition();
-
-  // Fetch data for default position on mount
-  useEffect(() => {
-    if (defaultPositionId && !positionsData[defaultPositionId]) {
-      startTransition(async () => {
-        const data = await fetchPositionData(defaultPositionId);
-        if (data) {
-          setPositionsData((prev) => ({ ...prev, [defaultPositionId]: data }));
-        }
-      });
-    }
-  }, [defaultPositionId, positionsData]);
 
   const handlePositionSelect = (values: string[]) => {
     setSelectedPositionIds(values);

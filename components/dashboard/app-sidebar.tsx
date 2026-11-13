@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { NavMain } from "@/components/dashboard/nav-main";
+import { NavMain, NavMainFallback } from "@/components/dashboard/nav-main";
 import { NavUser } from "@/components/dashboard/nav-user";
 import {
   Sidebar,
@@ -21,7 +21,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -92,18 +91,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="">
-        <Suspense
-          fallback={
-            <div className="space-y-3 mt-4 p-2">
-              {data.navSecondary.map((_, idx) => (
-                <Skeleton
-                  key={idx}
-                  className="bg-foreground/10 rounded w-full h-8"
-                />
-              ))}
-            </div>
-          }
-        >
+        <Suspense fallback={<NavMainFallback items={data.navSecondary} />}>
           <NavMain items={data.navSecondary} />
         </Suspense>
       </SidebarContent>

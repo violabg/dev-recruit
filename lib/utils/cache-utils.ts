@@ -9,6 +9,13 @@
  * - Server Actions: Use the standard functions (invalidateQuizCache, etc.)
  * - Route Handlers: Use the *InRouteHandler variants (invalidateEvaluationCacheInRouteHandler, etc.)
  *
+ * TAGGING RULE (prevents stale data):
+ * Every cached read must `cacheTag()` the collection tag of EVERY entity it
+ * reads, including joined/included relations (e.g. a candidate list that
+ * includes interview status is tagged CANDIDATES + INTERVIEWS + POSITIONS).
+ * Mutations then only invalidate their own entity's tags, and deletes pass
+ * `deleted: true` so collections removed by DB cascades are expired too.
+ *
  * @see docs/CACHE_IMPLEMENTATION.md for caching strategy details
  */
 
@@ -66,6 +73,33 @@ export const entityTag = {
   preset: (id: string) => `preset-${id}`,
 } as const;
 
+/**
+ * Collections whose rows are removed by an `onDelete: Cascade` when a parent
+ * entity is deleted (see prisma/schema.prisma). Deleting the parent must also
+ * expire every cached read of these collections, otherwise lists and counts
+ * keep showing rows that no longer exist.
+ */
+const CASCADE_ON_DELETE = {
+  position: [
+    CacheTags.QUIZZES,
+    CacheTags.INTERVIEWS,
+    CacheTags.EVALUATIONS,
+    CacheTags.CANDIDATES,
+    CacheTags.BEHAVIORAL_RUBRICS,
+  ],
+  quiz: [CacheTags.INTERVIEWS, CacheTags.EVALUATIONS],
+  candidate: [
+    CacheTags.INTERVIEWS,
+    CacheTags.EVALUATIONS,
+    CacheTags.BEHAVIORAL_RUBRICS,
+  ],
+  interview: [CacheTags.EVALUATIONS],
+} as const;
+
+function expireTags(tags: readonly string[]) {
+  for (const tag of tags) updateTag(tag);
+}
+
 // ============================================================================
 // Quiz Cache Invalidation
 // ============================================================================
@@ -76,9 +110,15 @@ export const entityTag = {
 export function invalidateQuizCache(options?: {
   quizId?: string;
   positionId?: string;
+  /** Quiz was deleted: also expire cascaded interviews/evaluations */
+  deleted?: boolean;
 }) {
   updateTag(CacheTags.QUIZZES);
   updateTag(CacheTags.QUESTIONS);
+
+  if (options?.deleted) {
+    expireTags(CASCADE_ON_DELETE.quiz);
+  }
 
   if (options?.quizId) {
     updateTag(entityTag.quiz(options.quizId));
@@ -131,8 +171,18 @@ export function invalidateQuestionCache(options?: {
 /**
  * Invalidate position cache after create/update/delete operations
  */
-export function invalidatePositionCache(positionId?: string) {
+export function invalidatePositionCache(
+  positionId?: string,
+  options?: {
+    /** Position was deleted: also expire cascaded quizzes/interviews/etc. */
+    deleted?: boolean;
+  },
+) {
   updateTag(CacheTags.POSITIONS);
+
+  if (options?.deleted) {
+    expireTags(CASCADE_ON_DELETE.position);
+  }
 
   if (positionId) {
     updateTag(entityTag.position(positionId));
@@ -154,8 +204,14 @@ export function invalidateCandidateCache(options?: {
   candidateId?: string;
   positionId?: string;
   positionIds?: string[];
+  /** Candidate was deleted: also expire cascaded interviews/evaluations/rubrics */
+  deleted?: boolean;
 }) {
   updateTag(CacheTags.CANDIDATES);
+
+  if (options?.deleted) {
+    expireTags(CASCADE_ON_DELETE.candidate);
+  }
 
   if (options?.candidateId) {
     updateTag(entityTag.candidate(options.candidateId));
@@ -193,8 +249,14 @@ export function invalidateReferenceDataCache(category?: string) {
 export function invalidateInterviewCache(options?: {
   interviewId?: string;
   quizId?: string;
+  /** Interview(s) deleted: also expire cascaded evaluations */
+  deleted?: boolean;
 }) {
   updateTag(CacheTags.INTERVIEWS);
+
+  if (options?.deleted) {
+    expireTags(CASCADE_ON_DELETE.interview);
+  }
 
   if (options?.interviewId) {
     updateTag(entityTag.interview(options.interviewId));

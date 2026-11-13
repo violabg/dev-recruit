@@ -42,7 +42,7 @@ export default async function Home() {
                 </div>
                 <div className="flex min-[400px]:flex-row flex-col items-center gap-2">
                   <ThemeToggle />
-                  <Suspense fallback={<Skeleton className="w-32 h-10" />}>
+                  <Suspense fallback={<Skeleton className="rounded-lg w-36 h-9" />}>
                     <StartButton />
                   </Suspense>
                 </div>

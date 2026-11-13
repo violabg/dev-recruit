@@ -6,7 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getPositionsForSelect } from "@/lib/data/positions";
+import {
+  getPositionById,
+  getPositionsForSelect,
+} from "@/lib/data/positions";
 import { Suspense } from "react";
 import { ApplyFormSkeleton } from "./fallbacks";
 
@@ -87,6 +90,9 @@ async function ApplyFormContent({ searchParams }: PageProps) {
     <ApplyFormClient
       positions={positions}
       defaultPositionId={validPositionId}
+      defaultPosition={
+        validPositionId ? await getPositionById(validPositionId) : null
+      }
     />
   );
 }

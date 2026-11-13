@@ -1,76 +1,82 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaginationSkeleton, TableSkeleton, TextSkeleton } from "@/components/skeletons";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { STATUS_CONFIG } from "./runtime-section";
 
+/** Mirrors Stats: static status labels/icons, only the counts are skeletons. */
 export const StatsFallback = () => (
   <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-    {Array.from({ length: 4 }).map((_, index) => (
-      <Card key={index} className="animate-pulse">
-        <CardHeader className="flex flex-row justify-between items-center pb-2">
-          <CardTitle>
-            <Skeleton className="w-20 h-4" />
-          </CardTitle>
-          <Skeleton className="size-4" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="mb-2 w-16 h-8" />
-          <Skeleton className="w-24 h-3" />
-        </CardContent>
-      </Card>
-    ))}
+    {Object.entries(STATUS_CONFIG).map(([key, config]) => {
+      const Icon = config.icon;
+      return (
+        <Card key={key}>
+          <CardHeader className="flex flex-row justify-between items-center space-y-0 pb-2">
+            <CardTitle className="font-medium text-sm">{config.label}</CardTitle>
+            <Icon className={`h-4 w-4 ${config.color}`} />
+          </CardHeader>
+          <CardContent>
+            <TextSkeleton lineClassName="h-8" className="w-10 h-7" />
+            <p className="text-muted-foreground text-xs">colloqui</p>
+          </CardContent>
+        </Card>
+      );
+    })}
   </div>
 );
 
+/** Mirrors SearchAndFilterInterviews: search + wrapped [status, position, language]. */
 export const FiltersSkeleton = () => (
   <div className="flex sm:flex-row flex-col gap-4">
-    <Skeleton className="flex-1 h-10" />
+    <Skeleton className="flex-1 rounded-lg h-9" />
     <div className="flex flex-wrap gap-4">
-      <Skeleton className="w-[153px] h-10" />
-      <Skeleton className="w-[183px] h-10" />
-      <Skeleton className="w-[172px] h-10" />
+      <Skeleton className="rounded-lg w-[153px] h-9" />
+      <Skeleton className="rounded-lg w-[183px] h-9" />
+      <Skeleton className="rounded-lg w-[172px] h-9" />
     </div>
   </div>
 );
 
+/** Mirrors InterviewsRuntimeSection: count line + "Lista Colloqui" table card. */
 export const InterviewsSkeleton = () => (
   <>
-    {/* Summary Line */}
-    <div className="flex items-center gap-2">
-      <Skeleton className="w-32 h-4" />
-      <Skeleton className="rounded-full w-20 h-5" />
-      <Skeleton className="rounded-full w-24 h-5" />
+    <div className="flex justify-between items-center">
+      <TextSkeleton className="w-32" />
     </div>
-
-    {/* Table Card */}
-    <Card className="animate-pulse">
+    <Card>
       <CardHeader>
-        <CardTitle>
-          <Skeleton className="w-32 h-5" />
-        </CardTitle>
-        <div className="space-y-2">
-          <Skeleton className="w-full max-w-md h-4" />
-        </div>
+        <CardTitle>Lista Colloqui</CardTitle>
+        <CardDescription>
+          Visualizza tutti i colloqui con le relative informazioni e gestisci
+          i link di invito
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-4">
         <div className="space-y-4">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center py-2 last:border-0 border-b"
-            >
-              <div className="space-y-2">
-                <Skeleton className="w-40 h-4" />
-                <Skeleton className="w-32 h-3" />
-              </div>
-              <div className="flex gap-4">
-                <Skeleton className="rounded-full w-24 h-6" />
-                <Skeleton className="w-20 h-4" />
-              </div>
-            </div>
-          ))}
+          <TableSkeleton
+            rows={5}
+            columns={[
+              { header: "Candidato" },
+              { header: "Quiz" },
+              { header: "Posizione" },
+              { header: "Competenze", cell: "badge" },
+              { header: "Stato", cell: "badge" },
+              {
+                header: "Azioni",
+                headClassName: "text-right",
+                cell: "action",
+                cellClassName: "text-right",
+                actionCount: 2,
+              },
+            ]}
+          />
         </div>
-        <div className="flex justify-end pt-4">
-          <Skeleton className="w-64 h-10" />
-        </div>
+        <PaginationSkeleton />
       </CardContent>
     </Card>
   </>

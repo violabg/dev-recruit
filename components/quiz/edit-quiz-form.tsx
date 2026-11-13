@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Preset } from "@/lib/data/presets";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { cn, DEFAULT_GENERATION_MODEL } from "@/lib/utils";
@@ -46,6 +47,8 @@ type EditQuizFormProps = {
   mode?: "edit" | "create";
   onSaveSuccess?: (result?: SaveQuizResult) => void;
   languageOptions?: React.ReactNode;
+  /** Un-awaited server promise of presets (see getAllPresets) */
+  presetsPromise: Promise<Preset[]>;
 };
 
 export function EditQuizForm({
@@ -54,6 +57,7 @@ export function EditQuizForm({
   mode = "edit",
   onSaveSuccess,
   languageOptions,
+  presetsPromise,
 }: EditQuizFormProps) {
   const router = useRouter();
 
@@ -209,6 +213,7 @@ export function EditQuizForm({
               <PresetGenerationButtons
                 onGeneratePreset={handleGeneratePreset}
                 loading={aiLoading}
+                presetsPromise={presetsPromise}
               />
 
               <div className="space-y-6">

@@ -1,43 +1,66 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  BadgeSkeleton,
+  ButtonSkeleton,
+  PageHeaderSkeleton,
+  TextSkeleton,
+} from "@/components/skeletons";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+/** Mirrors CandidateHeader (PageHeader with status/position badges + 5 actions). */
 export function CandidateHeaderSkeleton() {
   return (
-    <div className="flex justify-between items-center">
-      <div>
-        <Skeleton className="mb-2 w-64 h-10" />
-        <div className="flex items-center gap-2">
-          <Skeleton className="w-20 h-6" />
-          <Skeleton className="w-28 h-6" />
-          <Skeleton className="w-40 h-4" />
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Skeleton className="w-28 h-10" />
-        <Skeleton className="w-24 h-10" />
-        <Skeleton className="w-10 h-10" />
-      </div>
-    </div>
+    <PageHeaderSkeleton
+      info={
+        <>
+          <BadgeSkeleton className="w-20" />
+          <BadgeSkeleton className="w-28" />
+          <TextSkeleton className="w-44" />
+        </>
+      }
+      actions={
+        <>
+          <ButtonSkeleton className="w-28" />
+          <ButtonSkeleton className="w-28" />
+          <ButtonSkeleton className="w-44" />
+          <ButtonSkeleton className="w-24" />
+          <ButtonSkeleton size="sm" />
+        </>
+      }
+    />
   );
 }
 
+const DETAIL_LABELS = [
+  "Nome",
+  "Cognome",
+  "Email",
+  "Data di nascita",
+  "Stato",
+  "Posizioni",
+];
+
+/** Mirrors CandidateDetailsContent: real labels, skeleton values. */
 export function CandidateDetailsSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <Skeleton className="w-40 h-6" />
+        <CardTitle>Dettagli Candidato</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="gap-4 grid md:grid-cols-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i}>
-              <Skeleton className="mb-2 w-24 h-4" />
-              <Skeleton className="w-32 h-5" />
+          {DETAIL_LABELS.map((label) => (
+            <div key={label}>
+              <div className="font-semibold">{label}</div>
+              {label === "Stato" ? (
+                <BadgeSkeleton className="w-20" />
+              ) : (
+                <TextSkeleton lineClassName="h-6" className="w-36 h-4" />
+              )}
             </div>
           ))}
           <div className="md:col-span-2">
-            <Skeleton className="mb-2 w-24 h-4" />
-            <Skeleton className="w-40 h-5" />
+            <div className="font-semibold">Curriculum</div>
+            <TextSkeleton lineClassName="h-6" className="w-44 h-4" />
           </div>
         </div>
       </CardContent>
@@ -45,24 +68,25 @@ export function CandidateDetailsSkeleton() {
   );
 }
 
+/** Mirrors CandidateInterviewsContent rows (status + date | score). */
 export function CandidateInterviewsSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <Skeleton className="w-24 h-6" />
+        <CardTitle>Colloqui</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {Array.from({ length: 2 }).map((_, i) => (
+          {Array.from({ length: 2 }, (_, i) => (
             <div
               key={i}
-              className="flex justify-between items-center pb-2 border-b last:border-b-0"
+              className="flex justify-between items-center pb-2 last:pb-0 border-b last:border-b-0"
             >
               <div>
-                <Skeleton className="mb-1 w-24 h-5" />
-                <Skeleton className="w-32 h-4" />
+                <TextSkeleton lineClassName="h-6" className="w-24 h-4" />
+                <TextSkeleton className="w-36" />
               </div>
-              <Skeleton className="w-28 h-5" />
+              <TextSkeleton lineClassName="h-6" className="w-28 h-4" />
             </div>
           ))}
         </div>

@@ -227,7 +227,7 @@ export async function updateCandidate(
           },
         });
         // Invalidate interview cache since we deleted interviews
-        invalidateInterviewCache();
+        invalidateInterviewCache({ deleted: true });
       } catch (deleteError) {
         storageLogger.error(
           "Failed to delete interviews for removed positions",
@@ -338,13 +338,12 @@ export async function deleteCandidate(id: string) {
 
   await prisma.candidate.delete({ where: { id } });
 
+  // deleted: true expires interviews/evaluations/rubrics removed by cascade
   invalidateCandidateCache({
     candidateId: id,
     positionIds: candidate.positions.map((p) => p.positionId),
+    deleted: true,
   });
-
-  // Invalidate interview cache since candidate deletion cascades to interviews
-  invalidateInterviewCache();
 
   redirect("/dashboard/candidates");
 }

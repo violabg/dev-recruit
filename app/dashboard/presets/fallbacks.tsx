@@ -1,35 +1,40 @@
+import {
+  PaginationSkeleton,
+  TableSkeleton,
+  TextSkeleton,
+} from "@/components/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const PresetsListSkeleton = () => {
-  return (
-    <div className="border rounded-lg overflow-hidden">
-      <div className="bg-muted/30 p-4 border-b">
-        <div className="flex gap-4">
-          <Skeleton className="flex-1 h-4" />
-          <Skeleton className="flex-1 h-4" />
-          <Skeleton className="flex-1 h-4" />
-          <Skeleton className="flex-1 h-4" />
-        </div>
-      </div>
-      <div className="space-y-6 p-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex justify-between items-center">
+/** Mirrors PresetsTable (real headers, icon + label/description) + pagination. */
+export const PresetsListSkeleton = () => (
+  <>
+    <TableSkeleton
+      className="rounded-lg"
+      rows={5}
+      columns={[
+        {
+          header: "Nome",
+          content: (
             <div className="flex items-center gap-3">
-              <Skeleton className="rounded-md size-9" />
-              <div className="space-y-2">
-                <Skeleton className="w-[200px] h-4" />
-                <Skeleton className="w-[140px] h-3" />
+              <Skeleton className="rounded-md size-5" />
+              <div>
+                <TextSkeleton lineClassName="h-6" className="w-40 h-4" />
+                <TextSkeleton className="w-56" />
               </div>
             </div>
-            <div className="flex gap-4">
-              <Skeleton className="w-[100px] h-6" />
-              <Skeleton className="w-20 h-6" />
-              <Skeleton className="w-[120px] h-6" />
-            </div>
-            <Skeleton className="rounded-md size-8" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+          ),
+        },
+        { header: "Tipo", cell: "badge" },
+        { header: "Difficoltà", cell: "badge" },
+        { header: "Tag", cell: "badge" },
+        {
+          header: "Azioni",
+          headClassName: "text-right",
+          cell: "action",
+          cellClassName: "text-right",
+        },
+      ]}
+    />
+    <PaginationSkeleton />
+  </>
+);

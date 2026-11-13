@@ -1,6 +1,6 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { Prisma } from "@/lib/prisma/client";
-import { CacheTags } from "@/lib/utils/cache-utils";
+import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import prisma from "../prisma";
 
@@ -82,7 +82,7 @@ export async function getPresetsData(
 export async function getPresetData(presetId: string): Promise<Preset | null> {
   "use cache";
   cacheLife("minutes");
-  cacheTag(CacheTags.PRESETS, presetId);
+  cacheTag(CacheTags.PRESETS, entityTag.preset(presetId));
 
   return prisma.preset.findUnique({
     where: { id: presetId },
@@ -105,4 +105,22 @@ export async function getRecentPresetIds(limit = 100): Promise<string[]> {
   });
 
   return presets.map((p) => p.id);
+}
+
+/**
+ * All presets (unpaginated) for the quiz editor's "Smart Question Presets".
+ *
+ * Started (not awaited) by server pages and passed to the client editor as a
+ * promise, then unwrapped with `use()` inside a Suspense boundary. This keeps
+ * the list in the cached server render instead of a client-side fetch on every
+ * mount. Invalidated via updateTag("presets") in preset mutations.
+ */
+export async function getAllPresets(): Promise<Preset[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CacheTags.PRESETS);
+
+  return prisma.preset.findMany({
+    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+  });
 }

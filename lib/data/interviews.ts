@@ -2,7 +2,7 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { mapQuizFromPrisma, Quiz } from "@/lib/data/quizzes";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import { CacheTags } from "@/lib/utils/cache-utils";
+import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { InterviewStatus } from "../schemas";
@@ -235,7 +235,14 @@ export const getQuizAssignmentData = async (
 ): Promise<QuizAssignmentData | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.INTERVIEWS);
+  // Reads quiz + position, candidates eligible for the position, interviews
+  cacheTag(
+    CacheTags.INTERVIEWS,
+    CacheTags.QUIZZES,
+    CacheTags.POSITIONS,
+    CacheTags.CANDIDATES,
+    entityTag.quiz(quizId),
+  );
 
   const quiz = await prisma.quiz.findUnique({
     where: {
@@ -337,7 +344,14 @@ export const getCandidateQuizData = async (
 ): Promise<CandidateQuizData | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.INTERVIEWS);
+  // Reads candidate + positions, their interviews, and available quizzes
+  cacheTag(
+    CacheTags.INTERVIEWS,
+    CacheTags.CANDIDATES,
+    CacheTags.POSITIONS,
+    CacheTags.QUIZZES,
+    entityTag.candidate(candidateId),
+  );
 
   const candidate = await prisma.candidate.findUnique({
     where: {
@@ -559,7 +573,15 @@ export const getInterviewDetail = async (
 ): Promise<InterviewDetailResult | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.INTERVIEWS);
+  // Embeds the full quiz (with questions) and candidate
+  cacheTag(
+    CacheTags.INTERVIEWS,
+    CacheTags.QUIZZES,
+    CacheTags.QUESTIONS,
+    CacheTags.CANDIDATES,
+    CacheTags.POSITIONS,
+    entityTag.interview(id),
+  );
 
   const interview = await prisma.interview.findFirst({
     where: {
@@ -637,7 +659,11 @@ export const getInterviewsByQuiz = async (
 ): Promise<AssignedInterview[]> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.INTERVIEWS);
+  cacheTag(
+    CacheTags.INTERVIEWS,
+    CacheTags.CANDIDATES,
+    CacheTags.QUIZZES,
+  );
 
   const interviews = await prisma.interview.findMany({
     where: { quizId },
@@ -698,7 +724,13 @@ export const getFilteredInterviews = cache(
   }) => {
     "use cache";
     cacheLife("hours");
-    cacheTag(CacheTags.INTERVIEWS);
+    // Joins candidate, quiz and position for display and filtering
+  cacheTag(
+    CacheTags.INTERVIEWS,
+    CacheTags.CANDIDATES,
+    CacheTags.QUIZZES,
+    CacheTags.POSITIONS,
+  );
 
     const {
       search = "",

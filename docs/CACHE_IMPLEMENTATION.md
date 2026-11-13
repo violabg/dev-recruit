@@ -135,6 +135,33 @@ async function getQuizzesByPosition(positionId: string) {
 }
 ```
 
+#### Dependency tagging rule (no stale data)
+
+A cached read must be tagged with the collection tag of **every entity it
+reads**, including relations pulled in via `include`/`select`. Mutations only
+invalidate their own entity, so a missing dependency tag means stale UI.
+
+| Read                                   | Tags                                                   |
+| -------------------------------------- | ------------------------------------------------------ |
+| `getFilteredCandidates`                | `candidates`, `positions`, `interviews`                |
+| `getQuizzes`, `getQuizById`            | `quizzes`, `positions`, `questions` (+ `quiz-{id}`)    |
+| `getQuizQuestions`                     | `questions`, `quiz-{id}` (questions are shared)        |
+| `getFilteredInterviews`                | `interviews`, `candidates`, `quizzes`, `positions`     |
+| Evaluation reads (`EVALUATION_INCLUDE`)| `evaluations`, `interviews`, `candidates`, `positions`, `quizzes` |
+
+**Deletes and DB cascades.** `onDelete: Cascade` removes child rows without a
+mutation for them, so delete actions pass `deleted: true`:
+
+```typescript
+invalidatePositionCache(id, { deleted: true }); // + quizzes, interviews, evaluations, candidates, rubrics
+invalidateQuizCache({ quizId, deleted: true }); // + interviews, evaluations
+invalidateCandidateCache({ candidateId, deleted: true }); // + interviews, evaluations, rubrics
+invalidateInterviewCache({ interviewId, deleted: true }); // + evaluations
+```
+
+The cascade map lives in `CASCADE_ON_DELETE` in `lib/utils/cache-utils.ts`;
+update it whenever `prisma/schema.prisma` cascade rules change.
+
 ## Caching Patterns
 
 ### Pattern 1: Data Layer Caching
@@ -211,6 +238,47 @@ async function UserGreeting() {
   <UserGreeting />
 </Suspense>;
 ```
+
+### Pattern 4: Server Data for Client Components (donut / promise props)
+
+Never fetch lists in a client component's `useEffect` (or via a server action
+on mount). Fetch them in the server tree with a cached data function, then
+hand them to the client in one of two ways:
+
+1. **Slot (donut) pattern** — when the client only renders markup for the
+   data (e.g. `<SelectItem>`s), render a server component and pass it as a
+   `ReactNode` prop/children:
+
+   ```tsx
+   <EditQuizForm
+     languageOptions={
+       <Suspense fallback={null}>
+         <ProgrammingLanguageSelectItems /> {/* async server component */}
+       </Suspense>
+     }
+   />
+   ```
+
+2. **Promise prop + `use()`** — when the client needs the data itself
+   (click handlers, filtering). Start the cached query in the server
+   component **without awaiting it**, pass the promise, and unwrap it with
+   `use()` behind a `Suspense` boundary inside the client component:
+
+   ```tsx
+   // server
+   const presetsPromise = getAllPresets().catch(() => []);
+   <EditQuizForm presetsPromise={presetsPromise} />;
+
+   // client
+   function PresetButtons({ presetsPromise }) {
+     const presets = use(presetsPromise);
+     ...
+   }
+   ```
+
+Both keep the data in the cached server render (part of the PPR shell or
+streamed), avoid client waterfalls, and refresh automatically after
+`updateTag()` in a server action because the action re-renders the route.
 
 ## Cache Invalidation
 

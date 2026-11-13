@@ -42,7 +42,9 @@ export async function deletePosition(id: string) {
 
   await prisma.position.delete({ where: { id } });
 
-  invalidatePositionCache();
+  // Pass the id so getPositionById(id) is expired too, and cascade to the
+  // quizzes/interviews/evaluations removed by onDelete: Cascade.
+  invalidatePositionCache(id, { deleted: true });
 
   redirect("/dashboard/positions");
 }

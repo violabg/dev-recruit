@@ -328,3 +328,55 @@ describe("invalidateAllDashboardCaches", () => {
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
   });
 });
+
+describe("cascade invalidation on delete", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const updatedTags = () => mockedUpdateTag.mock.calls.map(([tag]) => tag);
+
+  it("does not cascade on plain position updates", () => {
+    invalidatePositionCache("pos-1");
+    expect(updatedTags()).not.toContain(CacheTags.QUIZZES);
+    expect(updatedTags()).not.toContain(CacheTags.INTERVIEWS);
+  });
+
+  it("expires everything removed by a position delete cascade", () => {
+    invalidatePositionCache("pos-1", { deleted: true });
+    expect(updatedTags()).toEqual(
+      expect.arrayContaining([
+        CacheTags.POSITIONS,
+        "positions-pos-1",
+        CacheTags.QUIZZES,
+        CacheTags.INTERVIEWS,
+        CacheTags.EVALUATIONS,
+        CacheTags.CANDIDATES,
+        CacheTags.BEHAVIORAL_RUBRICS,
+      ]),
+    );
+  });
+
+  it("expires interviews and evaluations when a quiz is deleted", () => {
+    invalidateQuizCache({ quizId: "quiz-1", deleted: true });
+    expect(updatedTags()).toEqual(
+      expect.arrayContaining([CacheTags.INTERVIEWS, CacheTags.EVALUATIONS]),
+    );
+  });
+
+  it("expires interviews, evaluations and rubrics when a candidate is deleted", () => {
+    invalidateCandidateCache({ candidateId: "cand-1", deleted: true });
+    expect(updatedTags()).toEqual(
+      expect.arrayContaining([
+        CacheTags.INTERVIEWS,
+        CacheTags.EVALUATIONS,
+        CacheTags.BEHAVIORAL_RUBRICS,
+      ]),
+    );
+  });
+
+  it("expires evaluations when an interview is deleted", () => {
+    invalidateInterviewCache({ interviewId: "int-1", deleted: true });
+    expect(updatedTags()).toContain(CacheTags.EVALUATIONS);
+  });
+});

@@ -1,3 +1,4 @@
+import { SelectOptionsSkeleton } from "@/components/skeletons";
 import { SearchAndFilterInterviews } from "@/components/interviews/search-and-filter-interviews";
 import PageHeader from "@/components/page-header";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
@@ -34,7 +35,7 @@ export default async function InterviewsPage({
         <Suspense fallback={<FiltersSkeleton />}>
           <SearchAndFilterInterviews
             languageOptions={
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<SelectOptionsSkeleton />}>
                 <ProgrammingLanguageSelectItems />
               </Suspense>
             }

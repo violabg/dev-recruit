@@ -1,13 +1,24 @@
+import { SelectOptionsSkeleton } from "@/components/skeletons";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getAllPositions } from "@/lib/data/positions";
+import { getAllPresets } from "@/lib/data/presets";
 import type { Position } from "@/lib/prisma/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
 import { NewQuizCreationPage, PositionOption } from "./new-quiz-page";
 
+/**
+ * Mirrors NewQuizCreationPage before a position is chosen: the full-width
+ * position Select (h-9) followed by the "Seleziona una posizione" prompt.
+ * It's a fragment because the page wrapper already applies space-y-6.
+ */
 const positionsLoaderFallback = (
-  <div className="p-6 border border-muted/50 border-dashed rounded-xl text-center">
-    <p className="text-muted-foreground">Caricamento delle posizioni...</p>
-  </div>
+  <>
+    <Skeleton className="rounded-lg w-full h-9" />
+    <div className="p-6 border border-muted/50 rounded-xl text-center">
+      <p>Seleziona una posizione per iniziare la creazione del quiz.</p>
+    </div>
+  </>
 );
 
 export default function NewQuizPage() {
@@ -36,6 +47,7 @@ async function PositionsContent({
 }: {
   positionsPromise: Promise<Position[]>;
 }) {
+  const presetsPromise = getAllPresets().catch(() => []);
   const positions = await positionsPromise;
 
   const serializedPositions: PositionOption[] = positions.map((position) => ({
@@ -48,8 +60,9 @@ async function PositionsContent({
   return (
     <NewQuizCreationPage
       positions={serializedPositions}
+      presetsPromise={presetsPromise}
       languageOptions={
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SelectOptionsSkeleton />}>
           <ProgrammingLanguageSelectItems />
         </Suspense>
       }

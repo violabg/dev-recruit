@@ -91,3 +91,41 @@ export function NavMain({
     </SidebarGroup>
   );
 }
+
+/**
+ * Suspense fallback for <NavMain>: the same menu (items are static) without
+ * the pathname-dependent active state, so the sidebar doesn't shift when the
+ * real nav hydrates.
+ */
+export function NavMainFallback({
+  items,
+}: {
+  items: { label: string; href: string; icon: LucideIcon }[];
+}) {
+  return (
+    <SidebarGroup className="mt-4">
+      <SidebarGroupContent>
+        <SidebarMenu className="space-y-2">
+          {items.map((route) => (
+            <SidebarMenuItem key={route.label}>
+              <SidebarMenuButton
+                size="default"
+                className="relative rounded-md overflow-hidden text-muted-foreground"
+              >
+                <Link
+                  href={route.href as any}
+                  className="relative flex items-center px-2 py-2 w-full"
+                >
+                  <route.icon className="mr-2 size-4 text-muted-foreground" />
+                  <span className="flex-1 text-muted-foreground text-sm">
+                    {route.label}
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}

@@ -66,7 +66,7 @@ export const getPositionById = cache(
   async (positionId: string): Promise<Position | null> => {
     "use cache";
     cacheLife("hours");
-    cacheTag(entityTag.position(positionId));
+    cacheTag(CacheTags.POSITIONS, entityTag.position(positionId));
     return prisma.position.findFirst({
       where: {
         id: positionId,

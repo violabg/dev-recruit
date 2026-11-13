@@ -49,6 +49,15 @@ export type EvaluationWithRelations = Prisma.EvaluationGetPayload<{
   };
 }>;
 
+// EVALUATION_INCLUDE joins these collections; reads must be tagged with them
+// so renaming a candidate/position/quiz or rescoring an interview refreshes.
+const EVALUATION_RELATION_TAGS = [
+  CacheTags.INTERVIEWS,
+  CacheTags.CANDIDATES,
+  CacheTags.POSITIONS,
+  CacheTags.QUIZZES,
+] as const;
+
 // Reusable include pattern for evaluation queries
 const EVALUATION_INCLUDE = {
   interview: {
@@ -101,7 +110,11 @@ export async function getEvaluationByInterviewId(
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationInterview(interviewId));
+  cacheTag(
+    CacheTags.EVALUATIONS,
+    ...EVALUATION_RELATION_TAGS,
+    entityTag.evaluationInterview(interviewId),
+  );
 
   return prisma.evaluation.findUnique({
     where: { interviewId },
@@ -117,7 +130,11 @@ export async function getEvaluationsByCandidateId(
 ): Promise<EvaluationWithRelations[]> {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationCandidate(candidateId));
+  cacheTag(
+    CacheTags.EVALUATIONS,
+    ...EVALUATION_RELATION_TAGS,
+    entityTag.evaluationCandidate(candidateId),
+  );
 
   return prisma.evaluation.findMany({
     where: { candidateId },
@@ -134,7 +151,11 @@ export async function getEvaluationById(
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluation(id));
+  cacheTag(
+    CacheTags.EVALUATIONS,
+    ...EVALUATION_RELATION_TAGS,
+    entityTag.evaluation(id),
+  );
 
   return prisma.evaluation.findUnique({
     where: { id },
@@ -150,7 +171,11 @@ export async function getLatestInterviewEvaluationByCandidateId(
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationCandidate(candidateId));
+  cacheTag(
+    CacheTags.EVALUATIONS,
+    ...EVALUATION_RELATION_TAGS,
+    entityTag.evaluationCandidate(candidateId),
+  );
 
   return prisma.evaluation.findFirst({
     where: {
@@ -172,7 +197,10 @@ export async function hasEvaluationForPosition(
 ): Promise<boolean> {
   "use cache";
   cacheLife("minutes");
-  cacheTag(CacheTags.EVALUATIONS, entityTag.evaluationCandidate(candidateId));
+  cacheTag(
+    CacheTags.EVALUATIONS,
+    entityTag.evaluationCandidate(candidateId),
+  );
 
   const count = await prisma.evaluation.count({
     where: {

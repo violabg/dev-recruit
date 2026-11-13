@@ -87,7 +87,7 @@ export async function getQuestions(filters: QuestionFilters = {}) {
 export async function getQuestionById(id: string) {
   "use cache";
   cacheLife("minutes");
-  cacheTag(entityTag.question(id));
+  cacheTag(CacheTags.QUESTIONS, entityTag.question(id));
 
   return prisma.question.findUnique({
     where: { id },
@@ -175,7 +175,9 @@ export async function getFavoritesCount() {
 export async function getQuizQuestions(quizId: string) {
   "use cache";
   cacheLife("minutes");
-  cacheTag(entityTag.quiz(quizId));
+  // Question content is shared across quizzes: an edit to any question
+  // (QUESTIONS) must refresh every quiz that links it.
+  cacheTag(CacheTags.QUESTIONS, entityTag.quiz(quizId));
 
   const quizQuestions = await prisma.quizQuestion.findMany({
     where: { quizId },

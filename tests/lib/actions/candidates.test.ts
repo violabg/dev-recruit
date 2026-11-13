@@ -465,11 +465,12 @@ describe("candidates actions", () => {
 
       await deleteCandidate("cand-123");
 
+      // deleted: true cascades to interviews/evaluations/rubrics
       expect(invalidateCandidateCache).toHaveBeenCalledWith({
         candidateId: "cand-123",
         positionIds: ["pos-123"],
+        deleted: true,
       });
-      expect(invalidateInterviewCache).toHaveBeenCalled();
     });
   });
 });

@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { TableSkeleton } from "@/components/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,7 +17,7 @@ import {
   type ReferenceCategory,
 } from "@/lib/constants/reference-categories";
 import { getReferenceDataByCategory } from "@/lib/data/reference-data";
-import { Plus } from "lucide-react";
+import { GripVertical, Plus } from "lucide-react";
 import { Suspense } from "react";
 
 const categories = referenceCategories.map((value) => ({
@@ -58,7 +59,7 @@ export default async function ReferenceDataPage() {
                 </DialogContent>
               </Dialog>
 
-              <Suspense fallback={<Skeleton className="h-64" />}>
+              <Suspense fallback={<ReferenceDataTableSkeleton />}>
                 <ReferenceDataSection category={cat.value} />
               </Suspense>
             </div>
@@ -66,6 +67,34 @@ export default async function ReferenceDataPage() {
         ))}
       </Tabs>
     </div>
+  );
+}
+
+/** Mirrors ReferenceDataTable: unbordered table, drag handle, label, actions. */
+function ReferenceDataTableSkeleton() {
+  return (
+    <TableSkeleton
+      bordered={false}
+      rows={6}
+      columns={[
+        {
+          header: "",
+          headClassName: "w-12",
+          content: <GripVertical className="w-4 h-4 text-muted-foreground" />,
+        },
+        { header: "Etichetta" },
+        {
+          header: "Azioni",
+          headClassName: "w-32",
+          content: (
+            <div className="flex gap-2">
+              <Skeleton className="rounded-lg w-9 h-7" />
+              <Skeleton className="rounded-lg w-9 h-7" />
+            </div>
+          ),
+        },
+      ]}
+    />
   );
 }
 

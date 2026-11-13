@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { PositionFormSkeleton } from "./position-form-skeleton";
 import { referenceCategoryLabels } from "@/lib/constants/reference-categories";
 import { getReferenceDataByCategory } from "@/lib/data/reference-data";
 import { Position } from "@/lib/prisma/client";
@@ -80,25 +80,6 @@ export async function PositionFormWithData({
       experienceLevels={experienceLevelsFormatted}
       contractTypes={contractTypesFormatted}
     />
-  );
-}
-
-/**
- * Fallback skeleton for loading state
- */
-function PositionFormSkeleton() {
-  return (
-    <div className="space-y-8">
-      <Skeleton className="w-full h-12" />
-      <Skeleton className="w-full h-12" />
-      <Skeleton className="w-full h-32" />
-      <Skeleton className="w-full h-12" />
-      <Skeleton className="w-full h-24" />
-      <div className="flex gap-4">
-        <Skeleton className="w-24 h-10" />
-        <Skeleton className="w-24 h-10" />
-      </div>
-    </div>
   );
 }
 

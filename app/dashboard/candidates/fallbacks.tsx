@@ -1,47 +1,53 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  FilterBarSkeleton,
+  PaginationSkeleton,
+  TableSkeleton,
+} from "@/components/skeletons";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-export const StatsSkeleton = () => (
-  <div className="gap-4 grid md:grid-cols-4">
-    {Array.from({ length: 2 }).map((_, index) => (
-      <Card key={index}>
-        <CardHeader className="pb-2">
-          <CardTitle>
-            <Skeleton className="w-24 h-4" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="w-1/2 h-10" />
-        </CardContent>
-      </Card>
-    ))}
-  </div>
-);
+import { ArrowUpDown } from "lucide-react";
 
-export const FiltersSkeleton = () => (
-  <div className="flex md:flex-row flex-col gap-4">
-    <Skeleton className="flex-1 h-10" />
-    <Skeleton className="w-full md:w-[153px] h-10" />
-    <Skeleton className="w-full md:w-[182px] h-10" />
-    <Skeleton className="w-full md:w-[142px] h-10" />
-  </div>
-);
+/** Mirrors SearchAndFilterCandidates: search + status, position, sort. */
+export const FiltersSkeleton = () => <FilterBarSkeleton selects={3} />;
 
+/** Mirrors CandidatesRuntimeSection (table view, the default). */
 export const CandidatesListSkeleton = () => (
   <Card>
     <CardContent>
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            <Skeleton className="w-24 h-8" />
-            <Skeleton className="w-24 h-8" />
+        <div className="w-full">
+          <div className="flex justify-between items-center">
+            {/* TabsList h-8: "Tabella" / "Griglia" */}
+            <Skeleton className="rounded-lg w-40 h-8" />
           </div>
-          <Skeleton className="w-32 h-4" />
+          <div className="pt-4">
+            <TableSkeleton
+              rows={5}
+              columns={[
+                {
+                  header: (
+                    <div className="flex items-center">
+                      Nome
+                      <ArrowUpDown className="ml-2 size-4" />
+                    </div>
+                  ),
+                  headClassName: "w-[250px]",
+                },
+                { header: "Email", cell: "muted" },
+                { header: "Posizione", cell: "stacked" },
+                { header: "Stato", cell: "badge" },
+                { header: "Data", cell: "muted" },
+                {
+                  header: "Azioni",
+                  headClassName: "text-right",
+                  cell: "action",
+                  cellClassName: "text-right",
+                },
+              ]}
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="w-full h-12" />
-          ))}
-        </div>
+        <PaginationSkeleton />
       </div>
     </CardContent>
   </Card>

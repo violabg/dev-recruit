@@ -6,70 +6,59 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { LucideIcon } from "lucide-react";
 
-export function DashboardStatsSkeleton() {
+/**
+ * Mirrors the stat cards in page.tsx: static title/icon/caption are rendered
+ * for real, only the count (text-2xl, 32px line) is a skeleton.
+ */
+export function DashboardStatsSkeleton({
+  title,
+  description,
+  icon: Icon,
+}: {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}) {
   return (
-    <Card className="animate-pulse">
+    <Card>
       <CardHeader className="flex flex-row justify-between items-center pb-2">
-        <Skeleton className="w-24 h-4" />
-        <Skeleton className="rounded-full size-4" />
+        <CardTitle className="font-medium text-sm">{title}</CardTitle>
+        <Icon className="size-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <Skeleton className="w-16 h-8" />
-        <Skeleton className="mt-2 w-32 h-3" />
+        <div className="flex items-center h-8">
+          <Skeleton className="w-12 h-7" />
+        </div>
+        <p className="text-muted-foreground text-xs">{description}</p>
       </CardContent>
     </Card>
   );
 }
 
+/** Mirrors RecentPositions: same card header and 5 linked rows (limit 5). */
 export function RecentPositionsSkeleton() {
   return (
-    <>
-      {/* Recent positions skeleton */}
-      <Card className="col-span-1">
-        <CardHeader>
-          <CardTitle>
-            <Skeleton className="rounded w-32 h-5" />
-          </CardTitle>
-          <CardDescription>
-            <Skeleton className="rounded w-40 h-4" />
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center p-3 border rounded-lg"
-              >
-                <div>
-                  <Skeleton className="mb-1 rounded w-32 h-4" />
-                  <Skeleton className="rounded w-20 h-3" />
-                </div>
-                <Skeleton className="rounded w-20 h-8" />
+    <Card className="col-span-1">
+      <CardHeader>
+        <CardTitle>Posizioni Recenti</CardTitle>
+        <CardDescription>Le ultime posizioni create</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="px-3 py-2 border rounded-lg">
+              <div className="flex items-center h-6">
+                <Skeleton className="w-48 h-4" />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent activity skeleton 
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>
-              <div className="bg-muted rounded w-32 h-5" />
-            </CardTitle>
-            <CardDescription>
-              <div className="bg-muted rounded w-40 h-4" />
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[140px]">
-              <div className="bg-muted mb-2 rounded w-32 h-4" />
-              <div className="bg-muted rounded w-24 h-3" />
+              <div className="flex items-center h-5">
+                <Skeleton className="w-24 h-3.5" />
+              </div>
             </div>
-          </CardContent>
-        </Card> */}
-    </>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

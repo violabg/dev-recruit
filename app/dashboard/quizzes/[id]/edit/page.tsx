@@ -1,5 +1,7 @@
+import { SelectOptionsSkeleton } from "@/components/skeletons";
 import { EditQuizForm } from "@/components/quiz/edit-quiz-form";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
+import { getAllPresets } from "@/lib/data/presets";
 import { getQuizData } from "@/lib/data/quizzes";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -22,6 +24,9 @@ async function EditQuizContent({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Start the (cached) presets query without awaiting it: it runs in parallel
+  // with the quiz fetch and streams into the client editor via use().
+  const presetsPromise = getAllPresets().catch(() => []);
   const awaitedParams = await params;
   const data = await getQuizData(awaitedParams.id);
 
@@ -33,8 +38,9 @@ async function EditQuizContent({
     <EditQuizForm
       quiz={quiz}
       position={position}
+      presetsPromise={presetsPromise}
       languageOptions={
-        <Suspense key="languages" fallback={<div>Loading...</div>}>
+        <Suspense key="languages" fallback={<SelectOptionsSkeleton />}>
           <ProgrammingLanguageSelectItems />
         </Suspense>
       }

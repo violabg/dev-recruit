@@ -146,7 +146,8 @@ export async function getFilteredCandidates(
 ): Promise<PaginatedCandidates> {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.CANDIDATES);
+  // CANDIDATE_INCLUDE joins positions + interviews (status/score)
+  cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS, CacheTags.INTERVIEWS);
 
   const {
     search = "",
@@ -209,7 +210,12 @@ export const getCandidateWithDetails = async (
 ): Promise<CandidateWithRelations | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.CANDIDATES);
+  cacheTag(
+    CacheTags.CANDIDATES,
+    CacheTags.POSITIONS,
+    CacheTags.INTERVIEWS,
+    entityTag.candidate(id),
+  );
 
   return prisma.candidate.findFirst({
     where: { id },

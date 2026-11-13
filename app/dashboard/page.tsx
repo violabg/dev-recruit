@@ -156,13 +156,37 @@ export default async function DashboardPage() {
 
       <div className="gap-4 grid md:grid-cols-3">
         {/* Stats cards */}
-        <Suspense fallback={<DashboardStatsSkeleton />}>
+        <Suspense
+          fallback={
+            <DashboardStatsSkeleton
+              title="Posizioni Aperte"
+              description="Posizioni attualmente aperte"
+              icon={Briefcase}
+            />
+          }
+        >
           <OpenPositions />
         </Suspense>
-        <Suspense fallback={<DashboardStatsSkeleton />}>
+        <Suspense
+          fallback={
+            <DashboardStatsSkeleton
+              title="Candidati"
+              description="Candidati totali nel sistema"
+              icon={Users}
+            />
+          }
+        >
           <Candidates />
         </Suspense>
-        <Suspense fallback={<DashboardStatsSkeleton />}>
+        <Suspense
+          fallback={
+            <DashboardStatsSkeleton
+              title="Colloqui Completati"
+              description="Colloqui completati con successo"
+              icon={BarChart3}
+            />
+          }
+        >
           <Interviews />
         </Suspense>
       </div>

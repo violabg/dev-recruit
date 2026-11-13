@@ -159,6 +159,7 @@ export async function deleteInterview(id: string) {
   invalidateInterviewCache({
     interviewId: id,
     quizId: interview.quizId,
+    deleted: true,
   });
 
   return { success: true };

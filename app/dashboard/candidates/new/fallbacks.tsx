@@ -1,3 +1,5 @@
+import { CandidateFormBodySkeleton } from "@/components/candidates/candidate-form-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -5,63 +7,48 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 
-export function CandidateFormSkeleton() {
+const HEADERS = {
+  new: {
+    title: "Nuovo Candidato",
+    description: "Inserisci i dati del candidato da aggiungere",
+  },
+  edit: {
+    title: "Modifica Candidato",
+    description: "Aggiorna i dati per mantenere le informazioni sincronizzate.",
+  },
+} as const;
+
+/**
+ * Mirrors the new/edit candidate pages: outer Card with the (static) header
+ * and the CandidateForm grid inside CardContent.
+ */
+export function CandidateFormSkeleton({
+  mode = "new",
+}: {
+  mode?: "new" | "edit";
+}) {
+  const { title, description } = HEADERS[mode];
+  const heading = (
+    <>
+      <CardTitle className="text-2xl">{title}</CardTitle>
+      <CardDescription>{description}</CardDescription>
+    </>
+  );
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl">
-          <Skeleton className="w-48 h-8" />
-        </CardTitle>
-        <CardDescription>
-          <Skeleton className="w-72 h-5" />
-        </CardDescription>
-      </CardHeader>
+      {mode === "edit" ? (
+        <CardHeader className="flex items-center gap-4">
+          {/* ghost icon back button */}
+          <Skeleton className="rounded-lg size-8" />
+          <div>{heading}</div>
+        </CardHeader>
+      ) : (
+        <CardHeader>{heading}</CardHeader>
+      )}
       <CardContent>
-        <div className="space-y-6">
-          {/* First name and Last name - 2 column grid */}
-          <div className="gap-4 grid sm:grid-cols-2">
-            <div className="space-y-2">
-              <Skeleton className="w-12 h-4" />
-              <Skeleton className="w-full h-10" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="w-16 h-4" />
-              <Skeleton className="w-full h-10" />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div className="space-y-2">
-            <Skeleton className="w-12 h-4" />
-            <Skeleton className="w-full h-10" />
-          </div>
-
-          {/* Date of birth */}
-          <div className="space-y-2">
-            <Skeleton className="w-28 h-4" />
-            <Skeleton className="w-40 h-10" />
-          </div>
-
-          {/* Position select */}
-          <div className="space-y-2">
-            <Skeleton className="w-20 h-4" />
-            <Skeleton className="w-full h-10" />
-          </div>
-
-          {/* File upload */}
-          <div className="space-y-2">
-            <Skeleton className="w-24 h-4" />
-            <Skeleton className="w-full h-32" />
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-4">
-            <Skeleton className="w-20 h-9" />
-            <Skeleton className="w-32 h-10" />
-          </div>
-        </div>
+        <CandidateFormBodySkeleton mode={mode} />
       </CardContent>
     </Card>
   );

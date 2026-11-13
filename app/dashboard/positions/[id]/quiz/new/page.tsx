@@ -1,9 +1,11 @@
+import { SelectOptionsSkeleton } from "@/components/skeletons";
 import {
   NewQuizCreationPage,
   PositionOption,
 } from "@/app/dashboard/quizzes/new/new-quiz-page";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getPositionById } from "@/lib/data/positions";
+import { getAllPresets } from "@/lib/data/presets";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { QuizGeneratorSkeleton } from "./fallbacks";
@@ -27,6 +29,7 @@ async function QuizGeneratorContent({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const presetsPromise = getAllPresets().catch(() => []);
   const { id } = await incomingParams;
   const position = await getPositionById(id);
 
@@ -44,8 +47,9 @@ async function QuizGeneratorContent({
   return (
     <NewQuizCreationPage
       fixedPosition={positionOption}
+      presetsPromise={presetsPromise}
       languageOptions={
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SelectOptionsSkeleton />}>
           <ProgrammingLanguageSelectItems />
         </Suspense>
       }

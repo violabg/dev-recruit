@@ -1,10 +1,10 @@
 "use client";
-import { getPresetsAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { QuestionType } from "@/lib/schemas";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
 import { ChevronsUpDown, Lightbulb } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, use, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -19,7 +19,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
-import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
 
 export type Props = {
   onGeneratePreset: (
@@ -28,13 +27,48 @@ export type Props = {
     options: any
   ) => Promise<void>;
   loading: boolean;
+  /**
+   * Presets fetched on the server (cached, tag "presets") and passed down as
+   * an un-awaited promise. Unwrapped with `use()` so the list is part of the
+   * server render rather than refetched on every mount.
+   */
+  presetsPromise: Promise<Preset[]>;
 };
 
-export function PresetGenerationButtons(props: Props) {
-  const { onGeneratePreset, loading } = props;
-  const [presets, setPresets] = useState<Preset[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function PresetGenerationButtonsFallback() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lightbulb className="w-5 h-5" />
+          Smart Question Presets
+        </CardTitle>
+        <CardDescription>
+          <Button variant="outline" disabled>
+            Genera domande automaticamente utilizzando preset predefiniti
+            <ChevronsUpDown />
+            <span className="sr-only">Toggle</span>
+          </Button>
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
 
+export function PresetGenerationButtons(props: Props) {
+  return (
+    <Suspense fallback={<PresetGenerationButtonsFallback />}>
+      <PresetGenerationButtonsContent {...props} />
+    </Suspense>
+  );
+}
+
+function PresetGenerationButtonsContent({
+  onGeneratePreset,
+  loading,
+  presetsPromise,
+}: Props) {
+  const presets = use(presetsPromise);
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePresetClick = async (preset: Preset) => {
@@ -43,56 +77,6 @@ export function PresetGenerationButtons(props: Props) {
       llmModel: DEFAULT_GENERATION_MODEL,
     });
   };
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadPresets = async () => {
-      try {
-        const result = await getPresetsAction();
-
-        if (!result.success) {
-          throw new Error(result.error || "Failed to load presets");
-        }
-
-        if (isMounted) {
-          setPresets(result.presets);
-        }
-      } catch (error) {
-        // Silent fail - component will show empty state
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadPresets();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="w-5 h-5" />
-            Smart Question Presets
-          </CardTitle>
-          <CardDescription>
-            <Button variant="outline">
-              Genera domande automaticamente utilizzando preset predefiniti
-              <ChevronsUpDown />
-              <span className="sr-only">Toggle</span>
-            </Button>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>

@@ -1,63 +1,56 @@
+import {
+  ButtonSkeleton,
+  FieldSkeleton,
+  TextSkeleton,
+} from "@/components/skeletons";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft } from "lucide-react";
 
+/**
+ * Mirrors InviteCandidatesContent: back link, title + description (quiz and
+ * position names are the only dynamic text), tabs, and the default
+ * "Assign to candidates" card with the CandidateSelectionForm.
+ */
 export function InviteCandidatesSkeleton() {
   return (
     <div className="space-y-6">
-      {/* Back button skeleton */}
       <div className="flex items-center gap-2">
-        <Skeleton className="w-40 h-10" />
+        <span className="inline-flex items-center px-2.5 h-7 font-medium text-[0.8rem] text-muted-foreground">
+          <ArrowLeft className="mr-1 size-4" />
+          Back to quiz
+        </span>
       </div>
 
-      {/* Title skeleton */}
       <div>
-        <Skeleton className="mb-2 w-96 h-10" />
-        <Skeleton className="w-64 h-5" />
+        <h1 className="font-bold text-3xl">Assign quiz to candidates</h1>
+        <TextSkeleton lineClassName="h-6" className="w-96 max-w-full h-4" />
       </div>
 
-      {/* Tabs skeleton */}
-      <div className="border-border border-b">
-        <div className="flex gap-4">
-          <Skeleton className="w-32 h-10" />
-          <Skeleton className="w-40 h-10" />
-        </div>
-      </div>
-
-      {/* Tab content skeleton */}
-      <div className="space-y-4">
-        {/* Card for form section */}
-        <div className="space-y-4 p-6 border border-border rounded-lg">
-          <Skeleton className="mb-4 w-48 h-6" />
-
-          {/* Form fields */}
-          <div className="space-y-3">
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
-          </div>
-
-          {/* Submit button */}
-          <Skeleton className="w-32 h-10" />
-        </div>
-
-        {/* Table skeleton */}
-        <div className="p-4 border border-border rounded-lg">
-          <Skeleton className="mb-4 w-64 h-6" />
-
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <Skeleton className="w-48 h-5" />
-              <Skeleton className="w-20 h-5" />
-            </div>
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center pt-3 border-t"
-              >
-                <Skeleton className="w-56 h-5" />
-                <Skeleton className="w-20 h-5" />
+      <div className="flex flex-col gap-2">
+        {/* TabsList (h-8): "Assign to candidates" / "Created interviews" */}
+        <Skeleton className="rounded-lg w-80 h-8" />
+        <div className="space-y-4 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assign quiz to candidates</CardTitle>
+              <CardDescription>
+                Select candidates and create interview links for this quiz
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <FieldSkeleton label="Select candidates" required />
+                <ButtonSkeleton size="sm" className="w-40" />
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

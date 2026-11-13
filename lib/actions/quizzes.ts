@@ -167,6 +167,7 @@ export async function deleteQuizById(quizId: string) {
     invalidateQuizCache({
       quizId,
       positionId: quiz.positionId ?? undefined,
+      deleted: true,
     });
 
     redirect("/dashboard/quizzes");

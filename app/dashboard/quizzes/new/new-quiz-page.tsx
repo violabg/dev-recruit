@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SaveQuizResult } from "@/hooks/use-edit-quiz-form";
+import type { Preset } from "@/lib/data/presets";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,12 +28,14 @@ type NewQuizPageProps = {
   positions?: PositionOption[];
   fixedPosition?: PositionOption;
   languageOptions?: React.ReactNode;
+  presetsPromise: Promise<Preset[]>;
 };
 
 export const NewQuizCreationPage = ({
   positions = [],
   fixedPosition,
   languageOptions,
+  presetsPromise,
 }: NewQuizPageProps) => {
   const [selectedPositionId, setSelectedPositionId] = useState(
     fixedPosition?.id ?? ""
@@ -137,6 +140,7 @@ export const NewQuizCreationPage = ({
           mode="create"
           onSaveSuccess={handleSaveSuccess}
           languageOptions={languageOptions}
+          presetsPromise={presetsPromise}
         />
       )}
     </>

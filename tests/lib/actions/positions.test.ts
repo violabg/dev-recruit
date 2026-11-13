@@ -180,7 +180,9 @@ describe("positions actions", () => {
 
       await deletePosition("pos-123");
 
-      expect(invalidatePositionCache).toHaveBeenCalledWith();
+      expect(invalidatePositionCache).toHaveBeenCalledWith("pos-123", {
+        deleted: true,
+      });
     });
   });
 

@@ -23,7 +23,7 @@ export default async function CandidateEditPage({
   params,
 }: CandidateEditPageProps) {
   return (
-    <Suspense fallback={<CandidateFormSkeleton />}>
+    <Suspense fallback={<CandidateFormSkeleton mode="edit" />}>
       <CandidateEditContent params={params} />
     </Suspense>
   );

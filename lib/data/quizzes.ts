@@ -169,7 +169,8 @@ export async function getQuizzes({
 }): Promise<PaginatedQuizzes> {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.QUIZZES);
+  // Joins positions (title/level filter) and linked questions
+  cacheTag(CacheTags.QUIZZES, CacheTags.POSITIONS, CacheTags.QUESTIONS);
 
   let quizzes: QuizResponse[] = [];
   let fetchError: string | null = null;
@@ -264,7 +265,12 @@ export const getQuizData = async (
 ): Promise<{ quiz: QuizForEdit; position: PositionDetails } | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.QUIZZES);
+  cacheTag(
+    CacheTags.QUIZZES,
+    CacheTags.POSITIONS,
+    CacheTags.QUESTIONS,
+    entityTag.quiz(quizId),
+  );
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
@@ -310,7 +316,11 @@ export const getQuizzesForPosition = async (
 > => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.QUIZZES, entityTag.position(positionId));
+  cacheTag(
+    CacheTags.QUIZZES,
+    CacheTags.QUESTIONS,
+    entityTag.position(positionId),
+  );
 
   const quizzes = await prisma.quiz.findMany({
     where: {
@@ -389,7 +399,12 @@ export const getQuizById = async (
 ): Promise<QuizDetail | null> => {
   "use cache";
   cacheLife("hours");
-  cacheTag(CacheTags.QUIZZES, entityTag.quiz(quizId));
+  cacheTag(
+    CacheTags.QUIZZES,
+    CacheTags.POSITIONS,
+    CacheTags.QUESTIONS,
+    entityTag.quiz(quizId),
+  );
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId },
