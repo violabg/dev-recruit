@@ -30,7 +30,7 @@ export async function QuizQuestionsContent({ params }: Props) {
       {quiz.questions.map((question, index) => (
         <Card
           key={index}
-          className="shadow-md hover:shadow-lg pt-0 border-primary/20 ring-1 ring-primary/5 overflow-hidden transition-all"
+          className="pt-0"
         >
           <CardHeader className="gap-0 bg-primary/10 pt-4 [.border-b]:pb-4 border-b">
             <CardTitle className="flex justify-between items-center gap-2 text-lg">
@@ -56,7 +56,7 @@ export async function QuizQuestionsContent({ params }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold dark:text-primary text-sm">Domanda:</h3>
+              <h3 className="font-bold dark:text-heading text-sm">Domanda:</h3>
               <p className="mt-1">{question.question}</p>
             </div>
 

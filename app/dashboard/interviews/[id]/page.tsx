@@ -82,6 +82,7 @@ export default async function InterviewDetailPage({
         timeLimit={quiz.timeLimit}
       />
       <PageHeader
+        section="interviews"
         title={`Colloquio: ${quiz.title}`}
         info={
           <>

@@ -39,7 +39,7 @@ export default async function DashboardLayout({
         {/* React 19.3 View Transition: route navigations are Transitions, so the
             content area cross-fades between pages (header/sidebar stay put). */}
         <ViewTransition default="none" update="page-fade">
-          <div className="p-4 h-full">{children}</div>
+          <div className="p-4 md:p-6 h-full">{children}</div>
         </ViewTransition>
       </SidebarInset>
     </SidebarProvider>

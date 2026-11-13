@@ -13,7 +13,9 @@ import { Fragment } from "react";
 import { usePathname } from "next/navigation";
 
 const DASHBOARD_LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
+  dashboard: "Panoramica",
+  presets: "Preset",
+  "reference-data": "Dati di riferimento",
   positions: "Posizioni",
   quizzes: "Quiz",
   candidates: "Candidati",

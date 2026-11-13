@@ -12,7 +12,7 @@ export const BehavioralScenarioDisplay = ({
 }: BehavioralScenarioDisplayProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-bold dark:text-primary text-sm">
+      <h3 className="font-bold dark:text-heading text-sm">
         Risposta di esempio:
       </h3>
       <p className="mt-1 text-muted-foreground text-sm">
@@ -20,7 +20,7 @@ export const BehavioralScenarioDisplay = ({
       </p>
       {question.keywords && question.keywords.length > 0 && (
         <div className="flex flex-col gap-2 mt-2">
-          <h3 className="font-bold dark:text-primary text-sm">
+          <h3 className="font-bold dark:text-heading text-sm">
             Temi di valutazione:
           </h3>
           <div className="flex flex-wrap gap-1 mt-1">

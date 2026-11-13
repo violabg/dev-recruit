@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { AccountInfo } from "@/components/profile/account-info";
 import { ButtonSkeleton, TextSkeleton } from "@/components/skeletons";
 import {
@@ -18,12 +19,10 @@ function ProfileSkeleton() {
   const infoRows = ["Email", "Account creato", "Ultimo aggiornamento"];
   return (
     <div className="space-y-6 mx-auto w-full max-w-2xl">
-      <div className="space-y-2">
-        <h1 className="font-bold text-3xl tracking-tight">Profilo</h1>
-        <p className="text-muted-foreground">
-          Gestisci le impostazioni del tuo profilo e account
-        </p>
-      </div>
+      <PageHeader
+        title="Profilo"
+        description="Gestisci le impostazioni del tuo profilo e account"
+      />
 
       <Card>
         <CardHeader>
@@ -77,12 +76,10 @@ async function ProfileContent() {
 
   return (
     <div className="space-y-6 mx-auto w-full max-w-2xl">
-      <div className="space-y-2">
-        <h1 className="font-bold text-3xl tracking-tight">Profilo</h1>
-        <p className="text-muted-foreground">
-          Gestisci le impostazioni del tuo profilo e account
-        </p>
-      </div>
+      <PageHeader
+        title="Profilo"
+        description="Gestisci le impostazioni del tuo profilo e account"
+      />
 
       <AccountInfo profile={profile} user={user} />
     </div>

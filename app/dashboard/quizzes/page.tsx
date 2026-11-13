@@ -39,6 +39,7 @@ export default async function QuizzesPage({
   return (
     <div className="space-y-6">
       <PageHeader
+        section="quizzes"
         title="Quiz"
         description="Gestisci i quiz per le tue posizioni aperte"
         actionBtns={<NewQuizButton />}

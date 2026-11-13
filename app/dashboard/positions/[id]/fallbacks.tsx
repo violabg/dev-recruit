@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function PositionHeaderSkeleton() {
   return (
     <PageHeaderSkeleton
+        section="positions"
       info={
         <>
           <BadgeSkeleton className="w-16" />
@@ -93,7 +94,7 @@ function PositionTabCardsSkeleton({
   return (
     <>
       <div className="flex justify-between">
-        <h2 className="font-semibold text-xl">{title}</h2>
+        <h2 className="font-semibold text-heading text-xl">{title}</h2>
         <ButtonSkeleton size="sm" className={actionClassName} />
       </div>
       <div className="gap-4 grid md:grid-cols-2">

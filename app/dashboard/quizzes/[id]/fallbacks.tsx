@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function QuizHeaderSkeleton() {
   return (
     <PageHeaderSkeleton
+        section="quizzes"
       info={
         <>
           <BadgeSkeleton className="w-28" />
@@ -42,7 +43,7 @@ export function QuizQuestionsTabSkeleton() {
       {Array.from({ length: 3 }, (_, i) => (
         <Card
           key={i}
-          className="shadow-md pt-0 border-primary/20 ring-1 ring-primary/5 overflow-hidden"
+          className="pt-0"
         >
           <CardHeader className="gap-0 bg-primary/10 pt-4 [.border-b]:pb-4 border-b">
             <CardTitle className="flex justify-between items-center gap-2 text-lg">
@@ -58,14 +59,14 @@ export function QuizQuestionsTabSkeleton() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold dark:text-primary text-sm">Domanda:</h3>
+              <h3 className="font-bold dark:text-heading text-sm">Domanda:</h3>
               <div className="mt-1">
                 <TextSkeleton lineClassName="h-6" className="w-full max-w-2xl h-4" />
                 <TextSkeleton lineClassName="h-6" className="w-full max-w-md h-4" />
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold dark:text-primary text-sm">Opzioni:</h3>
+              <h3 className="font-bold dark:text-heading text-sm">Opzioni:</h3>
               <div className="flex flex-col gap-4 mt-2">
                 {Array.from({ length: 4 }, (_, o) => (
                   <div

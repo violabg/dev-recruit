@@ -56,6 +56,7 @@ export async function QuizHeader({ params }: Props) {
 
   return (
     <PageHeader
+        section="quizzes"
       title={quiz.title}
       info={
         <>

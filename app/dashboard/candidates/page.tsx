@@ -29,6 +29,7 @@ export default async function CandidatesPage({
   return (
     <div className="space-y-6">
       <PageHeader
+        section="candidates"
         title="Candidati"
         description="Gestisci i candidati per le tue posizioni aperte"
         actionBtns={

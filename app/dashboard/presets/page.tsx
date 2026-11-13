@@ -124,6 +124,7 @@ export default async function PresetsPage({
   return (
     <div className="space-y-6 w-full">
       <PageHeader
+        section="presets"
         title="Preset"
         description="Crea e gestisci preset per la generazione di domande per le tue
             posizioni"

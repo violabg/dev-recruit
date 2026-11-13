@@ -23,7 +23,7 @@ export const Stats = async () => {
         return (
           <Card key={key} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row justify-between items-center space-y-0 pb-2">
-              <CardTitle className="font-medium text-sm">
+              <CardTitle className="font-medium text-foreground text-sm">
                 {config.label}
               </CardTitle>
               <Icon className={`h-4 w-4 ${config.color}`} />

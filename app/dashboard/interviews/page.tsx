@@ -25,6 +25,7 @@ export default async function InterviewsPage({
   return (
     <div className="space-y-6">
       <PageHeader
+        section="interviews"
         title="Colloqui"
         description="Gestisci tutti i colloqui tecnici"
       />

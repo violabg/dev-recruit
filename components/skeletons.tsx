@@ -11,6 +11,8 @@
  *   h-5, text-base → h-6, text-2xl → h-8, text-3xl → h-9) so the vertical
  *   rhythm matches.
  */
+import type { SectionKey } from "@/components/dashboard/sections";
+import { SectionTile } from "@/components/page-header";
 import { SelectItem } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -178,8 +180,9 @@ export function PaginationSkeleton() {
 }
 
 /**
- * Mirrors <PageHeader>: text-3xl title (h-9 line), optional description
- * (text-base, h-6) or info row (mt-1, gap-2), and the action buttons row.
+ * Mirrors <PageHeader>: optional section tile, text-3xl title (h-9 line),
+ * optional description (text-sm, h-5) or info row (mt-2, gap-2), and the
+ * action buttons row.
  */
 export function PageHeaderSkeleton({
   title,
@@ -187,6 +190,7 @@ export function PageHeaderSkeleton({
   description,
   info,
   actions,
+  section,
 }: {
   /** Real title when it's static; otherwise a skeleton is shown */
   title?: string;
@@ -195,28 +199,39 @@ export function PageHeaderSkeleton({
   description?: boolean | string;
   info?: React.ReactNode;
   actions?: React.ReactNode;
+  section?: SectionKey;
 }) {
   return (
-    <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-4">
-      <div>
-        {title ? (
-          <h1 className="font-bold text-gradient text-3xl tracking-tight">
-            {title}
-          </h1>
-        ) : (
-          <TextSkeleton lineClassName="h-9" className={cn("h-7", titleClassName)} />
-        )}
-        {typeof description === "string" ? (
-          <p className="text-muted-foreground">{description}</p>
-        ) : description ? (
-          <TextSkeleton lineClassName="h-6" className="w-72 h-4" />
-        ) : null}
-        {info && (
-          <div className="flex flex-wrap items-center gap-2 mt-1">{info}</div>
-        )}
+    <div className="flex md:flex-row flex-col md:justify-between md:items-start gap-4">
+      <div className="flex items-start gap-3 min-w-0">
+        {section && <SectionTile section={section} />}
+        <div className="min-w-0">
+          {title ? (
+            <h1 className="font-bold text-heading text-3xl text-balance tracking-tight">
+              {title}
+            </h1>
+          ) : (
+            <TextSkeleton
+              lineClassName="h-9"
+              className={cn("h-7", titleClassName)}
+            />
+          )}
+          {typeof description === "string" ? (
+            <p className="max-w-prose text-muted-foreground text-sm">
+              {description}
+            </p>
+          ) : description ? (
+            <TextSkeleton lineClassName="h-5" className="w-72 h-3.5" />
+          ) : null}
+          {info && (
+            <div className="flex flex-wrap items-center gap-2 mt-2">{info}</div>
+          )}
+        </div>
       </div>
       {actions && (
-        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+        <div className="flex flex-wrap items-center gap-2 md:pt-1">
+          {actions}
+        </div>
       )}
     </div>
   );

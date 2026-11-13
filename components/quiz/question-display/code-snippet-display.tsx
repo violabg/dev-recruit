@@ -15,7 +15,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
       {question.codeSnippet && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold dark:text-primary text-sm">
+            <h3 className="font-bold dark:text-heading text-sm">
               Snippet di codice:
             </h3>
             {question.language && (
@@ -33,7 +33,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
       {question.sampleSolution && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold dark:text-primary text-sm">
+            <h3 className="font-bold dark:text-heading text-sm">
               Soluzione di esempio:
             </h3>
             {question.language && (

@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { ReferenceDataForm } from "@/components/reference-data/reference-data-form";
 import { ReferenceDataTable } from "@/components/reference-data/reference-data-table";
 import { Button } from "@/components/ui/button";
@@ -28,9 +29,11 @@ const categories = referenceCategories.map((value) => ({
 export default async function ReferenceDataPage() {
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="font-bold text-3xl">Dati di Riferimento</h1>
-      </div>
+      <PageHeader
+        section="settings"
+        title="Dati di riferimento"
+        description="Linguaggi, framework, strumenti e altri valori proposti nei moduli"
+      />
 
       <Tabs defaultValue="programmingLanguage" className="space-y-6">
         <TabsList>

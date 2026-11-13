@@ -42,6 +42,7 @@ export default async function PositionsPage({
   return (
     <div className="space-y-6">
       <PageHeader
+        section="positions"
         title="Posizioni"
         description="Gestisci le posizioni"
         actionBtns={

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function CandidateHeaderSkeleton() {
   return (
     <PageHeaderSkeleton
+        section="candidates"
       info={
         <>
           <BadgeSkeleton className="w-20" />

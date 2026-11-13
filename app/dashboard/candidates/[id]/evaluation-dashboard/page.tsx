@@ -99,6 +99,7 @@ export default async function CandidateEvaluationDashboardPage({
       </div>
 
       <PageHeader
+        section="candidates"
         title={`Valutazione unificata — ${candidate.firstName} ${candidate.lastName}`}
         description="Riepilogo di quiz tecnico, scenario comportamentale e note del hiring manager"
       />

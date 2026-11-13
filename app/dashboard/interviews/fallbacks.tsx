@@ -17,7 +17,7 @@ export const StatsFallback = () => (
       return (
         <Card key={key}>
           <CardHeader className="flex flex-row justify-between items-center space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">{config.label}</CardTitle>
+            <CardTitle className="font-medium text-foreground text-sm">{config.label}</CardTitle>
             <Icon className={`h-4 w-4 ${config.color}`} />
           </CardHeader>
           <CardContent>

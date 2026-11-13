@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  BrainCircuit,
-  Briefcase,
-  FileQuestion,
-  MessageSquareMore,
-  Settings,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 
 import { NavMain, NavMainFallback } from "@/components/dashboard/nav-main";
 import { NavUser } from "@/components/dashboard/nav-user";
+import { NAV_SECTIONS } from "@/components/dashboard/sections";
 import {
   Sidebar,
   SidebarContent,
@@ -24,49 +17,9 @@ import {
 import Link from "next/link";
 import { Suspense } from "react";
 
-const data = {
-  navSecondary: [
-    // {
-    //   href: "/dashboard",
-    //   label: "Dashboard",
-    //   icon: LayoutDashboard,
-    // },
-    {
-      href: "/dashboard/positions",
-      label: "Posizioni",
-      icon: Briefcase,
-    },
-    {
-      href: "/dashboard/candidates",
-      label: "Candidati",
-      icon: Users,
-    },
-    {
-      href: "/dashboard/quizzes",
-      label: "Quiz",
-      icon: FileQuestion,
-    },
-    {
-      href: "/dashboard/presets",
-      label: "Presets",
-      icon: Sparkles,
-    },
-    {
-      href: "/dashboard/interviews",
-      label: "Colloqui",
-      icon: MessageSquareMore,
-    },
-    {
-      href: "/dashboard/settings/reference-data",
-      label: "Impostazioni",
-      icon: Settings,
-    },
-  ],
-};
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props} className="bg-sidebar border-r-0">
+    <Sidebar variant="inset" collapsible="icon" {...props} className="bg-sidebar border-r-0">
       <SidebarHeader className="p-2 border-sidebar-border/50 border-b">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -90,9 +43,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="">
-        <Suspense fallback={<NavMainFallback items={data.navSecondary} />}>
-          <NavMain items={data.navSecondary} />
+      <SidebarContent className="pt-2">
+        <Suspense fallback={<NavMainFallback items={NAV_SECTIONS} />}>
+          <NavMain items={NAV_SECTIONS} />
         </Suspense>
       </SidebarContent>
       <SidebarFooter className="p-2 border-sidebar-border/50 border-t">

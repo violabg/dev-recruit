@@ -104,6 +104,7 @@ export default async function PresetDetailPage({
   return (
     <div className="space-y-6">
       <PageHeader
+        section="presets"
         title={preset.label}
         description={preset.description || "Nessuna descrizione fornita."}
         actionBtns={
