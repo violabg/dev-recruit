@@ -165,11 +165,9 @@ Open [http://localhost:3000](http://localhost:3000) to access the application.
 
 ## 📖 Documentation
 
-For detailed documentation on specific features:
-
-- **[AI Quiz Generation System](./docs/AI_QUIZ_GENERATION.md)** - Deep dive into the AI-powered quiz generation
-- **[Cache Implementation](./docs/CACHE_IMPLEMENTATION.md)** - Server-side caching patterns
-- **[Question Schema Reference](./docs/QUESTION_SCHEMAS.md)** - Zod schemas for question validation
+- **[CONTEXT.md](./CONTEXT.md)** - Project vocabulary (domain terms, Italian UI labels, status values, code-area map)
+- **[knowledge/](./knowledge)** - Project rules (domain model, server actions, caching, AI, question schemas, styling, testing)
+- **[Agentic system](./docs/agentic-system/README.md)** - How the AI agent workflows are set up
 
 ## 🔧 Available Scripts
 
@@ -221,7 +219,7 @@ graph TB
 
 ## 🤖 AI Quiz Generation Flow
 
-The AI quiz generation system is the heart of DevRecruit. See the detailed documentation at **[docs/AI_QUIZ_GENERATION.md](./docs/AI_QUIZ_GENERATION.md)**.
+The AI quiz generation system is the heart of DevRecruit. Its rules are in **[knowledge/ai_generation.md](./knowledge/ai_generation.md)**.
 
 ### High-Level Flow
 
@@ -279,7 +277,7 @@ The core entities in DevRecruit:
 | **Evaluation**        | AI-generated assessments (polymorphic: interview or candidate-based)          |
 | **Preset**            | Question generation templates with type-specific parameters                   |
 
-For detailed information on the candidate-position relationship, see [`docs/CANDIDATE_POSITIONS.md`](docs/CANDIDATE_POSITIONS.md).
+Entity rules (including the candidate-position relationship) are in [`knowledge/domain_model.md`](knowledge/domain_model.md).
 
 ## 🎨 Styling Guidelines
 

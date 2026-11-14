@@ -1,0 +1,119 @@
+---
+title: "cache invalidation"
+tier: "PerContext"
+keywords: ["cache","use cache","cacheTag","invalidate","CacheTags","entityTag","data layer"]
+intent: "When adding or changing a cached read in the data layer or any mutation that must invalidate cache, or passing server data to client components."
+editable: true
+---
+# Cache tagging and invalidation
+
+Cache Components (`cacheComponents`) and Partial Prefetching are on. How `"use cache"`, `cacheLife`, `cacheTag`, `updateTag` work is in the Next.js docs (next-devtools MCP); this document holds only this project's rules.
+
+## Where caching lives
+
+- `"use cache"` is used only in the data layer functions (one module per entity). Pages and server components call those functions; they never call Prisma.
+- Every cached read sets `cacheLife("hours")`, or `cacheLife("minutes")` for short-lived data. No other profile and no custom profiles.
+- Two reads are uncached on purpose: `getProfile` (depends on the session) and `getInterviewByToken` (live interview state while the candidate answers). Follow the same choice for any session-dependent or live read.
+- NEVER call `requireUser()`, `getCurrentUser()`, `cookies()` or `headers()` inside a `"use cache"` scope. Render components that need them inside a `Suspense` boundary.
+
+## Tag vocabulary
+
+Always build tags with the helpers from the cache utils; never write tag strings by hand.
+
+| Collection tag (`CacheTags.*`) | Entity tag (`entityTag.*`) |
+|---|---|
+| `QUIZZES` = `quizzes` | `entityTag.quiz(id)` → `quiz-{id}` |
+| `QUESTIONS` = `questions` | `entityTag.question(id)` → `question-{id}` |
+| `POSITIONS` = `positions` | `entityTag.position(id)` → `positions-{id}` (plural on purpose) |
+| `CANDIDATES` = `candidates` | `entityTag.candidate(id)` → `candidate-{id}` |
+| `INTERVIEWS` = `interviews` | `entityTag.interview(id)` → `interview-{id}` |
+| `EVALUATIONS` = `evaluations` | `entityTag.evaluation(id)`, `entityTag.evaluationInterview(interviewId)`, `entityTag.evaluationCandidate(candidateId)` |
+| `BEHAVIORAL_RUBRICS` = `behavioral-rubrics` | `entityTag.behavioralRubric(candidateId, positionId)` |
+| `PRESETS` = `presets` | `entityTag.preset(id)` |
+| `REFERENCE_DATA` = `reference-data` | `entityTag.referenceCategory(category)` |
+
+`entityTag` is an object of functions; the separator is always `-`.
+
+## Dependency-tag rule
+
+A cached read MUST tag the collection tag of every entity it reads, including every relation pulled in through `include` or `select`. Mutations invalidate only their own entity, so a missing dependency tag means stale UI. Add the entity tag too when the read targets one row.
+
+```ts
+export async function getFilteredCandidates(params?: FetchCandidatesParams) {
+  "use cache";
+  cacheLife("hours");
+  // CANDIDATE_INCLUDE joins positions + interviews
+  cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS, CacheTags.INTERVIEWS);
+  // ...prisma.candidate.findMany({ where, include: CANDIDATE_INCLUDE, ... })
+}
+```
+
+Join tables have no tag of their own: `QuizQuestion` is covered by `quizzes` + `questions`, `CandidatePosition` by `candidates`.
+
+## Invalidating mutations
+
+Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or `revalidatePath` directly (the helpers also refresh the dashboard paths).
+
+| Helper | Always expires | Options |
+|---|---|---|
+| `invalidateQuizCache({ quizId?, positionId?, deleted? })` | `quizzes`, `questions` | entity tags for quiz and position |
+| `invalidateQuestionCache({ questionId?, quizId?, isFavorite? })` | `questions` | `quizId` also expires the quiz; `isFavorite` = favorite status changed |
+| `invalidatePositionCache(positionId?, { deleted? })` | `positions` | positional id, then options |
+| `invalidateCandidateCache({ candidateId?, positionId?, positionIds?, deleted? })` | `candidates` | pass every position touched (old and new) |
+| `invalidateInterviewCache({ interviewId?, quizId?, deleted? })` | `interviews` | |
+| `invalidateEvaluationCache({ evaluationId?, interviewId?, candidateId? })` | `evaluations` | server actions only |
+| `invalidateEvaluationCacheInRouteHandler({ … })` | `evaluations` | same options; for route handlers |
+| `invalidateBehavioralRubricCache({ candidateId, positionId })` | `behavioral-rubrics` | both required |
+| `invalidatePresetCache(presetId?)` | `presets` | pass the id whenever there is one |
+| `invalidateReferenceDataCache(category?)` | `reference-data` | |
+| `invalidateProfileCache()` | profile paths | |
+
+Helpers use `updateTag`, which works only in server actions. In a route handler use the `…InRouteHandler` variant (it uses `revalidateTag(tag, { expire: 0 })`).
+
+## Deletes and database cascades
+
+A delete (including `deleteMany`) of a Position, Quiz, Candidate or Interview MUST pass `deleted: true`, so the helper also expires the collections whose rows the database removed by cascade (`CASCADE_ON_DELETE`):
+
+| Deleted | Also expires |
+|---|---|
+| position | quizzes, interviews, evaluations, candidates, behavioral-rubrics |
+| quiz | interviews, evaluations |
+| candidate | interviews, evaluations, behavioral-rubrics |
+| interview | evaluations |
+
+```ts
+await prisma.candidate.delete({ where: { id } });
+invalidateCandidateCache({
+  candidateId: id,
+  positionIds: candidate.positions.map((p) => p.positionId),
+  deleted: true,
+});
+```
+
+When an `onDelete: Cascade` relation is added or changed in the Prisma schema, update `CASCADE_ON_DELETE` in the same change.
+
+## Passing server data to client components
+
+NEVER fetch lists in a client component (`useEffect`, or an action called on mount). Fetch them in the server tree with a cached data function, then:
+
+- Slot pattern, when the client only renders markup for the data: pass an async server component as a `ReactNode` prop, e.g. `languageOptions={<Suspense fallback={<SelectOptionsSkeleton />}><ProgrammingLanguageSelectItems /></Suspense>}`.
+- Promise prop + `use()`, when the client needs the data itself: start the cached read without awaiting, pass the promise, unwrap it with `use()` under a `Suspense` inside the client component, e.g. `presetsPromise={getAllPresets().catch(() => [])}` → `use(presetsPromise)`.
+
+Both stay in the cached server render and refresh after the action's `updateTag`.
+
+## API routes
+
+Route handlers exist only for streaming responses (resume evaluation, position description) and for the auth library. Every other server call from the client is a server action.
+
+## Prerender constraint
+
+Do not read the current time (`new Date()`, `Date.now()`) in code that runs during prerender; use timing APIs (`performance.timeOrigin + performance.now()`, as the logger does) or move the code behind `Suspense`.
+
+## Common mistakes
+
+- Adding an `include`/`select` relation to a cached read without adding that entity's collection tag.
+- Writing tags as literals, with `:` as separator, or `position-{id}` instead of `positions-{id}`.
+- Calling `updateTag`/`revalidatePath` directly, or `invalidateEvaluationCache` inside a route handler.
+- Deleting without `deleted: true`, leaving cascaded rows in cached lists and counts.
+- Updating a candidate's positions and passing only the new position ids.
+- Caching session-dependent data or calling session APIs inside `"use cache"`.
