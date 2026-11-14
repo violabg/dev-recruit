@@ -4,7 +4,7 @@
  * Shared types and interfaces for the AI service modules.
  */
 
-import { FALLBACK_MODELS } from "../../utils";
+import { FALLBACK_MODELS } from "./models";
 
 // AI-specific error types
 export class AIGenerationError extends Error {

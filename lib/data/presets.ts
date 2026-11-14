@@ -24,7 +24,6 @@ export type PresetsFilterParams = {
 
 /**
  * Fetch paginated and filtered presets with caching
- * Used by getPresetsAction() to retrieve the preset list
  * Cache is invalidated via updateTag("presets") after mutations
  */
 export async function getPresetsData(
@@ -76,7 +75,6 @@ export async function getPresetsData(
 
 /**
  * Fetch a single preset by ID with granular caching
- * Used by getPresetAction(id) to retrieve a specific preset for detail/edit pages
  * Cache is invalidated granularly via updateTag("presets", presetId) after mutations
  */
 export async function getPresetData(presetId: string): Promise<Preset | null> {

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { PasswordField } from "@/components/ui/rhf-inputs";
 import { updatePassword } from "@/lib/actions/profile";
+import { unwrap } from "@/lib/utils/action-result";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,11 +41,7 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
   const onSubmit = (values: ChangePasswordFormData) => {
     startTransition(async () => {
       try {
-        const formData = new FormData();
-        formData.append("current_password", values.current_password);
-        formData.append("new_password", values.new_password);
-
-        await updatePassword(formData);
+        unwrap(await updatePassword(values));
         toast.success("Password aggiornata con successo");
         reset();
         router.push("/dashboard/profile");
@@ -52,7 +49,7 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Errore nell&apos;aggiornamento della password",
+            : "Errore nell'aggiornamento della password",
         );
       }
     });

@@ -1,189 +1,111 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { transcribeAudioAction } from "../../../lib/actions/transcription";
 
-// Mock dependencies
 vi.mock("@ai-sdk/groq", () => ({
-  groq: {
-    transcription: vi.fn(() => ({ model: "whisper-large-v3-turbo" })),
-  },
+  groq: { transcription: vi.fn((model: string) => ({ model })) },
 }));
-vi.mock("ai", () => ({
-  transcribe: vi.fn(),
-}));
-vi.mock("../../../lib/services/logger", () => ({
-  logger: {
-    error: vi.fn(),
-  },
-}));
-vi.mock("../../../lib/utils", () => ({
-  LLM_MODELS: {
-    WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo",
-  },
-}));
+vi.mock("ai", () => ({ transcribe: vi.fn() }));
+vi.mock("@/lib/services/logger", () => ({ logger: { error: vi.fn() } }));
 
-describe("transcription action", () => {
+import { transcribeAudioAction } from "@/lib/actions/transcription";
+import prisma from "@/lib/prisma";
+import { transcribe } from "ai";
+
+const form = (fields: { token?: string; audio?: Blob }) => {
+  const formData = new FormData();
+  if (fields.token !== undefined) formData.append("token", fields.token);
+  if (fields.audio) formData.append("audio", fields.audio);
+  return formData;
+};
+
+const audio = () => new Blob([new Uint8Array([10, 20, 30])]);
+
+const activeInterview = {
+  status: "in_progress",
+  startedAt: new Date(),
+  quiz: { timeLimit: 30 },
+};
+
+describe("transcribeAudioAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.interview.findUnique).mockResolvedValue(
+      activeInterview as any,
+    );
+    vi.mocked(transcribe).mockResolvedValue({ text: "Testo trascritto" } as any);
   });
 
-  describe("transcribeAudioAction", () => {
-    it("transcribes audio successfully", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
+  it("transcribes audio for an active interview", async () => {
+    const result = await transcribeAudioAction(
+      form({ token: "tok", audio: audio() }),
+    );
 
-      mockTranscribe.mockResolvedValueOnce({
-        text: "This is the transcribed text from the audio file.",
-      });
+    expect(result).toEqual({ success: true, text: "Testo trascritto" });
+    expect(prisma.interview.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { token: "tok" } }),
+    );
 
-      const audioBlob = new Blob([new Uint8Array([1, 2, 3, 4, 5])]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      const result = await transcribeAudioAction(formData);
+    const call = vi.mocked(transcribe).mock.calls[0][0];
+    expect(Array.from(call.audio as Uint8Array)).toEqual([10, 20, 30]);
+    expect(call.model).toEqual({ model: "whisper-large-v3-turbo" });
+  });
 
-      expect(result.success).toBe(true);
-      expect(result.text).toBe(
-        "This is the transcribed text from the audio file."
-      );
-      expect(mockTranscribe).toHaveBeenCalledWith({
-        model: expect.anything(),
-        audio: expect.any(Uint8Array),
-      });
+  it("refuses a request without an interview token", async () => {
+    const result = await transcribeAudioAction(form({ audio: audio() }));
+
+    expect(result.success).toBe(false);
+    expect(transcribe).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unknown token", async () => {
+    vi.mocked(prisma.interview.findUnique).mockResolvedValueOnce(null);
+
+    const result = await transcribeAudioAction(
+      form({ token: "nope", audio: audio() }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: "Il colloquio non è più attivo",
     });
+    expect(transcribe).not.toHaveBeenCalled();
+  });
 
-    it("handles empty audio data", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
+  it.each([
+    ["completed", new Date()],
+    ["cancelled", new Date()],
+    ["in_progress", new Date(Date.now() - 3 * 60 * 60 * 1000)],
+  ])("refuses a %s interview that no longer accepts answers", async (status, startedAt) => {
+    vi.mocked(prisma.interview.findUnique).mockResolvedValueOnce({
+      ...activeInterview,
+      status,
+      startedAt,
+    } as any);
 
-      mockTranscribe.mockResolvedValueOnce({
-        text: "",
-      });
+    const result = await transcribeAudioAction(
+      form({ token: "tok", audio: audio() }),
+    );
 
-      const audioBlob = new Blob([new Uint8Array([])]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      const result = await transcribeAudioAction(formData);
+    expect(result.success).toBe(false);
+    expect(transcribe).not.toHaveBeenCalled();
+  });
 
-      expect(result.success).toBe(true);
-      expect(result.text).toBe("");
-      expect(mockTranscribe).toHaveBeenCalled();
+  it("refuses a request without audio", async () => {
+    const result = await transcribeAudioAction(form({ token: "tok" }));
+
+    expect(result).toEqual({
+      success: false,
+      error: "Nessun file audio fornito",
     });
+  });
 
-    it("converts Blob to Uint8Array", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
+  it("returns a friendly error when the provider fails", async () => {
+    vi.mocked(transcribe).mockRejectedValueOnce(new Error("provider down"));
 
-      mockTranscribe.mockResolvedValueOnce({
-        text: "Test transcription",
-      });
+    const result = await transcribeAudioAction(
+      form({ token: "tok", audio: audio() }),
+    );
 
-      const audioData = [10, 20, 30, 40, 50];
-      const audioBlob = new Blob([new Uint8Array(audioData)]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      await transcribeAudioAction(formData);
-
-      const callArgs = mockTranscribe.mock.calls[0][0];
-      expect(callArgs.audio).toBeInstanceOf(Uint8Array);
-      expect(Array.from(callArgs.audio)).toEqual(audioData);
-    });
-
-    it("returns error when transcription fails", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
-
-      mockTranscribe.mockRejectedValueOnce(
-        new Error("Transcription service unavailable")
-      );
-
-      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      const result = await transcribeAudioAction(formData);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Transcription service unavailable");
-    });
-
-    it("handles long audio files", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
-
-      const longText = "This is a very long transcription. ".repeat(100);
-      mockTranscribe.mockResolvedValueOnce({
-        text: longText,
-      });
-
-      const largeAudioData = Array(10000).fill(1);
-      const audioBlob = new Blob([new Uint8Array(largeAudioData)]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      const result = await transcribeAudioAction(formData);
-
-      expect(result.success).toBe(true);
-      expect(result.text).toBe(longText);
-      expect(result.text!.length).toBeGreaterThan(1000);
-    });
-
-    it("uses Groq Whisper model", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
-
-      mockTranscribe.mockResolvedValueOnce({
-        text: "Test",
-      });
-
-      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      await transcribeAudioAction(formData);
-
-      const callArgs = mockTranscribe.mock.calls[0][0];
-      expect(callArgs.model).toBeDefined();
-    });
-
-    it("handles special characters in transcription", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
-
-      mockTranscribe.mockResolvedValueOnce({
-        text: "Text with special chars: é, ñ, ü, @, #, $, %, &",
-      });
-
-      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      const result = await transcribeAudioAction(formData);
-
-      expect(result.success).toBe(true);
-      expect(result.text).toContain("é");
-      expect(result.text).toContain("@");
-    });
-
-    it("handles multi-language transcription", async () => {
-      const { transcribe } = await import("ai");
-      const mockTranscribe = transcribe as any;
-
-      mockTranscribe.mockResolvedValueOnce({
-        text: "English and Italian: Ciao, hello, buongiorno",
-      });
-
-      const audioBlob = new Blob([new Uint8Array([1, 2, 3])]);
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-      const result = await transcribeAudioAction(formData);
-
-      expect(result.success).toBe(true);
-      expect(result.text).toContain("English");
-      expect(result.text).toContain("Italian");
-      expect(result.text).toContain("Ciao");
-    });
-
-    it("returns error when no audio file is provided", async () => {
-      const formData = new FormData();
-      const result = await transcribeAudioAction(formData);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("No audio file provided");
-    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Trascrizione non riuscita");
   });
 });

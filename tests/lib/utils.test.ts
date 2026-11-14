@@ -5,16 +5,18 @@
  */
 
 import {
-  cn,
-  formatDate,
   DEFAULT_GENERATION_MODEL,
   FALLBACK_MODELS,
   getAllAvailableModels,
-  getInitials,
   getModelsByCategory,
   getOptimalModel,
-  getStatusColor,
   LLM_MODELS,
+} from "@/lib/services/ai/models";
+import {
+  cn,
+  formatDate,
+  getInitials,
+  getStatusColor,
   prismLanguage,
 } from "@/lib/utils";
 import { describe, expect, it } from "vitest";

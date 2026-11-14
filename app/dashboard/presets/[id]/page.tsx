@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
-import { deletePresetAction, getPresetAction } from "@/lib/actions/presets";
+import { deletePresetAction } from "@/lib/actions/presets";
+import { getPresetData } from "@/lib/data/presets";
 import { getRecentPresetIds } from "@/lib/data/presets";
 import { Edit } from "lucide-react";
 import type { Route } from "next";
@@ -63,13 +64,12 @@ async function PresetDetailContent({
   params,
 }: PresetDetailPageProps) {
   const { id } = await params;
-  const result = await getPresetAction(id);
+  const preset = await getPresetData(id);
 
-  if (!result.success || !result.preset) {
+  if (!preset) {
     notFound();
   }
 
-  const preset = result.preset;
   const behaviorByType: Record<string, { label: string; value: string }[]> = {
     multiple_choice: [
       {

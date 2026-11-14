@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { InputField } from "@/components/ui/rhf-inputs";
-import { updateProfile, type Profile } from "@/lib/actions/profile";
+import { updateProfile } from "@/lib/actions/profile";
+import type { Profile } from "@/lib/data/profile";
+import { unwrap } from "@/lib/utils/action-result";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,11 +51,7 @@ export const ProfileForm = ({
   const onSubmit = (values: ProfileFormValues) => {
     startTransition(async () => {
       try {
-        const formData = new FormData();
-        formData.append("full_name", values.full_name);
-        formData.append("user_name", values.user_name);
-
-        await updateProfile(formData);
+        unwrap(await updateProfile(values));
         toast.success("Profilo aggiornato con successo");
         router.push("/dashboard/profile");
       } catch (error) {

@@ -18,21 +18,32 @@ import {
 } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { updateEvaluationNotes } from "@/lib/actions/evaluation-entity";
 import {
-  createInterviewEvaluation,
-  updateEvaluationNotes,
-} from "@/lib/actions/evaluation-entity";
-import {
-  evaluateAnswer,
-  generateOverallEvaluation,
+  completeInterviewEvaluationAction,
+  evaluateInterviewAnswerAction,
 } from "@/lib/actions/evaluations";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
-import { SavedQuestion } from "@/lib/schemas";
+import type { EvaluationResult, SavedQuestion } from "@/lib/schemas";
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 
 import { Loader2, Save, Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+
+type QuestionEvaluation = EvaluationResult & { maxScore: number };
+
+/** Mirrors the server rule: an empty answer is not evaluated */
+const hasAnswer = (rawAnswer: unknown) => {
+  if (rawAnswer === undefined || rawAnswer === null || rawAnswer === "") {
+    return false;
+  }
+  if (typeof rawAnswer === "object" && "code" in rawAnswer) {
+    return Boolean((rawAnswer as { code: unknown }).code);
+  }
+  return true;
+};
 
 interface InterviewResultsClientProps {
   interviewId: string;
@@ -50,9 +61,17 @@ export function InterviewResultsClient({
   initialEvaluation,
 }: InterviewResultsClientProps) {
   const [loading, setLoading] = useState(false);
-  const [evaluations, setEvaluations] = useState<Record<string, any>>({});
-  const [savedEvaluation, setSavedEvaluation] =
-    useState<EvaluationWithRelations | null>(initialEvaluation ?? null);
+  const [evaluations, setEvaluations] = useState<
+    Record<string, QuestionEvaluation>
+  >({});
+  const [savedEvaluation, setSavedEvaluation] = useState<{
+    id: string;
+    notes: string | null;
+  } | null>(
+    initialEvaluation
+      ? { id: initialEvaluation.id, notes: initialEvaluation.notes }
+      : null,
+  );
   const [overallEvaluation, setOverallEvaluation] = useState<any | null>(
     initialEvaluation
       ? {
@@ -81,16 +100,17 @@ export function InterviewResultsClient({
   const evaluateAnswers = async () => {
     setLoading(true);
     try {
-      const evaluatedQuestions: Record<string, any> = {};
-      let totalScore = 0;
-      let maxPossibleScore = 0;
+      const evaluatedQuestions: Record<string, QuestionEvaluation> = {};
 
-      // Get questions that have answers
-      const questionsToEvaluate = quizQuestions.filter((q) => answers[q.dbId]);
+      // Every answered question is evaluated, whatever its type
+      const questionsToEvaluate = quizQuestions.filter((q) =>
+        hasAnswer(answers[q.dbId]),
+      );
       setTotalQuestionsToEvaluate(questionsToEvaluate.length);
       setCurrentEvaluationIndex(0);
 
-      // Evaluate each question
+      // One request per question keeps the progress indicator accurate.
+      // The server reads the question and the answer itself.
       for (let i = 0; i < questionsToEvaluate.length; i++) {
         const question = questionsToEvaluate[i];
         setCurrentEvaluationIndex(i + 1);
@@ -99,49 +119,11 @@ export function InterviewResultsClient({
             (question.question.length > 60 ? "..." : ""),
         );
 
-        let answer = "";
-        const rawAnswer = answers[question.dbId];
-
-        switch (question.type) {
-          case "multiple_choice":
-            // Pass the index as string - evaluateAnswer expects the index, not the option text
-            answer = String(rawAnswer ?? "");
-            break;
-          case "code_snippet":
-            // code_snippet answers are stored as { code: string }
-            answer =
-              typeof rawAnswer === "object" &&
-              rawAnswer !== null &&
-              "code" in rawAnswer
-                ? rawAnswer.code
-                : String(rawAnswer ?? "");
-            break;
-          case "open_question":
-            // open_question answers are stored as plain strings
-            answer = String(rawAnswer ?? "");
-            break;
-          default:
-            console.error("Unknown question type:", question.type);
-            continue;
-        }
-        const maxScore = 10; // Max score per question
-
         try {
-          // Call the server action to evaluate the answer
-          const result = await evaluateAnswer(question, answer);
-
-          evaluatedQuestions[question.dbId] = {
-            evaluation: result.evaluation,
-            score: result.score,
-            maxScore,
-            strengths: result.strengths,
-            weaknesses: result.weaknesses,
-          };
-
-          totalScore += result.score;
-          maxPossibleScore += maxScore;
-        } catch (error) {
-          console.error("Error evaluating answer:", error);
+          evaluatedQuestions[question.dbId] = unwrap(
+            await evaluateInterviewAnswerAction(interviewId, question.dbId),
+          ).evaluation;
+        } catch {
           toast.error("Errore valutazione", {
             description: `Errore nella valutazione della domanda: ${question.question.slice(
               0,
@@ -152,82 +134,47 @@ export function InterviewResultsClient({
             evaluation:
               "Errore durante la valutazione automatica. La risposta verrà valutata manualmente.",
             score: 0,
-            maxScore,
+            maxScore: 10,
             strengths: [],
             weaknesses: ["Valutazione automatica non riuscita"],
           };
-          maxPossibleScore += maxScore;
         }
       }
 
       setEvaluations(evaluatedQuestions);
 
-      // Calculate overall score as percentage
-      const percentageScore =
-        maxPossibleScore > 0
-          ? Math.round((totalScore / maxPossibleScore) * 100)
-          : 0;
-      setOverallScore(percentageScore);
-
-      // Generate overall evaluation
+      // Overall evaluation: generated, scored and saved on the server
       setIsGeneratingOverallEvaluation(true);
       setCurrentQuestionTitle("");
       try {
-        const answeredQuestions = quizQuestions.filter((q) => answers[q.dbId]);
-
-        const result = await generateOverallEvaluation(
-          candidateName,
-          answeredQuestions.length,
-          quizQuestions.length,
-          percentageScore,
-          evaluatedQuestions,
+        const result = unwrap(
+          await completeInterviewEvaluationAction({
+            interviewId,
+            questionEvaluations: evaluatedQuestions,
+          }),
         );
 
-        // Normalize fitScore from 0-100 (AI output) to 0-10 (display scale)
-        const normalizedResult = {
-          ...result,
-          fitScore: result.fitScore
-            ? Math.round(result.fitScore / 10)
-            : undefined,
-        };
-
-        setOverallEvaluation(normalizedResult);
-
-        // Save to database (createInterviewEvaluation also normalizes fitScore)
-        try {
-          const saved = await createInterviewEvaluation(
-            interviewId,
-            result,
-            percentageScore,
-          );
-          setSavedEvaluation({
-            ...saved,
-            interview: null,
-            candidate: null,
-            position: null,
-            creator: null,
-          } as unknown as EvaluationWithRelations);
-          toast.success("Valutazione salvata con successo");
-        } catch (saveError) {
-          console.error("Error saving evaluation:", saveError);
-          toast.error("Errore nel salvataggio", {
-            description:
-              "La valutazione è stata generata ma non salvata nel database",
-          });
-        }
+        setOverallScore(result.quizScore);
+        // fitScore: 0-100 (AI output) to 0-10 (display scale)
+        setOverallEvaluation({
+          ...result.overall,
+          fitScore: Math.round(result.overall.fitScore / 10),
+        });
+        setSavedEvaluation({ id: result.evaluationId, notes: null });
+        toast.success("Valutazione salvata con successo");
       } catch (error) {
-        console.error("Error generating overall evaluation:", error);
         toast.error("Errore valutazione complessiva", {
-          description:
+          description: errorMessage(
+            error,
             "Non è stato possibile generare la valutazione complessiva automatica",
+          ),
         });
         setOverallEvaluation({
           evaluation:
             "Non è stato possibile generare una valutazione complessiva automatica. Si prega di rivedere manualmente i risultati delle singole domande.",
         });
       }
-    } catch (error) {
-      console.error("Error in evaluation process:", error);
+    } catch {
       toast.error("Errore", {
         description:
           "Si è verificato un errore durante la valutazione delle risposte",
@@ -267,11 +214,12 @@ export function InterviewResultsClient({
 
     startSavingNotes(async () => {
       try {
-        await updateEvaluationNotes(savedEvaluation.id, notes);
+        unwrap(await updateEvaluationNotes(savedEvaluation.id, notes));
         toast.success("Note salvate con successo");
       } catch (error) {
-        console.error("Error saving notes:", error);
-        toast.error("Errore durante il salvataggio delle note");
+        toast.error(
+          errorMessage(error, "Errore durante il salvataggio delle note"),
+        );
       }
     });
   };
@@ -540,7 +488,8 @@ export function InterviewResultsClient({
                                 );
                               })()}
 
-                            {type === "open_question" && (
+                            {(type === "open_question" ||
+                              type === "behavioral_scenario") && (
                               <div className="p-3 border rounded-md whitespace-pre-wrap">
                                 {String(answers[dbId] ?? "")}
                               </div>

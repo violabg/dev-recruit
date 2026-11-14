@@ -28,6 +28,28 @@ export const overallEvaluationSchema = z.object({
   fitScore: z.number().min(0).max(100),
 });
 
+// Body of POST /api/evaluations/stream
+export const resumeEvaluationRequestSchema = z.object({
+  candidateId: baseSchemas.id,
+  positionId: baseSchemas.id,
+});
+
+// Input of completeInterviewEvaluationAction: per-question results keyed by
+// question id
+export const interviewEvaluationInputSchema = z.object({
+  interviewId: baseSchemas.id,
+  questionEvaluations: z.record(
+    z.string(),
+    evaluationResultSchema.extend({ maxScore: z.number().optional() }),
+  ),
+});
+
+// Input of updateEvaluationNotes
+export const evaluationNotesSchema = z.object({
+  id: baseSchemas.id,
+  notes: z.string().max(10000, "Le note non possono superare 10000 caratteri"),
+});
+
 export const behavioralRubricSchema = z.object({
   candidateId: baseSchemas.id,
   positionId: baseSchemas.id,
@@ -73,5 +95,8 @@ export const hiringNotesSchema = z
 
 export type EvaluationResult = z.infer<typeof evaluationResultSchema>;
 export type OverallEvaluation = z.infer<typeof overallEvaluationSchema>;
+export type InterviewEvaluationInput = z.infer<
+  typeof interviewEvaluationInputSchema
+>;
 export type BehavioralRubricInput = z.infer<typeof behavioralRubricSchema>;
 export type HiringNotesInput = z.infer<typeof hiringNotesSchema>;

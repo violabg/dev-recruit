@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
+import { formatDate } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -29,7 +30,7 @@ export async function CandidateInterviewsContent({ params }: Props) {
                 <div className="font-medium">{interview.status}</div>
                 {interview.createdAt && (
                   <div className="text-muted-foreground text-sm">
-                    {new Date(interview.createdAt).toLocaleString()}
+                    {formatDate(new Date(interview.createdAt).toISOString(), true)}
                   </div>
                 )}
               </div>

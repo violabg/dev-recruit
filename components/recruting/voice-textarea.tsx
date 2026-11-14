@@ -9,6 +9,8 @@ import { LiveWaveform } from "../ui/live-waveform";
 interface VoiceTextareaProps {
   value: string | null;
   onChange: (value: string | null) => void;
+  /** Token of the interview being taken; transcription is refused without it */
+  interviewToken: string;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -16,6 +18,7 @@ interface VoiceTextareaProps {
 export function VoiceTextarea({
   value,
   onChange,
+  interviewToken,
   placeholder = "Scrivi la tua risposta qui...",
   disabled = false,
 }: VoiceTextareaProps) {
@@ -80,6 +83,7 @@ export function VoiceTextarea({
           // Use FormData to send audio without JSON serialization
           const formData = new FormData();
           formData.append("audio", audioBlob, "audio.webm");
+          formData.append("token", interviewToken);
 
           try {
             setError(null);
@@ -100,14 +104,15 @@ export function VoiceTextarea({
                 ? error.message
                 : "Errore sconosciuto durante la trascrizione";
             setError(errorMessage);
-            console.error("Errore durante la trascrizione:", error);
           }
         });
       };
       recorder.start();
-    } catch (err) {
+    } catch {
       setIsRecording(false);
-      console.error("Impossibile avviare la registrazione:", err);
+      setError(
+        "Impossibile accedere al microfono. Controlla i permessi del browser.",
+      );
     }
   };
 

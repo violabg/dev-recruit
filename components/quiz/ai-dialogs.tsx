@@ -1,6 +1,7 @@
 "use client";
 
 import { AIQuizGenerationDialog } from "@/components/quiz/ai-quiz-generation-dialog";
+import type { GeneratedQuiz } from "@/components/quiz/quiz-generation-form";
 import { QuestionType } from "@/lib/schemas";
 import { AIQuestionGenerationDialog } from "./ai-question-generation-dialog";
 
@@ -61,7 +62,7 @@ type AIDialogsProps = {
     skills: string[];
     description?: string | null;
   };
-  quizId?: string;
+  onQuizGenerated: (quiz: GeneratedQuiz) => void;
 };
 
 export const AIDialogs = ({
@@ -78,7 +79,7 @@ export const AIDialogs = ({
   defaultDifficulty = 3,
   languageOptions,
   position,
-  quizId,
+  onQuizGenerated,
 }: AIDialogsProps) => {
   return (
     <>
@@ -111,9 +112,9 @@ export const AIDialogs = ({
         open={fullQuizDialogOpen}
         onOpenChange={setFullQuizDialogOpen}
         title="Genera Nuovo Quiz con AI"
-        description="Sostituisci completamente tutte le domande del quiz con nuove generate dall'AI"
+        description="Sostituisci tutte le domande del quiz con nuove generate dall'AI. Nulla viene salvato finché non premi Salva."
         position={position}
-        quizId={quizId}
+        onGenerated={onQuizGenerated}
       />
     </>
   );

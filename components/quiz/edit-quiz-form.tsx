@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Preset } from "@/lib/data/presets";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
-import { cn, DEFAULT_GENERATION_MODEL } from "@/lib/utils";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/services/ai/models";
+import { cn } from "@/lib/utils";
 import { getSaveButtonContent } from "@/lib/utils/quiz-form-utils";
 import { AlertCircle, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
+import { toast } from "sonner";
 import { useAIGeneration } from "../../hooks/use-ai-generation";
 import {
   type EditQuizFormData,
@@ -22,6 +24,7 @@ import { FavoriteQuestionsDialog } from "./favorite-questions-dialog";
 import { PresetGenerationButtons } from "./preset-generation-buttons";
 import { QuestionsHeader } from "./questions-header";
 import { QuestionsList } from "./questions-list";
+import type { GeneratedQuiz } from "./quiz-generation-form";
 import { QuizSettings } from "./quiz-settings";
 
 const _: EditQuizFormData = {
@@ -69,6 +72,7 @@ export function EditQuizForm({
     prepend,
     remove,
     update,
+    replace,
     handleSave,
     saveStatus,
     addBlankQuestion,
@@ -151,6 +155,22 @@ export function EditQuizForm({
       });
     },
     [prepend, fields, setExpandedQuestions],
+  );
+
+  // A generated quiz replaces the editor content as UNSAVED changes: the
+  // user reviews it and saves (or cancels) explicitly.
+  const handleQuizGenerated = useCallback(
+    (generated: GeneratedQuiz) => {
+      form.setValue("title", generated.title, { shouldDirty: true });
+      form.setValue("timeLimit", generated.timeLimit, { shouldDirty: true });
+      replace(generated.questions);
+      setExpandedQuestions(new Set());
+      toast.success("Quiz generato", {
+        description:
+          "Rivedi le domande e premi Salva per confermare. Finché non salvi, nulla viene modificato.",
+      });
+    },
+    [form, replace, setExpandedQuestions],
   );
 
   // Handle preset generation
@@ -315,7 +335,7 @@ export function EditQuizForm({
         aiLoading={aiLoading}
         languageOptions={languageOptions}
         position={position}
-        quizId={mode === "edit" ? quiz.id : undefined}
+        onQuizGenerated={handleQuizGenerated}
       />
 
       {/* Favorite Questions Dialog */}

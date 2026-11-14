@@ -2,19 +2,16 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, Loader2, Plus } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 
 import { Button } from "@/components/ui/button";
 import { MultiSelectField } from "@/components/ui/rhf-inputs";
-import {
-  assignQuizzesToCandidate,
-  AssignQuizzesToCandidateState,
-} from "@/lib/actions/candidate-quiz-assignment";
+import { assignQuizzesToCandidate } from "@/lib/actions/interviews";
 import { QuizSelection, quizSelectionSchema } from "@/lib/schemas";
-
-type QuizSelectionValues = QuizSelection;
 
 interface Quiz {
   id: string;
@@ -29,75 +26,62 @@ interface QuizSelectionFormProps {
   onSuccess?: () => void;
 }
 
-const initialState: AssignQuizzesToCandidateState = {
-  message: "",
-};
+type CreatedLink = Extract<
+  Awaited<ReturnType<typeof assignQuizzesToCandidate>>,
+  { success: true }
+>["created"][number];
 
 export function QuizSelectionForm({
   candidateId,
   availableQuizzes,
   onSuccess,
 }: QuizSelectionFormProps) {
-  const [formState, formAction, isPending] = useActionState(
-    assignQuizzesToCandidate,
-    initialState,
-  );
-  const [createdLinks, setCreatedLinks] = useState<
-    {
-      quizId: string;
-      token: string;
-      quizTitle: string;
-    }[]
-  >([]);
+  const [isPending, startTransition] = useTransition();
+  const [createdLinks, setCreatedLinks] = useState<CreatedLink[]>([]);
 
-  const form = useForm<QuizSelectionValues>({
+  const form = useForm<QuizSelection>({
     resolver: zodResolver(quizSelectionSchema),
-    defaultValues: {
-      quizIds: [],
-    },
+    defaultValues: { quizIds: [] },
   });
 
-  const { control } = form;
-  const selectedIds = useWatch({ control, name: "quizIds" });
+  const onSubmit = (values: QuizSelection) => {
+    startTransition(async () => {
+      try {
+        const result = unwrap(
+          await assignQuizzesToCandidate({
+          candidateId,
+          quizIds: values.quizIds,
+          }),
+        );
 
-  // Derive the created links from the latest action result during render
-  const [prevFormState, setPrevFormState] = useState(formState);
-  if (formState !== prevFormState) {
-    setPrevFormState(formState);
-    if (formState.success) {
-      setCreatedLinks(formState.createdInterviews || []);
-    }
-  }
+        setCreatedLinks(result.created);
 
-  useEffect(() => {
-    if (formState.success) {
-      toast.success("Interview links created", {
-        description: `${
-          formState.createdInterviews?.length || 0
-        } interview links have been created successfully`,
-      });
-      form.reset();
-      if (onSuccess) {
-        onSuccess();
+        if (result.created.length > 0) {
+          toast.success("Link di colloquio creati", {
+            description: `${result.created.length} link creati con successo`,
+          });
+          form.reset();
+          onSuccess?.();
+        }
+
+        if (result.skipped.length > 0) {
+          toast.warning("Alcuni colloqui non sono stati creati", {
+            description: result.skipped.join(" "),
+          });
+        }
+      } catch (error) {
+        toast.error("Errore nella creazione dei colloqui", {
+          description: errorMessage(error),
+        });
       }
-    } else if (formState.message && formState.errors) {
-      const errorMessages = Object.values(formState.errors).flat().join(", ");
-      toast.error("Error creating interviews", {
-        description:
-          formState.message || errorMessages || "An unknown error occurred",
-      });
-    } else if (formState.message && !formState.success && !formState.errors) {
-      toast.error("Error", {
-        description: formState.message,
-      });
-    }
-  }, [formState, form, onSuccess]);
+    });
+  };
 
   const copyInterviewLink = (token: string) => {
     const link = `${window.location.origin}/recruting/${token}`;
     navigator.clipboard.writeText(link);
-    toast.success("Link copied", {
-      description: "The interview link has been copied to your clipboard",
+    toast.success("Link copiato", {
+      description: "Il link del colloquio è stato copiato negli appunti",
     });
   };
 
@@ -111,27 +95,26 @@ export function QuizSelectionForm({
       {availableQuizzes.length === 0 ? (
         <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-40 text-center">
           <p className="text-muted-foreground text-sm">
-            No quizzes available for this candidate&apos;s position.
+            Nessun quiz disponibile per la posizione di questo candidato.
           </p>
           <p className="mt-1 text-muted-foreground text-xs">
-            Create quizzes for this position first before assigning them to
-            candidates.
+            Crea prima un quiz per questa posizione, poi assegnalo ai
+            candidati.
           </p>
         </div>
       ) : (
-        <form action={formAction} className="space-y-6" noValidate>
-          <input type="hidden" name="candidateId" value={candidateId} />
-          {selectedIds.map((quizId) => (
-            <input key={quizId} type="hidden" name="quizIds" value={quizId} />
-          ))}
-
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6"
+          noValidate
+        >
           <MultiSelectField
-            control={control}
+            control={form.control}
             name="quizIds"
-            label="Select quizzes"
+            label="Seleziona i quiz"
             required
             options={quizOptions}
-            placeholder="Select quizzes to assign to this candidate"
+            placeholder="Seleziona i quiz da assegnare a questo candidato"
             showClear
           />
 
@@ -139,22 +122,21 @@ export function QuizSelectionForm({
             {isPending ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Creating interviews...
+                Creazione colloqui...
               </>
             ) : (
               <>
                 <Plus className="mr-1 size-4" />
-                Create interview links
+                Crea link di colloquio
               </>
             )}
           </Button>
         </form>
       )}
 
-      {/* Display created links */}
       {createdLinks.length > 0 && (
         <div className="space-y-4">
-          <h3 className="font-medium">Generated Interview Links</h3>
+          <h3 className="font-medium">Link di colloquio generati</h3>
           <div className="space-y-2">
             {createdLinks.map((link) => (
               <div
@@ -164,16 +146,17 @@ export function QuizSelectionForm({
                 <div>
                   <div className="font-medium">{link.quizTitle}</div>
                   <div className="text-muted-foreground text-sm">
-                    Interview link ready
+                    Link del colloquio pronto
                   </div>
                 </div>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => copyInterviewLink(link.token)}
                 >
                   <Copy className="mr-1 size-4" />
-                  Copy Link
+                  Copia link
                 </Button>
               </div>
             ))}

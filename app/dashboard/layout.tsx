@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
-import Breadcrumbs from "@/components/dashboard/Breadcrumbs";
+import Breadcrumbs from "@/components/dashboard/breadcrumbs";
 import { SessionRefreshProvider } from "@/components/dashboard/session-refresh-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {

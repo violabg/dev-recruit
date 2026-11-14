@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getProfile } from "@/lib/actions/profile";
+import { getProfile } from "@/lib/data/profile";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 

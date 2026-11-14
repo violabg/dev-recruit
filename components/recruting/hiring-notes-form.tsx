@@ -14,6 +14,7 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { unwrap } from "@/lib/utils/action-result";
 
 const formSchema = hiringNotesSchema;
 
@@ -45,7 +46,7 @@ export const HiringNotesForm = ({
   const onSubmit = (values: FormData) => {
     startTransition(async () => {
       try {
-        await updateHiringManagerNotesAction(values);
+        unwrap(await updateHiringManagerNotesAction(values));
         toast.success("Note del hiring manager salvate");
       } catch (error) {
         toast.error("Errore salvataggio note", {

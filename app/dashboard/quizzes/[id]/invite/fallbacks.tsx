@@ -24,12 +24,12 @@ export function InviteCandidatesSkeleton() {
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center px-2.5 h-7 font-medium text-[0.8rem] text-muted-foreground">
           <ArrowLeft className="mr-1 size-4" />
-          Back to quiz
+          Torna al quiz
         </span>
       </div>
 
       <div>
-        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assign quiz to candidates</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assegna il quiz ai candidati</h1>
         <TextSkeleton lineClassName="h-6" className="w-96 max-w-full h-4" />
       </div>
 
@@ -41,14 +41,14 @@ export function InviteCandidatesSkeleton() {
         <div className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Assign quiz to candidates</CardTitle>
+              <CardTitle>Assegna il quiz ai candidati</CardTitle>
               <CardDescription>
-                Select candidates and create interview links for this quiz
+                Seleziona i candidati e crea i link di colloquio per questo quiz
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <FieldSkeleton label="Select candidates" required />
+                <FieldSkeleton label="Seleziona i candidati" required />
                 <ButtonSkeleton size="sm" className="w-40" />
               </div>
             </CardContent>

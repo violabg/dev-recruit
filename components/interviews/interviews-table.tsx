@@ -223,9 +223,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                           </TooltipContent>
                         </Tooltip>
                       <DeleteWithConfirm
-                        deleteAction={async () => {
-                          await deleteInterview(interview.id);
-                        }}
+                        deleteAction={() => deleteInterview(interview.id)}
                         title="Eliminare il colloquio?"
                         description="Questa azione eliminerà permanentemente il colloquio e tutte le risposte associate. L'azione non può essere annullata."
                         label="Elimina"

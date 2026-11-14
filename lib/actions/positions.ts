@@ -5,109 +5,91 @@ import { getPositionById } from "../data/positions";
 import prisma from "../prisma";
 import { PositionFormData, positionFormSchema } from "../schemas";
 import { invalidatePositionCache } from "../utils/cache-utils";
+import { runAction, UserError } from "./run-action";
 
-// Position actions
 export async function createPosition(values: PositionFormData) {
-  const user = await requireUser();
+  return runAction("createPosition", async () => {
+    const user = await requireUser();
+    const payload = positionFormSchema.parse(values);
 
-  const payload = positionFormSchema.parse(values);
+    const position = await prisma.position.create({
+      data: {
+        title: payload.title,
+        description: payload.description?.trim() || null,
+        experienceLevel: payload.experienceLevel,
+        skills: payload.skills,
+        softSkills: payload.softSkills ?? [],
+        contractType: payload.contractType?.trim() || null,
+        createdBy: user.id,
+      },
+      select: { id: true },
+    });
 
-  const position = await prisma.position.create({
-    data: {
-      title: payload.title,
-      description: payload.description || null,
-      experienceLevel: payload.experienceLevel,
-      skills: payload.skills,
-      softSkills: payload.softSkills ?? [],
-      contractType: payload.contractType ?? null,
-      createdBy: user.id,
-    },
-    select: { id: true },
+    invalidatePositionCache(position.id);
+
+    redirect(`/dashboard/positions/${position.id}`);
   });
+}
 
-  invalidatePositionCache(position.id);
+export async function updatePosition(id: string, values: PositionFormData) {
+  return runAction("updatePosition", async () => {
+    await requireUser();
+    const payload = positionFormSchema.parse(values);
 
-  redirect(`/dashboard/positions/${position.id}`);
+    const existing = await prisma.position.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new UserError("Posizione non trovata");
+    }
+
+    await prisma.position.update({
+      where: { id },
+      data: {
+        title: payload.title,
+        description: payload.description?.trim() || null,
+        experienceLevel: payload.experienceLevel,
+        skills: payload.skills,
+        softSkills: payload.softSkills ?? [],
+        contractType: payload.contractType?.trim() || null,
+      },
+    });
+
+    invalidatePositionCache(id);
+
+    redirect(`/dashboard/positions/${id}`);
+  });
 }
 
 export async function deletePosition(id: string) {
-  await requireUser();
+  return runAction("deletePosition", async () => {
+    await requireUser();
 
-  const position = await prisma.position.findUnique({
-    where: { id },
-    select: { id: true },
+    const position = await prisma.position.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!position) {
+      throw new UserError("Posizione non trovata");
+    }
+
+    await prisma.position.delete({ where: { id } });
+
+    // Pass the id so getPositionById(id) is expired too, and cascade to the
+    // quizzes/interviews/evaluations removed by onDelete: Cascade.
+    invalidatePositionCache(id, { deleted: true });
+
+    redirect("/dashboard/positions");
   });
-
-  if (!position) {
-    throw new Error("Position not found");
-  }
-
-  await prisma.position.delete({ where: { id } });
-
-  // Pass the id so getPositionById(id) is expired too, and cascade to the
-  // quizzes/interviews/evaluations removed by onDelete: Cascade.
-  invalidatePositionCache(id, { deleted: true });
-
-  redirect("/dashboard/positions");
 }
 
-export async function updatePosition(id: string, formData: FormData) {
-  const user = await requireUser();
-  const parseJsonArray = (
-    value: FormDataEntryValue | null,
-    field: string
-  ): string[] => {
-    if (!value) {
-      return [] as string[];
-    }
-
-    if (typeof value !== "string") {
-      throw new Error(`Invalid ${field} value`);
-    }
-
-    try {
-      const parsed = JSON.parse(value);
-
-      if (!Array.isArray(parsed)) {
-        throw new Error();
-      }
-
-      return parsed as string[];
-    } catch {
-      throw new Error(`Invalid ${field} format`);
-    }
-  };
-
-  const rawSkills = formData.get("skills");
-  const rawSoftSkills = formData.get("softSkills");
-
-  const payload = positionFormSchema.parse({
-    title: formData.get("title"),
-    description: formData.get("description") ?? undefined,
-    experienceLevel: formData.get("experienceLevel"),
-    skills: parseJsonArray(rawSkills, "skills"),
-    softSkills: parseJsonArray(rawSoftSkills, "softSkills"),
-    contractType:
-      (formData.get("contractType") as string | null)?.trim() || undefined,
-  });
-
-  await prisma.position.update({
-    where: { id },
-    data: {
-      title: payload.title,
-      description: payload.description?.trim() || null,
-      experienceLevel: payload.experienceLevel,
-      skills: payload.skills,
-      softSkills: payload.softSkills ?? [],
-      contractType: payload.contractType ?? null,
-    },
-  });
-
-  invalidatePositionCache(id);
-
-  redirect(`/dashboard/positions/${id}`);
-}
-
+/**
+ * Position details for the public apply form (/recruting), which loads them
+ * as the applicant picks positions. Public on purpose: no requireUser().
+ */
 export async function fetchPositionData(positionId: string) {
   return getPositionById(positionId);
 }

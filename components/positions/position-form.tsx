@@ -38,7 +38,7 @@ export function PositionForm({
   contractTypes = [],
 }: PositionFormProps) {
   const router = useRouter();
-  const [isSubmitting, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [isGeneratingDescription, startDescriptionGeneration] = useTransition();
 
   const isEditing = !!position;
@@ -78,27 +78,17 @@ export function PositionForm({
     form.reset(defaultValues);
   }, [defaultValues, form, pathname]);
 
-  async function onSubmit(values: PositionFormData) {
+  function onSubmit(values: PositionFormData) {
     startTransition(async () => {
-      try {
-        if (isEditing) {
-          const formData = new FormData();
-          formData.append("title", values.title);
-          formData.append("description", values.description || "");
-          formData.append("experienceLevel", values.experienceLevel);
-          formData.append("skills", JSON.stringify(values.skills));
-          formData.append(
-            "softSkills",
-            JSON.stringify(values.softSkills || []),
-          );
-          formData.append("contractType", values.contractType || "");
+      // On success the action redirects and returns nothing
+      const result = isEditing
+        ? await updatePosition(position.id, values)
+        : await createPosition(values);
 
-          await updatePosition(position!.id, formData);
-        } else {
-          await createPosition(values);
-        }
-      } catch (error) {
-        console.error("Error submitting position:", error);
+      if (result && !result.success) {
+        toast.error("Impossibile salvare la posizione", {
+          description: result.error,
+        });
       }
     });
   }
@@ -157,7 +147,6 @@ export function PositionForm({
 
         toast.success("Descrizione generata con successo");
       } catch (error) {
-        console.error("Errore generazione descrizione:", error);
         const message =
           error instanceof Error ? error.message : "Errore sconosciuto";
         toast.error("Impossibile generare la descrizione", {
@@ -252,7 +241,7 @@ export function PositionForm({
                   type="button"
                   size="sm"
                   onClick={handleGenerateDescription}
-                  disabled={isGeneratingDescription || isSubmitting}
+                  disabled={isGeneratingDescription || isPending}
                   className="bg-primary/10 hover:bg-primary/20 shadow-none border border-primary/20 text-primary"
                 >
                   {isGeneratingDescription ? (
@@ -306,10 +295,10 @@ export function PositionForm({
               <div className="flex flex-col gap-3 pt-6 border-t">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isPending}
                   className="w-full"
                 >
-                  {isSubmitting ? (
+                  {isPending ? (
                     <>
                       <Loader2 className="mr-2 size-4 animate-spin" />
                       {isEditing ? "Salvataggio..." : "Creazione..."}
@@ -324,7 +313,7 @@ export function PositionForm({
                   type="button"
                   variant="outline"
                   onClick={handleCancel}
-                  disabled={isSubmitting}
+                  disabled={isPending}
                   className="w-full"
                 >
                   Annulla

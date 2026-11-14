@@ -1,6 +1,7 @@
 "use client";
 
-import { cancelExpiredInterviewAction } from "@/lib/actions/interviews";
+import { closeExpiredInterviewAction } from "@/lib/actions/interviews";
+import { interviewState } from "@/lib/utils/interview-utils";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -12,9 +13,8 @@ type Props = {
 };
 
 /**
- * Client component that checks if an in-progress interview has expired
- * and cancels it via server action if needed. Only runs for in_progress interviews
- * with a time limit.
+ * Closes an in-progress interview that has run past its time limit, then
+ * refreshes the page so the new status shows. Renders nothing.
  */
 export function InterviewExpiryChecker({
   interviewId,
@@ -26,48 +26,23 @@ export function InterviewExpiryChecker({
   const isCheckingRef = useRef(false);
 
   useEffect(() => {
-    // Only check for in_progress interviews with a time limit
-    if (
-      status !== "in_progress" ||
-      !startedAt ||
-      !timeLimit ||
-      timeLimit <= 0
-    ) {
+    if (interviewState({ status, startedAt, timeLimit }) !== "expired") {
       return;
     }
+    if (isCheckingRef.current) return;
+    isCheckingRef.current = true;
 
-    // Check if already expired based on client time
-    const startTime = new Date(startedAt).getTime();
-    const now = Date.now();
-    const elapsedMinutes = (now - startTime) / (1000 * 60);
-
-    if (elapsedMinutes <= timeLimit) {
-      // Not expired yet, no need to check
-      return;
-    }
-
-    // Interview appears expired, call server action to cancel
-    const checkExpiry = async () => {
-      if (isCheckingRef.current) return;
-      isCheckingRef.current = true;
-
-      try {
-        const result = await cancelExpiredInterviewAction(interviewId);
-
-        if (result.success && result.cancelled) {
-          // Refresh the page to show updated status
-          router.refresh();
-        }
-      } catch (error) {
-        console.error("Failed to check interview expiry:", error);
-      } finally {
+    closeExpiredInterviewAction(interviewId)
+      .then((result) => {
+        if (result.success && result.closed) router.refresh();
+      })
+      .catch(() => {
+        // Not critical: the status is corrected on the next visit
+      })
+      .finally(() => {
         isCheckingRef.current = false;
-      }
-    };
-
-    checkExpiry();
+      });
   }, [interviewId, status, startedAt, timeLimit, router]);
 
-  // This component renders nothing - it's purely for side effects
   return null;
 }

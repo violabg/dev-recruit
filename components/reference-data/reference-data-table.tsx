@@ -35,6 +35,7 @@ import { useState, useSyncExternalStore } from "react";
 const noopSubscribe = () => () => {};
 import { toast } from "sonner";
 import { ReferenceDataForm } from "./reference-data-form";
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 
 interface Item {
   id: string;
@@ -155,16 +156,17 @@ export function ReferenceDataTable({
 
     // Persist order to server (send ordered IDs)
     try {
-      await reorderReferenceDataAction({
-        category: category as ReferenceCategory,
-        itemIds: next.map((i: Item) => i.id),
-      });
+      unwrap(
+        await reorderReferenceDataAction({
+          category: category as ReferenceCategory,
+          itemIds: next.map((i: Item) => i.id),
+        }),
+      );
       toast.success("Ordine aggiornato");
     } catch (e) {
       // Revert on error
       setItems(items);
-      console.error(e);
-      toast.error("Errore durante il riordinamento");
+      toast.error(errorMessage(e, "Errore durante il riordinamento"));
     }
   }
 

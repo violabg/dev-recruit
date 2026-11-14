@@ -18,7 +18,7 @@ export function SeedPresetsButton() {
           description: `${result.count} preset caricati`,
         });
       } else {
-        toast.error(result.error || "Errore nel caricamento dei preset");
+        toast.error(result.error);
       }
     });
   };

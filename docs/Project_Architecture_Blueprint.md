@@ -228,7 +228,7 @@ export async function getQuizzes() {
 - **Authentication** - `requireUser()` for protected operations
 - **Validation** - Zod schemas for input validation
 - **Cache invalidation** - `updateTag()` after mutations
-- **Error handling** - Consistent error transformation with `handleActionError`
+- **Error handling** - `runAction()` returns `ActionResult` (`{ success, error }`) with Italian messages; see AGENTS.md › Conventions
 
 **Patterns:**
 
@@ -1980,7 +1980,7 @@ components/
 
 ### Error Handling Guidelines
 
-1. **Always catch errors in server actions** - Use `handleActionError`
+1. **Wrap every server action in `runAction()`** - Expected failures are returned as `{ success: false, error }`, never thrown (thrown messages are hidden in production); throw `UserError` for user-facing messages
 2. **Provide user-friendly messages** - Convert error codes to Italian messages
 3. **Log errors with context** - Include relevant IDs and parameters
 4. **Use error boundaries** - Page-level error.tsx files

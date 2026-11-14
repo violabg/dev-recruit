@@ -36,8 +36,7 @@ export function useSessionRefresh(interval = 5 * 60 * 1000) {
           router.push("/auth/login");
           return;
         }
-      } catch (error) {
-        console.error("Failed to check session:", error);
+      } catch {
         // On error, assume session is invalid and redirect
         toast.error("Errore di sessione. Accedi di nuovo.");
         router.push("/auth/login");

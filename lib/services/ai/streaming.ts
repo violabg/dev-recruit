@@ -4,9 +4,9 @@
  * Streaming utilities for AI-generated content like position descriptions.
  */
 
-import { groq } from "@ai-sdk/groq";
-import { streamText, wrapLanguageModel } from "ai";
-import { getOptimalModel, isDevelopment } from "../../utils";
+import { streamText } from "ai";
+import { getLanguageModel } from "./generate";
+import { getOptimalModel } from "./models";
 import { buildPositionDescriptionPrompt } from "./prompts";
 import {
   AIErrorCode,
@@ -21,16 +21,9 @@ export async function streamPositionDescription(
   params: GeneratePositionDescriptionParams
 ) {
   try {
-    const aiModel = groq(getOptimalModel("simple_task", params.specificModel));
-
-    let model = aiModel;
-    if (isDevelopment) {
-      const { devToolsMiddleware } = await import("@ai-sdk/devtools");
-      model = wrapLanguageModel({
-        model: aiModel,
-        middleware: devToolsMiddleware(),
-      });
-    }
+    const model = await getLanguageModel(
+      getOptimalModel("simple_task", params.specificModel),
+    );
 
     const prompt = buildPositionDescriptionPrompt(params);
 

@@ -7,7 +7,7 @@ import { baseSchemas } from "./base";
 
 export const candidateSelectionSchema = z.object({
   candidateIds: z.array(baseSchemas.id).min(1, {
-    error: "Please select at least one candidate.",
+    error: "Seleziona almeno un candidato.",
   }),
   quizId: baseSchemas.id.optional(), // Optional for forms that don't have quizId in form data
 });
@@ -15,14 +15,14 @@ export const candidateSelectionSchema = z.object({
 // Specific schema for candidate-quiz assignment action
 export const candidateQuizSelectionSchema = z.object({
   candidateIds: z.array(baseSchemas.id).min(1, {
-    error: "Please select at least one candidate.",
+    error: "Seleziona almeno un candidato.",
   }),
   quizId: baseSchemas.id, // Required for backend action
 });
 
 export const quizSelectionSchema = z.object({
   quizIds: z.array(baseSchemas.id).min(1, {
-    error: "Please select at least one quiz.",
+    error: "Seleziona almeno un quiz.",
   }),
   candidateId: baseSchemas.id.optional(), // Optional for forms that don't have candidateId in form data
 });
@@ -30,7 +30,7 @@ export const quizSelectionSchema = z.object({
 // Specific schema for candidate-quiz assignment action
 export const candidateQuizAssignmentSchema = z.object({
   quizIds: z.array(baseSchemas.id).min(1, {
-    error: "Please select at least one quiz.",
+    error: "Seleziona almeno un quiz.",
   }),
   candidateId: baseSchemas.id, // Required for backend action
 });

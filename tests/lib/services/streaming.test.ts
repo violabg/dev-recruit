@@ -28,10 +28,13 @@ vi.mock("ai", () => ({
   wrapLanguageModel: vi.fn((config) => config.model),
 }));
 
-// Mock utils for getOptimalModel
-vi.mock("@/lib/utils", () => ({
+// Mock model selection
+vi.mock("@/lib/services/ai/models", () => ({
   getOptimalModel: vi.fn().mockReturnValue("llama3-8b-8192"),
-  isDevelopment: true,
+  FALLBACK_MODELS: [],
+}));
+vi.mock("@/lib/utils", () => ({
+  isDevelopment: false,
   cn: vi.fn(),
 }));
 
@@ -64,7 +67,7 @@ vi.mock("@/lib/services/ai/types", () => ({
 import { buildPositionDescriptionPrompt } from "@/lib/services/ai/prompts";
 import { streamPositionDescription } from "@/lib/services/ai/streaming";
 import { AIGenerationError } from "@/lib/services/ai/types";
-import { getOptimalModel } from "@/lib/utils";
+import { getOptimalModel } from "@/lib/services/ai/models";
 import { groq } from "@ai-sdk/groq";
 import { streamText } from "ai";
 

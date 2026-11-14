@@ -25,13 +25,16 @@ import {
 } from "@/components/ui/rhf-inputs";
 import { SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { QuestionType } from "@/lib/schemas";
-import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
+import {
+  questionGenerationOptionsSchema,
+  type QuestionGenerationOptions,
+  type QuestionType,
+} from "@/lib/schemas";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/services/ai/models";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
 
 const getDifficultyLabel = (value: number) => {
   const labels = {
@@ -44,28 +47,7 @@ const getDifficultyLabel = (value: number) => {
   return labels[value as keyof typeof labels] || "Medio";
 };
 
-// generation form schema
-const generationSchema = z.object({
-  instructions: z.string().optional(),
-  llmModel: z.string().min(1, "Please select a model"),
-  difficulty: z.number().min(1).max(5).optional(),
-
-  // Multiple Choice specific
-  focusAreas: z.array(z.string()).optional(),
-  distractorComplexity: z.enum(["simple", "moderate", "complex"]).optional(),
-
-  // Open Question specific
-  expectedResponseLength: z.enum(["short", "medium", "long"]).optional(),
-  evaluationCriteria: z.array(z.string()).optional(),
-
-  // Code Snippet specific
-  language: z.string().optional(),
-  bugType: z.enum(["syntax", "logic", "performance", "security"]).optional(),
-  codeComplexity: z.enum(["basic", "intermediate", "advanced"]).optional(),
-  includeComments: z.boolean().optional(),
-});
-
-type GenerationFormData = z.infer<typeof generationSchema>;
+type GenerationFormData = QuestionGenerationOptions;
 
 type AIGenerationDialogProps = {
   open: boolean;
@@ -91,7 +73,7 @@ export const AIQuestionGenerationDialog = ({
   languageOptions,
 }: AIGenerationDialogProps) => {
   const form = useForm<GenerationFormData>({
-    resolver: zodResolver(generationSchema),
+    resolver: zodResolver(questionGenerationOptionsSchema),
     defaultValues: {
       llmModel: DEFAULT_GENERATION_MODEL,
       difficulty: defaultDifficulty,

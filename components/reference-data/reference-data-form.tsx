@@ -1,8 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { InputField } from "@/components/ui/rhf-inputs";
 import {
   createReferenceDataAction,
   updateReferenceDataAction,
@@ -11,9 +10,12 @@ import { type ReferenceCategory } from "@/lib/constants/reference-categories";
 import {
   referenceDataFormSchema,
   type ReferenceDataFormData,
+  type ReferenceDataFormInput,
 } from "@/lib/schemas/reference-data";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 interface ReferenceDataFormProps {
   category: ReferenceCategory;
@@ -28,49 +30,51 @@ export function ReferenceDataForm({
   defaultValues,
   onSuccess,
 }: ReferenceDataFormProps) {
-  const form = useForm<ReferenceDataFormData>({
-    // Cast resolver to satisfy RHF types with zod defaults
-    resolver: zodResolver(referenceDataFormSchema) as any,
+  const [isPending, startTransition] = useTransition();
+  const itemId = defaultValues?.id;
+
+  const form = useForm<ReferenceDataFormInput, unknown, ReferenceDataFormData>({
+    resolver: zodResolver(referenceDataFormSchema),
     defaultValues: {
       category,
       label: defaultValues?.label || "",
-      isActive:
-        defaultValues?.isActive !== undefined ? defaultValues.isActive : true,
-      order: defaultValues?.order !== undefined ? defaultValues.order : 0,
+      isActive: defaultValues?.isActive ?? true,
+      order: defaultValues?.order ?? 0,
     },
   });
 
-  async function onSubmit(data: ReferenceDataFormData) {
-    try {
-      if (defaultValues?.id) {
-        await updateReferenceDataAction({ ...data, id: defaultValues.id });
-      } else {
-        await createReferenceDataAction(data);
+  const onSubmit = (data: ReferenceDataFormData) => {
+    startTransition(async () => {
+      const result = itemId
+        ? await updateReferenceDataAction({ ...data, id: itemId })
+        : await createReferenceDataAction(data);
+
+      if (!result.success) {
+        toast.error(result.error);
+        return;
       }
+
+      toast.success(itemId ? "Elemento aggiornato" : "Elemento creato");
       onSuccess?.();
-    } catch (error) {
-      console.error(error);
-    }
-  }
+    });
+  };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4">
-      <div>
-        <Label htmlFor="label">Etichetta</Label>
-        <Input
-          id="label"
-          {...form.register("label")}
-          placeholder="Inserisci l'etichetta"
-        />
-        {form.formState.errors.label && (
-          <p className="text-red-500 text-sm">
-            {form.formState.errors.label.message}
-          </p>
-        )}
-      </div>
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="space-y-4"
+      noValidate
+    >
+      <InputField
+        control={form.control}
+        name="label"
+        label="Etichetta"
+        placeholder="Inserisci l'etichetta"
+        required
+      />
 
-      <Button type="submit" disabled={form.formState.isSubmitting}>
-        {defaultValues?.id ? "Aggiorna" : "Crea"}
+      <Button type="submit" disabled={isPending}>
+        {itemId ? "Aggiorna" : "Crea"}
       </Button>
     </form>
   );

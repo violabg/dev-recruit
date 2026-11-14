@@ -100,7 +100,6 @@ export function DeleteWithConfirm({
         ) {
           return;
         }
-        console.error("Error during deletion:", error);
         toast.error(errorMessage);
       }
     });

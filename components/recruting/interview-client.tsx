@@ -28,6 +28,8 @@ import {
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
 import { InterviewStatus } from "@/lib/schemas";
+import { unwrap } from "@/lib/utils/action-result";
+import { getRemainingSeconds } from "@/lib/utils/interview-utils";
 import { AlertTriangle, BrainCircuit } from "lucide-react";
 import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -47,31 +49,6 @@ type Candidate = {
   name: string;
   email: string;
 };
-
-/**
- * Calculate remaining time in seconds based on startedAt and timeLimit
- * Returns null if no time limit, 0 if time expired
- * Never returns more than the total time limit
- */
-function calculateRemainingTime(
-  startedAt: string | null,
-  timeLimitMinutes: number | null
-): number | null {
-  if (!timeLimitMinutes) return null;
-
-  const totalSeconds = timeLimitMinutes * 60;
-
-  // If not started yet, return null (timer shouldn't show)
-  if (!startedAt) return null;
-
-  const startTime = new Date(startedAt).getTime();
-  const now = Date.now();
-  const elapsedSeconds = Math.floor((now - startTime) / 1000);
-  const remaining = totalSeconds - elapsedSeconds;
-
-  // Clamp between 0 and totalSeconds
-  return Math.max(0, Math.min(remaining, totalSeconds));
-}
 
 /**
  * Find the index of the first unanswered question
@@ -119,7 +96,7 @@ export function InterviewClient({
 
   // Calculate remaining time from startedAt if interview is in progress
   // Note: We compute this during render but defer side effects to useEffect
-  const initialTimeRemaining = calculateRemainingTime(
+  const initialTimeRemaining = getRemainingSeconds(
     interview.startedAt,
     quiz.timeLimit
   );
@@ -152,44 +129,40 @@ export function InterviewClient({
   }, []);
 
   const handleConfirmTimeExpired = useCallback(() => {
-    // Save any pending answer
     const currentQuestion = quiz.questions[currentQuestionIndex];
-    if (pendingAnswer !== null && !answers[currentQuestion.dbId]) {
+    const answerToSave =
+      pendingAnswer !== null && !answers[currentQuestion.dbId]
+        ? pendingAnswer
+        : null;
+
+    if (answerToSave !== null) {
       setAnswers((prev) => ({
         ...prev,
-        [currentQuestion.dbId]: pendingAnswer,
+        [currentQuestion.dbId]: answerToSave,
       }));
-      startTransition(async () => {
-        try {
+    }
+
+    startTransition(async () => {
+      try {
+        if (answerToSave !== null) {
+          // The server accepts a last answer shortly after the limit. If it
+          // is refused anyway, the interview must still be closed.
           await submitAnswer(
             interview.token,
             currentQuestion.dbId,
-            pendingAnswer
+            answerToSave,
           );
-          await completeInterview(interview.token);
-          setIsCompleted(true);
-        } catch (cause) {
-          const message =
-            cause instanceof Error
-              ? cause.message
-              : "Impossibile completare l'intervista";
-          toast.error("Errore", { description: message });
         }
-      });
-    } else {
-      startTransition(async () => {
-        try {
-          await completeInterview(interview.token);
-          setIsCompleted(true);
-        } catch (cause) {
-          const message =
-            cause instanceof Error
-              ? cause.message
-              : "Impossibile completare l'intervista";
-          toast.error("Errore", { description: message });
-        }
-      });
-    }
+        unwrap(await completeInterview(interview.token));
+        setIsCompleted(true);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? cause.message
+            : "Impossibile completare l'intervista";
+        toast.error("Errore", { description: message });
+      }
+    });
     setIsTimeExpired(true);
     setShowTimeExpiredDialog(false);
   }, [
@@ -203,7 +176,7 @@ export function InterviewClient({
   const handleCompleteInterview = useCallback(() => {
     startTransition(async () => {
       try {
-        await completeInterview(interview.token);
+        unwrap(await completeInterview(interview.token));
         setIsCompleted(true);
       } catch (cause) {
         const message =
@@ -220,11 +193,11 @@ export function InterviewClient({
   const handleStartInterview = () => {
     startTransition(async () => {
       try {
-        const result = await startInterview(interview.token);
+        const result = unwrap(await startInterview(interview.token));
         setIsStarted(true);
         // Calculate remaining time from server's startedAt timestamp
         if (quiz.timeLimit && result.startedAt) {
-          const remaining = calculateRemainingTime(
+          const remaining = getRemainingSeconds(
             result.startedAt,
             quiz.timeLimit
           );
@@ -251,7 +224,7 @@ export function InterviewClient({
     }));
     startTransition(async () => {
       try {
-        await submitAnswer(interview.token, questionId, answer);
+        unwrap(await submitAnswer(interview.token, questionId, answer));
       } catch (cause) {
         const message =
           cause instanceof Error
@@ -290,12 +263,14 @@ export function InterviewClient({
       }));
       startTransition(async () => {
         try {
-          await submitAnswer(
-            interview.token,
-            currentQuestion.dbId,
-            pendingAnswer
+          unwrap(
+            await submitAnswer(
+              interview.token,
+              currentQuestion.dbId,
+              pendingAnswer,
+            ),
           );
-          await completeInterview(interview.token);
+          unwrap(await completeInterview(interview.token));
           setIsCompleted(true);
         } catch (cause) {
           const message =
@@ -445,6 +420,7 @@ export function InterviewClient({
               questionNumber={currentQuestionIndex + 1}
               onAnswerChange={handlePendingAnswerChange}
               currentAnswer={answers[quiz.questions[currentQuestionIndex].dbId]}
+              interviewToken={interview.token}
             />
           )}
 

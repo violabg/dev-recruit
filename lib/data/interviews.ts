@@ -883,7 +883,7 @@ export const getFilteredInterviews = cache(
 /**
  * Computes counts of interviews grouped by status from an array of InterviewListItem
  */
-export const getInteviewsStatus = cache(
+export const getInterviewsStatus = cache(
   async (): Promise<Record<string, number>> => {
     "use cache";
     cacheLife("hours");

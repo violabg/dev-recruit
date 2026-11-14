@@ -1,20 +1,12 @@
-/**
- *  AI Generation Hook (Example)
- *
- * This is an example of how to use the new modular question prompt system
- * with type-specific parameters for better question generation.
- */
-
 "use client";
 
 import { generateNewQuestionAction } from "@/lib/actions/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { GenerateQuestionParams } from "@/lib/services/ai-service";
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import {
-  createBackendQuestionParams,
   createBehavioralScenarioParams,
   createCodeSnippetParams,
-  createFrontendQuestionParams,
   createMultipleChoiceParams,
   createOpenQuestionParams,
 } from "@/lib/utils/question-prompt-helpers";
@@ -23,6 +15,7 @@ import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { EditQuizFormData } from "./use-edit-quiz-form";
+
 type Question = FlexibleQuestion;
 
 type UseAIGenerationProps = {
@@ -43,7 +36,7 @@ type UseAIGenerationProps = {
   ) => void;
 };
 
-type GenerationOptions = {
+export type GenerationOptions = {
   instructions?: string;
   llmModel: string;
   difficulty?: number;
@@ -58,6 +51,11 @@ type GenerationOptions = {
   includeComments?: boolean;
 };
 
+/**
+ * AI generation of single questions inside the quiz editor.
+ * Generated questions are added to the form only: nothing is saved until the
+ * user saves the quiz.
+ */
 export const useAIGeneration = ({
   form,
   fields,
@@ -73,21 +71,77 @@ export const useAIGeneration = ({
     number | null
   >(null);
 
-  // Create base configuration from position and form data
-  const createBaseConfig = () => ({
-    quizTitle: form.getValues("title"),
-    positionTitle: position.title,
-    experienceLevel: position.experienceLevel,
-    skills: position.skills,
-    previousQuestions: fields.map((field) => ({
-      question: field.question,
-      type: field.type,
-    })),
-  });
+  /** Programming language suggested by the position's skills */
+  const inferLanguageFromSkills = (): string => {
+    const skills = position.skills.map((skill) => skill.toLowerCase());
+    const has = (...needles: string[]) =>
+      skills.some((skill) => needles.some((needle) => skill.includes(needle)));
 
-  /**
-   *  question generation with type-specific parameters
-   */
+    if (has("javascript", "react", "node")) return "javascript";
+    if (has("typescript")) return "typescript";
+    if (has("python")) return "python";
+    if (has("java")) return "java";
+    if (has("c#", "csharp")) return "csharp";
+    if (has("php")) return "php";
+    return "javascript";
+  };
+
+  /** Build the generation request for a question type and its options */
+  const buildParams = (
+    type: QuestionType,
+    options: GenerationOptions,
+  ): GenerateQuestionParams => {
+    const baseConfig = {
+      quizTitle: form.getValues("title"),
+      positionTitle: position.title,
+      experienceLevel: position.experienceLevel,
+      skills: position.skills,
+      previousQuestions: fields.map((field) => ({
+        question: field.question,
+        type: field.type,
+      })),
+    };
+
+    let params: GenerateQuestionParams;
+    switch (type) {
+      case "multiple_choice":
+        params = createMultipleChoiceParams(baseConfig, {
+          focusAreas: options.focusAreas,
+          distractorComplexity: options.distractorComplexity || "moderate",
+        });
+        break;
+      case "open_question":
+        params = createOpenQuestionParams(baseConfig, {
+          expectedResponseLength: options.expectedResponseLength || "medium",
+          evaluationCriteria: options.evaluationCriteria,
+        });
+        break;
+      case "code_snippet":
+        params = createCodeSnippetParams(baseConfig, {
+          language: options.language || inferLanguageFromSkills(),
+          bugType: options.bugType,
+          codeComplexity: options.codeComplexity || "intermediate",
+          includeComments: options.includeComments ?? true,
+        });
+        break;
+      case "behavioral_scenario":
+        params = createBehavioralScenarioParams(baseConfig, {
+          expectedResponseLength: options.expectedResponseLength || "medium",
+          evaluationCriteria: options.evaluationCriteria,
+        });
+        break;
+      default:
+        throw new Error("Tipo di domanda non supportato");
+    }
+
+    if (options.difficulty) params.difficulty = options.difficulty;
+    if (options.instructions) params.instructions = options.instructions;
+    if (options.llmModel) params.specificModel = options.llmModel;
+
+    return params;
+  };
+
+  /** Generate a new question and add it at the top of the list */
   const handleGenerateQuestion = async (
     type: QuestionType,
     options: GenerationOptions,
@@ -96,151 +150,29 @@ export const useAIGeneration = ({
     setGeneratingQuestionType(type);
 
     try {
-      const baseConfig = createBaseConfig();
-      let params;
+      const { question } = unwrap(
+        await generateNewQuestionAction(buildParams(type, options)),
+      );
+      const newQuestion = { ...question, id: generateId() };
 
-      // Create type-specific parameters based on question type
-      switch (type) {
-        case "multiple_choice":
-          params = createMultipleChoiceParams(baseConfig, {
-            focusAreas: options.focusAreas,
-            distractorComplexity: options.distractorComplexity || "moderate",
-          });
-          break;
-        case "open_question":
-          params = createOpenQuestionParams(baseConfig, {
-            expectedResponseLength: options.expectedResponseLength || "medium",
-            evaluationCriteria: options.evaluationCriteria,
-          });
-          break;
-        case "code_snippet":
-          params = createCodeSnippetParams(baseConfig, {
-            language: options.language || inferLanguageFromSkills(),
-            bugType: options.bugType,
-            codeComplexity: options.codeComplexity || "intermediate",
-            includeComments: options.includeComments ?? true,
-          });
-          break;
-        case "behavioral_scenario":
-          params = createBehavioralScenarioParams(baseConfig, {
-            expectedResponseLength: options.expectedResponseLength || "medium",
-            evaluationCriteria: options.evaluationCriteria,
-          });
-          break;
-      }
+      prepend(newQuestion);
+      setExpandedQuestions((prev) => new Set([...prev, newQuestion.id]));
 
-      // Add common options
-      if (options.difficulty) {
-        params.difficulty = options.difficulty;
-      }
-      if (options.instructions) {
-        params.instructions = options.instructions;
-      }
-      if (options.llmModel) {
-        params.specificModel = options.llmModel;
-      }
-
-      const newQuestion = await generateNewQuestionAction(params);
-      const newQuestionWithId = {
-        ...newQuestion,
-        id: generateId(),
-      };
-
-      prepend(newQuestionWithId);
-
-      // Expand the new question by default
-      setExpandedQuestions((prev) => new Set([...prev, newQuestionWithId.id]));
-
-      toast.success(" question generated successfully!");
+      toast.success("Domanda generata con successo!");
       setGeneratingQuestionType(null);
     } catch (error) {
-      console.error(" question generation error:", error);
-
-      let errorMessage = "Error during  question generation";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      toast.error("Generation Error", {
-        description: errorMessage,
+      toast.error("Errore di generazione", {
+        description: errorMessage(
+          error,
+          "Errore durante la generazione della domanda",
+        ),
       });
     } finally {
       setAiLoading(false);
     }
   };
 
-  /**
-   * Generate frontend-optimized questions with smart defaults
-   */
-  const generateFrontendQuestion = async (
-    type: QuestionType,
-    options: Omit<GenerationOptions, "language" | "bugType" | "codeComplexity">,
-  ) => {
-    const baseConfig = createBaseConfig();
-    const params = createFrontendQuestionParams(type, baseConfig);
-
-    // Override with user options
-    if (options.difficulty) params.difficulty = options.difficulty;
-    if (options.instructions) params.instructions = options.instructions;
-    if (options.llmModel) params.specificModel = options.llmModel;
-
-    await generateQuestionWithParams(params);
-  };
-
-  /**
-   * Generate backend-optimized questions with smart defaults
-   */
-  const generateBackendQuestion = async (
-    type: QuestionType,
-    options: Omit<GenerationOptions, "focusAreas" | "distractorComplexity">,
-  ) => {
-    const baseConfig = createBaseConfig();
-    const params = createBackendQuestionParams(type, baseConfig);
-
-    // Override with user options
-    if (options.difficulty) params.difficulty = options.difficulty;
-    if (options.instructions) params.instructions = options.instructions;
-    if (options.llmModel) params.specificModel = options.llmModel;
-
-    await generateQuestionWithParams(params);
-  };
-
-  /**
-   * Low-level function to generate question with specific parameters
-   */
-  const generateQuestionWithParams = async (params: GenerateQuestionParams) => {
-    setAiLoading(true);
-
-    try {
-      const newQuestion = await generateNewQuestionAction(params);
-      const newQuestionWithId = {
-        ...newQuestion,
-        id: generateId(),
-      };
-
-      prepend(newQuestionWithId);
-      setExpandedQuestions((prev) => new Set([...prev, newQuestionWithId.id]));
-
-      toast.success("Question generated successfully!");
-    } catch (error) {
-      console.error("Question generation error:", error);
-
-      let errorMessage = "Error during question generation";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      toast.error("Generation Error", {
-        description: errorMessage,
-      });
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  /**
-   *  regenerate existing question with type-specific parameters
-   */
+  /** Replace the question being regenerated, keeping its database link */
   const handleRegenerateQuestion = async (
     type: QuestionType,
     options: GenerationOptions,
@@ -251,119 +183,27 @@ export const useAIGeneration = ({
 
     try {
       const currentQuestion = fields[regeneratingQuestionIndex];
-      const baseConfig = createBaseConfig();
+      const { question } = unwrap(
+        await generateNewQuestionAction(buildParams(type, options)),
+      );
 
-      let params;
-
-      // Create type-specific parameters based on question type
-      switch (type) {
-        case "multiple_choice":
-          params = createMultipleChoiceParams(baseConfig, {
-            focusAreas: options.focusAreas,
-            distractorComplexity: options.distractorComplexity || "moderate",
-          });
-          break;
-        case "open_question":
-          params = createOpenQuestionParams(baseConfig, {
-            expectedResponseLength: options.expectedResponseLength || "medium",
-            evaluationCriteria: options.evaluationCriteria,
-          });
-          break;
-        case "code_snippet":
-          params = createCodeSnippetParams(baseConfig, {
-            language: options.language || inferLanguageFromSkills(),
-            bugType: options.bugType,
-            codeComplexity: options.codeComplexity || "intermediate",
-            includeComments: options.includeComments ?? true,
-          });
-          break;
-        case "behavioral_scenario":
-          params = createBehavioralScenarioParams(baseConfig, {
-            expectedResponseLength: options.expectedResponseLength || "medium",
-            evaluationCriteria: options.evaluationCriteria,
-          });
-          break;
-        default:
-          throw new Error("Tipo di domanda non supportato");
-      }
-
-      // Add common options
-      if (options.difficulty) {
-        params.difficulty = options.difficulty;
-      }
-      if (options.instructions) {
-        params.instructions = options.instructions;
-      }
-      if (options.llmModel) {
-        params.specificModel = options.llmModel;
-      }
-
-      const newQuestion = await generateNewQuestionAction(params);
-
-      // Update the question at the specific index
-      // Keep the same dbId to maintain the database link
       update(regeneratingQuestionIndex, {
-        ...newQuestion,
+        ...question,
         dbId: currentQuestion.dbId,
       });
 
       toast.success("Domanda rigenerata con successo!");
       setRegeneratingQuestionIndex(null);
     } catch (error) {
-      console.error(" question regeneration error:", error);
-
-      let errorMessage = "Errore durante la rigenerazione della domanda";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      toast.error("Errore di Rigenerazione", {
-        description: errorMessage,
+      toast.error("Errore di rigenerazione", {
+        description: errorMessage(
+          error,
+          "Errore durante la rigenerazione della domanda",
+        ),
       });
     } finally {
       setAiLoading(false);
     }
-  };
-
-  /**
-   * Infer programming language from position skills
-   */
-  const inferLanguageFromSkills = (): string => {
-    const skills = position.skills.map((skill) => skill.toLowerCase());
-
-    if (
-      skills.some(
-        (skill) =>
-          skill.includes("javascript") ||
-          skill.includes("react") ||
-          skill.includes("node"),
-      )
-    ) {
-      return "javascript";
-    }
-    if (skills.some((skill) => skill.includes("typescript"))) {
-      return "typescript";
-    }
-    if (skills.some((skill) => skill.includes("python"))) {
-      return "python";
-    }
-    if (skills.some((skill) => skill.includes("java"))) {
-      return "java";
-    }
-    if (
-      skills.some((skill) => skill.includes("c#") || skill.includes("csharp"))
-    ) {
-      return "csharp";
-    }
-    if (skills.some((skill) => skill.includes("php"))) {
-      return "php";
-    }
-
-    return "javascript"; // Default fallback
-  };
-
-  const generateNewQuestion = (type: QuestionType) => {
-    setGeneratingQuestionType(type);
   };
 
   const setRegeneratingIndex = (index: number | null) => {
@@ -379,51 +219,7 @@ export const useAIGeneration = ({
     setGeneratingQuestionType,
     regeneratingQuestionIndex,
     setRegeneratingQuestionIndex: setRegeneratingIndex,
-    generateNewQuestion,
-
-    //  methods
     handleGenerateQuestion,
     handleRegenerateQuestion,
-    generateFrontendQuestion,
-    generateBackendQuestion,
-    generateQuestionWithParams,
   };
 };
-
-/**
- * Usage Examples:
- *
- * ```tsx
- * const {
- *   handleGenerateQuestion,
- *   generateFrontendQuestion,
- *   generateBackendQuestion
- * } = useAIGeneration({ ... });
- *
- * // Generate a complex multiple choice question
- * await handleGenerateQuestion("multiple_choice", {
- *   llmModel: "openai/gpt-oss-120b",
- *   difficulty: 4,
- *   focusAreas: ["React Hooks", "State Management"],
- *   distractorComplexity: "complex",
- *   instructions: "Focus on advanced React patterns"
- * });
- *
- * // Generate a frontend-optimized open question
- * await generateFrontendQuestion("open_question", {
- *   llmModel: "openai/gpt-oss-120b",
- *   difficulty: 3,
- *   expectedResponseLength: "medium",
- *   evaluationCriteria: ["conceptual understanding", "best practices"]
- * });
- *
- * // Generate a backend code snippet question
- * await generateBackendQuestion("code_snippet", {
- *   llmModel: "openai/gpt-oss-120b",
- *   difficulty: 4,
- *   language: "javascript",
- *   bugType: "security",
- *   includeComments: true
- * });
- * ```
- */

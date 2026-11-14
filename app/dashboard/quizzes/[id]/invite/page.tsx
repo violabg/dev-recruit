@@ -41,12 +41,12 @@ async function InviteCandidatesContent({
   if (!data || !data.quiz || !data.position) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
-        <p className="font-medium text-lg">Quiz or Position not found</p>
+        <p className="font-medium text-lg">Quiz o posizione non trovati</p>
         <Link
           href="/dashboard/quizzes"
           className={`mt-4 ${buttonVariants({ variant: "default" })}`}
         >
-          Return to quizzes
+          Torna ai quiz
         </Link>
       </div>
     );
@@ -62,30 +62,30 @@ async function InviteCandidatesContent({
           className={buttonVariants({ variant: "ghost", size: "sm" })}
         >
           <ArrowLeft className="mr-1 size-4" />
-          Back to quiz
+          Torna al quiz
         </Link>
       </div>
 
       <div>
-        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assign quiz to candidates</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assegna il quiz ai candidati</h1>
         <p className="text-muted-foreground">
-          Assign the quiz &quot;{quiz.title}&quot; for the position &quot;
-          {position?.title}&quot; to candidates
+          Assegna il quiz &quot;{quiz.title}&quot; per la posizione &quot;
+          {position?.title}&quot; ai candidati
         </p>
       </div>
 
       <Tabs defaultValue="candidates">
         <TabsList variant="line">
-          <TabsTrigger value="candidates">Assign to candidates</TabsTrigger>
-          <TabsTrigger value="interviews">Created interviews</TabsTrigger>
+          <TabsTrigger value="candidates">Assegna ai candidati</TabsTrigger>
+          <TabsTrigger value="interviews">Colloqui creati</TabsTrigger>
         </TabsList>
 
         <TabsContent value="candidates" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Assign quiz to candidates</CardTitle>
+              <CardTitle>Assegna il quiz ai candidati</CardTitle>
               <CardDescription>
-                Select candidates and create interview links for this quiz
+                Seleziona i candidati e crea i link di colloquio per questo quiz
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -100,9 +100,9 @@ async function InviteCandidatesContent({
         <TabsContent value="interviews" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Created interviews</CardTitle>
+              <CardTitle>Colloqui creati</CardTitle>
               <CardDescription>
-                Manage interviews created for this quiz
+                Gestisci i colloqui creati per questo quiz
               </CardDescription>
             </CardHeader>
             <CardContent>

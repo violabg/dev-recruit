@@ -31,15 +31,15 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
 
     startTransition(async () => {
       const result = await toggleQuestionFavoriteAction(question.dbId!);
-      if (result?.success) {
-        setIsFavorite(result.isFavorite ?? !isFavorite);
+      if (result.success) {
+        setIsFavorite(result.isFavorite);
         toast.success(
           result.isFavorite
             ? "Domanda aggiunta ai preferiti"
             : "Domanda rimossa dai preferiti"
         );
       } else {
-        toast.error("Errore nel salvataggio della domanda");
+        toast.error(result.error);
       }
     });
   };

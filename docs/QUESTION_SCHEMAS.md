@@ -311,21 +311,10 @@ const questions = convertToStrictQuestions(aiResponse);
 ```typescript
 import { questionSchemas, convertToStrictQuestions } from "@/lib/schemas";
 
-export async function saveQuiz(questions: unknown[]) {
-  // Parse with flexible schema (accepts partial data)
-  const parsed = z.array(questionSchemas.flexible).parse(questions);
-
-  // Convert to strict for storage
-  const strict = convertToStrictQuestions(parsed);
-
-  // Validate strict format
-  const validated = z.array(questionSchemas.strict).parse(strict);
-
-  // Save to database
-  await prisma.quiz.create({
-    data: { questions: validated },
-  });
-}
+// Accept partial AI output, then fill defaults before use
+// (see aiQuizService.generateQuiz in lib/services/ai/core.ts)
+const parsed = z.array(questionSchemas.flexible).parse(aiOutput.questions);
+const questions = convertToStrictQuestions(parsed);
 ```
 
 ### In React Components
@@ -443,228 +432,47 @@ enum QuestionType {
 }
 ```
 
-### Entity Schemas
+### How questions are written
 
-Located in `lib/schemas/questionEntity.ts`:
+There is **one write path**: a quiz and its ordered question set are saved
+together by `upsertQuizAction` (`lib/actions/quizzes.ts`). It takes a typed
+`SaveQuizInput` (`saveQuizSchema` in `lib/schemas/quiz.ts`): with `quizId` it
+updates that quiz, without it it creates one for `positionId`.
 
-| Schema                     | Purpose                                   |
-| -------------------------- | ----------------------------------------- |
-| `createQuestionSchema`     | Validate input for creating new questions |
-| `updateQuestionSchema`     | Validate input for updating questions     |
-| `questionEntitySchema`     | Full question entity from database        |
-| `addQuestionsToQuizSchema` | Add questions to a quiz                   |
-| `questionFilterSchema`     | Filter/search questions                   |
+The join table is written only by `syncQuizQuestions(tx, quizId, questions,
+userId)` in `lib/services/quiz-questions.ts`, used by save and duplicate:
 
-### Server Actions
+- a question with a `dbId` that still exists is updated in place and linked;
+- any other question is created and linked, in array order;
+- questions that were linked to the quiz and are no longer in the set are
+  deleted, unless they are favorites or still used by another quiz.
 
-Located in `lib/actions/questions.ts`:
+AI generation (`generateNewQuizAction`, `generateNewQuestionAction`) never
+saves: results are added to the quiz editor as unsaved changes and are stored
+only when the user presses Save.
 
-| Action                         | Description                       |
-| ------------------------------ | --------------------------------- |
-| `createQuestionAction`         | Create a new reusable question    |
-| `updateQuestionAction`         | Update an existing question       |
-| `deleteQuestionAction`         | Delete a question                 |
-| `toggleQuestionFavoriteAction` | Toggle favorite status            |
-| `addQuestionsToQuizAction`     | Add questions to a quiz           |
-| `removeQuestionFromQuizAction` | Remove question from quiz         |
-| `reorderQuizQuestionsAction`   | Reorder questions in a quiz       |
-| `createBulkQuestionsAction`    | Create multiple questions at once |
+### Question actions
 
-### Data Helpers
+`lib/actions/questions.ts` holds the actions the quiz editor calls on a
+single saved question:
 
-Located in `lib/data/questions.ts`:
+| Action                         | Description                                                  |
+| ------------------------------ | ------------------------------------------------------------ |
+| `toggleQuestionFavoriteAction` | Toggle a question's favorite status                          |
+| `deleteQuestionFromQuizAction` | Remove from a quiz; favorites are only unlinked, not deleted |
+| `fetchFavoriteQuestionsAction` | Favorite questions for the "add from favorites" dialog       |
 
-| Function                  | Description                          |
-| ------------------------- | ------------------------------------ |
-| `getQuestions`            | Get paginated questions with filters |
-| `getQuestionById`         | Get single question by ID            |
-| `getFavoriteQuestions`    | Get all favorite questions           |
-| `getQuestionsCountByType` | Count questions grouped by type      |
-| `getQuizQuestions`        | Get questions linked to a quiz       |
-| `searchQuestions`         | Search questions by text             |
-
-### Usage Example
-
-```typescript
-import {
-  createQuestionAction,
-  toggleQuestionFavoriteAction,
-} from "@/lib/actions/questions";
-import { getQuestions, getFavoriteQuestions } from "@/lib/data/questions";
-
-// Create a reusable question
-const result = await createQuestionAction({
-  type: "multiple_choice",
-  question: "What is React?",
-  options: ["A library", "A framework", "A language", "A database"],
-  correctAnswer: 0,
-  keywords: ["React", "frontend"],
-  isFavorite: false,
-});
-
-// Get favorite questions
-const favorites = await getFavoriteQuestions();
-
-// Toggle favorite
-await toggleQuestionFavoriteAction(questionId);
-```
-
----
-
-## Quiz-Question Integration
-
-The system supports two storage approaches for quiz questions:
-
-1. **Inline JSON Questions** (legacy): Questions stored as JSON in `Quiz.questions`
-2. **Linked Question Entities** (new): Questions stored in `Question` table, linked via `QuizQuestion` join table
-
-### Backward Compatibility
-
-Quiz data helpers automatically handle both approaches:
-
-- When fetching quiz questions, linked entities are preferred over inline JSON
-- Existing quizzes with JSON questions continue to work
-- New quizzes can use either approach or a combination
-
-### Quiz-Question Server Actions
-
-Additional actions in `lib/actions/questions.ts` for quiz integration:
-
-| Action                                    | Description                                            |
-| ----------------------------------------- | ------------------------------------------------------ |
-| `saveQuestionToLibraryAction`             | Convert a single inline question to a library entity   |
-| `saveQuestionsToLibraryAction`            | Bulk convert inline questions to library entities      |
-| `saveQuizQuestionsToLibraryAndLinkAction` | Save inline questions to library AND link them to quiz |
-| `linkLibraryQuestionsToQuizAction`        | Link existing library questions to a quiz              |
-
-### Quiz Data Helpers (Updated)
-
-The `lib/data/quizzes.ts` module now supports linked questions:
-
-```typescript
-import { getQuizById, getQuestionsForQuiz } from "@/lib/data/quizzes";
-
-// Get quiz with linked questions (automatically prefers linked over JSON)
-const quiz = await getQuizById(quizId);
-// quiz.questions contains questions (from linked or JSON)
-// quiz.hasLinkedQuestions indicates if using linked entities
-
-// Get questions with explicit source preference
-const questions = await getQuestionsForQuiz(quizId, {
-  preferLinked: true, // Use linked entities if available
-  fallbackToJson: true, // Fall back to JSON if no linked questions
-});
-```
-
-### Question Library Helpers
-
-Additional helpers in `lib/data/questions.ts`:
-
-| Function                       | Description                                    |
-| ------------------------------ | ---------------------------------------------- |
-| `getLinkedQuestionIds`         | Get IDs of questions already linked to a quiz  |
-| `getAvailableQuestionsForQuiz` | Get library questions not yet linked to a quiz |
-| `QuestionWithMetadata` type    | Question with usage count and linked quiz info |
-
-### Workflow Examples
-
-#### Save AI-generated questions to library
-
-```typescript
-import { saveQuizQuestionsToLibraryAndLinkAction } from "@/lib/actions/questions";
-
-// After AI generates questions for a quiz
-const result = await saveQuizQuestionsToLibraryAndLinkAction({
-  quizId: quiz.id,
-  questions: generatedQuestions, // FlexibleQuestion[]
-  markAsFavorite: true, // Optional: mark all as favorites
-});
-
-if (result.success) {
-  console.log(`Saved ${result.data.questions.length} questions to library`);
-}
-```
-
-#### Link existing library questions to a new quiz
-
-```typescript
-import { linkLibraryQuestionsToQuizAction } from "@/lib/actions/questions";
-import { getAvailableQuestionsForQuiz } from "@/lib/data/questions";
-
-// Get available questions (not already linked)
-const available = await getAvailableQuestionsForQuiz(quizId, {
-  type: "multiple_choice",
-  isFavorite: true,
-});
-
-// Link selected questions to the quiz
-const result = await linkLibraryQuestionsToQuizAction({
-  quizId,
-  questionIds: selectedQuestionIds,
-});
-```
-
-#### Mix library and new questions
-
-```typescript
-import { addQuestionsToQuizAction } from "@/lib/actions/questions";
-
-// Add library questions with specific order
-await addQuestionsToQuizAction({
-  quizId,
-  questionIds: [
-    { id: libraryQuestion1Id, order: 0 },
-    { id: libraryQuestion2Id, order: 1 },
-    { id: newlyCreatedQuestionId, order: 2 },
-  ],
-});
-```
-
-### Data Flow Diagram
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                        QUIZ CREATION                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────────┐     ┌──────────────────┐                     │
-│  │ AI Generate  │────▶│ Inline JSON      │                     │
-│  │ Questions    │     │ (Quiz.questions) │                     │
-│  └──────────────┘     └────────┬─────────┘                     │
-│                                │                                │
-│                                ▼                                │
-│                    ┌───────────────────────┐                   │
-│                    │ saveQuizQuestionsTo   │                   │
-│                    │ LibraryAndLinkAction  │                   │
-│                    └───────────┬───────────┘                   │
-│                                │                                │
-│                                ▼                                │
-│  ┌──────────────┐     ┌──────────────────┐                     │
-│  │ Question     │◀────│ QuizQuestion     │                     │
-│  │ Library      │     │ (join table)     │                     │
-│  └──────────────┘     └──────────────────┘                     │
-│         │                      │                                │
-│         │                      │                                │
-│         ▼                      ▼                                │
-│  ┌──────────────┐     ┌──────────────────┐                     │
-│  │ Reuse in     │     │ Quiz displays    │                     │
-│  │ other quizzes│     │ linked questions │                     │
-│  └──────────────┘     └──────────────────┘                     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+Adding favorites to a quiz needs no action of its own: the dialog adds them to
+the editor with their `dbId`, and saving links them.
 
 ### Cache Tags
 
-Question-related cache tags for invalidation:
-
-| Tag                       | Used By                             |
-| ------------------------- | ----------------------------------- |
-| `questions`               | All question listing functions      |
-| `questions-{userId}`      | User's questions                    |
-| `question-{id}`           | Single question by ID               |
-| `questions-favorites`     | Favorite questions list             |
-| `quiz-questions-{quizId}` | Questions linked to a specific quiz |
+| Tag                   | Used By                 |
+| --------------------- | ----------------------- |
+| `questions`           | Any question listing    |
+| `question-{id}`       | Single question by ID   |
+| `questions-favorites` | Favorite questions list |
+| `quiz-{id}`           | A quiz and its questions |
 
 ---
 

@@ -90,13 +90,3 @@ export function prepareQuestionForUpdate(question: FlexibleQuestion) {
     // isFavorite is not updated here - it's managed separately
   };
 }
-
-/**
- * Prepare multiple questions for bulk create
- */
-export function prepareQuestionsForBulkCreate(
-  questions: FlexibleQuestion[],
-  userId: string
-) {
-  return questions.map((q) => prepareQuestionForCreate(q, userId));
-}

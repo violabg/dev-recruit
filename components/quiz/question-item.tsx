@@ -82,16 +82,16 @@ export const QuestionItem = ({
 
     startTransition(async () => {
       const result = await toggleQuestionFavoriteAction(field.dbId!);
-      if (result?.success) {
+      if (result.success) {
         // Set local override for optimistic UI update
-        setLocalFavoriteOverride(result.isFavorite ?? !isFavorite);
+        setLocalFavoriteOverride(result.isFavorite);
         toast.success(
           result.isFavorite
             ? "Domanda aggiunta ai preferiti"
             : "Domanda rimossa dai preferiti",
         );
       } else {
-        toast.error("Errore nel salvataggio della domanda");
+        toast.error(result.error);
       }
     });
   };
@@ -189,7 +189,7 @@ export const QuestionItem = ({
                     quizId,
                     field.dbId!,
                   );
-                  if (result?.success) {
+                  if (result.success) {
                     // Remove from form state after successful deletion
                     onRemove(actualIndex);
                     // Reset form with current values (after removal) to clear dirty state

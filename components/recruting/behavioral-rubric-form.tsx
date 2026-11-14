@@ -13,6 +13,7 @@ import { useTransition } from "react";
 import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { unwrap } from "@/lib/utils/action-result";
 
 const formSchema = behavioralRubricSchema;
 
@@ -50,7 +51,7 @@ export const BehavioralRubricForm = ({
   const onSubmit: SubmitHandler<FormData> = (values) => {
     startTransition(async () => {
       try {
-        await upsertBehavioralRubricAction(values);
+        unwrap(await upsertBehavioralRubricAction(values));
         toast.success("Rubrica comportamentale salvata");
       } catch (error) {
         toast.error("Errore salvataggio rubrica", {

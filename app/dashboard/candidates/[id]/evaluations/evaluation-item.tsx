@@ -30,7 +30,9 @@ interface EvaluationItemProps {
   setNotes: (note: string) => void;
   savingNotes: boolean;
   handleSaveNotes: (id: string) => void;
-  handleDeleteEvaluation: (id: string) => Promise<void>;
+  handleDeleteEvaluation: (
+    id: string,
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function EvaluationItem({

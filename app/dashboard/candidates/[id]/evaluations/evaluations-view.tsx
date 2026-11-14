@@ -15,6 +15,7 @@ import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { parsePartialEvaluation } from "./streaming-utils";
 import type { Position } from "./types";
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 
 interface CandidateEvaluationsViewProps {
   candidateId: string;
@@ -135,7 +136,6 @@ export function CandidateEvaluationsView({
       toast.success("Valutazione generata con successo");
       router.refresh();
     } catch (error) {
-      console.error("Error generating evaluation:", error);
       toast.error(
         error instanceof Error
           ? error.message
@@ -151,18 +151,24 @@ export function CandidateEvaluationsView({
   const handleSaveNotes = (evaluationId: string) => {
     startSavingNotes(async () => {
       try {
-        await updateEvaluationNotes(evaluationId, notes[evaluationId] ?? "");
+        unwrap(
+          await updateEvaluationNotes(evaluationId, notes[evaluationId] ?? ""),
+        );
         toast.success("Note salvate con successo");
       } catch (error) {
-        console.error("Error saving notes:", error);
-        toast.error("Errore durante il salvataggio delle note");
+        toast.error(
+          errorMessage(error, "Errore durante il salvataggio delle note"),
+        );
       }
     });
   };
 
   const handleDeleteEvaluation = async (evaluationId: string) => {
-    await deleteEvaluation(evaluationId);
-    setEvaluations((prev) => prev.filter((e) => e.id !== evaluationId));
+    const result = await deleteEvaluation(evaluationId);
+    if (result.success) {
+      setEvaluations((prev) => prev.filter((e) => e.id !== evaluationId));
+    }
+    return result;
   };
 
   return (

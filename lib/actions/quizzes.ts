@@ -5,59 +5,33 @@ import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import {
   duplicateQuizSchema,
+  generateQuizSchema,
   questionSchemas,
   saveQuizSchema,
   type DuplicateQuizInput,
   type FlexibleQuestion,
+  type GenerateQuizInput,
   type SaveQuizInput,
 } from "../schemas";
 import { aiQuizService, GenerateQuestionParams } from "../services/ai-service";
 import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
 import { logger } from "../services/logger";
-import {
-  handleActionError,
-  isRedirectError,
-} from "../utils/action-error-handler";
 import { invalidateQuizCache } from "../utils/cache-utils";
 import { syncQuizQuestions } from "../services/quiz-questions";
 import { mapQuizQuestionsToFlexible } from "../utils/question-utils";
+import { runAction, UserError } from "./run-action";
 
-type GenerateNewQuizActionParams = {
-  positionId: string;
-  quizTitle: string;
-  questionCount: number;
-  difficulty: number;
-  includeMultipleChoice: boolean;
-  includeOpenQuestions: boolean;
-  includeCodeSnippets: boolean;
-  includeBehavioralScenarios: boolean;
-  instructions?: string;
-  previousQuestions?: { question: string }[];
-  specificModel?: string;
-};
+/**
+ * Ask the AI for a quiz for a position. Nothing is saved: the result goes to
+ * the quiz editor, and upsertQuizAction stores it when the user saves.
+ */
+export async function generateNewQuizAction(input: GenerateQuizInput) {
+  return runAction("generateNewQuizAction", async () => {
+    await requireUser();
+    const { positionId, ...config } = generateQuizSchema.parse(input);
 
-export async function generateNewQuizAction({
-  positionId,
-  quizTitle,
-  questionCount,
-  difficulty,
-  includeMultipleChoice,
-  includeOpenQuestions,
-  includeCodeSnippets,
-  includeBehavioralScenarios,
-  instructions,
-  previousQuestions,
-  specificModel,
-}: GenerateNewQuizActionParams) {
-  try {
-    // Validate user authentication
-    const user = await requireUser();
-
-    // Get position details
     const position = await prisma.position.findUnique({
-      where: {
-        id: positionId,
-      },
+      where: { id: positionId },
       select: {
         id: true,
         title: true,
@@ -75,70 +49,41 @@ export async function generateNewQuizAction({
       );
     }
 
-    // Generate quiz using AI service
-    const quizData = await aiQuizService.generateQuiz({
+    return aiQuizService.generateQuiz({
       positionTitle: position.title,
       experienceLevel: position.experienceLevel,
       skills: position.skills,
       description: position.description || undefined,
-      quizTitle,
-      questionCount,
-      difficulty,
-      includeMultipleChoice,
-      includeOpenQuestions,
-      includeCodeSnippets,
-      includeBehavioralScenarios,
-      instructions,
-      previousQuestions,
-      specificModel,
+      ...config,
     });
-
-    return quizData;
-  } catch (error) {
-    handleActionError(error, {
-      operation: "generateNewQuizAction",
-      context: { positionId },
-      fallbackMessage: "AI generation failed. Please try again.",
-      rethrowKnownErrors: true,
-    });
-  }
+  });
 }
 
 export async function generateNewQuestionAction(
   params: GenerateQuestionParams,
 ) {
-  try {
+  return runAction("generateNewQuestionAction", async () => {
     await requireUser();
 
     // Generate question using AI service with the new parameter structure
     const question = await aiQuizService.generateQuestion(params);
 
-    // Validate generated question
-    const validatedQuestion = questionSchemas.strict.parse(question);
-
-    return validatedQuestion;
-  } catch (error) {
-    // Handle Zod validation errors specially
-    if (error instanceof z.ZodError) {
-      logger.error("Question validation failed:", { issues: error.issues });
-      throw new QuizSystemError(
-        "Generated question failed validation",
-        QuizErrorCode.INVALID_INPUT,
-        { zodErrors: error.issues },
+    const validated = questionSchemas.strict.safeParse(question);
+    if (!validated.success) {
+      logger.error("Generated question failed validation", {
+        issues: validated.error.issues,
+      });
+      throw new UserError(
+        "La domanda generata non è valida. Riprova la generazione.",
       );
     }
 
-    handleActionError(error, {
-      operation: "generateNewQuestionAction",
-      context: { questionType: params.type },
-      fallbackMessage: "Question generation failed. Please try again.",
-      rethrowKnownErrors: true,
-    });
-  }
+    return { question: validated.data };
+  });
 }
 
 export async function deleteQuizById(quizId: string) {
-  try {
+  return runAction("deleteQuizById", async () => {
     if (!quizId) {
       throw new QuizSystemError(
         "Quiz ID is required",
@@ -146,7 +91,7 @@ export async function deleteQuizById(quizId: string) {
       );
     }
 
-    const user = await requireUser();
+    await requireUser();
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
@@ -171,17 +116,7 @@ export async function deleteQuizById(quizId: string) {
     });
 
     redirect("/dashboard/quizzes");
-  } catch (error) {
-    // Re-throw redirect responses (Next.js uses special errors for redirects)
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    handleActionError(error, {
-      operation: "deleteQuizById",
-      fallbackMessage: "Quiz deletion failed. Please try again.",
-    });
-  }
+  });
 }
 
 /**
@@ -190,7 +125,7 @@ export async function deleteQuizById(quizId: string) {
  * `positionId`. Always returns the quiz id.
  */
 export async function upsertQuizAction(input: SaveQuizInput) {
-  try {
+  return runAction("upsertQuizAction", async () => {
     const user = await requireUser();
 
     const parsed = saveQuizSchema.safeParse(input);
@@ -263,19 +198,14 @@ export async function upsertQuizAction(input: SaveQuizInput) {
     invalidateQuizCache({ quizId: quiz.id, positionId: position.id });
 
     return { id: quiz.id };
-  } catch (error) {
-    handleActionError(error, {
-      operation: "upsertQuizAction",
-      fallbackMessage: "Quiz operation failed. Please try again.",
-    });
-  }
+  });
 }
 
 /**
  * Duplicate a quiz, with copies of its questions, onto another position.
  */
 export async function duplicateQuizAction(input: DuplicateQuizInput) {
-  try {
+  return runAction("duplicateQuizAction", async () => {
     const user = await requireUser();
 
     const parsed = duplicateQuizSchema.safeParse(input);
@@ -344,11 +274,5 @@ export async function duplicateQuizAction(input: DuplicateQuizInput) {
     invalidateQuizCache({ quizId: newQuiz.id, positionId: newPositionId });
 
     return { id: newQuiz.id };
-  } catch (error) {
-    handleActionError(error, {
-      operation: "duplicateQuizAction",
-      context: { quizId: input?.quizId },
-      fallbackMessage: "Quiz duplication failed. Please try again.",
-    });
-  }
+  });
 }

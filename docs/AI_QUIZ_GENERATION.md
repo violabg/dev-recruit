@@ -61,19 +61,22 @@ graph TB
 
 | Component                     | Location                           | Purpose                                          |
 | ----------------------------- | ---------------------------------- | ------------------------------------------------ |
-| `AIQuizService`               | `lib/services/ai/core.ts`          | Main service class for AI generation             |
+| `generateStructured`          | `lib/services/ai/generate.ts`      | The only call into the model provider: model choice, retry, timeout, fallback |
+| `LLM_MODELS`, `getOptimalModel` | `lib/services/ai/models.ts`      | Model catalogue and task → model mapping (client-safe) |
+| `AIQuizService`               | `lib/services/ai/core.ts`          | Quiz and question generation (prompts + schemas) |
 | `generateNewQuizAction`       | `lib/actions/quizzes.ts`           | Server action for full quiz generation           |
 | `generateNewQuestionAction`   | `lib/actions/quizzes.ts`           | Server action for single question generation     |
 | `useAIGeneration`             | `hooks/use-ai-generation.ts`       | React hook for client-side generation management |
 | Question Schemas              | `lib/schemas/question.ts`          | Zod schemas for question validation              |
-| `evaluateAnswer`              | `lib/actions/evaluations.ts`       | Server action for answer evaluation              |
-| `generateCandidateEvaluation` | `lib/actions/evaluation-entity.ts` | Resume-based candidate assessment                |
+| Interview evaluation          | `lib/services/interview-evaluation.ts` | Scores answers read from the database and stores the Evaluation |
+| Resume evaluation             | `lib/services/resume-evaluation.ts` | Prepares and stores the streamed resume evaluation |
+| Evaluation prompts            | `lib/services/ai/evaluation-prompts.ts` | Answer, overall and resume evaluation prompts |
 | `streamPositionDescription`   | `lib/services/ai/streaming.ts`     | Streaming position description generation        |
 | `transcribeAudioAction`       | `lib/actions/transcription.ts`     | Audio transcription using Whisper                |
 | Preset Management             | `lib/actions/presets.ts`           | Question generation template management          |
 | Logging                       | `lib/services/logger.ts`           | Scoped AI logger (`aiLogger`)                    |
 
-> **Note:** The AI service is modular - `lib/services/ai-service.ts` re-exports from `lib/services/ai/` for backward compatibility. The actual implementation is split across `core.ts`, `prompts.ts`, `retry.ts`, `streaming.ts`, `sanitize.ts`, and `types.ts`.
+> **Note:** `lib/services/ai-service.ts` re-exports from `lib/services/ai/`. Any new AI call goes through `generateStructured()` (structured output) or `getLanguageModel()` (streaming), never `groq()` directly, so every feature shares one failure policy.
 
 ## Generation Flow
 
@@ -115,7 +118,9 @@ sequenceDiagram
     Service-->>Action: Question[]
 
     Action-->>Form: Generated questions
-    Form-->>User: Display in editor
+    Form-->>User: Replace editor content as unsaved changes
+    User->>Form: Review, then Save
+    Form->>Action: upsertQuizAction() stores quiz + questions
 ```
 
 ### Single Question Generation
@@ -294,6 +299,8 @@ export function sanitizeInput(input: string): string {
 
 ## Model Selection
 
+Defined in `lib/services/ai/models.ts` (plain constants and pure functions, safe to import from client components).
+
 Only models available on Groq's **free plan** are used (verified against the
 Groq models API, November 2026). All free chat models share the same limits
 (30 RPM · 1K RPD · 8K TPM · 200K TPD), so the strongest model is the default.
@@ -421,18 +428,27 @@ const evalResult = await generateText({
 
 ### Retry Strategy
 
+Implemented once, in `generateStructured()` (`lib/services/ai/generate.ts`), for
+quiz generation, question generation and interview evaluation alike:
+
 ```mermaid
 graph TD
-    A[API Call] --> B{Success?}
+    A[Primary model] --> B{Success?}
     B -->|Yes| C[Return Result]
     B -->|No| D{Retries Left?}
     D -->|Yes| E[Wait with Backoff]
     E --> A
     D -->|No| F{Fallback Models?}
-    F -->|Yes| G[Try Next Model]
-    G --> A
+    F -->|Yes| G[Next model, one attempt]
+    G --> B
     F -->|No| H[Throw AIGenerationError]
 ```
+
+- The primary model is the task's default, or `specificModel` when the user picked one. It is retried with exponential backoff.
+- Each fallback model (`FALLBACK_MODELS`, skipping the primary) is tried once.
+- Every attempt is bounded by the timeout.
+- `CONTENT_FILTERED` is never retried or sent to another model.
+- `describeAIError()` maps failures to the Italian message shown to the user.
 
 **Configuration:**
 
@@ -440,7 +456,7 @@ graph TD
 const DEFAULT_CONFIG = {
   maxRetries: 3,
   retryDelay: 1000, // 1s base, exponential: 1s, 2s, 4s
-  timeout: 60000, // 60 seconds
+  timeout: 60000, // per attempt
   fallbackModels: [...FALLBACK_MODELS], // gpt-oss-20b → qwen3.8-27b
 };
 ```
@@ -533,7 +549,8 @@ const result = await generateNewQuizAction({
   specificModel: "openai/gpt-oss-120b",
 });
 
-// Result: { questions: Question[] }
+// Result: { success: true, questions: Question[] } | { success: false, error }
+// Nothing is saved: the editor shows the questions as unsaved changes.
 ```
 
 ### Generate a Single Question (Hook)
@@ -591,17 +608,16 @@ The system provides two types of AI-powered evaluations:
 
 ### Interview Evaluations
 
-Evaluates candidate answers to quiz questions with structured feedback.
+Scores a completed interview's answers and stores one Evaluation.
 
-**Location**: `lib/actions/evaluations.ts`
+**Location**: `lib/services/interview-evaluation.ts` (rules), `lib/actions/evaluations.ts` (actions)
 
-**Capabilities**:
+The browser only names the interview and the question. Questions, answers and
+the quiz score are always read and computed on the server.
 
-- Answer correctness scoring (0-10 scale)
-- Detailed evaluation text
-- Strengths and weaknesses identification
-- Type-specific evaluation logic for each question type
-- **Consistent scoring** with low temperature (0.1) for reproducible results
+- `evaluateInterviewAnswerAction(interviewId, questionId)` scores one answer (0-10). Called once per answered question so the results screen can show progress. All four question types are scored, including behavioral scenarios.
+- `completeInterviewEvaluationAction({ interviewId, questionEvaluations })` computes the quiz score (0-100), generates the overall evaluation and stores it. It refuses a second evaluation and results for questions that were not answered.
+- Temperature 0 and a fixed seed, for reproducible scoring.
 
 **Schema**:
 
@@ -614,53 +630,36 @@ const evaluationResultSchema = z.object({
 });
 ```
 
-**Usage Example**:
-
-```typescript
-import { evaluateAnswer } from "@/lib/actions/evaluations";
-
-const result = await evaluateAnswer(
-  question, // FlexibleQuestion
-  candidateAnswer, // string
-  "openai/gpt-oss-120b", // optional model override
-);
-
-// Result: { evaluation, score, strengths, weaknesses, maxScore }
-```
-
 **Evaluation Flow**:
 
 ```mermaid
 sequenceDiagram
-    participant I as Interview Component
-    participant A as evaluateAnswer Action
-    participant AI as Groq API
-    participant S as Zod Schema
+    participant R as Results screen
+    participant A as evaluations actions
+    participant S as interview-evaluation
+    participant AI as generateStructured
 
-    I->>A: Submit answer for evaluation
-    A->>A: Build type-specific prompt
-    A->>AI: generateObject() with evaluationResultSchema
-    AI-->>A: Structured evaluation
-    A->>S: Validate response
-    S-->>A: EvaluationResult
-    A-->>I: Return evaluation + score
+    loop each answered question
+        R->>A: evaluateInterviewAnswerAction(interviewId, questionId)
+        A->>S: load question + stored answer
+        S->>AI: answer evaluation prompt
+        AI-->>R: score, strengths, weaknesses
+    end
+    R->>A: completeInterviewEvaluationAction(results)
+    A->>S: quiz score + overall evaluation
+    S->>S: store Evaluation
+    S-->>R: evaluationId, overall, quizScore
 ```
 
 ### Candidate Evaluations
 
 Evaluates candidates based on their resume against position requirements.
 
-**Location**: `lib/actions/evaluation-entity.ts`
+**Location**: `lib/services/resume-evaluation.ts` (rules), `app/api/evaluations/stream/route.ts` (streaming)
 
-**Capabilities**:
-
-- PDF resume text extraction using `unpdf`
-- Skills match analysis
-- Experience level assessment
-- Soft skills evaluation
-- Overall fit score (0-100 scale)
-- Recommendations for next steps
-- **Consistent assessments** with low temperature (0.2) for reproducible results
+- `prepareResumeEvaluation(candidateId, positionId)` checks the candidate, resume, position and that no evaluation exists yet, extracts the PDF text with `unpdf` and builds the prompt. Resumes are cut at `MAX_RESUME_CHARS` (80,000).
+- The route streams the model output to the browser.
+- `saveResumeEvaluation()` parses the full response and stores it once the stream ends.
 
 **Schema**:
 
@@ -677,14 +676,12 @@ const overallEvaluationSchema = z.object({
 **Usage Example**:
 
 ```typescript
-import { generateCandidateEvaluationAction } from "@/lib/actions/evaluation-entity";
-
-const result = await generateCandidateEvaluationAction({
-  candidateId: "candidate-123",
-  positionId: "position-456",
+const response = await fetch("/api/evaluations/stream", {
+  method: "POST",
+  body: JSON.stringify({ candidateId, positionId }),
 });
-
-// Creates Evaluation entity with AI assessment
+// 400/404/409 with { error } when it cannot be generated; otherwise a text
+// stream of the JSON evaluation, stored before the stream closes.
 ```
 
 **Evaluation Entity (Polymorphic)**:
@@ -786,11 +783,11 @@ const result = await generateNewQuestionAction({
 
 **Preset Management Actions**:
 
-- `getPresetsAction` - Get all presets with pagination/search
+- `getPresetsData` (`lib/data/presets.ts`) - Cached preset list with pagination/search
 - `createPresetAction` - Create new preset
 - `updatePresetAction` - Update existing preset
 - `deletePresetAction` - Delete preset
-- `seedPresetsAction` - Seed default presets
+- `seedDefaultPresetsAction` - Replace all presets with the default set
 
 **Seeded Default Presets** (see `prisma/seed.ts`):
 
@@ -876,16 +873,12 @@ The system supports audio transcription for candidate answers using Groq's Whisp
 ```typescript
 import { transcribeAudioAction } from "@/lib/actions/transcription";
 
-// Client sends audio as number array (Uint8Array converted)
-const audioData = Array.from(uint8Array);
+const formData = new FormData();
+formData.append("audio", audioBlob, "audio.webm");
+formData.append("token", interviewToken); // required
 
-const result = await transcribeAudioAction(audioData);
-
-if (result.success) {
-  console.log("Transcribed text:", result.text);
-} else {
-  console.error("Transcription error:", result.error);
-}
+const result = await transcribeAudioAction(formData);
+// { success: true, text } | { success: false, error }
 ```
 
 **Use Cases**:
@@ -897,10 +890,9 @@ if (result.success) {
 
 **Technical Details**:
 
-- Accepts audio as `number[]` (serializable for server actions)
-- Converts to `Uint8Array` server-side
-- Uses Groq's `transcription` model via Vercel AI SDK
-- Returns plain text transcript
+- Candidate-facing, so no signed-in user: the interview token is the credential.
+- Refused unless the interview still accepts answers (`acceptsAnswers()`), and above 25 MB.
+- Uses Groq's `transcription` model via the Vercel AI SDK; returns plain text.
 
 **Example Flow**:
 

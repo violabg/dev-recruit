@@ -3,8 +3,8 @@
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
-import { logger } from "../services/logger";
 import { invalidatePresetCache } from "../utils/cache-utils";
+import { runAction } from "./run-action";
 
 // Type for preset seed data (subset of PresetCreateInput)
 type PresetSeedData = Omit<
@@ -144,34 +144,23 @@ const DEFAULT_PRESETS: PresetSeedData[] = [
   },
 ];
 
+/** Replace every preset with the default set. */
 export async function seedDefaultPresetsAction() {
-  await requireUser();
+  return runAction("seedDefaultPresetsAction", async () => {
+    await requireUser();
 
-  try {
-    // Delete existing presets
-    await prisma.preset.deleteMany({});
-
-    // Create new presets
-    const created = await Promise.all(
-      DEFAULT_PRESETS.map((preset) =>
-        prisma.preset.create({
-          data: preset,
-        })
-      )
-    );
+    const created = await prisma.$transaction(async (tx) => {
+      await tx.preset.deleteMany({});
+      return Promise.all(
+        DEFAULT_PRESETS.map((preset) => tx.preset.create({ data: preset })),
+      );
+    });
 
     invalidatePresetCache();
 
     return {
-      success: true,
-      message: `Successfully seeded ${created.length} presets`,
+      message: `${created.length} preset predefiniti creati`,
       count: created.length,
     };
-  } catch (error) {
-    logger.error("Failed to seed presets", { error });
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to seed presets",
-    };
-  }
+  });
 }

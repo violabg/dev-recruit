@@ -1,32 +1,22 @@
 /**
  * AI Quiz Service - Core
  *
- * Main AI service for generating quizzes and questions.
- * Uses modular components from the ai/ directory.
+ * Quiz and question generation. Model choice, retry, timeout and fallback
+ * live in ./generate; this module only supplies prompts and schemas.
  */
 
-import { groq } from "@ai-sdk/groq";
 import {
-  generateText,
-  NoObjectGeneratedError,
-  Output,
-  wrapLanguageModel,
-} from "ai";
-import {
-  AIQuizGeneration,
   aiQuizGenerationSchema,
   convertToStrictQuestions,
-  FlexibleQuestion,
   Question,
   questionSchemas,
 } from "../../schemas";
-import { getOptimalModel, isDevelopment } from "../../utils";
+import { generateStructured } from "./generate";
 import {
   buildQuestionPrompts,
   buildQuizPrompt,
   buildQuizSystemPrompt,
 } from "./prompts";
-import { withRetry, withTimeout } from "./retry";
 import {
   AIErrorCode,
   AIGenerationConfig,
@@ -44,198 +34,51 @@ export class AIQuizService {
   }
 
   async generateQuiz(
-    params: GenerateQuizParams
+    params: GenerateQuizParams,
   ): Promise<{ questions: Question[] }> {
-    try {
-      const model = getOptimalModel("quiz_generation", params.specificModel);
-      const prompt = buildQuizPrompt(params);
+    const output = await generateStructured({
+      task: "quiz_generation",
+      schema: aiQuizGenerationSchema,
+      system: buildQuizSystemPrompt(),
+      prompt: buildQuizPrompt(params),
+      specificModel: params.specificModel,
+      temperature: 0.7,
+      config: this.config,
+    });
 
-      const aiModel = groq(model);
-
-      const result = await withTimeout(
-        withRetry(async () => {
-          let model = aiModel;
-          if (isDevelopment) {
-            const { devToolsMiddleware } = await import("@ai-sdk/devtools");
-            model = wrapLanguageModel({
-              model: aiModel,
-              middleware: devToolsMiddleware(),
-            });
-          }
-
-          try {
-            const response = await generateText({
-              model,
-              prompt,
-              system: buildQuizSystemPrompt(),
-              output: Output.object({ schema: aiQuizGenerationSchema }),
-              temperature: 0.7,
-              providerOptions: {
-                groq: {
-                  structuredOutputs: false,
-                },
-              },
-            });
-
-            const output = response.output as AIQuizGeneration | undefined;
-            if (!output || !output.questions || !output.title) {
-              throw new AIGenerationError(
-                "Invalid response structure from AI model",
-                AIErrorCode.INVALID_RESPONSE,
-                { response }
-              );
-            }
-
-            return output;
-          } catch (error) {
-            if (error instanceof NoObjectGeneratedError) {
-              throw new AIGenerationError(
-                "AI model failed to generate valid quiz structure",
-                AIErrorCode.GENERATION_FAILED,
-                { originalError: error.message }
-              );
-            }
-            throw error;
-          }
-        }, this.config),
-        this.config.timeout
-      );
-
-      return {
-        questions: convertToStrictQuestions(result.questions),
-      };
-    } catch (error) {
-      if (error instanceof AIGenerationError) {
-        throw error;
-      }
-
-      // Try fallback models if available
-      if (params.specificModel && this.config.fallbackModels.length > 0) {
-        for (const fallbackModel of this.config.fallbackModels) {
-          if (fallbackModel !== params.specificModel) {
-            try {
-              return await this.generateQuiz({
-                ...params,
-                specificModel: fallbackModel,
-              });
-            } catch {
-              continue;
-            }
-          }
-        }
-      }
-
+    if (!output.questions || !output.title) {
       throw new AIGenerationError(
-        "All quiz generation attempts failed",
-        AIErrorCode.GENERATION_FAILED,
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
+        "Invalid response structure from AI model",
+        AIErrorCode.INVALID_RESPONSE,
+        { output },
       );
     }
+
+    return { questions: convertToStrictQuestions(output.questions) };
   }
 
   async generateQuestion(params: GenerateQuestionParams): Promise<Question> {
-    try {
-      const model = getOptimalModel(
-        "question_generation",
-        params.specificModel
-      );
+    const { systemPrompt, userPrompt } = buildQuestionPrompts(params);
 
-      // Build system and user prompts using the type-specific builder
-      const { systemPrompt, userPrompt } = buildQuestionPrompts(params);
+    const output = await generateStructured({
+      task: "question_generation",
+      schema: questionSchemas.flexible,
+      system: systemPrompt,
+      prompt: userPrompt,
+      specificModel: params.specificModel,
+      temperature: 0.7,
+      config: this.config,
+    });
 
-      const aiModel = groq(model);
-
-      const result = await withTimeout(
-        withRetry(async () => {
-          let model = aiModel;
-          if (isDevelopment) {
-            const { devToolsMiddleware } = await import("@ai-sdk/devtools");
-            model = wrapLanguageModel({
-              model: aiModel,
-              middleware: devToolsMiddleware(),
-            });
-          }
-
-          try {
-            const response = await generateText({
-              model,
-              prompt: userPrompt,
-              system: systemPrompt,
-              output: Output.object({ schema: questionSchemas.flexible }),
-              temperature: 0.7,
-              providerOptions: {
-                groq: {
-                  structuredOutputs: false,
-                },
-              },
-            });
-
-            const output = response.output as FlexibleQuestion | undefined;
-            if (!output) {
-              throw new AIGenerationError(
-                "Invalid response structure from AI model",
-                AIErrorCode.INVALID_RESPONSE,
-                { response }
-              );
-            }
-
-            return output;
-          } catch (error) {
-            if (error instanceof NoObjectGeneratedError) {
-              throw new AIGenerationError(
-                "AI model failed to generate valid question structure",
-                AIErrorCode.GENERATION_FAILED,
-                { originalError: error.message }
-              );
-            }
-            throw error;
-          }
-        }, this.config),
-        this.config.timeout
-      );
-
-      // Convert the single question result to strict type
-      if (!result || !result.question) {
-        throw new AIGenerationError(
-          "No question generated in response",
-          AIErrorCode.INVALID_RESPONSE,
-          { result }
-        );
-      }
-
-      const strictQuestions = convertToStrictQuestions([result]);
-      return strictQuestions[0];
-    } catch (error) {
-      if (error instanceof AIGenerationError) {
-        throw error;
-      }
-
-      // Try fallback models if available
-      if (params.specificModel && this.config.fallbackModels.length > 0) {
-        for (const fallbackModel of this.config.fallbackModels) {
-          if (fallbackModel !== params.specificModel) {
-            try {
-              return await this.generateQuestion({
-                ...params,
-                specificModel: fallbackModel,
-              });
-            } catch {
-              continue;
-            }
-          }
-        }
-      }
-
+    if (!output.question) {
       throw new AIGenerationError(
-        "All question generation attempts failed",
-        AIErrorCode.GENERATION_FAILED,
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
+        "No question generated in response",
+        AIErrorCode.INVALID_RESPONSE,
+        { output },
       );
     }
+
+    return convertToStrictQuestions([output])[0];
   }
 }
 

@@ -4,27 +4,19 @@ import { upsertQuizAction } from "@/lib/actions/quizzes";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import {
   FlexibleQuestion,
-  questionSchemas,
+  quizEditorSchema,
   QuestionType,
-  saveQuizRequestSchema,
+  type QuizEditorData,
 } from "@/lib/schemas";
+import { unwrap } from "@/lib/utils/action-result";
 import { generateId } from "@/lib/utils/quiz-form-utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import * as z from "zod";
 
-// Use the consolidated schemas with form-specific validation
-const editQuizFormSchema = saveQuizRequestSchema.extend({
-  positionId: z.string().optional(), // Make positionId optional for updates
-  questions: z
-    .array(questionSchemas.flexible)
-    .min(1, "Almeno una domanda è obbligatoria"),
-});
-
-export type EditQuizFormData = z.infer<typeof editQuizFormSchema>;
+export type EditQuizFormData = QuizEditorData;
 
 type UseEditQuizFormProps = {
   quiz: QuizForEdit;
@@ -38,7 +30,7 @@ type UseEditQuizFormProps = {
   onSaveSuccess?: (result?: SaveQuizResult) => void;
 };
 
-export type SaveQuizResult = Awaited<ReturnType<typeof upsertQuizAction>>;
+export type SaveQuizResult = { id: string };
 
 export const useEditQuizForm = ({
   quiz,
@@ -73,11 +65,11 @@ export const useEditQuizForm = ({
   );
 
   const form = useForm<EditQuizFormData>({
-    resolver: zodResolver(editQuizFormSchema),
+    resolver: zodResolver(quizEditorSchema),
     defaultValues: initialValues,
   });
 
-  const { fields, append, prepend, remove, update } = useFieldArray({
+  const { fields, append, prepend, remove, update, replace } = useFieldArray({
     control: form.control,
     name: "questions",
   });
@@ -131,26 +123,17 @@ export const useEditQuizForm = ({
     prepend(createEmptyQuestion(type));
   };
 
-  const save = async (data: EditQuizFormData) => {
-    const formData = new FormData();
-    formData.append("title", data.title);
-    if (data.timeLimit !== null) {
-      formData.append("timeLimit", data.timeLimit.toString());
-    }
-    formData.append("questions", JSON.stringify(data.questions));
-
-    if (isCreateMode) {
-      const positionId = data.positionId ?? position.id;
-      if (!positionId) {
-        throw new Error("Position ID is required for quiz creation");
-      }
-      formData.append("positionId", positionId);
-    } else {
-      formData.append("quizId", quiz.id);
-    }
-
-    return await upsertQuizAction(formData);
-  };
+  const save = async (data: EditQuizFormData) =>
+    unwrap(
+      await upsertQuizAction({
+        title: data.title,
+        timeLimit: data.timeLimit,
+        questions: data.questions,
+        ...(isCreateMode
+          ? { positionId: data.positionId ?? position.id }
+          : { quizId: quiz.id }),
+      }),
+    );
 
   const handleSave = async (data: EditQuizFormData) => {
     setSaveStatus("saving");
@@ -171,7 +154,6 @@ export const useEditQuizForm = ({
       }
     } catch (error) {
       setSaveStatus("error");
-      console.error("Errore salvataggio:", error);
 
       let errorMessage = "Errore durante il salvataggio del quiz";
       if (error instanceof Error) {
@@ -264,7 +246,6 @@ export const useEditQuizForm = ({
         ...prev,
         questions: { ...prev.questions, [questionId]: "error" },
       }));
-      console.error("Errore salvataggio domanda:", error);
 
       let errorMessage = "Errore durante il salvataggio della domanda";
       if (error instanceof Error) {
@@ -336,6 +317,7 @@ export const useEditQuizForm = ({
     prepend,
     remove,
     update,
+    replace,
     handleSave,
     saveStatus,
     generateId,

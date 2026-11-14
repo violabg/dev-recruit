@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getPresetAction } from "@/lib/actions/presets";
+import { getPresetData } from "@/lib/data/presets";
 import { ArrowLeft } from "lucide-react";
 import { Route } from "next";
 import Link from "next/link";
@@ -38,9 +38,9 @@ export default function EditPresetPage(
 
 async function EditPresetContent({ params }: EditPresetPageProps) {
   const { id } = await params;
-  const result = await getPresetAction(id);
+  const preset = await getPresetData(id);
 
-  if (!result.success || !result.preset) {
+  if (!preset) {
     notFound();
   }
 
@@ -49,7 +49,7 @@ async function EditPresetContent({ params }: EditPresetPageProps) {
       <CardHeader className="flex items-center gap-4">
         <Link
           href={
-            `/dashboard/presets/${result.preset.id}` as Route<`/dashboard/presets/${string}`>
+            `/dashboard/presets/${preset.id}` as Route<`/dashboard/presets/${string}`>
           }
           className={buttonVariants({
             variant: "ghost",
@@ -67,7 +67,7 @@ async function EditPresetContent({ params }: EditPresetPageProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <PresetForm preset={result.preset} />
+        <PresetForm preset={preset} />
       </CardContent>
     </Card>
   );

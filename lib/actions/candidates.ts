@@ -20,6 +20,7 @@ import {
   invalidateCandidateCache,
   invalidateInterviewCache,
 } from "../utils/cache-utils";
+import { runAction, UserError } from "./run-action";
 
 const readFormValue = (formData: FormData, key: string) => {
   const value = formData.get(key);
@@ -35,7 +36,7 @@ const parsePositionIds = (raw: string | undefined) => {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : undefined;
   } catch {
-    throw new Error("Formato posizioni non valido");
+    throw new UserError("Formato posizioni non valido");
   }
 };
 
@@ -54,16 +55,21 @@ const getCandidateById = async (id: string) => {
   });
 
   if (!candidate) {
-    throw new Error("Candidate not found");
+    throw new UserError("Candidato non trovato");
   }
 
   return candidate;
 };
 
-// Candidate actions
-export async function createCandidate(formData: FormData) {
-  const user = await requireUser();
-
+/**
+ * Create a candidate (with optional resume) from the candidate form data.
+ * `createdBy` is the recruiter who entered it, or null for a public
+ * application.
+ */
+async function createCandidateFromForm(
+  formData: FormData,
+  createdBy: string | null,
+) {
   const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
   const positionIdsRaw = readFormValue(formData, "positionIds");
   const positionIds = parsePositionIds(positionIdsRaw) ?? [];
@@ -83,7 +89,7 @@ export async function createCandidate(formData: FormData) {
   });
 
   if (positions.length !== payload.positionIds.length) {
-    throw new Error("Una o più posizioni selezionate non sono valide");
+    throw new UserError("Una o più posizioni selezionate non sono valide");
   }
 
   // Create candidate first to get ID for file naming
@@ -94,7 +100,7 @@ export async function createCandidate(formData: FormData) {
       email: payload.email.trim(),
       dateOfBirth: payload.dateOfBirth ?? null,
       status: "pending",
-      createdBy: user.id,
+      createdBy,
       positions: {
         create: payload.positionIds.map((positionId, index) => ({
           positionId,
@@ -117,7 +123,7 @@ export async function createCandidate(formData: FormData) {
     if (!validation.valid) {
       // Delete the candidate if file validation fails
       await prisma.candidate.delete({ where: { id: candidate.id } });
-      throw new Error(validation.error || "File non valido");
+      throw new UserError(validation.error || "File non valido");
     }
 
     try {
@@ -141,209 +147,232 @@ export async function createCandidate(formData: FormData) {
     positionIds: candidate.positions.map((p) => p.positionId),
   });
 
-  return { success: true as const, candidateId: candidate.id };
+  return { candidateId: candidate.id };
+}
+
+// Candidate actions
+
+/** Add a candidate from the dashboard. */
+export async function createCandidate(formData: FormData) {
+  return runAction("createCandidate", async () => {
+    const user = await requireUser();
+    return createCandidateFromForm(formData, user.id);
+  });
+}
+
+/**
+ * Public application from /recruting. No signed-in user: the candidate is
+ * stored without a creator and only gets a confirmation back.
+ */
+export async function applyAsCandidate(formData: FormData) {
+  return runAction("applyAsCandidate", async () => {
+    await createCandidateFromForm(formData, null);
+  });
 }
 
 export async function updateCandidate(
   id: string,
   formData: FormData
-): Promise<{ success: boolean }> {
-  const user = await requireUser();
+) {
+  return runAction("updateCandidate", async () => {
+    await requireUser();
 
-  const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
-  const removeResume = readFormValue(formData, "removeResume") === "true";
-  const positionIdsRaw = readFormValue(formData, "positionIds");
-  const positionIds = parsePositionIds(positionIdsRaw);
+    const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
+    const removeResume = readFormValue(formData, "removeResume") === "true";
+    const positionIdsRaw = readFormValue(formData, "positionIds");
+    const positionIds = parsePositionIds(positionIdsRaw);
 
-  const rawPayload = {
-    firstName: readFormValue(formData, "firstName"),
-    lastName: readFormValue(formData, "lastName"),
-    email: readFormValue(formData, "email"),
-    positionIds,
-    status: readFormValue(formData, "status"),
-    dateOfBirth: dateOfBirthRaw ? new Date(dateOfBirthRaw) : undefined,
-    removeResume,
-  };
-
-  const payload: CandidateUpdateData = candidateUpdateSchema.parse(rawPayload);
-
-  const candidate = await getCandidateById(id);
-  const existingPositionIds = new Set<string>();
-
-  // Collect existing position IDs for cache invalidation and comparison
-  for (const pos of candidate.positions) {
-    existingPositionIds.add(pos.positionId);
-  }
-
-  const updateData: Prisma.CandidateUpdateInput = {};
-
-  if (payload.firstName) {
-    updateData.firstName = payload.firstName.trim();
-  }
-
-  if (payload.lastName) {
-    updateData.lastName = payload.lastName.trim();
-  }
-
-  if (payload.email) {
-    updateData.email = payload.email.trim();
-  }
-
-  if (payload.status) {
-    updateData.status = payload.status;
-  }
-
-  if (payload.dateOfBirth !== undefined) {
-    updateData.dateOfBirth = payload.dateOfBirth ?? null;
-  }
-
-  if (payload.positionIds) {
-    // Validate all positions exist
-    const positions = await prisma.position.findMany({
-      where: { id: { in: payload.positionIds } },
-      select: { id: true },
-    });
-
-    if (positions.length !== payload.positionIds.length) {
-      throw new Error("Una o più posizioni selezionate non sono valide");
-    }
-
-    // Determine which positions are being removed
-    const newPositionIds = new Set(payload.positionIds);
-    const removedPositionIds = Array.from(existingPositionIds).filter(
-      (posId) => !newPositionIds.has(posId)
-    );
-
-    // Delete non-completed interviews for removed positions
-    if (removedPositionIds.length > 0) {
-      try {
-        await prisma.interview.deleteMany({
-          where: {
-            candidateId: id,
-            quiz: {
-              positionId: { in: removedPositionIds },
-            },
-            status: { notIn: ["completed"] },
-          },
-        });
-        // Invalidate interview cache since we deleted interviews
-        invalidateInterviewCache({ deleted: true });
-      } catch (deleteError) {
-        storageLogger.error(
-          "Failed to delete interviews for removed positions",
-          {
-            error: deleteError,
-            candidateId: id,
-            removedPositionIds,
-          }
-        );
-        // Continue with update anyway
-      }
-    }
-
-    // Delete existing position relationships and create new ones
-    updateData.positions = {
-      deleteMany: {},
-      create: payload.positionIds.map((positionId, index) => ({
-        positionId,
-        isPrimary: index === 0, // First position is primary
-      })),
+    const rawPayload = {
+      firstName: readFormValue(formData, "firstName"),
+      lastName: readFormValue(formData, "lastName"),
+      email: readFormValue(formData, "email"),
+      positionIds,
+      status: readFormValue(formData, "status"),
+      dateOfBirth: dateOfBirthRaw ? new Date(dateOfBirthRaw) : undefined,
+      removeResume,
     };
 
-    // Add new positions to existing set for cache invalidation
-    for (const positionId of payload.positionIds) {
-      existingPositionIds.add(positionId);
-    }
-  }
+    const payload: CandidateUpdateData = candidateUpdateSchema.parse(rawPayload);
 
-  // Handle resume file upload or removal
-  const resumeFile = formData.get("resumeFile");
-  const hasNewFile = resumeFile instanceof File && resumeFile.size > 0;
-  const existingResumeUrl = candidate.resumeUrl;
-  let shouldDeleteOldResume = false;
+    const candidate = await getCandidateById(id);
+    const existingPositionIds = new Set<string>();
 
-  if (hasNewFile) {
-    const validation = validateResumeFile(resumeFile);
-    if (!validation.valid) {
-      throw new Error(validation.error || "File non valido");
+    // Collect existing position IDs for cache invalidation and comparison
+    for (const pos of candidate.positions) {
+      existingPositionIds.add(pos.positionId);
     }
 
-    // Upload new file
-    try {
-      const resumeUrl = await uploadResumeToR2(resumeFile, id);
-      updateData.resumeUrl = resumeUrl;
-      if (existingResumeUrl) {
-        shouldDeleteOldResume = true;
+    const updateData: Prisma.CandidateUpdateInput = {};
+
+    if (payload.firstName) {
+      updateData.firstName = payload.firstName.trim();
+    }
+
+    if (payload.lastName) {
+      updateData.lastName = payload.lastName.trim();
+    }
+
+    if (payload.email) {
+      updateData.email = payload.email.trim();
+    }
+
+    if (payload.status) {
+      updateData.status = payload.status;
+    }
+
+    if (payload.dateOfBirth !== undefined) {
+      updateData.dateOfBirth = payload.dateOfBirth ?? null;
+    }
+
+    if (payload.positionIds) {
+      // Validate all positions exist
+      const positions = await prisma.position.findMany({
+        where: { id: { in: payload.positionIds } },
+        select: { id: true },
+      });
+
+      if (positions.length !== payload.positionIds.length) {
+        throw new UserError("Una o più posizioni selezionate non sono valide");
       }
-    } catch (uploadError) {
-      storageLogger.error("Failed to upload resume during candidate update", {
-        error: uploadError,
-        candidateId: id,
-      });
-      throw new Error("Errore durante il caricamento del curriculum");
+
+      // Determine which positions are being removed
+      const newPositionIds = new Set(payload.positionIds);
+      const removedPositionIds = Array.from(existingPositionIds).filter(
+        (posId) => !newPositionIds.has(posId)
+      );
+
+      // Delete non-completed interviews for removed positions
+      if (removedPositionIds.length > 0) {
+        try {
+          await prisma.interview.deleteMany({
+            where: {
+              candidateId: id,
+              quiz: {
+                positionId: { in: removedPositionIds },
+              },
+              status: { notIn: ["completed"] },
+            },
+          });
+          // Invalidate interview cache since we deleted interviews
+          invalidateInterviewCache({ deleted: true });
+        } catch (deleteError) {
+          storageLogger.error(
+            "Failed to delete interviews for removed positions",
+            {
+              error: deleteError,
+              candidateId: id,
+              removedPositionIds,
+            }
+          );
+          // Continue with update anyway
+        }
+      }
+
+      // Delete existing position relationships and create new ones
+      updateData.positions = {
+        deleteMany: {},
+        create: payload.positionIds.map((positionId, index) => ({
+          positionId,
+          isPrimary: index === 0, // First position is primary
+        })),
+      };
+
+      // Add new positions to existing set for cache invalidation
+      for (const positionId of payload.positionIds) {
+        existingPositionIds.add(positionId);
+      }
     }
-  } else if (removeResume && existingResumeUrl) {
-    // User wants to remove existing resume without uploading a new one
-    updateData.resumeUrl = null;
-    shouldDeleteOldResume = true;
-  }
 
-  if (Object.keys(updateData).length === 0) {
-    return { success: false };
-  }
+    // Handle resume file upload or removal
+    const resumeFile = formData.get("resumeFile");
+    const hasNewFile = resumeFile instanceof File && resumeFile.size > 0;
+    const existingResumeUrl = candidate.resumeUrl;
+    let shouldDeleteOldResume = false;
 
-  await prisma.candidate.update({
-    where: { id },
-    data: updateData,
-  });
+    if (hasNewFile) {
+      const validation = validateResumeFile(resumeFile);
+      if (!validation.valid) {
+        throw new UserError(validation.error || "File non valido");
+      }
 
-  if (shouldDeleteOldResume && existingResumeUrl) {
-    try {
-      await deleteResumeFromR2(existingResumeUrl);
-    } catch (deleteError) {
-      storageLogger.error("Failed to delete old resume after update", {
-        error: deleteError,
-        candidateId: id,
-      });
+      // Upload new file
+      try {
+        const resumeUrl = await uploadResumeToR2(resumeFile, id);
+        updateData.resumeUrl = resumeUrl;
+        if (existingResumeUrl) {
+          shouldDeleteOldResume = true;
+        }
+      } catch (uploadError) {
+        storageLogger.error("Failed to upload resume during candidate update", {
+          error: uploadError,
+          candidateId: id,
+        });
+        throw new UserError("Errore durante il caricamento del curriculum");
+      }
+    } else if (removeResume && existingResumeUrl) {
+      // User wants to remove existing resume without uploading a new one
+      updateData.resumeUrl = null;
+      shouldDeleteOldResume = true;
     }
-  }
 
-  // Invalidate cache for all affected positions (old + new)
-  invalidateCandidateCache({
-    candidateId: id,
-    positionIds: Array.from(existingPositionIds),
+    if (Object.keys(updateData).length === 0) {
+      throw new UserError("Nessun aggiornamento rilevato");
+    }
+
+    await prisma.candidate.update({
+      where: { id },
+      data: updateData,
+    });
+
+    if (shouldDeleteOldResume && existingResumeUrl) {
+      try {
+        await deleteResumeFromR2(existingResumeUrl);
+      } catch (deleteError) {
+        storageLogger.error("Failed to delete old resume after update", {
+          error: deleteError,
+          candidateId: id,
+        });
+      }
+    }
+
+    // Invalidate cache for all affected positions (old + new)
+    invalidateCandidateCache({
+      candidateId: id,
+      positionIds: Array.from(existingPositionIds),
+    });
+
   });
-
-  return { success: true };
 }
 
 // Delete candidate
 export async function deleteCandidate(id: string) {
-  const user = await requireUser();
+  return runAction("deleteCandidate", async () => {
+    await requireUser();
 
-  const candidate = await getCandidateById(id);
+    const candidate = await getCandidateById(id);
 
-  // Delete resume file if exists
-  if (candidate.resumeUrl) {
-    try {
-      await deleteResumeFromR2(candidate.resumeUrl);
-    } catch (deleteError) {
-      storageLogger.error("Failed to delete resume during candidate deletion", {
-        error: deleteError,
-        candidateId: id,
-      });
-      // Continue with candidate deletion anyway
+    // Delete resume file if exists
+    if (candidate.resumeUrl) {
+      try {
+        await deleteResumeFromR2(candidate.resumeUrl);
+      } catch (deleteError) {
+        storageLogger.error("Failed to delete resume during candidate deletion", {
+          error: deleteError,
+          candidateId: id,
+        });
+        // Continue with candidate deletion anyway
+      }
     }
-  }
 
-  await prisma.candidate.delete({ where: { id } });
+    await prisma.candidate.delete({ where: { id } });
 
-  // deleted: true expires interviews/evaluations/rubrics removed by cascade
-  invalidateCandidateCache({
-    candidateId: id,
-    positionIds: candidate.positions.map((p) => p.positionId),
-    deleted: true,
+    // deleted: true expires interviews/evaluations/rubrics removed by cascade
+    invalidateCandidateCache({
+      candidateId: id,
+      positionIds: candidate.positions.map((p) => p.positionId),
+      deleted: true,
+    });
+
+    redirect("/dashboard/candidates");
   });
-
-  redirect("/dashboard/candidates");
 }

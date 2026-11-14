@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import {
   getCandidatesCount,
-  getInteviewsStatus,
+  getInterviewsStatus,
   getPositionsCount,
   getRecentPositions,
 } from "@/lib/data/dashboard";
@@ -25,7 +25,7 @@ import { Suspense } from "react";
 import { RecentPositionsSkeleton, StatValueSkeleton } from "./fallbacks";
 
 async function Pipeline() {
-  const counts = await getInteviewsStatus();
+  const counts = await getInterviewsStatus();
   return <InterviewPipeline counts={counts} />;
 }
 

@@ -1,7 +1,7 @@
 "use client";
 import { type Preset } from "@/lib/data/presets";
 import { QuestionType } from "@/lib/schemas";
-import { DEFAULT_GENERATION_MODEL } from "@/lib/utils";
+import { DEFAULT_GENERATION_MODEL } from "@/lib/services/ai/models";
 import { getPresetIcon } from "@/lib/utils/preset-icons";
 import { ChevronsUpDown, Lightbulb } from "lucide-react";
 import { Suspense, use, useState } from "react";

@@ -11,12 +11,16 @@ import {
 import { InputField } from "@/components/ui/rhf-inputs/input-field";
 import { SelectField } from "@/components/ui/rhf-inputs/select-field";
 import { duplicateQuizAction } from "@/lib/actions/quizzes";
+import {
+  duplicateQuizFormSchema,
+  type DuplicateQuizFormData,
+} from "@/lib/schemas";
+import { unwrap } from "@/lib/utils/action-result";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
 type DuplicateQuizDialogProps = {
   open: boolean;
@@ -29,12 +33,7 @@ type DuplicateQuizDialogProps = {
   }>;
 };
 
-const duplicateFormSchema = z.object({
-  newTitle: z.string().min(2, "Il titolo deve contenere almeno 2 caratteri."),
-  newPositionId: z.string().min(1, "Seleziona una posizione."),
-});
-
-type DuplicateFormData = z.infer<typeof duplicateFormSchema>;
+type DuplicateFormData = DuplicateQuizFormData;
 
 export function DuplicateQuizDialog({
   open,
@@ -47,7 +46,7 @@ export function DuplicateQuizDialog({
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<DuplicateFormData>({
-    resolver: zodResolver(duplicateFormSchema),
+    resolver: zodResolver(duplicateQuizFormSchema),
     defaultValues: {
       newTitle: `${quizTitle} - Copia`,
       newPositionId: "",
@@ -57,19 +56,12 @@ export function DuplicateQuizDialog({
   const onSubmit = async (data: DuplicateFormData) => {
     startTransition(async () => {
       try {
-        const formData = new FormData();
-        formData.append("quizId", quizId);
-        formData.append("newPositionId", data.newPositionId);
-        formData.append("newTitle", data.newTitle);
+        const { id } = unwrap(await duplicateQuizAction({ quizId, ...data }));
 
-        const result = await duplicateQuizAction(formData);
-
-        if (result?.id) {
-          toast.success("Quiz duplicato con successo!");
-          onOpenChange(false);
-          form.reset();
-          router.push(`/dashboard/quizzes/${result.id}`);
-        }
+        toast.success("Quiz duplicato con successo!");
+        onOpenChange(false);
+        form.reset();
+        router.push(`/dashboard/quizzes/${id}`);
       } catch (error) {
         const errorMessage =
           error instanceof Error

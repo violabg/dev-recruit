@@ -15,7 +15,7 @@ import {
   DEFAULT_PAGE_SIZE,
   UrlPagination,
 } from "@/components/ui/url-pagination";
-import { getPresetsAction } from "@/lib/actions/presets";
+import { getPresetsData } from "@/lib/data/presets";
 import { type Preset } from "@/lib/data/presets";
 import { Plus, Settings2 } from "lucide-react";
 import Link from "next/link";
@@ -37,20 +37,6 @@ async function PresetsContent({
   const search = params.search?.trim();
   const page = Math.max(1, Math.floor(Number(params.page)) || 1);
 
-  const result = await getPresetsAction({
-    search,
-    page,
-    pageSize: DEFAULT_PAGE_SIZE,
-  });
-
-  if (!result.success) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-muted-foreground">{result.error}</p>
-      </div>
-    );
-  }
-
   const {
     presets,
     totalCount,
@@ -58,7 +44,11 @@ async function PresetsContent({
     totalPages,
     hasNextPage,
     hasPrevPage,
-  } = result;
+  } = await getPresetsData({
+    search,
+    page,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
 
   return (
     <>

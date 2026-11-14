@@ -22,6 +22,8 @@ interface QuestionProps {
   questionNumber: number;
   onAnswerChange: (answer: QuestionAnswer) => void;
   currentAnswer: QuestionAnswer;
+  /** Interview token: authorises voice transcription for this candidate */
+  interviewToken: string;
 }
 
 export function InterviewQuestion({
@@ -29,6 +31,7 @@ export function InterviewQuestion({
   questionNumber,
   onAnswerChange,
   currentAnswer,
+  interviewToken,
 }: QuestionProps) {
   const { theme, resolvedTheme } = useTheme();
 
@@ -124,8 +127,13 @@ export function InterviewQuestion({
           </RadioGroup>
         )}
 
-        {question.type === "open_question" && (
-          <VoiceTextarea value={answer} onChange={setAnswer} />
+        {(question.type === "open_question" ||
+          question.type === "behavioral_scenario") && (
+          <VoiceTextarea
+            value={answer}
+            onChange={setAnswer}
+            interviewToken={interviewToken}
+          />
         )}
 
         {question.type === "code_snippet" && (

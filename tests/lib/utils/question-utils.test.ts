@@ -8,7 +8,6 @@ import {
   mapQuizQuestionsToFlexible,
   prepareQuestionForCreate,
   prepareQuestionForUpdate,
-  prepareQuestionsForBulkCreate,
 } from "@/lib/utils/question-utils";
 import { mockMultipleChoiceQuestion, mockOpenQuestion } from "@/tests/mocks";
 import { describe, expect, it } from "vitest";
@@ -180,25 +179,5 @@ describe("prepareQuestionForUpdate", () => {
 
     expect(mcResult.options).toEqual(mcQuestion.options);
     expect(openResult.sampleAnswer).toBe(openQuestion.sampleAnswer);
-  });
-});
-
-describe("prepareQuestionsForBulkCreate", () => {
-  it("should prepare multiple questions for bulk create", () => {
-    const questions = [mockMultipleChoiceQuestion(), mockOpenQuestion()];
-    const userId = "user-123";
-
-    const result = prepareQuestionsForBulkCreate(questions, userId);
-
-    expect(result).toHaveLength(2);
-    expect(result[0].createdBy).toBe(userId);
-    expect(result[1].createdBy).toBe(userId);
-    expect(result[0].type).toBe("multiple_choice");
-    expect(result[1].type).toBe("open_question");
-  });
-
-  it("should handle empty array", () => {
-    const result = prepareQuestionsForBulkCreate([], "user-123");
-    expect(result).toEqual([]);
   });
 });

@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LLM_MODELS } from "@/lib/utils";
+import { LLM_MODELS } from "@/lib/services/ai/models";
 
 // Groq free-plan chat models (see LLM_MODELS in lib/utils.ts)
 const llmModelOptions = [

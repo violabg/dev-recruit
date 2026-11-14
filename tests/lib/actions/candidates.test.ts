@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  applyAsCandidate,
   createCandidate,
   deleteCandidate,
   updateCandidate,
@@ -48,11 +49,77 @@ vi.mock("../../../lib/services/logger", () => ({
 
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
+  unstable_rethrow: vi.fn(),
 }));
 
 describe("candidates actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("applyAsCandidate (public form)", () => {
+    const application = () => {
+      const formData = new FormData();
+      formData.append("firstName", "Anna");
+      formData.append("lastName", "Bianchi");
+      formData.append("email", "anna@example.com");
+      formData.append("positionIds", JSON.stringify(["pos-123"]));
+      return formData;
+    };
+
+    it("creates the candidate without a signed-in user", async () => {
+      const { default: prisma } = await import("../../../lib/prisma");
+      const { requireUser } = await import("../../../lib/auth-server");
+      (prisma.position.findMany as any).mockResolvedValueOnce([
+        { id: "pos-123" },
+      ]);
+      (prisma.candidate.create as any).mockResolvedValueOnce({
+        id: "cand-9",
+        positions: [{ positionId: "pos-123" }],
+      });
+
+      const result = await applyAsCandidate(application());
+
+      expect(result).toEqual({ success: true });
+      expect(requireUser).not.toHaveBeenCalled();
+      expect(prisma.candidate.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            firstName: "Anna",
+            createdBy: null,
+            status: "pending",
+          }),
+        }),
+      );
+    });
+
+    it("does not reveal the new candidate id to the applicant", async () => {
+      const { default: prisma } = await import("../../../lib/prisma");
+      (prisma.position.findMany as any).mockResolvedValueOnce([
+        { id: "pos-123" },
+      ]);
+      (prisma.candidate.create as any).mockResolvedValueOnce({
+        id: "cand-9",
+        positions: [],
+      });
+
+      const result = await applyAsCandidate(application());
+
+      expect(JSON.stringify(result)).not.toContain("cand-9");
+    });
+
+    it("rejects a position that does not exist", async () => {
+      const { default: prisma } = await import("../../../lib/prisma");
+      (prisma.position.findMany as any).mockResolvedValueOnce([]);
+
+      const result = await applyAsCandidate(application());
+
+      expect(result).toEqual({
+        success: false,
+        error: "Una o più posizioni selezionate non sono valide",
+      });
+      expect(prisma.candidate.create).not.toHaveBeenCalled();
+    });
   });
 
   describe("createCandidate", () => {
@@ -75,8 +142,7 @@ describe("candidates actions", () => {
 
       const result = await createCandidate(formData);
 
-      expect(result.success).toBe(true);
-      expect(result.candidateId).toBe("cand-123");
+      expect(result).toEqual({ success: true, candidateId: "cand-123" });
       expect(mockCreate).toHaveBeenCalledWith({
         data: expect.objectContaining({
           firstName: "Mario",
@@ -100,9 +166,7 @@ describe("candidates actions", () => {
       formData.append("email", "mario@example.com");
       formData.append("positionIds", JSON.stringify(["invalid-id"]));
 
-      await expect(createCandidate(formData)).rejects.toThrow(
-        "Una o più posizioni selezionate non sono valide"
-      );
+      expect(await createCandidate(formData)).toMatchObject({ success: false });
     });
 
     it("creates candidate with date of birth", async () => {
@@ -199,7 +263,7 @@ describe("candidates actions", () => {
       formData.append("positionIds", JSON.stringify(["pos-123"]));
       formData.append("resumeFile", mockFile);
 
-      await expect(createCandidate(formData)).rejects.toThrow("File too large");
+      expect(await createCandidate(formData)).toMatchObject({ success: false });
       expect(mockDelete).toHaveBeenCalledWith({ where: { id: "cand-123" } });
     });
 
@@ -269,9 +333,7 @@ describe("candidates actions", () => {
       const formData = new FormData();
       formData.append("firstName", "Luigi");
 
-      await expect(updateCandidate("invalid-id", formData)).rejects.toThrow(
-        "Candidate not found"
-      );
+      expect(await updateCandidate("invalid-id", formData)).toMatchObject({ success: false });
     });
 
     it("updates position and invalidates both caches", async () => {
@@ -401,9 +463,7 @@ describe("candidates actions", () => {
 
       mockFindUnique.mockResolvedValueOnce(null);
 
-      await expect(deleteCandidate("invalid-id")).rejects.toThrow(
-        "Candidate not found"
-      );
+      expect(await deleteCandidate("invalid-id")).toMatchObject({ success: false });
     });
 
     it("deletes resume file before deleting candidate", async () => {

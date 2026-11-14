@@ -27,6 +27,7 @@ import {
 } from "@/lib/utils/quiz-form-utils";
 import { Heart, Loader2, Search } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 type FavoriteQuestionsDialogProps = {
   open: boolean;
@@ -70,8 +71,10 @@ export function FavoriteQuestionsDialog({
     if (open) {
       startTransition(async () => {
         const result = await fetchFavoriteQuestionsAction(1, 100);
-        if (result?.success) {
+        if (result.success) {
           setQuestions(result.questions as QuestionWithMetadata[]);
+        } else {
+          toast.error(result.error);
         }
         setSelectedIds(new Set());
       });

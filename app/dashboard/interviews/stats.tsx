@@ -1,5 +1,5 @@
 import { InterviewPipeline } from "@/components/dashboard/interview-pipeline";
-import { getInteviewsStatus } from "@/lib/data/interviews";
+import { getInterviewsStatus } from "@/lib/data/interviews";
 import { InterviewStatus } from "@/lib/schemas";
 
 export type InterviewsSearchParams = {
@@ -12,6 +12,6 @@ export type InterviewsSearchParams = {
 
 /** Status overview as the shared interview pipeline (stages filter the list). */
 export const Stats = async () => {
-  const statusCounts = await getInteviewsStatus();
+  const statusCounts = await getInterviewsStatus();
   return <InterviewPipeline counts={statusCounts} />;
 };

@@ -25,7 +25,7 @@ import { getPositions } from "@/lib/data/positions";
 import { Briefcase, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { PositionsSkeleton, SearchPositionsSkeleton } from "./fallback";
+import { PositionsSkeleton, SearchPositionsSkeleton } from "./fallbacks";
 import { PositionsTableClient } from "./positions-table-client";
 
 type PositionsSearchParams = Promise<{

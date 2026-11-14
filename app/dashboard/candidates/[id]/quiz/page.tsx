@@ -45,7 +45,7 @@ async function CandidateQuizContent({
   if (!data) {
     return redirect(
       `/dashboard/candidates/${candidateId}?error=${encodeURIComponent(
-        "Failed to load candidate data"
+        "Impossibile caricare i dati del candidato"
       )}` as Route
     );
   }
@@ -61,7 +61,7 @@ async function CandidateQuizContent({
   if (!candidate || !position) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
-        <p className="font-medium text-lg">Candidate or Position not found</p>
+        <p className="font-medium text-lg">Candidato o posizione non trovati</p>
         <Link
           href="/dashboard/candidates"
           className={buttonVariants({
@@ -71,7 +71,7 @@ async function CandidateQuizContent({
           })}
         >
           <ArrowLeft className="mr-1 size-4" />
-          Return to candidates
+          Torna ai candidati
         </Link>
       </div>
     );
@@ -88,30 +88,30 @@ async function CandidateQuizContent({
           })}
         >
           <ArrowLeft className="mr-1 size-4" />
-          Back to candidate
+          Torna al candidato
         </Link>
       </div>
 
       <div>
-        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assign quizzes to candidate</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assegna quiz al candidato</h1>
         <p className="text-muted-foreground">
-          Assign quizzes for the position &quot;{position.title}&quot; to &quot;
+          Assegna i quiz della posizione &quot;{position.title}&quot; a &quot;
           {candidate.name}&quot; ({candidate.email})
         </p>
       </div>
 
       <Tabs defaultValue="quizzes">
         <TabsList variant="line">
-          <TabsTrigger value="quizzes">Assign quizzes</TabsTrigger>
-          <TabsTrigger value="interviews">Existing interviews</TabsTrigger>
+          <TabsTrigger value="quizzes">Assegna quiz</TabsTrigger>
+          <TabsTrigger value="interviews">Colloqui esistenti</TabsTrigger>
         </TabsList>
 
         <TabsContent value="quizzes" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Assign quizzes to candidate</CardTitle>
+              <CardTitle>Assegna quiz al candidato</CardTitle>
               <CardDescription>
-                Select quizzes and create interview links for this candidate
+                Seleziona i quiz e crea i link di colloquio per questo candidato
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -126,9 +126,9 @@ async function CandidateQuizContent({
         <TabsContent value="interviews" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Existing interviews</CardTitle>
+              <CardTitle>Colloqui esistenti</CardTitle>
               <CardDescription>
-                Manage interviews created for this candidate
+                Gestisci i colloqui creati per questo candidato
               </CardDescription>
             </CardHeader>
             <CardContent>

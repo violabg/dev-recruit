@@ -5,7 +5,7 @@ import {
   getInterviewByToken,
   getInterviewDetail,
   getInterviewsByQuiz,
-  getInteviewsStatus,
+  getInterviewsStatus,
   getQuizAssignmentData,
   getRecentInterviewIds,
   mapAssignedInterview,
@@ -333,7 +333,7 @@ describe("interviews data layer", () => {
     expect(result).toEqual(["i1", "i2"]);
   });
 
-  it("getInteviewsStatus returns status counts", async () => {
+  it("getInterviewsStatus returns status counts", async () => {
     const fakeInterviews = [
       { status: "completed" },
       { status: "completed" },
@@ -342,7 +342,7 @@ describe("interviews data layer", () => {
 
     (prisma.interview.findMany as any).mockResolvedValue(fakeInterviews);
 
-    const result = await getInteviewsStatus();
+    const result = await getInterviewsStatus();
     expect(result.completed).toBe(2);
     expect(result.pending).toBe(1);
   });

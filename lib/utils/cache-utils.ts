@@ -39,14 +39,10 @@ export const CacheTags = {
   EVALUATIONS: "evaluations",
   BEHAVIORAL_RUBRICS: "behavioral-rubrics",
   PRESETS: "presets",
+  REFERENCE_DATA: "reference-data",
 
   // Aggregate views
   DASHBOARD: "dashboard",
-
-  // Legacy tags (for backward compatibility)
-  QUIZ_DATA: "quiz-data",
-  POSITION_DATA: "position-data",
-  USER_DATA: "user-data",
 } as const;
 
 /**
@@ -60,6 +56,7 @@ export type CacheTagValue = (typeof CacheTags)[keyof typeof CacheTags];
 export const entityTag = {
   quiz: (id: string) => `quiz-${id}`,
   question: (id: string) => `question-${id}`,
+  // Plural for historical reasons: renaming it would orphan cached entries
   position: (id: string) => `positions-${id}`,
   candidate: (id: string) => `candidate-${id}`,
   interview: (id: string) => `interview-${id}`,
@@ -71,6 +68,7 @@ export const entityTag = {
   behavioralRubric: (candidateId: string, positionId: string) =>
     `behavioral-rubric-${candidateId}-${positionId}`,
   preset: (id: string) => `preset-${id}`,
+  referenceCategory: (category: string) => `reference-data-${category}`,
 } as const;
 
 /**
@@ -239,12 +237,12 @@ export function invalidateCandidateCache(options?: {
 
 // Reference data cache invalidation
 export function invalidateReferenceDataCache(category?: string) {
-  updateTag("reference-data");
-  if (category) updateTag(`reference-data-${category}`);
+  updateTag(CacheTags.REFERENCE_DATA);
+  if (category) updateTag(entityTag.referenceCategory(category));
 }
 /**
  * Invalidate interview cache after create/update/delete operations
- * Use this in Server Actions only. For Route Handlers, use invalidateInterviewCacheInRouteHandler.
+ * Use this in Server Actions only.
  */
 export function invalidateInterviewCache(options?: {
   interviewId?: string;
@@ -260,31 +258,6 @@ export function invalidateInterviewCache(options?: {
 
   if (options?.interviewId) {
     updateTag(entityTag.interview(options.interviewId));
-    revalidatePath(`/dashboard/interviews/${options.interviewId}`);
-  }
-
-  if (options?.quizId) {
-    revalidatePath(`/dashboard/quizzes/${options.quizId}`);
-    revalidatePath(`/dashboard/quizzes/${options.quizId}/invite`);
-  }
-
-  revalidatePath("/dashboard/interviews");
-}
-
-/**
- * Invalidate interview cache from Route Handlers (uses revalidateTag instead of updateTag)
- * Use this in Route Handlers (app/api/*). For Server Actions, use invalidateInterviewCache.
- *
- * Uses { expire: 0 } for immediate expiration since we want the new data to show right away.
- */
-export function invalidateInterviewCacheInRouteHandler(options?: {
-  interviewId?: string;
-  quizId?: string;
-}) {
-  revalidateTag(CacheTags.INTERVIEWS, { expire: 0 });
-
-  if (options?.interviewId) {
-    revalidateTag(entityTag.interview(options.interviewId), { expire: 0 });
     revalidatePath(`/dashboard/interviews/${options.interviewId}`);
   }
 
@@ -407,24 +380,5 @@ export function invalidatePresetCache(presetId?: string) {
 export function invalidateProfileCache() {
   revalidatePath("/dashboard/profile");
   revalidatePath("/dashboard/profile/edit");
-  revalidatePath("/dashboard");
-}
-
-// ============================================================================
-// Bulk Invalidation Helpers
-// ============================================================================
-
-/**
- * Invalidate all dashboard caches (use sparingly)
- */
-export function invalidateAllDashboardCaches() {
-  updateTag(CacheTags.QUIZZES);
-  updateTag(CacheTags.QUESTIONS);
-  updateTag(CacheTags.POSITIONS);
-  updateTag(CacheTags.CANDIDATES);
-  updateTag(CacheTags.INTERVIEWS);
-  updateTag(CacheTags.EVALUATIONS);
-  updateTag(CacheTags.PRESETS);
-
   revalidatePath("/dashboard");
 }

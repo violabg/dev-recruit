@@ -3,17 +3,17 @@ import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { removeQuestionFromQuizSchema } from "../schemas";
 import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
-import { handleActionError } from "../utils/action-error-handler";
 import {
   invalidateQuestionCache,
   invalidateQuizCache,
 } from "../utils/cache-utils";
+import { runAction } from "./run-action";
 
 /**
  * Toggle favorite status of a question
  */
 export async function toggleQuestionFavoriteAction(questionId: string) {
-  try {
+  return runAction("toggleQuestionFavoriteAction", async () => {
     await requireUser();
 
     if (!questionId) {
@@ -47,13 +47,8 @@ export async function toggleQuestionFavoriteAction(questionId: string) {
     // Invalidate cache
     invalidateQuestionCache({ questionId, isFavorite: true });
 
-    return { success: true, isFavorite: question.isFavorite };
-  } catch (error) {
-    handleActionError(error, {
-      operation: "toggleQuestionFavoriteAction",
-      fallbackMessage: "Failed to toggle favorite. Please try again.",
-    });
-  }
+    return { isFavorite: question.isFavorite };
+  });
 }
 
 /**
@@ -65,7 +60,7 @@ export async function deleteQuestionFromQuizAction(
   quizId: string,
   questionId: string
 ) {
-  try {
+  return runAction("deleteQuestionFromQuizAction", async () => {
     await requireUser();
 
     // Validate input
@@ -108,16 +103,10 @@ export async function deleteQuestionFromQuizAction(
     invalidateQuizCache({ quizId: validatedInput.quizId });
 
     return {
-      success: true,
       wasDeleted: !question.isFavorite,
       wasFavorite: question.isFavorite,
     };
-  } catch (error) {
-    handleActionError(error, {
-      operation: "deleteQuestionFromQuizAction",
-      fallbackMessage: "Failed to delete question from quiz. Please try again.",
-    });
-  }
+  });
 }
 
 /**
@@ -125,7 +114,7 @@ export async function deleteQuestionFromQuizAction(
  * This wraps the data layer function for use in client components
  */
 export async function fetchFavoriteQuestionsAction(page = 1, limit = 100) {
-  try {
+  return runAction("fetchFavoriteQuestionsAction", async () => {
     await requireUser();
 
     const skip = (page - 1) * limit;
@@ -141,7 +130,6 @@ export async function fetchFavoriteQuestionsAction(page = 1, limit = 100) {
     ]);
 
     return {
-      success: true,
       questions,
       pagination: {
         page,
@@ -150,10 +138,5 @@ export async function fetchFavoriteQuestionsAction(page = 1, limit = 100) {
         totalPages: Math.ceil(total / limit),
       },
     };
-  } catch (error) {
-    handleActionError(error, {
-      operation: "fetchFavoriteQuestionsAction",
-      fallbackMessage: "Failed to fetch favorite questions. Please try again.",
-    });
-  }
+  });
 }

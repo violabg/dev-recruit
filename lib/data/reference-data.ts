@@ -1,13 +1,13 @@
-"use server";
 import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { ReferenceCategory } from "../constants/reference-categories";
 import prisma from "../prisma";
+import { CacheTags, entityTag } from "../utils/cache-utils";
 
 export const getAllReferenceData = cache(async () => {
   "use cache";
   cacheLife("hours");
-  cacheTag("reference-data");
+  cacheTag(CacheTags.REFERENCE_DATA);
 
   return await prisma.referenceData.findMany({
     where: { isActive: true },
@@ -19,8 +19,7 @@ export const getReferenceDataByCategory = cache(
   async (category: ReferenceCategory) => {
     "use cache";
     cacheLife("hours");
-    cacheTag("reference-data");
-    cacheTag(`reference-data-${category}`);
+    cacheTag(CacheTags.REFERENCE_DATA, entityTag.referenceCategory(category));
 
     return await prisma.referenceData.findMany({
       where: { category, isActive: true },
@@ -39,7 +38,7 @@ export const getReferenceDataByCategory = cache(
 export const getAllReferenceDataGrouped = cache(async () => {
   "use cache";
   cacheLife("hours");
-  cacheTag("reference-data");
+  cacheTag(CacheTags.REFERENCE_DATA);
 
   const data = await prisma.referenceData.findMany({
     where: { isActive: true },

@@ -1,16 +1,18 @@
 import {
-  deleteQuiz,
   deleteQuizById,
   duplicateQuizAction,
   generateNewQuestionAction,
   generateNewQuizAction,
-  regenerateQuizAction,
   upsertQuizAction,
 } from "@/lib/actions/quizzes";
 import prisma from "@/lib/prisma";
+import { unwrap } from "@/lib/utils/action-result";
 import { aiQuizService } from "@/lib/services/ai-service";
 
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(),
+  unstable_rethrow: vi.fn(),
+}));
 vi.mock("@/lib/services/ai-service", () => ({
   aiQuizService: {
     generateQuiz: vi.fn(),
@@ -133,7 +135,7 @@ describe("quizzes actions", () => {
         includeBehavioralScenarios: false,
       });
 
-      expect(result).toEqual(mockQuizData);
+      expect(result).toEqual({ ...mockQuizData, success: true });
       expect(aiQuizService.generateQuiz).toHaveBeenCalledWith(
         expect.objectContaining({
           positionTitle: "Senior Developer",
@@ -147,8 +149,7 @@ describe("quizzes actions", () => {
     it("throws error when position not found", async () => {
       vi.mocked(prisma.position.findUnique).mockResolvedValueOnce(null);
 
-      await expect(
-        generateNewQuizAction({
+      expect(await generateNewQuizAction({
           positionId: "invalid",
           quizTitle: "Test",
           questionCount: 5,
@@ -157,8 +158,7 @@ describe("quizzes actions", () => {
           includeOpenQuestions: false,
           includeCodeSnippets: false,
           includeBehavioralScenarios: false,
-        }),
-      ).rejects.toThrow();
+        }),).toMatchObject({ success: false });
     });
 
     it("handles AI generation with previousQuestions", async () => {
@@ -234,7 +234,7 @@ describe("quizzes actions", () => {
         difficulty: 3,
       });
 
-      expect(result).toEqual(mockQuestion);
+      expect(result).toEqual({ success: true, question: mockQuestion });
       expect(aiQuizService.generateQuestion).toHaveBeenCalledWith({
         type: "multiple_choice",
         positionTitle: "Frontend Developer",
@@ -266,7 +266,7 @@ describe("quizzes actions", () => {
         difficulty: 4,
       });
 
-      expect(result.type).toBe("open_question");
+      expect(unwrap(result).question.type).toBe("open_question");
     });
 
     it("generates a code snippet question", async () => {
@@ -292,7 +292,7 @@ describe("quizzes actions", () => {
         difficulty: 5,
       });
 
-      expect(result.type).toBe("code_snippet");
+      expect(unwrap(result).question.type).toBe("code_snippet");
     });
 
     it("throws error on validation failure", async () => {
@@ -307,31 +307,18 @@ describe("quizzes actions", () => {
         invalidQuestion as any,
       );
 
-      await expect(
-        generateNewQuestionAction({
+      expect(await generateNewQuestionAction({
           type: "multiple_choice",
           positionTitle: "Developer",
           experienceLevel: "Mid",
           skills: ["JavaScript"],
           quizTitle: "Test Quiz",
           difficulty: 3,
-        }),
-      ).rejects.toThrow();
+        }),).toMatchObject({ success: false });
     });
   });
 
-  describe("deleteQuiz and deleteQuizById", () => {
-    it("deleteQuiz extracts quizId from FormData and calls deleteQuizById", async () => {
-      const formData = new FormData();
-      formData.append("quizId", "quiz1");
-
-      await deleteQuiz(formData);
-
-      expect(prisma.quiz.delete).toHaveBeenCalledWith({
-        where: { id: "quiz1" },
-      });
-    });
-
+  describe("deleteQuizById", () => {
     it("deleteQuizById deletes a quiz", async () => {
       await deleteQuizById("quiz1");
 
@@ -341,13 +328,13 @@ describe("quizzes actions", () => {
     });
 
     it("deleteQuizById throws error when quizId missing", async () => {
-      await expect(deleteQuizById("")).rejects.toThrow();
+      expect(await deleteQuizById("")).toMatchObject({ success: false });
     });
 
     it("deleteQuizById throws error when quiz not found", async () => {
       vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
 
-      await expect(deleteQuizById("invalid")).rejects.toThrow();
+      expect(await deleteQuizById("invalid")).toMatchObject({ success: false });
     });
 
     it("deleteQuizById redirects after successful deletion", async () => {
@@ -373,15 +360,11 @@ describe("quizzes actions", () => {
             correctAnswer: 0,
           },
         ];
-        const formData = new FormData();
-        formData.append("title", "Test Quiz");
-        formData.append("positionId", "pos1");
-        formData.append("questions", JSON.stringify(questions));
-        formData.append("timeLimit", "30");
+        const formData = { title: "Test Quiz", positionId: "pos1", questions: questions, timeLimit: 30 } as any;
 
         const result = await upsertQuizAction(formData);
 
-        expect(result?.id).toBe("new-quiz");
+        expect(unwrap(result).id).toBe("new-quiz");
         expect(prisma.quiz.create).toHaveBeenCalled();
       });
 
@@ -395,10 +378,7 @@ describe("quizzes actions", () => {
             correctAnswer: 0,
           },
         ];
-        const formData = new FormData();
-        formData.append("title", "Test Quiz");
-        formData.append("positionId", "pos1");
-        formData.append("questions", JSON.stringify(questions));
+        const formData = { title: "Test Quiz", positionId: "pos1", questions: questions, timeLimit: null } as any;
 
         await upsertQuizAction(formData);
 
@@ -409,31 +389,23 @@ describe("quizzes actions", () => {
       });
 
       it("throws error when positionId missing in create mode", async () => {
-        const formData = new FormData();
-        formData.append("title", "Test");
-        formData.append("questions", JSON.stringify([]));
+        const formData = { title: "Test", questions: [] } as any;
 
-        await expect(upsertQuizAction(formData)).rejects.toThrow();
+        expect(await upsertQuizAction(formData)).toMatchObject({ success: false });
       });
 
       it("throws error when position not found", async () => {
         vi.mocked(prisma.position.findUnique).mockResolvedValueOnce(null);
 
-        const formData = new FormData();
-        formData.append("title", "Test");
-        formData.append("positionId", "invalid");
-        formData.append("questions", JSON.stringify([]));
+        const formData = { title: "Test", positionId: "invalid", questions: [] } as any;
 
-        await expect(upsertQuizAction(formData)).rejects.toThrow();
+        expect(await upsertQuizAction(formData)).toMatchObject({ success: false });
       });
 
       it("throws error when questions are invalid JSON", async () => {
-        const formData = new FormData();
-        formData.append("title", "Test");
-        formData.append("positionId", "pos1");
-        formData.append("questions", "invalid json");
+        const formData = { title: "Test", positionId: "pos1", questions: "invalid json" as any } as any;
 
-        await expect(upsertQuizAction(formData)).rejects.toThrow();
+        expect(await upsertQuizAction(formData)).toMatchObject({ success: false });
       });
     });
 
@@ -446,11 +418,7 @@ describe("quizzes actions", () => {
             sampleAnswer: "Sample answer",
           },
         ];
-        const formData = new FormData();
-        formData.append("quizId", "quiz1");
-        formData.append("title", "Updated Quiz");
-        formData.append("questions", JSON.stringify(questions));
-        formData.append("timeLimit", "45");
+        const formData = { quizId: "quiz1", title: "Updated Quiz", questions: questions, timeLimit: 45 } as any;
 
         await upsertQuizAction(formData);
 
@@ -473,10 +441,7 @@ describe("quizzes actions", () => {
             correctAnswer: 1,
           },
         ];
-        const formData = new FormData();
-        formData.append("quizId", "quiz1");
-        formData.append("title", "Updated");
-        formData.append("questions", JSON.stringify(questions));
+        const formData = { quizId: "quiz1", title: "Updated", questions: questions, timeLimit: null } as any;
 
         await upsertQuizAction(formData);
 
@@ -496,138 +461,49 @@ describe("quizzes actions", () => {
             correctAnswer: 0,
           },
         ];
-        const formData = new FormData();
-        formData.append("quizId", "quiz1");
-        formData.append("title", "Updated");
-        formData.append("questions", JSON.stringify(questions));
+        const formData = { quizId: "quiz1", title: "Updated", questions: questions, timeLimit: null } as any;
 
         await upsertQuizAction(formData);
 
-        expect(prisma.question.deleteMany).toHaveBeenCalled();
+        expect(prisma.question.deleteMany).toHaveBeenCalledWith({
+          where: {
+            id: { in: ["old-q1"] },
+            isFavorite: false,
+            quizQuestions: { none: {} },
+          },
+        });
+      });
+
+      it("returns the quiz id in update mode", async () => {
+        const result = await upsertQuizAction({
+          quizId: "quiz1",
+          title: "Updated",
+          timeLimit: null,
+          questions: [
+            {
+              type: "open_question",
+              question: "Domanda",
+              sampleAnswer: "Risposta",
+            },
+          ],
+        } as any);
+
+        expect(result).toEqual({ success: true, id: "quiz1" });
       });
 
       it("throws error when quiz not found in update mode", async () => {
         vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
 
-        const formData = new FormData();
-        formData.append("quizId", "invalid");
-        formData.append("title", "Test");
-        formData.append("questions", JSON.stringify([]));
+        const formData = { quizId: "invalid", title: "Test", questions: [] } as any;
 
-        await expect(upsertQuizAction(formData)).rejects.toThrow();
+        expect(await upsertQuizAction(formData)).toMatchObject({ success: false });
       });
-    });
-  });
-
-  describe("regenerateQuizAction", () => {
-    it("regenerates quiz questions using AI", async () => {
-      const mockQuizData = {
-        title: "Regenerated Quiz",
-        questions: [
-          {
-            type: "multiple_choice" as const,
-            question: "New AI question",
-            options: ["Option A", "Option B", "Option C", "Option D"],
-            correctAnswer: 0,
-          },
-        ],
-      };
-
-      vi.mocked(aiQuizService.generateQuiz).mockResolvedValueOnce(mockQuizData);
-
-      const result = await regenerateQuizAction({
-        quizId: "quiz1",
-        positionId: "pos1",
-        quizTitle: "Regenerated",
-        questionCount: 3,
-        difficulty: 4,
-        includeMultipleChoice: true,
-        includeOpenQuestions: false,
-        includeCodeSnippets: false,
-        includeBehavioralScenarios: false,
-      });
-
-      expect(result?.id).toBe("quiz1");
-      expect(aiQuizService.generateQuiz).toHaveBeenCalled();
-      expect(prisma.quiz.update).toHaveBeenCalled();
-    });
-
-    it("throws error when quiz not found", async () => {
-      vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
-
-      await expect(
-        regenerateQuizAction({
-          quizId: "invalid",
-          positionId: "pos1",
-          quizTitle: "Test",
-          questionCount: 5,
-          difficulty: 3,
-          includeMultipleChoice: true,
-          includeOpenQuestions: false,
-          includeCodeSnippets: false,
-          includeBehavioralScenarios: false,
-        }),
-      ).rejects.toThrow();
-    });
-
-    it("throws error when position not found", async () => {
-      vi.mocked(prisma.position.findFirst).mockResolvedValueOnce(null);
-
-      await expect(
-        regenerateQuizAction({
-          quizId: "quiz1",
-          positionId: "invalid",
-          quizTitle: "Test",
-          questionCount: 5,
-          difficulty: 3,
-          includeMultipleChoice: true,
-          includeOpenQuestions: false,
-          includeCodeSnippets: false,
-          includeBehavioralScenarios: false,
-        }),
-      ).rejects.toThrow();
-    });
-
-    it("deletes old questions and creates new ones", async () => {
-      const mockQuizData = {
-        title: "New",
-        questions: [
-          {
-            type: "open_question" as const,
-            question: "New question",
-            sampleAnswer: "Answer",
-          },
-        ],
-      };
-
-      vi.mocked(aiQuizService.generateQuiz).mockResolvedValueOnce(mockQuizData);
-      vi.mocked(prisma.quizQuestion.findMany).mockResolvedValueOnce([
-        { questionId: "old-q1" } as any,
-      ]);
-
-      await regenerateQuizAction({
-        quizId: "quiz1",
-        positionId: "pos1",
-        quizTitle: "Regenerated",
-        questionCount: 1,
-        difficulty: 3,
-        includeMultipleChoice: false,
-        includeOpenQuestions: true,
-        includeCodeSnippets: false,
-        includeBehavioralScenarios: false,
-      });
-
-      expect(prisma.question.deleteMany).toHaveBeenCalled();
-      expect(prisma.question.create).toHaveBeenCalled();
     });
   });
 
   describe("duplicateQuizAction", () => {
     it("duplicates a quiz to a new position", async () => {
-      const formData = new FormData();
-      formData.append("quizId", "quiz1");
-      formData.append("newPositionId", "pos2");
-      formData.append("newTitle", "Duplicated Quiz");
+      const formData = { quizId: "quiz1", newPositionId: "pos2", newTitle: "Duplicated Quiz" } as any;
 
       vi.mocked(prisma.position.findUnique).mockResolvedValueOnce({
         id: "pos2",
@@ -635,46 +511,36 @@ describe("quizzes actions", () => {
 
       const result = await duplicateQuizAction(formData);
 
-      expect(result?.id).toBe("new-quiz");
+      expect(unwrap(result).id).toBe("new-quiz");
       expect(prisma.quiz.create).toHaveBeenCalled();
       expect(prisma.question.create).toHaveBeenCalled();
     });
 
     it("throws error when required fields missing", async () => {
-      const formData = new FormData();
-      formData.append("quizId", "quiz1");
+      const formData = { quizId: "quiz1" } as any;
 
-      await expect(duplicateQuizAction(formData)).rejects.toThrow();
+      expect(await duplicateQuizAction(formData)).toMatchObject({ success: false });
     });
 
     it("throws error when original quiz not found", async () => {
       vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
 
-      const formData = new FormData();
-      formData.append("quizId", "invalid");
-      formData.append("newPositionId", "pos2");
-      formData.append("newTitle", "Test");
+      const formData = { quizId: "invalid", newPositionId: "pos2", newTitle: "Test" } as any;
 
-      await expect(duplicateQuizAction(formData)).rejects.toThrow();
+      expect(await duplicateQuizAction(formData)).toMatchObject({ success: false });
     });
 
     it("throws error when target position not found", async () => {
-      const formData = new FormData();
-      formData.append("quizId", "quiz1");
-      formData.append("newPositionId", "invalid");
-      formData.append("newTitle", "Test");
+      const formData = { quizId: "quiz1", newPositionId: "invalid", newTitle: "Test" } as any;
 
       // First call is for the quiz (succeeds), second is for the position (fails)
       vi.mocked(prisma.position.findUnique).mockResolvedValueOnce(null);
 
-      await expect(duplicateQuizAction(formData)).rejects.toThrow();
+      expect(await duplicateQuizAction(formData)).toMatchObject({ success: false });
     });
 
     it("copies all questions with correct order", async () => {
-      const formData = new FormData();
-      formData.append("quizId", "quiz1");
-      formData.append("newPositionId", "pos2");
-      formData.append("newTitle", "Duplicated");
+      const formData = { quizId: "quiz1", newPositionId: "pos2", newTitle: "Duplicated" } as any;
 
       vi.mocked(prisma.position.findUnique).mockResolvedValueOnce({
         id: "pos2",

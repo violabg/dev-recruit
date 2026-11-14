@@ -1,237 +1,87 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { seedDefaultPresetsAction } from "../../../lib/actions/seed-presets";
 
-// Mock dependencies
-vi.mock("../../../lib/prisma", () => ({
-  default: {
-    preset: {
-      deleteMany: vi.fn(),
-      create: vi.fn(),
+vi.mock("@/lib/prisma", () => {
+  const preset = { deleteMany: vi.fn(), create: vi.fn() };
+  return {
+    default: {
+      preset,
+      $transaction: vi.fn(async (callback: any) => callback({ preset })),
     },
-  },
+  };
+});
+
+vi.mock("@/lib/utils/cache-utils", () => ({
+  invalidatePresetCache: vi.fn(),
 }));
 
-vi.mock("../../../lib/auth-server", () => ({
-  requireUser: vi.fn(() =>
-    Promise.resolve({ id: "user-123", name: "Test User" })
-  ),
+vi.mock("@/lib/services/logger", () => ({
+  logger: { error: vi.fn() },
+  aiLogger: { warn: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock("../../../lib/services/logger", () => ({
-  logger: {
-    info: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+import { seedDefaultPresetsAction } from "@/lib/actions/seed-presets";
+import { requireUser } from "@/lib/auth-server";
+import prisma from "@/lib/prisma";
+import { unwrap } from "@/lib/utils/action-result";
+import { invalidatePresetCache } from "@/lib/utils/cache-utils";
 
-describe("seed-presets actions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(requireUser).mockResolvedValue({ id: "user-123" } as any);
+  vi.mocked(prisma.preset.deleteMany).mockResolvedValue({ count: 3 });
+  vi.mocked(prisma.preset.create).mockResolvedValue({ id: "preset" } as any);
+});
+
+describe("seedDefaultPresetsAction", () => {
+  it("requires a signed-in user and changes nothing otherwise", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+
+    const result = await seedDefaultPresetsAction();
+
+    expect(result).toMatchObject({ success: false });
+    expect(prisma.preset.deleteMany).not.toHaveBeenCalled();
   });
 
-  describe("seedDefaultPresetsAction", () => {
-    it("seeds default presets successfully", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
+  it("replaces every preset with the default set", async () => {
+    const result = unwrap(await seedDefaultPresetsAction());
 
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
+    expect(prisma.preset.deleteMany).toHaveBeenCalledWith({});
+    expect(result.count).toBeGreaterThan(0);
+    expect(prisma.preset.create).toHaveBeenCalledTimes(result.count);
+    expect(result.message).toContain(String(result.count));
+    expect(invalidatePresetCache).toHaveBeenCalled();
+  });
 
-      const result = await seedDefaultPresetsAction();
+  it("seeds presets for every question type with unique names", async () => {
+    await seedDefaultPresetsAction();
 
-      expect(result.success).toBe(true);
-      expect(result.count).toBe(9); // 9 default presets
-      expect(mockDeleteMany).toHaveBeenCalled();
-      expect(mockCreate).toHaveBeenCalledTimes(9);
-    });
+    const seeded = vi
+      .mocked(prisma.preset.create)
+      .mock.calls.map(([args]) => args.data);
+    const types = new Set(seeded.map((preset) => preset.questionType));
+    const names = seeded.map((preset) => preset.name);
 
-    it("deletes existing presets before seeding", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
+    expect(types).toEqual(
+      new Set(["multiple_choice", "open_question", "code_snippet"]),
+    );
+    expect(new Set(names).size).toBe(names.length);
+  });
 
-      mockDeleteMany.mockResolvedValueOnce({ count: 5 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
+  it("runs delete and create in one transaction", async () => {
+    await seedDefaultPresetsAction();
 
-      await seedDefaultPresetsAction();
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+  });
 
-      expect(mockDeleteMany).toHaveBeenCalledBefore(mockCreate as any);
-      expect(mockDeleteMany).toHaveBeenCalledWith({});
-    });
+  it("reports a failure without exposing the database error", async () => {
+    vi.mocked(prisma.preset.create).mockRejectedValueOnce(
+      new Error("db exploded"),
+    );
 
-    it("creates presets with correct structure", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
+    const result = await seedDefaultPresetsAction();
 
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
-
-      await seedDefaultPresetsAction();
-
-      // Check first preset (react-hooks)
-      expect(mockCreate).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          name: "react-hooks",
-          questionType: "multiple_choice",
-          focusAreas: expect.arrayContaining([
-            "React Hooks",
-            "useEffect",
-            "Custom Hooks",
-          ]),
-          distractorComplexity: "complex",
-        }),
-      });
-    });
-
-    it("creates presets for all question types", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
-
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
-
-      await seedDefaultPresetsAction();
-
-      const createCalls = mockCreate.mock.calls;
-      const types = createCalls.map((call: any) => call[0].data.questionType);
-
-      expect(types).toContain("multiple_choice");
-      expect(types).toContain("code_snippet");
-      expect(types).toContain("open_question");
-    });
-
-    it("includes code_snippet preset with bugType", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
-
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
-
-      await seedDefaultPresetsAction();
-
-      const codeSnippetCall = mockCreate.mock.calls.find(
-        (call: any) => call[0].data.questionType === "code_snippet"
-      );
-
-      expect(codeSnippetCall).toBeDefined();
-      expect(codeSnippetCall[0].data.bugType).toBeDefined();
-    });
-
-    it("returns success message", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
-
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
-
-      const result = await seedDefaultPresetsAction();
-
-      expect(result.success).toBe(true);
-      expect(result.message).toContain("Successfully seeded");
-      expect(result.count).toBe(9);
-    });
-
-    it("returns error on database failure", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const { logger } = await import("../../../lib/services/logger");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-
-      mockDeleteMany.mockRejectedValueOnce(
-        new Error("Database connection failed")
-      );
-
-      const result = await seedDefaultPresetsAction();
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Database connection failed");
-      expect(logger.error).toHaveBeenCalled();
-    });
-
-    it("returns error on partial seeding failure", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const { logger } = await import("../../../lib/services/logger");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
-
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate
-        .mockResolvedValueOnce({ id: "preset-1" })
-        .mockResolvedValueOnce({ id: "preset-2" })
-        .mockRejectedValueOnce(new Error("Create failed"));
-
-      const result = await seedDefaultPresetsAction();
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Create failed");
-      expect(logger.error).toHaveBeenCalled();
-    });
-
-    it("verifies all preset names are present", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
-
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
-
-      await seedDefaultPresetsAction();
-
-      const createCalls = mockCreate.mock.calls;
-      const names = createCalls.map((call: any) => call[0].data.name);
-
-      const expectedNames = [
-        "react-hooks",
-        "typescript-mastery",
-        "frontend-performance",
-        "api-design",
-        "database-optimization",
-        "security-awareness",
-        "problem-solving",
-        "system-design",
-        "best-practices",
-      ];
-
-      expectedNames.forEach((name) => {
-        expect(names).toContain(name);
-      });
-    });
-
-    it("verifies all presets have tags", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockDeleteMany = prisma.preset.deleteMany as any;
-      const mockCreate = prisma.preset.create as any;
-
-      mockDeleteMany.mockResolvedValueOnce({ count: 0 });
-      mockCreate.mockResolvedValue({ id: "preset-123" });
-
-      await seedDefaultPresetsAction();
-
-      const createCalls = mockCreate.mock.calls;
-
-      createCalls.forEach((call: any) => {
-        // All presets have tags
-        expect(call[0].data.tags).toBeDefined();
-        expect(Array.isArray(call[0].data.tags)).toBe(true);
-        expect(call[0].data.tags.length).toBeGreaterThan(0);
-
-        // Different question types have different required fields
-        const questionType = call[0].data.questionType;
-        if (questionType === "multiple_choice") {
-          expect(call[0].data.focusAreas).toBeDefined();
-          expect(Array.isArray(call[0].data.focusAreas)).toBe(true);
-        } else if (questionType === "open_question") {
-          expect(call[0].data.evaluationCriteria).toBeDefined();
-          expect(Array.isArray(call[0].data.evaluationCriteria)).toBe(true);
-        } else if (questionType === "code_snippet") {
-          expect(call[0].data.bugType).toBeDefined();
-          expect(call[0].data.codeComplexity).toBeDefined();
-        }
-      });
-    });
+    expect(result).toMatchObject({ success: false });
+    expect(JSON.stringify(result)).not.toContain("db exploded");
+    expect(invalidatePresetCache).not.toHaveBeenCalled();
   });
 });

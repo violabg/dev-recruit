@@ -1,9 +1,8 @@
 "use client";
 import {
-  Position,
-  QuizForm,
-  SaveQuizResult,
-} from "@/app/dashboard/positions/[id]/quiz/new/QuizForm";
+  QuizGenerationForm,
+  type GeneratedQuiz,
+} from "@/components/quiz/quiz-generation-form";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -13,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BrainCircuit } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 type DialogPosition = {
   id: string;
@@ -29,7 +27,8 @@ type AIGenerationDialogProps = {
   title: string;
   description: string;
   position: DialogPosition;
-  quizId?: string;
+  /** Receives the generated quiz. Nothing is saved by this dialog. */
+  onGenerated: (quiz: GeneratedQuiz) => void;
 };
 
 export const AIQuizGenerationDialog = ({
@@ -38,26 +37,13 @@ export const AIQuizGenerationDialog = ({
   title,
   description,
   position,
-  quizId,
+  onGenerated,
 }: AIGenerationDialogProps) => {
-  const router = useRouter();
-
   const experienceLabel = position.experienceLevel ?? "—";
 
-  const quizFormPosition: Position = {
-    id: position.id,
-    title: position.title,
-    description: position.description ?? null,
-    experienceLevel: experienceLabel,
-    skills: position.skills,
-  };
-
-  const handleSuccess = (result: SaveQuizResult) => {
+  const handleGenerated = (quiz: GeneratedQuiz) => {
     onOpenChange(false);
-    if (!result?.id) {
-      return;
-    }
-    router.push(`/dashboard/quizzes/${result.id}`);
+    onGenerated(quiz);
   };
 
   return (
@@ -70,11 +56,14 @@ export const AIQuizGenerationDialog = ({
         <div className="space-y-6 pr-2">
           <div className="gap-6 grid md:grid-cols-5">
             <div className="md:col-span-3 bg-panel p-6 border border-border rounded-2xl">
-              <QuizForm
-                position={quizFormPosition}
+              <QuizGenerationForm
+                position={{
+                  id: position.id,
+                  title: position.title,
+                  experienceLevel: experienceLabel,
+                }}
                 onCancel={() => onOpenChange(false)}
-                onSuccess={handleSuccess}
-                quizId={quizId}
+                onGenerated={handleGenerated}
               />
             </div>
             <Card className="md:col-span-2">
@@ -151,8 +140,8 @@ export const AIQuizGenerationDialog = ({
                         4
                       </span>
                       <span>
-                        Puoi modificare il quiz generato prima di associarlo ai
-                        candidati
+                        Le domande generate compaiono nell&apos;editor: rivedile
+                        e salva il quiz solo quando sei soddisfatto
                       </span>
                     </li>
                   </ul>

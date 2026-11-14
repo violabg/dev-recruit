@@ -1,289 +1,169 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  getProfile,
-  updatePassword,
-  updateProfile,
-} from "../../../lib/actions/profile";
 
-// Mock dependencies
-vi.mock("../../../lib/prisma", () => ({
-  default: {
-    profile: {
-      findUnique: vi.fn(),
-      upsert: vi.fn(),
-    },
-  },
+vi.mock("@/lib/prisma", () => ({
+  default: { profile: { findUnique: vi.fn(), upsert: vi.fn() } },
 }));
 
-vi.mock("../../../lib/auth-server", () => ({
-  requireUser: vi.fn(() =>
-    Promise.resolve({ id: "user-123", name: "Test User" })
-  ),
+vi.mock("@/lib/auth", () => ({
+  auth: { api: { updateUser: vi.fn(), changePassword: vi.fn() } },
 }));
 
-vi.mock("../../../lib/auth", () => ({
-  auth: {
-    api: {
-      updateUser: vi.fn(),
-      changePassword: vi.fn(),
-    },
-  },
-}));
-
-vi.mock("../../../lib/utils/cache-utils", () => ({
+vi.mock("@/lib/utils/cache-utils", () => ({
   invalidateProfileCache: vi.fn(),
 }));
 
-vi.mock("next/headers", () => ({
-  headers: vi.fn(() => {
-    const headersList = new Headers();
-    headersList.set("host", "localhost:3000");
-    return headersList;
-  }),
-}));
+import { updatePassword, updateProfile } from "@/lib/actions/profile";
+import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
+import { getProfile } from "@/lib/data/profile";
+import prisma from "@/lib/prisma";
+import { invalidateProfileCache } from "@/lib/utils/cache-utils";
 
-describe("profile actions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(requireUser).mockResolvedValue({ id: "user-123" } as any);
+});
+
+describe("getProfile", () => {
+  it("returns the signed-in user's profile", async () => {
+    vi.mocked(prisma.profile.findUnique).mockResolvedValueOnce({
+      id: "p1",
+      fullName: "Mario Rossi",
+      userName: "mario",
+      avatarUrl: null,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: null,
+    } as any);
+
+    const result = await getProfile();
+
+    expect(prisma.profile.findUnique).toHaveBeenCalledWith({
+      where: { userId: "user-123" },
+    });
+    expect(result.user).toEqual({ id: "user-123" });
+    expect(result.profile).toEqual({
+      id: "p1",
+      fullName: "Mario Rossi",
+      userName: "mario",
+      avatarUrl: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: null,
+    });
   });
 
-  describe("getProfile", () => {
-    it("returns existing profile", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockFindUnique = prisma.profile.findUnique as any;
+  it("returns a null profile when none exists yet", async () => {
+    vi.mocked(prisma.profile.findUnique).mockResolvedValueOnce(null);
 
-      const profile = {
-        id: "profile-123",
+    const result = await getProfile();
+
+    expect(result.profile).toBeNull();
+    expect(result.error).toBeUndefined();
+  });
+
+  it("returns an error instead of throwing when not signed in", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+
+    const result = await getProfile();
+
+    expect(result).toEqual({
+      profile: null,
+      user: null,
+      error: "UNAUTHENTICATED",
+    });
+  });
+});
+
+describe("updateProfile", () => {
+  it("saves the profile and the account name", async () => {
+    const result = await updateProfile({
+      full_name: " Mario Rossi ",
+      user_name: "mario_rossi",
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(prisma.profile.upsert).toHaveBeenCalledWith({
+      where: { userId: "user-123" },
+      create: {
         userId: "user-123",
-        fullName: "Test User",
-        userName: "testuser",
-        avatarUrl: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockFindUnique.mockResolvedValueOnce(profile);
-
-      const result = await getProfile();
-
-      expect(result.profile).toBeTruthy();
-      expect(result.profile?.id).toBe("profile-123");
-      expect(result.user).toBeTruthy();
-      expect(mockFindUnique).toHaveBeenCalledWith({
-        where: { userId: "user-123" },
-      });
+        fullName: "Mario Rossi",
+        userName: "mario_rossi",
+      },
+      update: { fullName: "Mario Rossi", userName: "mario_rossi" },
     });
-
-    it("returns null profile when not found", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const mockFindUnique = prisma.profile.findUnique as any;
-
-      mockFindUnique.mockResolvedValueOnce(null);
-
-      const result = await getProfile();
-
-      expect(result.profile).toBeNull();
-      expect(result.user).toBeTruthy();
-    });
-
-    it("returns error when authentication fails", async () => {
-      const { requireUser } = await import("../../../lib/auth-server");
-      const mockRequireUser = requireUser as any;
-
-      mockRequireUser.mockRejectedValueOnce(new Error("Unauthorized"));
-
-      const result = await getProfile();
-
-      expect(result.profile).toBeNull();
-      expect(result.user).toBeNull();
-      expect(result.error).toBe("Unauthorized");
-    });
+    expect(auth.api.updateUser).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { name: "Mario Rossi" } }),
+    );
+    expect(invalidateProfileCache).toHaveBeenCalled();
   });
 
-  describe("updateProfile", () => {
-    it("updates profile successfully", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const { auth } = await import("../../../lib/auth");
-      const mockUpsert = prisma.profile.upsert as any;
-      const mockUpdateUser = auth.api.updateUser as any;
-
-      const formData = new FormData();
-      formData.append("full_name", "Updated Name");
-      formData.append("user_name", "updateduser");
-
-      mockUpsert.mockResolvedValueOnce({});
-      mockUpdateUser.mockResolvedValueOnce({});
-
-      const result = await updateProfile(formData);
-
-      expect(result.success).toBe(true);
-      expect(mockUpsert).toHaveBeenCalledWith({
-        where: { userId: "user-123" },
-        create: {
-          userId: "user-123",
-          fullName: "Updated Name",
-          userName: "updateduser",
-        },
-        update: {
-          fullName: "Updated Name",
-          userName: "updateduser",
-        },
-      });
-      expect(mockUpdateUser).toHaveBeenCalled();
+  it("returns the validation message for an invalid user name", async () => {
+    const result = await updateProfile({
+      full_name: "Mario Rossi",
+      user_name: "mario rossi!",
     });
 
-    it("creates profile if not exists (upsert)", async () => {
-      const { default: prisma } = await import("../../../lib/prisma");
-      const { auth } = await import("../../../lib/auth");
-      const mockUpsert = prisma.profile.upsert as any;
-      const mockUpdateUser = auth.api.updateUser as any;
-
-      const formData = new FormData();
-      formData.append("full_name", "New User");
-      formData.append("user_name", "newuser");
-
-      mockUpsert.mockResolvedValueOnce({});
-      mockUpdateUser.mockResolvedValueOnce({});
-
-      const result = await updateProfile(formData);
-
-      expect(result.success).toBe(true);
-      expect(mockUpsert).toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      error:
+        "Nome utente può contenere solo lettere, numeri, trattini e underscore",
     });
-
-    it("throws error when required fields missing", async () => {
-      const formData = new FormData();
-
-      await expect(updateProfile(formData)).rejects.toThrow(
-        "Nome completo e nome utente sono obbligatori"
-      );
-    });
-
-    it("throws error when userName missing", async () => {
-      const formData = new FormData();
-      formData.append("full_name", "Only Name");
-
-      await expect(updateProfile(formData)).rejects.toThrow(
-        "Nome completo e nome utente sono obbligatori"
-      );
-    });
-
-    it("throws error when fullName missing", async () => {
-      const formData = new FormData();
-      formData.append("user_name", "onlyusername");
-
-      await expect(updateProfile(formData)).rejects.toThrow(
-        "Nome completo e nome utente sono obbligatori"
-      );
-    });
-
-    it("requires authentication", async () => {
-      const { requireUser } = await import("../../../lib/auth-server");
-      const mockRequireUser = requireUser as any;
-
-      mockRequireUser.mockRejectedValueOnce(new Error("Unauthorized"));
-
-      const formData = new FormData();
-      await expect(updateProfile(formData)).rejects.toThrow("Unauthorized");
-    });
+    expect(prisma.profile.upsert).not.toHaveBeenCalled();
   });
 
-  describe("updatePassword", () => {
-    it("updates password successfully", async () => {
-      const { auth } = await import("../../../lib/auth");
-      const mockChangePassword = auth.api.changePassword as any;
+  it("requires a signed-in user", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
 
-      const formData = new FormData();
-      formData.append("current_password", "oldPassword123");
-      formData.append("new_password", "newPassword456");
-
-      mockChangePassword.mockResolvedValueOnce({});
-
-      const result = await updatePassword(formData);
-
-      expect(result.success).toBe(true);
-      expect(mockChangePassword).toHaveBeenCalledWith(
-        expect.objectContaining({
-          body: {
-            currentPassword: "oldPassword123",
-            newPassword: "newPassword456",
-          },
-          headers: expect.any(Headers),
-        })
-      );
+    const result = await updateProfile({
+      full_name: "Mario Rossi",
+      user_name: "mario",
     });
 
-    it("throws error when current password missing", async () => {
-      const formData = new FormData();
-      formData.append("new_password", "newPassword456");
+    expect(result).toMatchObject({ success: false });
+    expect(prisma.profile.upsert).not.toHaveBeenCalled();
+  });
+});
 
-      await expect(updatePassword(formData)).rejects.toThrow(
-        "Password non valida"
-      );
+describe("updatePassword", () => {
+  const values = {
+    current_password: "vecchia-password",
+    new_password: "nuova-password",
+    confirm_password: "nuova-password",
+  };
+
+  it("changes the password", async () => {
+    const result = await updatePassword(values);
+
+    expect(result).toEqual({ success: true });
+    expect(auth.api.changePassword).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: {
+          currentPassword: "vecchia-password",
+          newPassword: "nuova-password",
+        },
+      }),
+    );
+  });
+
+  it("rejects a mismatched confirmation", async () => {
+    const result = await updatePassword({
+      ...values,
+      confirm_password: "altra-password",
     });
 
-    it("throws error when new password missing", async () => {
-      const formData = new FormData();
-      formData.append("current_password", "oldPassword123");
+    expect(result).toMatchObject({ success: false });
+    expect(auth.api.changePassword).not.toHaveBeenCalled();
+  });
 
-      await expect(updatePassword(formData)).rejects.toThrow(
-        "Password non valida"
-      );
-    });
+  it("explains a refused password change", async () => {
+    vi.mocked(auth.api.changePassword).mockRejectedValueOnce(
+      new Error("Invalid password"),
+    );
 
-    it("throws error when both passwords missing", async () => {
-      const formData = new FormData();
+    const result = await updatePassword(values);
 
-      await expect(updatePassword(formData)).rejects.toThrow(
-        "Password non valida"
-      );
-    });
-
-    it("handles API error", async () => {
-      const { auth } = await import("../../../lib/auth");
-      const mockChangePassword = auth.api.changePassword as any;
-
-      const formData = new FormData();
-      formData.append("current_password", "wrongPassword");
-      formData.append("new_password", "newPassword456");
-
-      mockChangePassword.mockRejectedValueOnce(
-        new Error("Current password is incorrect")
-      );
-
-      await expect(updatePassword(formData)).rejects.toThrow(
-        "Current password is incorrect"
-      );
-    });
-
-    it("includes host header in request", async () => {
-      const { auth } = await import("../../../lib/auth");
-      const mockChangePassword = auth.api.changePassword as any;
-
-      const formData = new FormData();
-      formData.append("current_password", "oldPassword123");
-      formData.append("new_password", "newPassword456");
-
-      mockChangePassword.mockResolvedValueOnce({});
-
-      await updatePassword(formData);
-
-      const callArgs = mockChangePassword.mock.calls[0][0];
-      expect(callArgs.headers).toBeInstanceOf(Headers);
-      expect(callArgs.headers.get("host")).toBe("localhost:3000");
-    });
-
-    it("requires authentication", async () => {
-      const { requireUser } = await import("../../../lib/auth-server");
-      const mockRequireUser = requireUser as any;
-
-      mockRequireUser.mockRejectedValueOnce(new Error("Unauthorized"));
-
-      const formData = new FormData();
-      formData.append("current_password", "old");
-      formData.append("new_password", "new");
-
-      await expect(updatePassword(formData)).rejects.toThrow("Unauthorized");
+    expect(result).toMatchObject({
+      success: false,
+      error: expect.stringContaining("Verifica la password attuale"),
     });
   });
 });

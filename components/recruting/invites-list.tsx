@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import { it } from "date-fns/locale";
 import { Copy } from "lucide-react";
 import { useState } from "react";
 
@@ -31,21 +32,23 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
   const copyInterviewLink = (token: string) => {
     const link = `${window.location.origin}/recruting/${token}`;
     navigator.clipboard.writeText(link);
-    toast.success("Link copied", {
-      description: "The interview link has been copied to your clipboard",
+    toast.success("Link copiato", {
+      description: "Il link del colloquio è stato copiato negli appunti",
     });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline">Pending</Badge>;
+        return <Badge variant="outline">In attesa</Badge>;
       case "in_progress":
-        return <Badge variant="secondary">In progress</Badge>;
+        return <Badge variant="secondary">In corso</Badge>;
       case "completed":
-        return <Badge>Completed</Badge>;
+        return <Badge>Completato</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Annullato</Badge>;
       case "expired":
-        return <Badge variant="destructive">Expired</Badge>;
+        return <Badge variant="destructive">Scaduto</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -54,7 +57,10 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+      return formatDistanceToNow(new Date(dateString), {
+        addSuffix: true,
+        locale: it,
+      });
     } catch {
       return dateString;
     }
@@ -64,7 +70,7 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
     return (
       <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-40 text-center">
         <p className="text-muted-foreground text-sm">
-          No interviews have been created for this quiz yet.
+          Non è ancora stato creato nessun colloquio.
         </p>
       </div>
     );
@@ -76,11 +82,11 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Candidate</TableHead>
+              <TableHead>Candidato</TableHead>
               <TableHead>Quiz</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Stato</TableHead>
+              <TableHead>Creato</TableHead>
+              <TableHead className="text-right">Azioni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -101,23 +107,26 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => copyInterviewLink(interview.token)}
-                      title="Copy interview link"
+                      title="Copia il link del colloquio"
                     >
                       <Copy className="size-4" />
                     </Button>
                     <DeleteWithConfirm
                       deleteAction={async () => {
-                        await deleteInterview(interview.id);
-                        setInterviews(
-                          interviews.filter((i) => i.id !== interview.id)
-                        );
+                        const result = await deleteInterview(interview.id);
+                        if (result.success) {
+                          setInterviews(
+                            interviews.filter((i) => i.id !== interview.id),
+                          );
+                        }
+                        return result;
                       }}
-                      title="Are you sure?"
-                      description="This will permanently delete the interview. This action cannot be undone."
-                      label="Delete"
+                      title="Eliminare il colloquio?"
+                      description="Il colloquio verrà eliminato definitivamente. L'azione non può essere annullata."
+                      label="Elimina"
                       iconOnly
-                      successMessage="Interview deleted successfully"
-                      errorMessage="Failed to delete interview"
+                      successMessage="Colloquio eliminato con successo"
+                      errorMessage="Errore durante l'eliminazione del colloquio"
                       disabled={interview.status === "completed"}
                       variant="outline"
                     />

@@ -1,203 +1,44 @@
 import { requireUser } from "@/lib/auth-server";
-import prisma from "@/lib/prisma";
-import { overallEvaluationSchema } from "@/lib/schemas";
+import { resumeEvaluationRequestSchema } from "@/lib/schemas";
+import { getLanguageModel } from "@/lib/services/ai/generate";
+import { getOptimalModel } from "@/lib/services/ai/models";
 import { aiLogger } from "@/lib/services/logger";
-import { getOptimalModel, isDevelopment } from "@/lib/utils";
+import {
+  prepareResumeEvaluation,
+  ResumeEvaluationError,
+  saveResumeEvaluation,
+} from "@/lib/services/resume-evaluation";
 import { invalidateEvaluationCacheInRouteHandler } from "@/lib/utils/cache-utils";
-import { groq } from "@ai-sdk/groq";
-import { streamText, wrapLanguageModel } from "ai";
+import { streamText } from "ai";
 
-/** Remove markdown code blocks from AI response if present */
-function cleanJsonResponse(text: string): string {
-  let jsonText = text.trim();
-  if (jsonText.startsWith("```json")) {
-    jsonText = jsonText.slice(7);
-  } else if (jsonText.startsWith("```")) {
-    jsonText = jsonText.slice(3);
-  }
-  if (jsonText.endsWith("```")) {
-    jsonText = jsonText.slice(0, -3);
-  }
-  return jsonText.trim();
-}
-
-/** Extract text from PDF using unpdf (serverless-compatible) */
-async function extractTextFromPDF(pdfUrl: string): Promise<string> {
-  try {
-    const response = await fetch(pdfUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch PDF: ${response.statusText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-
-    const { extractText, getDocumentProxy } = await import("unpdf");
-    const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
-    const { text } = await extractText(pdf, { mergePages: true });
-
-    return text || "";
-  } catch (error) {
-    aiLogger.error("Failed to extract text from PDF", { error });
-    throw new Error(
-      `Impossibile leggere il curriculum: ${
-        error instanceof Error ? error.message : "Errore sconosciuto"
-      }`
-    );
-  }
-}
-
+/**
+ * Streams a resume-based evaluation to the browser and stores it once the
+ * stream is complete. All evaluation rules live in
+ * lib/services/resume-evaluation.
+ */
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
-    const { candidateId, positionId } = await request.json();
 
-    if (!candidateId || !positionId) {
+    const body = resumeEvaluationRequestSchema.safeParse(
+      await request.json().catch(() => null),
+    );
+    if (!body.success) {
       return Response.json(
         { error: "candidateId e positionId sono obbligatori" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Fetch candidate with resume URL
-    const candidate = await prisma.candidate.findUnique({
-      where: { id: candidateId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        resumeUrl: true,
-      },
-    });
-
-    if (!candidate) {
-      return Response.json({ error: "Candidato non trovato" }, { status: 404 });
-    }
-
-    if (!candidate.resumeUrl) {
-      return Response.json(
-        {
-          error:
-            "Il candidato non ha un curriculum caricato. Carica un curriculum prima di generare la valutazione.",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Fetch position details
-    const position = await prisma.position.findUnique({
-      where: { id: positionId },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        experienceLevel: true,
-        skills: true,
-        softSkills: true,
-      },
-    });
-
-    if (!position) {
-      return Response.json({ error: "Posizione non trovata" }, { status: 404 });
-    }
-
-    // Check if evaluation already exists for this candidate-position combination
-    const existingEvaluation = await prisma.evaluation.findFirst({
-      where: {
-        candidateId,
-        positionId,
-        interviewId: null, // Only resume evaluations
-      },
-    });
-
-    if (existingEvaluation) {
-      return Response.json(
-        {
-          error:
-            "Esiste già una valutazione per questo candidato e questa posizione",
-        },
-        { status: 409 }
-      );
-    }
-
-    // Extract text from resume PDF
-    const resumeText = await extractTextFromPDF(candidate.resumeUrl);
-
-    if (!resumeText || resumeText.trim().length < 50) {
-      return Response.json(
-        {
-          error:
-            "Impossibile estrarre testo sufficiente dal curriculum. Assicurati che il PDF contenga testo selezionabile.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const candidateName = `${candidate.firstName} ${candidate.lastName}`;
-
-    // Limit resume text to 80K chars (models have 128K context, leaving room for prompt/output)
-    const maxResumeLength = 80000;
-    const truncatedResume = resumeText.substring(0, maxResumeLength);
-    const resumeSuffix =
-      resumeText.length > maxResumeLength ? "... [troncato]" : "";
-
-    const prompt = `Analizza il seguente curriculum vitae e valuta l'idoneità del candidato per la posizione specificata.
-
-          CURRICULUM DEL CANDIDATO (${candidateName}):
-          ${truncatedResume}${resumeSuffix}
-
-          POSIZIONE DA VALUTARE:
-          - Titolo: ${position.title}
-          - Livello di esperienza richiesto: ${position.experienceLevel}
-          - Competenze tecniche richieste: ${position.skills.join(", ")}
-          - Soft skills richieste: ${position.softSkills.join(", ")}
-          ${
-            position.description ? `- Descrizione: ${position.description}` : ""
-          }
-
-          Fornisci una valutazione dettagliata considerando:
-          1. Corrispondenza delle competenze tecniche
-          2. Esperienza lavorativa rilevante
-          3. Livello di esperienza rispetto a quanto richiesto
-          4. Soft skills e caratteristiche personali evidenziate
-          5. Formazione e certificazioni pertinenti
-          6. Potenziale di crescita e adattabilità
-
-          Rispondi con un oggetto JSON contenente:
-          - evaluation: una valutazione dettagliata in italiano
-          - strengths: array di punti di forza del candidato
-          - weaknesses: array di aree di miglioramento o lacune
-          - recommendation: una raccomandazione su come procedere con il candidato
-          - fitScore: un punteggio da 0 a 100 che indica l'idoneità complessiva per la posizione`;
-
-    const model = getOptimalModel("resume_evaluation");
-
-    const jsonFormatInstructions = `
-
-          IMPORTANTE: Rispondi SOLO con un oggetto JSON valido, senza markdown o altri formati. L'oggetto deve avere questa struttura esatta:
-          {
-            "evaluation": "testo della valutazione",
-            "strengths": ["punto 1", "punto 2", ...],
-            "weaknesses": ["punto 1", "punto 2", ...],
-            "recommendation": "testo della raccomandazione",
-            "fitScore": numero da 0 a 100
-          }`;
-
-    const aiModel = groq(model);
-
-    let modelForStream = aiModel;
-    if (isDevelopment) {
-      const { devToolsMiddleware } = await import("@ai-sdk/devtools");
-      modelForStream = wrapLanguageModel({
-        model: aiModel,
-        middleware: devToolsMiddleware(),
-      });
-    }
+    const prepared = await prepareResumeEvaluation(
+      body.data.candidateId,
+      body.data.positionId,
+    );
 
     const result = streamText({
-      model: modelForStream,
-      prompt: prompt + jsonFormatInstructions,
-      system:
-        "Sei un esperto recruiter tecnico che valuta candidati in modo oggettivo e costruttivo. Basa la tua valutazione esclusivamente sulle informazioni fornite nel curriculum. Rispondi sempre in italiano. Rispondi SOLO con JSON valido.",
+      model: await getLanguageModel(getOptimalModel("resume_evaluation")),
+      prompt: prepared.prompt,
+      system: prepared.system,
     });
 
     // Stream the text response directly
@@ -215,25 +56,18 @@ export async function POST(request: Request) {
 
           // After streaming completes, parse and save to database BEFORE closing
           try {
-            const jsonText = cleanJsonResponse(fullText);
-            const parsed = overallEvaluationSchema.parse(JSON.parse(jsonText));
-
-            await prisma.evaluation.create({
-              data: {
-                title: position.title,
-                candidateId: candidate.id,
-                positionId: position.id,
-                evaluation: parsed.evaluation,
-                strengths: parsed.strengths,
-                weaknesses: parsed.weaknesses,
-                recommendation: parsed.recommendation,
-                fitScore: Math.round(parsed.fitScore / 10),
-                createdBy: user.id,
-              },
+            await saveResumeEvaluation({
+              candidateId: prepared.candidateId,
+              positionId: prepared.positionId,
+              title: prepared.title,
+              responseText: fullText,
+              userId: user.id,
             });
 
             // Invalidate cache to show the new evaluation
-            invalidateEvaluationCacheInRouteHandler({ candidateId });
+            invalidateEvaluationCacheInRouteHandler({
+              candidateId: prepared.candidateId,
+            });
           } catch (parseError) {
             aiLogger.error("Error parsing/saving evaluation", {
               error: parseError,
@@ -254,6 +88,10 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    if (error instanceof ResumeEvaluationError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+
     aiLogger.error("Error streaming evaluation", { error });
     return Response.json(
       {

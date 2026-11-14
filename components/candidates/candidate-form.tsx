@@ -7,7 +7,12 @@ import {
   MultiSelectField,
   SelectField,
 } from "@/components/ui/rhf-inputs";
-import { createCandidate, updateCandidate } from "@/lib/actions/candidates";
+import {
+  applyAsCandidate,
+  createCandidate,
+  updateCandidate,
+} from "@/lib/actions/candidates";
+import { unwrap } from "@/lib/utils/action-result";
 import { Candidate } from "@/lib/prisma/client";
 import {
   candidateFormSchema,
@@ -206,10 +211,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
 
       startTransition(async () => {
         try {
-          const response = await updateCandidate(props.candidate.id, formData);
-          if (!response.success) {
-            throw new Error("Nessun aggiornamento rilevato");
-          }
+          unwrap(await updateCandidate(props.candidate.id, formData));
           router.push(`/dashboard/candidates/${props.candidate.id}`);
         } catch (submitError: unknown) {
           setError(
@@ -225,16 +227,13 @@ export const CandidateForm = (props: CandidateFormProps) => {
 
     startTransition(async () => {
       try {
-        const response = await createCandidate(formData);
         if (isApplyMode) {
+          unwrap(await applyAsCandidate(formData));
           setIsSubmitted(true);
           return;
         }
-        if (response?.candidateId) {
-          router.push(`/dashboard/candidates/${response.candidateId}`);
-        } else {
-          router.push("/dashboard/candidates");
-        }
+        const { candidateId } = unwrap(await createCandidate(formData));
+        router.push(`/dashboard/candidates/${candidateId}`);
       } catch (submitError: unknown) {
         setError(
           submitError instanceof Error

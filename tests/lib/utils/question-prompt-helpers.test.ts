@@ -4,10 +4,8 @@
  */
 
 import {
-  createBackendQuestionParams,
   createBaseParams,
   createCodeSnippetParams,
-  createFrontendQuestionParams,
   createMultipleChoiceParams,
   createOpenQuestionParams,
   createQuestionParams,
@@ -245,109 +243,5 @@ describe("createQuestionParams", () => {
     expect(() =>
       createQuestionParams("invalid_type" as "multiple_choice", baseConfig)
     ).toThrow("Unsupported question type: invalid_type");
-  });
-});
-
-describe("createFrontendQuestionParams", () => {
-  const baseConfig = {
-    quizTitle: "Frontend Quiz",
-    positionTitle: "Frontend Developer",
-    experienceLevel: "mid",
-    skills: ["React", "Vue"],
-  };
-
-  it("should create multiple choice params with frontend defaults", () => {
-    const params = createFrontendQuestionParams("multiple_choice", baseConfig);
-
-    expect(params.type).toBe("multiple_choice");
-    expect((params as { focusAreas?: string[] }).focusAreas).toEqual([
-      "React",
-      "JavaScript",
-      "CSS",
-      "DOM",
-    ]);
-    expect(
-      (params as { distractorComplexity?: string }).distractorComplexity
-    ).toBe("moderate");
-  });
-
-  it("should create open question params with frontend defaults", () => {
-    const params = createFrontendQuestionParams("open_question", baseConfig);
-
-    expect(params.type).toBe("open_question");
-    expect(
-      (params as { expectedResponseLength?: string }).expectedResponseLength
-    ).toBe("medium");
-    expect(
-      (params as { evaluationCriteria?: string[] }).evaluationCriteria
-    ).toEqual([
-      "technical accuracy",
-      "best practices",
-      "conceptual understanding",
-    ]);
-  });
-
-  it("should create code snippet params with frontend defaults", () => {
-    const params = createFrontendQuestionParams("code_snippet", baseConfig);
-
-    expect(params.type).toBe("code_snippet");
-    expect((params as { language?: string }).language).toBe("javascript");
-    expect((params as { bugType?: string }).bugType).toBe("logic");
-    expect((params as { codeComplexity?: string }).codeComplexity).toBe(
-      "intermediate"
-    );
-    expect((params as { includeComments?: boolean }).includeComments).toBe(
-      true
-    );
-  });
-});
-
-describe("createBackendQuestionParams", () => {
-  const baseConfig = {
-    quizTitle: "Backend Quiz",
-    positionTitle: "Backend Developer",
-    experienceLevel: "senior",
-    skills: ["Node.js", "PostgreSQL"],
-  };
-
-  it("should create multiple choice params with backend defaults", () => {
-    const params = createBackendQuestionParams("multiple_choice", baseConfig);
-
-    expect(params.type).toBe("multiple_choice");
-    expect((params as { focusAreas?: string[] }).focusAreas).toEqual([
-      "APIs",
-      "databases",
-      "server architecture",
-      "security",
-    ]);
-    expect(
-      (params as { distractorComplexity?: string }).distractorComplexity
-    ).toBe("complex");
-  });
-
-  it("should create open question params with backend defaults", () => {
-    const params = createBackendQuestionParams("open_question", baseConfig);
-
-    expect(params.type).toBe("open_question");
-    expect(
-      (params as { expectedResponseLength?: string }).expectedResponseLength
-    ).toBe("long");
-    expect(
-      (params as { evaluationCriteria?: string[] }).evaluationCriteria
-    ).toEqual(["system design", "scalability", "security considerations"]);
-  });
-
-  it("should create code snippet params with backend defaults", () => {
-    const params = createBackendQuestionParams("code_snippet", baseConfig);
-
-    expect(params.type).toBe("code_snippet");
-    expect((params as { language?: string }).language).toBe("javascript");
-    expect((params as { bugType?: string }).bugType).toBe("security");
-    expect((params as { codeComplexity?: string }).codeComplexity).toBe(
-      "advanced"
-    );
-    expect((params as { includeComments?: boolean }).includeComments).toBe(
-      true
-    );
   });
 });

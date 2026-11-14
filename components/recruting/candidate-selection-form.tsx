@@ -2,19 +2,16 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, Loader2, Plus } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 
 import { Button } from "@/components/ui/button";
 import { MultiSelectField } from "@/components/ui/rhf-inputs";
-import {
-  assignCandidatesToQuiz,
-  AssignCandidatesToQuizState,
-} from "@/lib/actions/interviews";
+import { assignCandidatesToQuiz } from "@/lib/actions/interviews";
 import { CandidateSelection, candidateSelectionSchema } from "@/lib/schemas";
-
-type CandidateSelectionValues = CandidateSelection;
 
 interface Candidate {
   id: string;
@@ -26,81 +23,65 @@ interface Candidate {
 interface CandidateSelectionFormProps {
   quizId: string;
   unassignedCandidates: Candidate[];
-  onSuccess?: () => void; // This might not be needed if revalidation handles updates
+  onSuccess?: () => void;
 }
 
-const initialState: AssignCandidatesToQuizState = {
-  message: "",
-};
+type CreatedLink = Extract<
+  Awaited<ReturnType<typeof assignCandidatesToQuiz>>,
+  { success: true }
+>["created"][number];
 
 export function CandidateSelectionForm({
   quizId,
   unassignedCandidates,
   onSuccess,
 }: CandidateSelectionFormProps) {
-  const [formState, formAction, isPending] = useActionState(
-    // Use useActionState
-    assignCandidatesToQuiz,
-    initialState,
-  );
-  const [createdLinks, setCreatedLinks] = useState<
-    {
-      candidateId: string;
-      token: string;
-      candidateName: string;
-      candidateEmail: string;
-    }[]
-  >([]);
+  const [isPending, startTransition] = useTransition();
+  const [createdLinks, setCreatedLinks] = useState<CreatedLink[]>([]);
 
-  const form = useForm<CandidateSelectionValues>({
+  const form = useForm<CandidateSelection>({
     resolver: zodResolver(candidateSelectionSchema),
-    defaultValues: {
-      candidateIds: [],
-    },
+    defaultValues: { candidateIds: [] },
   });
 
-  const { control } = form;
-  const selectedIds = useWatch({ control, name: "candidateIds" });
+  const onSubmit = (values: CandidateSelection) => {
+    startTransition(async () => {
+      try {
+        const result = unwrap(
+          await assignCandidatesToQuiz({
+          quizId,
+          candidateIds: values.candidateIds,
+          }),
+        );
 
-  // Derive the created links from the latest action result during render
-  const [prevFormState, setPrevFormState] = useState(formState);
-  if (formState !== prevFormState) {
-    setPrevFormState(formState);
-    if (formState.success) {
-      setCreatedLinks(formState.createdInterviews || []);
-    }
-  }
+        setCreatedLinks(result.created);
 
-  useEffect(() => {
-    if (formState.success) {
-      toast.success("Interview links created", {
-        description: `${
-          formState.createdInterviews?.length || 0
-        } interview links have been created successfully`,
-      });
-      form.reset();
-      if (onSuccess) {
-        onSuccess(); // Consider if this is still needed with server-side revalidation
+        if (result.created.length > 0) {
+          toast.success("Link di colloquio creati", {
+            description: `${result.created.length} link creati con successo`,
+          });
+          form.reset();
+          onSuccess?.();
+        }
+
+        if (result.skipped.length > 0) {
+          toast.warning("Alcuni colloqui non sono stati creati", {
+            description: result.skipped.join(" "),
+          });
+        }
+      } catch (error) {
+        toast.error("Errore nella creazione dei colloqui", {
+          description: errorMessage(error),
+        });
       }
-    } else if (formState.message && formState.errors) {
-      // Display general errors or specific field errors
-      const errorMessages = Object.values(formState.errors).flat().join(", ");
-      toast.error("Error creating interviews", {
-        description:
-          formState.message || errorMessages || "An unknown error occurred",
-      });
-    } else if (formState.message && !formState.success && !formState.errors) {
-      toast.error("Error", {
-        description: formState.message,
-      });
-    }
-  }, [formState, form, onSuccess]);
+    });
+  };
 
   const copyInterviewLink = (token: string) => {
     const link = `${window.location.origin}/recruting/${token}`;
     navigator.clipboard.writeText(link);
-    toast.success("Link copied", {
-      description: "The interview link has been copied to your clipboard",
+    toast.success("Link copiato", {
+      description: "Il link del colloquio è stato copiato negli appunti",
     });
   };
 
@@ -114,32 +95,26 @@ export function CandidateSelectionForm({
       {unassignedCandidates.length === 0 ? (
         <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-40 text-center">
           <p className="text-muted-foreground text-sm">
-            No candidates available to assign for this quiz position.
+            Nessun candidato da assegnare per la posizione di questo quiz.
           </p>
           <p className="mt-1 text-muted-foreground text-xs">
-            All candidates in this position have already been assigned or there
-            are no candidates in this position.
+            Tutti i candidati di questa posizione sono già stati assegnati,
+            oppure la posizione non ha candidati.
           </p>
         </div>
       ) : (
-        <form action={formAction} className="space-y-6" noValidate>
-          <input type="hidden" name="quizId" value={quizId} />
-          {selectedIds.map((candidateId) => (
-            <input
-              key={candidateId}
-              type="hidden"
-              name="candidateIds"
-              value={candidateId}
-            />
-          ))}
-
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6"
+          noValidate
+        >
           <MultiSelectField
-            control={control}
+            control={form.control}
             name="candidateIds"
-            label="Select candidates"
+            label="Seleziona i candidati"
             required
             options={candidateOptions}
-            placeholder="Select candidates to assign this quiz"
+            placeholder="Seleziona i candidati a cui assegnare questo quiz"
             showClear
           />
 
@@ -147,22 +122,21 @@ export function CandidateSelectionForm({
             {isPending ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Creating interviews...
+                Creazione colloqui...
               </>
             ) : (
               <>
                 <Plus className="mr-1 size-4" />
-                Create interview links
+                Crea link di colloquio
               </>
             )}
           </Button>
         </form>
       )}
 
-      {/* Display created links */}
       {createdLinks.length > 0 && (
         <div className="space-y-4">
-          <h3 className="font-medium">Generated Interview Links</h3>
+          <h3 className="font-medium">Link di colloquio generati</h3>
           <div className="space-y-2">
             {createdLinks.map((link) => (
               <div
@@ -172,16 +146,17 @@ export function CandidateSelectionForm({
                 <div>
                   <div className="font-medium">{link.candidateName}</div>
                   <div className="text-muted-foreground text-sm">
-                    {link.candidateEmail} • Interview link ready
+                    {link.candidateEmail} • Link del colloquio pronto
                   </div>
                 </div>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => copyInterviewLink(link.token)}
                 >
                   <Copy className="mr-1 size-4" />
-                  Copy Link
+                  Copia link
                 </Button>
               </div>
             ))}

@@ -138,7 +138,7 @@ async function InterviewDetailContent({
           <DeleteWithConfirm
             deleteAction={async () => {
               "use server";
-              await deleteInterview(interview.id);
+              return deleteInterview(interview.id);
             }}
             title="Eliminare l'colloquio?"
             description="Questa azione eliminerà permanentemente l'colloquio e tutte le risposte associate. L'azione non può essere annullata."

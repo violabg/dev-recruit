@@ -25,6 +25,8 @@ export const reorderReferenceDataSchema = z.object({
 });
 
 export type ReferenceDataFormData = z.infer<typeof referenceDataFormSchema>;
+/** Form-side shape: fields with defaults are optional before parsing */
+export type ReferenceDataFormInput = z.input<typeof referenceDataFormSchema>;
 export type UpdateReferenceDataFormData = z.infer<
   typeof updateReferenceDataFormSchema
 >;

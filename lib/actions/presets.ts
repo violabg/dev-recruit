@@ -1,12 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { requireUser } from "../auth-server";
-import {
-  getPresetData,
-  getPresetsData,
-  type PresetsFilterParams,
-} from "../data/presets";
 import prisma from "../prisma";
 import {
   createPresetSchema,
@@ -15,50 +9,11 @@ import {
   type UpdatePresetInput,
 } from "../schemas";
 import { invalidatePresetCache } from "../utils/cache-utils";
+import { runAction, UserError } from "./run-action";
 
-// Get all presets with pagination and search
-export async function getPresetsAction(params?: PresetsFilterParams) {
-  try {
-    const result = await getPresetsData(params);
-    return { success: true, ...result };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch presets",
-      presets: [],
-      totalCount: 0,
-      currentPage: 1,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPrevPage: false,
-    };
-  }
-}
-
-// Get a single preset by ID
-export async function getPresetAction(presetId: string) {
-  try {
-    const preset = await getPresetData(presetId);
-
-    if (!preset) {
-      return { success: false, error: "Preset not found" };
-    }
-
-    return { success: true, preset };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch preset",
-    };
-  }
-}
-
-// Create a new preset
 export async function createPresetAction(data: CreatePresetInput) {
-  await requireUser();
-
-  try {
-    // Validate input
+  return runAction("createPresetAction", async () => {
+    await requireUser();
     const validatedData = createPresetSchema.parse(data);
 
     const preset = await prisma.preset.create({
@@ -67,45 +22,26 @@ export async function createPresetAction(data: CreatePresetInput) {
 
     invalidatePresetCache(preset.id);
 
-    return { success: true, presetId: preset.id };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: "Invalid input",
-        issues: error.issues,
-      };
-    }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to create preset",
-    };
-  }
+    return { presetId: preset.id };
+  });
 }
 
-// Update a preset
 export async function updatePresetAction(
   presetId: string,
-  data: UpdatePresetInput
+  data: UpdatePresetInput,
 ) {
-  await requireUser();
+  return runAction("updatePresetAction", async () => {
+    await requireUser();
+    const validatedData = updatePresetSchema.parse(data);
 
-  try {
-    // Verify preset exists
     const existingPreset = await prisma.preset.findUnique({
       where: { id: presetId },
+      select: { id: true },
     });
 
     if (!existingPreset) {
-      return {
-        success: false,
-        error: "Preset not found",
-      };
+      throw new UserError("Preset non trovato");
     }
-
-    // Validate input
-    const validatedData = updatePresetSchema.parse(data);
 
     const preset = await prisma.preset.update({
       where: { id: presetId },
@@ -114,75 +50,27 @@ export async function updatePresetAction(
 
     invalidatePresetCache(preset.id);
 
-    return { success: true, presetId: preset.id };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: "Invalid input",
-        issues: error.issues,
-      };
-    }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update preset",
-    };
-  }
+    return { presetId: preset.id };
+  });
 }
 
-// Delete a preset
 export async function deletePresetAction(presetId: string) {
-  await requireUser();
+  return runAction("deletePresetAction", async () => {
+    await requireUser();
 
-  try {
     const preset = await prisma.preset.findUnique({
       where: { id: presetId },
+      select: { id: true },
     });
 
     if (!preset) {
-      return {
-        success: false,
-        error: "Preset not found",
-      };
+      throw new UserError("Preset non trovato");
     }
 
-    await prisma.preset.delete({
-      where: { id: presetId },
-    });
-
-    invalidatePresetCache();
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to delete preset",
-    };
-  }
-
-  redirect("/dashboard/presets");
-}
-
-// Bulk create presets (for seeding)
-export async function bulkCreatePresetsAction(presets: CreatePresetInput[]) {
-  await requireUser();
-
-  try {
-    const created = await Promise.all(
-      presets.map((preset) =>
-        prisma.preset.create({
-          data: preset as Parameters<typeof prisma.preset.create>[0]["data"],
-        })
-      )
-    );
+    await prisma.preset.delete({ where: { id: presetId } });
 
     invalidatePresetCache();
 
-    return { success: true, created };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create presets",
-    };
-  }
+    redirect("/dashboard/presets");
+  });
 }

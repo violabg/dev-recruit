@@ -145,16 +145,14 @@ export function PresetForm({ preset }: PresetFormProps) {
           ? await updatePresetAction(preset.id!, normalizedData)
           : await createPresetAction(normalizedData);
 
-        if (result && !result.success) {
-          toast.error(result.error || "Something went wrong");
-        } else if (result && result.success && result.presetId) {
-          // Redirect on success
-          router.push(`/dashboard/presets/${result.presetId}`);
+        if (!result.success) {
+          toast.error(result.error);
+          return;
         }
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Something went wrong",
-        );
+
+        router.push(`/dashboard/presets/${result.presetId}`);
+      } catch {
+        toast.error("Si è verificato un errore. Riprova.");
       }
     });
   };

@@ -140,11 +140,12 @@ model Candidate {
   dateOfBirth DateTime?
   status      String    @default("pending")
   resumeUrl   String?
-  createdBy   String
+  // Null when the candidate applied through the public form
+  createdBy   String?
   createdAt   DateTime  @default(now())
 
   positions          CandidatePosition[]
-  creator            User                @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
+  creator            User?               @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
   interviews         Interview[]
   evaluations        Evaluation[]
   behavioralRubrics  BehavioralRubric[]
