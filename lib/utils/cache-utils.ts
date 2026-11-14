@@ -136,7 +136,6 @@ export function invalidateQuizCache(options?: {
 export function invalidateQuestionCache(options?: {
   questionId?: string;
   quizId?: string;
-  isFavorite?: boolean;
 }) {
   updateTag(CacheTags.QUESTIONS);
 

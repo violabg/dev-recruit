@@ -25,6 +25,7 @@ import {
 } from "@/lib/actions/evaluations";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import type { EvaluationResult, SavedQuestion } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
 import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 
@@ -280,15 +281,14 @@ export function InterviewResultsClient({
                 className="flex flex-wrap gap-3 h-2"
               >
                 <ProgressTrack
-                  className={`${
-                    overallScore !== null
-                      ? overallScore >= 70
+                  className={cn(
+                    overallScore !== null &&
+                      (overallScore >= 70
                         ? "bg-success"
                         : overallScore >= 40
                           ? "bg-warning"
-                          : "bg-destructive"
-                      : ""
-                  }`}
+                          : "bg-destructive"),
+                  )}
                 >
                   <ProgressIndicator />
                 </ProgressTrack>
@@ -430,13 +430,14 @@ export function InterviewResultsClient({
                         </CardTitle>
                         {evaluation && (
                           <div
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${
+                            className={cn(
+                              "rounded-full px-2 py-1 text-xs font-medium",
                               evaluation.score >= 7
                                 ? "bg-success/10 text-success"
                                 : evaluation.score >= 4
                                   ? "bg-warning/10 text-warning"
-                                  : "bg-destructive/10 text-destructive"
-                            }`}
+                                  : "bg-destructive/10 text-destructive",
+                            )}
                           >
                             {evaluation.score}/{evaluation.maxScore}
                           </div>
@@ -479,11 +480,12 @@ export function InterviewResultsClient({
 
                                 return (
                                   <div
-                                    className={`rounded-md border p-3 ${
+                                    className={cn(
+                                      "rounded-md border p-3",
                                       isCorrectAnswer
                                         ? "border-success bg-success/10"
-                                        : "border-destructive bg-destructive/10"
-                                    }`}
+                                        : "border-destructive bg-destructive/10",
+                                    )}
                                   >
                                     {selectedOption ?? "Risposta non valida"}
                                   </div>

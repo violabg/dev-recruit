@@ -23,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { INTERVIEW_STATE_PRESENTATION } from "@/components/interviews/interview-status";
 import { deleteInterviewAction } from "@/lib/actions/interviews";
 import type { InterviewListItem } from "@/lib/data/interviews";
 import { interviewState, type InterviewState } from "@/lib/utils/interview-utils";
@@ -44,40 +45,16 @@ type InterviewsTableProps = {
   interviews: InterviewListItem[];
 };
 
-// Status configuration for badges and icons
-const statusConfig: Record<
+// Icon of each interview state; labels and tints are shared
+const stateIcons: Record<
   InterviewState,
-  {
-    label: string;
-    icon: ComponentType<SVGProps<SVGSVGElement>>;
-    badge: string;
-  }
+  ComponentType<SVGProps<SVGSVGElement>>
 > = {
-  pending: {
-    label: "In attesa",
-    icon: Clock,
-    badge: "bg-stage-pending/10 text-stage-pending",
-  },
-  in_progress: {
-    label: "In corso",
-    icon: MessageSquare,
-    badge: "bg-stage-progress/10 text-stage-progress",
-  },
-  completed: {
-    label: "Completato",
-    icon: CheckCircle,
-    badge: "bg-stage-done/10 text-stage-done",
-  },
-  cancelled: {
-    label: "Annullato",
-    icon: XCircle,
-    badge: "bg-stage-cancelled/10 text-stage-cancelled",
-  },
-  expired: {
-    label: "Scaduto",
-    icon: TimerOff,
-    badge: "bg-stage-expired/10 text-stage-expired",
-  },
+  pending: Clock,
+  in_progress: MessageSquare,
+  completed: CheckCircle,
+  cancelled: XCircle,
+  expired: TimerOff,
 };
 
 export function InterviewsTable({ interviews }: InterviewsTableProps) {
@@ -136,7 +113,8 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                   startedAt: interview.startedAt,
                   timeLimit: interview.quizTimeLimit,
                 });
-                const info = statusConfig[state];
+                const info = INTERVIEW_STATE_PRESENTATION[state];
+                const StateIcon = stateIcons[state];
 
                 return (
                   <TableRow key={interview.id} className="group">
@@ -194,7 +172,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                           info.badge,
                         )}
                       >
-                        <info.icon className="size-3" />
+                        <StateIcon className="size-3" />
                         {info.label}
                       </Badge>
                     </TableCell>

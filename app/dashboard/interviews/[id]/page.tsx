@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { InterviewExpiryChecker } from "@/components/interviews/interview-expiry-checker";
+import { getInterviewStatePresentation } from "@/components/interviews/interview-status";
 import PageHeader from "@/components/page-header";
 import { InterviewResults } from "@/components/recruiting/interview-results";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +81,7 @@ async function InterviewDetailContent({
   if (!interviewData) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
-        <p className="font-medium text-lg">Colloquio non trovata</p>
+        <p className="font-medium text-lg">Colloquio non trovato</p>
         <Link
           href="/dashboard/quizzes"
           className={cn("mt-4", buttonVariants({ variant: "default" }))}
@@ -92,6 +93,7 @@ async function InterviewDetailContent({
   }
 
   const { interview, quiz, candidate } = interviewData;
+  const statusPresentation = getInterviewStatePresentation(interview.status);
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,28 +112,8 @@ async function InterviewDetailContent({
             <Badge variant="outline">
               {quiz.positions?.title ?? "Senza ruolo"}
             </Badge>
-            <Badge
-              variant={
-                interview.status === "pending"
-                  ? "outline"
-                  : interview.status === "cancelled"
-                  ? "destructive"
-                  : interview.status === "completed"
-                  ? "default"
-                  : interview.status === "in_progress"
-                  ? "secondary"
-                  : "outline"
-              }
-            >
-              {interview.status === "pending"
-                ? "In attesa"
-                : interview.status === "cancelled"
-                ? "Annullato"
-                : interview.status === "completed"
-                ? "Completato"
-                : interview.status === "in_progress"
-                ? "In corso"
-                : interview.status}
+            <Badge className={statusPresentation.badge}>
+              {statusPresentation.label}
             </Badge>
           </>
         }
@@ -141,11 +123,11 @@ async function InterviewDetailContent({
               "use server";
               return deleteInterviewAction(interview.id);
             }}
-            title="Eliminare l'colloquio?"
-            description="Questa azione eliminerà permanentemente l'colloquio e tutte le risposte associate. L'azione non può essere annullata."
+            title="Eliminare il colloquio?"
+            description="Questa azione eliminerà permanentemente il colloquio e tutte le risposte associate. L'azione non può essere annullata."
             label="Elimina colloquio"
-            successMessage="Colloquio eliminata con successo"
-            errorMessage="Errore durante l'eliminazione dell'intervista"
+            successMessage="Colloquio eliminato con successo"
+            errorMessage="Errore durante l'eliminazione del colloquio"
             disabled={interview.status === "completed"}
           />
         }
@@ -216,7 +198,7 @@ async function InterviewDetailContent({
             <CardHeader>
               <CardTitle>Risultati non disponibili</CardTitle>
               <CardDescription>
-                L&apos;intervista non è ancora stata completata
+                Il colloquio non è ancora stato completato
               </CardDescription>
             </CardHeader>
             <CardContent>

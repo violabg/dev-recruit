@@ -21,7 +21,7 @@ export type TagInputProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 export function TagInput({
   value,
   onValueChange,
-  placeholder = "Add a tag…",
+  placeholder = "Aggiungi un tag…",
   maxTags,
   allowDuplicates = false,
   disabled = false,
@@ -100,7 +100,7 @@ export function TagInput({
             className="text-muted-foreground hover:text-foreground"
             onClick={() => removeTag(tag)}
             disabled={disabled}
-            aria-label={`Remove ${tag}`}
+            aria-label={`Rimuovi ${tag}`}
           >
             <X className="size-3.5" />
           </Button>
@@ -145,7 +145,7 @@ export function TagInput({
           className="ms-auto text-muted-foreground hover:text-foreground"
           onClick={() => onValueChange([])}
           disabled={disabled}
-          aria-label="Clear all tags"
+          aria-label="Rimuovi tutti i tag"
         >
           <X className="size-3.5" />
         </Button>

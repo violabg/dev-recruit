@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { seedDefaultPresetsAction } from "@/lib/actions/seed-presets";
+import { errorMessage } from "@/lib/utils/action-result";
 import { Loader2, Zap } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -18,7 +19,7 @@ export function SeedPresetsButton() {
           description: `${result.count} preset caricati`,
         });
       } else {
-        toast.error(result.error);
+        toast.error(errorMessage(result.error));
       }
     });
   };

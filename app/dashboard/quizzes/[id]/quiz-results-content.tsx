@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 
+import { getInterviewStatePresentation } from "@/components/interviews/interview-status";
 import { getInterviewsByQuiz } from "@/lib/data/interviews";
 import { formatDate } from "@/lib/utils";
 import { Eye, Link2 } from "lucide-react";
@@ -10,6 +11,11 @@ import Link from "next/link";
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+function InterviewStatusCell({ status }: { status: string }) {
+  const { label, badge } = getInterviewStatePresentation(status);
+  return <Badge className={badge}>{label}</Badge>;
+}
 
 export async function QuizResultsContent({ params }: Props) {
   const { id: quizId } = await params;
@@ -20,7 +26,7 @@ export async function QuizResultsContent({ params }: Props) {
       <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
         <div className="text-center">
           <p className="text-muted-foreground text-sm">
-            Nessun candidato ha ancora completato questo quiz
+            Questo quiz non è ancora stato assegnato a nessun candidato
           </p>
           <Link
             href={`/dashboard/quizzes/${quizId}/invite`}
@@ -72,21 +78,7 @@ export async function QuizResultsContent({ params }: Props) {
                   {interview.candidateEmail}
                 </td>
                 <td className="p-2">
-                  <Badge
-                    variant={
-                      interview.status === "completed"
-                        ? "default"
-                        : interview.status === "started"
-                        ? "secondary"
-                        : "outline"
-                    }
-                  >
-                    {interview.status === "completed"
-                      ? "Completato"
-                      : interview.status === "started"
-                      ? "Iniziato"
-                      : "Assegnato"}
-                  </Badge>
+                  <InterviewStatusCell status={interview.status} />
                 </td>
                 <td className="p-2 text-muted-foreground text-xs">
                   {formatDate(interview.createdAt)}

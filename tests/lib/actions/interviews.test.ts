@@ -147,6 +147,17 @@ describe("submitAnswerAction", () => {
     expect(update()).not.toHaveBeenCalled();
   });
 
+  it("refuses an invalid answer before reading the interview", async () => {
+    for (const answer of [null, true, "", { code: "" }]) {
+      expect(await submitAnswerAction("token", "q2", answer)).toMatchObject({
+        success: false,
+      });
+    }
+
+    expect(prisma.interview.findUnique).not.toHaveBeenCalled();
+    expect(prisma.interview.update).not.toHaveBeenCalled();
+  });
+
   it("has no time limit when the quiz has none", async () => {
     findUnique().mockResolvedValueOnce(
       stored({ startedAt: minutesAgo(600), quiz: { timeLimit: null } }) as any,

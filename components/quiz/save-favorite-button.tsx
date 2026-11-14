@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toggleQuestionFavoriteAction } from "@/lib/actions/questions";
+import { errorMessage } from "@/lib/utils/action-result";
 import { FlexibleQuestion } from "@/lib/schemas";
 import { Heart } from "lucide-react";
 import { useState, useTransition } from "react";
@@ -40,7 +41,7 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
             : "Domanda rimossa dai preferiti"
         );
       } else {
-        toast.error(result.error);
+        toast.error(errorMessage(result.error));
       }
     });
   };

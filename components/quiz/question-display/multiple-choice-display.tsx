@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 type MultipleChoiceDisplayProps = {
   question: {
     options?: string[];
@@ -19,16 +21,17 @@ export const MultipleChoiceDisplay = ({
           return (
             <div
               key={optIndex}
-              className={`flex items-center gap-2 rounded-md border p-2 ${
-                isCorrect
-                  ? "border-success bg-success/10"
-                  : ""
-              }`}
+              className={cn(
+                "flex items-center gap-2 rounded-md border p-2",
+                isCorrect && "border-success bg-success/10",
+              )}
             >
               <div
-                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isCorrect ? "border-success bg-success text-primary-foreground" : ""
-                }`}
+                className={cn(
+                  "flex size-5 items-center justify-center rounded-full border",
+                  isCorrect &&
+                    "border-success bg-success text-primary-foreground",
+                )}
               >
                 {isCorrect && (
                   <svg

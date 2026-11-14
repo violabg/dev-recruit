@@ -84,7 +84,7 @@ export function ReferenceDataTable({
         <TableCell>
           <button
             className="cursor-grab active:cursor-grabbing"
-            aria-label="Drag handle"
+            aria-label="Trascina per riordinare"
             {...attributes}
             {...listeners}
           >

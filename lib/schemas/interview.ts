@@ -9,7 +9,7 @@ import { z } from "zod";
 
 export const interviewAnswerSchema = z.union([
   z.string().min(1, "La risposta non può essere vuota"),
-  z.coerce.number().int().min(0, "L'indice della risposta non è valido"),
+  z.number().int().min(0, "L'indice della risposta non è valido"),
   z.object({
     code: z.string().min(1, "Il codice non può essere vuoto"),
   }),

@@ -82,7 +82,9 @@ export async function submitAnswerAction(
   answer: Prisma.JsonValue,
 ) {
   return runAction("submitAnswerAction", async () => {
-    const interview = await findInterviewByToken(token);
+    const parsed = submitAnswerSchema.parse({ token, questionId, answer });
+
+    const interview = await findInterviewByToken(parsed.token);
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: interview.quizId },
@@ -90,12 +92,12 @@ export async function submitAnswerAction(
     });
 
     if (
-      !quiz?.quizQuestions.some((link) => link.questionId === questionId)
+      !quiz?.quizQuestions.some(
+        (link) => link.questionId === parsed.questionId,
+      )
     ) {
       throw new UserError("Domanda non valida per questo colloquio");
     }
-
-    const parsed = submitAnswerSchema.parse({ token, questionId, answer });
 
     const state = interviewState(interview);
 
@@ -114,11 +116,12 @@ export async function submitAnswerAction(
 
     await prisma.interview.update({
       where: { id: interview.id },
-      data: { answers: { ...currentAnswers, [questionId]: parsed.answer } },
+      data: {
+        answers: { ...currentAnswers, [parsed.questionId]: parsed.answer },
+      },
     });
 
     invalidateInterviewCache({ interviewId: interview.id });
-
   });
 }
 
@@ -133,7 +136,6 @@ export async function completeInterviewAction(token: string) {
     }
 
     await closeInterview(interview.id);
-
   });
 }
 

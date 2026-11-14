@@ -2,6 +2,7 @@
 
 import { EditQuizForm } from "@/components/quiz/edit-quiz-form";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import {
   Select,
@@ -123,10 +124,10 @@ export const NewQuizCreationPage = ({
           </p>
           <Link
             href="/dashboard/positions"
-            className={`mt-4 ${buttonVariants({
-              variant: "outline",
-              size: "sm",
-            })}`}
+            className={cn(
+              "mt-4",
+              buttonVariants({ variant: "outline", size: "sm" }),
+            )}
           >
             Vai alle posizioni
           </Link>

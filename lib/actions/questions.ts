@@ -38,7 +38,7 @@ export async function toggleQuestionFavoriteAction(questionId: string) {
     });
 
     // Invalidate cache
-    invalidateQuestionCache({ questionId, isFavorite: true });
+    invalidateQuestionCache({ questionId });
 
     return { isFavorite: question.isFavorite };
   });

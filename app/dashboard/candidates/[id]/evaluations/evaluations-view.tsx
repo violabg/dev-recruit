@@ -137,9 +137,7 @@ export function CandidateEvaluationsView({
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Errore durante la generazione della valutazione"
+        errorMessage(error, "Errore durante la generazione della valutazione"),
       );
       // Clear streaming state on error
       setStreamingEvaluation(null);

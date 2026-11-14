@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { INTERVIEW_STATE_PRESENTATION } from "@/components/interviews/interview-status";
 import { deleteInterviewAction } from "@/lib/actions/interviews";
 import type { AssignedInterview } from "@/lib/data/interviews";
 import { interviewState, type InterviewState } from "@/lib/utils/interview-utils";
@@ -26,24 +27,6 @@ import { TableRowLink } from "../ui/table-row-link";
 interface InvitesListProps {
   assignedInterviews: AssignedInterview[];
 }
-
-// Same labels and tints as the interviews table
-const statusPresentation: Record<
-  InterviewState,
-  { label: string; badge: string }
-> = {
-  pending: { label: "In attesa", badge: "bg-stage-pending/10 text-stage-pending" },
-  in_progress: {
-    label: "In corso",
-    badge: "bg-stage-progress/10 text-stage-progress",
-  },
-  completed: { label: "Completato", badge: "bg-stage-done/10 text-stage-done" },
-  cancelled: {
-    label: "Annullato",
-    badge: "bg-stage-cancelled/10 text-stage-cancelled",
-  },
-  expired: { label: "Scaduto", badge: "bg-stage-expired/10 text-stage-expired" },
-};
 
 export function InvitesList({ assignedInterviews }: InvitesListProps) {
   const [interviews, setInterviews] =
@@ -58,7 +41,7 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
   };
 
   const statusBadge = (state: InterviewState) => {
-    const { label, badge } = statusPresentation[state];
+    const { label, badge } = INTERVIEW_STATE_PRESENTATION[state];
     return <Badge className={cn("w-fit", badge)}>{label}</Badge>;
   };
 

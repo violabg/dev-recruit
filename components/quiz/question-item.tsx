@@ -21,6 +21,7 @@ import {
 } from "@/lib/actions/questions";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { errorMessage } from "@/lib/utils/action-result";
 import { getQuestionTypeLabel } from "@/lib/utils/quiz-form-utils";
 import { ChevronDown, ChevronUp, Heart, Sparkles, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
@@ -91,7 +92,7 @@ export const QuestionItem = ({
             : "Domanda rimossa dai preferiti",
         );
       } else {
-        toast.error(result.error);
+        toast.error(errorMessage(result.error));
       }
     });
   };

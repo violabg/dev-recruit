@@ -12,6 +12,7 @@ import {
   type ReferenceDataFormData,
   type ReferenceDataFormInput,
 } from "@/lib/schemas/reference-data";
+import { errorMessage } from "@/lib/utils/action-result";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -50,7 +51,7 @@ export function ReferenceDataForm({
         : await createReferenceDataAction(data);
 
       if (!result.success) {
-        toast.error(result.error);
+        toast.error(errorMessage(result.error));
         return;
       }
 

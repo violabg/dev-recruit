@@ -115,8 +115,8 @@ describe("invalidateQuestionCache", () => {
     expect(mockedUpdateTag).toHaveBeenCalledWith("quiz-quiz-123");
   });
 
-  it("should invalidate the questions collection when the favorite status changes", () => {
-    invalidateQuestionCache({ isFavorite: true });
+  it("should invalidate only the questions collection without options", () => {
+    invalidateQuestionCache();
 
     expect(mockedUpdateTag).toHaveBeenCalledTimes(1);
     expect(mockedUpdateTag).toHaveBeenCalledWith(CacheTags.QUESTIONS);

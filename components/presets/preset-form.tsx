@@ -12,6 +12,7 @@ import {
 import { createPresetAction, updatePresetAction } from "@/lib/actions/presets";
 import { type Preset } from "@/lib/data/presets";
 import { createPresetSchema, type CreatePresetInput } from "@/lib/schemas";
+import { errorMessage } from "@/lib/utils/action-result";
 import { PRESET_ICON_OPTIONS } from "@/lib/utils/preset-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname, useRouter } from "next/navigation";
@@ -146,7 +147,7 @@ export function PresetForm({ preset }: PresetFormProps) {
           : await createPresetAction(normalizedData);
 
         if (!result.success) {
-          toast.error(result.error);
+          toast.error(errorMessage(result.error));
           return;
         }
 
