@@ -7,14 +7,14 @@ editable: true
 ---
 # Cache tagging and invalidation
 
-Cache Components (`cacheComponents`) and Partial Prefetching are on. What `"use cache"`, `cacheLife`, `cacheTag`, `updateTag` and `revalidateTag` do, where each may be called and which profiles exist is NOT restated here: read `cacheLife.md`, `cacheTag.md`, `updateTag.md` and `revalidateTag.md` under `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/`, or ask next-devtools MCP or context7. This document holds only this project's rules, so a library upgrade never makes it stale.
+Cache Components and Partial Prefetching are on. The framework itself is NOT restated here: what `"use cache"`, `cacheLife`, `cacheTag`, `updateTag` and `revalidateTag` do and where each may be called, which request APIs are allowed inside a cached scope, what may run during prerender, and how to hand promises or server components to client components. Ask next-devtools MCP or context7 for the installed Next.js version. This document holds only this project's rules, so a library upgrade never makes it stale.
 
 ## Where caching lives
 
 - `"use cache"` is used only in the data layer functions (one module per entity). Pages and server components call those functions; they never call Prisma.
 - Every cached read sets `cacheLife("hours")`, or `cacheLife("minutes")` for short-lived data. No other profile and no custom profiles.
 - Two reads are uncached on purpose: `getProfile` (depends on the session) and `getInterviewByToken` (live interview state while the candidate answers). Follow the same choice for any session-dependent or live read.
-- NEVER call `requireUser()`, `getCurrentUser()`, `cookies()` or `headers()` inside a `"use cache"` scope. Render components that need them inside a `Suspense` boundary.
+- `requireUser()` and `getCurrentUser()` read the session cookie, so the framework's rules for request APIs apply to them: never inside a `"use cache"` scope.
 
 ## Tag vocabulary
 
@@ -57,7 +57,7 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | Helper | Always expires | Options |
 |---|---|---|
 | `invalidateQuizCache({ quizId?, positionId?, deleted? })` | `quizzes`, `questions` | entity tags for quiz and position |
-| `invalidateQuestionCache({ questionId?, quizId? })` | `questions` | `quizId` also expires the quiz. The signature still accepts `isFavorite?`, but it is ignored: the `questions` collection already covers favorite status |
+| `invalidateQuestionCache({ questionId?, quizId? })` | `questions` | `quizId` also expires the quiz. A favorite toggle needs no extra option: the `questions` collection covers favorite status |
 | `invalidatePositionCache(positionId?, { deleted? })` | `positions` | positional id, then options |
 | `invalidateCandidateCache({ candidateId?, positionId?, positionIds?, deleted? })` | `candidates` | pass every position touched (old and new) |
 | `invalidateInterviewCache({ interviewId?, quizId?, deleted? })` | `interviews` | |
@@ -68,7 +68,7 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | `invalidateReferenceDataCache(category?)` | `reference-data` | |
 | `invalidateProfileCache()` | profile paths | |
 
-Server actions use the standard helper; a route handler uses the `…InRouteHandler` variant. Why the two cannot be swapped belongs to the Next.js docs cited above.
+Server actions use the standard helper; a route handler uses the `…InRouteHandler` variant. Why the two cannot be swapped is framework behaviour: see the docs named above.
 
 ## Deletes and database cascades
 
@@ -94,20 +94,25 @@ When an `onDelete: Cascade` relation is added or changed in the Prisma schema, u
 
 ## Passing server data to client components
 
-NEVER fetch lists in a client component (`useEffect`, or an action called on mount). Fetch them in the server tree with a cached data function, then:
+NEVER fetch lists in a client component (`useEffect`, or an action called on mount). Fetch them in the server tree with a cached data function and hand them down:
 
-- Slot pattern, when the client only renders markup for the data: pass an async server component as a `ReactNode` prop, e.g. `languageOptions={<Suspense fallback={<SelectOptionsSkeleton />}><ProgrammingLanguageSelectItems /></Suspense>}`.
-- Promise prop + `use()`, when the client needs the data itself: start the cached read without awaiting, pass the promise, unwrap it with `use()` under a `Suspense` inside the client component, e.g. `presetsPromise={getAllPresets().catch(() => [])}` → `use(presetsPromise)`.
-
-Both stay in the cached server render and refresh after the action's `updateTag`.
+| Client needs | Project example |
+|---|---|
+| only to render markup for the data | async server component passed as a `ReactNode` prop: `languageOptions={<Suspense fallback={<SelectOptionsSkeleton />}><ProgrammingLanguageSelectItems /></Suspense>}` |
+| the data itself | un-awaited cached read passed as a promise prop: `presetsPromise={getAllPresets().catch(() => [])}` |
 
 ## API routes
 
-Route handlers exist only for streaming responses (resume evaluation, position description) and for the auth library. Every other server call from the client is a server action.
+Route handlers exist only for:
 
-## Prerender constraint
+| Route | Purpose |
+|---|---|
+| auth library catch-all | the auth library's own endpoints |
+| email verification confirm | verifies the email token through the auth library, then redirects only to a same-origin path (a `next`/`callbackURL` pointing elsewhere falls back to `/`) |
+| resume evaluation stream | streamed resume evaluation |
+| position description | streamed position description |
 
-Do not read the current time (`new Date()`, `Date.now()`) in code that runs during prerender; use timing APIs (`performance.timeOrigin + performance.now()`, as the logger does) or move the code behind `Suspense`.
+Every other server call from the client is a server action. Every route handler except the two auth ones MUST call `requireUser()`.
 
 ## Common mistakes
 
@@ -116,4 +121,5 @@ Do not read the current time (`new Date()`, `Date.now()`) in code that runs duri
 - Calling `updateTag`/`revalidatePath` directly, or `invalidateEvaluationCache` inside a route handler.
 - Deleting without `deleted: true`, leaving cascaded rows in cached lists and counts.
 - Updating a candidate's positions and passing only the new position ids.
-- Caching session-dependent data or calling session APIs inside `"use cache"`.
+- Caching session-dependent data, or calling `requireUser()`/`getCurrentUser()` inside `"use cache"`.
+- Redirecting from the email verification route to a caller-supplied URL without the same-origin check.

@@ -12,7 +12,7 @@ Vitest is the runner; its API is in the official docs. This document holds only 
 ## Layout and run
 
 - Tests live in a separate top-level `tests/` tree that mirrors the source tree (`tests/lib/actions/<name>.test.ts` tests the `<name>` actions module, and so on for data, services, utils, schemas, hooks). File names end in `.test.ts`.
-- One environment for every file: `happy-dom`. Vitest globals are on. The `@` alias points to the repository root.
+- Environment, globals, the `@` alias and the setup file are defined in the Vitest config: read it instead of assuming.
 - Shared data factories (`mockUser`, `mockQuiz`, `mockPosition`, `mockCandidate`, `mockInterview`, `mockEvaluation`, `mockPreset`, question mocks) are exported from `@/tests/mocks`.
 - Validation before handing work back: `pnpm lint && pnpm test:run && pnpm build`. There is no coverage threshold.
 

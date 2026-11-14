@@ -7,7 +7,7 @@ editable: true
 ---
 # UI styling conventions
 
-Generic shadcn/Tailwind rules (semantic colours, no `dark:` colour overrides, `cn()`, `gap` instead of `space-*`, `size-*`, Field/FieldGroup, composition, icons in buttons) come from the shadcn skill. The project uses the `base-nova` style (Base UI primitives: `render` prop, not `asChild`), Tailwind v4 with theme tokens defined in the global stylesheet, and `lucide-react` icons. This document holds only the project-specific additions.
+Generic shadcn and Tailwind rules, the project's shadcn style, its component primitives and its icon library come from the shadcn skill (which reads the project's own configuration). This document holds only the project-specific additions.
 
 ## Project tokens
 
@@ -31,11 +31,13 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 ## Status and score colours
 
 - Interview status → `stage-*` token, badge `bg-stage-<state>/10 text-stage-<state>`. Italian labels: `pending` "In attesa", `in_progress` "In corso", `completed` "Completato", `cancelled` "Annullato", `expired` "Scaduto".
-- Candidate status, score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
+- Candidate status → ALWAYS render `CandidateStatusBadge`, which takes its colour from `getStatusColor(status)` in the shared utils and its Italian label from its own map. `getStatusColor` is the single source of candidate-status colours: never write a local status → colour map. Which token a status gets is a design decision: change it only in `getStatusColor`, and only when the developer asks.
+- Score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
 - Score thresholds in the UI: per-answer score (0–10) ≥ 7 success, ≥ 4 warning, else destructive; percentages ≥ 70 success, ≥ 40 warning, else destructive.
 
 ```tsx
 <span aria-hidden className={cn("rounded-full size-2", stage.dot)} /> {/* stage.dot = "bg-stage-pending" */}
+<CandidateStatusBadge status={candidate.status} />
 <span className={cn("rounded-full px-2 py-1 text-xs font-medium",
   score >= 7 ? "bg-success/10 text-success"
   : score >= 4 ? "bg-warning/10 text-warning"
@@ -51,6 +53,7 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | Page title block | `PageHeader` with `title`, `description?`, `actionBtns?` and `section` (`SectionKey`, colours the title rule) |
 | Suspense fallbacks | shared skeletons: `PageHeaderSkeleton`, `TableSkeleton`, `FilterBarSkeleton`, `PaginationSkeleton`, `TextSkeleton`, `ButtonSkeleton`, `BadgeSkeleton`, `FieldSkeleton`, `SelectOptionsSkeleton` |
 | Section metadata (label, href, icon, colour classes) | `SECTIONS`, `NAV_GROUPS`, `NAV_FOOTER` |
+| Candidate status badge | `CandidateStatusBadge` |
 | Delete with confirmation | `DeleteWithConfirm` (accepts an action that returns a result or redirects) |
 | Row actions menu (edit + delete) | `EntityActionsMenu` |
 | Clickable table row | `TableRowLink` |
@@ -68,3 +71,4 @@ All UI text, including `aria-label` and screen-reader text, is Italian.
 - Changing the `primary` or `secondary` values.
 - Building a page title or delete dialog by hand instead of `PageHeader` / `DeleteWithConfirm`.
 - Colouring interview statuses with anything other than the `stage-*` tokens.
+- A local candidate status → colour map instead of `CandidateStatusBadge` / `getStatusColor`.

@@ -7,13 +7,14 @@ editable: true
 ---
 # AI generation and evaluation
 
-The provider is Groq through the Vercel AI SDK. SDK APIs are in the official docs (context7); this document holds only this project's rules.
+The provider is Groq through the Vercel AI SDK. SDK APIs are in the official docs (context7); this document holds only this project's rules. Model ids, retry counts, delays, timeouts and length caps are deliberately not written here: read them from the symbols named below.
 
 ## Single entry point
 
 - Structured output (quiz, question, every evaluation) goes ONLY through `generateStructured()`. It owns model choice, retry, timeout, fallback and the Italian error mapping.
 - Streaming text uses `getLanguageModel(getOptimalModel(task))` with the SDK's `streamText`. A text model is never taken from `groq(...)` directly.
-- Audio transcription is the one provider path outside `generateStructured` and `streamText`: `transcribeAudio(audio)` in the transcription module of the AI layer calls the SDK's `transcribe` with `groq.transcription(LLM_MODELS.WHISPER_LARGE_V3_TURBO)` and rethrows any failure as `AIGenerationError(GENERATION_FAILED)`. The server action keeps the token and size checks; no action or component calls `groq` itself.
+- Audio transcription is the one provider path outside `generateStructured` and `streamText`: `transcribeAudio(audio)` in the transcription module of the AI layer calls the SDK's `transcribe` with `groq.transcription(LLM_MODELS.WHISPER_LARGE_V3_TURBO)`. The server action keeps the token and size checks; no action or component calls `groq` itself.
+- A failed transcription MUST reach the candidate as its own message, "Trascrizione non riuscita. Riprova o scrivi la risposta.", thrown as `UserError` after logging the provider error. It never goes through `describeAIError`: the generic "Servizio AI temporaneamente non disponibile" does not tell the candidate they can type the answer instead.
 - `generateStructured`, `getLanguageModel` and `describeAIError` are exported only by the `generate` module of the AI layer, not by the AI barrels (`ai/index`, `ai-service`).
 
 ```ts
@@ -31,10 +32,11 @@ const result = await generateStructured({
 ## Models and failure policy
 
 - Models are defined in the models module (`LLM_MODELS`, `getOptimalModel`, `DEFAULT_GENERATION_MODEL`, `FALLBACK_MODELS`). It has no imports and is used by client components: NEVER import server code into it.
-- Only models of Groq's free plan are used. `getOptimalModel(task, specificModel?)`: `specificModel` wins; `simple_task` → `openai/gpt-oss-20b`; every other task (`quiz_generation`, `question_generation`, `evaluation`, `overall_evaluation`, `resume_evaluation`) → `openai/gpt-oss-120b`. Forms default to `DEFAULT_GENERATION_MODEL` (gpt-oss-120b).
-- Fallback chain (`FALLBACK_MODELS`): `openai/gpt-oss-20b`, then `qwen/qwen3.8-27b`, skipping the primary.
-- `DEFAULT_CONFIG`: primary model retried up to 3 times with backoff 1 s, 2 s, 4 s; the 60 s timeout bounds the primary's whole retry sequence; each fallback gets one attempt bounded by 60 s. Content-filtered failures are never retried or sent to another model.
-- Failures are `AIGenerationError` with an `AIErrorCode`; `runAction` turns them into Italian messages through `describeAIError`.
+- Only models of Groq's free plan are used. Model ids live only in `LLM_MODELS`; never write a model id string anywhere else.
+- `getOptimalModel(task, specificModel?)` picks the model: `specificModel` wins, then the per-task default (`simple_task` gets the small model, every other `LLMTaskType` the large one). Forms default to `DEFAULT_GENERATION_MODEL`.
+- `FALLBACK_MODELS` is the ordered fallback chain; the primary is skipped when it appears in it.
+- `DEFAULT_CONFIG` holds the retry count, backoff and timeout: the primary is retried with backoff and the timeout bounds its whole retry sequence; each fallback gets one attempt bounded by the timeout. Content-filtered failures are never retried or sent to another model.
+- Failures are `AIGenerationError` with an `AIErrorCode`; `runAction` turns them into Italian messages through `describeAIError` (transcription excepted, see Single entry point).
 - Audio transcription uses `LLM_MODELS.WHISPER_LARGE_V3_TURBO`; the ban on `generateText`/`groq(...)` is about text models (see Single entry point).
 
 ## Determinism
@@ -49,8 +51,8 @@ const result = await generateStructured({
 ## Prompts: Italian and sanitization
 
 - Prompt builders live in the prompts module (generation) and the evaluation-prompts module. Every prompt MUST require Italian for all generated values; JSON field names stay in English.
-- Every user-provided free-text value that goes into a generation prompt (titles, descriptions, instructions, skills, previous questions) MUST pass through `sanitizeInput()` (replaces prompt-injection patterns with `[filtered]`, cuts at 2000 characters).
-- Resume text is cut at `MAX_RESUME_CHARS` (80,000).
+- Every user-provided free-text value that goes into a generation prompt (titles, descriptions, instructions, skills, previous questions) MUST pass through `sanitizeInput()` (replaces prompt-injection patterns with `[filtered]` and caps the length).
+- Resume text is cut at `MAX_RESUME_CHARS`.
 
 ## Flows
 
@@ -74,7 +76,7 @@ Resume evaluation (route handler, streamed):
 
 Position description: POST to the generate-description route → `requireUser()` → `streamPositionDescription` (`simple_task`) → `toTextStreamResponse()`.
 
-Transcription: public `transcribeAudioAction(formData)` with the interview `token` and the audio blob; refused above 25 MB or when the interview no longer `acceptsAnswers()`.
+Transcription: public `transcribeAudioAction(formData)` with the interview `token` and the audio blob; refused above `MAX_AUDIO_BYTES` (the provider's own limit) or when the interview no longer `acceptsAnswers()`. A provider failure returns the dedicated transcription message.
 
 ## Common mistakes
 
@@ -83,5 +85,7 @@ Transcription: public `transcribeAudioAction(formData)` with the interview `toke
 - An evaluation call without `temperature: 0, seed: 42`.
 - A new free-text field in a generation prompt not passed through `sanitizeInput()`, or a prompt that does not require Italian output.
 - Adding a server import to the models module (breaks client bundles).
+- Writing a model id string outside `LLM_MODELS`.
 - Saving or invalidating cache inside a generation action.
 - Trusting client-sent question or answer text for evaluation; only ids come from the client.
+- Letting a transcription failure fall through to `describeAIError` instead of the dedicated transcription message.
