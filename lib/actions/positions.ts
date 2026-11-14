@@ -7,8 +7,8 @@ import { PositionFormData, positionFormSchema } from "../schemas";
 import { invalidatePositionCache } from "../utils/cache-utils";
 import { runAction, UserError } from "./run-action";
 
-export async function createPosition(values: PositionFormData) {
-  return runAction("createPosition", async () => {
+export async function createPositionAction(values: PositionFormData) {
+  return runAction("createPositionAction", async () => {
     const user = await requireUser();
     const payload = positionFormSchema.parse(values);
 
@@ -31,8 +31,8 @@ export async function createPosition(values: PositionFormData) {
   });
 }
 
-export async function updatePosition(id: string, values: PositionFormData) {
-  return runAction("updatePosition", async () => {
+export async function updatePositionAction(id: string, values: PositionFormData) {
+  return runAction("updatePositionAction", async () => {
     await requireUser();
     const payload = positionFormSchema.parse(values);
 
@@ -63,8 +63,8 @@ export async function updatePosition(id: string, values: PositionFormData) {
   });
 }
 
-export async function deletePosition(id: string) {
-  return runAction("deletePosition", async () => {
+export async function deletePositionAction(id: string) {
+  return runAction("deletePositionAction", async () => {
     await requireUser();
 
     const position = await prisma.position.findUnique({
@@ -87,9 +87,9 @@ export async function deletePosition(id: string) {
 }
 
 /**
- * Position details for the public apply form (/recruting), which loads them
+ * Position details for the public apply form (/recruiting), which loads them
  * as the applicant picks positions. Public on purpose: no requireUser().
  */
-export async function fetchPositionData(positionId: string) {
+export async function fetchPositionDataAction(positionId: string) {
   return getPositionById(positionId);
 }

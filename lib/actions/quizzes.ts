@@ -82,8 +82,8 @@ export async function generateNewQuestionAction(
   });
 }
 
-export async function deleteQuizById(quizId: string) {
-  return runAction("deleteQuizById", async () => {
+export async function deleteQuizAction(quizId: string) {
+  return runAction("deleteQuizAction", async () => {
     if (!quizId) {
       throw new QuizSystemError(
         "Quiz ID is required",

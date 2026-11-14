@@ -43,6 +43,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-heading: var(--heading);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-stage-pending: var(--stage-pending);
   --color-stage-progress: var(--stage-progress);
   --color-stage-done: var(--stage-done);
@@ -100,6 +102,9 @@
   --sidebar-accent-foreground: oklch(0.3 0.085 252);
   --sidebar-border: oklch(0.9 0.012 250);
   --sidebar-ring: oklch(0.536 0.16 238);
+  /* Feedback: success sits on the brand-green hue; both read as text on light surfaces */
+  --success: oklch(0.53 0.13 159);
+  --warning: oklch(0.56 0.14 62);
   /* Pipeline stages */
   --stage-pending: oklch(0.72 0.15 68);
   --stage-progress: oklch(0.536 0.16 238);
@@ -147,6 +152,8 @@
   --sidebar-accent-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(0.24 0.035 257);
   --sidebar-ring: oklch(0.62 0.15 238);
+  --success: oklch(0.72 0.14 159);
+  --warning: oklch(0.8 0.14 72);
   --stage-pending: oklch(0.8 0.14 72);
   --stage-progress: oklch(0.68 0.14 238);
   --stage-done: oklch(0.74 0.14 159);

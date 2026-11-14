@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableRowLink } from "@/components/ui/table-row-link";
-import { deleteQuizById } from "@/lib/actions/quizzes";
+import { deleteQuizAction } from "@/lib/actions/quizzes";
 import { Quiz } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
 import { ArrowUpDown, Clock, Link2 } from "lucide-react";
@@ -84,7 +84,7 @@ export function QuizTable({ quizzes }: QuizTableProps) {
                 <EntityActionsMenu
                   entityId={quiz.id}
                   editHref={`/dashboard/quizzes/${quiz.id}/edit`}
-                  deleteAction={deleteQuizById.bind(null, quiz.id)}
+                  deleteAction={deleteQuizAction.bind(null, quiz.id)}
                   deleteTitle="Elimina quiz"
                   deleteDescription="Sei sicuro di voler eliminare questo quiz? Questa azione non può essere annullata."
                   deleteErrorMessage="Errore durante l'eliminazione del quiz"

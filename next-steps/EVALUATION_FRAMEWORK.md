@@ -322,7 +322,7 @@ model BehavioralRubric {
 #### UI Component
 
 ```typescript
-// components/recruting/behavioral-rubric-form.tsx
+// components/recruiting/behavioral-rubric-form.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -705,7 +705,7 @@ model Evaluation {
 #### Unified Hiring Decision Form
 
 ```tsx
-// components/recruting/hiring-decision-form.tsx
+// components/recruiting/hiring-decision-form.tsx
 "use client";
 
 import { useEffect, useState } from "react";

@@ -1,6 +1,6 @@
 import PageHeader from "@/components/page-header";
-import { BehavioralRubricForm } from "@/components/recruting/behavioral-rubric-form";
-import { HiringNotesForm } from "@/components/recruting/hiring-notes-form";
+import { BehavioralRubricForm } from "@/components/recruiting/behavioral-rubric-form";
+import { HiringNotesForm } from "@/components/recruiting/hiring-notes-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBehavioralRubricByCandidatePosition } from "@/lib/data/behavioral-rubrics";

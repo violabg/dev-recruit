@@ -1,6 +1,6 @@
 import { InterviewExpiryChecker } from "@/components/interviews/interview-expiry-checker";
 import PageHeader from "@/components/page-header";
-import { InterviewResults } from "@/components/recruting/interview-results";
+import { InterviewResults } from "@/components/recruiting/interview-results";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 // Tabs removed — rendering results directly
-import { deleteInterview } from "@/lib/actions/interviews";
+import { deleteInterviewAction } from "@/lib/actions/interviews";
 import { getEvaluationByInterviewId } from "@/lib/data/evaluations";
 import {
   getInterviewDetail,
@@ -138,7 +138,7 @@ async function InterviewDetailContent({
           <DeleteWithConfirm
             deleteAction={async () => {
               "use server";
-              return deleteInterview(interview.id);
+              return deleteInterviewAction(interview.id);
             }}
             title="Eliminare l'colloquio?"
             description="Questa azione eliminerà permanentemente l'colloquio e tutte le risposte associate. L'azione non può essere annullata."

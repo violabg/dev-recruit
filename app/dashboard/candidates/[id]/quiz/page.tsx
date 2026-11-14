@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { QuizSelectionForm } from "@/components/quiz/quiz-selection-form";
-import { InvitesList } from "@/components/recruting/invites-list";
+import { InvitesList } from "@/components/recruiting/invites-list";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,

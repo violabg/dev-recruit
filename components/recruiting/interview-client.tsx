@@ -1,7 +1,7 @@
 "use client";
-import { InterviewComplete } from "@/components/recruting/interview-complete";
-import { InterviewQuestion } from "@/components/recruting/interview-question";
-import { InterviewTimer } from "@/components/recruting/interview-timer";
+import { InterviewComplete } from "@/components/recruiting/interview-complete";
+import { InterviewQuestion } from "@/components/recruiting/interview-question";
+import { InterviewTimer } from "@/components/recruiting/interview-timer";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  completeInterview,
-  startInterview,
-  submitAnswer,
+  completeInterviewAction,
+  startInterviewAction,
+  submitAnswerAction,
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
 import { InterviewStatus } from "@/lib/schemas";
@@ -147,13 +147,13 @@ export function InterviewClient({
         if (answerToSave !== null) {
           // The server accepts a last answer shortly after the limit. If it
           // is refused anyway, the interview must still be closed.
-          await submitAnswer(
+          await submitAnswerAction(
             interview.token,
             currentQuestion.dbId,
             answerToSave,
           );
         }
-        unwrap(await completeInterview(interview.token));
+        unwrap(await completeInterviewAction(interview.token));
         setIsCompleted(true);
       } catch (cause) {
         const message =
@@ -176,7 +176,7 @@ export function InterviewClient({
   const handleCompleteInterview = useCallback(() => {
     startTransition(async () => {
       try {
-        unwrap(await completeInterview(interview.token));
+        unwrap(await completeInterviewAction(interview.token));
         setIsCompleted(true);
       } catch (cause) {
         const message =
@@ -193,7 +193,7 @@ export function InterviewClient({
   const handleStartInterview = () => {
     startTransition(async () => {
       try {
-        const result = unwrap(await startInterview(interview.token));
+        const result = unwrap(await startInterviewAction(interview.token));
         setIsStarted(true);
         // Calculate remaining time from server's startedAt timestamp
         if (quiz.timeLimit && result.startedAt) {
@@ -224,7 +224,7 @@ export function InterviewClient({
     }));
     startTransition(async () => {
       try {
-        unwrap(await submitAnswer(interview.token, questionId, answer));
+        unwrap(await submitAnswerAction(interview.token, questionId, answer));
       } catch (cause) {
         const message =
           cause instanceof Error
@@ -264,13 +264,13 @@ export function InterviewClient({
       startTransition(async () => {
         try {
           unwrap(
-            await submitAnswer(
+            await submitAnswerAction(
               interview.token,
               currentQuestion.dbId,
               pendingAnswer,
             ),
           );
-          unwrap(await completeInterview(interview.token));
+          unwrap(await completeInterviewAction(interview.token));
           setIsCompleted(true);
         } catch (cause) {
           const message =
@@ -349,11 +349,11 @@ export function InterviewClient({
               </ul>
             </div>
 
-            <div className="bg-yellow-50 dark:bg-yellow-950 p-4 border border-yellow-200 dark:border-yellow-900 rounded-lg">
-              <h3 className="font-medium text-yellow-800 dark:text-yellow-300">
+            <div className="bg-warning/10 p-4 border border-warning/30 rounded-lg">
+              <h3 className="font-medium text-warning">
                 Importante
               </h3>
-              <p className="mt-1 text-yellow-800 dark:text-yellow-300 text-sm">
+              <p className="mt-1 text-warning text-sm">
                 Non chiudere o aggiornare questa pagina durante il quiz. Farlo
                 potrebbe causare la perdita delle tue risposte.
               </p>
@@ -471,8 +471,8 @@ export function InterviewClient({
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex justify-center items-center bg-yellow-100 dark:bg-yellow-900 rounded-full w-10 h-10">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              <div className="flex justify-center items-center bg-warning/10 rounded-full w-10 h-10">
+                <AlertTriangle className="w-5 h-5 text-warning" />
               </div>
               <AlertDialogTitle>Tempo scaduto</AlertDialogTitle>
             </div>

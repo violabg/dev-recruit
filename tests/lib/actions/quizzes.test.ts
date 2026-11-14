@@ -1,5 +1,5 @@
 import {
-  deleteQuizById,
+  deleteQuizAction,
   duplicateQuizAction,
   generateNewQuestionAction,
   generateNewQuizAction,
@@ -318,30 +318,30 @@ describe("quizzes actions", () => {
     });
   });
 
-  describe("deleteQuizById", () => {
-    it("deleteQuizById deletes a quiz", async () => {
-      await deleteQuizById("quiz1");
+  describe("deleteQuizAction", () => {
+    it("deleteQuizAction deletes a quiz", async () => {
+      await deleteQuizAction("quiz1");
 
       expect(prisma.quiz.delete).toHaveBeenCalledWith({
         where: { id: "quiz1" },
       });
     });
 
-    it("deleteQuizById throws error when quizId missing", async () => {
-      expect(await deleteQuizById("")).toMatchObject({ success: false });
+    it("deleteQuizAction throws error when quizId missing", async () => {
+      expect(await deleteQuizAction("")).toMatchObject({ success: false });
     });
 
-    it("deleteQuizById throws error when quiz not found", async () => {
+    it("deleteQuizAction throws error when quiz not found", async () => {
       vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
 
-      expect(await deleteQuizById("invalid")).toMatchObject({ success: false });
+      expect(await deleteQuizAction("invalid")).toMatchObject({ success: false });
     });
 
-    it("deleteQuizById redirects after successful deletion", async () => {
+    it("deleteQuizAction redirects after successful deletion", async () => {
       const { redirect } = await import("next/navigation");
 
       try {
-        await deleteQuizById("quiz1");
+        await deleteQuizAction("quiz1");
       } catch (error) {
         // Redirect throws an error
         expect(redirect).toHaveBeenCalledWith("/dashboard/quizzes");

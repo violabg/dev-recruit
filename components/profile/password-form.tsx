@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PasswordField } from "@/components/ui/rhf-inputs";
-import { updatePassword } from "@/lib/actions/profile";
+import { updatePasswordAction } from "@/lib/actions/profile";
 import { unwrap } from "@/lib/utils/action-result";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
   const onSubmit = (values: ChangePasswordFormData) => {
     startTransition(async () => {
       try {
-        unwrap(await updatePassword(values));
+        unwrap(await updatePasswordAction(values));
         toast.success("Password aggiornata con successo");
         reset();
         router.push("/dashboard/profile");

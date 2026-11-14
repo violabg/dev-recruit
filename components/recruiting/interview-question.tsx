@@ -1,6 +1,6 @@
 "use client";
 import { CodeHighlight } from "@/components/quiz/code-highlight";
-import { VoiceTextarea } from "@/components/recruting/voice-textarea";
+import { VoiceTextarea } from "@/components/recruiting/voice-textarea";
 import {
   Card,
   CardContent,

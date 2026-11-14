@@ -23,7 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { deleteInterview } from "@/lib/actions/interviews";
+import { deleteInterviewAction } from "@/lib/actions/interviews";
 import type { InterviewListItem } from "@/lib/data/interviews";
 import { isInterviewExpired } from "@/lib/utils/interview-utils";
 import {
@@ -47,25 +47,25 @@ const statusConfig = {
     label: "Pendente",
     icon: Clock,
     variant: "secondary" as const,
-    color: "text-orange-500",
+    color: "text-stage-pending",
   },
   in_progress: {
     label: "In Corso",
     icon: MessageSquare,
     variant: "default" as const,
-    color: "text-blue-500",
+    color: "text-stage-progress",
   },
   completed: {
     label: "Completato",
     icon: CheckCircle,
     variant: "default" as const,
-    color: "text-green-500",
+    color: "text-stage-done",
   },
   cancelled: {
     label: "Annullato",
     icon: XCircle,
     variant: "destructive" as const,
-    color: "text-red-500",
+    color: "text-stage-cancelled",
   },
 };
 
@@ -73,7 +73,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const copyInterviewLink = async (token: string) => {
-    const interviewUrl = `${window.location.origin}/recruting/${token}`;
+    const interviewUrl = `${window.location.origin}/recruiting/${token}`;
 
     try {
       await navigator.clipboard.writeText(interviewUrl);
@@ -208,7 +208,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                                 }
                                 className={
                                   copiedToken === interview.token
-                                    ? "bg-green-50 border-green-200"
+                                    ? "bg-success/10 border-success/30"
                                     : ""
                                 }
                               />
@@ -223,7 +223,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                           </TooltipContent>
                         </Tooltip>
                       <DeleteWithConfirm
-                        deleteAction={() => deleteInterview(interview.id)}
+                        deleteAction={() => deleteInterviewAction(interview.id)}
                         title="Eliminare il colloquio?"
                         description="Questa azione eliminerà permanentemente il colloquio e tutte le risposte associate. L'azione non può essere annullata."
                         label="Elimina"

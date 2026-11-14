@@ -103,7 +103,7 @@ export const QuestionItem = ({
         "relative pt-0 overflow-hidden transition-all duration-200",
         isExpanded ? "shadow-md" : "shadow-sm",
         hasQuestionChanges
-          ? "border-amber-500 border shadow-[0_0_15px_rgba(245,158,11,0.15)] dark:shadow-[0_0_20px_rgba(245,158,11,0.1)]"
+          ? "border-warning border shadow-lg shadow-warning/15"
           : cn(
               "border border-transparent hover:border-primary/50",
               isExpanded && "border-primary/20",
@@ -123,7 +123,7 @@ export const QuestionItem = ({
                 Domanda {actualIndex + 1}
               </span>
               {hasQuestionChanges && (
-                <span className="font-medium text-[10px] text-amber-600 dark:text-amber-500 animate-pulse">
+                <span className="font-medium text-[10px] text-warning animate-pulse">
                   Modifiche non salvate
                 </span>
               )}
@@ -150,7 +150,7 @@ export const QuestionItem = ({
                   className={cn(
                     "size-4 transition-colors",
                     isFavorite
-                      ? "fill-red-500 text-red-500"
+                      ? "fill-destructive text-destructive"
                       : "text-muted-foreground",
                   )}
                 />

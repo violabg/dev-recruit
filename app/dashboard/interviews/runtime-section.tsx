@@ -39,22 +39,22 @@ export const STATUS_CONFIG: Record<
   pending: {
     label: "Pendenti",
     icon: Clock,
-    color: "text-orange-500",
+    color: "text-stage-pending",
   },
   in_progress: {
     label: "In Corso",
     icon: MessageSquare,
-    color: "text-blue-500",
+    color: "text-stage-progress",
   },
   completed: {
     label: "Completati",
     icon: CheckCircle,
-    color: "text-green-500",
+    color: "text-stage-done",
   },
   cancelled: {
     label: "Annullati",
     icon: XCircle,
-    color: "text-red-500",
+    color: "text-stage-cancelled",
   },
 };
 

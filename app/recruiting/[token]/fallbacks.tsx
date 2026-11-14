@@ -70,11 +70,11 @@ export function InterviewSkeleton() {
             </ul>
           </div>
 
-          <div className="bg-yellow-50 dark:bg-yellow-950 p-4 border border-yellow-200 dark:border-yellow-900 rounded-lg">
-            <h3 className="font-medium text-yellow-800 dark:text-yellow-300">
+          <div className="bg-warning/10 p-4 border border-warning/30 rounded-lg">
+            <h3 className="font-medium text-warning">
               Importante
             </h3>
-            <p className="mt-1 text-yellow-800 dark:text-yellow-300 text-sm">
+            <p className="mt-1 text-warning text-sm">
               Non chiudere o aggiornare questa pagina durante il quiz. Farlo
               potrebbe causare la perdita delle tue risposte.
             </p>

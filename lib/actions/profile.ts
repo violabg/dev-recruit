@@ -13,8 +13,8 @@ import { headers } from "next/headers";
 import { invalidateProfileCache } from "../utils/cache-utils";
 import { runAction, UserError } from "./run-action";
 
-export async function updateProfile(values: ProfileFormData) {
-  return runAction("updateProfile", async () => {
+export async function updateProfileAction(values: ProfileFormData) {
+  return runAction("updateProfileAction", async () => {
     const user = await requireUser();
     const payload = profileSchema.parse(values);
     const fullName = payload.full_name.trim();
@@ -35,8 +35,8 @@ export async function updateProfile(values: ProfileFormData) {
   });
 }
 
-export async function updatePassword(values: ChangePasswordFormData) {
-  return runAction("updatePassword", async () => {
+export async function updatePasswordAction(values: ChangePasswordFormData) {
+  return runAction("updatePasswordAction", async () => {
     await requireUser();
     const payload = changePasswordSchema.parse(values);
 

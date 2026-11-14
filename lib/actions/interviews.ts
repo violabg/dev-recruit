@@ -47,8 +47,8 @@ async function closeInterview(interviewId: string) {
   invalidateInterviewCache({ interviewId });
 }
 
-export async function startInterview(token: string) {
-  return runAction("startInterview", async () => {
+export async function startInterviewAction(token: string) {
+  return runAction("startInterviewAction", async () => {
     const interview = await findInterviewByToken(token);
 
     // If already started, return existing startedAt
@@ -71,12 +71,12 @@ export async function startInterview(token: string) {
   });
 }
 
-export async function submitAnswer(
+export async function submitAnswerAction(
   token: string,
   questionId: string,
   answer: Prisma.JsonValue,
 ) {
-  return runAction("submitAnswer", async () => {
+  return runAction("submitAnswerAction", async () => {
     const interview = await findInterviewByToken(token);
     const state = interviewState(interview);
 
@@ -103,8 +103,8 @@ export async function submitAnswer(
   });
 }
 
-export async function completeInterview(token: string) {
-  return runAction("completeInterview", async () => {
+export async function completeInterviewAction(token: string) {
+  return runAction("completeInterviewAction", async () => {
     const interview = await findInterviewByToken(token);
 
     // Already closed: keep the original completion time and never reopen a
@@ -122,8 +122,8 @@ export async function completeInterview(token: string) {
 // Recruiter actions
 // ============================================================================
 
-export async function deleteInterview(id: string) {
-  return runAction("deleteInterview", async () => {
+export async function deleteInterviewAction(id: string) {
+  return runAction("deleteInterviewAction", async () => {
     await requireUser();
 
     const interview = await prisma.interview.findUnique({
@@ -220,11 +220,11 @@ async function createPendingInterview(candidateId: string, quizId: string) {
  * quiz's position. Pairs that already have an interview are skipped and
  * reported in `skipped`.
  */
-export async function assignCandidatesToQuiz(input: {
+export async function assignCandidatesToQuizAction(input: {
   quizId: string;
   candidateIds: string[];
 }) {
-  return runAction("assignCandidatesToQuiz", async () => {
+  return runAction("assignCandidatesToQuizAction", async () => {
     await requireUser();
     const { quizId, candidateIds } = candidateQuizSelectionSchema.parse(input);
 
@@ -289,11 +289,11 @@ export async function assignCandidatesToQuiz(input: {
  * the candidate's positions. Pairs that already have an interview are skipped
  * and reported in `skipped`.
  */
-export async function assignQuizzesToCandidate(input: {
+export async function assignQuizzesToCandidateAction(input: {
   candidateId: string;
   quizIds: string[];
 }) {
-  return runAction("assignQuizzesToCandidate", async () => {
+  return runAction("assignQuizzesToCandidateAction", async () => {
     await requireUser();
     const { candidateId, quizIds } = candidateQuizAssignmentSchema.parse(input);
 

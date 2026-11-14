@@ -9,8 +9,8 @@ import { runAction, UserError } from "./run-action";
 /**
  * Update evaluation notes (manual notes field)
  */
-export async function updateEvaluationNotes(id: string, notes: string) {
-  return runAction("updateEvaluationNotes", async () => {
+export async function updateEvaluationNotesAction(id: string, notes: string) {
+  return runAction("updateEvaluationNotesAction", async () => {
     await requireUser();
     evaluationNotesSchema.parse({ id, notes });
 
@@ -76,8 +76,8 @@ export async function updateHiringManagerNotesAction(input: unknown) {
 /**
  * Delete an evaluation
  */
-export async function deleteEvaluation(id: string) {
-  return runAction("deleteEvaluation", async () => {
+export async function deleteEvaluationAction(id: string) {
+  return runAction("deleteEvaluationAction", async () => {
     await requireUser();
 
     const evaluation = await prisma.evaluation.findUnique({

@@ -76,8 +76,8 @@ export function EntityActionsMenu({
           )}
           {deleteAction && (
             <DropdownMenuItem
+              variant="destructive"
               onClick={() => setDeleteDialogOpen(true)}
-              className="text-red-600"
             >
               <Trash2 className="mr-1 size-4" />
               Elimina

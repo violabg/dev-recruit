@@ -3,7 +3,7 @@ import { DuplicateQuizDialog } from "@/components/quiz/duplicate-quiz-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
-import { deleteQuizById } from "@/lib/actions/quizzes";
+import { deleteQuizAction } from "@/lib/actions/quizzes";
 import { Copy, Edit, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -51,7 +51,7 @@ export function QuizDetailActionsClient({
       </Link>
 
       <DeleteWithConfirm
-        deleteAction={deleteQuizById.bind(null, quizId)}
+        deleteAction={deleteQuizAction.bind(null, quizId)}
         description="Questa azione non può essere annullata. Il quiz verrà eliminato permanentemente."
         errorMessage="Errore durante l'eliminazione del quiz"
       />

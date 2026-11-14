@@ -91,9 +91,9 @@ export function InterviewTimer({
     const percentage = (displayTime / totalTimeSeconds) * 100;
 
     if (percentage <= 10) {
-      return "text-red-500"; // Red at 10% or less
+      return "text-destructive"; // Red at 10% or less
     } else if (percentage <= 30) {
-      return "text-yellow-500"; // Yellow at 30% or less
+      return "text-warning"; // Yellow at 30% or less
     }
     return "text-muted-foreground"; // Default color
   };

@@ -54,12 +54,12 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
             size="sm"
             onClick={handleToggleFavorite}
             disabled={isPending || !hasDbId}
-            className={isFavorite ? "text-red-500" : ""}
+            className={isFavorite ? "text-destructive" : ""}
           />
         }
       >
         <Heart
-          className={`size-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
+          className={`size-4 ${isFavorite ? "fill-destructive text-destructive" : ""}`}
         />
       </TooltipTrigger>
       <TooltipContent>

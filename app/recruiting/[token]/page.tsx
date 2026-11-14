@@ -1,4 +1,4 @@
-import { InterviewClient } from "@/components/recruting/interview-client";
+import { InterviewClient } from "@/components/recruiting/interview-client";
 import { getInterviewByToken } from "@/lib/data/interviews";
 import { Quiz } from "@/lib/data/quizzes";
 import { Suspense } from "react";

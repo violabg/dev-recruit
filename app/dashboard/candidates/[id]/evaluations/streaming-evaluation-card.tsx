@@ -53,7 +53,7 @@ export function StreamingEvaluationCard({
 
         {/* Strengths */}
         <div className="space-y-2">
-          <h4 className="font-medium text-green-600 dark:text-green-400 text-sm">
+          <h4 className="font-medium text-success text-sm">
             Punti di forza
           </h4>
           {streamingEvaluation.strengths &&
@@ -73,7 +73,7 @@ export function StreamingEvaluationCard({
 
         {/* Weaknesses */}
         <div className="space-y-2">
-          <h4 className="font-medium text-amber-600 dark:text-amber-400 text-sm">
+          <h4 className="font-medium text-warning text-sm">
             Aree di miglioramento
           </h4>
           {streamingEvaluation.weaknesses &&

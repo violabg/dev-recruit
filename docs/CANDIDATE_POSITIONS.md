@@ -142,7 +142,7 @@ Shows all positions with primary indicator in the details card.
 ### Create Candidate
 
 ```typescript
-export async function createCandidate(formData: FormData) {
+export async function createCandidateAction(formData: FormData) {
   const positionIdsRaw = readFormValue(formData, "positionIds");
   const payload = candidateFormSchema.parse({
     firstName: readFormValue(formData, "firstName"),
@@ -185,7 +185,7 @@ export async function createCandidate(formData: FormData) {
 ### Update Candidate
 
 ```typescript
-export async function updateCandidate(id: string, formData: FormData) {
+export async function updateCandidateAction(id: string, formData: FormData) {
   if (payload.positionIds) {
     // Validate all positions exist
     const positions = await prisma.position.findMany({

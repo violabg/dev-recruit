@@ -13,8 +13,8 @@ export function InterviewComplete() {
     <div className="flex flex-col justify-center items-center p-4 min-h-dvh">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center items-center bg-green-100 dark:bg-green-900 mx-auto mb-4 rounded-full w-12 h-12">
-            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-300" />
+          <div className="flex justify-center items-center bg-success/10 mx-auto mb-4 rounded-full w-12 h-12">
+            <CheckCircle className="w-6 h-6 text-success" />
           </div>
           <CardTitle className="text-2xl">Quiz completato</CardTitle>
           <CardDescription>

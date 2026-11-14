@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableRowLink } from "@/components/ui/table-row-link";
-import { deleteCandidate } from "@/lib/actions/candidates";
+import { deleteCandidateAction } from "@/lib/actions/candidates";
 import { CandidateWithRelations } from "@/lib/data/candidates";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -96,7 +96,7 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                 <EntityActionsMenu
                   entityId={candidate.id}
                   editHref={`/dashboard/candidates/${candidate.id}/edit`}
-                  deleteAction={deleteCandidate.bind(null, candidate.id)}
+                  deleteAction={deleteCandidateAction.bind(null, candidate.id)}
                   deleteTitle="Elimina candidato"
                   deleteDescription="Sei sicuro di voler eliminare questo candidato? Questa azione non può essere annullata."
                   deleteErrorMessage="Errore durante l'eliminazione del candidato"

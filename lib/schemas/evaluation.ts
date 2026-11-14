@@ -44,7 +44,7 @@ export const interviewEvaluationInputSchema = z.object({
   ),
 });
 
-// Input of updateEvaluationNotes
+// Input of updateEvaluationNotesAction
 export const evaluationNotesSchema = z.object({
   id: baseSchemas.id,
   notes: z.string().max(10000, "Le note non possono superare 10000 caratteri"),

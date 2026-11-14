@@ -153,28 +153,28 @@ async function createCandidateFromForm(
 // Candidate actions
 
 /** Add a candidate from the dashboard. */
-export async function createCandidate(formData: FormData) {
-  return runAction("createCandidate", async () => {
+export async function createCandidateAction(formData: FormData) {
+  return runAction("createCandidateAction", async () => {
     const user = await requireUser();
     return createCandidateFromForm(formData, user.id);
   });
 }
 
 /**
- * Public application from /recruting. No signed-in user: the candidate is
+ * Public application from /recruiting. No signed-in user: the candidate is
  * stored without a creator and only gets a confirmation back.
  */
-export async function applyAsCandidate(formData: FormData) {
-  return runAction("applyAsCandidate", async () => {
+export async function applyAsCandidateAction(formData: FormData) {
+  return runAction("applyAsCandidateAction", async () => {
     await createCandidateFromForm(formData, null);
   });
 }
 
-export async function updateCandidate(
+export async function updateCandidateAction(
   id: string,
   formData: FormData
 ) {
-  return runAction("updateCandidate", async () => {
+  return runAction("updateCandidateAction", async () => {
     await requireUser();
 
     const dateOfBirthRaw = readFormValue(formData, "dateOfBirth");
@@ -345,8 +345,8 @@ export async function updateCandidate(
 }
 
 // Delete candidate
-export async function deleteCandidate(id: string) {
-  return runAction("deleteCandidate", async () => {
+export async function deleteCandidateAction(id: string) {
+  return runAction("deleteCandidateAction", async () => {
     await requireUser();
 
     const candidate = await getCandidateById(id);

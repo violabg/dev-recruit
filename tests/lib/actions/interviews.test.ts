@@ -23,13 +23,13 @@ vi.mock("@/lib/utils/token", () => ({
 }));
 
 import {
-  assignCandidatesToQuiz,
-  assignQuizzesToCandidate,
+  assignCandidatesToQuizAction,
+  assignQuizzesToCandidateAction,
   closeExpiredInterviewAction,
-  completeInterview,
-  deleteInterview,
-  startInterview,
-  submitAnswer,
+  completeInterviewAction,
+  deleteInterviewAction,
+  startInterviewAction,
+  submitAnswerAction,
 } from "@/lib/actions/interviews";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
@@ -56,13 +56,13 @@ beforeEach(() => {
   vi.mocked(requireUser).mockResolvedValue({ id: "user1" } as any);
 });
 
-describe("startInterview", () => {
+describe("startInterviewAction", () => {
   it("starts a pending interview", async () => {
     findUnique().mockResolvedValueOnce(
       stored({ status: "pending", startedAt: null }) as any,
     );
 
-    const result = unwrap(await startInterview("tok"));
+    const result = unwrap(await startInterviewAction("tok"));
 
     expect(result.success).toBe(true);
     expect(update()).toHaveBeenCalledWith({
@@ -75,7 +75,7 @@ describe("startInterview", () => {
     const startedAt = minutesAgo(10);
     findUnique().mockResolvedValueOnce(stored({ startedAt }) as any);
 
-    const result = unwrap(await startInterview("tok"));
+    const result = unwrap(await startInterviewAction("tok"));
 
     expect(result.startedAt).toBe(startedAt.toISOString());
     expect(update()).not.toHaveBeenCalled();
@@ -84,15 +84,15 @@ describe("startInterview", () => {
   it("throws when the token is unknown", async () => {
     findUnique().mockResolvedValueOnce(null);
 
-    expect(await startInterview("nope")).toMatchObject({ success: false, error: expect.stringContaining("Colloquio non trovato") });
+    expect(await startInterviewAction("nope")).toMatchObject({ success: false, error: expect.stringContaining("Colloquio non trovato") });
   });
 });
 
-describe("submitAnswer", () => {
+describe("submitAnswerAction", () => {
   it("stores the answer alongside the previous ones", async () => {
     findUnique().mockResolvedValueOnce(stored() as any);
 
-    await submitAnswer("tok", "q2", "b");
+    await submitAnswerAction("tok", "q2", "b");
 
     expect(update()).toHaveBeenCalledWith({
       where: { id: "int1" },
@@ -105,7 +105,7 @@ describe("submitAnswer", () => {
       stored({ startedAt: minutesAgo(30.5) }) as any,
     );
 
-    await expect(submitAnswer("tok", "q2", "b")).resolves.toEqual({
+    await expect(submitAnswerAction("tok", "q2", "b")).resolves.toEqual({
       success: true,
     });
   });
@@ -115,7 +115,7 @@ describe("submitAnswer", () => {
       stored({ startedAt: minutesAgo(45) }) as any,
     );
 
-    expect(await submitAnswer("tok", "q2", "b")).toMatchObject({ success: false, error: expect.stringContaining("Il tempo a disposizione è scaduto") });
+    expect(await submitAnswerAction("tok", "q2", "b")).toMatchObject({ success: false, error: expect.stringContaining("Il tempo a disposizione è scaduto") });
     expect(update()).toHaveBeenCalledTimes(1);
     expect(update()).toHaveBeenCalledWith({
       where: { id: "int1" },
@@ -128,7 +128,7 @@ describe("submitAnswer", () => {
     async (status) => {
       findUnique().mockResolvedValueOnce(stored({ status }) as any);
 
-      expect(await submitAnswer("tok", "q2", "b")).toMatchObject({ success: false, error: expect.stringContaining("già concluso") });
+      expect(await submitAnswerAction("tok", "q2", "b")).toMatchObject({ success: false, error: expect.stringContaining("già concluso") });
       expect(update()).not.toHaveBeenCalled();
     },
   );
@@ -138,17 +138,17 @@ describe("submitAnswer", () => {
       stored({ startedAt: minutesAgo(600), quiz: { timeLimit: null } }) as any,
     );
 
-    await expect(submitAnswer("tok", "q2", "b")).resolves.toEqual({
+    await expect(submitAnswerAction("tok", "q2", "b")).resolves.toEqual({
       success: true,
     });
   });
 });
 
-describe("completeInterview", () => {
+describe("completeInterviewAction", () => {
   it("completes an in-progress interview", async () => {
     findUnique().mockResolvedValueOnce(stored() as any);
 
-    await completeInterview("tok");
+    await completeInterviewAction("tok");
 
     expect(update()).toHaveBeenCalledWith({
       where: { id: "int1" },
@@ -161,7 +161,7 @@ describe("completeInterview", () => {
     async (status) => {
       findUnique().mockResolvedValueOnce(stored({ status }) as any);
 
-      await expect(completeInterview("tok")).resolves.toEqual({
+      await expect(completeInterviewAction("tok")).resolves.toEqual({
         success: true,
       });
       expect(update()).not.toHaveBeenCalled();
@@ -203,18 +203,18 @@ describe("closeExpiredInterviewAction", () => {
   });
 });
 
-describe("deleteInterview", () => {
+describe("deleteInterviewAction", () => {
   it("requires a signed-in user", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
 
-    expect(await deleteInterview("int1")).toMatchObject({ success: false, error: expect.stringContaining("Sessione scaduta") });
+    expect(await deleteInterviewAction("int1")).toMatchObject({ success: false, error: expect.stringContaining("Sessione scaduta") });
     expect(prisma.interview.delete).not.toHaveBeenCalled();
   });
 
   it("deletes the interview and expires its caches", async () => {
     findUnique().mockResolvedValueOnce({ quizId: "quiz1" } as any);
 
-    await expect(deleteInterview("int1")).resolves.toEqual({ success: true });
+    await expect(deleteInterviewAction("int1")).resolves.toEqual({ success: true });
     expect(prisma.interview.delete).toHaveBeenCalledWith({
       where: { id: "int1" },
     });
@@ -228,11 +228,11 @@ describe("deleteInterview", () => {
   it("throws when the interview does not exist", async () => {
     findUnique().mockResolvedValueOnce(null);
 
-    expect(await deleteInterview("nope")).toMatchObject({ success: false, error: expect.stringContaining("Colloquio non trovato") });
+    expect(await deleteInterviewAction("nope")).toMatchObject({ success: false, error: expect.stringContaining("Colloquio non trovato") });
   });
 });
 
-describe("assignCandidatesToQuiz", () => {
+describe("assignCandidatesToQuizAction", () => {
   const candidates = [
     { id: "c1", firstName: "Mario", lastName: "Rossi", email: "m@x.it" },
     { id: "c2", firstName: "Anna", lastName: "Bianchi", email: "a@x.it" },
@@ -251,7 +251,7 @@ describe("assignCandidatesToQuiz", () => {
   });
 
   it("creates one pending interview per candidate", async () => {
-    const result = unwrap(await assignCandidatesToQuiz({
+    const result = unwrap(await assignCandidatesToQuizAction({
       quizId: "quiz1",
       candidateIds: ["c1", "c2"],
     }));
@@ -275,7 +275,7 @@ describe("assignCandidatesToQuiz", () => {
   });
 
   it("only accepts candidates linked to the quiz position", async () => {
-    await assignCandidatesToQuiz({ quizId: "quiz1", candidateIds: ["c1", "c2"] });
+    await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: ["c1", "c2"] });
 
     expect(prisma.candidate.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -292,7 +292,7 @@ describe("assignCandidatesToQuiz", () => {
       candidates[0],
     ] as any);
 
-    expect(await assignCandidatesToQuiz({ quizId: "quiz1", candidateIds: ["c1", "c2"] }),).toMatchObject({ success: false, error: expect.stringContaining("non sono validi") });
+    expect(await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: ["c1", "c2"] }),).toMatchObject({ success: false, error: expect.stringContaining("non sono validi") });
     expect(prisma.interview.create).not.toHaveBeenCalled();
   });
 
@@ -301,7 +301,7 @@ describe("assignCandidatesToQuiz", () => {
       .mockResolvedValueOnce({ id: "existing" } as any)
       .mockResolvedValueOnce(null);
 
-    const result = unwrap(await assignCandidatesToQuiz({
+    const result = unwrap(await assignCandidatesToQuizAction({
       quizId: "quiz1",
       candidateIds: ["c1", "c2"],
     }));
@@ -311,17 +311,17 @@ describe("assignCandidatesToQuiz", () => {
   });
 
   it("requires at least one candidate", async () => {
-    expect(await assignCandidatesToQuiz({ quizId: "quiz1", candidateIds: [] }),).toMatchObject({ success: false });
+    expect(await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: [] }),).toMatchObject({ success: false });
   });
 
   it("throws when the quiz does not exist", async () => {
     vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
 
-    expect(await assignCandidatesToQuiz({ quizId: "nope", candidateIds: ["c1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Quiz non trovato") });
+    expect(await assignCandidatesToQuizAction({ quizId: "nope", candidateIds: ["c1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Quiz non trovato") });
   });
 });
 
-describe("assignQuizzesToCandidate", () => {
+describe("assignQuizzesToCandidateAction", () => {
   beforeEach(() => {
     vi.mocked(prisma.candidate.findUnique).mockResolvedValue({
       id: "c1",
@@ -338,7 +338,7 @@ describe("assignQuizzesToCandidate", () => {
   });
 
   it("creates one pending interview per quiz", async () => {
-    const result = unwrap(await assignQuizzesToCandidate({
+    const result = unwrap(await assignQuizzesToCandidateAction({
       candidateId: "c1",
       quizIds: ["quiz1", "quiz2"],
     }));
@@ -358,7 +358,7 @@ describe("assignQuizzesToCandidate", () => {
       { id: "quiz1", title: "Quiz A" },
     ] as any);
 
-    expect(await assignQuizzesToCandidate({
+    expect(await assignQuizzesToCandidateAction({
         candidateId: "c1",
         quizIds: ["quiz1", "quiz2"],
       }),).toMatchObject({ success: false, error: expect.stringContaining("non sono validi") });
@@ -374,7 +374,7 @@ describe("assignQuizzesToCandidate", () => {
       .mockResolvedValueOnce({ id: "existing" } as any)
       .mockResolvedValueOnce(null);
 
-    const result = unwrap(await assignQuizzesToCandidate({
+    const result = unwrap(await assignQuizzesToCandidateAction({
       candidateId: "c1",
       quizIds: ["quiz1", "quiz2"],
     }));
@@ -386,6 +386,6 @@ describe("assignQuizzesToCandidate", () => {
   it("throws when the candidate does not exist", async () => {
     vi.mocked(prisma.candidate.findUnique).mockResolvedValueOnce(null);
 
-    expect(await assignQuizzesToCandidate({ candidateId: "nope", quizIds: ["quiz1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Candidato non trovato") });
+    expect(await assignQuizzesToCandidateAction({ candidateId: "nope", quizIds: ["quiz1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Candidato non trovato") });
   });
 });

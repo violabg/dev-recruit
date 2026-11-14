@@ -80,13 +80,12 @@ export const CodeSnippetForm = ({
                 data-color-mode={resolvedTheme === "dark" ? "dark" : "light"}
                 style={{
                   fontSize: 14,
-                  backgroundColor:
-                    resolvedTheme === "dark" ? "#1a1a1a" : "#f8f9fa",
+                  backgroundColor: "var(--muted)",
                   fontFamily:
                     "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
                   borderRadius: "6px",
                   border: "1px solid",
-                  borderColor: resolvedTheme === "dark" ? "#374151" : "#d1d5db",
+                  borderColor: "var(--border)",
                 }}
               />
             )}
@@ -125,13 +124,12 @@ export const CodeSnippetForm = ({
                 data-color-mode={resolvedTheme === "dark" ? "dark" : "light"}
                 style={{
                   fontSize: 14,
-                  backgroundColor:
-                    resolvedTheme === "dark" ? "#1a1a1a" : "#f8f9fa",
+                  backgroundColor: "var(--muted)",
                   fontFamily:
                     "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
                   borderRadius: "6px",
                   border: "1px solid",
-                  borderColor: resolvedTheme === "dark" ? "#374151" : "#d1d5db",
+                  borderColor: "var(--border)",
                 }}
               />
             )}

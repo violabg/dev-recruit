@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { deleteInterview } from "@/lib/actions/interviews";
+import { deleteInterviewAction } from "@/lib/actions/interviews";
 import type { AssignedInterview } from "@/lib/data/interviews";
 import { toast } from "sonner";
 import { TableRowLink } from "../ui/table-row-link";
@@ -30,7 +30,7 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
     useState<AssignedInterview[]>(assignedInterviews);
 
   const copyInterviewLink = (token: string) => {
-    const link = `${window.location.origin}/recruting/${token}`;
+    const link = `${window.location.origin}/recruiting/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiato", {
       description: "Il link del colloquio è stato copiato negli appunti",
@@ -113,7 +113,7 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
                     </Button>
                     <DeleteWithConfirm
                       deleteAction={async () => {
-                        const result = await deleteInterview(interview.id);
+                        const result = await deleteInterviewAction(interview.id);
                         if (result.success) {
                           setInterviews(
                             interviews.filter((i) => i.id !== interview.id),

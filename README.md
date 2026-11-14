@@ -57,7 +57,7 @@ dev-recruit/
 │   │   ├── quizzes/        # Quiz creation & editing with reusable questions
 │   │   ├── presets/        # Question generation presets management
 │   │   └── profile/        # User profile & settings
-│   ├── recruting/          # Public interview pages (candidate-facing)
+│   ├── recruiting/          # Public interview pages (candidate-facing)
 │   ├── auth/               # Authentication pages (login, signup, etc.)
 │   └── api/                # API routes (streaming, uploads)
 ├── components/             # React components
@@ -68,7 +68,7 @@ dev-recruit/
 │   ├── candidates/         # Candidate management components
 │   ├── interviews/         # Interview tracking components
 │   ├── presets/            # Preset management components
-│   └── recruting/          # Interview taking components
+│   └── recruiting/          # Interview taking components
 ├── lib/                    # Core business logic
 │   ├── actions/            # Server actions (quizzes, candidates, evaluations, etc.)
 │   ├── data/               # Data fetching layer (cached queries)

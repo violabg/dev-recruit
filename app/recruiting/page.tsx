@@ -1,4 +1,4 @@
-import { ApplyFormClient } from "@/components/recruting/apply-form-client";
+import { ApplyFormClient } from "@/components/recruiting/apply-form-client";
 import {
   Card,
   CardContent,

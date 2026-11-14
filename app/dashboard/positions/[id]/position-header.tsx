@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
-import { deletePosition } from "@/lib/actions/positions";
+import { deletePositionAction } from "@/lib/actions/positions";
 import { getPositionById } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
 import { Edit } from "lucide-react";
@@ -63,7 +63,7 @@ export async function PositionHeader({ params }: Props) {
           </Link>
 
           <DeleteWithConfirm
-            deleteAction={deletePosition.bind(null, position.id)}
+            deleteAction={deletePositionAction.bind(null, position.id)}
             description="Questa azione non può essere annullata. Verranno eliminati anche tutti i quiz e i candidati associati a questa posizione."
             errorMessage="Errore durante l'eliminazione della posizione"
           />

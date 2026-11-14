@@ -126,7 +126,7 @@ export function FavoriteQuestionsDialog({
       <DialogContent className="flex flex-col sm:max-w-2xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Heart className="fill-red-500 w-5 h-5 text-red-500" />
+            <Heart className="fill-destructive w-5 h-5 text-destructive" />
             Domande Preferite
           </DialogTitle>
           <DialogDescription>

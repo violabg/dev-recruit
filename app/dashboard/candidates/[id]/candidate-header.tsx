@@ -2,7 +2,7 @@ import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
-import { deleteCandidate } from "@/lib/actions/candidates";
+import { deleteCandidateAction } from "@/lib/actions/candidates";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { ClipboardCheck, Edit, LayoutGrid, Link2 } from "lucide-react";
 import Link from "next/link";
@@ -81,7 +81,7 @@ export async function CandidateHeader({ params }: Props) {
             Modifica
           </Link>
           <DeleteWithConfirm
-            deleteAction={deleteCandidate.bind(null, candidate.id)}
+            deleteAction={deleteCandidateAction.bind(null, candidate.id)}
             description="Questa azione non può essere annullata. Il candidato e tutti i dati associati verranno eliminati permanentemente."
             errorMessage="Errore durante l'eliminazione del candidato"
           />

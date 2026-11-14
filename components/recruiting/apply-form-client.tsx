@@ -2,7 +2,7 @@
 import { CandidateForm } from "@/components/candidates/candidate-form";
 import { PositionDetailCardClient } from "@/components/positions/position-detail-card-client";
 import { Card, CardContent } from "@/components/ui/card";
-import { fetchPositionData } from "@/lib/actions/positions";
+import { fetchPositionDataAction } from "@/lib/actions/positions";
 import type { Position } from "@/lib/prisma/client";
 import { useState, useTransition } from "react";
 import { PositionDetailSkeleton } from "../positions/position-detail-skeleton";
@@ -38,7 +38,7 @@ export function ApplyFormClient({
     startTransition(async () => {
       const newIds = values.filter((id) => !positionsData[id]);
       for (const id of newIds) {
-        const data = await fetchPositionData(id);
+        const data = await fetchPositionDataAction(id);
         if (data) {
           setPositionsData((prev) => ({ ...prev, [id]: data }));
         }

@@ -1,8 +1,8 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  deleteEvaluation,
-  updateEvaluationNotes,
+  deleteEvaluationAction,
+  updateEvaluationNotesAction,
 } from "@/lib/actions/evaluation-entity";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import type { OverallEvaluation } from "@/lib/schemas";
@@ -152,7 +152,7 @@ export function CandidateEvaluationsView({
     startSavingNotes(async () => {
       try {
         unwrap(
-          await updateEvaluationNotes(evaluationId, notes[evaluationId] ?? ""),
+          await updateEvaluationNotesAction(evaluationId, notes[evaluationId] ?? ""),
         );
         toast.success("Note salvate con successo");
       } catch (error) {
@@ -164,7 +164,7 @@ export function CandidateEvaluationsView({
   };
 
   const handleDeleteEvaluation = async (evaluationId: string) => {
-    const result = await deleteEvaluation(evaluationId);
+    const result = await deleteEvaluationAction(evaluationId);
     if (result.success) {
       setEvaluations((prev) => prev.filter((e) => e.id !== evaluationId));
     }

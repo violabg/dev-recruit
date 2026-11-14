@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SelectItem } from "@/components/ui/select";
-import { createPosition, updatePosition } from "@/lib/actions/positions";
+import { createPositionAction, updatePositionAction } from "@/lib/actions/positions";
 import { Position } from "@/lib/prisma/client";
 import {
   PositionFormData,
@@ -82,8 +82,8 @@ export function PositionForm({
     startTransition(async () => {
       // On success the action redirects and returns nothing
       const result = isEditing
-        ? await updatePosition(position.id, values)
-        : await createPosition(values);
+        ? await updatePositionAction(position.id, values)
+        : await createPositionAction(values);
 
       if (result && !result.success) {
         toast.error("Impossibile salvare la posizione", {

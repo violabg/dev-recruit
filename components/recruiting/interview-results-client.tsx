@@ -1,7 +1,7 @@
 "use client";
 
 import { CodeHighlight } from "@/components/quiz/code-highlight";
-import { OverallEvaluationCard } from "@/components/recruting/overall-evaluation-card";
+import { OverallEvaluationCard } from "@/components/recruiting/overall-evaluation-card";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { updateEvaluationNotes } from "@/lib/actions/evaluation-entity";
+import { updateEvaluationNotesAction } from "@/lib/actions/evaluation-entity";
 import {
   completeInterviewEvaluationAction,
   evaluateInterviewAnswerAction,
@@ -214,7 +214,7 @@ export function InterviewResultsClient({
 
     startSavingNotes(async () => {
       try {
-        unwrap(await updateEvaluationNotes(savedEvaluation.id, notes));
+        unwrap(await updateEvaluationNotesAction(savedEvaluation.id, notes));
         toast.success("Note salvate con successo");
       } catch (error) {
         toast.error(
@@ -283,10 +283,10 @@ export function InterviewResultsClient({
                   className={`${
                     overallScore !== null
                       ? overallScore >= 70
-                        ? "bg-green-500"
+                        ? "bg-success"
                         : overallScore >= 40
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
+                          ? "bg-warning"
+                          : "bg-destructive"
                       : ""
                   }`}
                 >
@@ -432,10 +432,10 @@ export function InterviewResultsClient({
                           <div
                             className={`rounded-full px-2 py-1 text-xs font-medium ${
                               evaluation.score >= 7
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                ? "bg-success/10 text-success"
                                 : evaluation.score >= 4
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                  ? "bg-warning/10 text-warning"
+                                  : "bg-destructive/10 text-destructive"
                             }`}
                           >
                             {evaluation.score}/{evaluation.maxScore}
@@ -479,8 +479,8 @@ export function InterviewResultsClient({
                                   <div
                                     className={`rounded-md border p-3 ${
                                       isCorrectAnswer
-                                        ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                        : "border-red-500 bg-red-50 dark:bg-red-950/20"
+                                        ? "border-success bg-success/10"
+                                        : "border-destructive bg-destructive/10"
                                     }`}
                                   >
                                     {selectedOption ?? "Risposta non valida"}
@@ -520,7 +520,7 @@ export function InterviewResultsClient({
                                 <div className="font-medium">
                                   Risposta corretta:
                                 </div>
-                                <div className="bg-green-50 dark:bg-green-950/20 p-3 border border-green-500 rounded-md">
+                                <div className="bg-success/10 p-3 border border-success rounded-md">
                                   {question.options[question.correctAnswer]}
                                 </div>
                                 {question.explanation && (
@@ -541,7 +541,7 @@ export function InterviewResultsClient({
                               {evaluation.strengths &&
                                 evaluation.strengths.length > 0 && (
                                   <div className="mt-2">
-                                    <div className="font-medium text-green-600 dark:text-green-400">
+                                    <div className="font-medium text-success">
                                       Punti di forza:
                                     </div>
                                     <ul className="space-y-1 mt-1 pl-5 list-disc">
@@ -559,7 +559,7 @@ export function InterviewResultsClient({
                               {evaluation.weaknesses &&
                                 evaluation.weaknesses.length > 0 && (
                                   <div className="mt-2">
-                                    <div className="font-medium text-amber-600 dark:text-amber-400">
+                                    <div className="font-medium text-warning">
                                       Aree di miglioramento:
                                     </div>
                                     <ul className="space-y-1 mt-1 pl-5 list-disc">

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { InputField } from "@/components/ui/rhf-inputs";
-import { updateProfile } from "@/lib/actions/profile";
+import { updateProfileAction } from "@/lib/actions/profile";
 import type { Profile } from "@/lib/data/profile";
 import { unwrap } from "@/lib/utils/action-result";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
@@ -51,7 +51,7 @@ export const ProfileForm = ({
   const onSubmit = (values: ProfileFormValues) => {
     startTransition(async () => {
       try {
-        unwrap(await updateProfile(values));
+        unwrap(await updateProfileAction(values));
         toast.success("Profilo aggiornato con successo");
         router.push("/dashboard/profile");
       } catch (error) {

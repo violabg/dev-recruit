@@ -60,8 +60,8 @@ export function GenerateEvaluationCard({
       </CardHeader>
       <CardContent className="space-y-4">
         {!hasResume ? (
-          <div className="bg-amber-50 dark:bg-amber-950/20 p-4 border border-amber-200 dark:border-amber-800 rounded-md">
-            <p className="text-amber-800 dark:text-amber-200 text-sm">
+          <div className="bg-warning/10 p-4 border border-warning/30 rounded-md">
+            <p className="text-warning text-sm">
               Il candidato non ha un curriculum caricato. Carica un curriculum
               dalla pagina del candidato prima di poter generare una
               valutazione.

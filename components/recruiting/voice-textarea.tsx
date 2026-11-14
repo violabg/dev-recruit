@@ -192,7 +192,7 @@ export function VoiceTextarea({
           </Button>
         )}
         {error && (
-          <div className="bg-red-50 dark:bg-red-950/30 p-2 rounded text-red-600 dark:text-red-400 text-sm">
+          <div className="bg-destructive/10 p-2 rounded text-destructive text-sm">
             {error}
           </div>
         )}

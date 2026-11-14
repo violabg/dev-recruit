@@ -141,7 +141,7 @@ export async function updateThingAction(input: ThingInput) {
 - **Never throw for an expected failure.** Thrown messages are replaced by a generic text in production; `runAction` turns `UserError`, Zod, quiz and AI errors into `{ success: false, error }` with an Italian message and logs anything unexpected.
 - Inputs are typed objects. `FormData` only when a file is uploaded (candidate form, voice recording).
 - `redirect()` inside `runAction` works as usual.
-- **Candidate-facing actions** (`startInterview`, `submitAnswer`, `completeInterview`, `transcribeAudioAction`, `applyAsCandidate`, `fetchPositionData`) are public on purpose: the interview token is the credential. Everything else calls `requireUser()`.
+- **Candidate-facing actions** (`startInterviewAction`, `submitAnswerAction`, `completeInterviewAction`, `transcribeAudioAction`, `applyAsCandidateAction`, `fetchPositionDataAction`) are public on purpose: the interview token is the credential. Everything else calls `requireUser()`.
 - Reads for pages live in `lib/data/`, not in actions.
 
 ### Forms
@@ -158,6 +158,7 @@ export async function updateThingAction(input: ThingInput) {
 ## Styling Guidelines
 
 - **Colors:** must use OKLCH format in CSS (see `app/globals.css`), e.g., `color: oklch(...)`
+- **Status colours:** use the theme tokens `success`, `warning`, `destructive`, `primary` and, for interview states, `stage-pending` / `stage-progress` / `stage-done` / `stage-cancelled` (e.g. `bg-success/10 text-success`). Never Tailwind palette classes (`text-green-600`) or hex values: tokens already adapt to dark mode, so no `dark:` colour overrides are needed.
 - **Utilities:** prefer Tailwind v4 classes; compose with `cn()`, `clsx()`, or `tailwind-merge`
 - **Components:** reuse UI primitives from `components/ui/` and dashboard helpers from `components/dashboard/` instead of building new low-level components
 

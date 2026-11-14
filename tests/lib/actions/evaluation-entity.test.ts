@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  deleteEvaluation,
-  updateEvaluationNotes,
+  deleteEvaluationAction,
+  updateEvaluationNotesAction,
 } from "../../../lib/actions/evaluation-entity";
 
 // Mock dependencies
@@ -47,7 +47,7 @@ describe("evaluation-entity actions", () => {
     ) as any;
   });
 
-  describe("updateEvaluationNotes", () => {
+  describe("updateEvaluationNotesAction", () => {
     it("updates evaluation notes successfully", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
       const mockFindUnique = prisma.evaluation.findUnique as any;
@@ -65,7 +65,7 @@ describe("evaluation-entity actions", () => {
         notes: "Updated notes",
       });
 
-      const result = await updateEvaluationNotes("eval-123", "Updated notes");
+      const result = await updateEvaluationNotesAction("eval-123", "Updated notes");
 
       expect(result).toEqual({ success: true });
       expect(mockUpdate).toHaveBeenCalledWith({
@@ -80,7 +80,7 @@ describe("evaluation-entity actions", () => {
 
       mockFindUnique.mockResolvedValueOnce(null);
 
-      expect(await updateEvaluationNotes("invalid-id", "Notes")).toMatchObject({ success: false });
+      expect(await updateEvaluationNotesAction("invalid-id", "Notes")).toMatchObject({ success: false });
     });
 
     it("invalidates cache after update", async () => {
@@ -101,7 +101,7 @@ describe("evaluation-entity actions", () => {
       mockFindUnique.mockResolvedValueOnce(evaluation);
       mockUpdate.mockResolvedValueOnce({ id: "eval-123" });
 
-      await updateEvaluationNotes("eval-123", "Notes");
+      await updateEvaluationNotesAction("eval-123", "Notes");
 
       expect(invalidateEvaluationCache).toHaveBeenCalledWith({
         evaluationId: "eval-123",
@@ -111,7 +111,7 @@ describe("evaluation-entity actions", () => {
     });
   });
 
-  describe("deleteEvaluation", () => {
+  describe("deleteEvaluationAction", () => {
     it("deletes evaluation successfully", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
       const mockFindUnique = prisma.evaluation.findUnique as any;
@@ -126,7 +126,7 @@ describe("evaluation-entity actions", () => {
       mockFindUnique.mockResolvedValueOnce(evaluation);
       mockDelete.mockResolvedValueOnce({});
 
-      const result = await deleteEvaluation("eval-123");
+      const result = await deleteEvaluationAction("eval-123");
 
       expect(result.success).toBe(true);
       expect(mockDelete).toHaveBeenCalledWith({ where: { id: "eval-123" } });
@@ -138,7 +138,7 @@ describe("evaluation-entity actions", () => {
 
       mockFindUnique.mockResolvedValueOnce(null);
 
-      expect(await deleteEvaluation("invalid-id")).toMatchObject({ success: false });
+      expect(await deleteEvaluationAction("invalid-id")).toMatchObject({ success: false });
     });
 
     it("invalidates cache after deletion", async () => {
@@ -159,7 +159,7 @@ describe("evaluation-entity actions", () => {
       mockFindUnique.mockResolvedValueOnce(evaluation);
       mockDelete.mockResolvedValueOnce({});
 
-      await deleteEvaluation("eval-123");
+      await deleteEvaluationAction("eval-123");
 
       expect(invalidateEvaluationCache).toHaveBeenCalledWith({
         evaluationId: "eval-123",

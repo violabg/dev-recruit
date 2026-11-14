@@ -21,13 +21,13 @@ export const MultipleChoiceDisplay = ({
               key={optIndex}
               className={`flex items-center gap-2 rounded-md border p-2 ${
                 isCorrect
-                  ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                  ? "border-success bg-success/10"
                   : ""
               }`}
             >
               <div
                 className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isCorrect ? "border-green-500 bg-green-500 text-white" : ""
+                  isCorrect ? "border-success bg-success text-white" : ""
                 }`}
               >
                 {isCorrect && (

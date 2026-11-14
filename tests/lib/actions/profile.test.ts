@@ -12,7 +12,7 @@ vi.mock("@/lib/utils/cache-utils", () => ({
   invalidateProfileCache: vi.fn(),
 }));
 
-import { updatePassword, updateProfile } from "@/lib/actions/profile";
+import { updatePasswordAction, updateProfileAction } from "@/lib/actions/profile";
 import { auth } from "@/lib/auth";
 import { requireUser } from "@/lib/auth-server";
 import { getProfile } from "@/lib/data/profile";
@@ -73,9 +73,9 @@ describe("getProfile", () => {
   });
 });
 
-describe("updateProfile", () => {
+describe("updateProfileAction", () => {
   it("saves the profile and the account name", async () => {
-    const result = await updateProfile({
+    const result = await updateProfileAction({
       full_name: " Mario Rossi ",
       user_name: "mario_rossi",
     });
@@ -97,7 +97,7 @@ describe("updateProfile", () => {
   });
 
   it("returns the validation message for an invalid user name", async () => {
-    const result = await updateProfile({
+    const result = await updateProfileAction({
       full_name: "Mario Rossi",
       user_name: "mario rossi!",
     });
@@ -113,7 +113,7 @@ describe("updateProfile", () => {
   it("requires a signed-in user", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
 
-    const result = await updateProfile({
+    const result = await updateProfileAction({
       full_name: "Mario Rossi",
       user_name: "mario",
     });
@@ -123,7 +123,7 @@ describe("updateProfile", () => {
   });
 });
 
-describe("updatePassword", () => {
+describe("updatePasswordAction", () => {
   const values = {
     current_password: "vecchia-password",
     new_password: "nuova-password",
@@ -131,7 +131,7 @@ describe("updatePassword", () => {
   };
 
   it("changes the password", async () => {
-    const result = await updatePassword(values);
+    const result = await updatePasswordAction(values);
 
     expect(result).toEqual({ success: true });
     expect(auth.api.changePassword).toHaveBeenCalledWith(
@@ -145,7 +145,7 @@ describe("updatePassword", () => {
   });
 
   it("rejects a mismatched confirmation", async () => {
-    const result = await updatePassword({
+    const result = await updatePasswordAction({
       ...values,
       confirm_password: "altra-password",
     });
@@ -159,7 +159,7 @@ describe("updatePassword", () => {
       new Error("Invalid password"),
     );
 
-    const result = await updatePassword(values);
+    const result = await updatePasswordAction(values);
 
     expect(result).toMatchObject({
       success: false,

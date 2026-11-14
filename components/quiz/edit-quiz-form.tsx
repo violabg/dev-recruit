@@ -271,7 +271,7 @@ export function EditQuizForm({
                 className={cn(
                   "top-6 sticky transition-colors",
                   isDirty &&
-                    "border-amber-500 border shadow-lg shadow-amber-500/10",
+                    "border-warning border shadow-lg shadow-warning/10",
                 )}
               >
                 <CardHeader className="pb-4">
@@ -288,7 +288,7 @@ export function EditQuizForm({
                       className={cn(
                         "w-full transition-all",
                         saveStatus === "success"
-                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          ? "bg-success hover:bg-success/90 text-white"
                           : saveStatus === "error"
                             ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                             : "",
@@ -309,7 +309,7 @@ export function EditQuizForm({
                   </div>
 
                   {isDirty && (
-                    <div className="flex justify-center items-center gap-2 pt-2 border-t font-medium text-amber-600 dark:text-amber-500 text-sm animate-pulse">
+                    <div className="flex justify-center items-center gap-2 pt-2 border-t font-medium text-warning text-sm animate-pulse">
                       <AlertCircle className="size-4" />
                       Modifiche non salvate
                     </div>

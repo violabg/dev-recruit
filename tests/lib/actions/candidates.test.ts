@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  applyAsCandidate,
-  createCandidate,
-  deleteCandidate,
-  updateCandidate,
+  applyAsCandidateAction,
+  createCandidateAction,
+  deleteCandidateAction,
+  updateCandidateAction,
 } from "../../../lib/actions/candidates";
 
 // Mock dependencies
@@ -57,7 +57,7 @@ describe("candidates actions", () => {
     vi.clearAllMocks();
   });
 
-  describe("applyAsCandidate (public form)", () => {
+  describe("applyAsCandidateAction (public form)", () => {
     const application = () => {
       const formData = new FormData();
       formData.append("firstName", "Anna");
@@ -78,7 +78,7 @@ describe("candidates actions", () => {
         positions: [{ positionId: "pos-123" }],
       });
 
-      const result = await applyAsCandidate(application());
+      const result = await applyAsCandidateAction(application());
 
       expect(result).toEqual({ success: true });
       expect(requireUser).not.toHaveBeenCalled();
@@ -103,7 +103,7 @@ describe("candidates actions", () => {
         positions: [],
       });
 
-      const result = await applyAsCandidate(application());
+      const result = await applyAsCandidateAction(application());
 
       expect(JSON.stringify(result)).not.toContain("cand-9");
     });
@@ -112,7 +112,7 @@ describe("candidates actions", () => {
       const { default: prisma } = await import("../../../lib/prisma");
       (prisma.position.findMany as any).mockResolvedValueOnce([]);
 
-      const result = await applyAsCandidate(application());
+      const result = await applyAsCandidateAction(application());
 
       expect(result).toEqual({
         success: false,
@@ -122,7 +122,7 @@ describe("candidates actions", () => {
     });
   });
 
-  describe("createCandidate", () => {
+  describe("createCandidateAction", () => {
     it("creates candidate successfully", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
       const mockFindMany = prisma.position.findMany as any;
@@ -140,7 +140,7 @@ describe("candidates actions", () => {
       formData.append("email", "mario.rossi@example.com");
       formData.append("positionIds", JSON.stringify(["pos-123"]));
 
-      const result = await createCandidate(formData);
+      const result = await createCandidateAction(formData);
 
       expect(result).toEqual({ success: true, candidateId: "cand-123" });
       expect(mockCreate).toHaveBeenCalledWith({
@@ -166,7 +166,7 @@ describe("candidates actions", () => {
       formData.append("email", "mario@example.com");
       formData.append("positionIds", JSON.stringify(["invalid-id"]));
 
-      expect(await createCandidate(formData)).toMatchObject({ success: false });
+      expect(await createCandidateAction(formData)).toMatchObject({ success: false });
     });
 
     it("creates candidate with date of birth", async () => {
@@ -187,7 +187,7 @@ describe("candidates actions", () => {
       formData.append("positionIds", JSON.stringify(["pos-123"]));
       formData.append("dateOfBirth", "1990-01-15");
 
-      await createCandidate(formData);
+      await createCandidateAction(formData);
 
       expect(mockCreate).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -223,7 +223,7 @@ describe("candidates actions", () => {
       formData.append("positionIds", JSON.stringify(["pos-123"]));
       formData.append("resumeFile", mockFile);
 
-      await createCandidate(formData);
+      await createCandidateAction(formData);
 
       expect(validateResumeFile).toHaveBeenCalledWith(mockFile);
       expect(uploadResumeToR2).toHaveBeenCalledWith(mockFile, "cand-123");
@@ -263,7 +263,7 @@ describe("candidates actions", () => {
       formData.append("positionIds", JSON.stringify(["pos-123"]));
       formData.append("resumeFile", mockFile);
 
-      expect(await createCandidate(formData)).toMatchObject({ success: false });
+      expect(await createCandidateAction(formData)).toMatchObject({ success: false });
       expect(mockDelete).toHaveBeenCalledWith({ where: { id: "cand-123" } });
     });
 
@@ -287,7 +287,7 @@ describe("candidates actions", () => {
       formData.append("email", "mario@example.com");
       formData.append("positionIds", JSON.stringify(["pos-123"]));
 
-      await createCandidate(formData);
+      await createCandidateAction(formData);
 
       expect(invalidateCandidateCache).toHaveBeenCalledWith({
         candidateId: "cand-123",
@@ -296,7 +296,7 @@ describe("candidates actions", () => {
     });
   });
 
-  describe("updateCandidate", () => {
+  describe("updateCandidateAction", () => {
     it("updates candidate successfully", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
       const mockFindUnique = prisma.candidate.findUnique as any;
@@ -312,7 +312,7 @@ describe("candidates actions", () => {
       formData.append("firstName", "Luigi");
       formData.append("lastName", "Verdi");
 
-      const result = await updateCandidate("cand-123", formData);
+      const result = await updateCandidateAction("cand-123", formData);
 
       expect(result.success).toBe(true);
       expect(mockUpdate).toHaveBeenCalledWith({
@@ -333,7 +333,7 @@ describe("candidates actions", () => {
       const formData = new FormData();
       formData.append("firstName", "Luigi");
 
-      expect(await updateCandidate("invalid-id", formData)).toMatchObject({ success: false });
+      expect(await updateCandidateAction("invalid-id", formData)).toMatchObject({ success: false });
     });
 
     it("updates position and invalidates both caches", async () => {
@@ -355,7 +355,7 @@ describe("candidates actions", () => {
       const formData = new FormData();
       formData.append("positionIds", JSON.stringify(["pos-new"]));
 
-      await updateCandidate("cand-123", formData);
+      await updateCandidateAction("cand-123", formData);
 
       expect(invalidateCandidateCache).toHaveBeenCalledWith({
         candidateId: "cand-123",
@@ -383,7 +383,7 @@ describe("candidates actions", () => {
       const formData = new FormData();
       formData.append("resumeFile", mockFile);
 
-      await updateCandidate("cand-123", formData);
+      await updateCandidateAction("cand-123", formData);
 
       expect(deleteResumeFromR2).toHaveBeenCalledWith(
         "https://r2.example.com/old-resume.pdf"
@@ -408,7 +408,7 @@ describe("candidates actions", () => {
       const formData = new FormData();
       formData.append("removeResume", "true");
 
-      await updateCandidate("cand-123", formData);
+      await updateCandidateAction("cand-123", formData);
 
       expect(deleteResumeFromR2).toHaveBeenCalledWith(
         "https://r2.example.com/resume.pdf"
@@ -432,13 +432,13 @@ describe("candidates actions", () => {
 
       const formData = new FormData();
 
-      const result = await updateCandidate("cand-123", formData);
+      const result = await updateCandidateAction("cand-123", formData);
 
       expect(result.success).toBe(false);
     });
   });
 
-  describe("deleteCandidate", () => {
+  describe("deleteCandidateAction", () => {
     it("deletes candidate successfully", async () => {
       const { default: prisma } = await import("../../../lib/prisma");
       const { redirect } = await import("next/navigation");
@@ -451,7 +451,7 @@ describe("candidates actions", () => {
       });
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
 
-      await deleteCandidate("cand-123");
+      await deleteCandidateAction("cand-123");
 
       expect(mockDelete).toHaveBeenCalledWith({ where: { id: "cand-123" } });
       expect(redirect).toHaveBeenCalledWith("/dashboard/candidates");
@@ -463,7 +463,7 @@ describe("candidates actions", () => {
 
       mockFindUnique.mockResolvedValueOnce(null);
 
-      expect(await deleteCandidate("invalid-id")).toMatchObject({ success: false });
+      expect(await deleteCandidateAction("invalid-id")).toMatchObject({ success: false });
     });
 
     it("deletes resume file before deleting candidate", async () => {
@@ -480,7 +480,7 @@ describe("candidates actions", () => {
       });
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
 
-      await deleteCandidate("cand-123");
+      await deleteCandidateAction("cand-123");
 
       expect(deleteResumeFromR2).toHaveBeenCalledWith(
         "https://r2.example.com/resume.pdf"
@@ -504,7 +504,7 @@ describe("candidates actions", () => {
       (deleteResumeFromR2 as any).mockRejectedValueOnce(new Error("S3 error"));
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
 
-      await deleteCandidate("cand-123");
+      await deleteCandidateAction("cand-123");
 
       expect(storageLogger.error).toHaveBeenCalled();
       expect(mockDelete).toHaveBeenCalled();
@@ -523,7 +523,7 @@ describe("candidates actions", () => {
       });
       mockDelete.mockResolvedValueOnce({ id: "cand-123" });
 
-      await deleteCandidate("cand-123");
+      await deleteCandidateAction("cand-123");
 
       // deleted: true cascades to interviews/evaluations/rubrics
       expect(invalidateCandidateCache).toHaveBeenCalledWith({

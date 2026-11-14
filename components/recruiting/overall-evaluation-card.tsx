@@ -29,7 +29,7 @@ export function OverallEvaluationCard({
 
         {overallEvaluation.strengths && (
           <div>
-            <h4 className="mb-2 font-medium text-green-600 dark:text-green-400">
+            <h4 className="mb-2 font-medium text-success">
               Punti di forza principali:
             </h4>
             <ul className="space-y-1 pl-5 list-disc">
@@ -42,7 +42,7 @@ export function OverallEvaluationCard({
 
         {overallEvaluation.weaknesses && (
           <div>
-            <h4 className="mb-2 font-medium text-amber-600 dark:text-amber-400">
+            <h4 className="mb-2 font-medium text-warning">
               Aree di miglioramento:
             </h4>
             <ul className="space-y-1 pl-5 list-disc">

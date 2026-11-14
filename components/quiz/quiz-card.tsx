@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
-import { deleteQuizById } from "@/lib/actions/quizzes";
+import { deleteQuizAction } from "@/lib/actions/quizzes";
 import { Quiz } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
 import { Clock, Eye, Link2 } from "lucide-react";
@@ -30,7 +30,7 @@ export function QuizCard({
           <EntityActionsMenu
             entityId={id}
             editHref={`/dashboard/quizzes/${id}/edit`}
-            deleteAction={deleteQuizById.bind(null, id)}
+            deleteAction={deleteQuizAction.bind(null, id)}
             deleteTitle="Elimina quiz"
             deleteDescription="Sei sicuro di voler eliminare questo quiz? Questa azione non può essere annullata."
             deleteErrorMessage="Errore durante l'eliminazione del quiz"

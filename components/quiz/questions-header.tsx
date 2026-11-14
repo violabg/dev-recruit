@@ -130,7 +130,7 @@ export const QuestionsHeader = ({
                     />
                   }
                 >
-                  <Heart className="size-4 text-red-500" />
+                  <Heart className="size-4 text-destructive" />
                   Preferite
                 </TooltipTrigger>
                 <TooltipContent>Aggiungi domande dai preferiti</TooltipContent>

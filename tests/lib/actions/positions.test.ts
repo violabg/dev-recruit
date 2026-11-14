@@ -21,9 +21,9 @@ vi.mock("next/navigation", () => ({
 }));
 
 import {
-  createPosition,
-  deletePosition,
-  updatePosition,
+  createPositionAction,
+  deletePositionAction,
+  updatePositionAction,
 } from "@/lib/actions/positions";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
@@ -48,9 +48,9 @@ beforeEach(() => {
   vi.mocked(prisma.position.create).mockResolvedValue({ id: "pos-123" } as any);
 });
 
-describe("createPosition", () => {
+describe("createPositionAction", () => {
   it("stores the position and redirects to it", async () => {
-    await createPosition(values);
+    await createPositionAction(values);
 
     expect(prisma.position.create).toHaveBeenCalledWith({
       data: {
@@ -69,7 +69,7 @@ describe("createPosition", () => {
   });
 
   it("stores empty optional fields as null", async () => {
-    await createPosition({
+    await createPositionAction({
       ...values,
       description: "",
       contractType: "",
@@ -88,7 +88,7 @@ describe("createPosition", () => {
   });
 
   it("returns the validation message for invalid input", async () => {
-    const result = await createPosition({ ...values, skills: [] });
+    const result = await createPositionAction({ ...values, skills: [] });
 
     expect(result).toEqual({
       success: false,
@@ -100,16 +100,16 @@ describe("createPosition", () => {
   it("requires a signed-in user", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
 
-    const result = await createPosition(values);
+    const result = await createPositionAction(values);
 
     expect(result).toMatchObject({ success: false });
     expect(prisma.position.create).not.toHaveBeenCalled();
   });
 });
 
-describe("updatePosition", () => {
+describe("updatePositionAction", () => {
   it("updates the position and redirects to it", async () => {
-    await updatePosition("pos-123", values);
+    await updatePositionAction("pos-123", values);
 
     expect(prisma.position.update).toHaveBeenCalledWith({
       where: { id: "pos-123" },
@@ -127,7 +127,7 @@ describe("updatePosition", () => {
   });
 
   it("stores the same nulls as create for empty optional fields", async () => {
-    await updatePosition("pos-123", {
+    await updatePositionAction("pos-123", {
       ...values,
       description: "",
       contractType: "",
@@ -143,32 +143,32 @@ describe("updatePosition", () => {
   it("reports a missing position", async () => {
     vi.mocked(prisma.position.findUnique).mockResolvedValueOnce(null);
 
-    const result = await updatePosition("nope", values);
+    const result = await updatePositionAction("nope", values);
 
     expect(result).toEqual({ success: false, error: "Posizione non trovata" });
     expect(prisma.position.update).not.toHaveBeenCalled();
   });
 
   it("returns the validation message for invalid input", async () => {
-    const result = await updatePosition("pos-123", { ...values, title: "" });
+    const result = await updatePositionAction("pos-123", { ...values, title: "" });
 
     expect(result).toMatchObject({ success: false });
     expect(prisma.position.update).not.toHaveBeenCalled();
   });
 });
 
-describe("deletePosition", () => {
+describe("deletePositionAction", () => {
   it("requires a signed-in user", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
 
-    const result = await deletePosition("pos-123");
+    const result = await deletePositionAction("pos-123");
 
     expect(result).toMatchObject({ success: false });
     expect(prisma.position.delete).not.toHaveBeenCalled();
   });
 
   it("deletes the position, expires cascaded caches and redirects", async () => {
-    await deletePosition("pos-123");
+    await deletePositionAction("pos-123");
 
     expect(prisma.position.delete).toHaveBeenCalledWith({
       where: { id: "pos-123" },
@@ -182,7 +182,7 @@ describe("deletePosition", () => {
   it("reports a missing position", async () => {
     vi.mocked(prisma.position.findUnique).mockResolvedValueOnce(null);
 
-    const result = await deletePosition("nope");
+    const result = await deletePositionAction("nope");
 
     expect(result).toEqual({ success: false, error: "Posizione non trovata" });
     expect(prisma.position.delete).not.toHaveBeenCalled();

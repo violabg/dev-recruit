@@ -8,9 +8,9 @@ import {
   SelectField,
 } from "@/components/ui/rhf-inputs";
 import {
-  applyAsCandidate,
-  createCandidate,
-  updateCandidate,
+  applyAsCandidateAction,
+  createCandidateAction,
+  updateCandidateAction,
 } from "@/lib/actions/candidates";
 import { unwrap } from "@/lib/utils/action-result";
 import { Candidate } from "@/lib/prisma/client";
@@ -211,7 +211,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
 
       startTransition(async () => {
         try {
-          unwrap(await updateCandidate(props.candidate.id, formData));
+          unwrap(await updateCandidateAction(props.candidate.id, formData));
           router.push(`/dashboard/candidates/${props.candidate.id}`);
         } catch (submitError: unknown) {
           setError(
@@ -228,11 +228,11 @@ export const CandidateForm = (props: CandidateFormProps) => {
     startTransition(async () => {
       try {
         if (isApplyMode) {
-          unwrap(await applyAsCandidate(formData));
+          unwrap(await applyAsCandidateAction(formData));
           setIsSubmitted(true);
           return;
         }
-        const { candidateId } = unwrap(await createCandidate(formData));
+        const { candidateId } = unwrap(await createCandidateAction(formData));
         router.push(`/dashboard/candidates/${candidateId}`);
       } catch (submitError: unknown) {
         setError(
@@ -248,9 +248,9 @@ export const CandidateForm = (props: CandidateFormProps) => {
   if (isApplyMode && isSubmitted) {
     return (
       <div className="py-8 text-center">
-        <div className="flex justify-center items-center bg-green-100 dark:bg-green-900/30 mx-auto mb-4 rounded-full w-16 h-16">
+        <div className="flex justify-center items-center bg-success/10 mx-auto mb-4 rounded-full w-16 h-16">
           <svg
-            className="w-8 h-8 text-green-600 dark:text-green-400"
+            className="w-8 h-8 text-success"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

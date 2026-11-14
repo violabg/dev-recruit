@@ -19,6 +19,7 @@ export async function proxy(request: NextRequest) {
   if (
     !session?.user &&
     !pathname.startsWith("/auth") &&
+    !pathname.startsWith("/recruiting") &&
     !pathname.startsWith("/recruting")
   ) {
     // Preserve the intended destination for redirect after login

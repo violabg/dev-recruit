@@ -10,7 +10,7 @@ import { errorMessage, unwrap } from "@/lib/utils/action-result";
 
 import { Button } from "@/components/ui/button";
 import { MultiSelectField } from "@/components/ui/rhf-inputs";
-import { assignQuizzesToCandidate } from "@/lib/actions/interviews";
+import { assignQuizzesToCandidateAction } from "@/lib/actions/interviews";
 import { QuizSelection, quizSelectionSchema } from "@/lib/schemas";
 
 interface Quiz {
@@ -27,7 +27,7 @@ interface QuizSelectionFormProps {
 }
 
 type CreatedLink = Extract<
-  Awaited<ReturnType<typeof assignQuizzesToCandidate>>,
+  Awaited<ReturnType<typeof assignQuizzesToCandidateAction>>,
   { success: true }
 >["created"][number];
 
@@ -48,7 +48,7 @@ export function QuizSelectionForm({
     startTransition(async () => {
       try {
         const result = unwrap(
-          await assignQuizzesToCandidate({
+          await assignQuizzesToCandidateAction({
           candidateId,
           quizIds: values.quizIds,
           }),
@@ -78,7 +78,7 @@ export function QuizSelectionForm({
   };
 
   const copyInterviewLink = (token: string) => {
-    const link = `${window.location.origin}/recruting/${token}`;
+    const link = `${window.location.origin}/recruiting/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiato", {
       description: "Il link del colloquio è stato copiato negli appunti",
