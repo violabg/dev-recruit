@@ -47,3 +47,7 @@ lib/prisma/
 
 !.env.example
 .env*.local
+
+# agentic-system:start
+agentic-system-sessions/
+# agentic-system:end

@@ -1,0 +1,112 @@
+{
+  "workspaceRoot": "..",
+  "knowledgeRoot": "../knowledge",
+  "sessionsRoot": "../agentic-system-sessions",
+  "userRoot": "~/.agentic-system",
+  "workflowsRoot": "workflows",
+  "partLimit": 18000,
+  "partLimits": {
+    "claude-code": 24000,
+    "opencode": 24000
+  },
+  "roles": {
+    "ask": [
+      "knowledge-catalog",
+      "knowledge-index-rebuild",
+      "knowledge-read",
+      "session-activate",
+      "session-artifact-list",
+      "session-artifact-read",
+      "session-artifact-write",
+      "session-event-log",
+      "session-image-attach",
+      "session-list",
+      "session-memory-append",
+      "session-memory-read"
+    ],
+    "code-implementor": [
+      "codebase-cluster-files",
+      "codebase-clusters",
+      "design-implementation-operation",
+      "design-implementation-operation-close",
+      "knowledge-catalog",
+      "knowledge-read",
+      "session-activate",
+      "session-artifact-list",
+      "session-artifact-read"
+    ],
+    "design-verifier": [
+      "design-verification-view",
+      "knowledge-catalog",
+      "knowledge-read"
+    ],
+    "documentation-reviewer": [],
+    "explorer": [
+      "codebase-cluster-files",
+      "codebase-clusters",
+      "session-artifact-read"
+    ],
+    "implementation-verifier": [
+      "design-snapshot",
+      "session-activate",
+      "session-artifact-list",
+      "session-artifact-read"
+    ],
+    "knowledge-builder": [
+      "knowledge-catalog",
+      "knowledge-create",
+      "knowledge-index-rebuild",
+      "knowledge-read",
+      "knowledge-update",
+      "session-activate",
+      "session-artifact-list",
+      "session-artifact-read",
+      "session-artifact-write",
+      "session-event-log",
+      "session-image-attach",
+      "session-list",
+      "session-memory-append",
+      "session-memory-read"
+    ],
+    "orchestrator": [
+      "codebase-cluster-files",
+      "codebase-clusters",
+      "design-approve",
+      "design-checks",
+      "design-contracts",
+      "design-decisions",
+      "design-document",
+      "design-file-references",
+      "design-file-system",
+      "design-implementation-operation",
+      "design-implementation-operation-close",
+      "design-iteration-close",
+      "design-iteration-open",
+      "design-knowledge-references",
+      "design-obligations",
+      "design-operation-status",
+      "design-operations",
+      "design-overview",
+      "design-snapshot",
+      "documentation-check",
+      "documentation-template-read",
+      "documentation-templates-list",
+      "knowledge-catalog",
+      "knowledge-index-rebuild",
+      "knowledge-read",
+      "session-activate",
+      "session-artifact-list",
+      "session-artifact-read",
+      "session-artifact-write",
+      "session-event-log",
+      "session-image-attach",
+      "session-list",
+      "session-memory-append",
+      "session-memory-read",
+      "workflow-job-activate",
+      "workflow-step-next",
+      "workflow-step-pending",
+      "workflow-types-list"
+    ]
+  }
+}

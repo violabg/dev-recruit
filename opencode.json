@@ -1,0 +1,7 @@
+{
+  "permission": {
+    "bash": {
+      "node agentic-system/bin/agentic-system.mjs *": "allow"
+    }
+  }
+}

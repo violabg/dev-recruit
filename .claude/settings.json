@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node agentic-system/bin/agentic-system.mjs *)"
+    ],
+    "deny": [
+      "Edit(/knowledge/**)"
+    ]
+  }
+}

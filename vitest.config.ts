@@ -9,7 +9,13 @@ export default defineConfig({
     environment: "happy-dom",
     setupFiles: ["./tests/setup.ts"],
     include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    exclude: ["**/node_modules/**", "**/dist/**", "**/.next/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.next/**",
+      "**/agentic-system/**",
+      "**/agentic-system-sessions/**",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

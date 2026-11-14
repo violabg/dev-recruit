@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     // Generated files
     'coverage/**',
     'env.d.ts',
+    // Agentic system (runtime, records, sessions)
+    'agentic-system/**',
+    'agentic-system-maintenance/**',
+    'agentic-system-sessions/**',
   ]),
 ])
 

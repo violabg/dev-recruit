@@ -1,0 +1,481 @@
+{
+  "version": 1,
+  "repo": {
+    "name": "dev-recruit"
+  },
+  "prefix": "dr-",
+  "executionHost": "claude-code",
+  "nodeVersion": "v26.13.1",
+  "locations": {
+    "runtimeRoot": "agentic-system",
+    "sessionsRoot": "agentic-system-sessions",
+    "userRuntimeRoot": "~/.agentic-system",
+    "knowledgeRoot": "knowledge",
+    "maintenanceRoot": "agentic-system-maintenance",
+    "guideRoot": "docs/agentic-system",
+    "documentationTemplates": "workspace"
+  },
+  "glossaryPath": "CONTEXT.md",
+  "validationCommands": "pnpm lint && pnpm test:run && pnpm build",
+  "tracker": {
+    "adapter": "GitHub Issues"
+  },
+  "skills": {
+    "manage-work-item": "generate"
+  },
+  "skillSharing": {
+    "folder": ".agents/skills",
+    "clients": {
+      "opencode": {
+        "via": "native",
+        "evidence": "documented at https://opencode.ai/docs/skills/ (checked 2026-11-14)"
+      },
+      "claude-code": {
+        "via": "symlink",
+        "evidence": "symlinked skill entries are documented; the repository already uses .claude/skills symlinks into .agents/skills"
+      },
+      "github-copilot-vscode": {
+        "via": "symlink",
+        "evidence": "the default Copilot harness reads only .github/skills; symlink support is undocumented, so it is verified in phase F (fallback: an approved copy)"
+      }
+    }
+  },
+  "environments": [
+    {
+      "id": "claude-code",
+      "profile": "claude-code",
+      "route": "skill",
+      "delegation": "native",
+      "overrides": {},
+      "bindings": {
+        "work-item-*": {
+          "text": "GitHub Issues on violabg/dev-recruit through the GitHub MCP server: `mcp__github__issue_read` (method `get` for the item, `get_comments` for comments, `get_labels` for its type, which this repository expresses as labels such as `bug` or `enhancement`; call it once per id for a batch), `mcp__github__issue_write` (method `create` or `update`) and `mcp__github__add_issue_comment`. The server needs GITHUB_PAT exported in the environment; if the tools are missing, ask the developer to export it and restart.",
+          "tools": [
+            "mcp__github__issue_read",
+            "mcp__github__issue_write",
+            "mcp__github__add_issue_comment"
+          ]
+        },
+        "wiki-*": {
+          "none": "no wiki: the GitHub wiki is enabled but empty"
+        },
+        "visual-evidence": "Read the image with the Read tool. For an image attached to an issue, take its URL from `mcp__github__issue_read`, download it into the session's artifacts folder with the terminal, then Read it. If it cannot be read, ask the developer for the image."
+      },
+      "roleTools": {
+        "ask": [
+          "mcp__context7__query-docs",
+          "mcp__context7__resolve-library-id"
+        ],
+        "orchestrator": [
+          "mcp__context7__query-docs",
+          "mcp__context7__resolve-library-id"
+        ]
+      },
+      "verification": {
+        "1 orchestrator starts, asks, asks workflow type": {
+          "status": "unverified",
+          "note": "needs an interactive session: run /dr-orchestrator"
+        },
+        "2 session created through the runtime": {
+          "status": "verified-fallback",
+          "note": "verify.mjs created a session in agentic-system-sessions/ from the terminal on 2026-11-14, not from the client"
+        },
+        "3 delegate runs in its own context": {
+          "status": "verified-fallback",
+          "note": "dr-explorer loaded and answered correctly via `claude -p --agent dr-explorer`; starting it from the orchestrator with Agent is still unverified"
+        },
+        "4 work items (GitHub MCP)": {
+          "status": "blocked",
+          "note": "GITHUB_PAT is not exported; the github MCP server fails to connect"
+        },
+        "4 visual evidence": {
+          "status": "unverified",
+          "note": "needs an interactive session"
+        },
+        "5 role skill refuses inside a role": {
+          "status": "unverified",
+          "note": "needs an interactive session"
+        },
+        "6 shared workflow skills discovered once": {
+          "status": "unverified",
+          "note": "symlinks in .claude/skills created; discovery not exercised"
+        },
+        "7 runtime-only delegate refused outside its role": {
+          "status": "verified-fallback",
+          "note": "runtime refuses session-list for design-verifier; the role-guard PreToolUse hook blocks `ls` and allows its runtime command (tested directly; the hook runs only once the folder is trusted)"
+        }
+      }
+    },
+    {
+      "id": "opencode",
+      "profile": "opencode",
+      "route": "native",
+      "delegation": "native",
+      "overrides": {
+        "tools": {
+          "search": [
+            "grep",
+            "glob"
+          ],
+          "terminal": [
+            "shell"
+          ],
+          "runtime": [
+            "shell"
+          ],
+          "delegate": [
+            "subagent"
+          ]
+        },
+        "skills": {
+          "manualOnly": {
+            "frontmatter": {
+              "disable-model-invocation": true
+            }
+          }
+        },
+        "delegation": {
+          "native": "Start a delegate with the `subagent` tool, naming the subagent with the role's native name below and passing the prompt the step gives. The subagent runs in its own child session and returns its result."
+        },
+        "checkedOn": "2026-11-14",
+        "source": "OpenCode v2.3.0 docs (https://opencode.ai/docs/tools/, /skills/, /permissions/) and a local `opencode debug agents --standalone` test on 2026-11-14: V1 `permission` keys (bash, task) are converted to V2 (shell, subagent); the tools are named shell and subagent; list is not a tool; disable-model-invocation hides a skill from the model"
+      },
+      "bindings": {
+        "work-item-*": {
+          "text": "GitHub Issues on violabg/dev-recruit through the GitHub MCP server: `github_issue_read` (method `get` for the item, `get_comments` for comments, `get_labels` for its type, which this repository expresses as labels; call it once per id for a batch), `github_issue_write` (method `create` or `update`) and `github_add_issue_comment`. The server needs GITHUB_PAT exported in the environment; if the tools are missing, ask the developer to export it and restart.",
+          "tools": [
+            "github_issue_read",
+            "github_issue_write",
+            "github_add_issue_comment"
+          ]
+        },
+        "wiki-*": {
+          "none": "no wiki: the GitHub wiki is enabled but empty"
+        },
+        "visual-evidence": "Read the image with the read tool. For an image attached to an issue, take its URL from `github_issue_read`, download it into the session's artifacts folder with the shell, then read it. If it cannot be read, ask the developer for the image."
+      },
+      "roleTools": {
+        "ask": [
+          "context7_query-docs",
+          "context7_resolve-library-id"
+        ],
+        "orchestrator": [
+          "context7_query-docs",
+          "context7_resolve-library-id"
+        ]
+      },
+      "verification": {
+        "agents discovered with permissions": {
+          "status": "verified-native",
+          "note": "`opencode debug agents --standalone` (v2.3.0) lists all 8 dr- roles; delegates hidden; V1 keys converted to shell/subagent; orchestrator allowlist general, dr-explorer, dr-code-implementor"
+        },
+        "1 orchestrator starts, asks, asks workflow type": {
+          "status": "unverified",
+          "note": "needs an interactive session"
+        },
+        "2 session created through the runtime": {
+          "status": "verified-fallback",
+          "note": "verify.mjs from the terminal"
+        },
+        "3 delegate runs in its own context": {
+          "status": "unverified",
+          "note": "needs an interactive session"
+        },
+        "4 work items (GitHub MCP)": {
+          "status": "blocked",
+          "note": "GITHUB_PAT is not exported"
+        },
+        "4 visual evidence": {
+          "status": "unverified",
+          "note": "needs an interactive session"
+        },
+        "6 shared workflow skills discovered once": {
+          "status": "unverified",
+          "note": "OpenCode reads both .agents/skills and .claude/skills (symlinks); check the skill list shows each once"
+        },
+        "7 runtime-only delegate refused outside its role": {
+          "status": "verified-fallback",
+          "note": "runtime refusal tested; per-command shell permissions shown by opencode debug agents"
+        }
+      }
+    },
+    {
+      "id": "github-copilot-vscode",
+      "profile": "github-copilot-vscode",
+      "route": "native",
+      "delegation": "native",
+      "overrides": {
+        "tools": {
+          "question": []
+        },
+        "delegation": {
+          "native": "Run the custom agent with the role's native name below as a subagent through the `agent` tool alias (the Copilot harness's native `task` tool), with the prompt the step gives. The subagent runs in its own context and returns only its result. It cannot be resumed: re-invoke the same role with the complete correction prompt, as the step's arm for a host without resume says."
+        },
+        "checkedOn": "2026-11-14",
+        "source": "VS Code 1.146 docs (https://code.visualstudio.com/docs/agents/reference/custom-agent-file-reference, /tools-reference): the default Copilot harness accepts the aliases execute, read, edit, search, agent and delegates with its native task tool; vscode/askQuestions is a Local-harness name (Local is deprecated, removed Feb 2027), so the role asks in chat"
+      },
+      "bindings": {
+        "work-item-*": {
+          "text": "GitHub Issues on violabg/dev-recruit through the `github` MCP server in .vscode/mcp.json (VS Code signs in with GitHub OAuth): `github/issue_read` (method `get` for the item, `get_comments` for comments, `get_labels` for its type, which this repository expresses as labels; call it once per id for a batch), `github/issue_write` (method `create` or `update`) and `github/add_issue_comment`.",
+          "tools": [
+            "github/issue_read",
+            "github/issue_write",
+            "github/add_issue_comment"
+          ]
+        },
+        "wiki-*": {
+          "none": "no wiki: the GitHub wiki is enabled but empty"
+        },
+        "visual-evidence": "Read an image attached in chat directly. For an image attached to an issue, take its URL from `github/issue_read`, download it into the session's artifacts folder with the terminal, then read it. If it cannot be read, ask the developer for the image."
+      },
+      "roleTools": {},
+      "verification": {
+        "1 orchestrator starts, asks, asks workflow type": {
+          "status": "unverified",
+          "note": "select dr-orchestrator in the VS Code agent picker; the Copilot harness has no documented question tool"
+        },
+        "2 session created through the runtime": {
+          "status": "verified-fallback",
+          "note": "verify.mjs from the terminal"
+        },
+        "3 delegate runs in its own context": {
+          "status": "unverified",
+          "note": "needs a VS Code session"
+        },
+        "4 work items (GitHub MCP)": {
+          "status": "unverified",
+          "note": "github server added to .vscode/mcp.json; OAuth sign-in pending"
+        },
+        "4 visual evidence": {
+          "status": "unverified",
+          "note": "needs a VS Code session"
+        },
+        "6 shared workflow skills discovered once": {
+          "status": "unverified",
+          "note": ".github/skills symlinks are undocumented for the Copilot harness; fall back to an approved copy if they are not listed"
+        },
+        "7 runtime-only delegate refused outside its role": {
+          "status": "verified-fallback",
+          "note": "runtime refusal tested; Copilot has no per-command limit"
+        }
+      }
+    }
+  ],
+  "integrations": [
+    {
+      "id": "github-mcp",
+      "clients": [
+        "claude-code",
+        "opencode"
+      ],
+      "transport": "http",
+      "server": "https://api.githubcopilot.com/mcp/",
+      "registeredIn": [
+        ".mcp.json (enabled in .claude/settings.local.json)",
+        "opencode.jsonc"
+      ],
+      "scope": "repository",
+      "authentication": "token in the environment variable GITHUB_PAT (fine-grained, Issues read/write on violabg/dev-recruit)",
+      "configuration_status": "configured",
+      "authentication_status": "missing"
+    },
+    {
+      "id": "github-mcp",
+      "clients": [
+        "github-copilot-vscode"
+      ],
+      "transport": "http",
+      "server": "https://api.githubcopilot.com/mcp/",
+      "registeredIn": [
+        ".vscode/mcp.json (to add)"
+      ],
+      "scope": "workspace",
+      "authentication": "VS Code GitHub OAuth sign-in",
+      "configuration_status": "missing",
+      "authentication_status": "unverified"
+    },
+    {
+      "id": "context7",
+      "clients": [
+        "claude-code",
+        "opencode"
+      ],
+      "transport": "http",
+      "server": "https://mcp.context7.com/mcp",
+      "scope": "repository",
+      "authentication": "none",
+      "configuration_status": "configured",
+      "authentication_status": "not-required"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "environments",
+      "answer": "claude-code, opencode, github-copilot-vscode; surfaces terminal and IDE extension",
+      "source": "user",
+      "evidence": "intake 2026-11-14"
+    },
+    {
+      "id": "execution-host",
+      "answer": "claude-code (via T3 Code)",
+      "source": "discovery",
+      "evidence": "current session"
+    },
+    {
+      "id": "node",
+      "answer": "v26.13.1",
+      "source": "discovery",
+      "evidence": "node --version"
+    },
+    {
+      "id": "plan-only",
+      "answer": "install after approval",
+      "source": "user",
+      "evidence": "intake"
+    },
+    {
+      "id": "repo-name",
+      "answer": "dev-recruit",
+      "source": "recommend-accepted",
+      "evidence": "git remote violabg/dev-recruit; package name dev-recruit-ai"
+    },
+    {
+      "id": "prefix",
+      "answer": "dr-",
+      "source": "user",
+      "evidence": "user-level agents named Orchestrator/Planner/Coder exist"
+    },
+    {
+      "id": "route",
+      "answer": "claude-code skill; opencode native; github-copilot-vscode native",
+      "source": "recommend-accepted",
+      "evidence": "profiles and current docs"
+    },
+    {
+      "id": "delegation",
+      "answer": "native for all three",
+      "source": "recommend-accepted",
+      "evidence": "profiles and current docs"
+    },
+    {
+      "id": "profile-overrides",
+      "answer": "opencode V2 tool names and manual-only skills; copilot harness delegate/question",
+      "source": "discovery",
+      "evidence": "docs re-check 2026-11-14 and local OpenCode test"
+    },
+    {
+      "id": "tracker",
+      "answer": "GitHub Issues (violabg/dev-recruit)",
+      "source": "user",
+      "evidence": "GitHub remote, issues enabled"
+    },
+    {
+      "id": "work-item-bindings",
+      "answer": "GitHub MCP issue_read / issue_write / add_issue_comment per client",
+      "source": "user",
+      "evidence": "user chose MCP over gh CLI"
+    },
+    {
+      "id": "manage-work-item",
+      "answer": "generate",
+      "source": "user",
+      "evidence": "write binding available"
+    },
+    {
+      "id": "wiki",
+      "answer": "none",
+      "source": "discovery",
+      "evidence": "dev-recruit.wiki.git not found"
+    },
+    {
+      "id": "visual-evidence",
+      "answer": "role read tool; issue attachments downloaded into the session first",
+      "source": "recommend-accepted",
+      "evidence": "client image support"
+    },
+    {
+      "id": "extra-tools",
+      "answer": "context7 for ask and orchestrator (Claude Code, OpenCode)",
+      "source": "recommend-accepted",
+      "evidence": "context7 configured in .mcp.json and opencode.jsonc"
+    },
+    {
+      "id": "runtime-root",
+      "answer": "agentic-system",
+      "source": "recommend-accepted",
+      "evidence": "no collision"
+    },
+    {
+      "id": "sessions-root",
+      "answer": "agentic-system-sessions (in repository, git-ignored)",
+      "source": "user",
+      "evidence": "intake"
+    },
+    {
+      "id": "user-runtime-root",
+      "answer": "~/.agentic-system",
+      "source": "recommend-accepted",
+      "evidence": "exists"
+    },
+    {
+      "id": "documentation-templates",
+      "answer": "workspace",
+      "source": "user",
+      "evidence": "shared through git"
+    },
+    {
+      "id": "knowledge-root",
+      "answer": "knowledge",
+      "source": "recommend-accepted",
+      "evidence": "none exists; docs/ stays"
+    },
+    {
+      "id": "glossary",
+      "answer": "CONTEXT.md (created when there are terms)",
+      "source": "recommend-accepted",
+      "evidence": "none exists"
+    },
+    {
+      "id": "validation-commands",
+      "answer": "pnpm lint && pnpm test:run && pnpm build",
+      "source": "recommend-accepted",
+      "evidence": "package.json scripts; no CI"
+    },
+    {
+      "id": "maintenance-root",
+      "answer": "agentic-system-maintenance",
+      "source": "recommend-accepted",
+      "evidence": "no collision"
+    },
+    {
+      "id": "guide-root",
+      "answer": "docs/agentic-system",
+      "source": "recommend-accepted",
+      "evidence": "existing docs/"
+    },
+    {
+      "id": "skills-folder",
+      "answer": ".agents/skills; opencode native, claude-code and copilot via symlinks",
+      "source": "user",
+      "evidence": "already in use; copilot harness reads only .github/skills"
+    },
+    {
+      "id": "tooling-exclusions",
+      "answer": "eslint.config.mjs globalIgnores: 'agentic-system/**', 'agentic-system-maintenance/**', 'agentic-system-sessions/**'; tsconfig.json exclude: \"agentic-system\", \"agentic-system-sessions\"; vitest.config.ts test.exclude: \"**/agentic-system/**\", \"**/agentic-system-sessions/**\"",
+      "source": "user",
+      "evidence": "eslint ., tsconfig **/*.ts, vitest **/*.test.*"
+    },
+    {
+      "id": "copilot-mcp",
+      "answer": "add github http server to .vscode/mcp.json (OAuth)",
+      "source": "user",
+      "evidence": "approved with grouped defaults"
+    },
+    {
+      "id": "warnings",
+      "answer": "context7 for Claude Code is client-level via enabledMcpjsonServers in .claude/settings.local.json; Copilot has no knowledge/ deny (runtime catches it); duplicate discovery via .claude/skills accepted and checked in phase F",
+      "source": "user",
+      "evidence": "file plan approval 2026-11-14"
+    }
+  ]
+}
