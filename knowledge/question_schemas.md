@@ -74,7 +74,7 @@ Change all of these, then search the code for an existing type name (e.g. `behav
 
 1. Prisma `enum QuestionType` (and `Question` columns if new fields), regenerate the client.
 2. `baseSchemas.questionType`.
-3. Question schemas: new `<x>QuestionSchema = baseQuestionSchema.extend({ type: z.literal(...) })`, add it to the strict union and to `questionSchemas`, export its type and an `is<X>Question` guard, add defaults in `convertToStrictQuestion`; new fields also in `flexible` (and its `superRefine` if they have rules).
+3. Question schemas: new `<x>QuestionSchema = baseQuestionSchema.extend({ type: z.literal(...) })`, add it to the strict union and to `questionSchemas`, export its type and an `is<X>Question` guard only when code must narrow on the new type, add defaults in `convertToStrictQuestion`; new fields also in `flexible` (and its `superRefine` if they have rules).
 4. New fields: `mapQuizQuestionsToFlexible`, `prepareQuestionForCreate`, `prepareQuestionForUpdate`, explicit Prisma `select`s.
 5. Whole-quiz generation: `include<X>` flag in the quiz generation config schema, in `GenerateQuizParams`, in `buildQuizPrompt` and `buildQuizSystemPrompt`, and in `QuizGenerationForm`.
 6. Single-question generation: `<X>QuestionParams` in the `GenerateQuestionParams` union, `questionPromptBuilders.<x>` and `buildQuestionPrompts`, `create<X>Params` and `createQuestionParams`, the type switch in `useAIGeneration`, `questionGenerationOptionsSchema` and `AIQuestionGenerationDialog` if it has its own options.
