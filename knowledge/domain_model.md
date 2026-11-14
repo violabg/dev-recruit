@@ -25,7 +25,7 @@ Prisma Client API semantics and migration behaviour are in the official docs (co
 | `Preset` | Recipe for generating one AI question | unique `name`, `questionType`, tuning fields, `difficulty` 1–5 | — (no relations) |
 | `ReferenceData` | Pick-list values for forms and filters | unique (`category`, `label`), `isActive`, `order` | — (values are copied as strings, no FK) |
 
-`Interview.score` is not used: the quiz result lives in `Evaluation.quizScore`.
+the quiz result lives in `Evaluation.quizScore`.
 
 ## Access: no ownership filtering, no roles
 

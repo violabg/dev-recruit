@@ -54,7 +54,7 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
 ## Redirecting actions
 
 - `redirect()` and `notFound()` pass through `runAction` unchanged. Call them at the top level of the body, after cache invalidation, never inside your own `try/catch`.
-- A redirecting action resolves to nothing on success. Callers MUST NOT `unwrap()` it; check `if (result && !result.success) toast.error(result.error)`.
+- A redirecting action resolves to nothing on success. Callers MUST NOT `unwrap()` it; check `if (result && !result.success) toast.error(errorMessage(result.error))`.
 
 ## Authentication and public actions
 
@@ -105,7 +105,7 @@ const onSubmit = (data: DuplicateFormData) =>
   });
 ```
 
-Equivalent without `unwrap`: `const result = await action(values); if (!result.success) { toast.error(result.error); return; }`.
+Equivalent without `unwrap`: `const result = await action(values); if (!result.success) { toast.error(errorMessage(result.error)); return; }`.
 
 ## Logging
 

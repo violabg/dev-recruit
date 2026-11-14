@@ -40,9 +40,9 @@ The `question` text of a code snippet holds no code; the code goes in `codeSnipp
 
 | Type | Missing field | Default |
 |---|---|---|
-| `open_question`, `behavioral_scenario` | `sampleAnswer` | `"Sample answer to be provided"` |
-| `code_snippet` | `sampleSolution` | `"// Sample solution to be provided"` |
-| `code_snippet` | `codeSnippet` | `"// Code snippet to be provided"` |
+| `open_question`, `behavioral_scenario` | `sampleAnswer` | `"Risposta di esempio da fornire"` |
+| `code_snippet` | `sampleSolution` | `"// Soluzione di esempio da fornire"` |
+| `code_snippet` | `codeSnippet` | `"// Snippet di codice da fornire"` |
 | `code_snippet` | `language` | `"javascript"` |
 | `multiple_choice` | — | none |
 

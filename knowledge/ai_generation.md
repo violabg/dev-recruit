@@ -12,7 +12,8 @@ The provider is Groq through the Vercel AI SDK. SDK APIs are in the official doc
 ## Single entry point
 
 - Structured output (quiz, question, every evaluation) goes ONLY through `generateStructured()`. It owns model choice, retry, timeout, fallback and the Italian error mapping.
-- Streaming text uses `getLanguageModel(getOptimalModel(task))` with the SDK's `streamText`. Never call `groq(...)` directly.
+- Streaming text uses `getLanguageModel(getOptimalModel(task))` with the SDK's `streamText`. A text model is never taken from `groq(...)` directly.
+- Audio transcription is the one provider path outside `generateStructured` and `streamText`: `transcribeAudio(audio)` in the transcription module of the AI layer calls the SDK's `transcribe` with `groq.transcription(LLM_MODELS.WHISPER_LARGE_V3_TURBO)` and rethrows any failure as `AIGenerationError(GENERATION_FAILED)`. The server action keeps the token and size checks; no action or component calls `groq` itself.
 - `generateStructured`, `getLanguageModel` and `describeAIError` are exported only by the `generate` module of the AI layer, not by the AI barrels (`ai/index`, `ai-service`).
 
 ```ts
@@ -34,7 +35,7 @@ const result = await generateStructured({
 - Fallback chain (`FALLBACK_MODELS`): `openai/gpt-oss-20b`, then `qwen/qwen3.8-27b`, skipping the primary.
 - `DEFAULT_CONFIG`: primary model retried up to 3 times with backoff 1 s, 2 s, 4 s; the 60 s timeout bounds the primary's whole retry sequence; each fallback gets one attempt bounded by 60 s. Content-filtered failures are never retried or sent to another model.
 - Failures are `AIGenerationError` with an `AIErrorCode`; `runAction` turns them into Italian messages through `describeAIError`.
-- Audio transcription uses `LLM_MODELS.WHISPER_LARGE_V3_TURBO`.
+- Audio transcription uses `LLM_MODELS.WHISPER_LARGE_V3_TURBO`; the ban on `generateText`/`groq(...)` is about text models (see Single entry point).
 
 ## Determinism
 
@@ -69,7 +70,7 @@ Interview evaluation:
 
 Resume evaluation (route handler, streamed):
 1. POST `{ candidateId, positionId }` → `requireUser()` → `prepareResumeEvaluation` (404 candidate/position missing, 400 no resume or unreadable PDF, 409 already evaluated) extracts the PDF text with `unpdf`.
-2. The model output is streamed as plain text; when it ends, `saveResumeEvaluation` parses it with `overallEvaluationSchema`, stores it (`fitScore / 10`) and calls `invalidateEvaluationCacheInRouteHandler`, before the stream closes.
+2. `streamText` runs with `temperature: 0, seed: 42` and its output is streamed as plain text. When it ends, `saveResumeEvaluation` parses it with `overallEvaluationSchema`, stores it (`fitScore / 10`) and calls `invalidateEvaluationCacheInRouteHandler`; the stream closes only after that. If parsing or saving fails, the error is logged and the stream fails with `controller.error(new Error("Valutazione generata ma non salvata. Riprova."))`, so the client never sees a silent success.
 
 Position description: POST to the generate-description route → `requireUser()` → `streamPositionDescription` (`simple_task`) → `toTextStreamResponse()`.
 

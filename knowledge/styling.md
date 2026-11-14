@@ -21,15 +21,16 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | `success` | Positive feedback, good scores, `Button` variant `success` |
 | `warning` | Caution: mid scores, low remaining time, unsaved changes |
 | `destructive` | Errors, delete actions, low scores, required-field asterisk |
-| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled` | Interview statuses `pending`, `in_progress`, `completed`, `cancelled` |
+| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` | Interview statuses `pending`, `in_progress`, `completed`, `cancelled`, and the derived `expired` |
 | `section-positions`, `section-candidates`, `section-quizzes`, `section-presets`, `section-interviews`, `section-settings` | Identity hue of each dashboard section (sidebar icon, page-title rule) |
 
 - New colours are added as OKLCH tokens in the global stylesheet (light and dark values), never as palette classes (`text-green-600`), hex or arbitrary values in components.
 - For status feedback prefer a tint (`bg-success/10 text-success`) over a filled background; never pair a token background with `text-white`/`text-black`.
+- Only `primary`, `secondary` and `accent` have a `-foreground` companion. `success` and `destructive` do not: on a filled `bg-success` or `bg-destructive` surface use `text-primary-foreground`.
 
 ## Status and score colours
 
-- Interview status → `stage-*` token. Italian labels: `pending` "In attesa", `in_progress` "In corso", `completed` "Completato", `cancelled` "Annullato".
+- Interview status → `stage-*` token, badge `bg-stage-<state>/10 text-stage-<state>`. Italian labels: `pending` "In attesa", `in_progress` "In corso", `completed` "Completato", `cancelled` "Annullato", `expired` "Scaduto".
 - Candidate status, score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
 - Score thresholds in the UI: per-answer score (0–10) ≥ 7 success, ≥ 4 warning, else destructive; percentages ≥ 70 success, ≥ 40 warning, else destructive.
 
