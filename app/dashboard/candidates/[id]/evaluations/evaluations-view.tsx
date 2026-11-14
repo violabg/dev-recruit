@@ -172,7 +172,7 @@ export function CandidateEvaluationsView({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <GenerateEvaluationCard
         candidateName={candidateName}
         availablePositions={availablePositions}
@@ -193,7 +193,7 @@ export function CandidateEvaluationsView({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
             Valutazioni esistenti ({evaluations.length}
             {streamingEvaluation ? " + 1 in corso" : ""})

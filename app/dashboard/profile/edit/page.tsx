@@ -19,10 +19,10 @@ import { Suspense } from "react";
 /** Mirrors EditProfileContent: back button + static heading + ProfileForm. */
 function EditProfileSkeleton() {
   return (
-    <div className="space-y-6 mx-auto w-full max-w-2xl">
-      <div className="flex items-center space-x-4">
+    <div className="flex flex-col gap-6 mx-auto w-full max-w-2xl">
+      <div className="flex items-center gap-4">
         <Skeleton className="rounded-lg size-8" />
-        <div className="space-y-1">
+        <div className="flex flex-col gap-1">
           <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Modifica Profilo</h1>
           <p className="text-muted-foreground">
             Aggiorna le informazioni del tuo profilo
@@ -38,9 +38,9 @@ function EditProfileSkeleton() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <span className="font-medium text-sm">Email</span>
                 <Skeleton className="rounded-lg w-full h-9" />
                 <p className="text-muted-foreground text-xs">
@@ -66,8 +66,8 @@ async function EditProfileContent() {
   }
 
   return (
-    <div className="space-y-6 mx-auto w-full max-w-2xl">
-      <div className="flex items-center space-x-4">
+    <div className="flex flex-col gap-6 mx-auto w-full max-w-2xl">
+      <div className="flex items-center gap-4">
         <Link
           href="/dashboard/profile"
           className={buttonVariants({ variant: "outline", size: "icon" })}
@@ -75,7 +75,7 @@ async function EditProfileContent() {
           <ArrowLeft className="size-4" />
         </Link>
 
-        <div className="space-y-1">
+        <div className="flex flex-col gap-1">
           <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">
             Modifica Profilo
           </h1>

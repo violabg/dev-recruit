@@ -4,7 +4,9 @@ import { z } from "zod";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import {
+  baseSchemas,
   duplicateQuizSchema,
+  generateQuestionParamsSchema,
   generateQuizSchema,
   questionSchemas,
   saveQuizSchema,
@@ -64,9 +66,10 @@ export async function generateNewQuestionAction(
 ) {
   return runAction("generateNewQuestionAction", async () => {
     await requireUser();
+    const parsed = generateQuestionParamsSchema.parse(params);
 
     // Generate question using AI service with the new parameter structure
-    const question = await aiQuizService.generateQuestion(params);
+    const question = await aiQuizService.generateQuestion(parsed);
 
     const validated = questionSchemas.strict.safeParse(question);
     if (!validated.success) {
@@ -84,33 +87,26 @@ export async function generateNewQuestionAction(
 
 export async function deleteQuizAction(quizId: string) {
   return runAction("deleteQuizAction", async () => {
-    if (!quizId) {
-      throw new QuizSystemError(
-        "Quiz ID is required",
-        QuizErrorCode.INVALID_INPUT,
-      );
-    }
-
     await requireUser();
 
+    const id = baseSchemas.id.parse(quizId);
+
     const quiz = await prisma.quiz.findUnique({
-      where: { id: quizId },
+      where: { id },
       select: { positionId: true },
     });
 
     if (!quiz) {
-      throw new QuizSystemError(
-        "Quiz not found",
-        QuizErrorCode.QUIZ_NOT_FOUND,
-        { quizId },
-      );
+      throw new QuizSystemError("Quiz not found", QuizErrorCode.QUIZ_NOT_FOUND, {
+        quizId: id,
+      });
     }
 
-    await prisma.quiz.delete({ where: { id: quizId } });
+    await prisma.quiz.delete({ where: { id } });
 
     // Invalidate cache
     invalidateQuizCache({
-      quizId,
+      quizId: id,
       positionId: quiz.positionId ?? undefined,
       deleted: true,
     });
@@ -130,10 +126,8 @@ export async function upsertQuizAction(input: SaveQuizInput) {
 
     const parsed = saveQuizSchema.safeParse(input);
     if (!parsed.success) {
-      throw new QuizSystemError(
-        "Dati del quiz non validi",
-        QuizErrorCode.INVALID_INPUT,
-        { issues: parsed.error.issues },
+      throw new UserError(
+        parsed.error.issues[0]?.message ?? "Dati del quiz non validi",
       );
     }
     const { quizId, positionId, title, timeLimit, questions } = parsed.data;
@@ -210,10 +204,8 @@ export async function duplicateQuizAction(input: DuplicateQuizInput) {
 
     const parsed = duplicateQuizSchema.safeParse(input);
     if (!parsed.success) {
-      throw new QuizSystemError(
-        "Quiz ID, position ID, and title are required",
-        QuizErrorCode.INVALID_INPUT,
-        { issues: parsed.error.issues },
+      throw new UserError(
+        parsed.error.issues[0]?.message ?? "Dati del quiz non validi",
       );
     }
     const { quizId, newPositionId, newTitle } = parsed.data;

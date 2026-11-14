@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { PasswordField } from "@/components/ui/rhf-inputs";
 import { updatePasswordAction } from "@/lib/actions/profile";
-import { unwrap } from "@/lib/utils/action-result";
+import { unwrap, errorMessage } from "@/lib/utils/action-result";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,9 +47,7 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
         router.push("/dashboard/profile");
       } catch (error) {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Errore nell'aggiornamento della password",
+          errorMessage(error, "Errore nell'aggiornamento della password"),
         );
       }
     });
@@ -67,10 +65,10 @@ export const PasswordForm = ({ className, ...props }: PasswordFormProps) => {
         <CardContent>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6"
+            className="flex flex-col gap-6"
             noValidate
           >
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <PasswordField
                 control={form.control}
                 name="current_password"

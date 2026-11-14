@@ -9,7 +9,7 @@ import { Brain, Briefcase, Sparkles } from "lucide-react";
  */
 export function PositionFormSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-8">
           <Card>
@@ -28,7 +28,7 @@ export function PositionFormSkeleton() {
             </CardContent>
           </Card>
 
-          <Card className="relative bg-primary/5 dark:bg-primary/10 border-primary/20 overflow-hidden">
+          <Card className="relative bg-primary/10 border-primary/20 overflow-hidden">
             <div className="top-0 right-0 absolute opacity-10 p-4">
               <Sparkles className="size-24 text-primary" />
             </div>
@@ -38,7 +38,7 @@ export function PositionFormSkeleton() {
                 Descrizione IA
               </CardTitle>
             </CardHeader>
-            <CardContent className="z-10 relative space-y-4 pt-4">
+            <CardContent className="z-10 relative flex flex-col gap-4 pt-4">
               <FieldSkeleton
                 label="Job Description"
                 controlClassName="h-auto min-h-48"
@@ -58,7 +58,7 @@ export function PositionFormSkeleton() {
                 Competenze
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="flex flex-col gap-6">
               <FieldSkeleton label="Tech Stack" required />
               <FieldSkeleton label="Soft Skills" />
               <div className="flex flex-col gap-3 pt-6 border-t">

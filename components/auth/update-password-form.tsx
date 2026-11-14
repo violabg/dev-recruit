@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
 import { UpdatePasswordFormData, updatePasswordSchema } from "@/lib/schemas";
+import { errorMessage } from "@/lib/utils/action-result";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -37,18 +38,22 @@ export function UpdatePasswordForm({
         });
 
         if (result.error) {
-          throw new Error(
-            result.error.message ?? "Errore nell'aggiornamento della password",
-          );
+          setError("password", {
+            message: errorMessage(
+              result.error,
+              "Errore nell'aggiornamento della password",
+            ),
+          });
+          return;
         }
 
         router.push("/dashboard");
       } catch (error: unknown) {
         setError("password", {
-          message:
-            error instanceof Error
-              ? error.message
-              : "Si è verificato un errore",
+          message: errorMessage(
+            error,
+            "Errore nell'aggiornamento della password",
+          ),
         });
       }
     });
@@ -66,14 +71,14 @@ export function UpdatePasswordForm({
         <CardContent>
           <form
             onSubmit={handleSubmit(handleUpdatePassword)}
-            className="space-y-4"
+            className="flex flex-col gap-4"
             autoComplete="off"
           >
             <PasswordField<UpdatePasswordFormData>
               control={form.control}
               name="password"
               label="Nuova password"
-              placeholder="New password"
+              placeholder="Nuova password"
               autoComplete="new-password"
               disabled={isPending}
               required

@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { InterviewExpiryChecker } from "@/components/interviews/interview-expiry-checker";
 import PageHeader from "@/components/page-header";
 import { InterviewResults } from "@/components/recruiting/interview-results";
@@ -82,7 +83,7 @@ async function InterviewDetailContent({
         <p className="font-medium text-lg">Colloquio non trovata</p>
         <Link
           href="/dashboard/quizzes"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna ai quiz
         </Link>
@@ -93,7 +94,7 @@ async function InterviewDetailContent({
   const { interview, quiz, candidate } = interviewData;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Client-side expiry checker - only triggers for in_progress interviews */}
       <InterviewExpiryChecker
         interviewId={interview.id}
@@ -172,7 +173,7 @@ async function InterviewDetailContent({
             <CardTitle className="font-medium text-sm">Stato</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <div className="flex justify-between">
                 <span className="text-muted-foreground text-sm">Inizio:</span>
                 <span>{formatDate(interview.startedAt, true)}</span>
@@ -201,7 +202,7 @@ async function InterviewDetailContent({
         </Card>
       </div>
 
-      <div className="space-y-4 pt-4">
+      <div className="flex flex-col gap-4 pt-4">
         {interview.status === "completed" ? (
           <InterviewResults
             interviewId={interview.id}

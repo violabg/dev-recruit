@@ -124,7 +124,7 @@ vi.stubEnv("BETTER_AUTH_SECRET", "test-secret");
 vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3000");
 vi.stubEnv("R2_ACCESS_KEY_ID", "test-r2-key");
 vi.stubEnv("R2_SECRET_ACCESS_KEY", "test-r2-secret");
-vi.stubEnv("R2_ENDPOINT", "https://test.r2.cloudflarestorage.com");
+vi.stubEnv("R2_ACCOUNT_ID", "test-account-id");
 vi.stubEnv("R2_BUCKET_NAME", "test-bucket");
 
 

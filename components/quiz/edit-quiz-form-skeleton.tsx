@@ -26,7 +26,7 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
   const addTypes = questionTypes.filter((t) => t.value !== "all");
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-9">
           {/* QuizSettings */}
@@ -34,7 +34,7 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
             <CardHeader>
               <CardTitle>Impostazioni Quiz</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <FieldSkeleton label="Titolo del Quiz" />
               <FieldSkeleton label="Limite di Tempo (minuti)" />
               <div className="pt-2">
@@ -45,11 +45,11 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
 
           <PresetGenerationButtonsFallback />
 
-          <div className="space-y-6">
+          <div className="flex flex-col gap-6">
             {/* QuestionsHeader */}
             <Card>
               <CardHeader>
-                <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+                <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4 sm:gap-0">
                   <div>
                     <CardTitle>Domande ({questions})</CardTitle>
                     <CardDescription>
@@ -84,7 +84,7 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
                 pulsanti sopra.
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
                 {Array.from({ length: questions }, (_, i) => (
                   <Card
                     key={i}
@@ -92,13 +92,13 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
                   >
                     <CardHeader className="gap-0 bg-muted/10 pt-4">
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           <span className="font-medium text-foreground">
                             Domanda {i + 1}
                           </span>
                           <BadgeSkeleton className="w-28" />
                         </div>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center gap-1">
                           {Array.from({ length: 4 }, (_, b) => (
                             <ButtonSkeleton key={b} size="icon" />
                           ))}
@@ -121,7 +121,7 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
                 Azioni
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-3">
                 <Skeleton className="rounded-lg w-full h-8" />
                 <Skeleton className="rounded-lg w-full h-8" />

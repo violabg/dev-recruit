@@ -38,7 +38,7 @@ export function QuizCard({
         </div>
       </CardHeader>
       <CardContent className="pb-2">
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-2">
             {positions && <Badge variant="outline">{positions?.title}</Badge>}
             {positions && (

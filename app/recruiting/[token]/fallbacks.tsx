@@ -38,10 +38,10 @@ export function InterviewSkeleton() {
             <Skeleton className="w-32 h-3.5" />
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-4">
           <div className="p-4 border rounded-lg">
             <h3 className="font-medium">Dettagli del quiz</h3>
-            <div className="space-y-2 mt-2 text-sm">
+            <div className="flex flex-col gap-2 mt-2 text-sm">
               {DETAIL_ROWS.map(([label, width]) => (
                 <div key={label} className="flex justify-between">
                   <span>{label}</span>
@@ -53,7 +53,7 @@ export function InterviewSkeleton() {
 
           <div className="p-4 border rounded-lg">
             <h3 className="font-medium">Istruzioni</h3>
-            <ul className="space-y-2 mt-2 text-sm">
+            <ul className="flex flex-col gap-2 mt-2 text-sm">
               <li>• Leggi attentamente ogni domanda prima di rispondere</li>
               <li>
                 • Puoi navigare tra le domande utilizzando i pulsanti

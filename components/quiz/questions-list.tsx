@@ -52,7 +52,7 @@ export const QuestionsList = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {filteredQuestions.map((field) => {
         const actualIndex = fields.findIndex((f) => f.id === field.id);
         const isExpanded = expandedQuestions.has(field.id);

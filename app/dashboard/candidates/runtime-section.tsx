@@ -138,7 +138,7 @@ export const CandidatesRuntimeSection = async ({
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <Tabs defaultValue={activeView} className="w-full">
               <div className="flex justify-between items-center">
                 <TabsList>

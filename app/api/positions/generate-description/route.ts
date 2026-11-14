@@ -3,6 +3,7 @@ import { positionDescriptionSchema } from "@/lib/schemas/position";
 import { aiLogger } from "@/lib/services/logger";
 import { streamPositionDescription } from "@/lib/services/ai-service";
 import { NextRequest } from "next/server";
+import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,18 +23,25 @@ export async function POST(request: NextRequest) {
 
     return stream.toTextStreamResponse();
   } catch (error) {
+    if (error instanceof ZodError) {
+      return Response.json(
+        { error: error.issues[0]?.message ?? "Dati non validi" },
+        { status: 400 },
+      );
+    }
+
     aiLogger.error("Stream position description failed", { error });
     return new Response(
       JSON.stringify({
         error:
           error instanceof Error
             ? error.message
-            : "Failed to generate description",
+            : "Impossibile generare la descrizione",
       }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

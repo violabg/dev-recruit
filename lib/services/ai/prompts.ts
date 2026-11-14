@@ -27,14 +27,16 @@ import type {
 function buildCommonContext(params: BaseQuestionParams): string {
   const sanitizedQuizTitle = sanitizeInput(params.quizTitle);
   const sanitizedPositionTitle = sanitizeInput(params.positionTitle);
+  const sanitizedExperienceLevel = sanitizeInput(params.experienceLevel);
+  const sanitizedSkills = params.skills.map(sanitizeInput).join(", ");
   const sanitizedInstructions = params.instructions
     ? sanitizeInput(params.instructions)
     : "";
 
   return `
           Position Details:
-          - Experience Level: ${params.experienceLevel}
-          - Required Skills: ${params.skills.join(", ")}
+          - Experience Level: ${sanitizedExperienceLevel}
+          - Required Skills: ${sanitizedSkills}
           - Difficulty level: ${params.difficulty || 3}/5
           ${
             sanitizedInstructions
@@ -107,7 +109,9 @@ export const questionPromptBuilders = {
       const requirements: string[] = [];
 
       if (params.focusAreas?.length) {
-        requirements.push(`Focus areas: ${params.focusAreas.join(", ")}`);
+        requirements.push(
+          `Focus areas: ${params.focusAreas.map(sanitizeInput).join(", ")}`,
+        );
       }
       if (params.distractorComplexity) {
         requirements.push(
@@ -120,7 +124,7 @@ export const questionPromptBuilders = {
           Create a multiple choice question with the following requirements:
           - Must be practical and job-relevant
           - Should test real-world application of skills
-          - Appropriate for ${params.experienceLevel} level
+          - Appropriate for ${sanitizeInput(params.experienceLevel)} level
           - Include 4 plausible options with clear distinctions
 
           ${
@@ -184,7 +188,9 @@ export const questionPromptBuilders = {
       }
       if (params.evaluationCriteria?.length) {
         requirements.push(
-          `Evaluation criteria: ${params.evaluationCriteria.join(", ")}`,
+          `Evaluation criteria: ${params.evaluationCriteria
+            .map(sanitizeInput)
+            .join(", ")}`,
         );
       }
 
@@ -194,7 +200,7 @@ export const questionPromptBuilders = {
           - Must be practical and job-relevant
           - Should encourage detailed, thoughtful responses
           - Allow for multiple valid approaches
-          - Appropriate for ${params.experienceLevel} level
+          - Appropriate for ${sanitizeInput(params.experienceLevel)} level
           - Test conceptual understanding and practical experience
           
           IMPORTANT CONSTRAINT:
@@ -293,7 +299,9 @@ export const questionPromptBuilders = {
         }
       }
 
-      const requirements = [`Programming language: ${targetLanguage}`];
+      const requirements = [
+        `Programming language: ${sanitizeInput(targetLanguage)}`,
+      ];
       const hasBugType = params.bugType && params.bugType.trim() !== "";
 
       let questionType: string;
@@ -320,15 +328,14 @@ export const questionPromptBuilders = {
           `Include comments: ${params.includeComments ? "yes" : "no"}`,
         );
       }
-
       return `${context}
 
           Create a code snippet question with the following requirements:
-          - Must contain realistic, job-relevant code in ${targetLanguage}
-          - CRITICAL: Both codeSnippet and sampleSolution MUST be written in ${targetLanguage}
-          - The "language" field MUST be set to "${targetLanguage}"
+          - Must contain realistic, job-relevant code in ${sanitizeInput(targetLanguage)}
+          - CRITICAL: Both codeSnippet and sampleSolution MUST be written in ${sanitizeInput(targetLanguage)}
+          - The "language" field MUST be set to "${sanitizeInput(targetLanguage)}"
           ${codeRequirements}
-          - Appropriate complexity for ${params.experienceLevel} level
+          - Appropriate complexity for ${sanitizeInput(params.experienceLevel)} level
           - Question type: ${questionType}
 
           Additional Requirements:
@@ -379,7 +386,9 @@ export const questionPromptBuilders = {
       }
       if (params.evaluationCriteria?.length) {
         requirements.push(
-          `Evaluation criteria: ${params.evaluationCriteria.join(", ")}`,
+          `Evaluation criteria: ${params.evaluationCriteria
+            .map(sanitizeInput)
+            .join(", ")}`,
         );
       }
 
@@ -388,7 +397,7 @@ export const questionPromptBuilders = {
           Create a behavioral scenario question with the following requirements:
           - Must be practical and role-relevant
           - Focus on judgment, communication, and collaboration
-          - Appropriate for ${params.experienceLevel} level
+          - Appropriate for ${sanitizeInput(params.experienceLevel)} level
           - No code implementation required
 
           ${
@@ -566,8 +575,8 @@ export function buildQuizPrompt(params: GenerateQuizParams): string {
   const prompt = `Create a technical quiz for the position "${sanitizedTitle}" with ${questionCount} questions.
 
                     Position Details:
-                    - Experience Level: ${experienceLevel}
-                    - Required Skills: ${skills.join(", ")}
+                    - Experience Level: ${sanitizeInput(experienceLevel)}
+                    - Required Skills: ${skills.map(sanitizeInput).join(", ")}
                     ${
                       sanitizedDescription
                         ? `- Description: ${sanitizedDescription}`
@@ -637,7 +646,7 @@ export function buildPositionDescriptionPrompt(
   return `
           Position:
           - Title: ${sanitizedTitle}
-          - Experience level: ${params.experienceLevel}
+          - Experience level: ${sanitizeInput(params.experienceLevel)}
           - Technical skills: ${sanitizedSkills}
           - Soft skills: ${sanitizedSoftSkills}
           - Contract type: ${sanitizedContract}

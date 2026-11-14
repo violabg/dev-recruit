@@ -117,7 +117,7 @@ export const QuestionItem = ({
         )}
       >
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <div className="flex flex-col">
               <span className="font-medium text-foreground text-md">
                 Domanda {actualIndex + 1}
@@ -132,7 +132,7 @@ export const QuestionItem = ({
               {getQuestionTypeLabel(field.type)}
             </Badge>
           </div>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -257,7 +257,7 @@ export const QuestionItem = ({
 
       {isExpanded && (
         <CardContent className="pt-0 pb-4">
-          <div className="space-y-6">
+          <div className="flex flex-col gap-6">
             <div className="bg-muted/30 p-4 border border-border/50 rounded-lg">
               <InputField
                 control={form.control}

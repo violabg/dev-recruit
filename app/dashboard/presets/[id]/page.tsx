@@ -95,6 +95,18 @@ async function PresetDetailContent({
           : "Non specificato",
       },
     ],
+    behavioral_scenario: [
+      {
+        label: "Lunghezza risposta attesa",
+        value: formatEnum(preset.expectedResponseLength),
+      },
+      {
+        label: "Criteri di valutazione",
+        value: preset.evaluationCriteria?.length
+          ? `${preset.evaluationCriteria.length} configurati`
+          : "Non specificato",
+      },
+    ],
     code_snippet: [
       {
         label: "Linguaggio",
@@ -119,7 +131,7 @@ async function PresetDetailContent({
   const isOpenQuestion = preset.questionType === "open_question";
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         section="presets"
         title={preset.label}
@@ -140,14 +152,14 @@ async function PresetDetailContent({
             </Link>
             <DeleteWithConfirm
               deleteAction={deletePresetAction.bind(null, preset.id)}
-              description="Questa azione non può essere annullata. Il preset verrà rimosso da tutte le posizioni che ne dipendono."
+              description="Questa azione non può essere annullata. Il preset verrà eliminato definitivamente."
               successMessage="Preset eliminato con successo"
               errorMessage="Errore nell'eliminazione del preset"
             />
           </>
         }
       />
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Card>
           <CardHeader className="flex flex-col gap-1">
             <CardTitle>Configurazione</CardTitle>
@@ -155,7 +167,7 @@ async function PresetDetailContent({
               Metadati essenziali catturati in questo preset.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline" className="capitalize">
                 {preset.questionType.replace(/_/g, " ")}
@@ -202,7 +214,7 @@ async function PresetDetailContent({
               domanda.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="flex flex-col gap-6">
             <div>
               <p className="text-muted-foreground text-sm">Istruzioni</p>
               {preset.instructions ? (
@@ -241,7 +253,7 @@ async function PresetDetailContent({
                   Criteri di valutazione
                 </p>
                 {preset.evaluationCriteria?.length ? (
-                  <ul className="space-y-1 mt-2 text-sm">
+                  <ul className="flex flex-col gap-1 mt-2 text-sm">
                     {preset.evaluationCriteria.map((criterion) => (
                       <li key={criterion} className="flex items-center gap-2">
                         <span className="bg-muted-foreground/60 rounded-full w-1.5 h-1.5" />

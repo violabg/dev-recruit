@@ -8,7 +8,7 @@ import { baseSchemas } from "./base";
 
 // Base question schema with common fields
 const baseQuestionSchema = z.object({
-  question: z.string().min(1, "Question text is required"),
+  question: z.string().min(1, "Il testo della domanda è obbligatorio"),
   keywords: z.array(z.string()).optional(),
   explanation: z.string().optional(),
 });
@@ -17,28 +17,30 @@ const baseQuestionSchema = z.object({
 const multipleChoiceQuestionSchema = baseQuestionSchema.extend({
   type: z.literal("multiple_choice"),
   options: z
-    .array(z.string().min(3, "Each option must be at least 3 characters long"))
-    .min(4, "Must be at least 4 options"),
+    .array(
+      z.string().min(3, "Ogni opzione deve contenere almeno 3 caratteri"),
+    )
+    .min(4, "Servono almeno 4 opzioni"),
   correctAnswer: z.coerce.number<number>().int().min(0).max(3),
 });
 
 const openQuestionSchema = baseQuestionSchema.extend({
   type: z.literal("open_question"),
-  sampleAnswer: z.string().min(1, "Sample answer required"),
+  sampleAnswer: z.string().min(1, "La risposta di esempio è obbligatoria"),
   sampleSolution: z.string().optional(),
   codeSnippet: z.string().optional(),
 });
 
 const behavioralScenarioQuestionSchema = baseQuestionSchema.extend({
   type: z.literal("behavioral_scenario"),
-  sampleAnswer: z.string().min(1, "Sample answer required"),
+  sampleAnswer: z.string().min(1, "La risposta di esempio è obbligatoria"),
 });
 
 const codeSnippetQuestionSchema = baseQuestionSchema.extend({
   type: z.literal("code_snippet"),
-  codeSnippet: z.string().min(1, "Code snippet required"),
-  sampleSolution: z.string().min(1, "Sample solution required"),
-  language: z.string().min(1, "Programming language required"),
+  codeSnippet: z.string().min(1, "Lo snippet di codice è obbligatorio"),
+  sampleSolution: z.string().min(1, "La soluzione di esempio è obbligatoria"),
+  language: z.string().min(1, "Il linguaggio di programmazione è obbligatorio"),
 });
 
 // Question type schemas for automatic type inference
@@ -61,7 +63,7 @@ export const questionSchemas = {
     .object({
       dbId: z.string().optional(), // Database ID for linked questions
       type: baseSchemas.questionType,
-      question: z.string().min(1, "Question text required"),
+      question: z.string().min(1, "Il testo della domanda è obbligatorio"),
       options: z.array(z.string()).optional(),
       correctAnswer: z.coerce.number<number>().optional(),
       explanation: z.string().optional(),
@@ -80,7 +82,7 @@ export const questionSchemas = {
             code: "custom",
             path: ["options"],
             error:
-              "Multiple choice questions require at least 4 options (each with at least 3 characters) and correct answer within bounds",
+              "Le domande a scelta multipla richiedono almeno 4 opzioni (ognuna di almeno 3 caratteri) e una risposta corretta entro i limiti",
             input: "",
           });
         }
@@ -90,7 +92,7 @@ export const questionSchemas = {
               ctx.issues.push({
                 code: "custom",
                 path: ["options", index],
-                error: "Each option must be at least 3 characters long",
+                error: "Ogni opzione deve contenere almeno 3 caratteri",
                 input: "",
               });
             }
@@ -105,7 +107,7 @@ export const questionSchemas = {
             code: "custom",
             path: ["correctAnswer"],
             error:
-              "Multiple choice questions require at least 4 options (each with at least 3 characters) and correct answer within bounds",
+              "Le domande a scelta multipla richiedono almeno 4 opzioni (ognuna di almeno 3 caratteri) e una risposta corretta entro i limiti",
             input: "",
           });
         }
@@ -166,23 +168,23 @@ export const convertToStrictQuestion = (
     normalizedQuestion.type === "open_question" &&
     !normalizedQuestion.sampleAnswer
   ) {
-    normalizedQuestion.sampleAnswer = "Sample answer to be provided";
+    normalizedQuestion.sampleAnswer = "Risposta di esempio da fornire";
   }
 
   if (
     normalizedQuestion.type === "behavioral_scenario" &&
     !normalizedQuestion.sampleAnswer
   ) {
-    normalizedQuestion.sampleAnswer = "Sample answer to be provided";
+    normalizedQuestion.sampleAnswer = "Risposta di esempio da fornire";
   }
 
   // For code snippet questions, ensure required fields are present
   if (normalizedQuestion.type === "code_snippet") {
     if (!normalizedQuestion.sampleSolution) {
-      normalizedQuestion.sampleSolution = "// Sample solution to be provided";
+      normalizedQuestion.sampleSolution = "// Soluzione di esempio da fornire";
     }
     if (!normalizedQuestion.codeSnippet) {
-      normalizedQuestion.codeSnippet = "// Code snippet to be provided";
+      normalizedQuestion.codeSnippet = "// Snippet di codice da fornire";
     }
     if (!normalizedQuestion.language) {
       normalizedQuestion.language = "javascript";
@@ -202,6 +204,6 @@ export const convertToStrictQuestions = (
  * Input for removing a question from a quiz
  */
 export const removeQuestionFromQuizSchema = z.object({
-  quizId: z.string().min(1, "Quiz ID is required"),
-  questionId: z.string().min(1, "Question ID is required"),
+  quizId: z.string().min(1, "Il quiz è obbligatorio"),
+  questionId: z.string().min(1, "La domanda è obbligatoria"),
 });

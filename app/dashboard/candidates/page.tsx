@@ -27,7 +27,7 @@ export default async function CandidatesPage({
   const positionItems = await getPositionItemsForSelect();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         section="candidates"
         title="Candidati"
@@ -43,7 +43,7 @@ export default async function CandidatesPage({
         }
       />
 
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <Suspense fallback={<FiltersSkeleton />}>
           <SearchAndFilterCandidates positionItems={positionItems} />
         </Suspense>

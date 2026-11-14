@@ -38,7 +38,7 @@ export function SliderField<T extends FieldValues>({
         const sliderValue = field.value ?? min;
 
         return (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Slider
               {...sliderProps}
               value={[sliderValue]}

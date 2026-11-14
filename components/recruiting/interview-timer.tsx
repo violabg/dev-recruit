@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import {
   useEffect,
@@ -105,7 +106,7 @@ export function InterviewTimer({
 
   return (
     <div className="flex items-center gap-2">
-      <Clock className={`size-4 ${getIconColor()}`} />
+      <Clock className={cn("size-4", getIconColor())} />
       <span className="font-mono">{formatTimeRemaining(displayTime)}</span>
     </div>
   );

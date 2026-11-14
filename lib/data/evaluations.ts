@@ -10,7 +10,6 @@ export type EvaluationWithRelations = Prisma.EvaluationGetPayload<{
       select: {
         id: true;
         status: true;
-        score: true;
         quiz: {
           select: {
             id: true;
@@ -64,7 +63,6 @@ const EVALUATION_INCLUDE = {
     select: {
       id: true,
       status: true,
-      score: true,
       quiz: {
         select: {
           id: true,

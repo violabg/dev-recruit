@@ -1,11 +1,11 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { LLM_MODELS } from "@/lib/services/ai/models";
-import { logger } from "@/lib/services/logger";
+import { transcriptionRequestSchema } from "@/lib/schemas";
+import { transcribeAudio } from "@/lib/services/ai/transcription";
 import { acceptsAnswers } from "@/lib/utils/interview-utils";
-import { groq } from "@ai-sdk/groq";
-import { transcribe } from "ai";
+import type { ActionResult } from "@/lib/utils/action-result";
+import { runAction, UserError } from "./run-action";
 
 /** Longest accepted recording (about 25 MB, the provider's own limit) */
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
@@ -18,22 +18,12 @@ const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
  */
 export async function transcribeAudioAction(
   formData: FormData,
-): Promise<{ success: boolean; text?: string; error?: string }> {
-  try {
-    const token = formData.get("token");
-    const audioFile = formData.get("audio");
-
-    if (typeof token !== "string" || !token) {
-      return { success: false, error: "Colloquio non valido" };
-    }
-
-    if (!audioFile || !(audioFile instanceof Blob)) {
-      return { success: false, error: "Nessun file audio fornito" };
-    }
-
-    if (audioFile.size > MAX_AUDIO_BYTES) {
-      return { success: false, error: "La registrazione è troppo lunga" };
-    }
+): Promise<ActionResult<{ text: string }>> {
+  return runAction("transcribeAudioAction", async () => {
+    const audio = formData.get("audio");
+    const { token } = transcriptionRequestSchema.parse({
+      token: formData.get("token") ?? "",
+    });
 
     const interview = await prisma.interview.findUnique({
       where: { token },
@@ -44,24 +34,32 @@ export async function transcribeAudioAction(
       },
     });
 
-    if (
-      !interview ||
-      !acceptsAnswers({ ...interview, timeLimit: interview.quiz.timeLimit })
-    ) {
-      return { success: false, error: "Il colloquio non è più attivo" };
+    if (!interview) {
+      throw new UserError("Colloquio non valido");
     }
 
-    const { text: transcript } = await transcribe({
-      model: groq.transcription(LLM_MODELS.WHISPER_LARGE_V3_TURBO),
-      audio: new Uint8Array(await audioFile.arrayBuffer()),
-    });
+    if (!audio || !(audio instanceof Blob)) {
+      throw new UserError("Nessun file audio fornito");
+    }
 
-    return { success: true, text: transcript };
-  } catch (error) {
-    logger.error("Transcription error:", { error });
-    return {
-      success: false,
-      error: "Trascrizione non riuscita. Riprova o scrivi la risposta.",
-    };
-  }
+    if (audio.size > MAX_AUDIO_BYTES) {
+      throw new UserError("La registrazione è troppo lunga");
+    }
+
+    if (
+      !acceptsAnswers({
+        status: interview.status,
+        startedAt: interview.startedAt,
+        timeLimit: interview.quiz.timeLimit,
+      })
+    ) {
+      throw new UserError("Il colloquio non è più attivo");
+    }
+
+    const text = await transcribeAudio(
+      new Uint8Array(await audio.arrayBuffer()),
+    );
+
+    return { text };
+  });
 }

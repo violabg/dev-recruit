@@ -34,7 +34,7 @@ describe("CacheTags", () => {
     expect(CacheTags.INTERVIEWS).toBe("interviews");
     expect(CacheTags.EVALUATIONS).toBe("evaluations");
     expect(CacheTags.PRESETS).toBe("presets");
-    expect(CacheTags.DASHBOARD).toBe("dashboard");
+    expect(CacheTags.REFERENCE_DATA).toBe("reference-data");
   });
 });
 
@@ -115,11 +115,11 @@ describe("invalidateQuestionCache", () => {
     expect(mockedUpdateTag).toHaveBeenCalledWith("quiz-quiz-123");
   });
 
-  it("should invalidate favorites when isFavorite is true", () => {
+  it("should invalidate the questions collection when the favorite status changes", () => {
     invalidateQuestionCache({ isFavorite: true });
 
-    expect(mockedUpdateTag).toHaveBeenCalledWith(CacheTags.QUESTIONS_FAVORITES);
-    expect(mockedUpdateTag).toHaveBeenCalledWith(CacheTags.QUIZZES);
+    expect(mockedUpdateTag).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateTag).toHaveBeenCalledWith(CacheTags.QUESTIONS);
   });
 });
 

@@ -41,10 +41,10 @@ const codeComplexitySchema = z.enum(["basic", "intermediate", "advanced"]);
 // Preset schema for CRUD operations
 export const presetSchema = z.object({
   id: z.string().cuid(),
-  name: z.string().min(1, "Preset name is required").max(100),
-  label: z.string().min(1, "Label is required").max(100),
+  name: z.string().min(1, "Il nome del preset è obbligatorio").max(100),
+  label: z.string().min(1, "L'etichetta è obbligatoria").max(100),
   description: z.string().max(500).optional().nullable(),
-  icon: z.string().min(1, "Icon name is required"),
+  icon: z.string().min(1, "Il nome dell'icona è obbligatorio"),
   questionType: baseSchemas.questionType,
   instructions: optionalTrimmedString(1000),
   focusAreas: optionalStringArray,
@@ -55,7 +55,9 @@ export const presetSchema = z.object({
   bugType: optionalEnum(bugTypeSchema),
   codeComplexity: optionalEnum(codeComplexitySchema),
   includeComments: optionalBoolean,
-  tags: z.array(z.string().min(1).max(50)).min(1, "At least one tag required"),
+  tags: z
+    .array(z.string().min(1).max(50))
+    .min(1, "Serve almeno un tag"),
   difficulty: z.number().int().min(1).max(5),
   isDefault: z.boolean().optional(),
 });

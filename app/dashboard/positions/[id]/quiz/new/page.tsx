@@ -6,6 +6,7 @@ import {
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getPositionById } from "@/lib/data/positions";
 import { getAllPresets } from "@/lib/data/presets";
+import { getFavoriteQuestions } from "@/lib/data/questions";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { QuizGeneratorSkeleton } from "./fallbacks";
@@ -16,7 +17,7 @@ export default async function GenerateQuizPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<QuizGeneratorSkeleton />}>
         <QuizGeneratorContent params={incomingParams} />
       </Suspense>
@@ -30,6 +31,7 @@ async function QuizGeneratorContent({
   params: Promise<{ id: string }>;
 }) {
   const presetsPromise = getAllPresets().catch(() => []);
+  const favoriteQuestionsPromise = getFavoriteQuestions().catch(() => []);
   const { id } = await incomingParams;
   const position = await getPositionById(id);
 
@@ -48,6 +50,7 @@ async function QuizGeneratorContent({
     <NewQuizCreationPage
       fixedPosition={positionOption}
       presetsPromise={presetsPromise}
+      favoriteQuestionsPromise={favoriteQuestionsPromise}
       languageOptions={
         <Suspense fallback={<SelectOptionsSkeleton />}>
           <ProgrammingLanguageSelectItems />

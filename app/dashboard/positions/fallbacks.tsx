@@ -13,7 +13,7 @@ export function SearchPositionsSkeleton() {
 /** Mirrors PositionsTable: table with real headers + UrlPagination. */
 export function PositionsSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <TableSkeleton
         rows={5}
         columns={[

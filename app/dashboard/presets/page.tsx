@@ -112,7 +112,7 @@ export default async function PresetsPage({
   searchParams: PresetsSearchParams;
 }) {
   return (
-    <div className="space-y-6 w-full">
+    <div className="flex flex-col gap-6 w-full">
       <PageHeader
         section="presets"
         title="Preset"
@@ -128,7 +128,7 @@ export default async function PresetsPage({
           </Link>
         }
       />
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <SearchPresets />
         <Suspense fallback={<PresetsListSkeleton />}>
           <PresetsContent searchParams={searchParams} />

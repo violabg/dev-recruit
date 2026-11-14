@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata, Viewport } from "next";
@@ -58,7 +59,11 @@ export default function RootLayout({
   return (
     <html
       lang="it"
-      className={`${plexSans.variable} ${bricolage.variable} ${geistMono.variable}`}
+      className={cn(
+        plexSans.variable,
+        bricolage.variable,
+        geistMono.variable,
+      )}
       suppressHydrationWarning
     >
       <body

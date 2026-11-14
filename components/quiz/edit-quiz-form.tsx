@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Preset } from "@/lib/data/presets";
+import type { QuestionWithMetadata } from "@/lib/data/questions";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { DEFAULT_GENERATION_MODEL } from "@/lib/services/ai/models";
@@ -52,6 +53,8 @@ type EditQuizFormProps = {
   languageOptions?: React.ReactNode;
   /** Un-awaited server promise of presets (see getAllPresets) */
   presetsPromise: Promise<Preset[]>;
+  /** Un-awaited server promise of favorite questions (see getFavoriteQuestions) */
+  favoriteQuestionsPromise: Promise<QuestionWithMetadata[]>;
 };
 
 export function EditQuizForm({
@@ -61,6 +64,7 @@ export function EditQuizForm({
   onSaveSuccess,
   languageOptions,
   presetsPromise,
+  favoriteQuestionsPromise,
 }: EditQuizFormProps) {
   const router = useRouter();
 
@@ -216,7 +220,7 @@ export function EditQuizForm({
       <FormProvider<EditQuizFormData> {...form}>
         <form
           onSubmit={form.handleSubmit(handleSave)}
-          className="space-y-6"
+          className="flex flex-col gap-6"
           noValidate
         >
           <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
@@ -236,7 +240,7 @@ export function EditQuizForm({
                 presetsPromise={presetsPromise}
               />
 
-              <div className="space-y-6">
+              <div className="flex flex-col gap-6">
                 {/* Questions Management */}
                 <QuestionsHeader
                   fieldsLength={fields.length}
@@ -280,7 +284,7 @@ export function EditQuizForm({
                     Azioni
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="flex flex-col gap-4">
                   <div className="flex flex-col gap-3">
                     <Button
                       type="submit"
@@ -288,9 +292,9 @@ export function EditQuizForm({
                       className={cn(
                         "w-full transition-all",
                         saveStatus === "success"
-                          ? "bg-success hover:bg-success/90 text-white"
+                          ? "bg-success hover:bg-success/90 text-primary-foreground"
                           : saveStatus === "error"
-                            ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                            ? "bg-destructive hover:bg-destructive/90 text-primary-foreground"
                             : "",
                       )}
                     >
@@ -343,6 +347,7 @@ export function EditQuizForm({
         open={favoritesDialogOpen}
         onOpenChange={setFavoritesDialogOpen}
         onAddQuestions={handleAddFavoriteQuestions}
+        favoriteQuestionsPromise={favoriteQuestionsPromise}
       />
     </>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -59,7 +60,10 @@ export function SaveFavoriteButton({ question }: SaveFavoriteButtonProps) {
         }
       >
         <Heart
-          className={`size-4 ${isFavorite ? "fill-destructive text-destructive" : ""}`}
+          className={cn(
+            "size-4",
+            isFavorite && "fill-destructive text-destructive",
+          )}
         />
       </TooltipTrigger>
       <TooltipContent>

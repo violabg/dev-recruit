@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { transcribeAudioAction } from "@/lib/actions/transcription";
+import { errorMessage } from "@/lib/utils/action-result";
 import { Loader2, Speech, Square, Trash2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { LiveWaveform } from "../ui/live-waveform";
@@ -85,25 +86,17 @@ export function VoiceTextarea({
           formData.append("audio", audioBlob, "audio.webm");
           formData.append("token", interviewToken);
 
-          try {
-            setError(null);
-            const result = await transcribeAudioAction(formData);
-            if (result.success && result.text) {
-              // Append new transcription to existing answer instead of replacing
-              onChange(
-                value && value.trim()
-                  ? `${value.trim()} ${result.text}`
-                  : result.text || null,
-              );
-            } else if (result.error) {
-              setError(result.error);
-            }
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error
-                ? error.message
-                : "Errore sconosciuto durante la trascrizione";
-            setError(errorMessage);
+          setError(null);
+          const result = await transcribeAudioAction(formData);
+          if (result.success && result.text) {
+            // Append new transcription to existing answer instead of replacing
+            onChange(
+              value && value.trim()
+                ? `${value.trim()} ${result.text}`
+                : result.text || null,
+            );
+          } else if (!result.success) {
+            setError(errorMessage(result.error));
           }
         });
       };
@@ -127,7 +120,7 @@ export function VoiceTextarea({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <Textarea
         placeholder={placeholder}
         className="min-h-32"

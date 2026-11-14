@@ -225,7 +225,7 @@ export function InterviewResultsClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Riepilogo risultati</CardTitle>
@@ -234,9 +234,9 @@ export function InterviewResultsClient({
             {quizQuestions.length} domande
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-4">
           <div className="gap-4 grid md:grid-cols-3">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <div className="font-medium text-sm">Completamento</div>
               <Progress
                 value={
@@ -249,7 +249,7 @@ export function InterviewResultsClient({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <div className="font-medium text-sm">
                 Risposte corrette (scelta multipla)
               </div>
@@ -272,7 +272,7 @@ export function InterviewResultsClient({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <div className="font-medium text-sm">Punteggio complessivo</div>
               <ProgressPrimitive.Root
                 value={overallScore || 0}
@@ -301,7 +301,7 @@ export function InterviewResultsClient({
           </div>
 
           {!overallEvaluation && (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <Button
                 onClick={evaluateAnswers}
                 size="sm"
@@ -316,7 +316,7 @@ export function InterviewResultsClient({
               </Button>
 
               {loading && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   {!isGeneratingOverallEvaluation &&
                   totalQuestionsToEvaluate > 0 ? (
                     // Show individual question progress
@@ -342,7 +342,7 @@ export function InterviewResultsClient({
                     </>
                   ) : (
                     // Show overall evaluation progress
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       <Loader2 className="size-4 text-primary animate-spin" />
                       <div className="text-muted-foreground text-sm">
                         Generazione valutazione complessiva...
@@ -359,8 +359,8 @@ export function InterviewResultsClient({
           )}
 
           {savedEvaluation && (
-            <div className="space-y-4 pt-4 border-t">
-              <div className="space-y-2">
+            <div className="flex flex-col gap-4 pt-4 border-t">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="notes" className="font-medium text-sm">
                   Note manuali
                 </Label>
@@ -412,7 +412,7 @@ export function InterviewResultsClient({
           <TabsContent
             key={tabValue}
             value={tabValue}
-            className="space-y-4 pt-4"
+            className="flex flex-col gap-4 pt-4"
           >
             {quizQuestions
               .filter((q) => tabValue === "all" || q.type === tabValue)
@@ -447,13 +447,15 @@ export function InterviewResultsClient({
                           ? "Risposta multipla"
                           : type === "open_question"
                             ? "Domanda aperta"
-                            : "Snippet di codice"}
+                            : type === "behavioral_scenario"
+                              ? "Scenario comportamentale"
+                              : "Snippet di codice"}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="flex flex-col gap-4">
                       {isAnswered ? (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
+                        <div className="flex flex-col gap-4">
+                          <div className="flex flex-col gap-2">
                             <div className="font-medium">
                               Risposta del candidato:
                             </div>
@@ -505,7 +507,7 @@ export function InterviewResultsClient({
                                     : String(answers[dbId] ?? "")
                                 }
                                 language={question.language ?? "javascript"}
-                                className="bg-[oklch(0.18_0.02_260)] p-4 border border-[oklch(0.3_0.02_260)] rounded-lg font-mono text-[oklch(0.95_0_0)] text-sm"
+                                className="bg-muted p-4 border border-border rounded-lg font-mono text-foreground text-sm"
                               />
                             )}
                           </div>
@@ -516,7 +518,7 @@ export function InterviewResultsClient({
                             question.correctAnswer >= 0 &&
                             question.correctAnswer <
                               question.options.length && (
-                              <div className="space-y-2">
+                              <div className="flex flex-col gap-2">
                                 <div className="font-medium">
                                   Risposta corretta:
                                 </div>
@@ -532,7 +534,7 @@ export function InterviewResultsClient({
                             )}
 
                           {evaluation && (
-                            <div className="space-y-2">
+                            <div className="flex flex-col gap-2">
                               <div className="font-medium">Valutazione AI:</div>
                               <div className="p-3 border rounded-md whitespace-pre-wrap">
                                 {evaluation.evaluation}
@@ -544,7 +546,7 @@ export function InterviewResultsClient({
                                     <div className="font-medium text-success">
                                       Punti di forza:
                                     </div>
-                                    <ul className="space-y-1 mt-1 pl-5 list-disc">
+                                    <ul className="flex flex-col gap-1 mt-1 pl-5 list-disc">
                                       {evaluation.strengths.map(
                                         (strength: any, idx: number) => (
                                           <li key={idx} className="text-sm">
@@ -562,7 +564,7 @@ export function InterviewResultsClient({
                                     <div className="font-medium text-warning">
                                       Aree di miglioramento:
                                     </div>
-                                    <ul className="space-y-1 mt-1 pl-5 list-disc">
+                                    <ul className="flex flex-col gap-1 mt-1 pl-5 list-disc">
                                       {evaluation.weaknesses.map(
                                         (weakness: any, idx: number) => (
                                           <li key={idx} className="text-sm">

@@ -18,7 +18,7 @@ import {
  */
 export function PresetDetailSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeaderSkeleton
         section="presets"
         titleClassName="w-72"
@@ -30,7 +30,7 @@ export function PresetDetailSkeleton() {
           </>
         }
       />
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Card>
           <CardHeader className="flex flex-col gap-1">
             <CardTitle>Configurazione</CardTitle>
@@ -38,7 +38,7 @@ export function PresetDetailSkeleton() {
               Metadati essenziali catturati in questo preset.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <BadgeSkeleton className="w-28" />
               <BadgeSkeleton className="w-20" />
@@ -74,7 +74,7 @@ export function PresetDetailSkeleton() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">Istruzioni</p>
-            <div className="space-y-1 mt-2">
+            <div className="flex flex-col gap-1 mt-2">
               <TextSkeleton className="w-full" />
               <TextSkeleton className="w-4/5" />
             </div>
@@ -99,7 +99,7 @@ export function EditPresetSkeleton() {
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6">
         {Array.from({ length: 5 }, (_, i) => (
           <div key={i} className="flex flex-col gap-2">
             <TextSkeleton className="w-28" />

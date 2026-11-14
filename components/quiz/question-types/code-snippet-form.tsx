@@ -46,7 +46,7 @@ export const CodeSnippetForm = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <SelectField
         control={form.control}
         name={`questions.${index}.language`}

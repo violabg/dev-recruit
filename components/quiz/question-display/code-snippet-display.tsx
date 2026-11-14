@@ -11,11 +11,11 @@ type CodeSnippetDisplayProps = {
 
 export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       {question.codeSnippet && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold dark:text-heading text-sm">
+            <h3 className="font-bold text-heading text-sm">
               Snippet di codice:
             </h3>
             {question.language && (
@@ -33,7 +33,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
       {question.sampleSolution && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold dark:text-heading text-sm">
+            <h3 className="font-bold text-heading text-sm">
               Soluzione di esempio:
             </h3>
             {question.language && (

@@ -39,6 +39,8 @@ export async function POST(request: Request) {
       model: await getLanguageModel(getOptimalModel("resume_evaluation")),
       prompt: prepared.prompt,
       system: prepared.system,
+      temperature: 0,
+      seed: 42,
     });
 
     // Stream the text response directly
@@ -72,6 +74,12 @@ export async function POST(request: Request) {
             aiLogger.error("Error parsing/saving evaluation", {
               error: parseError,
             });
+            // The evaluation was generated but not stored: fail the stream so
+            // the client does not report a silent success.
+            controller.error(
+              new Error("Valutazione generata ma non salvata. Riprova."),
+            );
+            return;
           }
 
           // Close AFTER the database save is complete

@@ -128,7 +128,7 @@ export const AIQuestionGenerationDialog = ({
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="space-y-1">
+          <DialogDescription className="flex flex-col gap-1">
             <span>{description}</span>
             {questionType && (
               <Badge variant="secondary" className="ml-2">
@@ -140,10 +140,10 @@ export const AIQuestionGenerationDialog = ({
 
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-6"
+          className="flex flex-col gap-6"
           noValidate
         >
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <h3 className="font-medium text-sm">Impostazioni di Base</h3>
 
             <Controller
@@ -193,7 +193,7 @@ export const AIQuestionGenerationDialog = ({
           </div>
 
           {questionType === "multiple_choice" && (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <h3 className="font-medium text-sm">
                 Impostazioni Scelta Multipla
               </h3>
@@ -221,7 +221,7 @@ export const AIQuestionGenerationDialog = ({
 
           {(questionType === "open_question" ||
             questionType === "behavioral_scenario") && (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <h3 className="font-medium text-sm">
                 Impostazioni Domanda Aperta / Scenario
               </h3>
@@ -251,7 +251,7 @@ export const AIQuestionGenerationDialog = ({
           )}
 
           {questionType === "code_snippet" && (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <h3 className="font-medium text-sm">
                 Impostazioni Snippet di Codice
               </h3>

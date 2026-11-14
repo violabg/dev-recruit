@@ -42,10 +42,10 @@ export function NavUser() {
           >
             {isPending ? (
               <>
-                <Skeleton className="dark:bg-muted-foreground/30 rounded-full size-8" />
+                <Skeleton className="rounded-full size-8" />
                 <div className="flex-1 gap-1 grid">
-                  <Skeleton className="dark:bg-muted-foreground/30 w-24 h-4" />
-                  <Skeleton className="dark:bg-muted-foreground/30 w-32 h-3" />
+                  <Skeleton className="w-24 h-4" />
+                  <Skeleton className="w-32 h-3" />
                 </div>
               </>
             ) : (

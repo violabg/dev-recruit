@@ -53,7 +53,7 @@ export const AIQuizGenerationDialog = ({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-6 pr-2">
+        <div className="flex flex-col gap-6 pr-2">
           <div className="gap-6 grid md:grid-cols-5">
             <div className="md:col-span-3 bg-panel p-6 border border-border rounded-2xl">
               <QuizGenerationForm
@@ -67,12 +67,12 @@ export const AIQuizGenerationDialog = ({
               />
             </div>
             <Card className="md:col-span-2">
-              <CardContent className="space-y-4 p-6">
+              <CardContent className="flex flex-col gap-4 p-6">
                 <div className="flex items-center gap-2 font-semibold text-lg">
                   <BrainCircuit className="w-5 h-5 text-primary" />
                   <span>Informazioni sulla posizione</span>
                 </div>
-                <div className="space-y-2 text-muted-foreground text-sm">
+                <div className="flex flex-col gap-2 text-muted-foreground text-sm">
                   <div>
                     <span className="font-medium">Titolo:</span>{" "}
                     {position.title}
@@ -107,7 +107,7 @@ export const AIQuizGenerationDialog = ({
                   <h3 className="font-medium">
                     Come funziona la generazione AI
                   </h3>
-                  <ul className="space-y-2 mt-2">
+                  <ul className="flex flex-col gap-2 mt-2">
                     <li className="flex items-start gap-2">
                       <span className="flex justify-center items-center bg-primary rounded-full size-4 font-bold text-primary-foreground text-xs">
                         1

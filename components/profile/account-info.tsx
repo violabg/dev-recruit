@@ -53,10 +53,10 @@ export const AccountInfo = ({
             Dettagli del tuo account e impostazioni
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center space-x-4">
+        <CardContent className="flex flex-col gap-6">
+          <div className="flex items-center gap-4">
             <CurrentUserAvatar />
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <h3 className="font-semibold text-lg">
                 {profile?.fullName ||
                   user?.name ||
@@ -71,7 +71,7 @@ export const AccountInfo = ({
 
           <Separator />
 
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             <div>
               <h4 className="font-medium text-sm">Email</h4>
               <p className="text-muted-foreground text-sm">{user?.email}</p>
@@ -90,9 +90,9 @@ export const AccountInfo = ({
 
           <Separator />
 
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             <h4 className="font-medium text-sm">Gestione Profilo</h4>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Link
                 href="/dashboard/profile/edit"
                 className={buttonVariants({
@@ -118,9 +118,9 @@ export const AccountInfo = ({
 
           <Separator />
 
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             <h4 className="font-medium text-sm">Azioni Account</h4>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <LogoutButton variant="outline" className="w-full">
                 Logout
               </LogoutButton>

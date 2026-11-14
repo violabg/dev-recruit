@@ -41,6 +41,7 @@ const minutesAgo = (minutes: number) =>
 
 const stored = (overrides: Record<string, unknown> = {}) => ({
   id: "int1",
+  quizId: "quiz-1",
   status: "in_progress",
   startedAt: minutesAgo(5),
   answers: { q1: "a" },
@@ -54,6 +55,9 @@ const update = () => vi.mocked(prisma.interview.update);
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(requireUser).mockResolvedValue({ id: "user1" } as any);
+  vi.mocked(prisma.quiz.findUnique).mockResolvedValue({
+    quizQuestions: [{ questionId: "q1" }, { questionId: "q2" }],
+  } as any);
 });
 
 describe("startInterviewAction", () => {
@@ -132,6 +136,16 @@ describe("submitAnswerAction", () => {
       expect(update()).not.toHaveBeenCalled();
     },
   );
+
+  it("refuses a question that does not belong to the interview's quiz", async () => {
+    findUnique().mockResolvedValueOnce(stored() as any);
+
+    expect(await submitAnswerAction("tok", "q9", "b")).toMatchObject({
+      success: false,
+      error: "Domanda non valida per questo colloquio",
+    });
+    expect(update()).not.toHaveBeenCalled();
+  });
 
   it("has no time limit when the quiz has none", async () => {
     findUnique().mockResolvedValueOnce(

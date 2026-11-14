@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { LoginFormData, loginSchema } from "@/lib/schemas";
+import { errorMessage } from "@/lib/utils/action-result";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -44,7 +45,10 @@ export function LoginForm({
         });
 
         if (result.error) {
-          throw new Error(result.error.message ?? "Credenziali non valide");
+          setError("email", {
+            message: errorMessage(result.error, "Credenziali non valide"),
+          });
+          return;
         }
 
         if (result.data?.redirect && result.data.url) {
@@ -55,10 +59,10 @@ export function LoginForm({
         router.push("/dashboard");
       } catch (error: unknown) {
         setError("email", {
-          message:
-            error instanceof Error
-              ? error.message
-              : "Si è verificato un errore durante l'accesso",
+          message: errorMessage(
+            error,
+            "Si è verificato un errore durante l'accesso",
+          ),
         });
       }
     });
@@ -76,7 +80,7 @@ export function LoginForm({
         <CardContent>
           <form
             onSubmit={handleSubmit(handleLogin)}
-            className="space-y-4"
+            className="flex flex-col gap-4"
             autoComplete="off"
           >
             <InputField<LoginFormData>

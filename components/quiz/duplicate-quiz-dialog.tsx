@@ -15,7 +15,7 @@ import {
   duplicateQuizFormSchema,
   type DuplicateQuizFormData,
 } from "@/lib/schemas";
-import { unwrap } from "@/lib/utils/action-result";
+import { unwrap, errorMessage } from "@/lib/utils/action-result";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -63,11 +63,7 @@ export function DuplicateQuizDialog({
         form.reset();
         router.push(`/dashboard/quizzes/${id}`);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Errore durante la duplicazione";
-        toast.error(errorMessage);
+        toast.error(errorMessage(error, "Errore durante la duplicazione"));
       }
     });
   };
@@ -85,7 +81,7 @@ export function DuplicateQuizDialog({
         <FormProvider<DuplicateFormData> {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4"
+            className="flex flex-col gap-4"
             noValidate
           >
             <InputField<DuplicateFormData>

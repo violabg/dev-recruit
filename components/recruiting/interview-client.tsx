@@ -28,7 +28,7 @@ import {
 } from "@/lib/actions/interviews";
 import { Quiz } from "@/lib/data/quizzes";
 import { InterviewStatus } from "@/lib/schemas";
-import { unwrap } from "@/lib/utils/action-result";
+import { unwrap, errorMessage } from "@/lib/utils/action-result";
 import { getRemainingSeconds } from "@/lib/utils/interview-utils";
 import { AlertTriangle, BrainCircuit } from "lucide-react";
 import { useCallback, useState, useTransition } from "react";
@@ -156,11 +156,9 @@ export function InterviewClient({
         unwrap(await completeInterviewAction(interview.token));
         setIsCompleted(true);
       } catch (cause) {
-        const message =
-          cause instanceof Error
-            ? cause.message
-            : "Impossibile completare l'intervista";
-        toast.error("Errore", { description: message });
+        toast.error("Errore", {
+          description: errorMessage(cause, "Impossibile completare l'intervista"),
+        });
       }
     });
     setIsTimeExpired(true);
@@ -179,11 +177,9 @@ export function InterviewClient({
         unwrap(await completeInterviewAction(interview.token));
         setIsCompleted(true);
       } catch (cause) {
-        const message =
-          cause instanceof Error
-            ? cause.message
-            : "Impossibile completare l'intervista";
-        toast.error("Errore", { description: message });
+        toast.error("Errore", {
+          description: errorMessage(cause, "Impossibile completare l'intervista"),
+        });
       }
     });
   }, [interview.token]);
@@ -207,11 +203,9 @@ export function InterviewClient({
           }
         }
       } catch (cause) {
-        const message =
-          cause instanceof Error
-            ? cause.message
-            : "Impossibile avviare l'intervista";
-        toast.error("Errore", { description: message });
+        toast.error("Errore", {
+          description: errorMessage(cause, "Impossibile avviare l'intervista"),
+        });
       }
     });
   };
@@ -226,11 +220,9 @@ export function InterviewClient({
       try {
         unwrap(await submitAnswerAction(interview.token, questionId, answer));
       } catch (cause) {
-        const message =
-          cause instanceof Error
-            ? cause.message
-            : "Impossibile salvare la risposta";
-        toast.error("Errore", { description: message });
+        toast.error("Errore", {
+          description: errorMessage(cause, "Impossibile salvare la risposta"),
+        });
       }
     });
   };
@@ -273,11 +265,9 @@ export function InterviewClient({
           unwrap(await completeInterviewAction(interview.token));
           setIsCompleted(true);
         } catch (cause) {
-          const message =
-            cause instanceof Error
-              ? cause.message
-              : "Impossibile completare l'intervista";
-          toast.error("Errore", { description: message });
+          toast.error("Errore", {
+            description: errorMessage(cause, "Impossibile completare l'intervista"),
+          });
         }
       });
     } else {
@@ -306,10 +296,10 @@ export function InterviewClient({
               {quiz.positions?.title}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <div className="p-4 border rounded-lg">
               <h3 className="font-medium">Dettagli del quiz</h3>
-              <div className="space-y-2 mt-2 text-sm">
+              <div className="flex flex-col gap-2 mt-2 text-sm">
                 <div className="flex justify-between">
                   <span>Titolo:</span>
                   <span className="font-medium">{quiz.title}</span>
@@ -329,7 +319,7 @@ export function InterviewClient({
 
             <div className="p-4 border rounded-lg">
               <h3 className="font-medium">Istruzioni</h3>
-              <ul className="space-y-2 mt-2 text-sm">
+              <ul className="flex flex-col gap-2 mt-2 text-sm">
                 <li>• Leggi attentamente ogni domanda prima di rispondere</li>
                 <li>
                   • Puoi navigare tra le domande utilizzando i pulsanti
@@ -400,7 +390,7 @@ export function InterviewClient({
 
       <main className="flex-1 m-auto p-4 md:p-6 container">
         <div className="mx-auto">
-          <div className="space-y-2 mb-6">
+          <div className="flex flex-col gap-2 mb-6">
             <h1 className="font-bold text-2xl">{quiz.title}</h1>
             <div className="flex justify-between items-center">
               <div className="text-muted-foreground text-sm">

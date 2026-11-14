@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
  */
 export function InterviewDetailSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeaderSkeleton
         section="interviews"
         titleClassName="w-96 max-w-full"
@@ -40,7 +40,7 @@ export function InterviewDetailSkeleton() {
             <CardTitle className="font-medium text-sm">Stato</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground text-sm">Inizio:</span>
                 <TextSkeleton lineClassName="h-6" className="w-28" />
@@ -62,13 +62,13 @@ export function InterviewDetailSkeleton() {
         </Card>
       </div>
 
-      <div className="space-y-4 pt-4">
+      <div className="flex flex-col gap-4 pt-4">
         <Card>
           <CardHeader>
             <TextSkeleton lineClassName="h-7" className="w-56 h-5" />
             <TextSkeleton className="w-80 max-w-full" />
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="flex flex-col gap-2">
             <TextSkeleton lineClassName="h-6" className="w-full" />
             <TextSkeleton lineClassName="h-6" className="w-2/3" />
           </CardContent>

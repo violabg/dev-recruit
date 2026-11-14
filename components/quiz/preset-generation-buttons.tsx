@@ -41,13 +41,13 @@ export function PresetGenerationButtonsFallback() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="w-5 h-5" />
-          Smart Question Presets
+          Preset intelligenti di domande
         </CardTitle>
         <CardDescription>
           <Button variant="outline" disabled>
             Genera domande automaticamente utilizzando preset predefiniti
             <ChevronsUpDown />
-            <span className="sr-only">Toggle</span>
+            <span className="sr-only">Espandi</span>
           </Button>
         </CardDescription>
       </CardHeader>
@@ -84,7 +84,7 @@ function PresetGenerationButtonsContent({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="w-5 h-5" />
-            Smart Question Presets
+            Preset intelligenti di domande
           </CardTitle>
           <CardDescription>
             <CollapsibleTrigger
@@ -92,7 +92,7 @@ function PresetGenerationButtonsContent({
                 <Button variant="outline">
                   Genera domande automaticamente utilizzando preset predefiniti
                   <ChevronsUpDown />
-                  <span className="sr-only">Toggle</span>
+                  <span className="sr-only">Espandi</span>
                 </Button>
               }
             />
@@ -122,7 +122,7 @@ function PresetGenerationButtonsContent({
                           {preset.label}
                         </span>
                         <Badge variant="secondary" className="ml-auto text-xs">
-                          Level {preset.difficulty}
+                          Livello {preset.difficulty}
                         </Badge>
                       </div>
                       <p className="mb-2 text-muted-foreground text-xs">

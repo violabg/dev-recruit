@@ -43,7 +43,7 @@ export function RadioGroupField<T extends FieldValues>({
           {...radioGroupProps}
         >
           {options.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
+            <div key={option.value} className="flex items-center gap-2">
               <RadioGroupItem
                 value={option.value}
                 id={`${field.name}-${option.value}`}

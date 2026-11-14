@@ -24,7 +24,7 @@ export type PresetsFilterParams = {
 
 /**
  * Fetch paginated and filtered presets with caching
- * Cache is invalidated via updateTag("presets") after mutations
+ * Cache is invalidated via invalidatePresetCache after mutations
  */
 export async function getPresetsData(
   params?: PresetsFilterParams,
@@ -75,7 +75,8 @@ export async function getPresetsData(
 
 /**
  * Fetch a single preset by ID with granular caching
- * Cache is invalidated granularly via updateTag("presets", presetId) after mutations
+ * Cache is invalidated granularly via invalidatePresetCache(presetId) after
+ * mutations
  */
 export async function getPresetData(presetId: string): Promise<Preset | null> {
   "use cache";
@@ -111,7 +112,7 @@ export async function getRecentPresetIds(limit = 100): Promise<string[]> {
  * Started (not awaited) by server pages and passed to the client editor as a
  * promise, then unwrapped with `use()` inside a Suspense boundary. This keeps
  * the list in the cached server render instead of a client-side fetch on every
- * mount. Invalidated via updateTag("presets") in preset mutations.
+ * mount. Invalidated via invalidatePresetCache in preset mutations.
  */
 export async function getAllPresets(): Promise<Preset[]> {
   "use cache";

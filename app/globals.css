@@ -49,6 +49,7 @@
   --color-stage-progress: var(--stage-progress);
   --color-stage-done: var(--stage-done);
   --color-stage-cancelled: var(--stage-cancelled);
+  --color-stage-expired: var(--stage-expired);
   --color-section-positions: var(--section-positions);
   --color-section-candidates: var(--section-candidates);
   --color-section-quizzes: var(--section-quizzes);
@@ -110,6 +111,7 @@
   --stage-progress: oklch(0.536 0.16 238);
   --stage-done: oklch(0.6 0.14 159);
   --stage-cancelled: oklch(0.6 0.1 15);
+  --stage-expired: oklch(0.62 0.13 45);
   /* Section identity hues (page-title rule + sidebar icons) */
   --section-positions: oklch(0.55 0.15 255);
   --section-candidates: oklch(0.55 0.1 185);
@@ -158,6 +160,7 @@
   --stage-progress: oklch(0.68 0.14 238);
   --stage-done: oklch(0.74 0.14 159);
   --stage-cancelled: oklch(0.72 0.09 15);
+  --stage-expired: oklch(0.78 0.12 55);
   --section-positions: oklch(0.76 0.12 255);
   --section-candidates: oklch(0.78 0.1 185);
   --section-quizzes: oklch(0.82 0.13 75);

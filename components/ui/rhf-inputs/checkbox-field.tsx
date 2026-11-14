@@ -40,7 +40,7 @@ export function CheckboxField<T extends FieldValues>({
                 onCheckedChange={field.onChange}
                 {...checkboxProps}
               />
-              <div className="space-y-1 leading-none">
+              <div className="flex flex-col gap-1 leading-none">
                 {label && (
                   <FieldLabel>
                     {label}

@@ -27,7 +27,7 @@ export const QuizSettings = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <InputField
           control={form.control}
           name="title"

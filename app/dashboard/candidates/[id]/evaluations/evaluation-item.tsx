@@ -106,11 +106,11 @@ export function EvaluationItem({
         </CardHeader>
 
         <CollapsibleContent>
-          <CardContent className="space-y-6 pt-0 pb-6">
+          <CardContent className="flex flex-col gap-6 pt-0 pb-6">
             <OverallEvaluationCard overallEvaluation={overallEvaluation} />
 
-            <div className="space-y-4">
-              <div className="space-y-2">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor={`notes-${evaluation.id}`}>Note manuali</Label>
                 <Textarea
                   id={`notes-${evaluation.id}`}

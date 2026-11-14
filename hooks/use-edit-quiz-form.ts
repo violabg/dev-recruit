@@ -8,11 +8,11 @@ import {
   QuestionType,
   type QuizEditorData,
 } from "@/lib/schemas";
-import { unwrap } from "@/lib/utils/action-result";
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import { generateId } from "@/lib/utils/quiz-form-utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -51,6 +51,8 @@ export const useEditQuizForm = ({
     settings: "idle",
     questions: {},
   });
+
+  const [isPending, startTransition] = useTransition();
 
   const pathname = usePathname();
 
@@ -98,7 +100,7 @@ export const useEditQuizForm = ({
       case "open_question":
         return {
           ...base,
-          sampleAnswer: "Sample answer to be provided",
+          sampleAnswer: "Risposta di esempio da fornire",
           sampleSolution: "",
           codeSnippet: "",
         };
@@ -112,7 +114,7 @@ export const useEditQuizForm = ({
       case "behavioral_scenario":
         return {
           ...base,
-          sampleAnswer: "Sample answer to be provided",
+          sampleAnswer: "Risposta di esempio da fornire",
         };
       default:
         return base;
@@ -135,38 +137,38 @@ export const useEditQuizForm = ({
       }),
     );
 
-  const handleSave = async (data: EditQuizFormData) => {
+  const handleSave = (data: EditQuizFormData) => {
     setSaveStatus("saving");
 
-    try {
-      const result = await save(data);
+    startTransition(async () => {
+      try {
+        const result = await save(data);
 
-      setSaveStatus("success");
-      toast.success("Quiz salvato con successo");
+        setSaveStatus("success");
+        toast.success("Quiz salvato con successo");
 
-      // Reset form dirty state after successful save
-      form.reset(data);
+        // Reset form dirty state after successful save
+        form.reset(data);
 
-      // Reset status after 2 seconds
-      setTimeout(() => setSaveStatus("idle"), 2000);
-      if (onSaveSuccess && result) {
-        onSaveSuccess(result);
+        // Reset status after 2 seconds
+        setTimeout(() => setSaveStatus("idle"), 2000);
+        if (onSaveSuccess && result) {
+          onSaveSuccess(result);
+        }
+      } catch (error) {
+        setSaveStatus("error");
+
+        toast.error("Errore salvataggio", {
+          description: errorMessage(
+            error,
+            "Errore durante il salvataggio del quiz",
+          ),
+        });
+
+        // Reset status after 3 seconds
+        setTimeout(() => setSaveStatus("idle"), 3000);
       }
-    } catch (error) {
-      setSaveStatus("error");
-
-      let errorMessage = "Errore durante il salvataggio del quiz";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      toast.error("Errore salvataggio", {
-        description: errorMessage,
-      });
-
-      // Reset status after 3 seconds
-      setTimeout(() => setSaveStatus("idle"), 3000);
-    }
+    });
   };
 
   // Check if settings section has changes
@@ -212,62 +214,56 @@ export const useEditQuizForm = ({
   );
 
   // Save a specific question
-  const handleSaveQuestion = async (index: number, data: EditQuizFormData) => {
+  const handleSaveQuestion = (index: number, data: EditQuizFormData) => {
     const questionId = fields[index]?.id || `question-${index}`;
     setSectionSaveStatus((prev) => ({
       ...prev,
       questions: { ...prev.questions, [questionId]: "saving" },
     }));
 
-    try {
-      await save(data);
+    startTransition(async () => {
+      try {
+        await save(data);
 
-      setSectionSaveStatus((prev) => ({
-        ...prev,
-        questions: { ...prev.questions, [questionId]: "success" },
-      }));
-      toast.success("Domanda salvata con successo");
-
-      // Reset form dirty state after successful save
-      form.reset(data);
-
-      // Reset status after 2 seconds
-      const timeoutId = setTimeout(() => {
         setSectionSaveStatus((prev) => ({
           ...prev,
-          questions: { ...prev.questions, [questionId]: "idle" },
+          questions: { ...prev.questions, [questionId]: "success" },
         }));
-      }, 2000);
+        toast.success("Domanda salvata con successo");
 
-      // Store timeout ID for potential cleanup
-      return timeoutId;
-    } catch (error) {
-      setSectionSaveStatus((prev) => ({
-        ...prev,
-        questions: { ...prev.questions, [questionId]: "error" },
-      }));
+        // Reset form dirty state after successful save
+        form.reset(data);
 
-      let errorMessage = "Errore durante il salvataggio della domanda";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      toast.error("Errore salvataggio domanda", {
-        description: errorMessage,
-      });
-
-      const timeoutId = setTimeout(
-        () =>
+        // Reset status after 2 seconds
+        setTimeout(() => {
           setSectionSaveStatus((prev) => ({
             ...prev,
             questions: { ...prev.questions, [questionId]: "idle" },
-          })),
-        3000,
-      );
+          }));
+        }, 2000);
+      } catch (error) {
+        setSectionSaveStatus((prev) => ({
+          ...prev,
+          questions: { ...prev.questions, [questionId]: "error" },
+        }));
 
-      // Store timeout ID for potential cleanup
-      return timeoutId;
-    }
+        toast.error("Errore salvataggio domanda", {
+          description: errorMessage(
+            error,
+            "Errore durante il salvataggio della domanda",
+          ),
+        });
+
+        setTimeout(
+          () =>
+            setSectionSaveStatus((prev) => ({
+              ...prev,
+              questions: { ...prev.questions, [questionId]: "idle" },
+            })),
+          3000,
+        );
+      }
+    });
   };
 
   // Track form dirty state for unsaved changes warning
@@ -326,6 +322,7 @@ export const useEditQuizForm = ({
     hasSettingsChanges,
     hasQuestionChanges,
     sectionSaveStatus,
+    isPending,
     isDirty,
   };
 };

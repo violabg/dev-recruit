@@ -14,7 +14,7 @@ export const FiltersSkeleton = () => <FilterBarSkeleton selects={3} />;
 export const CandidatesListSkeleton = () => (
   <Card>
     <CardContent>
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <div className="w-full">
           <div className="flex justify-between items-center">
             {/* TabsList h-8: "Tabella" / "Griglia" */}

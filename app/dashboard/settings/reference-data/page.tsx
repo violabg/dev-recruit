@@ -28,14 +28,14 @@ const categories = referenceCategories.map((value) => ({
 
 export default async function ReferenceDataPage() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         section="settings"
         title="Dati di riferimento"
         description="Linguaggi, framework, strumenti e altri valori proposti nei moduli"
       />
 
-      <Tabs defaultValue="programmingLanguage" className="space-y-6">
+      <Tabs defaultValue="programmingLanguage" className="flex flex-col gap-6">
         <TabsList variant="line">
           {categories.map((cat) => (
             <TabsTrigger key={cat.value} value={cat.value}>
@@ -46,7 +46,7 @@ export default async function ReferenceDataPage() {
 
         {categories.map((cat) => (
           <TabsContent key={cat.value} value={cat.value}>
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <Dialog>
                 <DialogTrigger render={<Button />}>
                   <Plus className="mr-2 w-4 h-4" />

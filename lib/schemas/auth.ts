@@ -34,7 +34,7 @@ export const signUpSchema = z
   })
   .refine((data) => data.password === data.repeatPassword, {
     path: ["repeatPassword"],
-    error: "Passwords do not match",
+    error: "Le password non corrispondono",
   });
 
 export const forgotPasswordSchema = z.object({

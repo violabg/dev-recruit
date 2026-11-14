@@ -20,7 +20,7 @@ export async function QuizSettingsContent({ params }: Props) {
       <CardHeader>
         <CardTitle>Impostazioni del quiz</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <div className="gap-4 grid md:grid-cols-2">
           <div>
             <h3 className="font-medium">Titolo</h3>

@@ -103,17 +103,17 @@ export function InterviewQuestion({
           </CardDescription>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         {question.type === "multiple_choice" && (
           <RadioGroup
             value={answer?.toString() ?? ""}
             onValueChange={(value) => setAnswer(value as string)}
-            className="space-y-3"
+            className="flex flex-col gap-3"
           >
             {question.options?.map((option: string, index: number) => (
               <div
                 key={index}
-                className="flex items-center space-x-2 p-3 border rounded-md"
+                className="flex items-center gap-2 p-3 border rounded-md"
               >
                 <RadioGroupItem
                   value={index.toString()}
@@ -137,7 +137,7 @@ export function InterviewQuestion({
         )}
 
         {question.type === "code_snippet" && (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {question.codeSnippet && (
               <div>
                 <h3 className="mb-2 font-medium">Codice:</h3>

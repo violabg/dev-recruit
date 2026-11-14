@@ -18,7 +18,7 @@ import { Suspense } from "react";
 function ProfileSkeleton() {
   const infoRows = ["Email", "Account creato", "Ultimo aggiornamento"];
   return (
-    <div className="space-y-6 mx-auto w-full max-w-2xl">
+    <div className="flex flex-col gap-6 mx-auto w-full max-w-2xl">
       <PageHeader
         title="Profilo"
         description="Gestisci le impostazioni del tuo profilo e account"
@@ -29,16 +29,16 @@ function ProfileSkeleton() {
           <CardTitle>Informazioni Account</CardTitle>
           <CardDescription>Dettagli del tuo account e impostazioni</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center space-x-4">
+        <CardContent className="flex flex-col gap-6">
+          <div className="flex items-center gap-4">
             <Skeleton className="rounded-full size-8" />
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <TextSkeleton lineClassName="h-7" className="w-40 h-5" />
               <TextSkeleton className="w-24" />
             </div>
           </div>
           <Separator />
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {infoRows.map((label) => (
               <div key={label}>
                 <h4 className="font-medium text-sm">{label}</h4>
@@ -47,17 +47,17 @@ function ProfileSkeleton() {
             ))}
           </div>
           <Separator />
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             <h4 className="font-medium text-sm">Gestione Profilo</h4>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <ButtonSkeleton size="sm" className="w-36" />
               <ButtonSkeleton size="sm" className="w-36" />
             </div>
           </div>
           <Separator />
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             <h4 className="font-medium text-sm">Azioni Account</h4>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Skeleton className="rounded-lg w-full h-8" />
             </div>
           </div>
@@ -75,7 +75,7 @@ async function ProfileContent() {
   }
 
   return (
-    <div className="space-y-6 mx-auto w-full max-w-2xl">
+    <div className="flex flex-col gap-6 mx-auto w-full max-w-2xl">
       <PageHeader
         title="Profilo"
         description="Gestisci le impostazioni del tuo profilo e account"

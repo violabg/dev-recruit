@@ -19,8 +19,7 @@ export async function proxy(request: NextRequest) {
   if (
     !session?.user &&
     !pathname.startsWith("/auth") &&
-    !pathname.startsWith("/recruiting") &&
-    !pathname.startsWith("/recruting")
+    !pathname.startsWith("/recruiting")
   ) {
     // Preserve the intended destination for redirect after login
     const loginUrl = new URL("/auth/login", request.url);

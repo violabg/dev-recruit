@@ -27,7 +27,7 @@ import {
   type QuizGenerationFormData,
 } from "@/lib/schemas";
 import { DEFAULT_GENERATION_MODEL } from "@/lib/services/ai/models";
-import { unwrap } from "@/lib/utils/action-result";
+import { unwrap, errorMessage } from "@/lib/utils/action-result";
 import { toast } from "sonner";
 
 /** A generated quiz that has NOT been saved: the editor decides what to keep. */
@@ -111,17 +111,17 @@ export function QuizGenerationForm({
         });
       } catch (error: unknown) {
         toast.error("Errore", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "Si è verificato un errore durante la generazione del quiz",
+          description: errorMessage(
+            error,
+            "Si è verificato un errore durante la generazione del quiz",
+          ),
         });
       }
     });
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
       <InputField
         control={control}
         name="quizTitle"
@@ -164,7 +164,7 @@ export function QuizGenerationForm({
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <h3 className="font-medium text-lg">Tipi di domande</h3>
         <div className="gap-4 grid md:grid-cols-2">
           <SwitchField

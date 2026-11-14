@@ -119,13 +119,13 @@ describe("updatePresetAction", () => {
 });
 
 describe("deletePresetAction", () => {
-  it("deletes the preset and redirects to the list", async () => {
+  it("deletes the preset, expires its cache entry and redirects to the list", async () => {
     await deletePresetAction("preset-1");
 
     expect(prisma.preset.delete).toHaveBeenCalledWith({
       where: { id: "preset-1" },
     });
-    expect(invalidatePresetCache).toHaveBeenCalled();
+    expect(invalidatePresetCache).toHaveBeenCalledWith("preset-1");
     expect(redirect).toHaveBeenCalledWith("/dashboard/presets");
   });
 

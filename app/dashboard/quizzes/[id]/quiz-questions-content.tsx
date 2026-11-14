@@ -54,9 +54,9 @@ export async function QuizQuestionsContent({ params }: Props) {
               <SaveFavoriteButton question={question} />
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold dark:text-heading text-sm">Domanda:</h3>
+              <h3 className="font-bold text-heading text-sm">Domanda:</h3>
               <p className="mt-1">{question.question}</p>
             </div>
 

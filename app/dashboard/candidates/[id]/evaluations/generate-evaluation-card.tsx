@@ -58,7 +58,7 @@ export function GenerateEvaluationCard({
           posizione specifica
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         {!hasResume ? (
           <div className="bg-warning/10 p-4 border border-warning/30 rounded-md">
             <p className="text-warning text-sm">
@@ -76,7 +76,7 @@ export function GenerateEvaluationCard({
           </div>
         ) : (
           <div className="flex items-end gap-4">
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 flex flex-col gap-2">
               <Label htmlFor="position">Posizione</Label>
               <Select
                 items={positionOptions}

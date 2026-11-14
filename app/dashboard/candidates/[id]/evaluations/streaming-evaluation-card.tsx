@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -35,9 +36,9 @@ export function StreamingEvaluationCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pb-6">
+      <CardContent className="flex flex-col gap-4 pb-6">
         {/* Evaluation text */}
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <h4 className="font-medium text-muted-foreground text-sm">
             Valutazione
           </h4>
@@ -52,19 +53,19 @@ export function StreamingEvaluationCard({
         </div>
 
         {/* Strengths */}
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <h4 className="font-medium text-success text-sm">
             Punti di forza
           </h4>
           {streamingEvaluation.strengths &&
           streamingEvaluation.strengths.length > 0 ? (
-            <ul className="space-y-1 pl-5 text-sm list-disc">
+            <ul className="flex flex-col gap-1 pl-5 text-sm list-disc">
               {streamingEvaluation.strengths.map((strength, idx) => (
                 <li key={idx}>{strength}</li>
               ))}
             </ul>
           ) : (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Skeleton className="w-3/4 h-4" />
               <Skeleton className="w-2/3 h-4" />
             </div>
@@ -72,19 +73,19 @@ export function StreamingEvaluationCard({
         </div>
 
         {/* Weaknesses */}
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <h4 className="font-medium text-warning text-sm">
             Aree di miglioramento
           </h4>
           {streamingEvaluation.weaknesses &&
           streamingEvaluation.weaknesses.length > 0 ? (
-            <ul className="space-y-1 pl-5 text-sm list-disc">
+            <ul className="flex flex-col gap-1 pl-5 text-sm list-disc">
               {streamingEvaluation.weaknesses.map((weakness, idx) => (
                 <li key={idx}>{weakness}</li>
               ))}
             </ul>
           ) : (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Skeleton className="w-3/4 h-4" />
               <Skeleton className="w-2/3 h-4" />
             </div>
@@ -92,7 +93,7 @@ export function StreamingEvaluationCard({
         </div>
 
         {/* Recommendation */}
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <h4 className="font-medium text-sm">Raccomandazione</h4>
           {streamingEvaluation.recommendation ? (
             <p className="text-sm">{streamingEvaluation.recommendation}</p>
@@ -111,11 +112,12 @@ export function StreamingEvaluationCard({
               {Array.from({ length: 10 }).map((_, i) => (
                 <div
                   key={i}
-                  className={`w-2 h-4 mx-0.5 rounded-sm ${
+                  className={cn(
+                    "w-2 h-4 mx-0.5 rounded-sm",
                     i < Math.round(streamingEvaluation.fitScore! / 10)
                       ? "bg-primary"
-                      : "bg-muted"
-                  }`}
+                      : "bg-muted",
+                  )}
                 />
               ))}
               <span className="ml-2 font-medium">

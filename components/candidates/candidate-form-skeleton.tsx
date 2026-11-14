@@ -13,7 +13,7 @@ export function CandidateFormBodySkeleton({
   mode?: "new" | "edit" | "apply";
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-8">
           <Card>
@@ -52,7 +52,7 @@ export function CandidateFormBodySkeleton({
                 Candidatura
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="flex flex-col gap-6">
               <FieldSkeleton label="Posizioni" required />
               {mode === "edit" && <FieldSkeleton label="Stato candidatura" />}
               <div className="flex flex-col gap-3 pt-4 border-t">

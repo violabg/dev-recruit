@@ -46,7 +46,7 @@ export function PositionDetailsSkeleton() {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Competenze tecniche</CardTitle>
@@ -80,7 +80,7 @@ export function PositionDetailsSkeleton() {
 /**
  * Shared shape of the "Quiz" and "Candidati" tabs: section heading + sm
  * button, then a md:2-col grid of cards (title, meta row, two sm buttons).
- * Rendered as a fragment because the TabsContent already applies space-y-4.
+ * Rendered as a fragment because the TabsContent already applies flex + gap.
  */
 function PositionTabCardsSkeleton({
   title,
@@ -104,7 +104,7 @@ function PositionTabCardsSkeleton({
               <TextSkeleton lineClassName="h-7" className="w-48 h-5" />
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <TextSkeleton className="w-28" />
                   {metaRight}

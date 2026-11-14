@@ -163,52 +163,6 @@ describe("baseSchemas", () => {
     });
   });
 
-  describe("experienceLevel", () => {
-    it("accepts valid experience levels", () => {
-      expect(baseSchemas.experienceLevel.parse("junior")).toBe("junior");
-      expect(baseSchemas.experienceLevel.parse("mid")).toBe("mid");
-      expect(baseSchemas.experienceLevel.parse("senior")).toBe("senior");
-      expect(baseSchemas.experienceLevel.parse("lead")).toBe("lead");
-    });
-
-    it("rejects invalid experience level", () => {
-      expect(() => baseSchemas.experienceLevel.parse("invalid")).toThrow();
-    });
-  });
-
-  describe("contractType", () => {
-    it("accepts valid contract types", () => {
-      expect(baseSchemas.contractType.parse("full-time")).toBe("full-time");
-      expect(baseSchemas.contractType.parse("part-time")).toBe("part-time");
-      expect(baseSchemas.contractType.parse("contract")).toBe("contract");
-      expect(baseSchemas.contractType.parse("internship")).toBe("internship");
-    });
-  });
-
-  describe("interviewStatus", () => {
-    it("accepts valid interview statuses", () => {
-      const statuses = ["pending", "in_progress", "completed", "cancelled"];
-      statuses.forEach((status) => {
-        expect(baseSchemas.interviewStatus.parse(status)).toBe(status);
-      });
-    });
-  });
-
-  describe("candidateStatus", () => {
-    it("accepts valid candidate statuses", () => {
-      const statuses = [
-        "pending",
-        "in_progress",
-        "completed",
-        "hired",
-        "rejected",
-      ];
-      statuses.forEach((status) => {
-        expect(baseSchemas.candidateStatus.parse(status)).toBe(status);
-      });
-    });
-  });
-
   describe("booleanField", () => {
     it("accepts boolean true", () => {
       expect(baseSchemas.booleanField.parse(true)).toBe(true);

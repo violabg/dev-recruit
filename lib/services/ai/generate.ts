@@ -172,5 +172,5 @@ export function describeAIError(error: unknown): string {
     return "Il servizio AI non ha risposto in tempo. Riprova.";
   }
 
-  return "Servizio di valutazione temporaneamente non disponibile. Riprova più tardi.";
+  return "Servizio AI temporaneamente non disponibile. Riprova più tardi.";
 }

@@ -21,7 +21,7 @@ export function InterviewComplete() {
             Grazie per aver completato il quiz tecnico
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 text-center">
+        <CardContent className="flex flex-col gap-4 text-center">
           <p>
             Le tue risposte sono state registrate con successo. Il recruiter
             esaminerà i risultati e ti contatterà per i prossimi passi.

@@ -11,6 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { errorMessage } from "@/lib/utils/action-result";
 import { Loader2, Trash2 } from "lucide-react";
 import { ReactElement, useTransition } from "react";
 import { toast } from "sonner";
@@ -59,7 +60,7 @@ export function DeleteWithConfirm({
   label = "Elimina",
   iconOnly = false,
   successMessage,
-  errorMessage = "Errore durante l'eliminazione",
+  errorMessage: fallbackMessage = "Errore durante l'eliminazione",
   onSuccess,
   size = "sm",
   variant = "destructive",
@@ -83,7 +84,7 @@ export function DeleteWithConfirm({
             }
             onSuccess?.();
           } else {
-            toast.error(result.error || errorMessage);
+            toast.error(errorMessage(result.error, fallbackMessage));
           }
         } else {
           // Assume success if no error was thrown and no result object
@@ -100,7 +101,7 @@ export function DeleteWithConfirm({
         ) {
           return;
         }
-        toast.error(errorMessage);
+        toast.error(errorMessage(error, fallbackMessage));
       }
     });
   };
@@ -129,7 +130,7 @@ export function DeleteWithConfirm({
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isPending}
-            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            className="bg-destructive hover:bg-destructive/90 text-primary-foreground"
           >
             {isPending ? (
               <>

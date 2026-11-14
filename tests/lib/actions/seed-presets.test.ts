@@ -20,6 +20,7 @@ vi.mock("@/lib/services/logger", () => ({
 }));
 
 import { seedDefaultPresetsAction } from "@/lib/actions/seed-presets";
+import { DEFAULT_PRESETS } from "@/lib/constants/preset-defaults";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { unwrap } from "@/lib/utils/action-result";
@@ -52,7 +53,7 @@ describe("seedDefaultPresetsAction", () => {
     expect(invalidatePresetCache).toHaveBeenCalled();
   });
 
-  it("seeds presets for every question type with unique names", async () => {
+  it("seeds the shared default presets with every question type and unique names", async () => {
     await seedDefaultPresetsAction();
 
     const seeded = vi
@@ -61,6 +62,7 @@ describe("seedDefaultPresetsAction", () => {
     const types = new Set(seeded.map((preset) => preset.questionType));
     const names = seeded.map((preset) => preset.name);
 
+    expect(seeded).toEqual(DEFAULT_PRESETS);
     expect(types).toEqual(
       new Set(["multiple_choice", "open_question", "code_snippet"]),
     );

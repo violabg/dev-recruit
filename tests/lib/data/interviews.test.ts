@@ -46,7 +46,6 @@ describe("interviews data layer", () => {
       startedAt: new Date("2020-01-01T00:00:00.000Z"),
       completedAt: new Date("2020-01-01T01:00:00.000Z"),
       createdAt: new Date("2020-01-01T00:00:00.000Z"),
-      score: 85,
       candidateId: "c2",
       candidate: {
         firstName: "John",
@@ -63,7 +62,6 @@ describe("interviews data layer", () => {
 
     const mapped = mapInterviewListItem(record as any);
     expect(mapped.id).toBe("i2");
-    expect(mapped.score).toBe(85);
     expect(mapped.positionTitle).toBe("Dev");
     expect(mapped.positionSkills).toEqual(["js"]);
   });
@@ -76,7 +74,6 @@ describe("interviews data layer", () => {
       createdAt: new Date(),
       startedAt: null,
       completedAt: null,
-      score: null,
       candidateId: `c${i}`,
       candidate: { firstName: "A", lastName: "B", email: "a@b" },
       quizId: `q${i}`,
@@ -248,7 +245,6 @@ describe("interviews data layer", () => {
       startedAt: new Date(),
       completedAt: new Date(),
       createdAt: new Date(),
-      score: 85,
       answers: { q1: "answer" },
       quiz: {
         id: "q1",
@@ -287,7 +283,6 @@ describe("interviews data layer", () => {
     const result = await getInterviewDetail("i1");
     expect(result).toBeTruthy();
     expect(result?.interview.id).toBe("i1");
-    expect(result?.interview.score).toBe(85);
     expect(result?.quiz.id).toBe("q1");
   });
 

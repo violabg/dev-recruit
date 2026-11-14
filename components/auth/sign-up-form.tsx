@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
 import { SignUpFormData, signUpSchema } from "@/lib/schemas";
+import { errorMessage } from "@/lib/utils/action-result";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -48,18 +49,22 @@ export function SignUpForm({
         });
 
         if (result.error) {
-          throw new Error(
-            result.error.message ?? "Errore durante la registrazione",
-          );
+          setError("email", {
+            message: errorMessage(
+              result.error,
+              "Errore durante la registrazione",
+            ),
+          });
+          return;
         }
 
         router.push("/auth/sign-up-success");
       } catch (error: unknown) {
         setError("email", {
-          message:
-            error instanceof Error
-              ? error.message
-              : "Si è verificato un errore durante la registrazione",
+          message: errorMessage(
+            error,
+            "Si è verificato un errore durante la registrazione",
+          ),
         });
       }
     });
@@ -75,7 +80,7 @@ export function SignUpForm({
         <CardContent>
           <form
             onSubmit={handleSubmit(handleSignUp)}
-            className="space-y-4"
+            className="flex flex-col gap-4"
             autoComplete="off"
           >
             <InputField<SignUpFormData>

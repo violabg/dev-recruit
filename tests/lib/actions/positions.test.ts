@@ -15,6 +15,10 @@ vi.mock("@/lib/utils/cache-utils", () => ({
   invalidatePositionCache: vi.fn(),
 }));
 
+vi.mock("@/lib/data/positions", () => ({
+  getPositionById: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
   unstable_rethrow: vi.fn(),
@@ -23,8 +27,10 @@ vi.mock("next/navigation", () => ({
 import {
   createPositionAction,
   deletePositionAction,
+  fetchPositionDataAction,
   updatePositionAction,
 } from "@/lib/actions/positions";
+import { getPositionById } from "@/lib/data/positions";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { invalidatePositionCache } from "@/lib/utils/cache-utils";
@@ -186,5 +192,25 @@ describe("deletePositionAction", () => {
 
     expect(result).toEqual({ success: false, error: "Posizione non trovata" });
     expect(prisma.position.delete).not.toHaveBeenCalled();
+  });
+});
+
+describe("fetchPositionDataAction", () => {
+  it("returns the position wrapped in the action result", async () => {
+    const position = { id: "pos-123", title: "Senior Developer" };
+    vi.mocked(getPositionById).mockResolvedValueOnce(position as any);
+
+    const result = await fetchPositionDataAction("pos-123");
+
+    expect(result).toEqual({ success: true, position });
+    expect(getPositionById).toHaveBeenCalledWith("pos-123");
+  });
+
+  it("returns a successful null position when the position does not exist", async () => {
+    vi.mocked(getPositionById).mockResolvedValueOnce(null);
+
+    const result = await fetchPositionDataAction("nope");
+
+    expect(result).toEqual({ success: true, position: null });
   });
 });

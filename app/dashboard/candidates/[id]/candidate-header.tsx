@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export async function CandidateHeader({ params }: Props) {
         <p className="font-medium text-lg">Candidato non trovato</p>
         <Link
           href="/dashboard/candidates"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna ai candidati
         </Link>
@@ -52,14 +53,14 @@ export async function CandidateHeader({ params }: Props) {
         <>
           <Link
             href={`/dashboard/candidates/${candidate.id}/quiz`}
-            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
+            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
           >
             <Link2 className="mr-1 size-4" />
             Associa quiz
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/evaluations`}
-            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
+            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
           >
             <ClipboardCheck className="mr-1 size-4" />
             Valutazioni
@@ -68,14 +69,14 @@ export async function CandidateHeader({ params }: Props) {
             href={
               `/dashboard/candidates/${candidate.id}/evaluation-dashboard` as any
             }
-            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
+            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
           >
             <LayoutGrid className="mr-1 size-4" />
             Dashboard valutazione
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/edit`}
-            className={`${buttonVariants({ variant: "outline" })} inline-flex`}
+            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
           >
             <Edit className="mr-1 size-4" />
             Modifica

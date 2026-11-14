@@ -23,7 +23,7 @@ export default async function ApplyPage({ searchParams }: PageProps) {
       <div className="w-full max-w-6xl">
         {/* Header Card */}
         <Card className="mb-6 w-full">
-          <CardHeader className="space-y-3 text-center">
+          <CardHeader className="flex flex-col gap-3 text-center">
             <div className="flex justify-center">
               <div className="flex justify-center items-center bg-primary/10 rounded-full w-14 h-14">
                 <svg
@@ -41,7 +41,7 @@ export default async function ApplyPage({ searchParams }: PageProps) {
                 </svg>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <CardTitle className="text-2xl">
                 Unisciti al nostro team! 🚀
               </CardTitle>

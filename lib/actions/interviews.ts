@@ -1,6 +1,10 @@
 "use server";
 
-import { candidateQuizAssignmentSchema, candidateQuizSelectionSchema } from "@/lib/schemas";
+import {
+  candidateQuizAssignmentSchema,
+  candidateQuizSelectionSchema,
+  submitAnswerSchema,
+} from "@/lib/schemas";
 import { acceptsAnswers, interviewState } from "@/lib/utils/interview-utils";
 import { generateInterviewToken } from "@/lib/utils/token";
 import { requireUser } from "../auth-server";
@@ -16,6 +20,7 @@ import { runAction, UserError } from "./run-action";
 
 const lifecycleSelect = {
   id: true,
+  quizId: true,
   status: true,
   startedAt: true,
   answers: true,
@@ -78,6 +83,20 @@ export async function submitAnswerAction(
 ) {
   return runAction("submitAnswerAction", async () => {
     const interview = await findInterviewByToken(token);
+
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: interview.quizId },
+      select: { quizQuestions: { select: { questionId: true } } },
+    });
+
+    if (
+      !quiz?.quizQuestions.some((link) => link.questionId === questionId)
+    ) {
+      throw new UserError("Domanda non valida per questo colloquio");
+    }
+
+    const parsed = submitAnswerSchema.parse({ token, questionId, answer });
+
     const state = interviewState(interview);
 
     if (state === "completed" || state === "cancelled") {
@@ -95,7 +114,7 @@ export async function submitAnswerAction(
 
     await prisma.interview.update({
       where: { id: interview.id },
-      data: { answers: { ...currentAnswers, [questionId]: answer } },
+      data: { answers: { ...currentAnswers, [questionId]: parsed.answer } },
     });
 
     invalidateInterviewCache({ interviewId: interview.id });

@@ -38,7 +38,7 @@ export function SwitchField<T extends FieldValues>({
           className="flex flex-row justify-between items-center p-3 border rounded-lg"
           orientation="horizontal"
         >
-          <div className="space-y-0.5">
+          <div className="flex flex-col gap-0.5">
             {label && (
               <FieldLabel className="text-base">
                 {label}

@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { STATUS_CONFIG } from "./runtime-section";
 
 /** Mirrors Stats: the shared pipeline skeleton. */
 export const StatsFallback = InterviewPipelineSkeleton;
@@ -39,8 +38,8 @@ export const InterviewsSkeleton = () => (
           i link di invito
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 px-4">
-        <div className="space-y-4">
+      <CardContent className="flex flex-col gap-4 px-4">
+        <div className="flex flex-col gap-4">
           <TableSkeleton
             rows={5}
             columns={[

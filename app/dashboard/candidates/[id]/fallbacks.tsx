@@ -69,7 +69,7 @@ export function CandidateDetailsSkeleton() {
   );
 }
 
-/** Mirrors CandidateInterviewsContent rows (status + date | score). */
+/** Mirrors CandidateInterviewsContent rows (status + date). */
 export function CandidateInterviewsSkeleton() {
   return (
     <Card>
@@ -77,7 +77,7 @@ export function CandidateInterviewsSkeleton() {
         <CardTitle>Colloqui</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {Array.from({ length: 2 }, (_, i) => (
             <div
               key={i}
@@ -87,7 +87,6 @@ export function CandidateInterviewsSkeleton() {
                 <TextSkeleton lineClassName="h-6" className="w-24 h-4" />
                 <TextSkeleton className="w-36" />
               </div>
-              <TextSkeleton lineClassName="h-6" className="w-28 h-4" />
             </div>
           ))}
         </div>

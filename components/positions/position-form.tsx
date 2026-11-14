@@ -9,6 +9,7 @@ import {
   positionFormSchema,
   type PositionDescriptionInput,
 } from "@/lib/schemas";
+import { errorMessage } from "@/lib/utils/action-result";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Brain, Briefcase, Loader2, Sparkles } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -87,7 +88,7 @@ export function PositionForm({
 
       if (result && !result.success) {
         toast.error("Impossibile salvare la posizione", {
-          description: result.error,
+          description: errorMessage(result.error),
         });
       }
     });
@@ -147,17 +148,19 @@ export function PositionForm({
 
         toast.success("Descrizione generata con successo");
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Errore sconosciuto";
         toast.error("Impossibile generare la descrizione", {
-          description: message,
+          description: errorMessage(error),
         });
       }
     });
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col gap-6"
+      noValidate
+    >
       <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
         {/* Left Column: Core Info & Description */}
         <div className="flex flex-col gap-6 lg:col-span-8">
@@ -217,7 +220,7 @@ export function PositionForm({
             </CardContent>
           </Card>
 
-          <Card className="relative bg-primary/5 dark:bg-primary/10 border-primary/20 overflow-hidden">
+          <Card className="relative bg-primary/10 border-primary/20 overflow-hidden">
             <div className="top-0 right-0 absolute opacity-10 p-4">
               <Sparkles className="size-24 text-primary" />
             </div>
@@ -227,7 +230,7 @@ export function PositionForm({
                 Descrizione IA
               </CardTitle>
             </CardHeader>
-            <CardContent className="z-10 relative space-y-4 pt-4">
+            <CardContent className="z-10 relative flex flex-col gap-4 pt-4">
               <TextareaField<PositionFormData>
                 control={control}
                 name="description"
@@ -270,7 +273,7 @@ export function PositionForm({
                 Competenze
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="flex flex-col gap-6">
               <MultiSelectField<PositionFormData>
                 control={control}
                 name="skills"

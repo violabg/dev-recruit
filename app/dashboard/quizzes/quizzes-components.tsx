@@ -18,13 +18,13 @@ export async function QuizzesStatisticsSection({
   }[];
 }) {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Statistiche</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <div className="flex justify-between">
               <span>Quiz totali:</span>
               <span className="font-medium">{quizzes?.length || 0}</span>
@@ -47,7 +47,7 @@ export async function QuizzesStatisticsSection({
         </CardHeader>
         <CardContent>
           {positionCounts && positionCounts.length > 0 ? (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {positionCounts.map((item) => (
                 <div key={item.positionId} className="flex justify-between">
                   <span className="truncate">{item.positionTitle}</span>

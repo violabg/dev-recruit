@@ -28,7 +28,7 @@ export default async function PositionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<PositionHeaderSkeleton />}>
         <PositionHeader params={params} />
       </Suspense>
@@ -39,18 +39,18 @@ export default async function PositionDetailPage({
           <TabsTrigger value="quizzes">Quiz</TabsTrigger>
           <TabsTrigger value="candidates">Candidati</TabsTrigger>
         </TabsList>
-        <TabsContent value="details" className="space-y-4 pt-4">
+        <TabsContent value="details" className="flex flex-col gap-4 pt-4">
           <Suspense fallback={<PositionDetailsSkeleton />}>
             <PositionDetailsContent params={params} />
           </Suspense>
         </TabsContent>
-        <TabsContent value="quizzes" className="space-y-4 pt-4">
+        <TabsContent value="quizzes" className="flex flex-col gap-4 pt-4">
           <Suspense fallback={<PositionQuizzesSkeleton />}>
             <Quizzes params={params} />
           </Suspense>
         </TabsContent>
 
-        <TabsContent value="candidates" className="space-y-4 pt-4">
+        <TabsContent value="candidates" className="flex flex-col gap-4 pt-4">
           <Suspense fallback={<PositionCandidatesSkeleton />}>
             <Candidates params={params} />
           </Suspense>

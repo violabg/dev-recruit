@@ -13,7 +13,7 @@ import { useTransition } from "react";
 import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { unwrap } from "@/lib/utils/action-result";
+import { unwrap, errorMessage } from "@/lib/utils/action-result";
 
 const formSchema = behavioralRubricSchema;
 
@@ -55,10 +55,10 @@ export const BehavioralRubricForm = ({
         toast.success("Rubrica comportamentale salvata");
       } catch (error) {
         toast.error("Errore salvataggio rubrica", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "Impossibile salvare la rubrica comportamentale",
+          description: errorMessage(
+            error,
+            "Impossibile salvare la rubrica comportamentale",
+          ),
         });
       }
     });
@@ -82,7 +82,7 @@ export const BehavioralRubricForm = ({
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
       <div className="gap-4 grid md:grid-cols-2">
         <SliderField
           control={form.control}

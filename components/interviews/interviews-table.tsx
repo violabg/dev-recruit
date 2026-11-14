@@ -25,15 +25,18 @@ import {
 } from "@/components/ui/tooltip";
 import { deleteInterviewAction } from "@/lib/actions/interviews";
 import type { InterviewListItem } from "@/lib/data/interviews";
-import { isInterviewExpired } from "@/lib/utils/interview-utils";
+import { interviewState, type InterviewState } from "@/lib/utils/interview-utils";
+import { cn } from "@/lib/utils";
 import {
   CheckCircle,
   Clock,
   Copy,
   MessageSquare,
   MessageSquareText,
+  TimerOff,
   XCircle,
 } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -42,30 +45,38 @@ type InterviewsTableProps = {
 };
 
 // Status configuration for badges and icons
-const statusConfig = {
+const statusConfig: Record<
+  InterviewState,
+  {
+    label: string;
+    icon: ComponentType<SVGProps<SVGSVGElement>>;
+    badge: string;
+  }
+> = {
   pending: {
-    label: "Pendente",
+    label: "In attesa",
     icon: Clock,
-    variant: "secondary" as const,
-    color: "text-stage-pending",
+    badge: "bg-stage-pending/10 text-stage-pending",
   },
   in_progress: {
-    label: "In Corso",
+    label: "In corso",
     icon: MessageSquare,
-    variant: "default" as const,
-    color: "text-stage-progress",
+    badge: "bg-stage-progress/10 text-stage-progress",
   },
   completed: {
     label: "Completato",
     icon: CheckCircle,
-    variant: "default" as const,
-    color: "text-stage-done",
+    badge: "bg-stage-done/10 text-stage-done",
   },
   cancelled: {
     label: "Annullato",
     icon: XCircle,
-    variant: "destructive" as const,
-    color: "text-stage-cancelled",
+    badge: "bg-stage-cancelled/10 text-stage-cancelled",
+  },
+  expired: {
+    label: "Scaduto",
+    icon: TimerOff,
+    badge: "bg-stage-expired/10 text-stage-expired",
   },
 };
 
@@ -88,7 +99,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -120,23 +131,12 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
               </TableRow>
             ) : (
               interviews.map((interview) => {
-                let status = interview.status;
-
-                // If the interview has been started but not completed, and the time
-                // limit for the quiz has passed, treat it as cancelled (display only)
-                if (
-                  isInterviewExpired(
-                    interview.startedAt,
-                    interview.completedAt,
-                    interview.quizTimeLimit
-                  )
-                ) {
-                  status = "cancelled";
-                }
-
-                const statusInfo =
-                  statusConfig[status as keyof typeof statusConfig];
-                const StatusIcon = statusInfo?.icon || Clock;
+                const state = interviewState({
+                  status: interview.status,
+                  startedAt: interview.startedAt,
+                  timeLimit: interview.quizTimeLimit,
+                });
+                const info = statusConfig[state];
 
                 return (
                   <TableRow key={interview.id} className="group">
@@ -175,7 +175,7 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <div className="space-y-1">
+                                <div className="flex flex-col gap-1">
                                   {interview.positionSkills
                                     .slice(3)
                                     .map((skill) => (
@@ -189,11 +189,13 @@ export function InterviewsTable({ interviews }: InterviewsTableProps) {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={statusInfo?.variant || "secondary"}
-                        className="flex items-center gap-1 w-fit"
+                        className={cn(
+                          "flex items-center gap-1 w-fit",
+                          info.badge,
+                        )}
                       >
-                        <StatusIcon className="size-3" />
-                        {statusInfo?.label || status}
+                        <info.icon className="size-3" />
+                        {info.label}
                       </Badge>
                     </TableCell>
                     <TableCell className="z-10 relative text-right">

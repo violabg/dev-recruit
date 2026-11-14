@@ -1,5 +1,4 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
-import type { ComponentType, SVGProps } from "react";
 
 import { InterviewsTable } from "@/components/interviews/interviews-table";
 import {
@@ -12,7 +11,6 @@ import {
 import { UrlPagination } from "@/components/ui/url-pagination";
 import { getFilteredInterviews } from "@/lib/data/interviews";
 import { InterviewStatus } from "@/lib/schemas";
-import { CheckCircle, Clock, MessageSquare, XCircle } from "lucide-react";
 import {
   normalizeLanguage,
   normalizePage,
@@ -26,36 +24,6 @@ export type InterviewsSearchParams = {
   position?: string;
   language?: string;
   page?: string;
-};
-
-export const STATUS_CONFIG: Record<
-  InterviewStatus,
-  {
-    label: string;
-    icon: ComponentType<SVGProps<SVGSVGElement>>;
-    color: string;
-  }
-> = {
-  pending: {
-    label: "Pendenti",
-    icon: Clock,
-    color: "text-stage-pending",
-  },
-  in_progress: {
-    label: "In Corso",
-    icon: MessageSquare,
-    color: "text-stage-progress",
-  },
-  completed: {
-    label: "Completati",
-    icon: CheckCircle,
-    color: "text-stage-done",
-  },
-  cancelled: {
-    label: "Annullati",
-    icon: XCircle,
-    color: "text-stage-cancelled",
-  },
 };
 
 export const InterviewsRuntimeSection = async ({
@@ -104,7 +72,7 @@ export const InterviewsRuntimeSection = async ({
             i link di invito
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 px-4">
+        <CardContent className="flex flex-col gap-4 px-4">
           <InterviewsTable interviews={interviews} />
           <UrlPagination
             pagination={{

@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { PositionFormWithData } from "@/components/positions/position-form-with-data";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -58,7 +59,7 @@ async function EditPositionContent({
         <p className="font-medium text-lg">Posizione non trovata</p>
         <Link
           href="/dashboard/positions"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna alle posizioni
         </Link>

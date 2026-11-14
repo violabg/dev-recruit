@@ -10,7 +10,7 @@ type OpenQuestionDisplayProps = {
 export const OpenQuestionDisplay = ({ question }: OpenQuestionDisplayProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-bold dark:text-heading text-sm">
+      <h3 className="font-bold text-heading text-sm">
         Risposta di esempio:
       </h3>
       <p className="mt-1 text-muted-foreground text-sm">
@@ -18,7 +18,7 @@ export const OpenQuestionDisplay = ({ question }: OpenQuestionDisplayProps) => {
       </p>
       {question.keywords && question.keywords.length > 0 && (
         <div className="flex flex-col gap-2 mt-2">
-          <h3 className="font-bold dark:text-heading text-sm">
+          <h3 className="font-bold text-heading text-sm">
             Parole chiave:
           </h3>
           <div className="flex flex-wrap gap-1 mt-1">

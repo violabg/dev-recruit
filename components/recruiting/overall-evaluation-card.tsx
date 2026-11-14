@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface OverallEvaluation {
@@ -22,7 +23,7 @@ export function OverallEvaluationCard({
       <CardHeader>
         <CardTitle className="text-lg">Valutazione complessiva AI</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <div className="whitespace-pre-wrap">
           {overallEvaluation.evaluation}
         </div>
@@ -32,7 +33,7 @@ export function OverallEvaluationCard({
             <h4 className="mb-2 font-medium text-success">
               Punti di forza principali:
             </h4>
-            <ul className="space-y-1 pl-5 list-disc">
+            <ul className="flex flex-col gap-1 pl-5 list-disc">
               {overallEvaluation.strengths.map((strength: any, idx: number) => (
                 <li key={idx}>{strength}</li>
               ))}
@@ -45,7 +46,7 @@ export function OverallEvaluationCard({
             <h4 className="mb-2 font-medium text-warning">
               Aree di miglioramento:
             </h4>
-            <ul className="space-y-1 pl-5 list-disc">
+            <ul className="flex flex-col gap-1 pl-5 list-disc">
               {overallEvaluation.weaknesses.map(
                 (weakness: any, idx: number) => (
                   <li key={idx}>{weakness}</li>
@@ -68,11 +69,12 @@ export function OverallEvaluationCard({
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div
                       key={i}
-                      className={`w-2 h-4 mx-0.5 rounded-sm ${
+                      className={cn(
+                        "w-2 h-4 mx-0.5 rounded-sm",
                         i < (overallEvaluation.fitScore ?? 0)
                           ? "bg-primary"
-                          : "bg-muted"
-                      }`}
+                          : "bg-muted",
+                      )}
                     />
                   ))}
                   <span className="ml-2 font-medium">

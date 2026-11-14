@@ -2,6 +2,7 @@ import { SelectOptionsSkeleton } from "@/components/skeletons";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getAllPositions } from "@/lib/data/positions";
 import { getAllPresets } from "@/lib/data/presets";
+import { getFavoriteQuestions } from "@/lib/data/questions";
 import type { Position } from "@/lib/prisma/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
@@ -10,7 +11,7 @@ import { NewQuizCreationPage, PositionOption } from "./new-quiz-page";
 /**
  * Mirrors NewQuizCreationPage before a position is chosen: the full-width
  * position Select (h-9) followed by the "Seleziona una posizione" prompt.
- * It's a fragment because the page wrapper already applies space-y-6.
+ * It's a fragment because the page wrapper already applies flex + gap.
  */
 const positionsLoaderFallback = (
   <>
@@ -25,7 +26,7 @@ export default function NewQuizPage() {
   const positionsPromise = getAllPositions();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Crea un nuovo quiz</h1>
@@ -48,6 +49,7 @@ async function PositionsContent({
   positionsPromise: Promise<Position[]>;
 }) {
   const presetsPromise = getAllPresets().catch(() => []);
+  const favoriteQuestionsPromise = getFavoriteQuestions().catch(() => []);
   const positions = await positionsPromise;
 
   const serializedPositions: PositionOption[] = positions.map((position) => ({
@@ -61,6 +63,7 @@ async function PositionsContent({
     <NewQuizCreationPage
       positions={serializedPositions}
       presetsPromise={presetsPromise}
+      favoriteQuestionsPromise={favoriteQuestionsPromise}
       languageOptions={
         <Suspense fallback={<SelectOptionsSkeleton />}>
           <ProgrammingLanguageSelectItems />

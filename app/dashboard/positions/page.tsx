@@ -40,7 +40,7 @@ export default async function PositionsPage({
   searchParams: PositionsSearchParams;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         section="positions"
         title="Posizioni"
@@ -90,7 +90,7 @@ const PositionsTable = async ({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {positions && positions.length > 0 ? (
         <>
           <div className="border rounded-md">

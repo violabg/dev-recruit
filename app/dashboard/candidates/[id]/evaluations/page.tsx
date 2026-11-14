@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 import { getCandidateWithDetails } from "@/lib/data/candidates";
@@ -43,7 +44,7 @@ async function CandidateEvaluationsContent({
         <p className="font-medium text-lg">Candidato non trovato</p>
         <Link
           href="/dashboard/candidates"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna ai candidati
         </Link>
@@ -54,14 +55,14 @@ async function CandidateEvaluationsContent({
   const fullName = `${candidate.firstName} ${candidate.lastName}`;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <Link
           href={`/dashboard/candidates/${id}`}
-          className={`${buttonVariants({
-            variant: "ghost",
-            size: "sm",
-          })} inline-flex`}
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "inline-flex",
+          )}
         >
           <ArrowLeft className="mr-1 size-4" />
           Torna al candidato

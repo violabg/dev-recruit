@@ -29,8 +29,8 @@ export default async function Home() {
         <section className="bg-linear-to-b from-background via-background/90 to-muted/20 py-20 md:py-32">
           <div className="px-4 md:px-6 container">
             <div className="items-center gap-6 lg:gap-12 grid lg:grid-cols-2">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
+              <div className="flex flex-col justify-center gap-4">
+                <div className="flex flex-col gap-2">
                   <h1 className="font-bold text-3xl sm:text-5xl xl:text-6xl/none tracking-tighter">
                     Selezione tecnica potenziata dall&apos;AI
                   </h1>
@@ -49,17 +49,17 @@ export default async function Home() {
               </div>
               <div className="relative mx-auto lg:mx-0">
                 <div className="relative bg-card shadow-lg p-6 border rounded-xl">
-                  <div className="space-y-4">
+                  <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-2 font-semibold text-lg">
                       <BrainCircuit className="w-5 h-5 text-primary" />
                       <span>Quiz generato dall&apos;AI</span>
                     </div>
-                    <div className="space-y-3 text-sm">
+                    <div className="flex flex-col gap-3 text-sm">
                       <div className="bg-muted/50 p-3 border rounded-lg">
                         <p className="font-medium">
                           Domanda 1: Cosa è un closure in JavaScript?
                         </p>
-                        <div className="space-y-1 mt-2 text-muted-foreground">
+                        <div className="flex flex-col gap-1 mt-2 text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <div className="flex justify-center items-center border rounded-full size-4">
                               <div className="bg-primary rounded-full w-2 h-2" />
@@ -97,7 +97,7 @@ export default async function Home() {
         </section>
         <section className="bg-background py-12 md:py-16">
           <div className="px-4 md:px-6 container">
-            <div className="space-y-3 mb-12 text-center">
+            <div className="flex flex-col gap-3 mb-12 text-center">
               <h2 className="font-bold text-3xl tracking-tighter">
                 Perché scegliere DevRecruit AI
               </h2>
@@ -107,7 +107,7 @@ export default async function Home() {
               </p>
             </div>
             <div className="gap-8 grid md:grid-cols-3">
-              <div className="flex flex-col items-center space-y-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
+              <div className="flex flex-col items-center gap-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
                 <div className="bg-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <BrainCircuit className="w-7 h-7 text-primary" />
                 </div>
@@ -119,7 +119,7 @@ export default async function Home() {
                   posizione e livello di esperienza.
                 </p>
               </div>
-              <div className="flex flex-col items-center space-y-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
+              <div className="flex flex-col items-center gap-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
                 <div className="bg-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <Users className="w-7 h-7 text-primary" />
                 </div>
@@ -128,7 +128,7 @@ export default async function Home() {
                   Visualizza e valuta le risposte dei candidati.
                 </p>
               </div>
-              <div className="flex flex-col items-center space-y-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
+              <div className="flex flex-col items-center gap-4 bg-card shadow-sm hover:shadow-md p-6 border rounded-xl text-center transition-shadow">
                 <div className="bg-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <CheckCircle className="w-7 h-7 text-primary" />
                 </div>

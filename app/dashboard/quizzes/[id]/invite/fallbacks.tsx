@@ -20,7 +20,7 @@ import { ArrowLeft } from "lucide-react";
  */
 export function InviteCandidatesSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center px-2.5 h-7 font-medium text-[0.8rem] text-muted-foreground">
           <ArrowLeft className="mr-1 size-4" />
@@ -38,7 +38,7 @@ export function InviteCandidatesSkeleton() {
         <div className="flex items-center border-b h-10">
           <Skeleton className="w-72 h-4" />
         </div>
-        <div className="space-y-4 pt-4">
+        <div className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Assegna il quiz ai candidati</CardTitle>
@@ -47,7 +47,7 @@ export function InviteCandidatesSkeleton() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div className="flex flex-col gap-6">
                 <FieldSkeleton label="Seleziona i candidati" required />
                 <ButtonSkeleton size="sm" className="w-40" />
               </div>

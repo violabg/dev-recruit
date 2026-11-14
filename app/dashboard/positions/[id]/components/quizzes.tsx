@@ -33,7 +33,7 @@ export default async function Quizzes({ params }: Props) {
                 <CardTitle className="text-lg">{quiz.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
                       {quiz.questions.length} domande

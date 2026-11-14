@@ -49,14 +49,14 @@ export const QuestionsHeader = ({
   return (
     <Card>
       <CardHeader>
-        <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+        <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4 sm:gap-0">
           <div>
             <CardTitle>Domande ({fieldsLength})</CardTitle>
             <CardDescription>
               Gestisci e genera domande del quiz utilizzando l&apos;AI
             </CardDescription>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Select
               items={questionTypes}
               value={questionTypeFilter}

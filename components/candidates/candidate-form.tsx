@@ -12,7 +12,7 @@ import {
   createCandidateAction,
   updateCandidateAction,
 } from "@/lib/actions/candidates";
-import { unwrap } from "@/lib/utils/action-result";
+import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import { Candidate } from "@/lib/prisma/client";
 import {
   candidateFormSchema,
@@ -24,6 +24,7 @@ import { Briefcase, Loader2, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { FileUpload } from "../ui/file-upload";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -70,7 +71,6 @@ type CandidateFormProps =
 
 export const CandidateForm = (props: CandidateFormProps) => {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [removeExistingResume, setRemoveExistingResume] = useState(false);
@@ -166,7 +166,6 @@ export const CandidateForm = (props: CandidateFormProps) => {
   };
 
   const handleFormSubmission = (values: Record<string, unknown>) => {
-    setError(null);
     const formData = new FormData();
 
     if (values.firstName !== undefined) {
@@ -214,10 +213,11 @@ export const CandidateForm = (props: CandidateFormProps) => {
           unwrap(await updateCandidateAction(props.candidate.id, formData));
           router.push(`/dashboard/candidates/${props.candidate.id}`);
         } catch (submitError: unknown) {
-          setError(
-            submitError instanceof Error
-              ? submitError.message
-              : "Errore durante l'aggiornamento del candidato",
+          toast.error(
+            errorMessage(
+              submitError,
+              "Errore durante l'aggiornamento del candidato",
+            ),
           );
         }
       });
@@ -235,10 +235,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
         const { candidateId } = unwrap(await createCandidateAction(formData));
         router.push(`/dashboard/candidates/${candidateId}`);
       } catch (submitError: unknown) {
-        setError(
-          submitError instanceof Error
-            ? submitError.message
-            : "Errore nella creazione del candidato",
+        toast.error(
+          errorMessage(submitError, "Errore nella creazione del candidato"),
         );
       }
     });
@@ -275,7 +273,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
   return (
     <form
       onSubmit={form.handleSubmit(handleFormSubmission)}
-      className="space-y-6"
+      className="flex flex-col gap-6"
     >
       <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
         {/* Left Column: Personal Info & Resume */}
@@ -352,7 +350,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
                 Candidatura
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="flex flex-col gap-6">
               <MultiSelectField
                 control={form.control}
                 name="positionIds"
@@ -417,7 +415,6 @@ export const CandidateForm = (props: CandidateFormProps) => {
         </div>
       </div>
 
-      {error && <p className="font-medium text-destructive text-sm">{error}</p>}
     </form>
   );
 };

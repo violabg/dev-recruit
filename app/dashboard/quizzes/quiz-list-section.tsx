@@ -69,7 +69,7 @@ export async function QuizListSection({
             }
           />
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <QuizViewTabs
               defaultValue={view}
               tableContent={<QuizTable quizzes={quizzes} />}

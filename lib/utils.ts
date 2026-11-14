@@ -67,17 +67,17 @@ export function formatDate(dateString: string | null, showTime?: boolean) {
 export const getStatusColor = (status: string) => {
   switch (status) {
     case "pending":
-      return "bg-yellow-500 text-black";
+      return "bg-warning/10 text-warning";
     case "contacted":
-      return "bg-blue-600";
+      return "bg-primary/10 text-primary";
     case "interviewing":
-      return "bg-purple-500";
+      return "bg-primary/10 text-primary";
     case "hired":
-      return "bg-green-500 text-black";
+      return "bg-success/10 text-success";
     case "rejected":
-      return "bg-red-500";
+      return "bg-destructive/10 text-destructive";
     default:
-      return "bg-gray-500";
+      return "bg-muted text-muted-foreground";
   }
 };
 

@@ -27,7 +27,7 @@ function BackRow() {
 /** Mirrors CandidateEvaluationsContent: back link, title, description, list. */
 export function CandidateEvaluationsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <BackRow />
       <div>
         <TextSkeleton
@@ -43,7 +43,7 @@ export function CandidateEvaluationsSkeleton() {
           <TextSkeleton lineClassName="h-7" className="w-56 h-5" />
           <TextSkeleton className="w-72 max-w-full" />
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="flex flex-col gap-3">
           <Skeleton className="rounded-lg w-full h-9" />
           <ButtonSkeleton className="w-40" />
         </CardContent>
@@ -55,7 +55,7 @@ export function CandidateEvaluationsSkeleton() {
 /** Mirrors CandidateQuizContent: back link, static title, line tabs, card. */
 export function CandidateQuizSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <BackRow />
       <div>
         <h1 className={TITLE_CLASS}>Assign quizzes to candidate</h1>
@@ -70,7 +70,7 @@ export function CandidateQuizSkeleton() {
             Existing interviews
           </span>
         </div>
-        <div className="space-y-4 pt-4">
+        <div className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Assign quizzes to candidate</CardTitle>
@@ -78,7 +78,7 @@ export function CandidateQuizSkeleton() {
                 Select quizzes and create interview links for this candidate
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex flex-col gap-3">
               {Array.from({ length: 3 }, (_, i) => (
                 <Skeleton key={i} className="rounded-lg w-full h-12" />
               ))}
@@ -96,7 +96,7 @@ const SCORE_CARDS = ["Quiz tecnico", "Scenario comportamentale", "Decisione hiri
 /** Mirrors CandidateEvaluationDashboardContent: header, scores, sections. */
 export function CandidateEvaluationDashboardSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <BackRow />
       <PageHeaderSkeleton
         section="candidates"
@@ -130,7 +130,7 @@ export function CandidateEvaluationDashboardSkeleton() {
         <CardHeader>
           <CardTitle>Quiz tecnico</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="flex flex-col gap-2">
           <TextSkeleton className="w-56" />
           <TextSkeleton className="w-32" />
           <TextSkeleton className="w-32" />

@@ -13,10 +13,8 @@
  * Every cached read must `cacheTag()` the collection tag of EVERY entity it
  * reads, including joined/included relations (e.g. a candidate list that
  * includes interview status is tagged CANDIDATES + INTERVIEWS + POSITIONS).
- * Mutations then only invalidate their own entity's tags, and deletes pass
+ * Every mutation calls the helper of its own entity, and deletes pass
  * `deleted: true` so collections removed by DB cascades are expired too.
- *
- * @see docs/CACHE_IMPLEMENTATION.md for caching strategy details
  */
 
 import { revalidatePath, revalidateTag, updateTag } from "next/cache";
@@ -32,7 +30,6 @@ export const CacheTags = {
   // Entity collections
   QUIZZES: "quizzes",
   QUESTIONS: "questions",
-  QUESTIONS_FAVORITES: "questions-favorites",
   POSITIONS: "positions",
   CANDIDATES: "candidates",
   INTERVIEWS: "interviews",
@@ -40,9 +37,6 @@ export const CacheTags = {
   BEHAVIORAL_RUBRICS: "behavioral-rubrics",
   PRESETS: "presets",
   REFERENCE_DATA: "reference-data",
-
-  // Aggregate views
-  DASHBOARD: "dashboard",
 } as const;
 
 /**
@@ -153,12 +147,6 @@ export function invalidateQuestionCache(options?: {
   if (options?.quizId) {
     updateTag(CacheTags.QUIZZES);
     updateTag(entityTag.quiz(options.quizId));
-  }
-
-  if (options?.isFavorite) {
-    updateTag(CacheTags.QUESTIONS_FAVORITES);
-    // Also invalidate quizzes since quiz edit pages show favorite status
-    updateTag(CacheTags.QUIZZES);
   }
 }
 

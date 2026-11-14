@@ -12,7 +12,7 @@ export default function QuizzesError({
   reset: () => void;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Quiz</h1>
         <p className="text-muted-foreground">

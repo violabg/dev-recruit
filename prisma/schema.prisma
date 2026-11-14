@@ -193,7 +193,6 @@ model Interview {
   status      InterviewStatus @default(pending)
   startedAt   DateTime?
   completedAt DateTime?
-  score       Float?
   answers     Json?
   token       String          @unique
   createdAt   DateTime        @default(now())
@@ -350,7 +349,7 @@ model Preset {
   label        String
   description  String?
   icon         String   // Icon name from lucide-react
-  questionType String   // multiple_choice, code_snippet, open_question
+  questionType String   // multiple_choice, open_question, code_snippet, behavioral_scenario
   instructions String?
   focusAreas   String[] @default([])
   distractorComplexity String?

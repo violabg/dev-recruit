@@ -57,16 +57,16 @@ export function QuizQuestionsTabSkeleton() {
               <ButtonSkeleton size="sm" className="w-9" />
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold dark:text-heading text-sm">Domanda:</h3>
+              <h3 className="font-bold text-heading text-sm">Domanda:</h3>
               <div className="mt-1">
                 <TextSkeleton lineClassName="h-6" className="w-full max-w-2xl h-4" />
                 <TextSkeleton lineClassName="h-6" className="w-full max-w-md h-4" />
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold dark:text-heading text-sm">Opzioni:</h3>
+              <h3 className="font-bold text-heading text-sm">Opzioni:</h3>
               <div className="flex flex-col gap-4 mt-2">
                 {Array.from({ length: 4 }, (_, o) => (
                   <div
@@ -100,7 +100,7 @@ export function QuizSettingsTabSkeleton() {
       <CardHeader>
         <CardTitle>Impostazioni del quiz</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <div className="gap-4 grid md:grid-cols-2">
           {SETTINGS_LABELS.map(([label, width]) => (
             <div key={label}>
@@ -126,7 +126,7 @@ const RESULTS_HEADERS = [
 /** Mirrors QuizResultsContent: plain table with real headers. */
 export function QuizResultsSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b">

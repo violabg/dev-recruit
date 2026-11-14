@@ -38,9 +38,12 @@ export function ApplyFormClient({
     startTransition(async () => {
       const newIds = values.filter((id) => !positionsData[id]);
       for (const id of newIds) {
-        const data = await fetchPositionDataAction(id);
-        if (data) {
-          setPositionsData((prev) => ({ ...prev, [id]: data }));
+        const result = await fetchPositionDataAction(id);
+        if (result.success && result.position) {
+          setPositionsData((prev) => ({
+            ...prev,
+            [id]: result.position as Position,
+          }));
         }
       }
     });
@@ -63,7 +66,7 @@ export function ApplyFormClient({
       </div>
 
       {/* Right: Selected Positions */}
-      <div className="space-y-4 overflow-y-auto">
+      <div className="flex flex-col gap-4 overflow-y-auto">
         {selectedPositionIds.length === 0 ? (
           <Card className="flex justify-center items-center border-dashed h-full min-h-96">
             <CardContent className="text-center">

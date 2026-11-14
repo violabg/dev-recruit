@@ -91,7 +91,7 @@ export function CandidateSelectionForm({
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {unassignedCandidates.length === 0 ? (
         <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-40 text-center">
           <p className="text-muted-foreground text-sm">
@@ -105,7 +105,7 @@ export function CandidateSelectionForm({
       ) : (
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6"
+          className="flex flex-col gap-6"
           noValidate
         >
           <MultiSelectField
@@ -135,9 +135,9 @@ export function CandidateSelectionForm({
       )}
 
       {createdLinks.length > 0 && (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <h3 className="font-medium">Link di colloquio generati</h3>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {createdLinks.map((link) => (
               <div
                 key={link.candidateId}

@@ -21,7 +21,7 @@ export default async function CandidateDetailPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<CandidateHeaderSkeleton />}>
         <CandidateHeader params={params} />
       </Suspense>

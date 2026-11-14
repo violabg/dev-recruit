@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import { BehavioralRubricForm } from "@/components/recruiting/behavioral-rubric-form";
 import { HiringNotesForm } from "@/components/recruiting/hiring-notes-form";
@@ -48,7 +49,7 @@ async function CandidateEvaluationDashboardContent({
         <p className="font-medium text-lg">Candidato non trovato</p>
         <Link
           href="/dashboard/candidates"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna ai candidati
         </Link>
@@ -104,7 +105,7 @@ async function CandidateEvaluationDashboardContent({
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <Link
           href={`/dashboard/candidates/${candidate.id}`}
@@ -172,7 +173,7 @@ async function CandidateEvaluationDashboardContent({
         <CardHeader>
           <CardTitle>Quiz tecnico</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="flex flex-col gap-2">
           {interviewEvaluation ? (
             <>
               <div className="text-muted-foreground text-sm">

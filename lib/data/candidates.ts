@@ -22,7 +22,6 @@ export type CandidateWithRelations = Prisma.CandidateGetPayload<{
       select: {
         id: true;
         status: true;
-        score: true;
         createdAt: true;
       };
     };
@@ -54,7 +53,6 @@ const CANDIDATE_INCLUDE = {
     select: {
       id: true,
       status: true,
-      score: true,
       createdAt: true,
     },
   },
@@ -146,7 +144,7 @@ export async function getFilteredCandidates(
 ): Promise<PaginatedCandidates> {
   "use cache";
   cacheLife("hours");
-  // CANDIDATE_INCLUDE joins positions + interviews (status/score)
+  // CANDIDATE_INCLUDE joins positions + interviews (status)
   cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS, CacheTags.INTERVIEWS);
 
   const {

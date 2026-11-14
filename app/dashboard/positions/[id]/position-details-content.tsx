@@ -31,7 +31,7 @@ export async function PositionDetailsContent({ params }: Props) {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Competenze tecniche</CardTitle>

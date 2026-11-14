@@ -69,7 +69,7 @@ export async function deletePresetAction(presetId: string) {
 
     await prisma.preset.delete({ where: { id: presetId } });
 
-    invalidatePresetCache();
+    invalidatePresetCache(presetId);
 
     redirect("/dashboard/presets");
   });

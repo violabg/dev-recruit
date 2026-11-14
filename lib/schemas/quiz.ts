@@ -41,7 +41,7 @@ export const quizGenerationConfigSchema = z.object({
   previousQuestions: z
     .array(
       z.object({
-        question: z.string().min(1, "Question text required"),
+        question: z.string().min(1, "Il testo della domanda è obbligatorio"),
         type: z.string().optional(),
       }),
     )

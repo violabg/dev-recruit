@@ -23,13 +23,13 @@ export default async function InterviewsPage({
   const positionItems = await getPositionItemsForSelect();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         section="interviews"
         title="Colloqui"
         description="Gestisci tutti i colloqui tecnici"
       />
-      <div className="@container space-y-6">
+      <div className="@container flex flex-col gap-6">
         <Suspense fallback={<StatsFallback />}>
           <Stats />
         </Suspense>

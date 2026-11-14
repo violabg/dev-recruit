@@ -17,23 +17,23 @@ export const baseSchemas = {
   //   },
   //   { message: "Invalid ID format (UUID or cuid required)" }
   // ),
-  id: z.string().min(1, "ID is required"),
+  id: z.string().min(1, "L'ID è obbligatorio"),
 
   // Text schemas with consistent validation
   title: z
     .string()
-    .min(2, "Title must be at least 2 characters")
-    .max(200, "Title must not exceed 200 characters")
+    .min(2, "Il titolo deve contenere almeno 2 caratteri")
+    .max(200, "Il titolo non può superare 200 caratteri")
     .trim(),
 
   description: z
     .string()
-    .max(2000, "Description must not exceed 2000 characters")
+    .max(2000, "La descrizione non può superare 2000 caratteri")
     .optional(),
 
   instructions: z
     .string()
-    .max(2000, "Instructions must not exceed 2000 characters")
+    .max(2000, "Le istruzioni non possono superare 2000 caratteri")
     .optional(),
 
   // Email validation with Italian error message
@@ -50,25 +50,25 @@ export const baseSchemas = {
   // Numeric schemas with validation
   difficulty: z
     .int()
-    .min(1, "Minimum difficulty is 1")
-    .max(5, "Maximum difficulty is 5"),
+    .min(1, "La difficoltà minima è 1")
+    .max(5, "La difficoltà massima è 5"),
 
   questionCount: z
     .int()
-    .min(1, "At least 1 question required")
-    .max(50, "Maximum 50 questions allowed"),
+    .min(1, "Serve almeno 1 domanda")
+    .max(50, "Sono consentite al massimo 50 domande"),
 
   timeLimit: z.coerce
     .number<number>()
     .int()
-    .min(5, "Minimum time limit is 5 minutes")
-    .max(120, "Maximum time limit is 120 minutes")
+    .min(5, "Il tempo limite minimo è 5 minuti")
+    .max(120, "Il tempo limite massimo è 120 minuti")
     .nullable(),
 
   score: z
     .number()
-    .min(0, "Score must be non-negative")
-    .max(10, "Maximum score is 10"),
+    .min(0, "Il punteggio non può essere negativo")
+    .max(10, "Il punteggio massimo è 10"),
 
   // Boolean schemas with proper coercion
   booleanField: z.union([
@@ -79,8 +79,8 @@ export const baseSchemas = {
 
   // Array schemas
   skills: z
-    .array(z.string().min(1, "Skill name required"))
-    .min(1, "At least one skill required"),
+    .array(z.string().min(1, "Il nome della competenza è obbligatorio"))
+    .min(1, "Serve almeno una competenza"),
 
   stringArray: z.array(z.string()),
 
@@ -88,29 +88,14 @@ export const baseSchemas = {
   questionType: z.enum(
     ["multiple_choice", "open_question", "code_snippet", "behavioral_scenario"],
     {
-      error: () => "Invalid question type",
+      error: () => "Tipo di domanda non valido",
     },
   ),
-
-  experienceLevel: z.enum(["junior", "mid", "senior", "lead"], {
-    error: () => "Invalid experience level",
-  }),
-
-  contractType: z.enum(["full-time", "part-time", "contract", "internship"], {
-    error: () => "Invalid contract type",
-  }),
 
   interviewStatus: z.enum(
     ["pending", "in_progress", "completed", "cancelled"],
     {
-      error: () => "Invalid interview status",
-    },
-  ),
-
-  candidateStatus: z.enum(
-    ["pending", "in_progress", "completed", "hired", "rejected"],
-    {
-      error: () => "Invalid candidate status",
+      error: () => "Stato del colloquio non valido",
     },
   ),
 } as const;
@@ -141,7 +126,7 @@ export const formTransformers = {
   // Transform string number to number with validation
   stringToNumber: z.string().transform((val) => {
     const num = Number(val);
-    if (isNaN(num)) throw new Error("Invalid number");
+    if (isNaN(num)) throw new Error("Numero non valido");
     return num;
   }),
 
@@ -162,7 +147,4 @@ export const formTransformers = {
 
 // Type exports for the base schemas
 export type QuestionType = z.infer<typeof baseSchemas.questionType>;
-export type ExperienceLevel = z.infer<typeof baseSchemas.experienceLevel>;
-export type ContractType = z.infer<typeof baseSchemas.contractType>;
 export type InterviewStatus = z.infer<typeof baseSchemas.interviewStatus>;
-export type CandidateStatus = z.infer<typeof baseSchemas.candidateStatus>;

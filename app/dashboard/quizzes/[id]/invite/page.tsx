@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -44,7 +45,7 @@ async function InviteCandidatesContent({
         <p className="font-medium text-lg">Quiz o posizione non trovati</p>
         <Link
           href="/dashboard/quizzes"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna ai quiz
         </Link>
@@ -55,7 +56,7 @@ async function InviteCandidatesContent({
   const { quiz, position, assignedInterviews, unassignedCandidates } = data;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <Link
           href={`/dashboard/quizzes/${quizId}`}
@@ -80,7 +81,7 @@ async function InviteCandidatesContent({
           <TabsTrigger value="interviews">Colloqui creati</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="candidates" className="space-y-4 pt-4">
+        <TabsContent value="candidates" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Assegna il quiz ai candidati</CardTitle>
@@ -97,7 +98,7 @@ async function InviteCandidatesContent({
           </Card>
         </TabsContent>
 
-        <TabsContent value="interviews" className="space-y-4 pt-4">
+        <TabsContent value="interviews" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Colloqui creati</CardTitle>

@@ -12,7 +12,7 @@ export function ApplyFormSkeleton() {
       <div>
         <CandidateFormBodySkeleton mode="apply" />
       </div>
-      <div className="space-y-4 overflow-y-auto">
+      <div className="flex flex-col gap-4 overflow-y-auto">
         <Card className="flex justify-center items-center border-dashed h-full min-h-96">
           <CardContent className="flex justify-center">
             <TextSkeleton className="w-64" />

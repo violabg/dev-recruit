@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -23,7 +24,7 @@ export async function QuizHeader({ params }: Props) {
         <p className="font-medium text-lg">Quiz non trovato</p>
         <Link
           href="/dashboard/quizzes"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna ai quiz
         </Link>
@@ -39,7 +40,7 @@ export async function QuizHeader({ params }: Props) {
         <p className="font-medium text-lg">Posizione non trovata</p>
         <Link
           href="/dashboard/quizzes"
-          className={`mt-4 ${buttonVariants({ variant: "default" })}`}
+          className={cn("mt-4", buttonVariants({ variant: "default" }))}
         >
           Torna ai quiz
         </Link>

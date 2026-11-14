@@ -7,7 +7,7 @@ export function PositionDetailSkeleton() {
   return (
     <Card className="flex flex-col overflow-hidden">
       <CardHeader className="pb-4">
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <TextSkeleton lineClassName="h-8" className="w-2/3 h-6" />
           <div className="flex items-center gap-2">
             <BadgeSkeleton className="w-24" />
@@ -16,10 +16,10 @@ export function PositionDetailSkeleton() {
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 space-y-6 pb-6 overflow-y-auto">
-        <div className="space-y-2">
+      <CardContent className="flex-1 flex flex-col gap-6 pb-6 overflow-y-auto">
+        <div className="flex flex-col gap-2">
           <h3 className="font-semibold text-foreground text-sm">Descrizione</h3>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <TextSkeleton className="w-full" />
             <TextSkeleton className="w-full" />
             <TextSkeleton className="w-11/12" />
@@ -27,7 +27,7 @@ export function PositionDetailSkeleton() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <CodeIcon className="w-4 h-4 text-primary" />
             <h3 className="font-semibold text-sm">Competenze Tecniche</h3>
@@ -39,7 +39,7 @@ export function PositionDetailSkeleton() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <HeartIcon className="w-4 h-4 text-primary" />
             <h3 className="font-semibold text-sm">Soft Skills</h3>

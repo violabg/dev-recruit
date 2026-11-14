@@ -223,7 +223,7 @@ describe("convertToStrictQuestion", () => {
     const strict = convertToStrictQuestion(flexible);
     expect(strict.type).toBe("open_question");
     if (strict.type === "open_question") {
-      expect(strict.sampleAnswer).toBe("Sample answer to be provided");
+      expect(strict.sampleAnswer).toBe("Risposta di esempio da fornire");
     }
   });
 
@@ -235,8 +235,8 @@ describe("convertToStrictQuestion", () => {
     const strict = convertToStrictQuestion(flexible);
     expect(strict.type).toBe("code_snippet");
     if (strict.type === "code_snippet") {
-      expect(strict.codeSnippet).toBe("// Code snippet to be provided");
-      expect(strict.sampleSolution).toBe("// Sample solution to be provided");
+      expect(strict.codeSnippet).toBe("// Snippet di codice da fornire");
+      expect(strict.sampleSolution).toBe("// Soluzione di esempio da fornire");
       expect(strict.language).toBe("javascript");
     }
   });

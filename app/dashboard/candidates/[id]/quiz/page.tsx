@@ -78,7 +78,7 @@ async function CandidateQuizContent({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <Link
           href={`/dashboard/candidates/${candidateId}`}
@@ -106,7 +106,7 @@ async function CandidateQuizContent({
           <TabsTrigger value="interviews">Colloqui esistenti</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="quizzes" className="space-y-4 pt-4">
+        <TabsContent value="quizzes" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Assegna quiz al candidato</CardTitle>
@@ -123,7 +123,7 @@ async function CandidateQuizContent({
           </Card>
         </TabsContent>
 
-        <TabsContent value="interviews" className="space-y-4 pt-4">
+        <TabsContent value="interviews" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Colloqui esistenti</CardTitle>

@@ -20,7 +20,7 @@ export async function CandidateInterviewsContent({ params }: Props) {
         <CardTitle>Colloqui</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {candidate.interviews.map((interview) => (
             <div
               key={interview.id}
@@ -33,11 +33,6 @@ export async function CandidateInterviewsContent({ params }: Props) {
                     {formatDate(new Date(interview.createdAt).toISOString(), true)}
                   </div>
                 )}
-              </div>
-              <div className="font-semibold">
-                {interview.score !== null
-                  ? `Punteggio: ${interview.score}`
-                  : "-"}
               </div>
             </div>
           ))}

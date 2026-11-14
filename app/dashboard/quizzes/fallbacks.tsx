@@ -24,7 +24,7 @@ export function QuizListSkeleton() {
   return (
     <Card>
       <CardContent>
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <div className="w-full">
             <div className="flex justify-between items-center">
               <Skeleton className="rounded-lg w-40 h-8" />

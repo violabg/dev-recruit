@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { InputField } from "@/components/ui/rhf-inputs";
 import { updateProfileAction } from "@/lib/actions/profile";
 import type { Profile } from "@/lib/data/profile";
-import { unwrap } from "@/lib/utils/action-result";
+import { unwrap, errorMessage } from "@/lib/utils/action-result";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,9 +56,7 @@ export const ProfileForm = ({
         router.push("/dashboard/profile");
       } catch (error) {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Errore nell'aggiornamento del profilo",
+          errorMessage(error, "Errore nell'aggiornamento del profilo"),
         );
       }
     });
@@ -76,11 +74,11 @@ export const ProfileForm = ({
         <CardContent>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6"
+            className="flex flex-col gap-6"
             noValidate
           >
-            <div className="space-y-4">
-              <div className="space-y-2">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <label className="font-medium text-sm">Email</label>
                 <Input value={userEmail || ""} disabled className="bg-muted" />
                 <p className="text-muted-foreground text-xs">

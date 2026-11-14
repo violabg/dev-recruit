@@ -41,7 +41,7 @@ export function MultiSelect({
   options,
   selected,
   onChange,
-  placeholder = "Select options...",
+  placeholder = "Seleziona le opzioni...",
   className,
   grouped = false,
   invalid = false,
@@ -54,7 +54,7 @@ export function MultiSelect({
     if (!grouped) return null;
 
     return options.reduce<Record<string, OptionType[]>>((acc, option) => {
-      const category = option.category || "Other";
+      const category = option.category || "Altro";
       if (!acc[category]) {
         acc[category] = [];
       }
@@ -104,7 +104,7 @@ export function MultiSelect({
         )}
       </ComboboxChips>
       <ComboboxContent anchor={anchor}>
-        <ComboboxEmpty>No results found.</ComboboxEmpty>
+        <ComboboxEmpty>Nessun risultato trovato.</ComboboxEmpty>
         <ComboboxList>
           {grouped && groupedOptions
             ? categories.map((category, index) => (

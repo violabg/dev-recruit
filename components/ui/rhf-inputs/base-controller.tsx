@@ -100,7 +100,7 @@ export function BaseController<T extends FieldValues>({
               <FieldContent className="gap-1">
                 <div className="flex items-center gap-3">
                   {children({ field, fieldState, formState, ariaDescribedBy })}
-                  <div className="space-y-1 leading-none">
+                  <div className="flex flex-col gap-1 leading-none">
                     {labelContent}
                     {descriptionContent}
                   </div>

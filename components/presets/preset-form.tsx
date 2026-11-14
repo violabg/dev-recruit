@@ -164,7 +164,7 @@ export function PresetForm({ preset }: PresetFormProps) {
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="space-y-6"
+      className="flex flex-col gap-6"
       noValidate
     >
       <div className="gap-6 grid grid-cols-1 lg:grid-cols-12">
@@ -220,12 +220,12 @@ export function PresetForm({ preset }: PresetFormProps) {
 
           {/* Dynamic Sections Based on Type */}
           {questionType === "multiple_choice" && (
-            <div className="group relative space-y-4 bg-card/30 p-6 border rounded-xl overflow-hidden">
+            <div className="group relative flex flex-col gap-4 bg-card/30 p-6 border rounded-xl overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
               <h3 className="z-10 relative font-heading font-medium text-base">
                 Configurazione Scelta Multipla
               </h3>
-              <div className="z-10 relative space-y-4">
+              <div className="z-10 relative flex flex-col gap-4">
                 <InputWithTagField
                   control={form.control}
                   name="focusAreas"
@@ -247,7 +247,7 @@ export function PresetForm({ preset }: PresetFormProps) {
 
           {(questionType === "open_question" ||
             questionType === "behavioral_scenario") && (
-            <div className="space-y-4 bg-card/30 p-6 border rounded-xl">
+            <div className="flex flex-col gap-4 bg-card/30 p-6 border rounded-xl">
               <h3 className="font-heading font-medium text-base">
                 Configurazione Domanda Aperta / Scenario
               </h3>
@@ -273,7 +273,7 @@ export function PresetForm({ preset }: PresetFormProps) {
           )}
 
           {questionType === "code_snippet" && (
-            <div className="space-y-4 bg-card/30 p-6 border rounded-xl">
+            <div className="flex flex-col gap-4 bg-card/30 p-6 border rounded-xl">
               <h3 className="font-heading font-medium text-base">
                 Configurazione Snippet
               </h3>
@@ -320,7 +320,7 @@ export function PresetForm({ preset }: PresetFormProps) {
             <h3 className="mb-4 font-heading font-semibold text-foreground/90 text-lg">
               Impostazioni
             </h3>
-            <div className="space-y-6">
+            <div className="flex flex-col gap-6">
               <SelectField
                 control={form.control}
                 name="icon"

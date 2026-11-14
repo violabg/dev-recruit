@@ -38,7 +38,7 @@ type InterviewWithCandidateAndQuiz = Prisma.InterviewGetPayload<{
       select: { id: true; firstName: true; lastName: true; email: true };
     };
     quiz: {
-      select: { id: true; title: true };
+      select: { id: true; title: true; timeLimit: true };
     };
   };
 }>;
@@ -78,7 +78,6 @@ export type InterviewListItem = {
   startedAt: string | null;
   completedAt: string | null;
   createdAt: string;
-  score: number | null;
   candidateId: string;
   candidateName: string;
   candidateEmail: string;
@@ -106,6 +105,7 @@ export type AssignedInterview = {
   candidateEmail: string;
   quizId: string;
   quizTitle: string;
+  quizTimeLimit: number | null;
 };
 
 /**
@@ -198,6 +198,7 @@ export const mapAssignedInterview = (
   candidateEmail: interview.candidate?.email ?? "",
   quizId: interview.quiz?.id ?? "",
   quizTitle: interview.quiz?.title ?? "",
+  quizTimeLimit: interview.quiz?.timeLimit ?? null,
 });
 
 /**
@@ -214,7 +215,6 @@ export const mapInterviewListItem = (
     startedAt: record.startedAt?.toISOString() ?? null,
     completedAt: record.completedAt?.toISOString() ?? null,
     createdAt: record.createdAt.toISOString(),
-    score: record.score ?? null,
     candidateId: record.candidateId,
     candidateName: getFullName(
       record.candidate?.firstName ?? null,
@@ -279,6 +279,7 @@ export const getQuizAssignmentData = async (
         select: {
           id: true,
           title: true,
+          timeLimit: true,
         },
       },
     },
@@ -418,6 +419,7 @@ export const getCandidateQuizData = async (
     candidateEmail: candidate.email,
     quizId: interview.quiz?.id ?? "",
     quizTitle: interview.quiz?.title ?? "",
+    quizTimeLimit: interview.quiz?.timeLimit ?? null,
   }));
 
   const assignedQuizIds = assignedInterviews
@@ -557,7 +559,6 @@ export type InterviewDetailResult = {
     startedAt: string | null;
     completedAt: string | null;
     createdAt: string;
-    score: number | null;
     answers: Record<string, InterviewAnswer> | null;
   };
   quiz: Quiz;
@@ -622,7 +623,6 @@ export const getInterviewDetail = async (
         ? interview.completedAt.toISOString()
         : null,
       createdAt: interview.createdAt.toISOString(),
-      score: interview.score ?? null,
       answers,
     },
     quiz,
@@ -680,6 +680,7 @@ export const getInterviewsByQuiz = async (
         select: {
           id: true,
           title: true,
+          timeLimit: true,
         },
       },
     },

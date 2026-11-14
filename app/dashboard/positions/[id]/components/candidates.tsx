@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidatesByPosition } from "@/lib/data/candidates";
+import { cn } from "@/lib/utils";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 
@@ -19,7 +20,7 @@ export default async function Candidates({ params }: Props) {
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">Candidati</h2>
         <Link
           href={`/dashboard/candidates/new?positionId=${id}`}
-          className={`${buttonVariants({ variant: "default", size: "sm" })}`}
+          className={cn(buttonVariants({ variant: "default", size: "sm" }))}
         >
           <Plus className="mr-1 size-4" />
           Aggiungi Candidato
@@ -36,7 +37,7 @@ export default async function Candidates({ params }: Props) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
                       {candidate.email}
@@ -62,20 +63,18 @@ export default async function Candidates({ params }: Props) {
                   <div className="flex justify-between">
                     <Link
                       href={`/dashboard/candidates/${candidate.id}`}
-                      className={`${buttonVariants({
-                        variant: "outline",
-                        size: "sm",
-                      })}`}
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "sm" }),
+                      )}
                     >
                       Dettagli
                     </Link>
 
                     <Link
                       href={`/dashboard/candidates/${candidate.id}/quiz`}
-                      className={`${buttonVariants({
-                        variant: "secondary",
-                        size: "sm",
-                      })}`}
+                      className={cn(
+                        buttonVariants({ variant: "secondary", size: "sm" }),
+                      )}
                     >
                       Associa quiz
                     </Link>
@@ -93,11 +92,10 @@ export default async function Candidates({ params }: Props) {
             </p>
             <Link
               href={`/dashboard/candidates/new?positionId=${id}`}
-              className={`${buttonVariants({
-                variant: "default",
-                size: "sm",
-                className: "mt-2",
-              })}`}
+              className={cn(
+                buttonVariants({ variant: "default", size: "sm" }),
+                "mt-2",
+              )}
             >
               <Users className="mr-1 size-4" />
               Aggiungi candidato

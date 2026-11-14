@@ -11,7 +11,7 @@ export const MultipleChoiceDisplay = ({
 }: MultipleChoiceDisplayProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-bold dark:text-heading text-sm">Opzioni:</h3>
+      <h3 className="font-bold text-heading text-sm">Opzioni:</h3>
       <div className="flex flex-col gap-4 mt-2">
         {question.options?.map((option: string, optIndex: number) => {
           const correctAnswer = question.correctAnswer ?? 0;
@@ -27,7 +27,7 @@ export const MultipleChoiceDisplay = ({
             >
               <div
                 className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isCorrect ? "border-success bg-success text-white" : ""
+                  isCorrect ? "border-success bg-success text-primary-foreground" : ""
                 }`}
               >
                 {isCorrect && (
@@ -52,7 +52,7 @@ export const MultipleChoiceDisplay = ({
       </div>
       {question.explanation && (
         <div className="flex flex-col gap-2 mt-2">
-          <h3 className="font-bold dark:text-heading text-sm">Spiegazione:</h3>
+          <h3 className="font-bold text-heading text-sm">Spiegazione:</h3>
           <p className="mt-1 text-muted-foreground text-sm">
             {question.explanation}
           </p>

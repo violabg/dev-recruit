@@ -420,7 +420,7 @@ export const LiveWaveform = ({
           const style = getComputedStyle(canvas)
           // Try to get the computed color value directly
           const color = style.color
-          return color || "#000"
+          return color || "var(--foreground)"
         })()
 
       const step = barWidth + barGap

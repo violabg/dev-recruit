@@ -37,12 +37,11 @@ vi.mock("@ai-sdk/devtools", () => ({
   devToolsMiddleware: vi.fn(() => ({})),
 }));
 
-vi.mock("../../../lib/utils", () => ({
+vi.mock("../../../lib/services/ai/models", () => ({
   getOptimalModel: vi.fn((type: string, specificModel?: string) => {
     return specificModel || "openai/gpt-oss-120b";
   }),
   FALLBACK_MODELS: ["openai/gpt-oss-20b", "qwen/qwen3.8-27b"],
-  isDevelopment: false,
 }));
 
 vi.mock("../../../lib/services/ai/retry", () => ({

@@ -16,6 +16,9 @@ export * from "./question";
 // Re-export unified quiz schemas and types
 export * from "./quiz";
 
+// Re-export interview answer schemas and types
+export * from "./interview";
+
 // DOMAIN-SPECIFIC SCHEMAS
 // ======================
 
@@ -50,9 +53,6 @@ export * from "./preset";
 
 // Re-export any utility types or functions needed across the application
 export type {
-  CandidateStatus,
-  ContractType,
-  ExperienceLevel,
   InterviewStatus,
   QuestionType,
 } from "./base";

@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@ai-sdk/groq", () => ({
-  groq: { transcription: vi.fn((model: string) => ({ model })) },
+vi.mock("@/lib/services/ai/transcription", () => ({
+  transcribeAudio: vi.fn(),
 }));
-vi.mock("ai", () => ({ transcribe: vi.fn() }));
+
 vi.mock("@/lib/services/logger", () => ({ logger: { error: vi.fn() } }));
 
 import { transcribeAudioAction } from "@/lib/actions/transcription";
+import { transcribeAudio } from "@/lib/services/ai/transcription";
+import { AIErrorCode, AIGenerationError } from "@/lib/services/ai/types";
 import prisma from "@/lib/prisma";
-import { transcribe } from "ai";
 
 const form = (fields: { token?: string; audio?: Blob }) => {
   const formData = new FormData();
@@ -18,6 +19,16 @@ const form = (fields: { token?: string; audio?: Blob }) => {
 };
 
 const audio = () => new Blob([new Uint8Array([10, 20, 30])]);
+
+/** A real FormData whose stored file reports a size above the 25 MB limit */
+const formWithOversizedAudio = () => {
+  const formData = new FormData();
+  formData.append("token", "tok");
+  formData.append("audio", new Blob([]), "audio.webm");
+  const file = formData.get("audio") as File;
+  Object.defineProperty(file, "size", { value: 25 * 1024 * 1024 + 1 });
+  return formData;
+};
 
 const activeInterview = {
   status: "in_progress",
@@ -31,7 +42,7 @@ describe("transcribeAudioAction", () => {
     vi.mocked(prisma.interview.findUnique).mockResolvedValue(
       activeInterview as any,
     );
-    vi.mocked(transcribe).mockResolvedValue({ text: "Testo trascritto" } as any);
+    vi.mocked(transcribeAudio).mockResolvedValue("Testo trascritto");
   });
 
   it("transcribes audio for an active interview", async () => {
@@ -43,17 +54,19 @@ describe("transcribeAudioAction", () => {
     expect(prisma.interview.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { token: "tok" } }),
     );
-
-    const call = vi.mocked(transcribe).mock.calls[0][0];
-    expect(Array.from(call.audio as Uint8Array)).toEqual([10, 20, 30]);
-    expect(call.model).toEqual({ model: "whisper-large-v3-turbo" });
+    expect(transcribeAudio).toHaveBeenCalledWith(
+      new Uint8Array([10, 20, 30]),
+    );
   });
 
   it("refuses a request without an interview token", async () => {
     const result = await transcribeAudioAction(form({ audio: audio() }));
 
-    expect(result.success).toBe(false);
-    expect(transcribe).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      error: "Il token del colloquio è obbligatorio",
+    });
+    expect(transcribeAudio).not.toHaveBeenCalled();
   });
 
   it("refuses an unknown token", async () => {
@@ -65,9 +78,9 @@ describe("transcribeAudioAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Il colloquio non è più attivo",
+      error: "Colloquio non valido",
     });
-    expect(transcribe).not.toHaveBeenCalled();
+    expect(transcribeAudio).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -85,8 +98,11 @@ describe("transcribeAudioAction", () => {
       form({ token: "tok", audio: audio() }),
     );
 
-    expect(result.success).toBe(false);
-    expect(transcribe).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      error: "Il colloquio non è più attivo",
+    });
+    expect(transcribeAudio).not.toHaveBeenCalled();
   });
 
   it("refuses a request without audio", async () => {
@@ -96,16 +112,36 @@ describe("transcribeAudioAction", () => {
       success: false,
       error: "Nessun file audio fornito",
     });
+    expect(transcribeAudio).not.toHaveBeenCalled();
   });
 
-  it("returns a friendly error when the provider fails", async () => {
-    vi.mocked(transcribe).mockRejectedValueOnce(new Error("provider down"));
+  it("refuses a recording above 25 MB", async () => {
+    const result = await transcribeAudioAction(formWithOversizedAudio());
+
+    expect(result).toEqual({
+      success: false,
+      error: "La registrazione è troppo lunga",
+    });
+    expect(transcribeAudio).not.toHaveBeenCalled();
+  });
+
+  it("returns the AI layer's Italian message when the provider fails", async () => {
+    vi.mocked(transcribeAudio).mockRejectedValueOnce(
+      new AIGenerationError(
+        "Trascrizione non riuscita",
+        AIErrorCode.GENERATION_FAILED,
+      ),
+    );
 
     const result = await transcribeAudioAction(
       form({ token: "tok", audio: audio() }),
     );
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("Trascrizione non riuscita");
+    if (!result.success) {
+      expect(result.error).toBe(
+        "Servizio AI temporaneamente non disponibile. Riprova più tardi.",
+      );
+    }
   });
 });

@@ -50,7 +50,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
         <Card key={candidate.id} className="overflow-hidden">
           <CardHeader className="p-4">
             <div className="flex justify-between items-start">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">
                   <AvatarFallback>
                     {getInitials(candidate.firstName, candidate.lastName)}
@@ -106,7 +106,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-4 pt-0">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center text-sm">
                 <Briefcase className="mr-2 size-4 text-muted-foreground" />
                 {candidate.positions && candidate.positions.length > 0 ? (

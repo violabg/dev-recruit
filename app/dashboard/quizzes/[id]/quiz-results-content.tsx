@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -23,10 +24,10 @@ export async function QuizResultsContent({ params }: Props) {
           </p>
           <Link
             href={`/dashboard/quizzes/${quizId}/invite`}
-            className={`mt-2 ${buttonVariants({
-              variant: "default",
-              size: "sm",
-            })}`}
+            className={cn(
+              "mt-2",
+              buttonVariants({ variant: "default", size: "sm" }),
+            )}
           >
             <Link2 className="mr-1 size-4" />
             Associa a candidati
@@ -37,7 +38,7 @@ export async function QuizResultsContent({ params }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b">

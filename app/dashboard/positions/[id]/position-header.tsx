@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -23,10 +24,10 @@ export async function PositionHeader({ params }: Props) {
         <p className="font-medium text-lg">Posizione non trovata</p>
         <Link
           href="/dashboard/positions"
-          className={`mt-4 ${buttonVariants({
-            variant: "default",
-            size: "sm",
-          })}`}
+          className={cn(
+            "mt-4",
+            buttonVariants({ variant: "default", size: "sm" }),
+          )}
         >
           Torna alle posizioni
         </Link>
@@ -53,10 +54,10 @@ export async function PositionHeader({ params }: Props) {
         <>
           <Link
             href={`/dashboard/positions/${position.id}/edit`}
-            className={`${buttonVariants({
-              variant: "outline",
-              size: "sm",
-            })} inline-flex`}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
           >
             <Edit className="mr-1 size-4" />
             Modifica

@@ -153,28 +153,28 @@ describe("formatDate", () => {
 });
 
 describe("getStatusColor", () => {
-  it("should return yellow for pending", () => {
-    expect(getStatusColor("pending")).toBe("bg-yellow-500 text-black");
+  it("should return the warning tint for pending", () => {
+    expect(getStatusColor("pending")).toBe("bg-warning/10 text-warning");
   });
 
-  it("should return blue for contacted", () => {
-    expect(getStatusColor("contacted")).toBe("bg-blue-600");
+  it("should return the primary tint for contacted", () => {
+    expect(getStatusColor("contacted")).toBe("bg-primary/10 text-primary");
   });
 
-  it("should return purple for interviewing", () => {
-    expect(getStatusColor("interviewing")).toBe("bg-purple-500");
+  it("should return the primary tint for interviewing", () => {
+    expect(getStatusColor("interviewing")).toBe("bg-primary/10 text-primary");
   });
 
-  it("should return green for hired", () => {
-    expect(getStatusColor("hired")).toBe("bg-green-500 text-black");
+  it("should return the success tint for hired", () => {
+    expect(getStatusColor("hired")).toBe("bg-success/10 text-success");
   });
 
-  it("should return red for rejected", () => {
-    expect(getStatusColor("rejected")).toBe("bg-red-500");
+  it("should return the destructive tint for rejected", () => {
+    expect(getStatusColor("rejected")).toBe("bg-destructive/10 text-destructive");
   });
 
-  it("should return gray for unknown status", () => {
-    expect(getStatusColor("unknown")).toBe("bg-gray-500");
+  it("should return the muted tint for an unknown status", () => {
+    expect(getStatusColor("unknown")).toBe("bg-muted text-muted-foreground");
   });
 });
 
