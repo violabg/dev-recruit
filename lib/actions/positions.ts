@@ -31,6 +31,8 @@ export async function createPosition(values: PositionFormData) {
 }
 
 export async function deletePosition(id: string) {
+  await requireUser();
+
   const position = await prisma.position.findUnique({
     where: { id },
     select: { id: true },

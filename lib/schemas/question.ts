@@ -197,3 +197,11 @@ export const convertToStrictQuestions = (
 ): Question[] => {
   return flexibleQuestions.map(convertToStrictQuestion);
 };
+
+/**
+ * Input for removing a question from a quiz
+ */
+export const removeQuestionFromQuizSchema = z.object({
+  quizId: z.string().min(1, "Quiz ID is required"),
+  questionId: z.string().min(1, "Question ID is required"),
+});

@@ -1,5 +1,3 @@
-"use server";
-
 import { headers } from "next/headers";
 import { auth } from "./auth";
 import { authLogger } from "./services/logger";

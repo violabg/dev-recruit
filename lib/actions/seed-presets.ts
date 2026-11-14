@@ -1,5 +1,6 @@
 "use server";
 
+import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
 import { logger } from "../services/logger";
@@ -12,7 +13,7 @@ type PresetSeedData = Omit<
 >;
 
 // Preset data to seed
-export const DEFAULT_PRESETS: PresetSeedData[] = [
+const DEFAULT_PRESETS: PresetSeedData[] = [
   // Frontend Presets
   {
     name: "react-hooks",
@@ -144,6 +145,8 @@ export const DEFAULT_PRESETS: PresetSeedData[] = [
 ];
 
 export async function seedDefaultPresetsAction() {
+  await requireUser();
+
   try {
     // Delete existing presets
     await prisma.preset.deleteMany({});

@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { overallEvaluationSchema } from "@/lib/schemas";
+import { aiLogger } from "@/lib/services/logger";
 import { getOptimalModel, isDevelopment } from "@/lib/utils";
 import { invalidateEvaluationCacheInRouteHandler } from "@/lib/utils/cache-utils";
 import { groq } from "@ai-sdk/groq";
@@ -36,7 +37,7 @@ async function extractTextFromPDF(pdfUrl: string): Promise<string> {
 
     return text || "";
   } catch (error) {
-    console.error("Failed to extract text from PDF:", error);
+    aiLogger.error("Failed to extract text from PDF", { error });
     throw new Error(
       `Impossibile leggere il curriculum: ${
         error instanceof Error ? error.message : "Errore sconosciuto"
@@ -234,7 +235,9 @@ export async function POST(request: Request) {
             // Invalidate cache to show the new evaluation
             invalidateEvaluationCacheInRouteHandler({ candidateId });
           } catch (parseError) {
-            console.error("Error parsing/saving evaluation:", parseError);
+            aiLogger.error("Error parsing/saving evaluation", {
+              error: parseError,
+            });
           }
 
           // Close AFTER the database save is complete
@@ -251,7 +254,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Error streaming evaluation:", error);
+    aiLogger.error("Error streaming evaluation", { error });
     return Response.json(
       {
         error:

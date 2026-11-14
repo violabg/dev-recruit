@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth-server";
 import { positionDescriptionSchema } from "@/lib/schemas/position";
+import { aiLogger } from "@/lib/services/logger";
 import { streamPositionDescription } from "@/lib/services/ai-service";
 import { NextRequest } from "next/server";
 
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     return stream.toTextStreamResponse();
   } catch (error) {
-    console.error("Stream position description failed:", error);
+    aiLogger.error("Stream position description failed", { error });
     return new Response(
       JSON.stringify({
         error:

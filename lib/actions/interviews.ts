@@ -5,6 +5,7 @@ import { generateInterviewToken } from "@/lib/utils/token";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import { Prisma } from "../prisma/client";
+import { logger } from "../services/logger";
 import { invalidateInterviewCache } from "../utils/cache-utils";
 
 export async function startInterview(token: string) {
@@ -136,6 +137,8 @@ export async function completeInterview(token: string) {
 }
 
 export async function deleteInterview(id: string) {
+  await requireUser();
+
   const interview = await prisma.interview.findUnique({
     where: { id },
     select: {
@@ -270,7 +273,7 @@ export async function cancelExpiredInterviewAction(interviewId: string) {
       status: interview.status,
     };
   } catch (error) {
-    console.error("Error checking interview expiry:", error);
+    logger.error("Error checking interview expiry", { error });
     return {
       success: false,
       error: "Failed to check interview expiry",

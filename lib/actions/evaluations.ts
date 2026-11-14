@@ -9,6 +9,7 @@ import {
 
 import { groq } from "@ai-sdk/groq";
 import { generateText, Output, wrapLanguageModel } from "ai";
+import { requireUser } from "../auth-server";
 import { aiLogger } from "../services/logger";
 import { FALLBACK_MODELS, getOptimalModel, isDevelopment } from "../utils";
 
@@ -18,6 +19,8 @@ export async function evaluateAnswer(
   answer: string,
   specificModel?: string,
 ) {
+  await requireUser();
+
   if (!question || !answer) {
     throw new Error("Missing required fields");
   }
@@ -308,6 +311,8 @@ export async function generateOverallEvaluation(
   evaluations: Record<string, EvaluationResult>,
   specificModel?: string,
 ) {
+  await requireUser();
+
   // Extract strengths and weaknesses from evaluations
   const allStrengths: string[] = [];
   const allWeaknesses: string[] = [];
