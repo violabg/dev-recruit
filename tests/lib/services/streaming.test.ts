@@ -35,7 +35,6 @@ vi.mock("@/lib/services/ai/models", () => ({
 }));
 vi.mock("@/lib/utils", () => ({
   isDevelopment: false,
-  cn: vi.fn(),
 }));
 
 // Mock prompts

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import PageHeader from "@/components/page-header";
 import { BehavioralRubricForm } from "@/components/recruiting/behavioral-rubric-form";
 import { HiringNotesForm } from "@/components/recruiting/hiring-notes-form";

@@ -56,6 +56,17 @@
   --color-section-presets: var(--section-presets);
   --color-section-interviews: var(--section-interviews);
   --color-section-settings: var(--section-settings);
+  --color-shiki-foreground: var(--shiki-foreground);
+  --color-shiki-background: var(--shiki-background);
+  --color-shiki-token-constant: var(--shiki-token-constant);
+  --color-shiki-token-string: var(--shiki-token-string);
+  --color-shiki-token-comment: var(--shiki-token-comment);
+  --color-shiki-token-keyword: var(--shiki-token-keyword);
+  --color-shiki-token-parameter: var(--shiki-token-parameter);
+  --color-shiki-token-function: var(--shiki-token-function);
+  --color-shiki-token-string-expression: var(--shiki-token-string-expression);
+  --color-shiki-token-punctuation: var(--shiki-token-punctuation);
+  --color-shiki-token-link: var(--shiki-token-link);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -119,6 +130,18 @@
   --section-presets: oklch(0.54 0.17 300);
   --section-interviews: oklch(0.56 0.17 350);
   --section-settings: oklch(0.55 0.02 260);
+  /* Syntax highlighting (Shiki css-variables theme, light values) */
+  --shiki-foreground: oklch(0.23 0.035 258);
+  --shiki-background: oklch(0.972 0.008 247);
+  --shiki-token-constant: oklch(0.48 0.13 300);
+  --shiki-token-string: oklch(0.5 0.12 155);
+  --shiki-token-comment: oklch(0.55 0.03 250);
+  --shiki-token-keyword: oklch(0.5 0.17 285);
+  --shiki-token-parameter: oklch(0.55 0.12 55);
+  --shiki-token-function: oklch(0.5 0.15 255);
+  --shiki-token-string-expression: oklch(0.55 0.1 185);
+  --shiki-token-punctuation: oklch(0.48 0.02 250);
+  --shiki-token-link: oklch(0.536 0.16 238);
 }
 
 .dark {
@@ -167,6 +190,18 @@
   --section-presets: oklch(0.76 0.14 300);
   --section-interviews: oklch(0.77 0.13 350);
   --section-settings: oklch(0.74 0.02 260);
+  /* Syntax highlighting (Shiki css-variables theme, dark values) */
+  --shiki-foreground: oklch(0.93 0.01 245);
+  --shiki-background: oklch(0.2 0.03 257);
+  --shiki-token-constant: oklch(0.78 0.13 305);
+  --shiki-token-string: oklch(0.8 0.14 155);
+  --shiki-token-comment: oklch(0.65 0.03 250);
+  --shiki-token-keyword: oklch(0.78 0.14 290);
+  --shiki-token-parameter: oklch(0.8 0.12 60);
+  --shiki-token-function: oklch(0.78 0.13 250);
+  --shiki-token-string-expression: oklch(0.8 0.1 185);
+  --shiki-token-punctuation: oklch(0.72 0.02 250);
+  --shiki-token-link: oklch(0.7 0.14 238);
 }
 
 /* Ink rail scope (dark mode only): text + section hues tuned for the navy sidebar */

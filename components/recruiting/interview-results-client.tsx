@@ -25,8 +25,8 @@ import {
 } from "@/lib/actions/evaluations";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import type { EvaluationResult, SavedQuestion } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
 import { errorMessage, unwrap } from "@/lib/utils/action-result";
+import { cn } from "cn";
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 
 import { Loader2, Save, Sparkles } from "lucide-react";
@@ -509,7 +509,6 @@ export function InterviewResultsClient({
                                     : String(answers[dbId] ?? "")
                                 }
                                 language={question.language ?? "javascript"}
-                                className="bg-muted p-4 border border-border rounded-lg font-mono text-foreground text-sm"
                               />
                             )}
                           </div>

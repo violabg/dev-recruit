@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { InterviewExpiryChecker } from "@/components/interviews/interview-expiry-checker";
 import { getInterviewStatePresentation } from "@/components/interviews/interview-status";
 import PageHeader from "@/components/page-header";

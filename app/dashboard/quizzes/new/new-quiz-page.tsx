@@ -2,7 +2,7 @@
 
 import { EditQuizForm } from "@/components/quiz/edit-quiz-form";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 import {
   Select,

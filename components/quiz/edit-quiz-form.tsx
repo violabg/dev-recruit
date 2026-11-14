@@ -6,7 +6,7 @@ import type { QuestionWithMetadata } from "@/lib/data/questions";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
 import { DEFAULT_GENERATION_MODEL } from "@/lib/services/ai/models";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { getSaveButtonContent } from "@/lib/utils/quiz-form-utils";
 import { AlertCircle, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";

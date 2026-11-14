@@ -18,7 +18,7 @@ import {
   getPositionsCount,
   getRecentPositions,
 } from "@/lib/data/dashboard";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";

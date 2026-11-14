@@ -1,5 +1,5 @@
 import { SECTIONS, type SectionKey } from "@/components/dashboard/sections";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 type PageHeaderProps = {
   title: string;

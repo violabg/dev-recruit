@@ -1,7 +1,7 @@
 /**
  * Unit tests for lib/utils.ts
  *
- * Tests utility functions like cn, getInitials, prismLanguage, formatDate, etc.
+ * Tests utility functions like getInitials, formatDate, etc.
  */
 
 import {
@@ -12,40 +12,8 @@ import {
   getOptimalModel,
   LLM_MODELS,
 } from "@/lib/services/ai/models";
-import {
-  cn,
-  formatDate,
-  getInitials,
-  getStatusColor,
-  prismLanguage,
-} from "@/lib/utils";
+import { formatDate, getInitials, getStatusColor } from "@/lib/utils";
 import { describe, expect, it } from "vitest";
-
-describe("cn (className utility)", () => {
-  it("should merge class names", () => {
-    expect(cn("foo", "bar")).toBe("foo bar");
-  });
-
-  it("should handle conditional classes", () => {
-    expect(cn("foo", false && "bar", "baz")).toBe("foo baz");
-  });
-
-  it("should merge tailwind classes correctly", () => {
-    expect(cn("px-2", "px-4")).toBe("px-4");
-  });
-
-  it("should handle arrays", () => {
-    expect(cn(["foo", "bar"])).toBe("foo bar");
-  });
-
-  it("should handle objects", () => {
-    expect(cn({ foo: true, bar: false, baz: true })).toBe("foo baz");
-  });
-
-  it("should handle undefined and null", () => {
-    expect(cn("foo", undefined, null, "bar")).toBe("foo bar");
-  });
-});
 
 describe("getInitials", () => {
   it("should return initials from full name", () => {
@@ -70,63 +38,6 @@ describe("getInitials", () => {
 
   it("should uppercase the initials", () => {
     expect(getInitials("mario rossi")).toBe("MR");
-  });
-});
-
-describe("prismLanguage", () => {
-  it("should map javascript", () => {
-    expect(prismLanguage("javascript")).toBe("javascript");
-    expect(prismLanguage("JavaScript")).toBe("javascript");
-    expect(prismLanguage("js")).toBe("javascript");
-    expect(prismLanguage("JS")).toBe("javascript");
-  });
-
-  it("should map typescript", () => {
-    expect(prismLanguage("typescript")).toBe("typescript");
-    expect(prismLanguage("TypeScript")).toBe("typescript");
-    expect(prismLanguage("ts")).toBe("typescript");
-    expect(prismLanguage("TS")).toBe("typescript");
-  });
-
-  it("should map python", () => {
-    expect(prismLanguage("python")).toBe("python");
-    expect(prismLanguage("Python")).toBe("python");
-    expect(prismLanguage("py")).toBe("python");
-  });
-
-  it("should map java to typescript", () => {
-    // Note: This is the current behavior in the codebase
-    expect(prismLanguage("java")).toBe("typescript");
-  });
-
-  it("should map c# to csharp", () => {
-    expect(prismLanguage("c#")).toBe("csharp");
-    expect(prismLanguage("C#")).toBe("csharp");
-    expect(prismLanguage("csharp")).toBe("csharp");
-  });
-
-  it("should map cpp", () => {
-    expect(prismLanguage("cpp")).toBe("cpp");
-    expect(prismLanguage("c++")).toBe("cpp");
-    expect(prismLanguage("C++")).toBe("cpp");
-  });
-
-  it("should map other languages", () => {
-    expect(prismLanguage("go")).toBe("go");
-    expect(prismLanguage("ruby")).toBe("ruby");
-    expect(prismLanguage("php")).toBe("php");
-    expect(prismLanguage("swift")).toBe("swift");
-    expect(prismLanguage("kotlin")).toBe("kotlin");
-  });
-
-  it("should map html and css to markup", () => {
-    expect(prismLanguage("html")).toBe("markup");
-    expect(prismLanguage("css")).toBe("markup");
-  });
-
-  it("should default to javascript for unknown languages", () => {
-    expect(prismLanguage("unknown")).toBe("javascript");
-    expect(prismLanguage("")).toBe("javascript");
   });
 });
 

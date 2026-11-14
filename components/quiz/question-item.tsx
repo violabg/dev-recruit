@@ -20,7 +20,7 @@ import {
   toggleQuestionFavoriteAction,
 } from "@/lib/actions/questions";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { errorMessage } from "@/lib/utils/action-result";
 import { getQuestionTypeLabel } from "@/lib/utils/quiz-form-utils";
 import { ChevronDown, ChevronUp, Heart, Sparkles, Trash2 } from "lucide-react";

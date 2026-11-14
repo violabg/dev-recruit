@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { LoginFormData, loginSchema } from "@/lib/schemas";
 import { errorMessage } from "@/lib/utils/action-result";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

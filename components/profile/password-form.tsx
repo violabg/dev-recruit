@@ -12,7 +12,7 @@ import { PasswordField } from "@/components/ui/rhf-inputs";
 import { updatePasswordAction } from "@/lib/actions/profile";
 import { unwrap, errorMessage } from "@/lib/utils/action-result";
 import { ChangePasswordFormData, changePasswordSchema } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";

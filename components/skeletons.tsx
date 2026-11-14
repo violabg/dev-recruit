@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 /** A text-line placeholder with the real line-height of its font size. */
 export function TextSkeleton({

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { PositionFormWithData } from "@/components/positions/position-form-with-data";
 import { buttonVariants } from "@/components/ui/button";
 

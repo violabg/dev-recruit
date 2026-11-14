@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCandidatesByPosition } from "@/lib/data/candidates";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 

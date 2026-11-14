@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { buttonVariants } from "@/components/ui/button";
 
 import { getCandidateWithDetails } from "@/lib/data/candidates";

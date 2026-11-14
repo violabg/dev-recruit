@@ -14,7 +14,7 @@ import { updateProfileAction } from "@/lib/actions/profile";
 import type { Profile } from "@/lib/data/profile";
 import { unwrap, errorMessage } from "@/lib/utils/action-result";
 import { ProfileFormData, profileSchema } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";

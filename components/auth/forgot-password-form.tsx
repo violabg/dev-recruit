@@ -10,7 +10,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { ForgotPasswordFormData, forgotPasswordSchema } from "@/lib/schemas";
 import { errorMessage } from "@/lib/utils/action-result";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState, useTransition } from "react";

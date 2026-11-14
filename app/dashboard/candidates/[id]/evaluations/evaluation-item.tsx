@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import type { OverallEvaluation } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { ChevronDown, Loader2, Save } from "lucide-react";
 
 interface EvaluationItemProps {

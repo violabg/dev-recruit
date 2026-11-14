@@ -27,7 +27,7 @@ import { INTERVIEW_STATE_PRESENTATION } from "@/components/interviews/interview-
 import { deleteInterviewAction } from "@/lib/actions/interviews";
 import type { InterviewListItem } from "@/lib/data/interviews";
 import { interviewState, type InterviewState } from "@/lib/utils/interview-utils";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import {
   CheckCircle,
   Clock,
