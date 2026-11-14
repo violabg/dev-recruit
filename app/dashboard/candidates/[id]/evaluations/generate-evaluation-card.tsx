@@ -29,7 +29,7 @@ interface GenerateEvaluationCardProps {
   hasResume: boolean;
 }
 
-export function GenerateEvaluationCard({
+function GenerateEvaluationCard({
   candidateName,
   availablePositions,
   selectedPositionId,

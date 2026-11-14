@@ -81,7 +81,7 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
 ## Client forms
 
 - `useForm` with `zodResolver(schema)`, where the schema comes from the shared schemas.
-- Fields from the `rhf-inputs` wrappers (`InputField`, `TextareaField`, `SelectField`, `MultiSelectField`, `CheckboxField`, `SwitchField`, `PasswordField`, `SliderField`, `InputWithTagField`, `RadioGroupField`, `FileUploadField`), passing `control` and `name`.
+- Fields from the `rhf-inputs` wrappers (`InputField`, `TextareaField`, `SelectField`, `MultiSelectField`, `CheckboxField`, `SwitchField`, `PasswordField`, `SliderField`, `InputWithTagField`), passing `control` and `name`.
 - `const [isPending, startTransition] = useTransition()`; submit inside `startTransition`.
 - Feedback through `toast` from `sonner`; navigate with `router.push`, or let the action `redirect()`.
 - Error text on the client comes from `errorMessage(error)` (fallback `GENERIC_ERROR`).

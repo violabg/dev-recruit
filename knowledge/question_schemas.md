@@ -55,7 +55,7 @@ return { questions: convertToStrictQuestions(output.questions) };
 const parsed = saveQuizSchema.safeParse(input); // questions: z.array(questionSchemas.flexible).min(1)
 ```
 
-Type guards `isMultipleChoiceQuestion`, `isOpenQuestion`, `isCodeSnippetQuestion`, `isBehavioralScenarioQuestion` check only `type`; on a `FlexibleQuestion` they narrow without validating the fields.
+Type guards `isMultipleChoiceQuestion`, `isOpenQuestion`, `isCodeSnippetQuestion` check only `type`; on a `FlexibleQuestion` they narrow without validating the fields. `behavioral_scenario` has no guard and no exported per-type type: compare `type === "behavioral_scenario"` directly.
 
 ## Mapping database ↔ form
 

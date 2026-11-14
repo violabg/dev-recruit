@@ -124,12 +124,4 @@ describe("logger module", () => {
       expect(typeof storageLogger.error).toBe("function");
     });
   });
-
-  describe("default export", () => {
-    it("should have default export equal to named logger export", async () => {
-      const loggerModule = await import("@/lib/services/logger");
-
-      expect(loggerModule.default).toBe(loggerModule.logger);
-    });
-  });
 });

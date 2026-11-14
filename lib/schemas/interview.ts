@@ -30,7 +30,3 @@ export const transcriptionRequestSchema = z.object({
 // ====================
 
 export type InterviewAnswer = z.infer<typeof interviewAnswerSchema>;
-export type SubmitAnswerInput = z.infer<typeof submitAnswerSchema>;
-export type TranscriptionRequestInput = z.infer<
-  typeof transcriptionRequestSchema
->;

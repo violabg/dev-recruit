@@ -132,9 +132,6 @@ export type MultipleChoiceQuestion = z.infer<
 >;
 export type OpenQuestion = z.infer<typeof openQuestionSchema>;
 export type CodeSnippetQuestion = z.infer<typeof codeSnippetQuestionSchema>;
-export type BehavioralScenarioQuestion = z.infer<
-  typeof behavioralScenarioQuestionSchema
->;
 
 // SavedQuestion is a FlexibleQuestion with required dbId (for questions loaded from DB)
 export type SavedQuestion = FlexibleQuestion & { dbId: string };
@@ -151,10 +148,6 @@ export const isOpenQuestion = (
 export const isCodeSnippetQuestion = (
   q: Question | FlexibleQuestion,
 ): q is CodeSnippetQuestion => q.type === "code_snippet";
-
-export const isBehavioralScenarioQuestion = (
-  q: Question | FlexibleQuestion,
-): q is BehavioralScenarioQuestion => q.type === "behavioral_scenario";
 
 // Question conversion utilities
 export const convertToStrictQuestion = (

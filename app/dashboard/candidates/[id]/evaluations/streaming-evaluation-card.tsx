@@ -17,7 +17,7 @@ interface StreamingEvaluationCardProps {
   streamingPositionTitle: string | null;
 }
 
-export function StreamingEvaluationCard({
+function StreamingEvaluationCard({
   streamingEvaluation,
   streamingPositionTitle,
 }: StreamingEvaluationCardProps) {

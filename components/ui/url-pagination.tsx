@@ -199,21 +199,3 @@ export function UrlPagination({
 
 // Re-export from shared constants for backward compatibility
 export { DEFAULT_PAGE_SIZE } from "@/lib/constants";
-
-/**
- * Helper to normalize page/pageSize values from search params
- */
-import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
-export const normalizePaginationParams = (
-  page?: string,
-  pageSize?: string
-): { page: number; pageSize: number } => {
-  const normalizedPage = Math.max(1, page ? Math.floor(Number(page)) || 1 : 1);
-  const normalizedPageSize = Math.max(
-    1,
-    pageSize
-      ? Math.floor(Number(pageSize)) || DEFAULT_PAGE_SIZE
-      : DEFAULT_PAGE_SIZE
-  );
-  return { page: normalizedPage, pageSize: normalizedPageSize };
-};

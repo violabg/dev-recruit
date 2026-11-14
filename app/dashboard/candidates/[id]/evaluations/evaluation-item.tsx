@@ -35,7 +35,7 @@ interface EvaluationItemProps {
   ) => Promise<{ success: boolean; error?: string }>;
 }
 
-export function EvaluationItem({
+function EvaluationItem({
   evaluation,
   isExpanded,
   onToggle,

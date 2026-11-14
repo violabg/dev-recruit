@@ -95,8 +95,3 @@ export const hiringNotesSchema = z
 
 export type EvaluationResult = z.infer<typeof evaluationResultSchema>;
 export type OverallEvaluation = z.infer<typeof overallEvaluationSchema>;
-export type InterviewEvaluationInput = z.infer<
-  typeof interviewEvaluationInputSchema
->;
-export type BehavioralRubricInput = z.infer<typeof behavioralRubricSchema>;
-export type HiringNotesInput = z.infer<typeof hiringNotesSchema>;

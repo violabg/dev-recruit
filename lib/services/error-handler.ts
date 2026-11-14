@@ -221,9 +221,6 @@ export class ErrorHandler {
   }
 }
 
-// Export singleton instance
-export const errorHandler = new ErrorHandler();
-
 // Utility function to create standardized errors
 export function createQuizError(
   message: string,

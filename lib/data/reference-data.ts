@@ -4,17 +4,6 @@ import { ReferenceCategory } from "../constants/reference-categories";
 import prisma from "../prisma";
 import { CacheTags, entityTag } from "../utils/cache-utils";
 
-export const getAllReferenceData = cache(async () => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.REFERENCE_DATA);
-
-  return await prisma.referenceData.findMany({
-    where: { isActive: true },
-    orderBy: [{ category: "asc" }, { order: "asc" }],
-  });
-});
-
 export const getReferenceDataByCategory = cache(
   async (category: ReferenceCategory) => {
     "use cache";
@@ -34,20 +23,3 @@ export const getReferenceDataByCategory = cache(
     });
   }
 );
-
-export const getAllReferenceDataGrouped = cache(async () => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.REFERENCE_DATA);
-
-  const data = await prisma.referenceData.findMany({
-    where: { isActive: true },
-    orderBy: [{ category: "asc" }, { order: "asc" }],
-  });
-
-  return data.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [] as typeof data;
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<string, typeof data>);
-});

@@ -94,8 +94,6 @@ export const duplicateQuizSchema = duplicateQuizFormSchema.extend({
 // NOTE: Entity types are defined in lib/data/quizzes.ts.
 // This file contains ONLY validation schemas, not entity definitions.
 
-export type AIQuizGeneration = z.infer<typeof aiQuizGenerationSchema>;
-export type QuizGenerationConfig = z.infer<typeof quizGenerationConfigSchema>;
 export type QuizGenerationFormData = z.infer<typeof quizGenerationFormSchema>;
 export type GenerateQuizInput = z.infer<typeof generateQuizSchema>;
 export type QuizEditorData = z.infer<typeof quizEditorSchema>;

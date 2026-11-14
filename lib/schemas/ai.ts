@@ -5,18 +5,6 @@ import { baseSchemas } from "./base";
 // AI GENERATION SCHEMAS
 // ====================
 
-export const aiGenerationSchema = z.object({
-  instructions: baseSchemas.instructions,
-  llmModel: z.string(),
-  difficulty: baseSchemas.difficulty.optional(),
-});
-
-// ====================
-// TYPE EXPORTS
-// ====================
-
-export type AIGenerationFormData = z.infer<typeof aiGenerationSchema>;
-
 // Options of the "generate question with AI" dialog
 export const questionGenerationOptionsSchema = z.object({
   instructions: z.string().optional(),
@@ -103,7 +91,3 @@ export const generateQuestionParamsSchema = z.discriminatedUnion("type", [
   generateCodeSnippetParamsSchema,
   generateBehavioralScenarioParamsSchema,
 ]);
-
-export type GenerateQuestionParamsInput = z.infer<
-  typeof generateQuestionParamsSchema
->;

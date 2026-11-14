@@ -348,15 +348,6 @@ export const getQuizzesForPosition = async (
   }));
 };
 
-// ===================
-// FILTER OPTIONS
-// ===================
-
-export type QuizFilterOptions = {
-  uniqueLevels: string[];
-  positions: Array<{ id: string; title: string }>;
-};
-
 /**
  * Returns last N quiz IDs for generateStaticParams.
  */

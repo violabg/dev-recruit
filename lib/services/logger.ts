@@ -244,5 +244,3 @@ export const aiLogger = createScopedLogger("AI");
 export const dbLogger = createScopedLogger("DB");
 export const authLogger = createScopedLogger("Auth");
 export const storageLogger = createScopedLogger("Storage");
-
-export default logger;

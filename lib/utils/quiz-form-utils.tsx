@@ -40,17 +40,6 @@ export const getSaveButtonContent = (saveStatus: SaveStatus) => {
   }
 };
 
-export const getSaveButtonVariant = (saveStatus: SaveStatus) => {
-  switch (saveStatus) {
-    case "success":
-      return "success" as const;
-    case "error":
-      return "destructive" as const;
-    default:
-      return "default" as const;
-  }
-};
-
 // Question type filter configuration
 export const questionTypes = [
   { value: "all", label: "Filtra per tipologia" },

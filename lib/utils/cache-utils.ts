@@ -40,11 +40,6 @@ export const CacheTags = {
 } as const;
 
 /**
- * Type for cache tag values
- */
-export type CacheTagValue = (typeof CacheTags)[keyof typeof CacheTags];
-
-/**
  * Generate cache tag for a specific entity by ID
  */
 export const entityTag = {
