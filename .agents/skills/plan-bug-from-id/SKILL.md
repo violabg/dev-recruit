@@ -8,8 +8,8 @@ disable-model-invocation: true
 This skill runs under the `orchestrator` role. Follow the line for your client.
 
 - **Claude Code:** If this conversation runs a different role, stop and tell the user to open a new conversation. If the `dr-orchestrator` skill is not loaded in this conversation yet, read `.claude/skills/dr-orchestrator/SKILL.md` and follow it as your complete role contract before you continue. The role contract governs step order, halt points and session persistence; this skill supplies only its intake.
-- **OpenCode:** If this conversation is not running the `dr-orchestrator` agent, stop and tell the user to press Tab until `dr-orchestrator` is the active agent, then invoke this skill again.
-- **GitHub Copilot in VS Code:** If this conversation is not running the `dr-orchestrator` agent, stop and tell the user to select `dr-orchestrator` in the Chat view's agent picker, then invoke this skill again.
+- **OpenCode:** If this conversation runs a different role, stop and tell the user to open a new conversation. If it already runs the `dr-orchestrator` agent, or the `dr-orchestrator` skill is already loaded, continue with the role contract already in effect. Otherwise read `.opencode/skills/dr-orchestrator/SKILL.md` and follow it as your complete role contract before you continue. The role contract governs step order, halt points and session persistence; this skill supplies only its intake.
+- **GitHub Copilot in VS Code:** If this conversation runs a different role, stop and tell the user to open a new conversation. If it already runs the `dr-orchestrator` agent, or the `dr-orchestrator` skill is already loaded, continue with the role contract already in effect. Otherwise read `.github/skills/dr-orchestrator/SKILL.md` and follow it as your complete role contract before you continue. The role contract governs step order, halt points and session persistence; this skill supplies only its intake.
 
 
 You need to plan a bug resolution based on the bug work item ID provided by the user.

@@ -41,7 +41,7 @@ Every `#capability:<token>` in a role, skill or workflow instruction is an opera
 
 ## Skills
 
-Repository skills live in `.agents/skills (workflow skills), .claude/skills (Claude Code role skills)`. Read a skill's `SKILL.md` before running its workflow.
+Repository skills live in `.agents/skills (workflow skills), .claude/skills (Claude Code role skills), .opencode/skills (OpenCode role skills), .github/skills (GitHub Copilot in VS Code role skills)`. Read a skill's `SKILL.md` before running its workflow.
 
 ## Knowledge
 

@@ -109,7 +109,7 @@
     {
       "id": "opencode",
       "profile": "opencode",
-      "route": "native",
+      "route": "skill",
       "delegation": "native",
       "overrides": {
         "tools": {
@@ -167,11 +167,15 @@
       "verification": {
         "agents discovered with permissions": {
           "status": "verified-native",
-          "note": "`opencode debug agents --standalone` (v2.3.0) lists all 8 dr- roles; delegates hidden; V1 keys converted to shell/subagent; orchestrator allowlist general, dr-explorer, dr-code-implementor"
+          "note": "`opencode debug agents --standalone` (v2.3.0) on 2026-11-14: five hidden delegate agents and the three primary role agents (orchestrator, ask, knowledge-builder), kept as repository-owned copies beside the skill route in .opencode/skills; the V1 keys are converted to shell/subagent"
+        },
+        "route: plan skills auto-load the orchestrator role": {
+          "status": "verified-fallback",
+          "note": "render checked on 2026-11-14: plan-user-story-from-id and plan-bug-from-id tell OpenCode to read .opencode/skills/dr-orchestrator/SKILL.md before continuing, and to continue without reloading it when the dr-orchestrator agent already runs; verify.mjs passes; not yet exercised in a conversation"
         },
         "1 orchestrator starts, asks, asks workflow type": {
           "status": "unverified",
-          "note": "needs an interactive session"
+          "note": "needs an interactive session: invoke /dr-orchestrator, or plan-user-story-from-id, which now loads the role itself"
         },
         "2 session created through the runtime": {
           "status": "verified-fallback",
@@ -191,7 +195,11 @@
         },
         "6 shared workflow skills discovered once": {
           "status": "unverified",
-          "note": "OpenCode reads both .agents/skills and .claude/skills (symlinks); check the skill list shows each once"
+          "note": "OpenCode reads both .agents/skills and .claude/skills (symlinks), and role skills now live in .opencode/skills; check the skill list shows each once"
+        },
+        "5 role skill refuses inside a role": {
+          "status": "unverified",
+          "note": "needs an interactive session"
         },
         "7 runtime-only delegate refused outside its role": {
           "status": "verified-fallback",
@@ -202,7 +210,7 @@
     {
       "id": "github-copilot-vscode",
       "profile": "github-copilot-vscode",
-      "route": "native",
+      "route": "skill",
       "delegation": "native",
       "overrides": {
         "tools": {
@@ -230,9 +238,13 @@
       },
       "roleTools": {},
       "verification": {
+        "route: plan skills auto-load the orchestrator role": {
+          "status": "verified-fallback",
+          "note": "render checked on 2026-11-14: plan-user-story-from-id and plan-bug-from-id tell Copilot to read .github/skills/dr-orchestrator/SKILL.md before continuing, and to continue without reloading it when the dr-orchestrator agent already runs; verify.mjs passes; not yet exercised in a VS Code session"
+        },
         "1 orchestrator starts, asks, asks workflow type": {
           "status": "unverified",
-          "note": "select dr-orchestrator in the VS Code agent picker; the Copilot harness has no documented question tool"
+          "note": "needs a VS Code session: invoke /dr-orchestrator, or a plan skill, which now loads the role itself; the Copilot harness has no documented question tool and the role asks in chat"
         },
         "2 session created through the runtime": {
           "status": "verified-fallback",
@@ -253,6 +265,10 @@
         "6 shared workflow skills discovered once": {
           "status": "unverified",
           "note": ".github/skills symlinks are undocumented for the Copilot harness; fall back to an approved copy if they are not listed"
+        },
+        "5 role skill refuses inside a role": {
+          "status": "unverified",
+          "note": "needs a VS Code session"
         },
         "7 runtime-only delegate refused outside its role": {
           "status": "verified-fallback",
@@ -347,9 +363,15 @@
     },
     {
       "id": "route",
-      "answer": "claude-code skill; opencode native; github-copilot-vscode native",
-      "source": "recommend-accepted",
-      "evidence": "profiles and current docs"
+      "answer": "claude-code, opencode and github-copilot-vscode all use the skill route: the user roles are started, or auto-loaded by a workflow skill, by reading their role skill. OpenCode and Copilot also keep repository-owned copies of the three user-role agents for harnesses that have an agent picker (see hybrid-agents)",
+      "source": "user",
+      "evidence": "changed 2026-11-14: the developer does not have an agent picker on every harness in use (T3 Code), so invoking plan-user-story-from-id or plan-bug-from-id must load the orchestrator role itself instead of telling the user to switch agent"
+    },
+    {
+      "id": "hybrid-agents",
+      "answer": "beside the skill route, .opencode/agents and .github/agents keep the orchestrator, ask and knowledge-builder agents as repository-owned copies of the native-route render; the two plan skills keep a local customization that continues when the dr-orchestrator agent already runs instead of loading the role skill again",
+      "source": "user",
+      "evidence": "requested 2026-11-14: a harness with an agent picker should still start the role natively. The kit renders one route per client, so these six agent files are not installer-managed: after a kit upgrade, render them again from a copy of answers.json with route=native for opencode and github-copilot-vscode (install.mjs show <path> --answers <that copy>) and compare with what is committed"
     },
     {
       "id": "delegation",
@@ -473,9 +495,9 @@
     },
     {
       "id": "warnings",
-      "answer": "context7 for Claude Code is client-level via enabledMcpjsonServers in .claude/settings.local.json; Copilot has no knowledge/ deny (runtime catches it); duplicate discovery via .claude/skills accepted and checked in phase F",
+      "answer": "context7 for Claude Code is client-level via enabledMcpjsonServers in .claude/settings.local.json; Copilot has no knowledge/ deny (runtime catches it); duplicate discovery via .claude/skills accepted and checked in phase F; on the skill route roleTools for ask and orchestrator cannot be listed in a role skill, so context7 stays client-level in Claude Code and OpenCode",
       "source": "user",
-      "evidence": "file plan approval 2026-11-14"
+      "evidence": "file plan approval 2026-11-14; skill route adopted 2026-11-14"
     }
   ]
 }

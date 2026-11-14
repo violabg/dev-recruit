@@ -5,7 +5,7 @@
     "version": "7.0.1"
   },
   "appliedOn": "2026-11-14",
-  "answersSha256": "c870678abf545e5757b3f467d839b55b00bb266a3f3ede01090301f5a38621ad",
+  "answersSha256": "d86b5a430078c3a362c2b3a50caea969afea329e9b035484b8ca6cfb64984045",
   "files": {
     ".agents/skills/author-repo-skill/SKILL.md": {
       "sha256": "0eeec2da4a2287cf4ef55d50d03fd08801bf8228c4b56fe74c061f10a2f4b66e",
@@ -30,7 +30,7 @@
       "customizable": true
     },
     ".agents/skills/plan-bug-from-id/SKILL.md": {
-      "sha256": "30a87898001d3acade6d89f954c9fc14e7e8eaffa16b3f0ebcdb356d626d1b1e",
+      "sha256": "c226804504ab8f567c5f38130a3d8182b23049dd2eb92018e481cec733f3edf1",
       "kind": "skill",
       "mode": "file",
       "envs": [
@@ -38,10 +38,11 @@
         "opencode",
         "github-copilot-vscode"
       ],
-      "customizable": true
+      "customizable": true,
+      "keptSha256": "4101a1f93e993016583b430fee269dbc29387ef57a090114122160d562809c09"
     },
     ".agents/skills/plan-user-story-from-id/SKILL.md": {
-      "sha256": "26ca74aa9e375640d1260fdf1a726aa354d97c1f04de58714881c7e76dfc86ec",
+      "sha256": "5bf96815c46cc09b503ed5ff02c0331aac404371c239152849516648840bd266",
       "kind": "skill",
       "mode": "file",
       "envs": [
@@ -49,7 +50,8 @@
         "opencode",
         "github-copilot-vscode"
       ],
-      "customizable": true
+      "customizable": true,
+      "keptSha256": "fb10b48659a3476ce68cdc79ecc405b4aca2a45c2a0277c228ca5d729c21cf25"
     },
     ".agents/skills/user-story-analysis/SKILL.md": {
       "sha256": "259ab49430ba96eed30b1142f342d0bad606f80a61b041f50249cbe9df0ab102",
@@ -198,15 +200,6 @@
       ],
       "customizable": false
     },
-    ".github/agents/dr-ask.agent.md": {
-      "sha256": "8fd86f2b3f2d448783670d59f699b8208807eda01efe03b6d6187859e259d7cc",
-      "kind": "role",
-      "mode": "file",
-      "envs": [
-        "github-copilot-vscode"
-      ],
-      "customizable": false
-    },
     ".github/agents/dr-code-implementor.agent.md": {
       "sha256": "aa40ad970ece2d4a8d0184d7124973141b379218f6de8b9b0214ca79e16f1fd3",
       "kind": "delegate",
@@ -252,24 +245,6 @@
       ],
       "customizable": false
     },
-    ".github/agents/dr-knowledge-builder.agent.md": {
-      "sha256": "d60f74fccff6572911f02d578c4bf2e72beefc477c0e5be955f83be83d15f165",
-      "kind": "role",
-      "mode": "file",
-      "envs": [
-        "github-copilot-vscode"
-      ],
-      "customizable": false
-    },
-    ".github/agents/dr-orchestrator.agent.md": {
-      "sha256": "96756889a47321cd3ba7faa918dac8b9e14b563f20155918b6bfe215651e5f15",
-      "kind": "role",
-      "mode": "file",
-      "envs": [
-        "github-copilot-vscode"
-      ],
-      "customizable": false
-    },
     ".github/instructions/sessions.instructions.md": {
       "sha256": "75530c912238025cf830bc64716346a6be0ff05c8e28e369ab4a9a8bd95938f9",
       "kind": "instruction",
@@ -283,6 +258,33 @@
       "sha256": "767837738b0f9988e44f85cfa74d31d54f807a8caaa665de2ad53b5e036dd4a7",
       "kind": "skill-alias",
       "mode": "symlink",
+      "envs": [
+        "github-copilot-vscode"
+      ],
+      "customizable": false
+    },
+    ".github/skills/dr-ask/SKILL.md": {
+      "sha256": "ce5bc7d945ad4f2dbf586b6def885821c30c7e70eb280282e965cd6f5c524beb",
+      "kind": "role-skill",
+      "mode": "file",
+      "envs": [
+        "github-copilot-vscode"
+      ],
+      "customizable": false
+    },
+    ".github/skills/dr-knowledge-builder/SKILL.md": {
+      "sha256": "7f4ac726e29e853eca3f067d7bb89c706b6c90d6a912dd321b3096de6696cd7b",
+      "kind": "role-skill",
+      "mode": "file",
+      "envs": [
+        "github-copilot-vscode"
+      ],
+      "customizable": false
+    },
+    ".github/skills/dr-orchestrator/SKILL.md": {
+      "sha256": "c9a3eb6158cca8cd3cb672fb4e98bae39e6ba0ae2746dff9faf5fcaa1bf2b846",
+      "kind": "role-skill",
+      "mode": "file",
       "envs": [
         "github-copilot-vscode"
       ],
@@ -332,15 +334,6 @@
       "customizable": false,
       "syntax": "hash"
     },
-    ".opencode/agents/dr-ask.md": {
-      "sha256": "a65ccbf47980d87a0eead22722b426d9c207c50c2a779a972d48ee4c6154084e",
-      "kind": "role",
-      "mode": "file",
-      "envs": [
-        "opencode"
-      ],
-      "customizable": false
-    },
     ".opencode/agents/dr-code-implementor.md": {
       "sha256": "2c5b8c849a785b4cfae43c1692726722119519e605f6101a43cf8ad3c40bcddd",
       "kind": "delegate",
@@ -386,18 +379,27 @@
       ],
       "customizable": false
     },
-    ".opencode/agents/dr-knowledge-builder.md": {
-      "sha256": "44859889809940a1773bc9cce366064c80ec6ff95549d5161c239acce563e0ab",
-      "kind": "role",
+    ".opencode/skills/dr-ask/SKILL.md": {
+      "sha256": "29d1dd85f4afa410aade389a8d4449e85dee5b78a30dd2aca008fb61900a0bae",
+      "kind": "role-skill",
       "mode": "file",
       "envs": [
         "opencode"
       ],
       "customizable": false
     },
-    ".opencode/agents/dr-orchestrator.md": {
-      "sha256": "7e4f684baca02e5e4becb64403479d65a48a633290f9c9c51ad7da3c7444a56b",
-      "kind": "role",
+    ".opencode/skills/dr-knowledge-builder/SKILL.md": {
+      "sha256": "c2198588bb05dd1d2a787be905ca00e04615b771639b98565069c11437c51dcd",
+      "kind": "role-skill",
+      "mode": "file",
+      "envs": [
+        "opencode"
+      ],
+      "customizable": false
+    },
+    ".opencode/skills/dr-orchestrator/SKILL.md": {
+      "sha256": "e2b95aaf35a5a64136f0180fbcb24f359359442108b1eadc5b6d3c8b8a70ae77",
+      "kind": "role-skill",
       "mode": "file",
       "envs": [
         "opencode"
@@ -825,7 +827,7 @@
       "customizable": false
     },
     "AGENTS.md": {
-      "sha256": "b2253440cefe1cff8616bf29b032b4d2852d719ebb05bbb9d100b726669956bd",
+      "sha256": "c3aa9668fd6cbc464697c8d45d2e29febc456d567cdd65c3317a22e6dca0ec8c",
       "kind": "router",
       "mode": "block",
       "envs": [],
@@ -850,14 +852,14 @@
       "customizable": false
     },
     "docs/agentic-system/github-copilot-vscode.md": {
-      "sha256": "8a8b54527f7cbb935307797d7e65dc44819e4eef7ef471b8ec357813c34e4634",
+      "sha256": "4b4967f495dd2c46c4167aae1305d634354ad9115a1cdfd4b594fc1d8acc3d07",
       "kind": "guide",
       "mode": "file",
       "envs": [],
       "customizable": false
     },
     "docs/agentic-system/opencode.md": {
-      "sha256": "c2cf7354a7f2e2f732f73707349cefb6ba275f4b6f45eeccdf6a58a0e9a52f75",
+      "sha256": "ffd3eadde2b0ad18a2ebcf5c814f63a57f7f132a5be4472d969fa193ef5f2813",
       "kind": "guide",
       "mode": "file",
       "envs": [],
