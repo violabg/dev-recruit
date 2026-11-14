@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { FileText, Loader2, Trash2, Upload, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Label } from "./label";

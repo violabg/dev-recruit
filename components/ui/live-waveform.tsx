@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type HTMLAttributes } from "react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 
 export type LiveWaveformProps = HTMLAttributes<HTMLDivElement> & {
   active?: boolean

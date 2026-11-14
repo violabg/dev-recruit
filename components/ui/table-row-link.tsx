@@ -3,7 +3,7 @@
 import Link from "next/link";
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 interface TableRowLinkProps
   extends Omit<React.ComponentProps<typeof Link>, "href"> {

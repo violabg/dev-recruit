@@ -16,7 +16,7 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import * as React from "react";
 
 export type OptionType = {

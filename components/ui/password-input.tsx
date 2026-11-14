@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useId, useState } from "react";
 
