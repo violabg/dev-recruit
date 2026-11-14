@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design</title>
+<style>
+/* Tokens. Dark follows the system unless the reader picked a theme; the ink is blue-black, the references cyanotype. */
+:root {
+  --ground: #f3f5f8; --panel: #ffffff; --raised: #ffffff; --sunk: #f1f3f7; --line: #d8dde6; --line-soft: #e6e9ef;
+  --ink: #18202b; --muted: #515b6d; --faint: #646e7f;
+  --ref: #2457b0; --ok: #137a4e; --warn: #985a00; --risk: #c2352b; --violet: #6644d6;
+  --overlay: rgba(16, 22, 32, .42); --shadow: none;
+  --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, "Iowan Old Style", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --bar-h: 58px;
+  --measure: 68ch;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0f141b; --panel: #151b24; --raised: #1b222d; --sunk: #0c1016; --line: #273041; --line-soft: #1f2733;
+    --ink: #e6e9ef; --muted: #a5afbf; --faint: #8b95a7;
+    --ref: #8db8ff; --ok: #4cd4a0; --warn: #f2b54e; --risk: #ff7d6e; --violet: #b9a3ff;
+    --overlay: rgba(4, 6, 10, .7); --shadow: none;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0f141b; --panel: #151b24; --raised: #1b222d; --sunk: #0c1016; --line: #273041; --line-soft: #1f2733;
+  --ink: #e6e9ef; --muted: #a5afbf; --faint: #8b95a7;
+  --ref: #8db8ff; --ok: #4cd4a0; --warn: #f2b54e; --risk: #ff7d6e; --violet: #b9a3ff;
+  --overlay: rgba(4, 6, 10, .7); --shadow: none;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--bar-h) + 20px); }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid var(--ref); outline-offset: 2px; border-radius: 4px; }
+p { margin: 0 0 .75em; }
+p:last-child { margin-bottom: 0; }
+code, pre, .mono { font-family: var(--mono); }
+code { font-size: .84em; background: color-mix(in srgb, var(--ref) 8%, transparent); padding: .1em .32em; border-radius: 3px; overflow-wrap: anywhere; }
+pre { margin: 0; font-size: 13px; line-height: 1.65; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; overflow-x: auto; white-space: pre; }
+button { font: inherit; color: inherit; }
+
+/* ---------- Header: identity, tools, approval. It stays in view. ---------- */
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 8px 20px; min-height: 58px; padding: 7px 20px 7px 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.ident { flex: 1 1 0; min-width: 0; }
+.ident h1 { margin: 0; font: 600 18px/1.3 var(--serif); letter-spacing: -.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* One line that truncates: the full text is the element's tooltip. */
+.ident .sub { margin: 1px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ident .sub > span + span { margin-left: 14px; }
+.ident .sub .mono { font-size: 12px; }
+.tools { flex: none; display: flex; align-items: center; gap: 4px; }
+.tools .gap { flex: none; width: 1px; height: 20px; background: var(--line); margin: 0 6px; }
+.tool { display: inline-flex; flex: none; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.tool:hover { color: var(--ink); background: var(--sunk); }
+.dialog-head .tool { border-color: var(--line); }
+.tool[aria-current="true"] { color: var(--ink); border-color: var(--ref); background: color-mix(in srgb, var(--ref) 10%, transparent); }
+.tool .n { font: 600 12px var(--sans); font-variant-numeric: tabular-nums; color: var(--faint); }
+.lbl-short { display: none; }
+@media (min-width: 1081px) and (max-width: 1320px) { .lbl-long { display: none; } .lbl-short { display: inline; } }
+.tool.err .n { color: var(--risk); }
+.tool.warn .n { color: var(--warn); }
+.tool.ok .n { color: var(--ok); }
+
+/* The approval stamp: the one loud mark on the page. */
+#status { flex: none; display: flex; padding: 3px; }
+.stamp { display: inline-flex; flex-direction: column; align-items: center; padding: 2px 11px 3px; border: 1.5px solid currentColor; border-radius: 5px; outline: 1px solid currentColor; outline-offset: 2px; color: var(--muted); line-height: 1.2; white-space: nowrap; }
+.stamp b { font: 700 13px var(--sans); font-variant-caps: all-small-caps; letter-spacing: .1em; }
+.stamp small { font: 500 11.5px var(--sans); font-variant-numeric: tabular-nums; }
+.stamp.approved { color: var(--ok); background: color-mix(in srgb, var(--ok) 8%, transparent); }
+.stamp.draft { color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, transparent); }
+.stamp.changed { color: var(--warn); }
+
+/* ---------- Shell: the path on the left, one stage at a time on the right. ---------- */
+.shell { display: grid; grid-template-columns: 268px minmax(0, 1fr); min-height: calc(100vh - var(--bar-h)); }
+.path { position: sticky; top: var(--bar-h); align-self: start; height: calc(100vh - var(--bar-h)); overflow-y: auto; padding: 18px 14px 28px; background: var(--panel); border-right: 1px solid var(--line); }
+.path-title { margin: 0 0 10px 10px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.path ol { list-style: none; margin: 0; padding: 0; }
+.path li + li { margin-top: 3px; }
+.step { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 0 11px; align-items: start; padding: 10px 10px 11px; border: 1px solid transparent; border-radius: 9px; color: var(--ink); text-decoration: none; }
+.step:hover { background: var(--sunk); }
+.step[aria-current="true"] { background: color-mix(in srgb, var(--ref) 9%, transparent); }
+.step .num { width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; font: 600 13px var(--sans); font-variant-numeric: tabular-nums; color: var(--muted); }
+.step[aria-current="true"] .num { border-color: var(--ref); background: var(--ref); color: var(--panel); }
+.step[aria-current="true"] .step-label { font-weight: 600; }
+.step[aria-current="true"] .hint { font-weight: 400; }
+.step-label { font-size: 14.5px; line-height: 1.3; padding-top: 3px; }
+.step .hint { display: block; margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--muted); }
+.step .cnt { margin-top: 4px; font: 600 12px var(--sans); font-variant-numeric: tabular-nums; color: var(--faint); }
+.step .cnt.warn { color: var(--warn); }
+
+main { min-width: 0; padding: 34px 44px 90px; }
+.stage { max-width: 54rem; }
+.stage[hidden] { display: none; }
+.stage-head { margin-bottom: 26px; }
+.stage-head h2 { margin: 0 0 10px; font: 600 32px/1.15 var(--serif); letter-spacing: -.01em; }
+.stage-head .lead { max-width: var(--measure); font: 17px/1.6 var(--serif); color: var(--muted); }
+.group-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 38px 0 14px; }
+.group-head:first-child { margin-top: 0; }
+.group-head h3 { margin: 0; font: 600 17px/1.3 var(--sans); }
+.group-head .n { font: 13px var(--sans); font-variant-numeric: tabular-nums; color: var(--muted); }
+.group-head p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 13.5px; }
+
+/* ---------- Badges: every fact about an item is a badge on its first line. ---------- */
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 23px; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; font: 500 12px/1 var(--sans); color: var(--muted); white-space: nowrap; }
+.badge.ref, .badge.ok, .badge.warn, .badge.risk, .badge.violet { border-color: color-mix(in srgb, currentColor 45%, transparent); }
+.badge.ref { color: var(--ref); }
+.badge.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 7%, transparent); }
+.badge.warn { color: var(--warn); }
+.badge.risk { color: var(--risk); }
+.badge.violet { color: var(--violet); }
+.badge.solid { border-color: transparent; font-weight: 600; }
+.badge.solid.risk { background: var(--risk); color: var(--ground); }
+.badge.dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.badge.dashed { border-style: dashed; }
+/* A facet badge: a muted key and a value, split by a hairline. */
+.badge.kv { padding: 0; gap: 0; overflow: hidden; }
+.badge.kv > span { padding: 0 9px; line-height: 21px; }
+.badge.kv > .k { color: var(--faint); border-right: 1px solid var(--line); }
+.badge.kv > .v { color: var(--ink); font-weight: 600; }
+
+/* ID references link to their item. */
+.id-text { font: 600 13px var(--sans); font-variant-numeric: tabular-nums; }
+.idref { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: 1px solid color-mix(in srgb, var(--ref) 45%, transparent); border-radius: 999px; font: 600 12px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--ref); text-decoration: none; white-space: nowrap; background: transparent; cursor: pointer; vertical-align: 1px; }
+.idref:hover { background: color-mix(in srgb, var(--ref) 12%, transparent); }
+.idref.file { max-width: 100%; overflow: hidden; text-overflow: ellipsis; border-style: dashed; color: var(--muted); border-color: var(--line); font: 500 12px/1 var(--mono); }
+.idref.file:hover { color: var(--ink); border-color: var(--muted); }
+.sym { font: .84em var(--mono); border-bottom: 1px dotted var(--faint); cursor: help; }
+.refs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.none { color: var(--faint); font-style: italic; }
+
+/* ---------- Cards: one argument each. ---------- */
+.card { position: relative; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 18px 24px 20px; margin-bottom: 16px; box-shadow: var(--shadow); scroll-margin-top: calc(var(--bar-h) + 16px); }
+.card.highlight { border-color: color-mix(in srgb, var(--risk) 60%, var(--line)); }
+.card-head { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+.card-id { margin-right: 4px; font: 700 15px var(--sans); font-variant-numeric: tabular-nums; color: var(--ref); text-decoration: none; }
+.card-id:hover { text-decoration: underline; }
+.card h4 { margin: 0 0 12px; font: 600 19px/1.35 var(--serif); }
+.statement { max-width: var(--measure); margin: 0 0 14px; font: 18px/1.6 var(--serif); }
+.prose { font: 16.5px/1.7 var(--serif); overflow-wrap: anywhere; }
+.prose > p, .prose > ul, .prose > ol, .anchored > p { max-width: var(--measure); }
+.prose ul, .prose ol { margin: 0 0 .75em; padding-left: 1.3em; }
+.prose li { margin-bottom: .25em; }
+/* Text anchored to elements: the anchor sits in a gutter, one row per element. */
+.anchored { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); gap: 12px; padding: 9px 0; border-top: 1px solid var(--line-soft); }
+.anchored:first-child { border-top: 0; padding-top: 2px; }
+.anchored > .idref { justify-self: start; margin-top: .2em; }
+.anchored > p { margin: 0; }
+.prose > p + .anchored { margin-top: 10px; }
+
+/* Labelled facts: a label column and its value. */
+.spec { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 9px 16px; margin: 16px 0 0; padding-top: 14px; border-top: 1px dashed var(--line); }
+.spec.flush { border-top: 0; padding-top: 0; margin-top: 0; }
+.spec dt { padding-top: 2px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.spec dd { margin: 0; min-width: 0; }
+.spec dd.prose { font-size: 15.5px; line-height: 1.6; }
+.label { margin: 18px 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+
+/* Decisions: the question, then the chosen answer as the thing to confirm. */
+.question { margin: 0 0 14px; padding: 10px 14px; border-left: 2px solid var(--ref); background: color-mix(in srgb, var(--ref) 7%, transparent); border-radius: 0 8px 8px 0; font: 17px/1.6 var(--serif); }
+.context { margin: 0 0 14px; }
+.answer { margin: 14px 0 0; padding: 12px 16px 14px; border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--ok) 6%, transparent); }
+.answer .label { margin: 0 0 6px; color: var(--ok); }
+.answer.open { border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: color-mix(in srgb, var(--warn) 6%, transparent); }
+.answer.open .label { color: var(--warn); }
+.option { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); gap: 10px; font: 16px/1.6 var(--serif); }
+.option + .option { margin-top: 8px; }
+.option > .mono { padding-top: 3px; font: 600 13px var(--sans); font-variant-numeric: tabular-nums; color: var(--muted); }
+.answer .option > .mono { color: var(--ok); font-weight: 700; }
+.others { padding: 0 16px; }
+
+/* Edge cases of an operation, folded by default. */
+details.edges { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 12px; }
+details.edges > summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; cursor: pointer; list-style: none; font-size: 13px; font-weight: 600; color: var(--muted); }
+details.edges > summary::-webkit-details-marker { display: none; }
+details.edges > summary::before { content: ""; width: 7px; height: 7px; margin: 0 4px 0 2px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform .15s ease; }
+details.edges[open] > summary::before { transform: translate(0, -2px) rotate(45deg); }
+details.edges > summary:hover { color: var(--ink); }
+.case { margin-top: 12px; padding: 10px 14px; border-left: 2px solid var(--line); border-radius: 0 8px 8px 0; background: var(--sunk); }
+.case.neg { border-left-color: var(--warn); }
+.case.fault { border-left-color: var(--risk); }
+.case-title { margin-bottom: 6px; font-weight: 600; }
+.case .spec { margin: 0; padding: 0; border: 0; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 4px 12px; font-size: 14px; }
+
+/* A strip of counts above a stage. */
+.tally { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 0 0 20px; padding: 12px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; color: var(--muted); }
+.tally b { margin-right: 6px; font: 700 16px var(--sans); color: var(--ink); }
+.tally .ok b { color: var(--ok); }
+.tally .warn b { color: var(--warn); }
+
+/* Tables for dense records. */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+th { text-align: left; white-space: nowrap; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--muted); }
+td { text-align: left; vertical-align: top; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line-soft); }
+tr:last-child td { border-bottom: 0; }
+.rule { font: 12.5px var(--mono); white-space: nowrap; }
+
+/* ---------- Filesystem: a tree in a code panel; a file opens its card. ---------- */
+.tree { padding: 12px 10px; background: var(--sunk); border: 1px solid var(--line); border-radius: 12px; font: 13px/1.5 var(--mono); overflow-x: auto; }
+.tree details > summary { list-style: none; }
+.tree details > summary::-webkit-details-marker { display: none; }
+.row { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 30px; padding: 3px 10px; border: 0; border-radius: 6px; background: transparent; text-align: left; white-space: nowrap; cursor: pointer; font: inherit; }
+.row:hover { background: color-mix(in srgb, var(--ref) 9%, transparent); }
+.row.folder { color: var(--muted); user-select: none; }
+.row.folder:hover { color: var(--ink); }
+.row.folder::before { content: ""; flex: none; width: 6px; height: 6px; margin: 0 4px 2px 2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .15s ease; }
+.tree details[open] > .row.folder::before { transform: translate(0, -2px) rotate(45deg); }
+.children { margin-left: 14px; padding-left: 12px; border-left: 1px solid var(--line); }
+.mark { flex: none; width: 16px; font: 700 11.5px var(--mono); text-align: center; }
+.mark.A { color: var(--ok); }
+.mark.M { color: var(--warn); }
+.mark.D { color: var(--risk); }
+.row.file .name { color: var(--ink); }
+.row.file.A .name { color: color-mix(in srgb, var(--ok) 70%, var(--ink)); }
+.row.file.M .name { color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
+.row.file.D .name { color: color-mix(in srgb, var(--risk) 60%, var(--ink)); text-decoration: line-through; }
+.row.file .module { font: 12px var(--sans); color: var(--faint); overflow: hidden; text-overflow: ellipsis; }
+.row.file .tail { display: flex; gap: 5px; margin-left: auto; padding-left: 16px; }
+.row.file .tail .idref { pointer-events: none; height: 19px; font-size: 11px; }
+
+/* ---------- Dialogs: the legend and a file's card. ---------- */
+dialog { width: min(860px, calc(100vw - 32px)); max-height: 84vh; padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--raised); color: var(--ink); box-shadow: 0 24px 60px rgba(0, 0, 0, .35); }
+dialog::backdrop { background: var(--overlay); backdrop-filter: blur(2px); }
+dialog[open] { animation: rise .16s ease-out; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 16px 22px; background: var(--raised); border-bottom: 1px solid var(--line); }
+.dialog-head h2 { flex: 1 1 auto; min-width: 0; margin: 0; font: 600 18px/1.3 var(--serif); overflow-wrap: anywhere; }
+.dialog-head h2.path-title-mono { font: 600 14.5px/1.45 var(--mono); }
+.dialog-head h2 .dir { font-weight: 400; color: var(--muted); }
+.dialog-body { padding: 18px 22px 22px; }
+.legend { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0 18px; margin: 0; }
+.legend dt, .legend dd { margin: 0; padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+.legend dt { font: 600 13px var(--sans); font-variant-numeric: tabular-nums; color: var(--ref); }
+.legend dd { font-size: 14px; color: var(--muted); }
+
+/* Stage footer: where to go next on the path. */
+.stage-nav { display: flex; justify-content: space-between; gap: 16px; margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); }
+.stage-nav a { display: flex; flex-direction: column; gap: 2px; text-decoration: none; font-size: 13px; color: var(--muted); }
+.stage-nav a b { font: 600 17px var(--serif); color: var(--ref); }
+.stage-nav a.next { margin-left: auto; text-align: right; }
+
+.empty { padding: 20px 22px; border: 1px dashed var(--line); border-radius: 12px; font: 16px/1.6 var(--serif); color: var(--muted); }
+.flash { animation: flash 1.8s ease-out; }
+@keyframes flash { from { background: color-mix(in srgb, var(--ref) 18%, var(--raised)); } }
+.template-note { max-width: 40rem; margin: 15vh auto; padding: 0 24px; }
+.template-note h1 { margin: 0 0 12px; font: 600 30px var(--serif); }
+.template-note p { font: 17px/1.6 var(--serif); color: var(--muted); }
+
+@media (max-width: 1080px) {
+  .topbar { flex-wrap: wrap; padding: 6px 16px; }
+  .ident { flex-basis: 0; }
+  .tools { order: 3; flex: 1 0 100%; overflow-x: auto; scrollbar-width: none; margin: 0 -10px; padding: 0 0 1px; }
+  .tools .gap { margin: 0 4px; }
+}
+@media (max-height: 560px) {
+  .topbar, .path { position: static !important; }
+}
+@media (max-width: 960px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .path { position: sticky; top: var(--bar-h); z-index: 10; height: auto; padding: 0; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .path-title { display: none; }
+  .path ol { display: flex; padding: 6px 8px; gap: 4px; }
+  .path li + li { margin-top: 0; }
+  .step { display: flex; align-items: center; gap: 8px; padding: 6px 10px; white-space: nowrap; }
+  .step .hint, .step .cnt { display: none; }
+  .step .num { width: 22px; height: 22px; font-size: 12px; }
+  .step-label { padding: 0; font-size: 14px; }
+  main { padding: 26px 16px 70px; }
+  .stage-head h2 { font-size: 26px; }
+  .card { padding: 14px 16px 16px; }
+  .spec, .legend { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
+  .spec dd { margin-bottom: 10px; }
+  .legend dt { border-bottom: 0; padding-bottom: 0; }
+  .anchored { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .row.file .module { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flash, dialog[open] { animation: none; }
+  details.edges > summary::before, .row.folder::before { transition: none; }
+}
+@media print {
+  body { background: #fff; }
+  .topbar { position: static; }
+  .path, .tools, .stage-nav { display: none; }
+  .shell { display: block; }
+  .stage[hidden] { display: block; }
+  .stage + .stage { break-before: page; }
+  .card { break-inside: avoid-page; }
+}
+</style>
+</head>
+<body>
+<header class="topbar" id="topbar">
+  <div class="ident"><h1 id="title">Design</h1><p class="sub" id="subtitle"></p></div>
+  <nav class="tools" aria-label="Page tools">
+    <button class="tool" type="button" id="legend-open">Legend</button>
+    <button class="tool" type="button" id="theme">Theme</button>
+    <span class="gap" aria-hidden="true"></span>
+    <span id="consult" style="display:contents"></span>
+  </nav>
+  <span id="status"></span>
+</header>
+<div class="shell">
+  <nav class="path" aria-label="Design sections"><p class="path-title">Reading path</p><ol id="path"></ol></nav>
+  <main id="main"></main>
+</div>
+<dialog id="legend" aria-labelledby="legend-title">
+  <div class="dialog-head"><h2 id="legend-title">How to read this design</h2><button class="tool" type="button" data-close>Close</button></div>
+  <div class="dialog-body"><dl class="legend" id="legend-body"></dl></div>
+</dialog>
+<dialog id="file" aria-labelledby="file-title">
+  <div class="dialog-head"><span id="file-mark"></span><h2 class="path-title-mono" id="file-title"></h2><button class="tool" type="button" data-close>Close</button></div>
+  <div class="dialog-body" id="file-body"></div>
+</dialog>
+<script id="design-data" type="application/json">/*__DESIGN_DATA__*/null</script>
+<script>
+(function () {
+  "use strict";
+  const raw = document.getElementById("design-data").textContent;
+  const data = raw.trim().slice(0, 2) === "/*" ? null : JSON.parse(raw);
+  if (!data || !data.design) {
+    // Opened as the bare template: the runtime inlines a design here when it renders design.html.
+    document.body.innerHTML = '<div class="template-note"><h1>Design review template</h1>' +
+      "<p>The runtime fills this file with a design when it renders design.html. Open the design.html of a session to review a design.</p></div>";
+    return;
+  }
+  const design = data.design;
+  const checks = data.checks;
+  const path = design.path;
+
+  // ---------- Helpers ----------
+  const esc = (text) => String(text == null ? "" : text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const list = (value) => (Array.isArray(value) ? value : []);
+  const when = (iso) => (iso ? String(iso).slice(0, 16).replace("T", " ") + " UTC" : "");
+  const day = (iso) => (iso ? String(iso).slice(0, 10) : "");
+  const badge = (text, kind) => '<span class="badge ' + (kind || "") + '">' + esc(text) + "</span>";
+  const facet = (key, value, title) => '<span class="badge kv"' + (title ? ' title="' + esc(title) + '"' : "") + '><span class="k">' + esc(key) + '</span><span class="v">' + esc(value) + "</span></span>";
+  const knowledgeRefs = list(design.knowledgeReferences);
+  const resolved = {};
+  list(data.knowledge).forEach((k) => { resolved[k.kid] = k; });
+  const batches = data.batches || {};
+  const fsFiles = path.filesystem.files;
+
+  // Every ID in the design, mapped to the stage that shows it, so any mention can link to it.
+  const stageOf = {};
+  design.decisions.forEach((d) => { stageOf[d.id] = "decisions"; list(d.options).forEach((o) => { if (o.id) stageOf[o.id] = "decisions"; }); });
+  path.operations.forEach((o) => { stageOf[o.id] = "plan"; });
+  fsFiles.forEach((f) => { stageOf[f.id] = "filesystem"; });
+  path.apis.forEach((a) => { stageOf[a.id] = "contracts"; });
+  path.contracts.forEach((c) => { stageOf[c.id] = "contracts"; });
+  design.obligations.forEach((o) => { stageOf[o.id] = "obligations"; });
+  design.fileReferences.forEach((f) => { stageOf[f.id] = "file-references"; });
+  knowledgeRefs.forEach((k) => { stageOf["kid-" + k.kid] = "knowledge-references"; });
+  design.iterations.forEach((i) => { stageOf[i.id] = "history"; });
+
+  // Cross references the design implies: which operations touch a file, which decisions an operation realizes.
+  const norm = (p) => String(p || "").replace(/\\/g, "/").toLowerCase();
+  const fileFor = (p) => fsFiles.filter((f) => norm(f.path) === norm(p) || norm(p).endsWith("/" + norm(f.path)) || norm(f.path).endsWith("/" + norm(p)))[0];
+  const opsOfFile = {};
+  path.operations.forEach((op) => list(op.files).forEach((p) => { const f = fileFor(p); if (f) (opsOfFile[f.id] = opsOfFile[f.id] || []).push(op.id); }));
+  const decisionsOfOp = {};
+  const opsOfDecision = {};
+  path.operations.forEach((op) => {
+    decisionsOfOp[op.id] = list(op.realizes);
+    list(op.realizes).forEach((id) => { (opsOfDecision[id] = opsOfDecision[id] || []).push(op.id); });
+  });
+  // The operations that realize a contract or an API: the ones that list it, or, before 3.0.3, the ones touching its file.
+  const opsRealizing = (field, id) => path.operations.filter((op) => list(op[field]).indexOf(id) !== -1).map((op) => op.id);
+  const decisionsOfFile = (f) =>Array.from(new Set(list(opsOfFile[f.id]).flatMap((op) => list(decisionsOfOp[op])))).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+  function idLink(id) {
+    return stageOf[id] ? '<a class="idref" href="#' + esc(id) + '">' + esc(id) + "</a>" : '<span class="mono">' + esc(id) + "</span>";
+  }
+  const kidLink = (kid) => (stageOf["kid-" + kid] ? '<a class="idref" href="#kid-' + esc(kid) + '">kid ' + esc(kid) + "</a>" : '<span class="mono">kid ' + esc(kid) + "</span>");
+  const fileLink = (p) => { const f = fileFor(p); return f ? '<a class="idref file" href="#' + esc(f.id) + '" title="' + esc(f.path) + '">' + esc(f.path) + "</a>" : "<code>" + esc(p) + "</code>"; };
+  const scopeBadge = (scope) => facet("scope", scope === "Test" ? "test" : "production");
+  function idLinks(ids, empty) {
+    const items = list(ids);
+    return items.length ? '<span class="refs">' + items.map(idLink).join("") + "</span>" : '<span class="none">' + esc(empty || "none") + "</span>";
+  }
+
+  // Inline formatting: `code`, [name](path) symbols, **bold**, {{O#.k}} anchors and any known design ID.
+  function inline(text) {
+    return String(text == null ? "" : text).split(/(`[^`]+`)/).map((part, index) => {
+      if (index % 2) return "<code>" + esc(part.slice(1, -1)) + "</code>";
+      let html = esc(part);
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="sym" title="$2">$1</span>');
+      html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      html = html.replace(/\{\{(O\d+(?:\.\d+)?)\}\}/g, (_, ref) => idLink(ref));
+      html = html.replace(/(^|[\s(,;:])((?:API|IM|FS|CT|FR|IT|D|O)\d+(?:\.\d+)?)(?=$|[\s),;:.])/g, (match, lead, ref) => (stageOf[ref] ? lead + idLink(ref) : match));
+      return html;
+    }).join("");
+  }
+  // Paragraphs on blank lines (or on single breaks when the text has no blank line); "- " lines become lists.
+  // Text anchored with two or more {{O#.k}} placeholders is split so each anchor opens its own row.
+  function prose(text, cls) {
+    if (!text) return '<p class="none">Not recorded.</p>';
+    const anchors = String(text).match(/\{\{O\d+(?:\.\d+)?\}\}/g) || [];
+    if (anchors.length > 1) {
+      const parts = String(text).split(/\s*(?=\{\{O\d+(?:\.\d+)?\}\})/);
+      return '<div class="prose ' + (cls || "") + '">' + parts.map((part) => {
+        const m = part.match(/^\{\{(O\d+(?:\.\d+)?)\}\}\s*([\s\S]*)$/);
+        return m ? '<div class="anchored">' + idLink(m[1]) + "<p>" + inline(m[2]).replace(/\n/g, "<br>") + "</p></div>" : part.trim() ? "<p>" + inline(part).replace(/\n/g, "<br>") + "</p>" : "";
+      }).join("") + "</div>";
+    }
+    const blocks = String(text).split(/\n{2,}/).length > 1 ? String(text).split(/\n{2,}/) : String(text).split(/\n/);
+    return '<div class="prose ' + (cls || "") + '">' + blocks.map((block) => block.trim()).filter(Boolean).map((block) => {
+      const lines = block.split("\n");
+      if (lines.every((l) => /^\s*[-*]\s+/.test(l))) return "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^\s*[-*]\s+/, "")) + "</li>").join("") + "</ul>";
+      return "<p>" + lines.map(inline).join("<br>") + "</p>";
+    }).join("") + "</div>";
+  }
+  function spec(rows, cls) {
+    const kept = rows.filter((r) => r && r[1]);
+    return kept.length ? '<dl class="spec ' + (cls || "") + '">' + kept.map((r) => "<dt>" + esc(r[0]) + "</dt><dd" + (r[2] ? ' class="prose"' : "") + ">" + r[1] + "</dd>").join("") + "</dl>" : "";
+  }
+  // A card: its ID and badges on the first line, then its title and body.
+  function card(id, badges, title, body, cls) {
+    const idMark = /^[A-Z]+\d/.test(id) || /^kid-/.test(id) ? '<a class="card-id" href="#' + esc(id) + '">' + esc(id.replace(/^kid-/, "kid ")) + "</a>" : "";
+    return '<article class="card ' + (cls || "") + '" id="' + esc(id) + '">' +
+      (idMark || badges ? '<div class="card-head">' + idMark + (badges || "") + "</div>" : "") +
+      (title ? "<h4>" + title + "</h4>" : "") + body + "</article>";
+  }
+  function groupHead(title, count, note) {
+    return '<div class="group-head"><h3>' + esc(title) + '</h3><span class="n">' + count + "</span>" + (note ? "<p>" + esc(note) + "</p>" : "") + "</div>";
+  }
+  function table(headers, rows) {
+    return '<div class="table-wrap"><table><thead><tr>' + headers.map((h) => "<th>" + esc(h) + "</th>").join("") + "</tr></thead><tbody>" +
+      rows.map((r) => "<tr>" + r.map((c) => "<td>" + c + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
+  }
+  const tally = (cells) => '<div class="tally">' + cells.filter(Boolean).map((c) => '<span class="' + (c[2] || "") + '"><b>' + esc(c[0]) + "</b>" + esc(c[1]) + "</span>").join("") + "</div>";
+  const empty = (text) => '<p class="empty">' + esc(text) + "</p>";
+  const changeKey = (change) => String(change || "").charAt(0).toUpperCase();
+  const changeMark = (change) => '<span class="mark ' + changeKey(change) + '" title="' + esc(change) + '">' + esc(changeKey(change)) + "</span>";
+
+  // ---------- Header ----------
+  const approved = design.status === "Approved";
+  const title = path.title || design.designId;
+  document.getElementById("title").textContent = title;
+  document.getElementById("title").title = title;
+  const subtitle = document.getElementById("subtitle");
+  subtitle.innerHTML = [
+    '<span>Design <span class="mono">' + esc(design.designId) + "</span></span>",
+    "<span>" + design.obligations.length + (design.obligations.length === 1 ? " obligation" : " obligations") + "</span>",
+    path.generator ? "<span>generated by " + esc(path.generator) + "</span>" : "",
+    design.planName ? '<span>plan <span class="mono">' + esc(design.planName) + "</span></span>" : "",
+  ].join("");
+  subtitle.title = Array.from(subtitle.children).map((s) => s.textContent).join(", ");
+  document.getElementById("status").innerHTML =
+    '<span class="stamp ' + (design.modifiedAfterApproval ? "changed" : approved ? "approved" : "draft") + '" title="' + esc(approved ? "Approved " + when(design.approvedAt) : "Last change " + when(design.updatedAt)) + '"><b>' +
+    esc(design.modifiedAfterApproval ? "Changed after approval" : design.status) + "</b><small>" + esc(day(approved ? design.approvedAt : design.updatedAt)) + "</small></span>";
+
+  // ---------- Stages ----------
+  // The path holds the reading order; the header holds the stages a reader consults.
+  const stages = [];
+  function stage(id, title, hint, lead, count, countKind, body, consult) { stages.push({ id, title, hint, lead, count, countKind, body, consult }); }
+
+  // Overview
+  stage("overview", "Overview", "What exists today and what is missing", "What the codebase does today, and what it is missing to satisfy the requirement.", null, "",
+    card("current", "", "Current codebase", prose(design.overview.currentState)) +
+    card("gaps", "", "Gaps to close", prose(design.overview.gaps)));
+
+  // Decisions: highlighted first, then the rest by where the question came from. A 3.0.0 `blocking` flag reads as highlight.
+  const highlightedDecision = (d) => Boolean(d.highlight || d.blocking);
+  const sourceNames = { breakingchange: "Breaking changes", requirements: "From the requirement", requirement: "From the requirement", codebase: "From the codebase", internalreasoning: "From the agent's own reasoning" };
+  const sourceNotes = { breakingchange: "Decisions that record a break the design introduces: a contract signature, a public API or a persisted schema." };
+  const sourceKey = (d) => String(d.source || "internal reasoning").toLowerCase().replace(/[^a-z]/g, "");
+  function decision(d) {
+    const options = list(d.options);
+    const chosen = options.filter((o) => o.chosen)[0];
+    const others = options.filter((o) => o !== chosen);
+    const option = (o) => '<div class="option"' + (o.id ? ' id="' + esc(o.id) + '"' : "") + '><span class="mono">' + esc(o.id || "") + "</span><div>" + inline(o.text) + "</div></div>";
+    const badges = (highlightedDecision(d) ? badge("Highlight", "solid risk") : "") + (d.source ? facet("source", d.source) : "") +
+      (list(opsOfDecision[d.id]).length ? "" : highlightedDecision(d) ? badge("not realized by code", "dashed") : badge("not realized yet", "warn"));
+    return card(d.id, badges, inline(d.topic),
+      (d.question ? '<p class="question">' + inline(d.question) + "</p>" : "") +
+      spec([["Context", d.context && prose(d.context), true], ["Why it is asked", d.why && prose(d.why), true], ["How the answer is used", d.how && prose(d.how), true]], "flush context") +
+      '<div class="answer' + (chosen ? "" : " open") + '"><p class="label">' + (chosen ? "Answer" : "No answer chosen yet") + "</p>" + (chosen ? option(chosen) : "") + "</div>" +
+      (others.length ? '<p class="label">Other answers considered</p><div class="others">' + others.map(option).join("") + "</div>" : "") +
+      (list(opsOfDecision[d.id]).length ? spec([["Realized in", idLinks(opsOfDecision[d.id])]]) : ""),
+      highlightedDecision(d) ? "highlight" : "");
+  }
+  const highlighted = design.decisions.filter(highlightedDecision);
+  const rest = design.decisions.filter((d) => !highlightedDecision(d));
+  const bySource = {};
+  rest.forEach((d) => { (bySource[sourceKey(d)] = bySource[sourceKey(d)] || []).push(d); });
+  const sourceOrder = ["breakingchange", "requirements", "requirement", "codebase", "internalreasoning"].concat(Object.keys(bySource).filter((k) => !sourceNames[k]));
+  stage("decisions", "Decisions", "The forks the design took", "Each decision is a question the design had to answer. Confirm the answer, or name another option by its ID to change it.",
+    design.decisions.length, highlighted.length ? "warn" : "",
+    design.decisions.length
+      ? (highlighted.length ? groupHead("Highlighted", highlighted.length, "Where your judgment is most needed. Read them first; approving the design accepts them.") + highlighted.map(decision).join("") : "") +
+        sourceOrder.filter((k) => bySource[k]).map((k) => groupHead(sourceNames[k] || bySource[k][0].source, bySource[k].length, sourceNotes[k]) + bySource[k].map(decision).join("")).join("")
+      : empty("No decisions recorded yet."));
+
+  // Implementation plan
+  function statusBadge(status) {
+    if (status === "Completed") return badge("Completed", "ok dot");
+    if (status === "Implemented") return badge("Implemented", "violet dot");
+    if (status === "InProgress") return badge("In progress", "warn dot");
+    return badge("Not started", "dot");
+  }
+  function edges(op) {
+    const branches = list(op.branches), negatives = list(op.negatives), faults = list(op.exceptions);
+    if (!branches.length && !negatives.length && !faults.length) return "";
+    const parts = [];
+    if (branches.length) parts.push(badge(branches.length + (branches.length === 1 ? " branch" : " branches")));
+    if (negatives.length) parts.push(badge(negatives.length + (negatives.length === 1 ? " negative case" : " negative cases"), "warn"));
+    if (faults.length) parts.push(badge(faults.length + (faults.length === 1 ? " fault" : " faults"), "risk"));
+    return '<details class="edges"><summary>Edge cases ' + parts.join("") + "</summary>" +
+      branches.map((b) => '<div class="case"><div class="case-title">' + inline(b.question) + "</div>" + spec([
+        ["Yes", b.yes && ((b.yes.label ? "<strong>" + inline(b.yes.label) + "</strong> " : "") + inline(b.yes.note))],
+        ["No", b.no && ((b.no.label ? "<strong>" + inline(b.no.label) + "</strong> " : "") + inline(b.no.note))],
+        ["Why", b.why && inline(b.why)]]) + "</div>").join("") +
+      negatives.map((n) => '<div class="case neg"><div class="case-title">' + inline(n.cause) + "</div>" + spec([
+        ["Behavior", inline(n.behavior)], ["Impact", n.impact && badge(n.impact, n.impact === "High" ? "risk" : n.impact === "Medium" ? "warn" : "")]]) + "</div>").join("") +
+      faults.map((x) => '<div class="case fault"><div class="case-title">' + inline(x.trigger) + "</div>" + spec([["Recovery", inline(x.recovery)]]) + "</div>").join("") +
+      "</details>";
+  }
+  const opsDone = path.operations.filter((o) => o.implementationStatus === "Completed").length;
+  const opsImplemented = path.operations.filter((o) => o.implementationStatus === "Implemented").length;
+  stage("plan", "Implementation plan", "How it is built", "The operations an implementor carries out, in order.",
+    path.operations.length, "",
+    (path.operations.length ? tally([[path.operations.length, "operations"], opsImplemented && [opsImplemented, "implemented, not verified", "warn"], [opsDone, "completed", opsDone === path.operations.length ? "ok" : ""]]) : "") +
+    (path.operations.length ? path.operations.map((op) => card(op.id,
+      badge(op.kind, "ref") + (op.testType ? badge(op.testType) : "") + (batches[op.id] ? facet("batch", batches[op.id].batch, batches[op.id].authorisation) : "") +
+        (op.hasDestructiveSideEffects ? badge("destructive", "risk") : "") + statusBadge(op.implementationStatus) + badge("from " + String(op.source || "design").toLowerCase()),
+      inline(op.operation),
+      prose(op.instructions) + edges(op) +
+      spec([
+        ["Source reference", op.sourceRef && inline(op.sourceRef)],
+        ["Depends on", list(op.dependsOn).length && idLinks(op.dependsOn)],
+        ["Files", list(op.files).length ? '<span class="refs">' + list(op.files).map(fileLink).join("") + "</span>" : '<span class="none">none</span>'],
+        ["Implements", list(op.refObligations).length && idLinks(op.refObligations)],
+        ["Contracts", list(op.refContracts).length && idLinks(op.refContracts)],
+        ["APIs", list(op.refApis).length && idLinks(op.refApis)],
+        ["Knowledge", list(op.knowledgeReferences).length ? '<span class="refs">' + list(op.knowledgeReferences).map(kidLink).join("") + "</span>"
+          : op.referencesExemption && op.referencesExemption.knowledge ? '<span class="none">none: </span>' + inline(op.referencesExemption.knowledge) : ""],
+        ["File references", list(op.fileReferences).length ? idLinks(op.fileReferences)
+          : op.referencesExemption && op.referencesExemption.file ? '<span class="none">none: </span>' + inline(op.referencesExemption.file) : ""],
+        ["Realizes decisions", list(decisionsOfOp[op.id]).length && idLinks(decisionsOfOp[op.id])],
+      ]))).join("") : empty("No operations scheduled yet.")));
+
+  // Filesystem: a folder tree; each file opens its card in a dialog.
+  const root = { folders: {}, files: [] };
+  fsFiles.forEach((f) => {
+    const parts = String(f.path).split(/[\\/]+/).filter(Boolean);
+    let node = root;
+    parts.slice(0, -1).forEach((name) => { node = node.folders[name] = node.folders[name] || { folders: {}, files: [] }; });
+    node.files.push({ name: parts[parts.length - 1] || f.path, file: f });
+  });
+  // Folders with a single child folder and no files collapse into one row (a/b/c/).
+  function fsNode(node) {
+    return Object.keys(node.folders).sort().map((name) => {
+      let label = name, child = node.folders[name];
+      while (!child.files.length && Object.keys(child.folders).length === 1) { const next = Object.keys(child.folders)[0]; label += "/" + next; child = child.folders[next]; }
+      return '<details open><summary class="row folder">' + esc(label) + '/</summary><div class="children">' + fsNode(child) + "</div></details>";
+    }).join("") + node.files.sort((a, b) => a.name.localeCompare(b.name)).map((entry) => {
+      const f = entry.file;
+      return '<button type="button" class="row file ' + changeKey(f.status) + '" id="' + esc(f.id) + '" data-file="' + esc(f.id) + '" title="' + esc(f.path) + '">' + changeMark(f.status) +
+        '<span class="name">' + esc(entry.name) + "</span>" + (f.module ? '<span class="module">' + esc(f.module) + "</span>" : "") +
+        '<span class="tail">' + decisionsOfFile(f).map((id) => '<span class="idref">' + esc(id) + "</span>").join("") + "</span></button>";
+    }).join("");
+  }
+  const added = fsFiles.filter((f) => f.status === "Added").length;
+  const deleted = fsFiles.filter((f) => f.status === "Deleted").length;
+  stage("filesystem", "Filesystem", "Files modified, added and deleted", "The files the design adds, modifies or removes. Open a file to see why it changes.",
+    fsFiles.length, "",
+    fsFiles.length
+      ? tally([[fsFiles.length - added - deleted, "modified", "warn"], [added, "added", "ok"], deleted && [deleted, "deleted", "risk"], [new Set(fsFiles.map((f) => f.module).filter(Boolean)).size, "modules touched"]]) +
+        '<div class="tree">' + fsNode(root) + "</div>"
+      : empty("No files declared yet."));
+
+  // Contracts
+  const statusClass = (s) => { const c = String(s || "").trim().charAt(0); return c === "2" ? "ok" : c === "4" ? "warn" : c === "5" ? "risk" : ""; };
+  const realizedBy = (ids) => (path.operations.length ? spec([["Realized by", ids.length ? idLinks(ids) : badge("no operation yet", "warn")]]) : "");
+  const apis = path.apis.map((a) => card(a.id,
+    badge(a.method, "ref solid"), "<code>" + esc(a.path) + "</code>",
+    '<p class="statement">' + inline(a.purpose) + "</p>" + spec([["Authorization", a.auth && inline(a.auth)]], "flush") +
+    '<p class="label">Request</p><pre>' + esc(a.request || "") + "</pre>" +
+    (list(a.responses).length ? '<p class="label">Responses</p>' + table(["Status", "Meaning", "Body"], list(a.responses).map((r) =>
+      [badge(r.status, statusClass(r.status)), inline(r.description), r.body ? "<code>" + esc(r.body) + "</code>" : ""])) : "") +
+    realizedBy(opsRealizing("refApis", a.id)))).join("");
+  const internal = path.contracts.map((c) => card(c.id,
+    c.type ? badge(c.type, "ref") : "", esc(c.module || c.id),
+    (c.file ? '<p><span class="refs">' + fileLink(c.file) + "</span></p>" : "") + '<p class="statement">' + inline(c.promises) + "</p>" +
+    '<p class="label">Signature</p><pre>' + esc(c.signature || "") + "</pre>" +
+    (list(c.premortem).length ? '<p class="label">What could break it</p>' + table(["Risk", "Mitigation"], list(c.premortem).map((m) => [inline(m.what), inline(m.mitigation)])) : "") +
+    realizedBy(opsRealizing("refContracts", c.id)))).join("");
+  stage("contracts", "Contracts", "Signatures and APIs", "What each module promises, with its full signature, and every public endpoint the design exposes.",
+    path.apis.length + path.contracts.length, "",
+    groupHead("Public APIs", path.apis.length) + (apis || empty("The design exposes no HTTP endpoint.")) +
+    groupHead("Internal contracts", path.contracts.length) + (internal || empty("No internal contracts recorded.")));
+
+  // History
+  stage("history", "History", "Implementation iterations", "Each implementation iteration: what was asked, what changed, and how it was verified.",
+    design.iterations.length, "",
+    design.iterations.length ? design.iterations.map((it) => card(it.id,
+      (it.status === "Closed" ? badge("Closed", "ok dot") : badge("Open", "ref dot")) + facet("opened", when(it.createdAt)) + (it.closedAt ? facet("closed", when(it.closedAt)) : ""), "",
+      '<p class="statement">' + inline(it.request) + "</p>" +
+      (list(it.files).length ? '<p class="label">Files changed</p>' + table(["", "Path"], list(it.files).map((f) => [changeMark(f.change), fileLink(f.path) + (f.detail ? '<div style="margin-top:4px">' + inline(f.detail) + "</div>" : "")])) : "") +
+      (list(it.verifications).length ? '<p class="label">Verifications</p>' + table(["Kind", "Name", "Outcome"], list(it.verifications).map((v) => [badge(v.kind), inline(v.name), inline(v.outcome)])) : "") +
+      (list(it.blocks).length ? '<p class="label">Blocks</p>' + list(it.blocks).map((b) => '<div class="case neg">' + inline(typeof b === "string" ? b : JSON.stringify(b)) + "</div>").join("") : "") +
+      (it.notes ? '<p class="label">Notes</p>' + prose(it.notes) : ""))).join("") : empty("No implementation iteration yet."));
+
+  // Obligations (consulted from the header)
+  const cov = checks.coverage;
+  const carried = {};
+  path.operations.forEach((op) => list(op.refObligations).forEach((r) => { (carried[r] = carried[r] || []).push(op.id); }));
+  const obligationDone = (o) => Boolean(carried[o.id]);
+  stage("obligations", "Obligations", "", "The behaviors the requirement demands. Each one must be realized by at least one operation.",
+    design.obligations.length, design.obligations.some((o) => !obligationDone(o)) ? "warn" : "",
+    design.obligations.length
+      ? tally([[cov.obligationsRealized + " / " + cov.obligationsTotal, "obligations realized", cov.obligationsRealized === cov.obligationsTotal ? "ok" : "warn"]]) +
+        design.obligations.map((o) => card(o.id,
+          (o.origin === "Developer" ? badge("decided by the developer", "violet") : badge("from the requirement")) + (obligationDone(o) ? badge("realized", "ok dot") : badge("not realized", "warn dot")), "",
+          '<p class="statement">' + inline(o.behavior) + "</p>" +
+          spec([["Applies to", o.class && inline(o.class)], ["Boundaries", o.boundaries && inline(o.boundaries)], ["Source in R", o.sourceRef && "<em>" + inline(o.sourceRef) + "</em>"], ["Realized by", list(carried[o.id]).length && idLinks(carried[o.id])]], "flush"))).join("")
+      : empty("No obligations recorded yet."), true);
+
+  // File references (consulted from the header)
+  stage("file-references", "File references", "", "The symbols the implementation needs, with existing files that already use them as examples.",
+    design.fileReferences.length, "",
+    design.fileReferences.length ? design.fileReferences.map((fr) => card(fr.id, scopeBadge(fr.scope) + facet("files", list(fr.files).length), "<code>" + esc(fr.symbol) + "</code>",
+      (fr.definitionPath ? spec([["Defined in", "<code>" + esc(fr.definitionPath) + "</code>"]], "flush") : "") +
+      list(fr.files).map((f) => {
+        const d = list(fr.details).filter((x) => String(x.path).toLowerCase() === String(f).toLowerCase())[0];
+        return '<p class="label"><code>' + esc(f) + (d && d.line ? ":" + esc(d.line) : "") + "</code></p>" +
+          (d ? spec([["Why it is a reference", inline(d.why)], ["Use in this work", inline(d.purpose)]], "flush") : "<p>" + badge("no detail recorded", "warn") + "</p>");
+      }).join(""))).join("") : empty("No file references recorded yet."), true);
+
+  // Knowledge references (consulted from the header): each kid with the text resolved when the page was rendered.
+  const usedBy = {};
+  path.operations.forEach((op) => list(op.knowledgeReferences).forEach((kid) => { (usedBy[kid] = usedBy[kid] || []).push(op.id); }));
+  stage("knowledge-references", "Knowledge references", "", "The prescriptions of the project knowledge the design applies: each one a line range of a knowledge document, with its text as it reads now.",
+    knowledgeRefs.length, "",
+    knowledgeRefs.length ? knowledgeRefs.map((k) => {
+      const r = resolved[k.kid] || {};
+      return card("kid-" + k.kid, scopeBadge(k.scope) + facet("file id", k.fId) + (k.range ? facet("lines", k.range.s + "–" + k.range.e) : ""), "<code>" + esc(k.filePath || "file id " + k.fId) + "</code>",
+        (r.text != null ? "<pre>" + esc(r.text) + "</pre>" : "<p>" + badge(r.resolutionNote || "the text is not available", "warn") + "</p>") +
+        spec([["Used by", usedBy[k.kid] ? idLinks(usedBy[k.kid]) : '<span class="none">no operation</span>']]));
+    }).join("") : empty("No knowledge reference recorded yet."), true);
+
+  // Checks (consulted from the header)
+  const where = (f) => (stageOf[f.element] ? idLink(f.element) : '<span class="mono">' + esc(f.element) + "</span>");
+  const findings = checks.errors.map((f) => [badge("error", "risk"), '<span class="rule">' + esc(f.rule) + "</span>", where(f), inline(f.detail)])
+    .concat(checks.warnings.map((f) => [badge("warning", "warn"), '<span class="rule">' + esc(f.rule) + "</span>", where(f), inline(f.detail)]));
+  stage("checks", "Checks", "", "Mechanical facts about the design: missing links, unrealized obligations, contracts and decisions. They do not judge whether the design is right.",
+    checks.errors.length + checks.warnings.length || "✓", checks.errors.length ? "err" : checks.warnings.length ? "warn" : "ok",
+    findings.length ? '<div class="card">' + table(["Severity", "Rule", "Where", "Detail"], findings) + "</div>"
+      : '<p class="empty">' + badge("clean", "ok") + " No mechanical findings. Every obligation is realized and every link resolves.</p>", true);
+
+  // ---------- Assemble ----------
+  const reading = stages.filter((s) => !s.consult);
+  const main = document.getElementById("main");
+  main.innerHTML = stages.map((s) => {
+    const i = reading.indexOf(s);
+    const prev = reading[i - 1], next = reading[i + 1];
+    return '<section class="stage" id="' + s.id + '" aria-labelledby="' + s.id + '-title" hidden>' +
+      '<div class="stage-head"><h2 id="' + s.id + '-title">' + esc(s.title) + "</h2>" + (s.lead ? '<div class="lead">' + inline(s.lead) + "</div>" : "") + "</div>" + s.body +
+      (i < 0 ? "" : '<nav class="stage-nav" aria-label="Previous and next section">' +
+        (prev ? '<a href="#' + prev.id + '">Previous<b>' + esc(prev.title) + "</b></a>" : "") +
+        (next ? '<a class="next" href="#' + next.id + '">Next<b>' + esc(next.title) + "</b></a>" : "") + "</nav>") + "</section>";
+  }).join("");
+  document.getElementById("path").innerHTML = reading.map((s, i) =>
+    '<li><a class="step" href="#' + s.id + '" data-to="' + s.id + '"><span class="num">' + (i + 1) + '</span><span class="step-label">' + esc(s.title) +
+    '<span class="hint">' + esc(s.hint) + "</span></span>" + (s.count ? '<span class="cnt ' + s.countKind + '">' + esc(s.count) + "</span>" : "<span></span>") + "</a></li>").join("");
+  // Consulted stages appear in the header only when they hold something; checks always do.
+  const shortTool = { "file-references": "References", "knowledge-references": "Knowledge" };
+  document.getElementById("consult").innerHTML = stages.filter((s) => s.consult && (s.id === "checks" || s.count)).map((s) =>
+    '<a class="tool ' + s.countKind + '" href="#' + s.id + '" data-to="' + s.id + '" title="' + esc(s.title) + '">' + (shortTool[s.id] ? '<span class="lbl-long">' + esc(s.title) + '</span><span class="lbl-short">' + esc(shortTool[s.id]) + "</span>" : esc(s.title)) + '<span class="n">' + esc(s.count) + "</span></a>").join("");
+
+  // The header can wrap; the sidebar and anchors sit below whatever height it has.
+  const topbar = document.getElementById("topbar");
+  const syncBar = () => document.documentElement.style.setProperty("--bar-h", topbar.offsetHeight + "px");
+  syncBar();
+  if (window.ResizeObserver) new ResizeObserver(syncBar).observe(topbar);
+
+  // ---------- File dialog ----------
+  const fileDialog = document.getElementById("file");
+  function openFile(id) {
+    const f = fsFiles.filter((x) => x.id === id)[0];
+    if (!f) return;
+    document.getElementById("file-mark").innerHTML = badge(f.status || "Changed", f.status === "Added" ? "ok" : f.status === "Deleted" ? "risk" : "warn");
+    const cut = String(f.path).search(/[^\\/]*$/);
+    document.getElementById("file-title").innerHTML = '<span class="dir">' + esc(String(f.path).slice(0, cut)) + "</span>" + esc(String(f.path).slice(cut));
+    document.getElementById("file-body").innerHTML = '<div class="card-head"><span class="card-id">' + esc(f.id) + "</span>" + (f.module ? facet("module", f.module) : "") + "</div>" +
+      spec([["Reason", prose(f.reason), true], ["Change", prose(f.change), true], ["Impact", prose(f.impact), true],
+        ["Operations", list(opsOfFile[f.id]).length && idLinks(opsOfFile[f.id])], ["Decisions", decisionsOfFile(f).length && idLinks(decisionsOfFile(f))]], "flush");
+    if (!fileDialog.open) { if (fileDialog.showModal) fileDialog.showModal(); else fileDialog.setAttribute("open", ""); }
+  }
+  document.addEventListener("click", (event) => {
+    const row = event.target.closest("[data-file]");
+    if (row) { history.replaceState(null, "", "#" + row.dataset.file); openFile(row.dataset.file); }
+  });
+
+  // ---------- Navigation: the hash names a stage or any ID; the stage holding it is shown. ----------
+  // The URL fragment is the only source of the current section, so the browser history moves between sections and
+  // a link opens one. The scroll position of every visited fragment is remembered in the page (no storage, so it
+  // works from disk): returning to a fragment, with the browser's Back too, reopens it where the reader left it.
+  const scrollByFragment = new Map();
+  let shownHash = null;
+  window.addEventListener("scroll", () => {
+    if (shownHash && location.hash === shownHash) scrollByFragment.set(shownHash, window.scrollY);
+  }, { passive: true });
+  function show(hash, scroll) {
+    const id = decodeURIComponent(hash.replace(/^#/, ""));
+    let target = id && document.getElementById(id);
+    let section = target && target.closest ? target.closest("section.stage") : null;
+    if (!section) {
+      section = document.querySelector("section.stage");
+      target = null;
+      // A fragment that names nothing is rewritten to the section shown, without a history entry.
+      try { history.replaceState(null, "", "#" + section.id); hash = "#" + section.id; } catch (_) { /* best effort */ }
+    }
+    const restored = scrollByFragment.has(hash) ? scrollByFragment.get(hash) : null;
+    document.querySelectorAll("section.stage").forEach((s) => { s.hidden = s !== section; });
+    document.querySelectorAll("[data-to]").forEach((a) => a.setAttribute("aria-current", String(a.dataset.to === section.id)));
+    const current = document.querySelector('.step[aria-current="true"]');
+    if (current && current.scrollIntoView) current.scrollIntoView({ block: "nearest", inline: "nearest" });
+    if (fileDialog.open && !(target && target.dataset.file)) fileDialog.close();
+    shownHash = hash;
+    if (!scroll) return;
+    if (target && target !== section) for (let p = target.parentElement; p; p = p.parentElement) if (p.tagName === "DETAILS") p.open = true;
+    if (restored !== null) {
+      window.scrollTo(0, restored);
+      if (target && target.dataset.file) openFile(target.dataset.file);
+      return;
+    }
+    if (!target || target === section) { window.scrollTo(0, 0); return; }
+    const box = target.closest(".card, tr, .row") || target;
+    box.scrollIntoView({ block: target.dataset.file ? "center" : "start" });
+    box.classList.remove("flash");
+    void box.offsetWidth;
+    box.classList.add("flash");
+    if (target.dataset.file) openFile(target.dataset.file);
+  }
+  window.addEventListener("hashchange", () => show(location.hash, true));
+  show(location.hash, Boolean(location.hash));
+  // The browser jumps to the hash on load after the stage is shown; place it again once loading ends.
+  window.addEventListener("load", () => { if (location.hash) show(location.hash, true); });
+
+  // ---------- Legend ----------
+  const legend = [
+    ["R", "The functional requirement. Everything in the design is anchored to it."],
+    ["O#", "An obligation: one behavior R demands, or one the developer declared."],
+    ["D#", "A decision: a question the design had to answer, with the chosen answer and the other options."],
+    ["D#.k", "An option of a decision. Name one by its ID to make it the answer."],
+    ["Highlight", "A decision where the developer's judgment is most needed. One about the situation, such as a missing input or process, is not realized by code."],
+    ["IM#", "An operation: one ordered step of the implementation plan."],
+    ["Operation kind", "What the operation does: Production (the production code), Documentation (documentation) or Testing (writes and runs the tests, and fixes the production code when a test reveals a real defect)."],
+    ["Batch", "When an operation is served: the production batch, then the documentation batch, without the developer's selection. A Testing operation, or one with destructive side effects, is served only when the developer selects it. A dependency is the only precedence constraint."],
+    ["Breaking change", "A decision that records a break the design introduces: a contract signature, a public API or a persisted schema."],
+    ["Implemented", "An operation the implementor closed that the orchestrator has not reviewed yet. Completed means reviewed."],
+    ["FS#", "A file the design adds (A), modifies (M) or deletes (D). Click a file to see why it changes."],
+    ["CT#", "An internal contract: what a module promises, with its signature."],
+    ["API#", "A public HTTP endpoint, with its request and responses."],
+    ["FR#", "A file reference: a symbol the work needs, with files that already use it."],
+    ["kid #", "A knowledge reference: one prescription of the project knowledge, as a line range of a knowledge document."],
+    ["Scope", "Whether a reference governs the production code or the tests."],
+    ["IT#", "An implementation iteration, recorded in the history."],
+  ];
+  document.getElementById("legend-body").innerHTML = legend.map((r) => "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>").join("");
+  const legendDialog = document.getElementById("legend");
+  document.getElementById("legend-open").addEventListener("click", () => { if (legendDialog.showModal) legendDialog.showModal(); else legendDialog.setAttribute("open", ""); });
+  document.querySelectorAll("dialog").forEach((d) => {
+    d.querySelector("[data-close]").addEventListener("click", () => d.close());
+    d.addEventListener("click", (event) => { if (event.target === d) d.close(); });
+  });
+
+  // ---------- Theme toggle (remembered per browser when storage is available) ----------
+  const rootEl = document.documentElement;
+  try { const saved = localStorage.getItem("design-theme"); if (saved === "light" || saved === "dark") rootEl.setAttribute("data-theme", saved); } catch (e) {}
+  document.getElementById("theme").addEventListener("click", () => {
+    const current = rootEl.getAttribute("data-theme");
+    const dark = current ? current === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = dark ? "light" : "dark";
+    rootEl.setAttribute("data-theme", next);
+    try { localStorage.setItem("design-theme", next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>

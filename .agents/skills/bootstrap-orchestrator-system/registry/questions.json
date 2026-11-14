@@ -1,0 +1,409 @@
+{
+  "about": "Every decision Bootstrap settles before it writes the answers file. `ask` says when the target user is asked: always, per-environment, on-evidence (only when discovery finds the thing), or derived (filled from discovery and approved in the grouped defaults). `recommend` is a proposal to state with the evidence found, never an answer. `answers` is where the result goes in the answers file; `slots` and `tokens` are the payload slots and host capability tokens the decision fills.",
+  "questions": [
+    {
+      "id": "environments",
+      "phase": "A",
+      "ask": "always",
+      "question": "Which clients will the team use in this repository, and on which surfaces (terminal, IDE extension, desktop or web app)?",
+      "recommend": "Only the clients the team actually uses. Multi-select from the client profiles (Claude Code, Codex, GitHub Copilot in VS Code, OpenCode, Cursor) or Other with a name. Never select a client because Bootstrap runs in it or because its folder exists.",
+      "infer_from": [
+        "existing .claude/, .codex/, .github/agents/, .opencode/, .cursor/ folders (evidence only)",
+        "the team's own statement"
+      ],
+      "answers": [
+        "environments[].id",
+        "environments[].profile"
+      ],
+      "slots": [
+        "AGENT_ROOT",
+        "SKILL_ROOT"
+      ]
+    },
+    {
+      "id": "execution-host",
+      "phase": "A",
+      "ask": "derived",
+      "question": "Which client runs this Bootstrap session?",
+      "recommend": "Record it separately from the selected clients; it selects nothing.",
+      "infer_from": [
+        "the current session"
+      ],
+      "answers": [
+        "executionHost"
+      ]
+    },
+    {
+      "id": "node",
+      "phase": "A",
+      "ask": "derived",
+      "question": "Is Node.js available to every client that will run the roles?",
+      "recommend": "Required. Without it, the gates run by hand from the contracts and are recorded as instruction-only, and only with the user's explicit approval.",
+      "infer_from": [
+        "`node --version` in the repository",
+        "each client's terminal or sandbox"
+      ],
+      "answers": [
+        "nodeVersion"
+      ]
+    },
+    {
+      "id": "plan-only",
+      "phase": "A",
+      "ask": "always",
+      "question": "Should Bootstrap stop at the file plan, or install after approval?",
+      "recommend": "Install after approval of the file plan.",
+      "infer_from": [],
+      "answers": []
+    },
+    {
+      "id": "repo-name",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Which repository name do the root instructions announce?",
+      "recommend": "The package manifest name; otherwise the git remote name; otherwise the folder name.",
+      "infer_from": [
+        "package.json, pyproject.toml, Cargo.toml, *.csproj",
+        "git remote origin",
+        "folder name"
+      ],
+      "answers": [
+        "repo.name"
+      ],
+      "slots": [
+        "REPO_NAME"
+      ]
+    },
+    {
+      "id": "prefix",
+      "phase": "C",
+      "ask": "always",
+      "question": "Which prefix should the generated role agents and role skills carry?",
+      "recommend": "A short slug of the repository name with a trailing hyphen, for example `shop-` for `shop-web`, because names like `ask` or `orchestrator` collide easily with other agent sets. An empty prefix keeps the canonical names.",
+      "infer_from": [
+        "repository name",
+        "existing agent and skill names in the selected clients' folders"
+      ],
+      "answers": [
+        "prefix"
+      ]
+    },
+    {
+      "id": "route",
+      "phase": "C",
+      "ask": "per-environment",
+      "question": "How do users start the user roles (orchestrator, ask, knowledge-builder) in this client?",
+      "recommend": "The profile's default route, confirmed on every surface the team uses: native agents only when the client's agent picker works on all of them; otherwise role skills invoked by name. One route per client, never both.",
+      "infer_from": [
+        "the profile's `routes`",
+        "current client documentation",
+        "the surfaces named in the environments answer"
+      ],
+      "answers": [
+        "environments[].route"
+      ]
+    },
+    {
+      "id": "delegation",
+      "phase": "C",
+      "ask": "per-environment",
+      "question": "How does the orchestrator start its delegates in this client?",
+      "recommend": "Native subagents, each with its own context. Only a client without subagents uses a separate CLI process (the profile's `subprocess` command); if it has neither, the workflows are blocked in that client. Never inline.",
+      "infer_from": [
+        "the profile's `delegation`",
+        "current client documentation"
+      ],
+      "answers": [
+        "environments[].delegation"
+      ],
+      "tokens": [
+        "delegate"
+      ]
+    },
+    {
+      "id": "profile-overrides",
+      "phase": "B",
+      "ask": "derived",
+      "question": "Does the current documentation of each selected client still match its profile?",
+      "recommend": "Re-read the profile's `docs`. Record every difference (a folder, a tool name, a field) as an override and say why; the installer applies overrides on top of the profile.",
+      "infer_from": [
+        "the profile's `docs` at their current version",
+        "the installed client version"
+      ],
+      "answers": [
+        "environments[].overrides"
+      ]
+    },
+    {
+      "id": "tracker",
+      "phase": "C",
+      "ask": "always",
+      "question": "Which work-item tracker does this repository use?",
+      "recommend": "The tracker the team already uses, reached through an MCP server or integration already configured for the selected clients; the local Markdown tracker when there is none.",
+      "infer_from": [
+        "git remote host",
+        ".github/ISSUE_TEMPLATE/",
+        "tracker references in CONTRIBUTING.md and PR templates",
+        "configured MCP servers (.mcp.json, .vscode/mcp.json, .codex/config.toml, opencode.json, .cursor/mcp.json)"
+      ],
+      "answers": [
+        "tracker.adapter",
+        "tracker.localContract"
+      ],
+      "slots": [
+        "LOCAL_MARKDOWN_TRACKER_CONTRACT"
+      ]
+    },
+    {
+      "id": "work-item-bindings",
+      "phase": "C",
+      "ask": "per-environment",
+      "question": "Which exact tools read work items (item, type, linked titles, comments) and, when manage-work-item is generated, create and update them?",
+      "recommend": "Only the tracker integration's single-item, type, batch, comment, create and update operations, returning Markdown. No search, delete or administrative tools. The local Markdown tracker binds them to its contract and the file tools. Register and authenticate the integration per client (contracts/integrations.md).",
+      "infer_from": [
+        "the tracker answer",
+        "configured MCP servers and their tool lists per client"
+      ],
+      "answers": [
+        "environments[].bindings.work-item-*"
+      ],
+      "tokens": [
+        "work-item-retrieval",
+        "work-item-type-retrieval",
+        "work-item-batch-retrieval",
+        "work-item-comment-retrieval",
+        "work-item-create",
+        "work-item-update"
+      ]
+    },
+    {
+      "id": "manage-work-item",
+      "phase": "C",
+      "ask": "always",
+      "question": "Generate the manage-work-item skill (create bugs and user stories, update existing items)?",
+      "recommend": "Generate it when a write binding works; skip or defer it otherwise, rather than installing a skill that cannot write.",
+      "infer_from": [
+        "the work-item bindings"
+      ],
+      "answers": [
+        "skills.manage-work-item"
+      ]
+    },
+    {
+      "id": "wiki",
+      "phase": "C",
+      "ask": "on-evidence",
+      "question": "Which wiki does the orchestrator read, and with which tools?",
+      "recommend": "Ask only when discovery finds a wiki (GitHub wiki, Confluence, a Notion space…). Otherwise record `{ \"none\": \"no wiki\" }` and the orchestrator skips those calls.",
+      "infer_from": [
+        "wiki links in README and docs",
+        "configured MCP servers"
+      ],
+      "answers": [
+        "environments[].bindings.wiki-*"
+      ],
+      "tokens": [
+        "wiki-catalog-read",
+        "wiki-page-list",
+        "wiki-page-read"
+      ]
+    },
+    {
+      "id": "visual-evidence",
+      "phase": "C",
+      "ask": "per-environment",
+      "question": "How do the orchestrator, ask and knowledge-builder look at an image in this client, including an image attached to a work item?",
+      "recommend": "The role's own image-capable read tool, with the bytes fetched through an authorized integration for issue attachments; a cheaper vision-capable delegate only when the user approves the model. When an image cannot be read, the role asks the user for it.",
+      "infer_from": [
+        "client image input support",
+        "tracker attachment access"
+      ],
+      "answers": [
+        "environments[].bindings.visual-evidence"
+      ],
+      "tokens": [
+        "visual-evidence"
+      ]
+    },
+    {
+      "id": "extra-tools",
+      "phase": "C",
+      "ask": "per-environment",
+      "question": "Which other MCP or client tools should a role have (documentation, cloud, design tools…)?",
+      "recommend": "Only exact, least-privilege tools that a role needs and the repository already uses. On the skill route they are made available at client level.",
+      "infer_from": [
+        "configured MCP servers",
+        "package manifests that name external APIs or frameworks"
+      ],
+      "answers": [
+        "environments[].roleTools"
+      ]
+    },
+    {
+      "id": "runtime-root",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Which repository folder holds the runtime, its config, the workflows and the contracts?",
+      "recommend": "`agentic-system/`, tracked in git so a clone works. A system folder in the repository is always visible: its name never starts with a dot.",
+      "infer_from": [
+        "top-level path collisions"
+      ],
+      "answers": [
+        "locations.runtimeRoot"
+      ],
+      "slots": [
+        "RUNTIME_ROOT"
+      ]
+    },
+    {
+      "id": "sessions-root",
+      "phase": "C",
+      "ask": "always",
+      "question": "Where should the session folders (memory, log, artifacts, designs) live?",
+      "recommend": "Outside the repository, `~/.agentic-system/sessions/<repo-name>`: sessions are per developer and never pollute the repository. Alternative: a repository folder such as `agentic-system-sessions/`, ignored by git. Outside paths are written with `~` and every client gets permission to reach them.",
+      "infer_from": [
+        "existing session folders",
+        "the team's preference"
+      ],
+      "answers": [
+        "locations.sessionsRoot"
+      ],
+      "slots": [
+        "SESSIONS_ROOT"
+      ]
+    },
+    {
+      "id": "user-runtime-root",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Which per-user folder holds personal documentation templates?",
+      "recommend": "`~/.agentic-system`.",
+      "infer_from": [],
+      "answers": [
+        "locations.userRuntimeRoot"
+      ],
+      "slots": [
+        "USER_RUNTIME_ROOT"
+      ]
+    },
+    {
+      "id": "documentation-templates",
+      "phase": "C",
+      "ask": "always",
+      "question": "Where should the example documentation templates go: the user folder (personal) or the workspace folder (shared through git)?",
+      "recommend": "The user folder; team templates the repository shares go in the workspace folder `<runtime root>/documentation/templates/`.",
+      "infer_from": [
+        "existing documentation templates"
+      ],
+      "answers": [
+        "locations.documentationTemplates"
+      ]
+    },
+    {
+      "id": "knowledge-root",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Which repository folder holds the project knowledge?",
+      "recommend": "`knowledge/`, tracked. Existing docs stay where they are; knowledge-builder writes tiered documents here that reference them.",
+      "infer_from": [
+        "existing knowledge/ or docs/ folders"
+      ],
+      "answers": [
+        "locations.knowledgeRoot"
+      ],
+      "slots": [
+        "KNOWLEDGE_ROOT"
+      ]
+    },
+    {
+      "id": "glossary",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Where is the repository vocabulary glossary?",
+      "recommend": "The existing `CONTEXT.md` or `GLOSSARY.md`; otherwise `CONTEXT.md` at the root, created by knowledge-builder when there are terms to record, never just because it is missing.",
+      "infer_from": [
+        "CONTEXT.md, GLOSSARY.md, docs/glossary.md"
+      ],
+      "answers": [
+        "glossaryPath"
+      ],
+      "slots": [
+        "CONTEXT_GLOSSARY_PATH"
+      ]
+    },
+    {
+      "id": "validation-commands",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Which commands validate a change?",
+      "recommend": "The lint, typecheck, test and build commands CI runs, in CI's order.",
+      "infer_from": [
+        "package.json scripts, Makefile, pyproject.toml, build files",
+        ".github/workflows/",
+        "CONTRIBUTING.md"
+      ],
+      "answers": [
+        "validationCommands"
+      ],
+      "slots": [
+        "VALIDATION_COMMANDS"
+      ]
+    },
+    {
+      "id": "maintenance-root",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Which repository folder holds the installation records (answers, manifest, baselines)?",
+      "recommend": "`agentic-system-maintenance/`, tracked so anyone on the team can run maintenance, and never read by the roles. Its name never starts with a dot.",
+      "infer_from": [
+        "top-level path collisions"
+      ],
+      "answers": [
+        "locations.maintenanceRoot"
+      ]
+    },
+    {
+      "id": "guide-root",
+      "phase": "C",
+      "ask": "derived",
+      "question": "Where do the human guides for each client go?",
+      "recommend": "`docs/agentic-system/`, tracked; or the repository's existing documentation folder convention.",
+      "infer_from": [
+        "existing docs/ layout"
+      ],
+      "answers": [
+        "locations.guideRoot"
+      ]
+    },
+    {
+      "id": "skills-folder",
+      "phase": "C",
+      "ask": "always",
+      "question": "Which one folder holds the workflow skills for all selected clients, and how does each client reach it?",
+      "recommend": "The folder the most selected clients discover natively, from `install.mjs skills-folder`, never from its branding. If several qualify, keep the one already in use. A client that does not discover it reaches it through a symlink where the client supports them, or else keeps a client-specific copy only with the user's approval and reason. With one client there is nothing to decide. See contracts/locations-and-permissions.md.",
+      "infer_from": [
+        "registry/clients.json skills.discovers and skills.symlinks",
+        "each client's current documentation",
+        "existing skill folders and copies"
+      ],
+      "answers": [
+        "skillSharing.folder",
+        "skillSharing.clients"
+      ]
+    },
+    {
+      "id": "tooling-exclusions",
+      "phase": "C",
+      "ask": "on-evidence",
+      "question": "Which application compiler, lint or test globs would pick up the visible system folders, and how should they exclude them?",
+      "recommend": "Add the smallest exclusion to each tool whose broad glob includes `agentic-system/`, `agentic-system-maintenance/` or `agentic-system-sessions/`. This is the one change Bootstrap may make to application configuration, and only the exact lines the user approved. Record them in `decisions`.",
+      "infer_from": [
+        "tsconfig, ESLint, Prettier, test runner and bundler configuration",
+        "the validation commands"
+      ],
+      "answers": [
+        "decisions"
+      ]
+    }
+  ]
+}

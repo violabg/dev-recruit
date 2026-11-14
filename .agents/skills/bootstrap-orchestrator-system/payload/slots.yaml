@@ -1,0 +1,33 @@
+# Authored. Every slot canonical files may contain. Bootstrap fills them per target repository.
+# `pnpm run validate:canonical` fails on a `{{SLOT}}` that is not listed here.
+slots:
+  RUNTIME_ROOT:
+    meaning: Workspace-relative folder that holds the runtime (bin, lib, assets), its config, the workflow steps and the workspace documentation folder.
+    example: agentic-system
+  SESSIONS_ROOT:
+    meaning: Folder that holds the session store and the runtime cache; inside the repository (ignored by git) or outside it, as the developer chooses at Bootstrap.
+    example: ~/.agentic-system/sessions/shop-web
+  USER_RUNTIME_ROOT:
+    meaning: Per-user folder for user-level documentation templates shared across repositories.
+    example: ~/.agentic-system
+  REPO_NAME:
+    meaning: Display name of the target repository.
+    example: shop-web
+  AGENT_ROOT:
+    meaning: Folder where the client discovers the generated role contracts.
+    example: .claude/agents
+  SKILL_ROOT:
+    meaning: Folder where the client discovers the generated skills.
+    example: .claude/skills
+  KNOWLEDGE_ROOT:
+    meaning: Folder that holds the project knowledge documents and their catalogue.
+    example: knowledge
+  CONTEXT_GLOSSARY_PATH:
+    meaning: Path of the repository vocabulary glossary.
+    example: CONTEXT.md
+  VALIDATION_COMMANDS:
+    meaning: The repository's build and test commands that validate a change.
+    example: npm run build && npm test
+  LOCAL_MARKDOWN_TRACKER_CONTRACT:
+    meaning: Path of the local Markdown tracker contract, when the repository uses local work items.
+    example: agentic-system/work-items/README.md

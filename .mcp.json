@@ -11,11 +11,6 @@
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
     },
-    "io.github.vercel/next-devtools-mcp": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["next-devtools-mcp@0.3.6"]
-    },
     "neon": {
       "type": "http",
       "url": "https://mcp.neon.tech/mcp"
@@ -23,8 +18,21 @@
     "shadcn": {
       "type": "stdio",
       "command": "npx",
-      "args": ["shadcn@latest", "mcp"],
-      "tools": ["*"]
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ],
+      "tools": [
+        "*"
+      ]
+    },
+    "next-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ]
     }
   }
 }

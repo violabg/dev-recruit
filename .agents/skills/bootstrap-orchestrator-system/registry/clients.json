@@ -1,0 +1,363 @@
+{
+  "about": "Client profiles for scripts/install.mjs. Each profile records how one client discovers role files, skills, routers and permissions, written against the official documentation listed in `docs` on `checkedOn`. Bootstrap re-checks the profile against the current documentation of every selected client and records any difference as an `overrides` entry in the answers file; the installer applies the overrides on top of the profile. A client without a profile is rendered by the agent under contracts/client-bindings.md. `skills.discovers` lists the other project folders a client documents reading skills from, with any limit on that; `runtime.partLimit` is the largest runtime answer, in bytes, the client shows whole.",
+  "profiles": {
+    "claude-code": {
+      "label": "Claude Code",
+      "docs": [
+        "https://code.claude.com/docs/en/sub-agents",
+        "https://code.claude.com/docs/en/skills",
+        "https://code.claude.com/docs/en/settings",
+        "https://code.claude.com/docs/en/permissions",
+        "https://code.claude.com/docs/en/memory"
+      ],
+      "checkedOn": "2026-11-01",
+      "router": {
+        "file": "CLAUDE.md",
+        "import": "@AGENTS.md"
+      },
+      "scopedInstructions": null,
+      "agents": {
+        "dir": ".claude/agents",
+        "format": "claude"
+      },
+      "skills": {
+        "dir": ".claude/skills",
+        "manualOnly": {
+          "frontmatter": {
+            "disable-model-invocation": true
+          }
+        },
+        "discovers": [],
+        "symlinks": "documented: a skill entry in the project folder can be a symlink to a directory elsewhere on disk"
+      },
+      "alsoDiscovers": [],
+      "tools": {
+        "read": [
+          "Read"
+        ],
+        "search": [
+          "Grep",
+          "Glob"
+        ],
+        "write": [
+          "Edit",
+          "Write"
+        ],
+        "terminal": [
+          "Bash"
+        ],
+        "question": [
+          "AskUserQuestion"
+        ],
+        "runtime": [
+          "Bash"
+        ],
+        "delegate": [
+          "Agent",
+          "SendMessage"
+        ]
+      },
+      "routes": {
+        "default": "skill",
+        "nativeStart": "start a new session with `claude --agent {name}`"
+      },
+      "delegation": {
+        "native": "Start a delegate with the `Agent` tool, `subagent_type` set to the role's native name below, and the prompt the step gives. The delegate runs in its own context and only its final report returns. Resume it with `SendMessage` addressed to the agent id the `Agent` call returned (`delegate_id`).",
+        "generalPurpose": "general-purpose",
+        "resume": true,
+        "subprocess": "claude -p"
+      },
+      "permissions": {
+        "format": "claude-settings",
+        "file": ".claude/settings.json"
+      },
+      "runtime": {
+        "partLimit": 24000,
+        "evidence": "a command result above about 30,000 characters is saved to a file (reported, not in the settings reference)"
+      }
+    },
+    "codex": {
+      "label": "Codex",
+      "docs": [
+        "https://developers.openai.com/codex/subagents",
+        "https://developers.openai.com/codex/skills",
+        "https://developers.openai.com/codex/config-reference",
+        "https://developers.openai.com/codex/guides/agents-md"
+      ],
+      "checkedOn": "2026-10-24",
+      "router": {
+        "file": "AGENTS.md",
+        "import": null
+      },
+      "scopedInstructions": null,
+      "agents": {
+        "dir": ".codex/agents",
+        "format": "codex"
+      },
+      "skills": {
+        "dir": ".agents/skills",
+        "manualOnly": {
+          "file": {
+            "path": "agents/openai.yaml",
+            "content": "policy:\n  allow_implicit_invocation: false\n"
+          }
+        },
+        "discovers": [],
+        "symlinks": "reported, unconfirmed: a Codex-hosted guide says symlinked folders are followed, and a forum post reports a regression; verify on each surface"
+      },
+      "alsoDiscovers": [],
+      "tools": {
+        "read": [],
+        "search": [],
+        "write": [],
+        "terminal": [],
+        "question": [],
+        "runtime": [],
+        "delegate": []
+      },
+      "routes": {
+        "default": "skill",
+        "nativeStart": null
+      },
+      "delegation": {
+        "native": "Spawn the custom agent with the role's native name below as a subagent and pass it the prompt the step gives, word for word. It runs on its own thread with its own context and only its result returns. Subagents start only on an explicit request, so always name the agent.",
+        "generalPurpose": "default",
+        "resume": false,
+        "subprocess": "codex exec"
+      },
+      "permissions": {
+        "format": "codex-toml",
+        "file": ".codex/config.toml"
+      }
+    },
+    "github-copilot-vscode": {
+      "label": "GitHub Copilot in VS Code",
+      "docs": [
+        "https://code.visualstudio.com/docs/copilot/customization/custom-agents",
+        "https://code.visualstudio.com/docs/copilot/agents/subagents",
+        "https://code.visualstudio.com/docs/copilot/customization/agent-skills",
+        "https://code.visualstudio.com/docs/copilot/customization/custom-instructions"
+      ],
+      "checkedOn": "2026-10-31",
+      "router": {
+        "file": "AGENTS.md",
+        "import": null
+      },
+      "scopedInstructions": {
+        "dir": ".github/instructions"
+      },
+      "agents": {
+        "dir": ".github/agents",
+        "format": "copilot"
+      },
+      "skills": {
+        "dir": ".github/skills",
+        "manualOnly": {
+          "frontmatter": {
+            "disable-model-invocation": true
+          }
+        },
+        "discovers": [
+          {
+            "dir": ".claude/skills",
+            "note": "documented for Local sessions; the Copilot harness lists only .github/skills"
+          },
+          {
+            "dir": ".agents/skills",
+            "note": "documented for Local sessions; the Copilot harness lists only .github/skills"
+          }
+        ],
+        "symlinks": "not documented"
+      },
+      "alsoDiscovers": [
+        ".claude/agents",
+        ".claude/skills",
+        ".agents/skills"
+      ],
+      "tools": {
+        "read": [
+          "read"
+        ],
+        "search": [
+          "search"
+        ],
+        "write": [
+          "edit"
+        ],
+        "terminal": [
+          "execute"
+        ],
+        "question": [
+          "vscode/askQuestions"
+        ],
+        "runtime": [
+          "execute"
+        ],
+        "delegate": [
+          "agent"
+        ]
+      },
+      "routes": {
+        "default": "native",
+        "nativeStart": "select `{name}` in the Chat view's agent picker"
+      },
+      "delegation": {
+        "native": "Run the custom agent with the role's native name below as a subagent through the `agent` tool, with the prompt the step gives. The subagent runs in its own context and returns only its result. It cannot be resumed: re-invoke the same role with the complete correction prompt, as the step's arm for a host without resume says.",
+        "generalPurpose": null,
+        "resume": false,
+        "subprocess": null
+      },
+      "permissions": {
+        "format": "vscode-settings",
+        "file": ".vscode/settings.json"
+      },
+      "runtime": {
+        "partLimit": 18000,
+        "evidence": "measured in Copilot CLI transcripts: on 1.0.105 and 1.0.110 a shell result of up to 20,152 characters was shown whole, and the smallest replaced by a file path and a preview was 21.1 KB; only the 1.0.103 pre-release builds replaced results from 8 KB. The documentation states no limit. The VS Code terminal limit is not documented, so the same limit is used"
+      }
+    },
+    "opencode": {
+      "label": "OpenCode",
+      "docs": [
+        "https://opencode.ai/docs/agents/",
+        "https://opencode.ai/docs/skills/",
+        "https://opencode.ai/docs/permissions/",
+        "https://opencode.ai/docs/rules/"
+      ],
+      "checkedOn": "2026-11-01",
+      "router": {
+        "file": "AGENTS.md",
+        "import": null
+      },
+      "scopedInstructions": null,
+      "agents": {
+        "dir": ".opencode/agents",
+        "format": "opencode"
+      },
+      "skills": {
+        "dir": ".opencode/skills",
+        "manualOnly": null,
+        "discovers": [
+          {
+            "dir": ".claude/skills"
+          },
+          {
+            "dir": ".agents/skills"
+          }
+        ],
+        "symlinks": "not documented"
+      },
+      "alsoDiscovers": [
+        ".claude/skills",
+        ".agents/skills"
+      ],
+      "tools": {
+        "read": [
+          "read"
+        ],
+        "search": [
+          "grep",
+          "glob",
+          "list"
+        ],
+        "write": [
+          "edit"
+        ],
+        "terminal": [
+          "bash"
+        ],
+        "question": [
+          "question"
+        ],
+        "runtime": [
+          "bash"
+        ],
+        "delegate": [
+          "task"
+        ]
+      },
+      "routes": {
+        "default": "native",
+        "nativeStart": "press Tab until `{name}` is the active agent"
+      },
+      "delegation": {
+        "native": "Start a delegate with the `task` tool, naming the subagent with the role's native name below and passing the prompt the step gives. The subagent runs in its own child session and returns its result.",
+        "generalPurpose": "general",
+        "resume": false,
+        "subprocess": "opencode run"
+      },
+      "permissions": {
+        "format": "opencode-json",
+        "file": "opencode.json"
+      }
+    },
+    "cursor": {
+      "label": "Cursor",
+      "docs": [
+        "https://cursor.com/docs/agent/subagents",
+        "https://cursor.com/docs/context/skills",
+        "https://cursor.com/docs/context/rules"
+      ],
+      "checkedOn": "2026-10-31",
+      "router": {
+        "file": "AGENTS.md",
+        "import": null
+      },
+      "scopedInstructions": null,
+      "agents": {
+        "dir": ".cursor/agents",
+        "format": "cursor"
+      },
+      "skills": {
+        "dir": ".cursor/skills",
+        "manualOnly": {
+          "frontmatter": {
+            "disable-model-invocation": true
+          }
+        },
+        "discovers": [
+          {
+            "dir": ".agents/skills"
+          },
+          {
+            "dir": ".claude/skills"
+          },
+          {
+            "dir": ".codex/skills"
+          }
+        ],
+        "symlinks": "not documented"
+      },
+      "alsoDiscovers": [
+        ".claude/agents",
+        ".codex/agents",
+        ".claude/skills",
+        ".agents/skills",
+        ".codex/skills"
+      ],
+      "tools": {
+        "read": [],
+        "search": [],
+        "write": [],
+        "terminal": [],
+        "question": [],
+        "runtime": [],
+        "delegate": []
+      },
+      "routes": {
+        "default": "skill",
+        "nativeStart": null
+      },
+      "delegation": {
+        "native": "Delegate to the subagent with the role's native name below (for example `/{name}` followed by the prompt the step gives). The subagent runs in its own context and returns an agent id; resume it by passing that id (`delegate_id`).",
+        "generalPurpose": null,
+        "resume": true,
+        "subprocess": "cursor-agent -p"
+      },
+      "permissions": {
+        "format": null,
+        "file": null
+      }
+    }
+  }
+}
