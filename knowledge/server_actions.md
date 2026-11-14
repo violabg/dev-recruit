@@ -7,6 +7,8 @@ editable: true
 ---
 # Server actions and forms
 
+Server Actions, `redirect()`, `useTransition`, react-hook-form and sonner mechanics are in their official docs, not restated here: read them through next-devtools MCP or context7. This document holds only this project's contract.
+
 ## Action shape
 
 Every exported server action wraps its whole body in `runAction(operationName, body)`. `operationName` is the action's own name; it appears in the log line of unexpected errors.

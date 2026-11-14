@@ -7,6 +7,8 @@ editable: true
 ---
 # Domain model and business rules
 
+Prisma Client API semantics and migration behaviour are in the official docs (context7) and are not restated here; this document holds only the domain rules the schema encodes.
+
 ## Entities and relations
 
 | Entity | Purpose | Key fields / constraints | Deleting it removes |

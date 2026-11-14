@@ -7,7 +7,7 @@ editable: true
 ---
 # Cache tagging and invalidation
 
-Cache Components (`cacheComponents`) and Partial Prefetching are on. How `"use cache"`, `cacheLife`, `cacheTag`, `updateTag` work is in the Next.js docs (next-devtools MCP); this document holds only this project's rules.
+Cache Components (`cacheComponents`) and Partial Prefetching are on. What `"use cache"`, `cacheLife`, `cacheTag`, `updateTag` and `revalidateTag` do, where each may be called and which profiles exist is NOT restated here: read `cacheLife.md`, `cacheTag.md`, `updateTag.md` and `revalidateTag.md` under `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/`, or ask next-devtools MCP or context7. This document holds only this project's rules, so a library upgrade never makes it stale.
 
 ## Where caching lives
 
@@ -57,7 +57,7 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | Helper | Always expires | Options |
 |---|---|---|
 | `invalidateQuizCache({ quizId?, positionId?, deleted? })` | `quizzes`, `questions` | entity tags for quiz and position |
-| `invalidateQuestionCache({ questionId?, quizId?, isFavorite? })` | `questions` | `quizId` also expires the quiz; `isFavorite` = favorite status changed |
+| `invalidateQuestionCache({ questionId?, quizId? })` | `questions` | `quizId` also expires the quiz. The signature still accepts `isFavorite?`, but it is ignored: the `questions` collection already covers favorite status |
 | `invalidatePositionCache(positionId?, { deleted? })` | `positions` | positional id, then options |
 | `invalidateCandidateCache({ candidateId?, positionId?, positionIds?, deleted? })` | `candidates` | pass every position touched (old and new) |
 | `invalidateInterviewCache({ interviewId?, quizId?, deleted? })` | `interviews` | |
@@ -68,7 +68,7 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | `invalidateReferenceDataCache(category?)` | `reference-data` | |
 | `invalidateProfileCache()` | profile paths | |
 
-Helpers use `updateTag`, which works only in server actions. In a route handler use the `…InRouteHandler` variant (it uses `revalidateTag(tag, { expire: 0 })`).
+Server actions use the standard helper; a route handler uses the `…InRouteHandler` variant. Why the two cannot be swapped belongs to the Next.js docs cited above.
 
 ## Deletes and database cascades
 
