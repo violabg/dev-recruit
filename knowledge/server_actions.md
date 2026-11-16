@@ -2,7 +2,7 @@
 title: "server actions"
 tier: "MustHave"
 keywords: ["server action","runAction","UserError","ActionResult","requireUser","form","react-hook-form"]
-intent: "Always: shape and error contract of every server action, public candidate-facing actions, and how client forms call actions."
+intent: "Always: shape and error contract of every server action, public candidate-facing actions, scorecard and guide actions, and how client forms call actions."
 editable: true
 ---
 # Server actions and forms
@@ -50,11 +50,13 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
 - For an expected failure, throw `UserError` with an Italian message. It is the only way to send a custom message.
 - New code uses `UserError` or `schema.parse`, not `QuizSystemError`.
 - `UserError` can also be thrown by domain services; the action just lets it propagate.
+- A message produced by a schema `.refine()` is a `ZodError` message, not a `UserError`: it reaches the client through the same contract, but it is not thrown by the action body.
 
 ## Redirecting actions
 
 - `redirect()` and `notFound()` pass through `runAction` unchanged. Call them at the top level of the body, after cache invalidation; the framework's rules for these calls and `try/catch` apply.
 - A redirecting action resolves to nothing on success. Callers MUST NOT `unwrap()` it; check `if (result && !result.success) toast.error(errorMessage(result.error))`.
+- `deleteInterviewGuideAction` is a redirecting action: it invalidates, then redirects to `/dashboard/positions/{positionId}?tab=guide`. Pass it to `DeleteWithConfirm` bound to the guide id and without `unwrap`; the component itself handles both a result and the absence of one.
 
 ## Authentication and public actions
 
@@ -72,7 +74,15 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
 | `fetchPositionDataAction(positionId)` | none (public apply form) |
 
 - `fetchPositionDataAction` returns `position: null` both when the position does not exist and when it exists but is not `open`.
-- Every other action, including the entity actions of the application hub (`moveApplicationStageAction`, `setApplicationOwnerAction`, `updatePositionStatusAction`), calls `requireUser()` and applies no role or ownership check. `moveApplicationStageAction` accepts any stage to any stage, including reopening a closed application; `setApplicationOwnerAction` takes `owner: "me" | "none"`.
+- Every other action, including the entity actions of the application hub (`moveApplicationStageAction`, `setApplicationOwnerAction`, `updatePositionStatusAction`) and the scorecard, interview-guide and evaluation-recalculation actions, calls `requireUser()` and applies no role or ownership check. `moveApplicationStageAction` accepts any stage to any stage, including reopening a closed application; `setApplicationOwnerAction` takes `owner: "me" | "none"`.
+- The scorecard and interview-guide actions follow the same rule. Their expected failures, all `UserError`:
+  - `saveScorecardAction`: "Posizione non trovata", "Uno o più criteri non appartengono a questa scheda". It saves the whole scorecard in one transaction and returns no id.
+  - `generateScorecardCriteriaAction`: "Posizione non trovata".
+  - `upsertInterviewGuideAction`: "Guida non trovata" when a guide id is given, "Posizione non trovata" when it is not, and the criteria error "Uno o più criteri selezionati non appartengono alla scheda della posizione". It returns `{ id }`. A guide created without a position fails earlier, on the schema refine "La posizione è obbligatoria per creare una guida", which is a `ZodError` message.
+  - `deleteInterviewGuideAction`: "Guida non trovata".
+  - `generateInterviewGuideAction`: "Posizione non trovata", "Crea prima la scheda di valutazione della posizione".
+  - `recalculateAnswerEvaluationsAction`: "Valutazione non trovata", "Nessuna risposta valutata", "Una o più domande non hanno una risposta", all thrown by the recalculation service.
+- The two generation actions (`generateScorecardCriteriaAction`, `generateInterviewGuideAction`) are read-only: they return a proposal and never write or invalidate cache.
 
 ## Inputs and reads
 
@@ -88,6 +98,7 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
 - `const [isPending, startTransition] = useTransition()`; submit inside `startTransition`.
 - Feedback through `toast` from `sonner`; navigate with `router.push`, or let the action `redirect()`.
 - Error text on the client comes from `errorMessage(error)` (fallback `GENERIC_ERROR`).
+- When the schema's defaults make the form input differ from the validated output, type `useForm` with three arguments: `useForm<z.input<typeof schema>, unknown, Output>`. This is the case of the scorecard and interview-guide editors, whose anchors have default values, so the input type has them optional and the output type requires them. Use `values` instead of `defaultValues` so the form follows the server data after a save and rows created by the save are not created twice, and pass `keyName: "fieldKey"` to `useFieldArray` because every row already carries its own database `id` in the `id` field.
 
 ```tsx
 const [isPending, startTransition] = useTransition();
@@ -125,3 +136,5 @@ Use the logger service: `logger`, or the scoped `aiLogger`, `dbLogger`, `authLog
 - Parsing input or touching the database before `requireUser()`.
 - Adding a read action for page data instead of a cached data-layer function.
 - Gating a stage, owner or status change on the current user's role or ownership: `requireUser()` is the only guard.
+- Adding a database write or a cache invalidation to a generation action, including the scorecard criteria proposal and the interview guide.
+- Using `defaultValues` for a form the server rewrites after a save: the new rows are then recreated on the next submit.

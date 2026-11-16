@@ -52,8 +52,12 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | `closed` | Chiusa | `bg-muted text-muted-foreground` |
 
   An unknown status falls back to muted. Never write a local status → colour map.
+- Scorecard criteria have one presentation module and no other map. `criterion-presentation.ts` of the scorecard components exports `CRITERION_CATEGORY_LABEL` ("Tecnico", "Soft skill", "Cultura"), `CRITERION_PRIORITY_PRESENTATION` (`must` "Indispensabile" `bg-primary/10 text-primary`, `nice` "Preferibile" `bg-muted text-muted-foreground`), `CRITERION_SOURCE_LABEL` ("Competenza", "Soft skill", "Personalizzato") and the option lists `CRITERION_CATEGORY_OPTIONS`, `CRITERION_PRIORITY_OPTIONS`, `CRITERION_SOURCE_OPTIONS`. Never write a local criterion map: the schema module only holds the value arrays (`CRITERION_CATEGORY_VALUES`, `CRITERION_PRIORITY_VALUES`, `CRITERION_SOURCE_VALUES`), never labels or classes.
+- Interview-guide section kinds have one presentation module too: `guide-section-kind.ts` of the interview-guide components exports `GUIDE_SECTION_KIND_LABEL` ("Introduzione", "Esperienza", "Tecnica", "Comportamentale", "Domande del candidato", "Chiusura") and `GUIDE_SECTION_KIND_OPTIONS`. The select's label is "Tipo".
+- The per-criterion CV assessment compares the score with the expected level of the criterion, in this order: `success` when the score reaches or exceeds `expectedLevel`; `warning` when it is exactly one point below; `destructive` for anything lower; `bg-muted text-muted-foreground` with "Nessuna evidenza nel CV" when the score is `null`. The chip reads `{score}/5 · atteso {expectedLevel}` and adds " (archiviato)" for an archived criterion.
 - Score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
 - Score thresholds in the UI: per-answer score (0–10) ≥ 7 success, ≥ 4 warning, else destructive; percentages ≥ 70 success, ≥ 40 warning, else destructive.
+- Unsaved changes are a `warning` tint: "Modifiche non salvate" with `bg-warning/10 px-2 py-1 rounded-md text-warning text-sm`, in both the scorecard and the interview-guide editor. The scorecard editor adds "Criteri soft di default: non sono ancora salvati" with `bg-warning/10 px-3 py-2 rounded-md text-warning text-sm`, and the guide editor flags a minutes sum that does not match the duration with `bg-warning/10 text-warning` on "Somma sezioni: {minutes} min su {duration}". A generation dialog that will replace existing rows warns with the same `bg-warning/10 … text-warning text-sm` tint.
 
 ```tsx
 <span aria-hidden className={cn("rounded-full size-2", stage.dot)} /> {/* stage.dot = "bg-stage-pending" */}
@@ -92,3 +96,5 @@ All UI text, including `aria-label` and screen-reader text, is Italian.
 - A local stage → colour map instead of the shared presentation map, or a candidate status badge for a `Candidate.status` that no longer exists.
 - Inventing a `section-applications` token instead of reusing the candidates hue.
 - Writing a position status badge by hand instead of `getPositionStatusPresentation`.
+- Writing a local criterion or guide-section label/colour map instead of the shared presentation modules.
+- Colouring a criterion score against a fixed threshold instead of the criterion's expected level.

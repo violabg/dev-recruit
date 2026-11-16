@@ -7,9 +7,18 @@ DevRecruit is an AI-assisted technical recruitment platform: recruiters define p
 | Term | Code symbol | Italian UI label | Meaning |
 |---|---|---|---|
 | Position | `Position` | Posizione / Posizioni | A job opening: title, description, experience level, skills, soft skills, contract type, status |
+| Scheda di valutazione | `Scorecard` | Scheda di valutazione | At most one per position: the criteria used to evaluate that position's candidates. Editor at `/dashboard/positions/[id]/scorecard`, tab "Scheda di valutazione" |
+| Criterio | `ScorecardCriterion` | Aggiungi criterio, Rimuovi criterio, Criteri archiviati | One row of the scorecard: name, description, category, priority, weight, expected level, anchors, source, order, `archivedAt` |
+| Categoria del criterio | `CriterionCategory` | Categoria: Tecnico · Soft skill · Cultura | `technical` · `soft` · `culture` |
+| Priorità del criterio | `CriterionPriority` | Priorità: Indispensabile · Preferibile | `must` · `nice` |
+| Origine del criterio | `CriterionSource` | Badge: Competenza · Soft skill · Personalizzato | `skill` · `softSkill` · `custom`. Shown as a badge, not a select |
+| Ancore | `anchors` (JSON `{ weak, medium, strong }`) | Risposta debole · Risposta media · Risposta forte | How a weak, medium and strong answer sounds; on the criterion and on the guide question |
+| Criterio archiviato | `ScorecardCriterion.archivedAt` | Criteri archiviati ("conservati perché hanno già valutazioni") | Criterion removed from the scorecard but kept because it has evidence; there is no restore |
+| Criteri soft di default | `DEFAULT_SOFT_CRITERIA` | Criteri soft di default: non sono ancora salvati | The 5 rubric dimensions (Comunicazione, Collaborazione, Problem Solving, Culture Fit, Leadership), category `soft`, source `custom`, weight 3, expected level 3, `must` except Leadership `nice`; proposed as unsaved rows in an empty scorecard |
 | Quiz | `Quiz` | Quiz | Reusable, ordered set of questions for one Position, with an optional time limit (minutes) |
 | Question | `Question` (DB row); `FlexibleQuestion` / `SavedQuestion` / `Question` (schema types) | Domanda / Domande | A reusable question. In forms and AI output the DB id is carried as `dbId` |
-| Quiz question link | `QuizQuestion` | — | Quiz ↔ Question link with `order` |
+| Quiz question link | `QuizQuestion` | — | Quiz ↔ Question link with `order` and `criterionIds` |
+| Criteri verificati | `QuizQuestion.criterionIds`, `GuideQuestion.criterionIds` | Criteri verificati | Scorecard criteria a question verifies. For quizzes they live on the link, never on `Question`; the same question in another quiz has its own list |
 | Favorite question | `Question.isFavorite` | Preferite, Domande Preferite | Question kept for reuse; survives removal from its quiz |
 | Candidate | `Candidate` | Candidato / Candidati | A person applying. Never signs in |
 | Application | `Application` | Candidatura / Candidature | One Candidate for one Position. Holds the stage; assessments and evaluations are evidence collected on it |
@@ -19,6 +28,10 @@ DevRecruit is an AI-assisted technical recruitment platform: recruiters define p
 | Assessment | `Assessment` | Test / Test inviati (dashboard); the candidate sees "Inizia il test" | One Candidate taking one Quiz, inside one Application: token, status, timing, answers |
 | Assessment token | `Assessment.token` | — (part of the link) | The candidate's only credential, in the public assessment link |
 | Interview (conversation) | — (not built yet) | Colloquio / Colloqui | The live conversation with the candidate. Never an `Assessment`, never a `Quiz` |
+| Guida colloquio | `InterviewGuide` | Guida colloquio / Guide colloquio | The interview template of a position: one or more per position (one per round by convention, not by constraint), with title, round and duration |
+| Sezione della guida | `GuideSection` | Titolo sezione, Aggiungi sezione, Somma sezioni | Ordered part of a guide with title, minutes and kind |
+| Tipo di sezione | `GuideSectionKind` | Tipo: Introduzione · Esperienza · Tecnica · Comportamentale · Domande del candidato · Chiusura | `intro` · `experience` · `technical` · `behavioral` · `candidate_questions` · `closing` |
+| Domanda della guida | `GuideQuestion` | Domanda, Approfondimenti, Criteri verificati, Obbligatoria | Text, follow-ups, verified criteria, anchors, required flag, order |
 | Invite / assignment | `assignCandidatesToQuizAction`, `assignQuizzesToCandidateAction` | Invita, Assegna quiz, Associa quiz | Creating pending assessments for candidate + quiz pairs |
 | Answer | `Assessment.answers` | — | Stored per Question id |
 | Voice answer | `transcribeAudioAction` | — | Recorded audio transcribed to text |
@@ -26,16 +39,19 @@ DevRecruit is an AI-assisted technical recruitment platform: recruiters define p
 | Resume evaluation | `Evaluation` with `candidateId` + `positionId` | Valutazioni (del curriculum) | AI assessment of a resume against one Position, streamed |
 | Fit score | `Evaluation.fitScore` | Punteggio di idoneità / Fit score | AI fit judgement, stored 0–10 |
 | Quiz score | `Evaluation.quizScore` | Quiz score / Punteggio complessivo | Assessment evaluation only: percentage 0–100 of points earned |
+| Dettaglio per risposta | `Evaluation.answerEvaluations` | Ricalcola dettaglio risposte; "Il dettaglio per risposta non è disponibile per questa valutazione." | For every evaluated question of a test: score 0–10, strengths, weaknesses |
+| Valutazione per criterio | `Evaluation.criteriaAssessment` | Valutazione per criterio | Resume evaluations only: per criterion a score 1–5 or null ("Nessuna evidenza nel CV") plus its evidence |
 | Recommendation | `Evaluation.recommendation` | Raccomandazione (AI card) | AI free-text recommendation |
 | Hiring notes | `interviewNotes`, `redFlags`, `standoutMoments`, `hireRecommendation`, `nextSteps` | Note del colloquio, Red flags, Momenti di rilievo, Raccomandazione, Prossimi step; card "Decisione hiring" | Hiring manager's decision recorded on an evaluation |
 | Manual notes | `Evaluation.notes` | Note manuali | Free-text note on an evaluation |
-| Behavioral rubric | `BehavioralRubric` | Comunicazione, Collaborazione, Problem Solving, Culture Fit, Leadership; card "Scenario comportamentale" | Recruiter's manual 1–5 soft-skill scores per candidate + position |
+| Behavioral rubric | `BehavioralRubric` | Comunicazione, Collaborazione, Problem Solving, Culture Fit, Leadership; card "Scenario comportamentale" | Recruiter's manual 1–5 soft-skill scores per candidate + position. Its five dimensions are also the default soft criteria of a scorecard (`DEFAULT_SOFT_CRITERIA`); the rubric itself is unchanged |
 | Application evaluation summary | `getApplicationEvaluationSummary` | Punteggio complessivo (tab "Decisione") | Computed overall score of one application, from quiz, rubric and hiring decision. Cards: "Punteggio complessivo", "Quiz", "Scenario comportamentale", "Decisione hiring" |
 | Preset | `Preset` | Preset; editor card "Smart Question Presets" | Saved recipe for generating one AI question of a given type |
 | Reference data | `ReferenceData` | Dati di riferimento | Editable pick lists (languages, frameworks, databases, tools, soft skills, contract types, experience levels) |
 | User | `User` (Better Auth) | Accedi / Registrazione | Recruiter account. Every signed-in user sees everything |
 | Profile | `Profile` | Profilo | App profile of a User (full name, user name, avatar) |
-| Le mie azioni | `getActionCenterData`, `components/dashboard/action-center.tsx` | Le mie azioni | Home `/dashboard`, the `overview` entry of `SECTIONS`. Lists tests to evaluate, stale applications, positions with incomplete setup and interviews without a kit; with a "Solo le mie" filter |
+| Setup della posizione | `getPositionSetup`, `getPositionSetupStatus` | Setup della posizione | Checklist of Dettagli, Scheda di valutazione, Quiz, Guida colloquio. Dettagli is always done; the others are done when the part exists (scorecard with at least one active criterion, at least one quiz, at least one guide) |
+| Le mie azioni | `getActionCenterData`, `components/dashboard/action-center.tsx` | Le mie azioni | Home `/dashboard`, the `overview` entry of `SECTIONS`. Lists tests to evaluate, stale applications, positions with incomplete setup (a `draft` or `open` position missing the scorecard, the quiz or the guide, each row saying "Manca: …") and interviews without a kit; with a "Solo le mie" filter |
 | Prossima azione | `getNextAction`, `components/applications/next-action-card.tsx` | Prossima azione | The action the application waits for: Valuta CV, Invia test, Genera valutazione, Pianifica colloquio, Prepara colloquio, Compila scheda, Vai alla decisione, Passa a <fase>, Candidatura chiusa |
 | Kanban Selezione | `components/applications/application-kanban.tsx`, `getApplicationsByPosition` | Tab "Selezione" of a position | One column per stage from Candidato to Assunto, plus "Chiuse" |
 | Responsabile | `Application.ownerId` | Prendi in carico / Rilascia / Solo le mie | The recruiter in charge. Never limits access |
@@ -52,6 +68,14 @@ Assessment status (`AssessmentStatus`): `pending` In attesa (invited, not starte
 
 Question type (`QuestionType`): `multiple_choice` Scelta multipla · `open_question` Domanda aperta · `code_snippet` Snippet di codice · `behavioral_scenario` Scenario comportamentale.
 
+Criterion category (`CriterionCategory`): `technical` Tecnico · `soft` Soft skill · `culture` Cultura.
+
+Criterion priority (`CriterionPriority`): `must` Indispensabile · `nice` Preferibile.
+
+Criterion source (`CriterionSource`): `skill` Competenza · `softSkill` Soft skill · `custom` Personalizzato.
+
+Guide section kind (`GuideSectionKind`): `intro` Introduzione · `experience` Esperienza · `technical` Tecnica · `behavioral` Comportamentale · `candidate_questions` Domande del candidato · `closing` Chiusura.
+
 Difficulty (1–5): Molto Facile · Facile · Medio · Difficile · Molto Difficile.
 
 Preset tuning values: expected response length `short` Breve · `medium` Media · `long` Lunga; distractor complexity `simple` Semplice · `moderate` Moderato · `complex` Complesso; bug type `syntax` Sintassi · `logic` Logica · `performance` Performance · `security` Sicurezza; code complexity `basic` Base · `intermediate` Intermedio · `advanced` Avanzato.
@@ -66,10 +90,13 @@ Reference data categories: `programmingLanguage` Linguaggi · `framework` Framew
 - **Assessment (entity) vs `assessment` (stage).** The entity is one sitting of a quiz; the stage is the step of an application in which tests are sent.
 - **Candidate vs Application.** The Candidate is the person (personal record, CV, "Non ricontattare" flag); the Application is that person's candidacy for one Position and carries the stage. A candidate has no status of its own.
 - **Evaluation has two kinds** in one table: assessment evaluation (`assessmentId` set, `candidateId`/`positionId` null) and resume evaluation (`candidateId` + `positionId`, `assessmentId` null).
-- **Scores.** Per-answer score 0–10 (not stored) · `quizScore` 0–100 (assessment evaluation only) · `fitScore` stored 0–10 (the AI returns 0–100). The overall score of an application is computed in the "Decisione" tab, never stored.
+- **Scores.** Per-answer score 0–10, stored in `Evaluation.answerEvaluations` for every assessment evaluation generated now (rows saved before it existed have none) · per-criterion score 1–5 or null ("Nessuna evidenza nel CV") in `Evaluation.criteriaAssessment`, resume evaluations only · `quizScore` 0–100 (assessment evaluation only) · `fitScore` stored 0–10 (the AI returns 0–100). The overall score of an application is computed in the "Decisione" tab, never stored.
 - **Recommendation.** `recommendation` = AI text; `hireRecommendation` = hiring manager's enum. Both show as "Raccomandazione".
 - **Notes.** `notes` = "Note manuali"; `interviewNotes` = "Note del colloquio" (part of hiring notes).
 - **`behavioral_scenario` vs Behavioral rubric.** The first is an AI-scored quiz question type; the second is the recruiter's manual scoring.
+- **Scheda di valutazione vs Behavioral rubric.** The scorecard is the position's list of criteria, used by the AI to propose quiz questions, guide questions and the per-criterion CV assessment; the rubric is the recruiter's manual 1–5 scoring. Only their five soft dimensions coincide.
+- **Scheda di valutazione vs Guida colloquio.** The scorecard says what to evaluate; the guide says how to run the interview. A guide can only be generated from a scorecard with at least one active criterion.
+- **Criterio vs Criteri verificati.** A criterion belongs to the position's scorecard; a verified-criteria list is the subset a single question checks, stored on the link or on the guide question.
 - **Preset vs Reference data.** Preset = AI generation recipe; reference data = form pick lists. Unrelated.
 - **Question `id` vs `dbId`.** `dbId` is the Question row id inside form/AI objects; `id` there is a client-only key.
 - **"Position"** always means the job opening, never an ordering (that is `QuizQuestion.order`).
@@ -80,23 +107,25 @@ Reference data categories: `programmingLanguage` Linguaggi · `framework` Framew
 
 | Area | Holds |
 |---|---|
-| `app/dashboard/` | Signed-in recruiter area: one folder per section (positions, applications, candidates, quizzes, presets, assessments, profile, settings/reference-data). `applications/` holds the list `/dashboard/applications` and `/dashboard/applications/[id]` with the tabs Panoramica, CV, Test, Colloqui, Decisione; `assessments/` holds `/dashboard/assessments` |
+| `app/dashboard/` | Signed-in recruiter area: one folder per section (positions, applications, candidates, quizzes, presets, assessments, profile, settings/reference-data). `applications/` holds the list `/dashboard/applications` and `/dashboard/applications/[id]` with the tabs Panoramica, CV, Test, Colloqui, Decisione; `assessments/` holds `/dashboard/assessments`. The position page has the tabs Dettagli, Scheda di valutazione, Selezione, Quiz, Guide colloquio chosen by `?tab=` (`dettagli`, `scheda`, `selezione`, `quiz`, `guide`), with the subpages `scorecard`, `guides/new`, `guides/[guideId]` and the components `guides.tsx`, `scorecard-summary.tsx`, `setup-checklist.tsx` under `positions/[id]/components/` |
 | `app/recruiting/` | Public candidate pages: apply form, assessment by token |
 | `app/auth/` | Login, sign-up and password pages |
 | `app/api/` | Route handlers: auth library, resume-evaluation stream, position-description stream |
 | `proxy.ts` | Redirects signed-out visitors to login, except auth and recruiting pages |
-| `lib/data/` | Cached reads, one module per entity, including `applications.ts` |
-| `lib/actions/` | Server actions, one module per entity, plus `run-action.ts`; `applications.ts` holds the stage and owner actions |
-| `lib/services/` | Domain logic without Next.js: `applications.ts` (`setApplicationStage`, `advanceApplicationStage`, `applicationHasEvidence`, `syncCandidateApplications`), assessment and resume evaluation, quiz-question sync, R2 storage, logger, `UserError` |
-| `lib/services/ai/` | AI layer: `generate.ts` (`generateStructured`), `models.ts`, `core.ts` (`aiQuizService`), `prompts.ts`, `evaluation-prompts.ts`, `streaming.ts`, `retry.ts`, `sanitize.ts`, `types.ts` |
-| `lib/schemas/` | Zod schemas and inferred types (barrel `index.ts`) |
-| `lib/utils/` | `action-result.ts`, `cache-utils.ts`, `assessment-utils.ts`, `application-stage.ts` (stages, advancement, `furthestApplication`, `isApplicationStale`, kanban columns), `next-action.ts`, `evaluation-score.ts`, `application-timeline.ts`, `question-utils.ts`, `question-prompt-helpers.ts`, `quiz-form-utils.tsx`, `preset-icons.ts`, `token.ts` |
+| `lib/data/` | Cached reads, one module per entity, including `applications.ts`, `scorecards.ts` and `interview-guides.ts` |
+| `lib/actions/` | Server actions, one module per entity, plus `run-action.ts`; `applications.ts` holds the stage and owner actions; `scorecards.ts` and `interview-guides.ts` hold the scorecard and guide actions |
+| `lib/services/` | Domain logic without Next.js: `applications.ts` (`setApplicationStage`, `advanceApplicationStage`, `applicationHasEvidence`, `syncCandidateApplications`), `scorecards.ts` (`saveScorecard`, `criterionHasEvidence`, `getActiveCriteria`, `assertActiveCriteria`), `interview-guides.ts` (`syncInterviewGuide`), assessment and resume evaluation, quiz-question sync, R2 storage, logger, `UserError` |
+| `lib/services/ai/` | AI layer: `generate.ts` (`generateStructured`), `models.ts`, `core.ts` (`aiQuizService`), `prompts.ts`, `evaluation-prompts.ts`, `scorecard-generation.ts`, `guide-generation.ts`, `streaming.ts`, `retry.ts`, `sanitize.ts`, `types.ts` |
+| `lib/schemas/` | Zod schemas and inferred types (barrel `index.ts`), including `scorecard.ts` and `interview-guide.ts` |
+| `lib/utils/` | `action-result.ts`, `cache-utils.ts`, `assessment-utils.ts`, `application-stage.ts` (stages, advancement, `furthestApplication`, `isApplicationStale`, kanban columns), `next-action.ts`, `evaluation-score.ts`, `application-timeline.ts`, `question-utils.ts`, `question-prompt-helpers.ts`, `quiz-form-utils.tsx`, `preset-icons.ts`, `criterion-keys.ts`, `position-setup.ts`, `scorecard-defaults.ts`, `token.ts` |
 | `lib/` root | `auth.ts`, `auth-server.ts` (`requireUser`), `prisma.ts`, `utils.ts` (`cn`), `zod-config.ts` |
 | `lib/prisma/` | Generated Prisma client — do not edit |
-| `prisma/` | `schema.prisma`, `migrations/` (`0_init`, `20261115000000_application_hub` and the procedure `README.md`), `seed.ts`, the scripts `list-duplicate-emails.ts` (`pnpm db:duplicates`), `verify-application-hub.ts` (`pnpm db:verify`) and `load-env.ts` |
+| `prisma/` | `schema.prisma`, `migrations/` (`0_init`, `20261115000000_application_hub`, `20261117000000_scorecard_guides` and the procedure `README.md`), `seed.ts`, the scripts `list-duplicate-emails.ts` (`pnpm db:duplicates`), `verify-application-hub.ts` (`pnpm db:verify`) and `load-env.ts` |
 | `components/ui/`, `components/ui/rhf-inputs/` | UI primitives and react-hook-form field wrappers |
 | `components/dashboard/` | Dashboard shell (sidebar, breadcrumbs, sections, `action-center.tsx` "Le mie azioni", `assessment-pipeline.tsx` shown in `/dashboard/assessments`) |
-| `components/applications/` | Stage badge and stepper, kanban, timeline, "Prossima azione" card, move-stage menu, owner controls, "Solo le mie" toggle, test send form, evaluation summary view |
+| `components/applications/` | Stage badge and stepper, kanban, timeline, "Prossima azione" card, move-stage menu, owner controls, "Solo le mie" toggle, test send form, evaluation summary view, `criteria-assessment-list.tsx` |
+| `components/scorecard/` | Scorecard editor, criterion row and `criterion-presentation.ts` |
+| `components/interview-guides/` | Guide editor, section, question, "Genera dalla scheda" dialog and `guide-section-kind.ts` |
 | `components/assessments/` | Test status, table and filters |
 | `components/<entity>/` | Feature components; root files `page-header.tsx`, `skeletons.tsx` |
 | `hooks/` | Client hooks (quiz editor, AI generation) |

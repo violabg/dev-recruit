@@ -32,8 +32,14 @@ Always build tags with the helpers from the cache utils; never write tag strings
 | `BEHAVIORAL_RUBRICS` = `behavioral-rubrics` | `entityTag.behavioralRubric(candidateId, positionId)` |
 | `PRESETS` = `presets` | `entityTag.preset(id)` |
 | `REFERENCE_DATA` = `reference-data` | `entityTag.referenceCategory(category)` |
+| `SCORECARDS` = `scorecards` | `entityTag.scorecard(positionId)` → `scorecard-{positionId}` |
+| `INTERVIEW_GUIDES` = `interview-guides` | `entityTag.interviewGuide(id)` → `interview-guide-{id}` |
 
 `entityTag` is an object of functions; the separator is always `-`.
+
+- `entityTag.scorecard` takes a POSITION id, not a scorecard id: a position has at most one scorecard, so the position is the key for both the scorecard and its criteria.
+- `entityTag.interviewGuide` takes the guide id, never the position id and never the id of a section.
+- Criteria have no tag of their own: `scorecards` covers them. Sections and questions of a guide have no tag of their own: `interview-guides` covers them. A quiz-criterion link is covered by `quizzes` + `questions`, like the whole `QuizQuestion` link.
 
 There is no tag for `User`. Cached application reads include the owner's name (`owner: { select: { id: true, name: true } }`) but carry only the tags of the entities they join and of the collections they read. A user rename therefore does not refresh those reads until another tag or the `cacheLife` window expires; this is accepted, not compensated with a new tag.
 
@@ -53,6 +59,16 @@ export async function getFilteredCandidates(params?: FetchCandidatesParams) {
 
 `Application` is an entity, not a join table: it carries the stage and the owner, and it has no tag of its own. Its reads are covered by `candidates` plus the candidate and position entity tags; every write on an application calls `invalidateCandidateCache` with the candidate, the position(s) and the application id(s). The real join table, `QuizQuestion`, is covered by `quizzes` + `questions`.
 
+The reads that carry the new tags, with the dependency each one adds:
+
+- `getScorecardByPositionId` tags `scorecards`, `positions` and `entityTag.scorecard(positionId)`: it reads the scorecard and its criteria, and the position is the key. It is also the source of the criterion names for the quiz view, the quiz form, the guide editor and a new guide page.
+- `getCriterionOptionsByPosition` tags `scorecards` only: it walks the criteria of every position, so no entity tag and no `positions` apply.
+- `getPositionSetupStatus` tags `positions`, `scorecards`, `quizzes`, `interview-guides` and `entityTag.position(positionId)`: it reads the position with the counts of quizzes, guides and active criteria. Without `scorecards` the checklist would not follow a criterion change.
+- `getApplicationDetail` tags the candidate, position, assessment, evaluation and quiz collections plus `scorecards` (no scorecard entity tag): the criterion names come from the scorecard, and every helper that writes a scorecard expires the collection.
+- `getActionCenterData` tags the candidate, position, assessment, evaluation and quiz collections plus `scorecards` and `interview-guides`: it reads the same counts as the setup rule.
+- `getInterviewGuidesByPosition` tags `interview-guides`, `positions` and `entityTag.position(positionId)`, never a guide entity tag: the read lists several guides and the position is the filter.
+- `getInterviewGuideById` tags `interview-guides` and `entityTag.interviewGuide(guideId)`: it targets one guide.
+
 ## Invalidating mutations
 
 Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or `revalidatePath` directly (the helpers also refresh the dashboard paths).
@@ -71,8 +87,17 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | `invalidatePresetCache(presetId?)` | `presets` | pass the id whenever there is one |
 | `invalidateReferenceDataCache(category?)` | `reference-data` | |
 | `invalidateProfileCache()` | profile paths | |
+| `invalidateScorecardCache({ positionId })` | `scorecards` and `scorecard-{positionId}` | `positionId` required; revalidates `/dashboard/positions/{id}`, `/dashboard/positions/{id}/scorecard` and `/dashboard`. It does not expire `positions` nor the position entity tag, and does not revalidate `/dashboard/positions` |
+| `invalidateInterviewGuideCache({ guideId?, positionId })` | `interview-guides`, and `interview-guide-{id}` when `guideId` is given | `positionId` required; revalidates `/dashboard/positions/{id}`, `/dashboard/positions/{id}/guides/{guideId}` when `guideId` is given, and `/dashboard`. It never revalidates `/dashboard/positions/{id}/guides/new` |
 
-Server actions use the standard helper; a route handler uses the `…InRouteHandler` variant. Why the two cannot be swapped is framework behaviour: see the docs named above.
+Server actions use the standard helper; a route handler uses the `…InRouteHandler` variant. Why the two cannot be swapped is framework behaviour: see the docs named above. The two scorecard and guide helpers are server-action only.
+
+Who calls the new helpers:
+
+- `saveScorecardAction` always calls `invalidateScorecardCache({ positionId })`. It calls `invalidateInterviewGuideCache({ positionId })` only when the save really removed a deleted criterion from at least one guide question; otherwise nothing in the guides changed.
+- `upsertInterviewGuideAction` calls `invalidateInterviewGuideCache({ guideId, positionId })` after the transaction, on creation and on update.
+- `deleteInterviewGuideAction` calls `invalidateInterviewGuideCache({ guideId, positionId })` after the delete and before redirecting.
+- `deletePositionAction` calls neither: `invalidatePositionCache(id, { deleted: true })` expires `scorecards` and `interview-guides` through `CASCADE_ON_DELETE`.
 
 ## Deletes and database cascades
 
@@ -80,7 +105,7 @@ A delete (including `deleteMany`) of a Position, Quiz, Candidate or Assessment M
 
 | Deleted | Also expires |
 |---|---|
-| position | quizzes, assessments, evaluations, candidates, behavioral-rubrics |
+| position | quizzes, assessments, evaluations, candidates, behavioral-rubrics, scorecards, interview-guides |
 | quiz | assessments, evaluations |
 | candidate | assessments, evaluations, behavioral-rubrics |
 | assessment | evaluations |
@@ -116,7 +141,15 @@ Route handlers exist only for:
 | resume evaluation stream | streamed resume evaluation |
 | position description | streamed position description |
 
-Every other server call from the client is a server action. Every route handler except the two auth ones MUST call `requireUser()`.
+Every other server call from the client is a server action. Every route handler except the two auth ones MUST call `requireUser()`. The per-criterion part of the resume evaluation travels in the existing stream: no route handler was added for the scorecard, the criteria or the guides.
+
+## Ids of deleted criteria on quiz links
+
+The scorecard save never writes `QuizQuestion`, so the id of a deleted criterion can stay on an existing quiz link until that quiz is saved again, and `duplicateQuizAction` can even copy it to a duplicate that stays on the same position. Therefore:
+
+- The authoritative cleanup is server-side: every save of a quiz drops the unknown ids before the transaction, so a client can never persist one.
+- Every reader MUST resolve criterion ids through the scorecard, active and archived criteria alike, and ignore the ids it does not find. This covers the quiz view, the quiz form and the CV per-criterion assessment, and will cover the matrix of the next phase.
+- The guide editor is the exception that proves the rule: it keeps an id it cannot resolve in the form, labelled as an archived criterion, and the guide save accepts it because it is already stored on that guide.
 
 ## Common mistakes
 
@@ -129,3 +162,7 @@ Every other server call from the client is a server action. Every route handler 
 - Caching session-dependent data, or calling `requireUser()`/`getCurrentUser()` inside `"use cache"`.
 - Reading the session in a server component without first awaiting `connection()` or `searchParams`.
 - Redirecting from the email verification route to a caller-supplied URL without the same-origin check.
+- Keying a scorecard tag by the scorecard id instead of the position id, or a guide tag by the position id.
+- Adding an entity tag to `getCriterionOptionsByPosition`, or forgetting `scorecards` in `getPositionSetupStatus`.
+- Expiring `scorecards` without `positions`, hiding the scorecard from the position page, or adding an `interview-guides` invalidation to every scorecard save when no guide changed.
+- Calling `invalidateScorecardCache` or `invalidateInterviewGuideCache` from a route handler.
