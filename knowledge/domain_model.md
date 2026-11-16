@@ -2,7 +2,7 @@
 title: "domain model"
 tier: "MustHave"
 keywords: ["domain model","entities","quiz","question","candidate","application","stage","assessment","position status","evaluation","preset","migration","business rules"]
-intent: "Always: entities, relations, cascades and business rules (quiz save path, scorecard and interview guide, applications and their stage, assessment lifecycle, evaluation kinds and scores, no ownership filtering, Italian)."
+intent: "Always: entities, relations, cascades and business rules (quiz save path, scorecard and interview guide, applications and their stage, assessment lifecycle, evaluation kinds and scores, access with no per-user filtering except unsubmitted interviewer material, Italian)."
 editable: true
 ---
 # Domain model and business rules
@@ -34,9 +34,10 @@ the quiz result lives in `Evaluation.quizScore`.
 
 ## Access: no ownership filtering, no roles
 
-Every signed-in user sees and edits every entity. `createdBy` records the author only.
+Every signed-in user sees and edits every entity, with one deliberate exception: the notes and the scorecard an interviewer writes during an interview stay visible only to that interviewer until they are submitted.
 
-- NEVER add `where: { createdBy: user.id }` or any per-user filter to a read or a mutation.
+- NEVER add `where: { createdBy: user.id }` or any per-user filter to a read or a mutation, with that single exception: unsubmitted interviewer notes and the unsubmitted interviewer scorecard are filtered to their author, and to nobody else.
+- The exception is about visibility, never about ownership or permission: each interviewer sees only their own material until their own submission, submitting is the only thing that publishes it, and from then on every signed-in user sees and edits it like any other entity. It never hides a submitted scorecard, never lets one interviewer read or change another's unsubmitted material, and never becomes a role.
 - NEVER add role or permission checks. `requireUser()` only checks that a session exists.
 - `Application.ownerId` names the recruiter in charge. It may feed a view filter the user can switch off ("Solo le mie"); it never limits what a user can open or edit.
   - Creating an application from the dashboard makes the signed-in user the owner.
@@ -204,6 +205,7 @@ Both audiences call an `Assessment` a **Test**: recruiters see "Test" / "Test in
 - Assigning a quiz to a `rejected` or `withdrawn` application.
 - Confusing `BehavioralRubric` with `behavioral_scenario` questions, or Preset with ReferenceData.
 - Filtering by `createdBy`, or calling `requireUser()` in a candidate-facing action.
+- Applying the interviewer visibility exception anywhere outside an interviewer's unsubmitted notes and scorecard, or letting it hide material after submission.
 - Running `prisma db push`, or changing the schema without a versioned migration.
 - Writing `QuizQuestion` from the scorecard save, or deleting a criterion that has evidence instead of archiving it.
 - Writing `criterionIds` on the `Question` row instead of on the quiz-question link.
