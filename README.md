@@ -12,11 +12,11 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 ### Core Functionality
 
 - **📋 Position Management** - Create and manage job positions with detailed skill requirements and AI-generated descriptions
-- **👥 Candidate Tracking** - Track candidates through the recruitment pipeline with status management, resume storage, and **multi-position assignment** (candidates can be associated with multiple positions with primary designation)
+- **👥 Candidate Tracking** - Track candidates through the recruitment pipeline with resume storage and **multi-position assignment**: each candidate has one application (candidatura) per position, with its stage (fase) and the recruiter in charge
 - **📝 AI-Powered Quiz Generation** - Generate technical assessments tailored to specific positions using advanced LLMs
-- **🎯 Interview System** - Send quiz invitations to candidates via unique tokens for remote technical assessments. Features time-limited quizzes with user confirmation dialogs for completion when time expires.
+- **🎯 Assessment System (Test)** - Send quiz invitations to candidates via unique tokens for remote technical assessments. Features time-limited quizzes with user confirmation dialogs for completion when time expires.
 - **📊 AI Evaluation** - Dual evaluation system:
-  - **Interview Evaluations** - Automated quiz answer evaluation with detailed feedback and scoring
+  - **Assessment (Test) Evaluations** - Automated quiz answer evaluation with detailed feedback and scoring
   - **Candidate Evaluations** - Resume-based assessment against position requirements with fit scoring
 - **🔄 Reusable Question Library** - Create, manage, and favorite questions for reuse across multiple quizzes
 - **⚙️ Generation Presets** - Configurable templates for question generation with type-specific parameters
@@ -43,7 +43,7 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 - **Neon PostgreSQL** - Serverless database with Prisma ORM
 - **Cloudflare R2 Storage** - S3-compatible object storage for resume/file uploads
 - **PDF Parsing** - Serverless PDF text extraction using unpdf for resume analysis
-- **Polymorphic Evaluations** - Unified evaluation entity supporting both interview and candidate assessments
+- **Polymorphic Evaluations** - Unified evaluation entity supporting both assessment (Test) and candidate evaluations
 
 ## 📁 Project Structure
 
@@ -51,13 +51,14 @@ A modern, AI-powered technical recruitment platform built with Next.js 16 that s
 dev-recruit/
 ├── app/                    # Next.js App Router
 │   ├── dashboard/          # Protected dashboard routes
+│   │   ├── applications/   # Application (candidatura) pages: list, detail with stage and next action
 │   │   ├── candidates/     # Candidate management & evaluations
-│   │   ├── interviews/     # Interview tracking & evaluations
+│   │   ├── assessments/    # Assessment (Test) tracking & evaluations
 │   │   ├── positions/      # Job position management
 │   │   ├── quizzes/        # Quiz creation & editing with reusable questions
 │   │   ├── presets/        # Question generation presets management
 │   │   └── profile/        # User profile & settings
-│   ├── recruiting/          # Public interview pages (candidate-facing)
+│   ├── recruiting/          # Public assessment (Test) pages (candidate-facing)
 │   ├── auth/               # Authentication pages (login, signup, etc.)
 │   └── api/                # API routes (streaming, uploads)
 ├── components/             # React components
@@ -65,10 +66,11 @@ dev-recruit/
 │   │   ├── rhf-inputs/     # React Hook Form input components
 │   ├── dashboard/          # Dashboard-specific components
 │   ├── quiz/               # Quiz editing components (AI dialogs, question management)
+│   ├── applications/       # Application stage, kanban, timeline and next-action components
 │   ├── candidates/         # Candidate management components
-│   ├── interviews/         # Interview tracking components
+│   ├── assessments/        # Assessment (Test) tracking components
 │   ├── presets/            # Preset management components
-│   └── recruiting/          # Interview taking components
+│   └── recruiting/          # Assessment (Test) taking components
 ├── lib/                    # Core business logic
 │   ├── actions/            # Server actions (quizzes, candidates, evaluations, etc.)
 │   ├── data/               # Data fetching layer (cached queries)
@@ -148,12 +150,14 @@ R2_PUBLIC_URL="https://files.yourdomain.com"
 # Generate Prisma client
 pnpm db:generate
 
-# Push schema to database (development)
-pnpm db:push
+# Apply the versioned migrations to the database (see prisma/migrations/README.md)
+pnpm db:migrate:deploy
 
 # Optional: Seed with sample data
 pnpm db:seed
 ```
+
+The schema changes only through versioned Prisma Migrate migrations (`pnpm db:migrate` in development, `pnpm db:migrate:deploy` to apply them); `prisma db push` is never used. The one-off realignment of an existing database (`pnpm db:duplicates`, baseline, `pnpm db:verify`) is described in [prisma/migrations/README.md](prisma/migrations/README.md).
 
 ### 5. Start the development server
 
@@ -178,7 +182,10 @@ Open [http://localhost:3000](http://localhost:3000) to access the application.
 | `pnpm start`       | Start production server        |
 | `pnpm lint`        | Run ESLint                     |
 | `pnpm db:generate` | Generate Prisma client         |
-| `pnpm db:push`     | Push schema changes (dev)      |
+| `pnpm db:migrate`  | Create and apply a new migration (dev) |
+| `pnpm db:migrate:deploy` | Apply the versioned migrations |
+| `pnpm db:duplicates` | List candidates sharing the same normalised email |
+| `pnpm db:verify`   | Verify the Phase 1 migration on a real database |
 | `pnpm db:seed`     | Seed database with sample data |
 
 ## 🏗️ Architecture Overview
@@ -269,12 +276,12 @@ The core entities in DevRecruit:
 | **User**              | Application users (recruiters)                                                |
 | **Position**          | Job positions with skill requirements                                         |
 | **Candidate**         | Applicants with multi-position support and resume storage                     |
-| **CandidatePosition** | Join table for many-to-many candidate-position relationship with primary flag |
+| **Application**       | Candidatura: un candidato per una posizione; contiene la fase e il responsabile |
 | **Quiz**              | Technical assessments composed of reusable questions                          |
 | **Question**          | Reusable question library (multiple choice, open, code snippet)               |
 | **QuizQuestion**      | Join table linking questions to quizzes with ordering                         |
-| **Interview**         | Quiz assignments to candidates with answers and results                       |
-| **Evaluation**        | AI-generated assessments (polymorphic: interview or candidate-based)          |
+| **Assessment**        | Test: quiz assignments to candidates with answers and results                 |
+| **Evaluation**        | AI-generated evaluations (polymorphic: assessment (Test) or candidate-based)  |
 | **Preset**            | Question generation templates with type-specific parameters                   |
 
 Entity rules (including the candidate-position relationship) are in [`knowledge/domain_model.md`](knowledge/domain_model.md).
