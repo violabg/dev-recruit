@@ -4,7 +4,8 @@ import { logger } from "@/lib/services/logger";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
-import { Position } from "../prisma/client";
+import { Position, Prisma } from "../prisma/client";
+import type { PositionStatus } from "../schemas";
 
 export type PaginatedPositions = {
   positions: Position[];
@@ -17,6 +18,7 @@ export type PaginatedPositions = {
 
 export const getPositions = async (params?: {
   search?: string;
+  status?: PositionStatus | "all";
   page?: number;
   pageSize?: number;
 }): Promise<PaginatedPositions> => {
@@ -24,21 +26,30 @@ export const getPositions = async (params?: {
   cacheLife("hours");
   cacheTag(CacheTags.POSITIONS);
 
-  const { search, page = 1, pageSize = DEFAULT_PAGE_SIZE } = params ?? {};
+  const {
+    search,
+    status = "all",
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+  } = params ?? {};
   const filter = search?.trim();
   // Avoid Math.max() which calls .valueOf() and fails with temporary client references
   const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
   const normalizedPageSize =
     typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
 
-  const where = filter
-    ? {
-        title: {
-          contains: filter,
-          mode: "insensitive" as const,
-        },
-      }
-    : {};
+  const where: Prisma.PositionWhereInput = {};
+
+  if (filter) {
+    where.title = {
+      contains: filter,
+      mode: "insensitive",
+    };
+  }
+
+  if (status !== "all") {
+    where.status = status;
+  }
 
   const [positions, totalCount] = await Promise.all([
     prisma.position.findMany({
@@ -75,14 +86,6 @@ export const getPositionById = cache(
   }
 );
 
-export const getPositionsCount = async () => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.POSITIONS);
-
-  return prisma.position.count();
-};
-
 /**
  * Returns all positions without pagination.
  * Use for dropdowns, static params, or other cases where you need the full list.
@@ -97,34 +100,18 @@ export const getAllPositions = async (): Promise<Position[]> => {
   });
 };
 
-export const getRecentPositions = async (limit = 5) => {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.POSITIONS);
-
-  return prisma.position.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: limit,
-    select: {
-      id: true,
-      title: true,
-      experienceLevel: true,
-    },
-  });
-};
-
 /**
- * Returns positions with only id and title for select/dropdown components.
+ * Returns the open positions with only id and title, for the lists where a
+ * candidate can apply (public form, candidate form).
  * Sorted alphabetically by title.
  */
-export const getPositionsForSelect = cache(async () => {
+export const getOpenPositionsForSelect = cache(async () => {
   "use cache";
   cacheLife("hours");
   cacheTag(CacheTags.POSITIONS);
 
   return prisma.position.findMany({
+    where: { status: "open" },
     select: { id: true, title: true },
     orderBy: { title: "asc" },
   });

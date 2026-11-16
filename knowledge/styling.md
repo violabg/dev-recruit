@@ -21,8 +21,8 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | `success` | Positive feedback, good scores, `Button` variant `success` |
 | `warning` | Caution: mid scores, low remaining time, unsaved changes |
 | `destructive` | Errors, delete actions, low scores, required-field asterisk |
-| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` | Interview statuses `pending`, `in_progress`, `completed`, `cancelled`, and the derived `expired` |
-| `section-positions`, `section-candidates`, `section-quizzes`, `section-presets`, `section-interviews`, `section-settings` | Identity hue of each dashboard section (sidebar icon, page-title rule) |
+| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` | Assessment statuses `pending`, `in_progress`, `completed`, `cancelled`, and the derived `expired` |
+| `section-positions`, `section-candidates`, `section-quizzes`, `section-presets`, `section-assessments`, `section-settings` | Identity hue of each dashboard section (sidebar icon, page-title rule) |
 
 - New colours are added as OKLCH tokens in the global stylesheet (light and dark values), never as palette classes (`text-green-600`), hex or arbitrary values in components.
 - For status feedback prefer a tint (`bg-success/10 text-success`) over a filled background; never pair a token background with `text-white`/`text-black`.
@@ -30,14 +30,13 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 
 ## Status and score colours
 
-- Interview status → `stage-*` token, badge `bg-stage-<state>/10 text-stage-<state>`. Italian labels: `pending` "In attesa", `in_progress` "In corso", `completed` "Completato", `cancelled` "Annullato", `expired` "Scaduto".
-- Candidate status → ALWAYS render `CandidateStatusBadge`, which takes its colour from `getStatusColor(status)` in the shared utils and its Italian label from its own map. `getStatusColor` is the single source of candidate-status colours: never write a local status → colour map. Which token a status gets is a design decision: change it only in `getStatusColor`, and only when the developer asks.
+- Assessment status → `stage-*` token, badge `bg-stage-<state>/10 text-stage-<state>`. Italian labels: `pending` "In attesa", `in_progress` "In corso", `completed` "Completato", `cancelled` "Annullato", `expired` "Scaduto". Every state's label and tint comes from `ASSESSMENT_STATE_PRESENTATION` through `getAssessmentStatePresentation(state)`: never write a local state → colour map.
+- The application stage never comes from `Candidate.status`, which does not exist: no candidate status badge, no candidate status → colour map. An application stage is shown with a badge tinted from the same `stage-*` tokens (their name predates the application stage: they are not reserved to assessments), through one shared presentation map for application stages, separate from the assessment one. Which token each stage gets is a design decision: change it only in that map.
 - Score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
 - Score thresholds in the UI: per-answer score (0–10) ≥ 7 success, ≥ 4 warning, else destructive; percentages ≥ 70 success, ≥ 40 warning, else destructive.
 
 ```tsx
 <span aria-hidden className={cn("rounded-full size-2", stage.dot)} /> {/* stage.dot = "bg-stage-pending" */}
-<CandidateStatusBadge status={candidate.status} />
 <span className={cn("rounded-full px-2 py-1 text-xs font-medium",
   score >= 7 ? "bg-success/10 text-success"
   : score >= 4 ? "bg-warning/10 text-warning"
@@ -53,7 +52,6 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | Page title block | `PageHeader` with `title`, `description?`, `actionBtns?` and `section` (`SectionKey`, colours the title rule) |
 | Suspense fallbacks | shared skeletons: `PageHeaderSkeleton`, `TableSkeleton`, `FilterBarSkeleton`, `PaginationSkeleton`, `TextSkeleton`, `ButtonSkeleton`, `BadgeSkeleton`, `FieldSkeleton`, `SelectOptionsSkeleton` |
 | Section metadata (label, href, icon, colour classes) | `SECTIONS`, `NAV_GROUPS`, `NAV_FOOTER` |
-| Candidate status badge | `CandidateStatusBadge` |
 | Delete with confirmation | `DeleteWithConfirm` (accepts an action that returns a result or redirects) |
 | Row actions menu (edit + delete) | `EntityActionsMenu` |
 | Clickable table row | `TableRowLink` |
@@ -70,5 +68,5 @@ All UI text, including `aria-label` and screen-reader text, is Italian.
 - `dark:` colour overrides on top of tokens.
 - Changing the `primary` or `secondary` values.
 - Building a page title or delete dialog by hand instead of `PageHeader` / `DeleteWithConfirm`.
-- Colouring interview statuses with anything other than the `stage-*` tokens.
-- A local candidate status → colour map instead of `CandidateStatusBadge` / `getStatusColor`.
+- Colouring assessment statuses with anything other than the `stage-*` tokens.
+- A local stage → colour map instead of the shared presentation map, or a candidate status badge for a `Candidate.status` that no longer exists.

@@ -16,34 +16,21 @@ import {
   UrlPagination,
 } from "@/components/ui/url-pagination";
 import { getFilteredCandidates } from "@/lib/data/candidates";
+import { APPLICATION_STAGE_VALUES, type ApplicationStage } from "@/lib/schemas";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 import type { CandidatesSearchParams } from "./page";
 
-type CandidateStatus =
-  | "all"
-  | "pending"
-  | "contacted"
-  | "interviewing"
-  | "hired"
-  | "rejected";
-type CandidateSort = "newest" | "oldest" | "name" | "status";
+type CandidateStageFilter = ApplicationStage | "all";
+type CandidateSort = "newest" | "oldest" | "name";
 type CandidateView = "table" | "grid";
 
-const STATUS_VALUES: CandidateStatus[] = [
-  "all",
-  "pending",
-  "contacted",
-  "interviewing",
-  "hired",
-  "rejected",
-];
-const SORT_VALUES: CandidateSort[] = ["newest", "oldest", "name", "status"];
+const SORT_VALUES: CandidateSort[] = ["newest", "oldest", "name"];
 const VIEW_VALUES: CandidateView[] = ["table", "grid"];
 
-const normalizeStatus = (value?: string): CandidateStatus =>
-  value && STATUS_VALUES.includes(value as CandidateStatus)
-    ? (value as CandidateStatus)
+const normalizeStage = (value?: string): CandidateStageFilter =>
+  value && (APPLICATION_STAGE_VALUES as readonly string[]).includes(value)
+    ? (value as ApplicationStage)
     : "all";
 
 const normalizeSort = (value?: string): CandidateSort =>
@@ -79,7 +66,7 @@ export const CandidatesRuntimeSection = async ({
 
   // Normalize all values to primitives AFTER awaiting
   const search = params.search?.trim() ?? "";
-  const status = normalizeStatus(params.status);
+  const stage = normalizeStage(params.stage);
   const positionId = params.position?.trim() || "all";
   const sort = normalizeSort(params.sort);
   const view = normalizeView(params.view);
@@ -89,7 +76,7 @@ export const CandidatesRuntimeSection = async ({
   // Fetch all data in parallel within the same Suspense boundary
   const candidatesData = await getFilteredCandidates({
     search,
-    status,
+    stage,
     positionId,
     sort,
     page,

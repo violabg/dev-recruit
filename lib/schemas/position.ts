@@ -28,6 +28,28 @@ export const positionDescriptionSchema = z.object({
 });
 
 // ====================
+// POSITION STATUS SCHEMAS
+// ====================
+// The status is not a form field: it changes through its own action.
+
+export const POSITION_STATUS_VALUES = ["draft", "open", "closed"] as const;
+
+export const positionStatusSchema = z.enum(POSITION_STATUS_VALUES, {
+  error: () => "Stato della posizione non valido",
+});
+
+export type PositionStatus = z.infer<typeof positionStatusSchema>;
+
+export const updatePositionStatusSchema = z.object({
+  positionId: baseSchemas.id,
+  status: positionStatusSchema,
+});
+
+export type UpdatePositionStatusInput = z.infer<
+  typeof updatePositionStatusSchema
+>;
+
+// ====================
 // TYPE EXPORTS
 // ====================
 

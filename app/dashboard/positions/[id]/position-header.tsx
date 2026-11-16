@@ -1,5 +1,7 @@
 import { cn } from "cn";
 import PageHeader from "@/components/page-header";
+import { getPositionStatusPresentation } from "@/components/positions/position-status";
+import { PositionStatusActions } from "@/components/positions/position-status-actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -35,12 +37,15 @@ export async function PositionHeader({ params }: Props) {
     );
   }
 
+  const status = getPositionStatusPresentation(position.status);
+
   return (
     <PageHeader
         section="positions"
       title={position.title}
       info={
         <>
+          <Badge className={cn("w-fit", status.badge)}>{status.label}</Badge>
           <Badge variant="outline">{position.experienceLevel}</Badge>
           {position.contractType && (
             <Badge variant="outline">{position.contractType}</Badge>
@@ -52,6 +57,10 @@ export async function PositionHeader({ params }: Props) {
       }
       actionBtns={
         <>
+          <PositionStatusActions
+            positionId={position.id}
+            status={position.status}
+          />
           <Link
             href={`/dashboard/positions/${position.id}/edit`}
             className={cn(
@@ -65,7 +74,7 @@ export async function PositionHeader({ params }: Props) {
 
           <DeleteWithConfirm
             deleteAction={deletePositionAction.bind(null, position.id)}
-            description="Questa azione non può essere annullata. Verranno eliminati anche tutti i quiz e i candidati associati a questa posizione."
+            description="Questa azione non può essere annullata. Una posizione con candidature non si può eliminare: chiudila."
             errorMessage="Errore durante l'eliminazione della posizione"
           />
         </>

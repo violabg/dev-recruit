@@ -26,7 +26,7 @@ export const LLM_MODELS = {
 
   // Audio transcription
   WHISPER_LARGE_V3: "whisper-large-v3", // Highest accuracy
-  WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo", // Faster, used for interviews
+  WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo", // Faster, used for assessments
 
   // ============================================================================
   // PREVIEW MODELS - may be discontinued by Groq at short notice

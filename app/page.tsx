@@ -6,9 +6,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/lib/auth-server";
 import { ArrowRight, BrainCircuit, CheckCircle, Users } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 async function StartButton() {
+  // The session is read per request, after connection(), never while the
+  // route is prerendered
+  await connection();
   const user = await getCurrentUser().catch(() => null);
   const href = user ? "/dashboard" : "/auth/login";
   return (
@@ -36,7 +40,7 @@ export default async function Home() {
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
                     Valuta le competenze tecniche dei candidati con quiz
-                    personalizzati e colloqui in tempo reale supportati
+                    personalizzati e test in tempo reale supportati
                     dall&apos;intelligenza artificiale.
                   </p>
                 </div>
@@ -123,7 +127,7 @@ export default async function Home() {
                 <div className="bg-primary/10 p-4 border border-primary/20 rounded-2xl">
                   <Users className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="font-bold text-xl">Colloqui in tempo reale</h3>
+                <h3 className="font-bold text-xl">Test in tempo reale</h3>
                 <p className="text-muted-foreground">
                   Visualizza e valuta le risposte dei candidati.
                 </p>

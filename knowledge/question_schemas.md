@@ -81,8 +81,8 @@ Change all of these, then search the code for an existing type name (e.g. `behav
 7. Presets: preset form options and fields, preset detail page.
 8. Editor: `createEmptyQuestion`, an editor form component, `QuestionItem` rendering, `questionTypes` and `getQuestionTypeLabel`.
 9. Read-only quiz view: a display component and the quiz questions view.
-10. Interview: the answer input in `InterviewQuestion`, and `answerToText` if the stored answer is not plain text.
-11. Evaluation: a branch in `buildAnswerEvaluationPrompt`; results UI in `InterviewResultsClient`.
+10. Assessment: the answer input in `AssessmentQuestion`, and `answerToText` if the stored answer is not plain text.
+11. Evaluation: a branch in `buildAnswerEvaluationPrompt`; results UI in `AssessmentResultsClient`.
 12. Tests for the schemas, mocks and prompt helpers.
 
 ## Common mistakes

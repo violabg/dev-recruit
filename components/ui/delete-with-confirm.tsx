@@ -84,7 +84,7 @@ export function DeleteWithConfirm({
             }
             onSuccess?.();
           } else {
-            toast.error(errorMessage(result.error, fallbackMessage));
+            toast.error(result.error || fallbackMessage);
           }
         } else {
           // Assume success if no error was thrown and no result object

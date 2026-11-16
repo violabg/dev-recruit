@@ -9,7 +9,21 @@ vi.mock("@/lib/services/logger", () => ({
   aiLogger: { warn: vi.fn(), error: vi.fn() },
 }));
 
+// Stage rules have their own tests: here the stage never changes
+vi.mock("@/lib/services/applications", () => ({
+  advanceApplicationStage: vi.fn(async (_client, applicationId: string) => ({
+    applicationId,
+    candidateId: "cand1",
+    positionId: "pos1",
+    previousStage: "screening",
+    stage: "screening",
+    changed: false,
+    cancelledAssessmentIds: [],
+  })),
+}));
+
 import prisma from "@/lib/prisma";
+import { advanceApplicationStage } from "@/lib/services/applications";
 import { MAX_RESUME_CHARS } from "@/lib/services/ai/evaluation-prompts";
 import {
   cleanJsonResponse,
@@ -42,6 +56,9 @@ describe("prepareResumeEvaluation", () => {
     vi.clearAllMocks();
     vi.mocked(prisma.candidate.findUnique).mockResolvedValue(candidate as any);
     vi.mocked(prisma.position.findUnique).mockResolvedValue(position as any);
+    vi.mocked(prisma.application.findUnique).mockResolvedValue({
+      id: "app1",
+    } as any);
     vi.mocked(prisma.evaluation.findFirst).mockResolvedValue(null);
     vi.mocked(extractText).mockResolvedValue({ text: RESUME } as any);
     vi.stubGlobal(
@@ -64,6 +81,41 @@ describe("prepareResumeEvaluation", () => {
     expect(prepared.prompt).toContain("Mario Rossi");
     expect(prepared.prompt).toContain(RESUME);
     expect(prepared.prompt).toContain("Frontend Developer");
+  });
+
+  it("returns the application id of candidate + position", async () => {
+    const prepared = await prepareResumeEvaluation("cand1", "pos1");
+
+    expect(prepared.applicationId).toBe("app1");
+    expect(prisma.application.findUnique).toHaveBeenCalledWith({
+      where: {
+        candidateId_positionId: { candidateId: "cand1", positionId: "pos1" },
+      },
+      select: { id: true },
+    });
+  });
+
+  it("refuses a position the candidate did not apply to", async () => {
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce(null);
+
+    const error = await prepareResumeEvaluation("cand1", "pos1").catch(
+      (e) => e,
+    );
+
+    expect(error).toBeInstanceOf(ResumeEvaluationError);
+    expect(error.status).toBe(404);
+    expect(error.message).toBe(
+      "Il candidato non è candidato a questa posizione",
+    );
+  });
+
+  it("looks for an existing resume evaluation only (assessmentId null)", async () => {
+    await prepareResumeEvaluation("cand1", "pos1");
+
+    expect(prisma.evaluation.findFirst).toHaveBeenCalledWith({
+      where: { candidateId: "cand1", positionId: "pos1", assessmentId: null },
+      select: { id: true },
+    });
   });
 
   it("cuts very long resumes at the single shared limit", async () => {
@@ -134,6 +186,7 @@ describe("saveResumeEvaluation", () => {
   const params = {
     candidateId: "cand1",
     positionId: "pos1",
+    applicationId: "app1",
     title: "Frontend Developer",
     userId: "user1",
   };
@@ -162,6 +215,27 @@ describe("saveResumeEvaluation", () => {
         createdBy: "user1",
       },
       select: { id: true },
+    });
+  });
+
+  it("stores and advances to screening in one transaction", async () => {
+    const result = await saveResumeEvaluation({
+      ...params,
+      responseText: JSON.stringify(response),
+    });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(advanceApplicationStage).toHaveBeenCalledWith(
+      prisma,
+      "app1",
+      "cv_evaluated",
+    );
+    expect(result).toEqual({
+      id: "e1",
+      stageChange: expect.objectContaining({
+        applicationId: "app1",
+        changed: false,
+      }),
     });
   });
 

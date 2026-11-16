@@ -30,7 +30,7 @@ const formWithOversizedAudio = () => {
   return formData;
 };
 
-const activeInterview = {
+const activeAssessment = {
   status: "in_progress",
   startedAt: new Date(),
   quiz: { timeLimit: 30 },
@@ -39,19 +39,19 @@ const activeInterview = {
 describe("transcribeAudioAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.interview.findUnique).mockResolvedValue(
-      activeInterview as any,
+    vi.mocked(prisma.assessment.findUnique).mockResolvedValue(
+      activeAssessment as any,
     );
     vi.mocked(transcribeAudio).mockResolvedValue("Testo trascritto");
   });
 
-  it("transcribes audio for an active interview", async () => {
+  it("transcribes audio for an active assessment", async () => {
     const result = await transcribeAudioAction(
       form({ token: "tok", audio: audio() }),
     );
 
     expect(result).toEqual({ success: true, text: "Testo trascritto" });
-    expect(prisma.interview.findUnique).toHaveBeenCalledWith(
+    expect(prisma.assessment.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { token: "tok" } }),
     );
     expect(transcribeAudio).toHaveBeenCalledWith(
@@ -59,18 +59,18 @@ describe("transcribeAudioAction", () => {
     );
   });
 
-  it("refuses a request without an interview token", async () => {
+  it("refuses a request without an assessment token", async () => {
     const result = await transcribeAudioAction(form({ audio: audio() }));
 
     expect(result).toEqual({
       success: false,
-      error: "Il token del colloquio è obbligatorio",
+      error: "Il token del test è obbligatorio",
     });
     expect(transcribeAudio).not.toHaveBeenCalled();
   });
 
   it("refuses an unknown token", async () => {
-    vi.mocked(prisma.interview.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.assessment.findUnique).mockResolvedValueOnce(null);
 
     const result = await transcribeAudioAction(
       form({ token: "nope", audio: audio() }),
@@ -78,7 +78,7 @@ describe("transcribeAudioAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Colloquio non valido",
+      error: "Test non valido",
     });
     expect(transcribeAudio).not.toHaveBeenCalled();
   });
@@ -87,9 +87,9 @@ describe("transcribeAudioAction", () => {
     ["completed", new Date()],
     ["cancelled", new Date()],
     ["in_progress", new Date(Date.now() - 3 * 60 * 60 * 1000)],
-  ])("refuses a %s interview that no longer accepts answers", async (status, startedAt) => {
-    vi.mocked(prisma.interview.findUnique).mockResolvedValueOnce({
-      ...activeInterview,
+  ])("refuses a %s assessment that no longer accepts answers", async (status, startedAt) => {
+    vi.mocked(prisma.assessment.findUnique).mockResolvedValueOnce({
+      ...activeAssessment,
       status,
       startedAt,
     } as any);
@@ -100,7 +100,7 @@ describe("transcribeAudioAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Il colloquio non è più attivo",
+      error: "Il test non è più attivo",
     });
     expect(transcribeAudio).not.toHaveBeenCalled();
   });

@@ -1,4 +1,6 @@
 "use client";
+import { ApplicationStageBadge } from "@/components/applications/application-stage-badge";
+import { Badge } from "@/components/ui/badge";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -11,12 +13,12 @@ import {
 import { TableRowLink } from "@/components/ui/table-row-link";
 import { deleteCandidateAction } from "@/lib/actions/candidates";
 import { CandidateWithRelations } from "@/lib/data/candidates";
+import { furthestApplication } from "@/lib/utils/application-stage";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ArrowUpDown, FileText, Link2 } from "lucide-react";
 import Link from "next/link";
 import { EntityActionsMenu } from "../ui/entity-actions-menu";
-import { CandidateStatusBadge } from "./candidate-status-badge";
 
 // Props for the candidate table
 interface CandidateTableProps {
@@ -43,35 +45,41 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
             </TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Posizione</TableHead>
-            <TableHead>Stato</TableHead>
+            <TableHead>Fase</TableHead>
             <TableHead>Data</TableHead>
             <TableHead className="text-right">Azioni</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {candidates.map((candidate) => (
+          {candidates.map((candidate) => {
+            const activeApplications = candidate.applications.filter(
+              (application) => application.stage !== "withdrawn",
+            );
+            const furthest = furthestApplication(candidate.applications);
+
+            return (
             <TableRow key={candidate.id} className="group">
               <TableCell className="relative font-medium">
                 <TableRowLink href={`/dashboard/candidates/${candidate.id}`} />
-                {getFullName(candidate.firstName, candidate.lastName)}
+                <div className="flex flex-wrap items-center gap-2">
+                  {getFullName(candidate.firstName, candidate.lastName)}
+                  {candidate.doNotContact && (
+                    <Badge className="bg-destructive/10 text-destructive">
+                      Non ricontattare
+                    </Badge>
+                  )}
+                </div>
               </TableCell>
               <TableCell>{candidate.email}</TableCell>
               <TableCell>
-                {candidate.positions && candidate.positions.length > 0 ? (
+                {activeApplications.length > 0 ? (
                   <div className="flex flex-col gap-1">
-                    {candidate.positions.map((cp) => (
-                      <div key={cp.id} className="flex flex-col">
-                        <div className="flex items-center gap-1">
-                          <span>{cp.position.title}</span>
-                          {cp.isPrimary && (
-                            <span className="bg-primary/10 px-1.5 py-0.5 rounded text-primary text-xs">
-                              Primaria
-                            </span>
-                          )}
-                        </div>
-                        {cp.position.experienceLevel && (
+                    {activeApplications.map((application) => (
+                      <div key={application.id} className="flex flex-col">
+                        <span>{application.position.title}</span>
+                        {application.position.experienceLevel && (
                           <span className="text-muted-foreground text-xs">
-                            {cp.position.experienceLevel}
+                            {application.position.experienceLevel}
                           </span>
                         )}
                       </div>
@@ -84,7 +92,11 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                 )}
               </TableCell>
               <TableCell>
-                <CandidateStatusBadge status={candidate.status} />
+                {furthest ? (
+                  <ApplicationStageBadge stage={furthest.stage} />
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
               </TableCell>
               <TableCell>
                 {candidate.createdAt &&
@@ -111,11 +123,11 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                     <Link2 className="mr-1 size-4" />
                     Associa quiz
                   </DropdownMenuItem>
-                  {candidate.interviews && candidate.interviews.length > 0 && (
+                  {candidate.assessments && candidate.assessments.length > 0 && (
                     <DropdownMenuItem
                       render={
                         <Link
-                          href={`/dashboard/interviews/${candidate.interviews[0].id}`}
+                          href={`/dashboard/assessments/${candidate.assessments[0].id}`}
                         />
                       }
                     >
@@ -126,7 +138,8 @@ export function CandidateTable({ candidates }: CandidateTableProps) {
                 </EntityActionsMenu>
               </TableCell>
             </TableRow>
-          ))}
+            );
+          })}
         </TableBody>
       </Table>
     </div>

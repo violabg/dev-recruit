@@ -43,7 +43,7 @@ export function InviteCandidatesSkeleton() {
             <CardHeader>
               <CardTitle>Assegna il quiz ai candidati</CardTitle>
               <CardDescription>
-                Seleziona i candidati e crea i link di colloquio per questo quiz
+                Seleziona i candidati e crea i link del test per questo quiz
               </CardDescription>
             </CardHeader>
             <CardContent>

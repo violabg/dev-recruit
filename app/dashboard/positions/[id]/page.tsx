@@ -1,14 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAllPositions } from "@/lib/data/positions";
 import { Suspense } from "react";
-import Candidates from "./components/candidates";
 import Quizzes from "./components/quizzes";
+import Selection from "./components/selection";
 
 import {
-  PositionCandidatesSkeleton,
   PositionDetailsSkeleton,
   PositionHeaderSkeleton,
   PositionQuizzesSkeleton,
+  PositionSelectionSkeleton,
 } from "./fallbacks";
 import { PositionDetailsContent } from "./position-details-content";
 import { PositionHeader } from "./position-header";
@@ -36,23 +36,22 @@ export default async function PositionDetailPage({
       <Tabs defaultValue="details">
         <TabsList variant="line">
           <TabsTrigger value="details">Dettagli</TabsTrigger>
+          <TabsTrigger value="selection">Selezione</TabsTrigger>
           <TabsTrigger value="quizzes">Quiz</TabsTrigger>
-          <TabsTrigger value="candidates">Candidati</TabsTrigger>
         </TabsList>
         <TabsContent value="details" className="flex flex-col gap-4 pt-4">
           <Suspense fallback={<PositionDetailsSkeleton />}>
             <PositionDetailsContent params={params} />
           </Suspense>
         </TabsContent>
+        <TabsContent value="selection" className="flex flex-col gap-4 pt-4">
+          <Suspense fallback={<PositionSelectionSkeleton />}>
+            <Selection params={params} />
+          </Suspense>
+        </TabsContent>
         <TabsContent value="quizzes" className="flex flex-col gap-4 pt-4">
           <Suspense fallback={<PositionQuizzesSkeleton />}>
             <Quizzes params={params} />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="candidates" className="flex flex-col gap-4 pt-4">
-          <Suspense fallback={<PositionCandidatesSkeleton />}>
-            <Candidates params={params} />
           </Suspense>
         </TabsContent>
       </Tabs>

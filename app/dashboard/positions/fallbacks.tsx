@@ -18,6 +18,7 @@ export function PositionsSkeleton() {
         rows={5}
         columns={[
           { header: "Titolo" },
+          { header: "Stato", cell: "badge" },
           { header: "Livello", cell: "badge" },
           { header: "Competenze", cell: "badge" },
           { header: "Data Creazione", cell: "muted" },

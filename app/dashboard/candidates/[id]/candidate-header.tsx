@@ -1,11 +1,18 @@
 import { cn } from "cn";
+import { ApplicationStageBadge } from "@/components/applications/application-stage-badge";
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { deleteCandidateAction } from "@/lib/actions/candidates";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
-import { ClipboardCheck, Edit, LayoutGrid, Link2 } from "lucide-react";
+import { furthestApplication } from "@/lib/utils/application-stage";
+import { ClipboardCheck, Edit, Link2 } from "lucide-react";
 import Link from "next/link";
 
 type Props = {
@@ -31,6 +38,7 @@ export async function CandidateHeader({ params }: Props) {
   }
 
   const fullName = `${candidate.firstName} ${candidate.lastName}`.trim();
+  const furthest = furthestApplication(candidate.applications);
 
   return (
     <PageHeader
@@ -38,12 +46,22 @@ export async function CandidateHeader({ params }: Props) {
       title={fullName}
       info={
         <>
-          <Badge variant="outline">{candidate.status}</Badge>
-          {candidate.positions && candidate.positions.length > 0 && (
-            <Badge variant="secondary">
-              {candidate.positions[0]?.position?.title}
-            </Badge>
-          )}
+          {furthest && <ApplicationStageBadge stage={furthest.stage} />}
+          {candidate.doNotContact &&
+            (candidate.doNotContactNote ? (
+              <Tooltip>
+                <TooltipTrigger>
+                  <Badge className="bg-destructive/10 text-destructive">
+                    Non ricontattare
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>{candidate.doNotContactNote}</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Badge className="bg-destructive/10 text-destructive">
+                Non ricontattare
+              </Badge>
+            ))}
           <span className="text-muted-foreground text-sm">
             {candidate.email}
           </span>
@@ -64,15 +82,6 @@ export async function CandidateHeader({ params }: Props) {
           >
             <ClipboardCheck className="mr-1 size-4" />
             Valutazioni
-          </Link>
-          <Link
-            href={
-              `/dashboard/candidates/${candidate.id}/evaluation-dashboard` as any
-            }
-            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
-          >
-            <LayoutGrid className="mr-1 size-4" />
-            Dashboard valutazione
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/edit`}

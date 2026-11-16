@@ -16,7 +16,7 @@ export async function updateEvaluationNotesAction(id: string, notes: string) {
 
     const evaluation = await prisma.evaluation.findUnique({
       where: { id },
-      select: { id: true, interviewId: true, candidateId: true },
+      select: { id: true, assessmentId: true, candidateId: true },
     });
 
     if (!evaluation) {
@@ -27,7 +27,7 @@ export async function updateEvaluationNotesAction(id: string, notes: string) {
 
     invalidateEvaluationCache({
       evaluationId: id,
-      interviewId: evaluation.interviewId ?? undefined,
+      assessmentId: evaluation.assessmentId ?? undefined,
       candidateId: evaluation.candidateId ?? undefined,
     });
 
@@ -44,7 +44,7 @@ export async function updateHiringManagerNotesAction(input: unknown) {
 
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: data.evaluationId },
-      select: { id: true, interviewId: true, candidateId: true },
+      select: { id: true, assessmentId: true, candidateId: true },
     });
 
     if (!evaluation) {
@@ -66,7 +66,7 @@ export async function updateHiringManagerNotesAction(input: unknown) {
 
     invalidateEvaluationCache({
       evaluationId: updated.id,
-      interviewId: evaluation.interviewId ?? undefined,
+      assessmentId: evaluation.assessmentId ?? undefined,
       candidateId: evaluation.candidateId ?? undefined,
     });
 
@@ -82,7 +82,7 @@ export async function deleteEvaluationAction(id: string) {
 
     const evaluation = await prisma.evaluation.findUnique({
       where: { id },
-      select: { id: true, interviewId: true, candidateId: true },
+      select: { id: true, assessmentId: true, candidateId: true },
     });
 
     if (!evaluation) {
@@ -93,7 +93,7 @@ export async function deleteEvaluationAction(id: string) {
 
     invalidateEvaluationCache({
       evaluationId: id,
-      interviewId: evaluation.interviewId ?? undefined,
+      assessmentId: evaluation.assessmentId ?? undefined,
       candidateId: evaluation.candidateId ?? undefined,
     });
 

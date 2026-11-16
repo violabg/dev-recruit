@@ -1,6 +1,8 @@
 "use client";
 
+import { ApplicationStageBadge } from "@/components/applications/application-stage-badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +14,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
 import { deleteCandidateAction } from "@/lib/actions/candidates";
 import { CandidateWithRelations } from "@/lib/data/candidates";
+import { furthestApplication } from "@/lib/utils/application-stage";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import {
@@ -24,7 +27,6 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { CandidateStatusBadge } from "./candidate-status-badge";
 
 interface CandidateGridProps {
   candidates: CandidateWithRelations[];
@@ -46,7 +48,13 @@ function getInitials(firstName: string, lastName: string): string {
 export function CandidateGrid({ candidates }: CandidateGridProps) {
   return (
     <div className="gap-4 grid sm:grid-cols-2 lg:grid-cols-3">
-      {candidates.map((candidate) => (
+      {candidates.map((candidate) => {
+        const activeApplications = candidate.applications.filter(
+          (application) => application.stage !== "withdrawn",
+        );
+        const furthest = furthestApplication(candidate.applications);
+
+        return (
         <Card key={candidate.id} className="overflow-hidden">
           <CardHeader className="p-4">
             <div className="flex justify-between items-start">
@@ -57,8 +65,13 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold">
+                  <h3 className="flex flex-wrap items-center gap-2 font-semibold">
                     {getFullName(candidate.firstName, candidate.lastName)}
+                    {candidate.doNotContact && (
+                      <Badge className="bg-destructive/10 text-destructive">
+                        Non ricontattare
+                      </Badge>
+                    )}
                   </h3>
                   <div className="flex items-center text-muted-foreground text-sm">
                     <Mail className="mr-1 w-3 h-3" />
@@ -90,11 +103,11 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                   <Link2 className="mr-1 size-4" />
                   Associa quiz
                 </DropdownMenuItem>
-                {candidate.interviews && candidate.interviews.length > 0 && (
+                {candidate.assessments && candidate.assessments.length > 0 && (
                   <DropdownMenuItem
                     render={
                       <Link
-                        href={`/dashboard/interviews/${candidate.interviews[0].id}`}
+                        href={`/dashboard/assessments/${candidate.assessments[0].id}`}
                       />
                     }
                   >
@@ -109,22 +122,15 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             <div className="flex flex-col gap-2">
               <div className="flex items-center text-sm">
                 <Briefcase className="mr-2 size-4 text-muted-foreground" />
-                {candidate.positions && candidate.positions.length > 0 ? (
+                {activeApplications.length > 0 ? (
                   <div className="flex flex-col gap-1">
-                    {candidate.positions.map((cp) => (
-                      <div key={cp.id}>
-                        <div className="flex items-center gap-1">
-                          <span>{cp.position.title}</span>
-                          {cp.isPrimary && (
-                            <span className="bg-primary/10 px-1.5 py-0.5 rounded text-primary text-xs">
-                              Primaria
-                            </span>
-                          )}
-                        </div>
-                        {cp.position.experienceLevel && (
+                    {activeApplications.map((application) => (
+                      <div key={application.id}>
+                        <span>{application.position.title}</span>
+                        {application.position.experienceLevel && (
                           <span className="text-muted-foreground text-xs">
                             {" "}
-                            • {cp.position.experienceLevel}
+                            • {application.position.experienceLevel}
                           </span>
                         )}
                       </div>
@@ -150,7 +156,11 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between items-center p-4 border-t">
-            <CandidateStatusBadge status={candidate.status} />
+            {furthest ? (
+              <ApplicationStageBadge stage={furthest.stage} />
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
             <Link
               href={`/dashboard/candidates/${candidate.id}`}
               className={buttonVariants({
@@ -163,7 +173,8 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
             </Link>
           </CardFooter>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }

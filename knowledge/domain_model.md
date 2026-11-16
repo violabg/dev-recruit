@@ -1,8 +1,8 @@
 ---
 title: "domain model"
 tier: "MustHave"
-keywords: ["domain model","entities","quiz","question","candidate","interview","evaluation","preset","business rules"]
-intent: "Always: entities, relations, cascades and business rules (quiz save path, candidate positions, interview lifecycle, evaluation kinds and scores, no ownership filtering, Italian)."
+keywords: ["domain model","entities","quiz","question","candidate","application","stage","assessment","position status","evaluation","preset","migration","business rules"]
+intent: "Always: entities, relations, cascades and business rules (quiz save path, applications and their stage, assessment lifecycle, evaluation kinds and scores, no ownership filtering, Italian)."
 editable: true
 ---
 # Domain model and business rules
@@ -13,14 +13,14 @@ Prisma Client API semantics and migration behaviour are in the official docs (co
 
 | Entity | Purpose | Key fields / constraints | Deleting it removes |
 |---|---|---|---|
-| `Position` | A job opening | `title`, `description?`, `experienceLevel` and `contractType` (free strings from reference data), `skills[]`, `softSkills[]` | its quizzes (and their interviews and interview evaluations), its `CandidatePosition` links, its behavioral rubrics. Resume evaluations keep the row with `positionId` set to null |
-| `Quiz` | Reusable ordered set of questions for exactly one Position | `positionId` (required), `timeLimit?` in minutes (5–120, null = no limit) | its `QuizQuestion` links and its interviews (and their evaluations). The `Question` rows are NOT deleted |
+| `Position` | A job opening | `title`, `description?`, `experienceLevel` and `contractType` (free strings from reference data), `skills[]`, `softSkills[]`, `status` (`draft`, `open`, `closed`) | Allowed only when the position has no application. Then: its quizzes, its behavioral rubrics. Resume evaluations keep the row with `positionId` set to null |
+| `Quiz` | Reusable ordered set of questions for exactly one Position | `positionId` (required), `timeLimit?` in minutes (5–120, null = no limit) | its `QuizQuestion` links and its assessments (and their evaluations). The `Question` rows are NOT deleted |
 | `Question` | Reusable question row | `type` (`QuestionType`), `question`, type-specific fields, `isFavorite` | its `QuizQuestion` links in every quiz |
 | `QuizQuestion` | Quiz ↔ Question link with `order` (0-based) | unique (`quizId`, `questionId`): a question appears at most once per quiz | — |
-| `Candidate` | A person applying; never signs in | `firstName`, `lastName`, `email`, `dateOfBirth?` (18+), `status`, `resumeUrl?`, `createdBy?` (null when self-applied) | its position links, interviews, evaluations, rubrics |
-| `CandidatePosition` | Candidate ↔ Position link | unique (`candidateId`, `positionId`), `isPrimary` | — |
-| `Interview` | One Candidate taking one Quiz | `token` (unique), `status` (`InterviewStatus`), `startedAt?`, `completedAt?`, `answers` (JSON keyed by Question id) | its evaluation |
-| `Evaluation` | AI assessment, two kinds (see Evaluations) | `interviewId?` (unique), `candidateId?`, `positionId?`, `fitScore`, `quizScore?`, hiring fields | — |
+| `Candidate` | A person applying; never signs in | `firstName`, `lastName`, `email` (unique, compared in lower case and without spaces), `dateOfBirth?` (18+), `resumeUrl?`, `doNotContact`, `doNotContactNote?`, `createdBy?` (null when self-applied) | its applications, assessments, evaluations, rubrics |
+| `Application` | A candidacy: one Candidate for one Position | unique (`candidateId`, `positionId`), `stage` (`ApplicationStage`), `stageChangedAt`, `ownerId?` (the recruiter in charge) | its assessments (and their evaluations). An application is deleted only when it holds no evidence: no assessment, evaluation or conversation |
+| `Assessment` | One Candidate taking one Quiz, inside one Application | `applicationId` (required), `token` (unique), `status` (`AssessmentStatus`), `startedAt?`, `completedAt?`, `answers` (JSON keyed by Question id) | its evaluation |
+| `Evaluation` | AI assessment, two kinds (see Evaluations) | `assessmentId?` (unique), `candidateId?`, `positionId?`, `fitScore`, `quizScore?`, hiring fields | — |
 | `BehavioralRubric` | Recruiter's manual soft-skill scores | unique (`candidateId`, `positionId`), four required scores 1–5, `leadershipScore?` | — |
 | `Preset` | Recipe for generating one AI question | unique `name`, `questionType`, tuning fields, `difficulty` 1–5 | — (no relations) |
 | `ReferenceData` | Pick-list values for forms and filters | unique (`category`, `label`), `isActive`, `order` | — (values are copied as strings, no FK) |
@@ -33,7 +33,8 @@ Every signed-in user sees and edits every entity. `createdBy` records the author
 
 - NEVER add `where: { createdBy: user.id }` or any per-user filter to a read or a mutation.
 - NEVER add role or permission checks. `requireUser()` only checks that a session exists.
-- Candidates are not users: they reach the public apply page and the interview page through public routes only.
+- `Application.ownerId` names the recruiter in charge. It may feed a view filter the user can switch off ("le mie"); it never limits what a user can open or edit.
+- Candidates are not users: they reach the public apply page and the assessment page through public routes only.
 
 ## Quiz and questions: one write path
 
@@ -57,56 +58,68 @@ for (const [order, question] of questions.entries()) {
 
 `generateNewQuizAction` and `generateNewQuestionAction` only return questions. The editor shows them as unsaved changes; nothing is stored until the user presses Save, which calls `upsertQuizAction`. NEVER add Prisma writes or cache invalidation to generation actions.
 
-## Candidates and positions
+## Candidates and applications
 
 - A candidate has 1 to 10 positions; every id MUST exist, otherwise `UserError("Una o più posizioni selezionate non sono valide")`.
-- The first id in `positionIds` is the primary position (`isPrimary: index === 0`). Reads order links by `isPrimary desc`.
-- An update that sends `positionIds` replaces all links (`deleteMany: {}` + `create`). Removing a position from a candidate also deletes that candidate's non-completed interviews on quizzes of the removed position.
-- Candidate status values: `pending` (default, also for public applications), `contacted`, `interviewing`, `hired`, `rejected`. Only the recruiter changes it; no flow changes it automatically.
-- A quiz can be assigned only to candidates linked to the quiz's position.
+- The candidate holds no state of its own: no `Candidate.status`, no candidate status badge. A candidate's situation is the stage of their application, and lists show the stage of their furthest application.
+- No position is primary. There is no `isPrimary` flag and no "Primaria" badge, and no read orders applications by a primary flag.
+- An update that sends `positionIds` is a diff, never a replace-all:
+  - an id that is new gets an `Application` in stage `applied`;
+  - an id that is unchanged is left untouched, with everything already recorded on it;
+  - an id that disappears moves its `Application` to `withdrawn` and keeps every assessment, evaluation and note already recorded; it is deleted only when it holds no evidence. The non-completed assessments of a withdrawn application are set to `cancelled`, never deleted.
+- Stages (`ApplicationStage`): `applied`, `screening`, `assessment`, `interview`, `decision`, `offer`, `hired`, `rejected`, `withdrawn`.
+- The stage lives on the `Application`. An action that reaches a later step advances it and updates `stageChangedAt`; automation never moves a stage backwards. The recruiter can still move it by hand in either direction, from any stage, and can reopen a `rejected` or `withdrawn` application.
+- Automatic advances: a stored resume evaluation moves the application to `screening`; creating an assessment moves it to `assessment`. Both only when the application is in an earlier stage.
+- A quiz can be assigned only to candidates with an application for the quiz's position; the assessment is created on that application.
+- The public application matches on the normalised email (lower case, no surrounding spaces). An email that already exists attaches the new application to that existing candidate and refreshes the CV; a candidate already applied to that position gets a confirmation and nothing is created. The candidate-facing response is identical in every case, so it never reveals whether the email already exists. `Candidate.email` is unique.
+- `doNotContact` (with `doNotContactNote`) is the only state kept on the candidate: a personal-record flag, unrelated to any stage.
+
+## Position lifecycle
+
+- `Position.status`: `draft` (being set up), `open`, `closed`.
+- Only `open` positions appear in the public apply form and accept a public application. A `closed` position keeps its applications and everything recorded on them.
+- A position that has at least one application cannot be deleted: the action fails with a `UserError`. Close it instead.
 
 ```ts
-positions: {
-  create: payload.positionIds.map((positionId, index) => ({
-    positionId,
-    isPrimary: index === 0,
-  })),
+// Only positions that are new create an Application; the ones that stay are untouched
+applications: {
+  create: newPositionIds.map((positionId) => ({ positionId })),
 },
 ```
 
-## Interviews
+## Assessments
 
-- The interview `token` is the candidate's only credential. Candidate-facing actions look the interview up by token and never call `requireUser()`.
-- One interview per (candidate, quiz): `createPendingInterview` skips an existing pair (application check, no DB constraint). It is the only place that creates interviews.
-- Stored status transitions: `pending` → `in_progress` (start, sets `startedAt`) → `completed` (sets `completedAt`, only through `closeInterview`).
-- `expired` is a derived state, never stored. An interview that runs out of time ends as `completed` and the answers already given count.
-- NEVER compute expiry by hand. Use the shared rules from the interview utils: `interviewState(interview, now)` (`pending | in_progress | expired | completed | cancelled`), `acceptsAnswers(interview, now)` (includes a 60 s grace, `EXPIRY_GRACE_SECONDS`), `getRemainingSeconds(startedAt, timeLimit, now)`.
+- The assessment `token` is the candidate's only credential. Candidate-facing actions look the assessment up by token and never call `requireUser()`.
+- One assessment per (candidate, quiz): `createPendingAssessment` skips an existing pair (application check, no DB constraint). It is the only place that creates assessments.
+- Stored status transitions: `pending` → `in_progress` (start, sets `startedAt`) → `completed` (sets `completedAt`, only through `closeAssessment`).
+- `expired` is a derived state, never stored. An assessment that runs out of time ends as `completed` and the answers already given count.
+- NEVER compute expiry by hand. Use the shared rules from the assessment utils: `assessmentState(assessment, now)` (`pending | in_progress | expired | completed | cancelled`), `acceptsAnswers(assessment, now)` (includes a 60 s grace, `EXPIRY_GRACE_SECONDS`), `getRemainingSeconds(startedAt, timeLimit, now)`.
 - Answers are stored by Question id: multiple choice = selected option index, code snippet = `{ code }`, open question and behavioral scenario = text.
 
 ```ts
-const state = interviewState(interview);
+const state = assessmentState(assessment);
 if (state === "completed" || state === "cancelled") {
-  throw new UserError("Il colloquio è già concluso");
+  throw new UserError("Il test è già concluso");
 }
-if (!acceptsAnswers(interview)) {
-  await closeInterview(interview.id); // ends as completed, answers count
+if (!acceptsAnswers(assessment)) {
+  await closeAssessment(assessment.id); // ends as completed, answers count
   throw new UserError("Il tempo a disposizione è scaduto");
 }
 ```
 
 ## Evaluations (polymorphic)
 
-| | Interview evaluation | Resume evaluation |
+| | Assessment evaluation | Resume evaluation |
 |---|---|---|
-| Ids set | `interviewId` only (`candidateId`, `positionId` null) | `candidateId` + `positionId` (`interviewId` null) |
-| Uniqueness | one per interview (unique `interviewId` + app check) | one per candidate + position (app check, HTTP 409) |
+| Ids set | `assessmentId` only (`candidateId`, `positionId` null) | `candidateId` + `positionId` (`assessmentId` null) |
+| Uniqueness | one per assessment (unique `assessmentId` + app check) | one per candidate + position (app check, HTTP 409) |
 | Scores | `quizScore` 0–100 and `fitScore` 0–10 | `fitScore` 0–10, no `quizScore` |
 | `title` | quiz title | position title |
 
 - Score scales: per-answer score 0–10 (not stored); `quizScore` = earned points over the evaluated questions, as a 0–100 percentage; the AI returns `fitScore` 0–100 and it is ALWAYS stored as `Math.round(fitScore / 10)`, i.e. 0–10, for both kinds.
-- To find a candidate's interview evaluations go through `interview.candidateId`; filtering `Evaluation.candidateId` returns resume evaluations only.
+- To find a candidate's assessment evaluations go through `assessment.candidateId`; filtering `Evaluation.candidateId` returns resume evaluations only.
 - `recommendation` is AI free text. `hireRecommendation` is the hiring manager's enum (`strong_yes`, `yes`, `maybe`, `no`, `strong_no`), saved with `interviewNotes`, `redFlags`, `standoutMoments`, `nextSteps` by `updateHiringManagerNotesAction`, which also sets `assessedBy`/`assessedAt`. `notes` is a separate free-text field ("Note manuali").
-- The evaluation dashboard score is computed, never stored: quiz (`quizScore / 10`, weight 0.5), rubric (average of the four required scores × 2, weight 0.3), `hireRecommendation` (10/8/6/4/2, weight 0.2), weighted over the parts present.
+- The evaluation dashboard belongs to one application: it reads the assessments, the rubric and the hiring decision of that application's candidate and position. Its score is computed, never stored: quiz (`quizScore / 10`, weight 0.5), rubric (average of the four required scores × 2, weight 0.3), `hireRecommendation` (10/8/6/4/2, weight 0.2), weighted over the parts present.
 
 ## Behavioral rubrics and presets
 
@@ -114,18 +127,32 @@ if (!acceptsAnswers(interview)) {
 - `Preset` has no relations. In the quiz editor the client spreads the preset's own fields as generation options; the server never loads a preset by id while generating. `questionType` accepts all four question types.
 - `seedDefaultPresetsAction` deletes ALL presets, including user-created ones, then recreates the defaults.
 
+## Schema changes
+
+- The schema is applied with Prisma Migrate. Every schema change is a versioned migration committed with the code that needs it.
+- NEVER apply the schema with `prisma db push` (the `db:push` script): it drops and recreates a renamed table instead of renaming it, so the rows the rename must keep are lost.
+- A rename is an `ALTER TABLE … RENAME` (table or column) written in the migration, never a drop and a create. When a change needs existing rows converted, the backfill is SQL in the same migration, placed before the removal of the columns it reads.
+- The same migration runs on development first and then on production: a development database is never copied over production.
+
 ## Language
 
 All user-facing text is Italian: UI labels, toasts, `UserError` messages, custom Zod messages, AI-generated content. Code identifiers and JSON field names stay in English.
+
+Recruiter-facing UI calls an `Assessment` **Test**. **Colloquio** names the live conversation and is never used for an `Assessment` or for a `Quiz`.
 
 ## Common mistakes
 
 - Writing `QuizQuestion` rows or creating quiz questions outside `syncQuizQuestions`, or outside the quiz-save transaction.
 - Sending the same `dbId` twice in one question array (violates the unique link).
 - Forgetting that editing a question with a `dbId` changes it in every quiz that links it.
-- Storing `expired` or `cancelled` when time runs out, or discarding the answers of an expired interview.
+- Storing `expired` or `cancelled` when time runs out, or discarding the answers of an expired assessment.
 - Storing the AI's 0–100 `fitScore` without dividing by 10.
-- Reading interview evaluations by `Evaluation.candidateId`.
-- Relying on a database constraint for "one interview per candidate + quiz" or "one resume evaluation per candidate + position": both are application checks.
+- Reading assessment evaluations by `Evaluation.candidateId`.
+- Relying on a database constraint for "one assessment per candidate + quiz" or "one resume evaluation per candidate + position": both are application checks.
+- Treating an update that sends `positionIds` as a replace-all: it is a diff, and a removed position becomes `withdrawn` with its history.
+- Reintroducing `Candidate.status`, `isPrimary`, a primary-position ordering or a candidate status badge.
+- Deleting a position that has applications, or deleting the assessments of a withdrawn application instead of cancelling them.
+- Using `Application.ownerId` to restrict access.
 - Confusing `BehavioralRubric` with `behavioral_scenario` questions, or Preset with ReferenceData.
 - Filtering by `createdBy`, or calling `requireUser()` in a candidate-facing action.
+- Running `prisma db push`, or changing the schema without a versioned migration.

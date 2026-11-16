@@ -12,7 +12,7 @@ import {
   getOptimalModel,
   LLM_MODELS,
 } from "@/lib/services/ai/models";
-import { formatDate, getInitials, getStatusColor } from "@/lib/utils";
+import { formatDate, getInitials } from "@/lib/utils";
 import { describe, expect, it } from "vitest";
 
 describe("getInitials", () => {
@@ -60,32 +60,6 @@ describe("formatDate", () => {
   it("should handle ISO date strings", () => {
     const result = formatDate("2024-12-25T10:00:00.000Z");
     expect(result).toMatch(/25\/12\/2024/);
-  });
-});
-
-describe("getStatusColor", () => {
-  it("should return the warning tint for pending", () => {
-    expect(getStatusColor("pending")).toBe("bg-warning/10 text-warning");
-  });
-
-  it("should return the primary tint for contacted", () => {
-    expect(getStatusColor("contacted")).toBe("bg-primary/10 text-primary");
-  });
-
-  it("should return the primary tint for interviewing", () => {
-    expect(getStatusColor("interviewing")).toBe("bg-primary/10 text-primary");
-  });
-
-  it("should return the success tint for hired", () => {
-    expect(getStatusColor("hired")).toBe("bg-success/10 text-success");
-  });
-
-  it("should return the destructive tint for rejected", () => {
-    expect(getStatusColor("rejected")).toBe("bg-destructive/10 text-destructive");
-  });
-
-  it("should return the muted tint for an unknown status", () => {
-    expect(getStatusColor("unknown")).toBe("bg-muted text-muted-foreground");
   });
 });
 

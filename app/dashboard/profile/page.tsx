@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProfile } from "@/lib/data/profile";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 /** Mirrors ProfileContent: static heading + AccountInfo card. */
@@ -68,6 +69,9 @@ function ProfileSkeleton() {
 }
 
 async function ProfileContent() {
+  // The session is read per request, after connection(), never while the
+  // route is prerendered
+  await connection();
   const { profile, user, error } = await getProfile();
 
   if (error || !user) {

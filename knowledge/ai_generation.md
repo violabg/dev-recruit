@@ -2,7 +2,7 @@
 title: "ai generation"
 tier: "PerContext"
 keywords: ["AI","generateStructured","LLM","Groq","prompt","evaluation","model","streaming","transcription"]
-intent: "When touching AI quiz/question generation, interview or resume evaluation, prompts, model selection, streaming routes or transcription."
+intent: "When touching AI quiz/question generation, assessment or resume evaluation, prompts, model selection, streaming routes or transcription."
 editable: true
 ---
 # AI generation and evaluation
@@ -44,7 +44,7 @@ const result = await generateStructured({
 | Use | temperature | seed |
 |---|---|---|
 | Quiz generation, question generation, position description | 0.7 | none |
-| Every evaluation (answer, overall interview, resume) | 0 | 42 |
+| Every evaluation (answer, overall assessment, resume) | 0 | 42 |
 
 `generateStructured` defaults to 0.7 when `temperature` is omitted: evaluation calls MUST pass `temperature: 0, seed: 42`.
 
@@ -66,9 +66,9 @@ Single question / preset generation:
 2. `generateNewQuestionAction(params)` → `aiQuizService.generateQuestion` → `generateStructured("question_generation", questionSchemas.flexible)` → strict conversion.
 3. The editor prepends the new question, or replaces a regenerated one keeping its `dbId`. Nothing is saved.
 
-Interview evaluation:
-1. Per answered question: `evaluateInterviewAnswerAction(interviewId, questionId)`. The server reads question and answer from the database (the client sends only ids) and scores 0–10. Multiple choice is scored by the AI, told server-side whether the chosen option is correct.
-2. `completeInterviewEvaluationAction({ interviewId, questionEvaluations })`: refuses a second evaluation and questions that were not answered, computes `quizScore`, generates the overall evaluation, stores one `Evaluation` (`fitScore / 10`), invalidates the evaluation cache.
+Assessment evaluation:
+1. Per answered question: `evaluateAssessmentAnswerAction(assessmentId, questionId)`. The server reads question and answer from the database (the client sends only ids) and scores 0–10. Multiple choice is scored by the AI, told server-side whether the chosen option is correct.
+2. `completeAssessmentEvaluationAction({ assessmentId, questionEvaluations })`: refuses a second evaluation and questions that were not answered, computes `quizScore`, generates the overall evaluation, stores one `Evaluation` (`fitScore / 10`), invalidates the evaluation cache.
 
 Resume evaluation (route handler, streamed):
 1. POST `{ candidateId, positionId }` → `requireUser()` → `prepareResumeEvaluation` (404 candidate/position missing, 400 no resume or unreadable PDF, 409 already evaluated) extracts the PDF text with `unpdf`.
@@ -76,7 +76,7 @@ Resume evaluation (route handler, streamed):
 
 Position description: POST to the generate-description route → `requireUser()` → `streamPositionDescription` (`simple_task`) → `toTextStreamResponse()`.
 
-Transcription: public `transcribeAudioAction(formData)` with the interview `token` and the audio blob; refused above `MAX_AUDIO_BYTES` (the provider's own limit) or when the interview no longer `acceptsAnswers()`. A provider failure returns the dedicated transcription message.
+Transcription: public `transcribeAudioAction(formData)` with the assessment `token` and the audio blob; refused above `MAX_AUDIO_BYTES` (the provider's own limit) or when the assessment no longer `acceptsAnswers()`. A provider failure returns the dedicated transcription message.
 
 ## Common mistakes
 

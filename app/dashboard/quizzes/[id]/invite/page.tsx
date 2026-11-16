@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { CandidateSelectionForm } from "@/components/recruiting/candidate-selection-form";
-import { InvitesList } from "@/components/recruiting/invites-list"; // Import AssignedInterview type
+import { InvitesList } from "@/components/recruiting/invites-list";
 import { buttonVariants } from "@/components/ui/button";
 
 import {
@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getQuizAssignmentData } from "@/lib/data/interviews";
+import { getQuizAssignmentData } from "@/lib/data/assessments";
 import { InviteCandidatesSkeleton } from "./fallbacks";
 
 export default async function InviteCandidatesPage({
@@ -53,7 +53,7 @@ async function InviteCandidatesContent({
     );
   }
 
-  const { quiz, position, assignedInterviews, unassignedCandidates } = data;
+  const { quiz, position, assignedAssessments, unassignedCandidates } = data;
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,7 +78,7 @@ async function InviteCandidatesContent({
       <Tabs defaultValue="candidates">
         <TabsList variant="line">
           <TabsTrigger value="candidates">Assegna ai candidati</TabsTrigger>
-          <TabsTrigger value="interviews">Colloqui creati</TabsTrigger>
+          <TabsTrigger value="assessments">Test creati</TabsTrigger>
         </TabsList>
 
         <TabsContent value="candidates" className="flex flex-col gap-4 pt-4">
@@ -86,7 +86,7 @@ async function InviteCandidatesContent({
             <CardHeader>
               <CardTitle>Assegna il quiz ai candidati</CardTitle>
               <CardDescription>
-                Seleziona i candidati e crea i link di colloquio per questo quiz
+                Seleziona i candidati e crea i link del test per questo quiz
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -98,16 +98,16 @@ async function InviteCandidatesContent({
           </Card>
         </TabsContent>
 
-        <TabsContent value="interviews" className="flex flex-col gap-4 pt-4">
+        <TabsContent value="assessments" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Colloqui creati</CardTitle>
+              <CardTitle>Test creati</CardTitle>
               <CardDescription>
-                Gestisci i colloqui creati per questo quiz
+                Gestisci i test creati per questo quiz
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <InvitesList assignedInterviews={assignedInterviews} />
+              <InvitesList assignedAssessments={assignedAssessments} />
             </CardContent>
           </Card>
         </TabsContent>

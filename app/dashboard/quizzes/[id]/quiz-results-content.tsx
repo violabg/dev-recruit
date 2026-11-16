@@ -2,8 +2,8 @@ import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 
-import { getInterviewStatePresentation } from "@/components/interviews/interview-status";
-import { getInterviewsByQuiz } from "@/lib/data/interviews";
+import { getAssessmentStatePresentation } from "@/components/assessments/assessment-status";
+import { getAssessmentsByQuiz } from "@/lib/data/assessments";
 import { formatDate } from "@/lib/utils";
 import { Eye, Link2 } from "lucide-react";
 import Link from "next/link";
@@ -12,16 +12,16 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-function InterviewStatusCell({ status }: { status: string }) {
-  const { label, badge } = getInterviewStatePresentation(status);
+function AssessmentStatusCell({ status }: { status: string }) {
+  const { label, badge } = getAssessmentStatePresentation(status);
   return <Badge className={badge}>{label}</Badge>;
 }
 
 export async function QuizResultsContent({ params }: Props) {
   const { id: quizId } = await params;
-  const interviews = await getInterviewsByQuiz(quizId);
+  const assessments = await getAssessmentsByQuiz(quizId);
 
-  if (interviews.length === 0) {
+  if (assessments.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
         <div className="text-center">
@@ -61,39 +61,41 @@ export async function QuizResultsContent({ params }: Props) {
             </tr>
           </thead>
           <tbody>
-            {interviews.map((interview) => (
+            {assessments.map((assessment) => (
               <tr
-                key={interview.id}
+                key={assessment.id}
                 className="hover:bg-muted/50 border-b transition-colors"
               >
                 <td className="p-2">
                   <Link
-                    href={`/dashboard/candidates/${interview.candidateId}`}
+                    href={`/dashboard/candidates/${assessment.candidateId}`}
                     className="text-primary hover:underline"
                   >
-                    {interview.candidateName}
+                    {assessment.candidateName}
                   </Link>
                 </td>
                 <td className="p-2 text-muted-foreground">
-                  {interview.candidateEmail}
+                  {assessment.candidateEmail}
                 </td>
                 <td className="p-2">
-                  <InterviewStatusCell status={interview.status} />
+                  <AssessmentStatusCell status={assessment.status} />
                 </td>
                 <td className="p-2 text-muted-foreground text-xs">
-                  {formatDate(interview.createdAt)}
+                  {formatDate(assessment.createdAt)}
                 </td>
                 <td className="p-2 text-muted-foreground text-xs">
-                  {interview.startedAt ? formatDate(interview.startedAt) : "—"}
+                  {assessment.startedAt
+                    ? formatDate(assessment.startedAt)
+                    : "—"}
                 </td>
                 <td className="p-2 text-muted-foreground text-xs">
-                  {interview.completedAt
-                    ? formatDate(interview.completedAt)
+                  {assessment.completedAt
+                    ? formatDate(assessment.completedAt)
                     : "—"}
                 </td>
                 <td className="p-2 text-center">
                   <Link
-                    href={`/dashboard/interviews/${interview.id}`}
+                    href={`/dashboard/assessments/${assessment.id}`}
                     className={buttonVariants({
                       variant: "ghost",
                       size: "icon",

@@ -92,10 +92,10 @@ export const baseSchemas = {
     },
   ),
 
-  interviewStatus: z.enum(
+  assessmentStatus: z.enum(
     ["pending", "in_progress", "completed", "cancelled"],
     {
-      error: () => "Stato del colloquio non valido",
+      error: () => "Stato del test non valido",
     },
   ),
 } as const;
@@ -147,4 +147,4 @@ export const formTransformers = {
 
 // Type exports for the base schemas
 export type QuestionType = z.infer<typeof baseSchemas.questionType>;
-export type InterviewStatus = z.infer<typeof baseSchemas.interviewStatus>;
+export type AssessmentStatus = z.infer<typeof baseSchemas.assessmentStatus>;

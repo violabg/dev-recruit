@@ -1,4 +1,5 @@
 "use client";
+import { APPLICATION_STAGE_PRESENTATION } from "@/components/applications/application-stage";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -18,6 +19,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState, useTransition } from "react";
+import { APPLICATION_STAGE_VALUES } from "@/lib/schemas";
 import { useDebouncedCallback } from "use-debounce";
 import { buttonVariants } from "../ui/button";
 
@@ -26,20 +28,19 @@ type SelectOption = {
   label: string;
 };
 
-const statusOptions: SelectOption[] = [
-  { value: "all", label: "Tutti gli stati" },
-  { value: "pending", label: "In attesa" },
-  { value: "contacted", label: "Contattato" },
-  { value: "interviewing", label: "In colloquio" },
-  { value: "hired", label: "Assunto" },
-  { value: "rejected", label: "Rifiutato" },
+// Candidates having at least one application in the stage
+const stageOptions: SelectOption[] = [
+  { value: "all", label: "Tutte le fasi" },
+  ...APPLICATION_STAGE_VALUES.map((stage) => ({
+    value: stage,
+    label: APPLICATION_STAGE_PRESENTATION[stage].label,
+  })),
 ];
 
 const sortOptions: SelectOption[] = [
   { value: "newest", label: "Più recenti" },
-  { value: "oldest", label: "Più vecchi" },
-  { value: "a-z", label: "A-Z" },
-  { value: "z-a", label: "Z-A" },
+  { value: "oldest", label: "Meno recenti" },
+  { value: "name", label: "Nome" },
 ];
 
 export const SearchAndFilterCandidates = ({
@@ -86,13 +87,13 @@ export const SearchAndFilterCandidates = ({
     });
   }, 800);
 
-  const handleStatus = (value: string | null) => {
+  const handleStage = (value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
     if (value && value !== "all") {
-      params.set("status", value);
+      params.set("stage", value);
     } else {
-      params.delete("status");
+      params.delete("stage");
     }
     startTransition(() => {
       const queryString = params.toString();
@@ -132,13 +133,13 @@ export const SearchAndFilterCandidates = ({
   };
 
   const currentSearch = searchParams.get("search") || "";
-  const currentStatus = searchParams.get("status") || "all";
+  const currentStage = searchParams.get("stage") || "all";
   const currentPosition = searchParams.get("position") || "all";
   const currentSort = searchParams.get("sort") || "newest";
 
   const hasActiveFilters =
     currentSearch ||
-    currentStatus !== "all" ||
+    currentStage !== "all" ||
     currentPosition !== "all" ||
     currentSort !== "newest";
 
@@ -166,10 +167,10 @@ export const SearchAndFilterCandidates = ({
           />
         </div>
         <Select
-          name="status"
-          items={statusOptions}
-          value={currentStatus}
-          onValueChange={handleStatus}
+          name="stage"
+          items={stageOptions}
+          value={currentStage}
+          onValueChange={handleStage}
           disabled={isPending}
         >
           <SelectTrigger className="w-auto @[800px]w-full">
@@ -177,7 +178,7 @@ export const SearchAndFilterCandidates = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {statusOptions.map((option) => (
+            {stageOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>

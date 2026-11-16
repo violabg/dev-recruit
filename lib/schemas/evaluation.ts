@@ -34,10 +34,10 @@ export const resumeEvaluationRequestSchema = z.object({
   positionId: baseSchemas.id,
 });
 
-// Input of completeInterviewEvaluationAction: per-question results keyed by
+// Input of completeAssessmentEvaluationAction: per-question results keyed by
 // question id
-export const interviewEvaluationInputSchema = z.object({
-  interviewId: baseSchemas.id,
+export const assessmentEvaluationInputSchema = z.object({
+  assessmentId: baseSchemas.id,
   questionEvaluations: z.record(
     z.string(),
     evaluationResultSchema.extend({ maxScore: z.number().optional() }),

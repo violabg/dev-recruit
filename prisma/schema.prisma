@@ -36,6 +36,8 @@ model User {
   evaluations Evaluation[] @relation("UserEvaluations")
   assessmentEvaluations Evaluation[] @relation("UserEvaluationAssessments")
   behavioralRubrics BehavioralRubric[] @relation("UserBehavioralRubrics")
+  ownedApplications   Application[] @relation("UserOwnedApplications")
+  decidedApplications Application[] @relation("UserDecidedApplications")
 
   isAnonymous Boolean?
 
@@ -112,62 +114,97 @@ model Profile {
   @@map("profiles")
 }
 
+enum PositionStatus {
+  draft
+  open
+  closed
+}
+
 model Position {
-  id              String   @id @default(cuid())
+  id              String         @id @default(cuid())
   title           String
   description     String?
   experienceLevel String
   skills          String[]
   softSkills      String[]
   contractType    String?
+  status          PositionStatus @default(draft)
   createdBy       String
-  createdAt       DateTime @default(now())
+  createdAt       DateTime       @default(now())
 
-  creator            User                @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
-  candidatePositions CandidatePosition[]
-  quizzes            Quiz[]
-  evaluations        Evaluation[]
-  behavioralRubrics  BehavioralRubric[]
+  creator           User               @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
+  applications      Application[]
+  quizzes           Quiz[]
+  evaluations       Evaluation[]
+  behavioralRubrics BehavioralRubric[]
 
+  @@index([status])
   @@map("positions")
 }
 
 model Candidate {
-  id          String    @id @default(cuid())
-  firstName   String
-  lastName    String
-  email       String
-  dateOfBirth DateTime?
-  status      String    @default("pending")
-  resumeUrl   String?
+  id               String    @id @default(cuid())
+  firstName        String
+  lastName         String
+  // Stored normalised: lower case, no surrounding spaces
+  email            String    @unique
+  dateOfBirth      DateTime?
+  resumeUrl        String?
+  doNotContact     Boolean   @default(false)
+  doNotContactNote String?
   // Null when the candidate applied through the public form
-  createdBy   String?
-  createdAt   DateTime  @default(now())
+  createdBy        String?
+  createdAt        DateTime  @default(now())
 
-  positions          CandidatePosition[]
-  creator            User?               @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
-  interviews         Interview[]
-  evaluations        Evaluation[]
-  behavioralRubrics  BehavioralRubric[]
+  applications      Application[]
+  creator           User?              @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
+  assessments       Assessment[]
+  evaluations       Evaluation[]
+  behavioralRubrics BehavioralRubric[]
 
   @@map("candidates")
 }
 
-// Join table for Candidate-Position many-to-many relationship
-model CandidatePosition {
-  id          String   @id @default(cuid())
-  candidateId String
-  positionId  String
-  isPrimary   Boolean  @default(false) // Flag to mark the primary position
-  createdAt   DateTime @default(now())
+enum ApplicationStage {
+  applied
+  screening
+  assessment
+  interview
+  decision
+  offer
+  hired
+  rejected
+  withdrawn
+}
 
-  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  position  Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+// A candidacy: one Candidate for one Position
+model Application {
+  id                String           @id @default(cuid())
+  candidateId       String
+  positionId        String
+  stage             ApplicationStage @default(applied)
+  stageChangedAt    DateTime         @default(now())
+  // The recruiter in charge; never restricts access
+  ownerId           String?
+  decision          String?
+  decisionRationale String?
+  decidedBy         String?
+  decidedAt         DateTime?
+  decisionWeights   Json?
+  createdAt         DateTime         @default(now())
+
+  candidate   Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  position    Position     @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  owner       User?        @relation("UserOwnedApplications", fields: [ownerId], references: [id], onDelete: SetNull)
+  decider     User?        @relation("UserDecidedApplications", fields: [decidedBy], references: [id], onDelete: SetNull)
+  assessments Assessment[]
 
   @@unique([candidateId, positionId])
   @@index([candidateId])
   @@index([positionId])
-  @@map("candidate_positions")
+  @@index([stage])
+  @@index([ownerId])
+  @@map("applications")
 }
 
 model Quiz {
@@ -180,31 +217,35 @@ model Quiz {
 
   position      Position       @relation(fields: [positionId], references: [id], onDelete: Cascade)
   creator       User           @relation("UserQuizzes", fields: [createdBy], references: [id], onDelete: Cascade)
-  interviews    Interview[]
+  assessments   Assessment[]
   quizQuestions QuizQuestion[] // New: linked reusable questions
 
   @@map("quizzes")
 }
 
-model Interview {
-  id          String          @id @default(cuid())
-  candidateId String
-  quizId      String
-  status      InterviewStatus @default(pending)
-  startedAt   DateTime?
-  completedAt DateTime?
-  answers     Json?
-  token       String          @unique
-  createdAt   DateTime        @default(now())
+// A quiz sent to a candidate (the test)
+model Assessment {
+  id            String           @id @default(cuid())
+  applicationId String
+  candidateId   String
+  quizId        String
+  status        AssessmentStatus @default(pending)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  answers       Json?
+  token         String           @unique
+  createdAt     DateTime         @default(now())
 
-  candidate  Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  quiz       Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  evaluation Evaluation?
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidate   Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  quiz        Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  evaluation  Evaluation?
 
-  @@map("interviews")
+  @@index([applicationId])
+  @@map("assessments")
 }
 
-enum InterviewStatus {
+enum AssessmentStatus {
   pending
   in_progress
   completed
@@ -267,13 +308,13 @@ enum QuestionType {
   behavioral_scenario
 }
 
-// AI-generated evaluations for interviews (quiz-based) and candidates (resume-based)
+// AI-generated evaluations for assessments (quiz-based) and candidates (resume-based)
 model Evaluation {
   id    String @id @default(cuid())
-  title String // Quiz name for interview eval, Position name for candidate eval
+  title String // Quiz name for assessment eval, Position name for candidate eval
 
-  // Polymorphic: one of interviewId or candidateId will be set
-  interviewId String?    @unique // 1:1 with interview
+  // Polymorphic: one of assessmentId or candidateId will be set
+  assessmentId String?    @unique // 1:1 with assessment
   candidateId String?    // Many evaluations per candidate (different positions)
   positionId  String?    // Required for candidate evaluations to track which position
 
@@ -283,7 +324,7 @@ model Evaluation {
   weaknesses     String[] @default([])
   recommendation String?
   fitScore       Int?     // 0-10 scale (AI's candidate fit assessment)
-  quizScore      Int?     // 0-100 percentage score from quiz answers (interview evals only)
+  quizScore      Int?     // 0-100 percentage score from quiz answers (assessment evals only)
 
   // Hiring manager notes and decision
   interviewNotes    String?
@@ -303,11 +344,11 @@ model Evaluation {
   updatedAt DateTime @updatedAt
 
   // Relations
-  interview Interview? @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-  candidate Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  position  Position?  @relation(fields: [positionId], references: [id], onDelete: SetNull)
-  creator   User       @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
-  assessor  User?      @relation("UserEvaluationAssessments", fields: [assessedBy], references: [id], onDelete: SetNull)
+  assessment Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  candidate  Candidate?  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  position   Position?   @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  creator    User        @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
+  assessor   User?       @relation("UserEvaluationAssessments", fields: [assessedBy], references: [id], onDelete: SetNull)
 
   @@index([candidateId])
   @@index([positionId])

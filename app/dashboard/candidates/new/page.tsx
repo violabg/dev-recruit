@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getPositionsForSelect } from "@/lib/data/positions";
+import { getOpenPositionsForSelect } from "@/lib/data/positions";
 import { Suspense } from "react";
 import { CandidateFormSkeleton } from "./fallbacks";
 
@@ -28,7 +28,8 @@ async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
   const params = await searchParams;
   const positionId = params.positionId;
 
-  const positions = await getPositionsForSelect();
+  // A new candidate can apply only to open positions
+  const positions = await getOpenPositionsForSelect();
 
   // Validate that the positionId exists if provided
   const validPositionId =

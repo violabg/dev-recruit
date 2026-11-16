@@ -7,7 +7,7 @@ import {
 // Mock dependencies
 vi.mock("../../../lib/prisma", () => ({
   default: {
-    interview: {
+    assessment: {
       findUnique: vi.fn(),
     },
     candidate: {
@@ -55,7 +55,7 @@ describe("evaluation-entity actions", () => {
 
       const evaluation = {
         id: "eval-123",
-        interviewId: "interview-123",
+        assessmentId: "assessment-123",
         candidateId: null,
       };
 
@@ -94,7 +94,7 @@ describe("evaluation-entity actions", () => {
 
       const evaluation = {
         id: "eval-123",
-        interviewId: "interview-123",
+        assessmentId: "assessment-123",
         candidateId: "candidate-123",
       };
 
@@ -105,7 +105,7 @@ describe("evaluation-entity actions", () => {
 
       expect(invalidateEvaluationCache).toHaveBeenCalledWith({
         evaluationId: "eval-123",
-        interviewId: "interview-123",
+        assessmentId: "assessment-123",
         candidateId: "candidate-123",
       });
     });
@@ -119,7 +119,7 @@ describe("evaluation-entity actions", () => {
 
       const evaluation = {
         id: "eval-123",
-        interviewId: "interview-123",
+        assessmentId: "assessment-123",
         candidateId: null,
       };
 
@@ -152,7 +152,7 @@ describe("evaluation-entity actions", () => {
 
       const evaluation = {
         id: "eval-123",
-        interviewId: null,
+        assessmentId: null,
         candidateId: "candidate-123",
       };
 
@@ -163,7 +163,7 @@ describe("evaluation-entity actions", () => {
 
       expect(invalidateEvaluationCache).toHaveBeenCalledWith({
         evaluationId: "eval-123",
-        interviewId: undefined,
+        assessmentId: undefined,
         candidateId: "candidate-123",
       });
     });

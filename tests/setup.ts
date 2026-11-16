@@ -72,12 +72,22 @@ const mockPrisma = {
     delete: vi.fn(),
     count: vi.fn(),
   },
-  interview: {
+  application: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+  assessment: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
   },

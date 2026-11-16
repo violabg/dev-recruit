@@ -8,7 +8,10 @@ import {
   ResumeEvaluationError,
   saveResumeEvaluation,
 } from "@/lib/services/resume-evaluation";
-import { invalidateEvaluationCacheInRouteHandler } from "@/lib/utils/cache-utils";
+import {
+  invalidateCandidateCacheInRouteHandler,
+  invalidateEvaluationCacheInRouteHandler,
+} from "@/lib/utils/cache-utils";
 import { streamText } from "ai";
 
 /**
@@ -58,17 +61,24 @@ export async function POST(request: Request) {
 
           // After streaming completes, parse and save to database BEFORE closing
           try {
+            // Stores the evaluation and advances the application to screening
             await saveResumeEvaluation({
               candidateId: prepared.candidateId,
               positionId: prepared.positionId,
+              applicationId: prepared.applicationId,
               title: prepared.title,
               responseText: fullText,
               userId: user.id,
             });
 
-            // Invalidate cache to show the new evaluation
+            // Invalidate cache to show the new evaluation and the new stage
             invalidateEvaluationCacheInRouteHandler({
               candidateId: prepared.candidateId,
+            });
+            invalidateCandidateCacheInRouteHandler({
+              candidateId: prepared.candidateId,
+              positionId: prepared.positionId,
+              applicationId: prepared.applicationId,
             });
           } catch (parseError) {
             aiLogger.error("Error parsing/saving evaluation", {

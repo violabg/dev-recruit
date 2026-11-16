@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   InputField,
   MultiSelectField,
-  SelectField,
+  SwitchField,
+  TextareaField,
 } from "@/components/ui/rhf-inputs";
 import {
   applyAsCandidateAction,
@@ -23,17 +24,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Briefcase, Loader2, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { FileUpload } from "../ui/file-upload";
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "pending", label: "In attesa" },
-  { value: "contacted", label: "Contattato" },
-  { value: "interviewing", label: "In colloquio" },
-  { value: "hired", label: "Assunto" },
-  { value: "rejected", label: "Rifiutato" },
-];
 
 type CandidateFormProps =
   | {
@@ -60,8 +53,9 @@ type CandidateFormProps =
         | "lastName"
         | "email"
         | "dateOfBirth"
-        | "status"
         | "resumeUrl"
+        | "doNotContact"
+        | "doNotContactNote"
       > & {
         positionIds: string[];
       };
@@ -112,12 +106,8 @@ export const CandidateForm = (props: CandidateFormProps) => {
             email: props.candidate.email,
             dateOfBirth: formatDateForInput(props.candidate.dateOfBirth),
             positionIds: props.candidate.positionIds,
-            status: props.candidate.status as
-              | "pending"
-              | "contacted"
-              | "interviewing"
-              | "hired"
-              | "rejected",
+            doNotContact: props.candidate.doNotContact,
+            doNotContactNote: props.candidate.doNotContactNote ?? "",
           }
         : {
             firstName: "",
@@ -136,6 +126,12 @@ export const CandidateForm = (props: CandidateFormProps) => {
     resolver: zodResolver(schema),
     defaultValues: initialValues,
   });
+
+  // The note field is shown only while "Non ricontattare" is on
+  const doNotContact = useWatch({
+    control: form.control,
+    name: "doNotContact" as never,
+  }) as unknown as boolean | undefined;
 
   // Reset local file state when the form source changes (adjust during render)
   const [resetKey, setResetKey] = useState({ initialValues, pathname });
@@ -199,9 +195,14 @@ export const CandidateForm = (props: CandidateFormProps) => {
     }
 
     if (isEditMode) {
-      if (values.status !== undefined) {
-        formData.append("status", String(values.status));
-      }
+      const doNotContact = values.doNotContact === true;
+      formData.append("doNotContact", doNotContact ? "true" : "false");
+      formData.append(
+        "doNotContactNote",
+        doNotContact && typeof values.doNotContactNote === "string"
+          ? values.doNotContactNote
+          : "",
+      );
 
       // Flag to remove existing resume
       if (removeExistingResume) {
@@ -371,13 +372,21 @@ export const CandidateForm = (props: CandidateFormProps) => {
               />
 
               {isEditMode && (
-                <SelectField
+                <SwitchField
                   control={form.control}
-                  name="status"
-                  label="Stato candidatura"
-                  placeholder="Seleziona stato"
-                  options={STATUS_OPTIONS}
-                  triggerProps={{ disabled: isPending, size: "default" }}
+                  name="doNotContact"
+                  label="Non ricontattare"
+                  disabled={isPending}
+                />
+              )}
+
+              {isEditMode && doNotContact && (
+                <TextareaField
+                  control={form.control}
+                  name="doNotContactNote"
+                  label="Nota"
+                  maxLength={500}
+                  disabled={isPending}
                 />
               )}
 

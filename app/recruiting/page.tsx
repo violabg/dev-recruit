@@ -7,8 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  getOpenPositionsForSelect,
   getPositionById,
-  getPositionsForSelect,
 } from "@/lib/data/positions";
 import { Suspense } from "react";
 import { ApplyFormSkeleton } from "./fallbacks";
@@ -67,9 +67,10 @@ async function ApplyFormContent({ searchParams }: PageProps) {
   const params = await searchParams;
   const positionId = params.positionId;
 
-  const positions = await getPositionsForSelect();
+  // Only open positions accept a public application
+  const positions = await getOpenPositionsForSelect();
 
-  // Validate that the positionId exists if provided
+  // The positionId of the link is valid only for an open position
   const validPositionId =
     positionId && positions.some((p) => p.id === positionId)
       ? positionId

@@ -3,21 +3,21 @@ import { describe, expect, it } from "vitest";
 
 import {
   getEvaluationById,
-  getEvaluationByInterviewId,
+  getEvaluationByAssessmentId,
   getEvaluationsByCandidateId,
   getEvaluationStats,
   hasEvaluationForPosition,
 } from "@/lib/data/evaluations";
 
 describe("evaluations data layer", () => {
-  it("getEvaluationByInterviewId returns record or null", async () => {
+  it("getEvaluationByAssessmentId returns record or null", async () => {
     (prisma.evaluation.findUnique as any).mockResolvedValueOnce(null);
-    const none = await getEvaluationByInterviewId("nope");
+    const none = await getEvaluationByAssessmentId("nope");
     expect(none).toBeNull();
 
-    const fake = { id: "e1", interview: { id: "i1" } };
+    const fake = { id: "e1", assessment: { id: "a1" } };
     (prisma.evaluation.findUnique as any).mockResolvedValueOnce(fake);
-    const res = await getEvaluationByInterviewId("i1");
+    const res = await getEvaluationByAssessmentId("a1");
     expect(res).toEqual(fake);
   });
 
@@ -50,7 +50,7 @@ describe("evaluations data layer", () => {
     (prisma.evaluation.count as any).mockResolvedValueOnce(4);
     const stats = await getEvaluationStats();
     expect(stats).toEqual({
-      interviewEvaluations: 3,
+      assessmentEvaluations: 3,
       candidateEvaluations: 4,
       total: 7,
     });

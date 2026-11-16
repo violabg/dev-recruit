@@ -3,10 +3,65 @@
  */
 
 import {
+  POSITION_STATUS_VALUES,
   positionDescriptionSchema,
   positionFormSchema,
+  positionStatusSchema,
+  updatePositionStatusSchema,
 } from "@/lib/schemas/position";
 import { describe, expect, it } from "vitest";
+
+describe("positionStatusSchema", () => {
+  it("lists draft, open and closed", () => {
+    expect(POSITION_STATUS_VALUES).toEqual(["draft", "open", "closed"]);
+  });
+
+  it.each(["draft", "open", "closed"])("accepts %s", (status) => {
+    expect(positionStatusSchema.parse(status)).toBe(status);
+  });
+
+  it("refuses an unknown status with the Italian message", () => {
+    const result = positionStatusSchema.safeParse("archived");
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe(
+      "Stato della posizione non valido",
+    );
+  });
+});
+
+describe("updatePositionStatusSchema", () => {
+  it("accepts a position id and a status", () => {
+    expect(
+      updatePositionStatusSchema.parse({ positionId: "p1", status: "closed" }),
+    ).toEqual({ positionId: "p1", status: "closed" });
+  });
+
+  it("refuses a missing position id", () => {
+    expect(
+      updatePositionStatusSchema.safeParse({ positionId: "", status: "open" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("refuses an unknown status", () => {
+    expect(
+      updatePositionStatusSchema.safeParse({ positionId: "p1", status: "x" })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("positionFormSchema has no status", () => {
+  it("drops a status sent with the form", () => {
+    const parsed = positionFormSchema.parse({
+      title: "Developer",
+      experienceLevel: "senior",
+      skills: ["React"],
+      status: "open",
+    } as any);
+    expect(parsed).not.toHaveProperty("status");
+  });
+});
 
 describe("positionFormSchema", () => {
   describe("valid inputs", () => {

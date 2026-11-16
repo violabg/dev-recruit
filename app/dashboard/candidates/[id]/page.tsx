@@ -2,11 +2,11 @@ import { getRecentCandidateIds } from "@/lib/data/candidates";
 import { Suspense } from "react";
 import { CandidateDetailsContent } from "./candidate-details-content";
 import { CandidateHeader } from "./candidate-header";
-import { CandidateInterviewsContent } from "./candidate-interviews-content";
+import { CandidateApplicationsContent } from "./candidate-applications-content";
 import {
+  CandidateApplicationsSkeleton,
   CandidateDetailsSkeleton,
   CandidateHeaderSkeleton,
-  CandidateInterviewsSkeleton,
 } from "./fallbacks";
 
 export async function generateStaticParams() {
@@ -30,8 +30,8 @@ export default async function CandidateDetailPage({
         <CandidateDetailsContent params={params} />
       </Suspense>
 
-      <Suspense fallback={<CandidateInterviewsSkeleton />}>
-        <CandidateInterviewsContent params={params} />
+      <Suspense fallback={<CandidateApplicationsSkeleton />}>
+        <CandidateApplicationsContent params={params} />
       </Suspense>
     </div>
   );

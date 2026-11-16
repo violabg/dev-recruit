@@ -1,7 +1,7 @@
 /**
  * Evaluation prompts
  *
- * Prompt builders for scoring interview answers, summarising an interview
+ * Prompt builders for scoring assessment answers, summarising an assessment
  * and evaluating a resume against a position.
  */
 
@@ -203,7 +203,7 @@ export function buildAnswerEvaluationPrompt(
 }
 
 /**
- * Prompt asking the model for the overall interview evaluation.
+ * Prompt asking the model for the overall assessment evaluation.
  */
 export function buildOverallEvaluationPrompt(params: {
   candidateName: string;

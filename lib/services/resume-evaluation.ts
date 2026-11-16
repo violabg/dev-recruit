@@ -12,6 +12,7 @@ import {
   buildResumeEvaluationPrompt,
   RESUME_EVALUATION_SYSTEM_PROMPT,
 } from "./ai/evaluation-prompts";
+import { advanceApplicationStage, type StageChangeResult } from "./applications";
 import { aiLogger } from "./logger";
 
 /** A request that cannot be fulfilled; `status` is the HTTP status to return. */
@@ -104,8 +105,21 @@ export async function prepareResumeEvaluation(
     throw new ResumeEvaluationError("Posizione non trovata", 404);
   }
 
+  // A resume evaluation is evidence of an application
+  const application = await prisma.application.findUnique({
+    where: { candidateId_positionId: { candidateId, positionId } },
+    select: { id: true },
+  });
+
+  if (!application) {
+    throw new ResumeEvaluationError(
+      "Il candidato non è candidato a questa posizione",
+      404,
+    );
+  }
+
   const existingEvaluation = await prisma.evaluation.findFirst({
-    where: { candidateId, positionId, interviewId: null },
+    where: { candidateId, positionId, assessmentId: null },
     select: { id: true },
   });
 
@@ -128,6 +142,7 @@ export async function prepareResumeEvaluation(
   return {
     candidateId: candidate.id,
     positionId: position.id,
+    applicationId: application.id,
     title: position.title,
     system: RESUME_EVALUATION_SYSTEM_PROMPT,
     prompt: buildResumeEvaluationPrompt({
@@ -139,32 +154,44 @@ export async function prepareResumeEvaluation(
 }
 
 /**
- * Parse the model's full text response and store it as an Evaluation.
+ * Parse the model's full text response, store it as an Evaluation and advance
+ * the application to screening, in one transaction.
  * Throws when the response is not a valid evaluation.
  */
 export async function saveResumeEvaluation(params: {
   candidateId: string;
   positionId: string;
+  applicationId: string;
   title: string;
   responseText: string;
   userId: string;
-}) {
+}): Promise<{ id: string; stageChange: StageChangeResult }> {
   const parsed = overallEvaluationSchema.parse(
     JSON.parse(cleanJsonResponse(params.responseText)),
   );
 
-  return prisma.evaluation.create({
-    data: {
-      title: params.title,
-      candidateId: params.candidateId,
-      positionId: params.positionId,
-      evaluation: parsed.evaluation,
-      strengths: parsed.strengths,
-      weaknesses: parsed.weaknesses,
-      recommendation: parsed.recommendation,
-      fitScore: Math.round(parsed.fitScore / 10), // 0-100 -> 0-10
-      createdBy: params.userId,
-    },
-    select: { id: true },
+  return prisma.$transaction(async (tx) => {
+    const evaluation = await tx.evaluation.create({
+      data: {
+        title: params.title,
+        candidateId: params.candidateId,
+        positionId: params.positionId,
+        evaluation: parsed.evaluation,
+        strengths: parsed.strengths,
+        weaknesses: parsed.weaknesses,
+        recommendation: parsed.recommendation,
+        fitScore: Math.round(parsed.fitScore / 10), // 0-100 -> 0-10
+        createdBy: params.userId,
+      },
+      select: { id: true },
+    });
+
+    const stageChange = await advanceApplicationStage(
+      tx,
+      params.applicationId,
+      "cv_evaluated",
+    );
+
+    return { id: evaluation.id, stageChange };
   });
 }

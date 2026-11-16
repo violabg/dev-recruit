@@ -1,45 +1,49 @@
 # CONTEXT — dev-recruit vocabulary
 
-DevRecruit is an AI-assisted technical recruitment platform: recruiters define positions, build quizzes (often AI-generated), invite candidates to take them, and get AI evaluations of answers and resumes. The UI is in Italian; code is in English. Rules live in `knowledge/` (read through the knowledge catalogue); this file only resolves terms.
+DevRecruit is an AI-assisted technical recruitment platform: recruiters define positions, build quizzes (often AI-generated), follow each application through its stages, send candidates a test, and get AI evaluations of answers and resumes. The UI is in Italian; code is in English. Rules live in `knowledge/` (read through the knowledge catalogue); this file only resolves terms.
 
 ## Glossary
 
 | Term | Code symbol | Italian UI label | Meaning |
 |---|---|---|---|
-| Position | `Position` | Posizione / Posizioni | A job opening: title, description, experience level, skills, soft skills, contract type |
+| Position | `Position` | Posizione / Posizioni | A job opening: title, description, experience level, skills, soft skills, contract type, status |
 | Quiz | `Quiz` | Quiz | Reusable, ordered set of questions for one Position, with an optional time limit (minutes) |
 | Question | `Question` (DB row); `FlexibleQuestion` / `SavedQuestion` / `Question` (schema types) | Domanda / Domande | A reusable question. In forms and AI output the DB id is carried as `dbId` |
 | Quiz question link | `QuizQuestion` | — | Quiz ↔ Question link with `order` |
 | Favorite question | `Question.isFavorite` | Preferite, Domande Preferite | Question kept for reuse; survives removal from its quiz |
 | Candidate | `Candidate` | Candidato / Candidati | A person applying. Never signs in |
-| Candidate position | `CandidatePosition`, `isPrimary` | Primaria (badge) | Candidate ↔ Position link; the first one is the primary position |
-| Public application | `applyAsCandidateAction` | Unisciti al nostro team! | Public form where candidates apply with a CV |
+| Application | `Application` | Candidatura / Candidature | One Candidate for one Position. Holds the stage; assessments and evaluations are evidence collected on it |
+| Application stage | `Application.stage` (`ApplicationStage`) | Fase | Where the application is in the hiring flow |
+| Public application | `applyAsCandidateAction` | Unisciti al nostro team! | Public form where candidates apply with a CV; an email already known adds the application to the existing candidate |
 | Resume | `Candidate.resumeUrl` | Curriculum Vitae / Curriculum / CV | PDF stored in Cloudflare R2 |
-| Interview | `Interview` | Colloquio / Colloqui (dashboard); the candidate sees "Inizia il quiz" | One Candidate taking one Quiz: token, status, timing, answers |
-| Interview token | `Interview.token` | — (part of the link) | The candidate's only credential, in the public interview link |
-| Invite / assignment | `assignCandidatesToQuizAction`, `assignQuizzesToCandidateAction` | Invita, Assegna quiz, Associa quiz | Creating pending interviews for candidate + quiz pairs |
-| Answer | `Interview.answers` | — | Stored per Question id |
+| Assessment | `Assessment` | Test / Test inviati (dashboard); the candidate sees "Inizia il quiz" | One Candidate taking one Quiz, inside one Application: token, status, timing, answers |
+| Assessment token | `Assessment.token` | — (part of the link) | The candidate's only credential, in the public assessment link |
+| Interview (conversation) | — (not built yet) | Colloquio / Colloqui | The live conversation with the candidate. Never an `Assessment`, never a `Quiz` |
+| Invite / assignment | `assignCandidatesToQuizAction`, `assignQuizzesToCandidateAction` | Invita, Assegna quiz, Associa quiz | Creating pending assessments for candidate + quiz pairs |
+| Answer | `Assessment.answers` | — | Stored per Question id |
 | Voice answer | `transcribeAudioAction` | — | Recorded audio transcribed to text |
-| Interview evaluation | `Evaluation` with `interviewId` | Valutazione complessiva AI | AI scoring of an interview's answers plus an overall assessment |
+| Assessment evaluation | `Evaluation` with `assessmentId` | Valutazione complessiva AI | AI scoring of an assessment's answers plus an overall judgement |
 | Resume evaluation | `Evaluation` with `candidateId` + `positionId` | Valutazioni (del curriculum) | AI assessment of a resume against one Position, streamed |
 | Fit score | `Evaluation.fitScore` | Punteggio di idoneità / Fit score | AI fit judgement, stored 0–10 |
-| Quiz score | `Evaluation.quizScore` | Quiz score / Punteggio complessivo | Interview only: percentage 0–100 of points earned |
+| Quiz score | `Evaluation.quizScore` | Quiz score / Punteggio complessivo | Assessment evaluation only: percentage 0–100 of points earned |
 | Recommendation | `Evaluation.recommendation` | Raccomandazione (AI card) | AI free-text recommendation |
 | Hiring notes | `interviewNotes`, `redFlags`, `standoutMoments`, `hireRecommendation`, `nextSteps` | Note del colloquio, Red flags, Momenti di rilievo, Raccomandazione, Prossimi step; card "Decisione hiring" | Hiring manager's decision recorded on an evaluation |
 | Manual notes | `Evaluation.notes` | Note manuali | Free-text note on an evaluation |
 | Behavioral rubric | `BehavioralRubric` | Comunicazione, Collaborazione, Problem Solving, Culture Fit, Leadership; card "Scenario comportamentale" | Recruiter's manual 1–5 soft-skill scores per candidate + position |
-| Evaluation dashboard | — | Dashboard valutazione / Valutazione unificata | Computed overall score from quiz, rubric and hiring decision |
+| Evaluation dashboard | — | Dashboard valutazione / Valutazione unificata | Computed overall score of one application, from quiz, rubric and hiring decision |
 | Preset | `Preset` | Preset; editor card "Smart Question Presets" | Saved recipe for generating one AI question of a given type |
 | Reference data | `ReferenceData` | Dati di riferimento | Editable pick lists (languages, frameworks, databases, tools, soft skills, contract types, experience levels) |
 | User | `User` (Better Auth) | Accedi / Registrazione | Recruiter account. Every signed-in user sees everything |
 | Profile | `Profile` | Profilo | App profile of a User (full name, user name, avatar) |
-| Dashboard sections | `SECTIONS` | Panoramica; Selezione (Posizioni, Candidati, Colloqui); Libreria (Quiz, Preset); Impostazioni | Navigation groups, each with its colour token |
+| Dashboard sections | `SECTIONS` | Panoramica; Selezione (Posizioni, Candidature, Candidati); Libreria (Quiz, Test inviati, Preset); Impostazioni | Navigation groups, each with its colour token |
 
 ## Enums and status values
 
-Candidate status (`Candidate.status`): `pending` In attesa · `contacted` Contattato · `interviewing` In colloquio · `hired` Assunto · `rejected` Rifiutato.
+Application stage (`ApplicationStage`): `applied` Candidato · `screening` Screening · `assessment` Test · `interview` Colloquio · `decision` Decisione · `offer` Offerta · `hired` Assunto · `rejected` Scartato · `withdrawn` Ritirato.
 
-Interview status (`InterviewStatus`): `pending` In attesa (invited, not started) · `in_progress` In corso · `completed` Completato · `cancelled` Annullato. Derived, never stored: `expired` (in progress past the time limit; closing it stores `completed`).
+Position status (`Position.status`): `draft` Bozza · `open` Aperta · `closed` Chiusa.
+
+Assessment status (`AssessmentStatus`): `pending` In attesa (invited, not started) · `in_progress` In corso · `completed` Completato · `cancelled` Annullato. Derived, never stored: `expired` (in progress past the time limit; closing it stores `completed`).
 
 Question type (`QuestionType`): `multiple_choice` Scelta multipla · `open_question` Domanda aperta · `code_snippet` Snippet di codice · `behavioral_scenario` Scenario comportamentale.
 
@@ -53,9 +57,11 @@ Reference data categories: `programmingLanguage` Linguaggi · `framework` Framew
 
 ## Ambiguities
 
-- **Quiz vs Interview.** The Quiz is the template (time limit lives here); the Interview is one candidate's sitting (start time, answers, token). "Colloquio", "Intervista" and the candidate-side "quiz" all mean the Interview.
-- **Evaluation has two kinds** in one table: interview evaluation (`interviewId` set, `candidateId`/`positionId` null) and resume evaluation (`candidateId` + `positionId`, `interviewId` null).
-- **Scores.** Per-answer score 0–10 (not stored) · `quizScore` 0–100 (interview only) · `fitScore` stored 0–10 (the AI returns 0–100).
+- **Quiz vs Assessment vs Colloquio.** The Quiz is the template (time limit lives here); the Assessment is one candidate's sitting (start time, answers, token), shown to recruiters as "Test" and to the candidate as "quiz". "Colloquio" means only the live conversation.
+- **Assessment (entity) vs `assessment` (stage).** The entity is one sitting of a quiz; the stage is the step of an application in which tests are sent.
+- **Candidate vs Application.** The Candidate is the person (personal record, CV, "Non ricontattare" flag); the Application is that person's candidacy for one Position and carries the stage. A candidate has no status of its own.
+- **Evaluation has two kinds** in one table: assessment evaluation (`assessmentId` set, `candidateId`/`positionId` null) and resume evaluation (`candidateId` + `positionId`, `assessmentId` null).
+- **Scores.** Per-answer score 0–10 (not stored) · `quizScore` 0–100 (assessment evaluation only) · `fitScore` stored 0–10 (the AI returns 0–100).
 - **Recommendation.** `recommendation` = AI text; `hireRecommendation` = hiring manager's enum. Both show as "Raccomandazione".
 - **Notes.** `notes` = "Note manuali"; `interviewNotes` = "Note del colloquio" (part of hiring notes).
 - **`behavioral_scenario` vs Behavioral rubric.** The first is an AI-scored quiz question type; the second is the recruiter's manual scoring.
@@ -69,22 +75,22 @@ Reference data categories: `programmingLanguage` Linguaggi · `framework` Framew
 
 | Area | Holds |
 |---|---|
-| `app/dashboard/` | Signed-in recruiter area: one folder per section (positions, candidates, quizzes, presets, interviews, profile, settings/reference-data) |
-| `app/recruiting/` | Public candidate pages: apply form, interview by token |
+| `app/dashboard/` | Signed-in recruiter area: one folder per section (positions, applications, candidates, quizzes, presets, assessments, profile, settings/reference-data) |
+| `app/recruiting/` | Public candidate pages: apply form, assessment by token |
 | `app/auth/` | Login, sign-up and password pages |
 | `app/api/` | Route handlers: auth library, resume-evaluation stream, position-description stream |
 | `proxy.ts` | Redirects signed-out visitors to login, except auth and recruiting pages |
 | `lib/data/` | Cached reads, one module per entity |
 | `lib/actions/` | Server actions, one module per entity, plus `run-action.ts` |
-| `lib/services/` | Domain logic without Next.js: interview and resume evaluation, quiz-question sync, R2 storage, logger, `UserError` |
+| `lib/services/` | Domain logic without Next.js: assessment and resume evaluation, quiz-question sync, R2 storage, logger, `UserError` |
 | `lib/services/ai/` | AI layer: `generate.ts` (`generateStructured`), `models.ts`, `core.ts` (`aiQuizService`), `prompts.ts`, `evaluation-prompts.ts`, `streaming.ts`, `retry.ts`, `sanitize.ts`, `types.ts` |
 | `lib/schemas/` | Zod schemas and inferred types (barrel `index.ts`) |
-| `lib/utils/` | `action-result.ts`, `cache-utils.ts`, `interview-utils.ts`, `question-utils.ts`, `question-prompt-helpers.ts`, `quiz-form-utils.tsx`, `preset-icons.ts`, `token.ts` |
+| `lib/utils/` | `action-result.ts`, `cache-utils.ts`, `assessment-utils.ts`, `question-utils.ts`, `question-prompt-helpers.ts`, `quiz-form-utils.tsx`, `preset-icons.ts`, `token.ts` |
 | `lib/` root | `auth.ts`, `auth-server.ts` (`requireUser`), `prisma.ts`, `utils.ts` (`cn`), `zod-config.ts` |
 | `lib/prisma/` | Generated Prisma client — do not edit |
-| `prisma/` | `schema.prisma`, `seed.ts` |
+| `prisma/` | `schema.prisma`, `migrations/`, `seed.ts` |
 | `components/ui/`, `components/ui/rhf-inputs/` | UI primitives and react-hook-form field wrappers |
-| `components/dashboard/` | Dashboard shell (sidebar, breadcrumbs, sections, interview pipeline) |
+| `components/dashboard/` | Dashboard shell (sidebar, breadcrumbs, sections, assessment pipeline) |
 | `components/<entity>/` | Feature components; root files `page-header.tsx`, `skeletons.tsx` |
 | `hooks/` | Client hooks (quiz editor, AI generation) |
 | `tests/` | Vitest tests mirroring the source tree; `setup.ts`, `mocks/` |

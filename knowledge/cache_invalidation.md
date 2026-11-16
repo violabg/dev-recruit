@@ -13,7 +13,7 @@ Cache Components and Partial Prefetching are on. The framework itself is NOT res
 
 - `"use cache"` is used only in the data layer functions (one module per entity). Pages and server components call those functions; they never call Prisma.
 - Every cached read sets `cacheLife("hours")`, or `cacheLife("minutes")` for short-lived data. No other profile and no custom profiles.
-- Two reads are uncached on purpose: `getProfile` (depends on the session) and `getInterviewByToken` (live interview state while the candidate answers). Follow the same choice for any session-dependent or live read.
+- Two reads are uncached on purpose: `getProfile` (depends on the session) and `getAssessmentByToken` (live assessment state while the candidate answers). Follow the same choice for any session-dependent or live read.
 - `requireUser()` and `getCurrentUser()` read the session cookie, so the framework's rules for request APIs apply to them: never inside a `"use cache"` scope.
 
 ## Tag vocabulary
@@ -26,8 +26,8 @@ Always build tags with the helpers from the cache utils; never write tag strings
 | `QUESTIONS` = `questions` | `entityTag.question(id)` → `question-{id}` |
 | `POSITIONS` = `positions` | `entityTag.position(id)` → `positions-{id}` (plural on purpose) |
 | `CANDIDATES` = `candidates` | `entityTag.candidate(id)` → `candidate-{id}` |
-| `INTERVIEWS` = `interviews` | `entityTag.interview(id)` → `interview-{id}` |
-| `EVALUATIONS` = `evaluations` | `entityTag.evaluation(id)`, `entityTag.evaluationInterview(interviewId)`, `entityTag.evaluationCandidate(candidateId)` |
+| `ASSESSMENTS` = `assessments` | `entityTag.assessment(id)` → `assessment-{id}` |
+| `EVALUATIONS` = `evaluations` | `entityTag.evaluation(id)`, `entityTag.evaluationAssessment(assessmentId)`, `entityTag.evaluationCandidate(candidateId)` |
 | `BEHAVIORAL_RUBRICS` = `behavioral-rubrics` | `entityTag.behavioralRubric(candidateId, positionId)` |
 | `PRESETS` = `presets` | `entityTag.preset(id)` |
 | `REFERENCE_DATA` = `reference-data` | `entityTag.referenceCategory(category)` |
@@ -42,13 +42,13 @@ A cached read MUST tag the collection tag of every entity it reads, including ev
 export async function getFilteredCandidates(params?: FetchCandidatesParams) {
   "use cache";
   cacheLife("hours");
-  // CANDIDATE_INCLUDE joins positions + interviews
-  cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS, CacheTags.INTERVIEWS);
+  // CANDIDATE_INCLUDE joins positions + assessments
+  cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS, CacheTags.ASSESSMENTS);
   // ...prisma.candidate.findMany({ where, include: CANDIDATE_INCLUDE, ... })
 }
 ```
 
-Join tables have no tag of their own: `QuizQuestion` is covered by `quizzes` + `questions`, `CandidatePosition` by `candidates`.
+Join tables have no tag of their own: `QuizQuestion` is covered by `quizzes` + `questions`.
 
 ## Invalidating mutations
 
@@ -59,9 +59,9 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | `invalidateQuizCache({ quizId?, positionId?, deleted? })` | `quizzes`, `questions` | entity tags for quiz and position |
 | `invalidateQuestionCache({ questionId?, quizId? })` | `questions` | `quizId` also expires the quiz. A favorite toggle needs no extra option: the `questions` collection covers favorite status |
 | `invalidatePositionCache(positionId?, { deleted? })` | `positions` | positional id, then options |
-| `invalidateCandidateCache({ candidateId?, positionId?, positionIds?, deleted? })` | `candidates` | pass every position touched (old and new) |
-| `invalidateInterviewCache({ interviewId?, quizId?, deleted? })` | `interviews` | |
-| `invalidateEvaluationCache({ evaluationId?, interviewId?, candidateId? })` | `evaluations` | server actions only |
+| `invalidateCandidateCache({ candidateId?, positionId?, positionIds?, deleted? })` | `candidates` | pass every position whose application was added or withdrawn |
+| `invalidateAssessmentCache({ assessmentId?, quizId?, deleted? })` | `assessments` | |
+| `invalidateEvaluationCache({ evaluationId?, assessmentId?, candidateId? })` | `evaluations` | server actions only |
 | `invalidateEvaluationCacheInRouteHandler({ … })` | `evaluations` | same options; for route handlers |
 | `invalidateBehavioralRubricCache({ candidateId, positionId })` | `behavioral-rubrics` | both required |
 | `invalidatePresetCache(presetId?)` | `presets` | pass the id whenever there is one |
@@ -72,20 +72,20 @@ Server actions use the standard helper; a route handler uses the `…InRouteHand
 
 ## Deletes and database cascades
 
-A delete (including `deleteMany`) of a Position, Quiz, Candidate or Interview MUST pass `deleted: true`, so the helper also expires the collections whose rows the database removed by cascade (`CASCADE_ON_DELETE`):
+A delete (including `deleteMany`) of a Position, Quiz, Candidate or Assessment MUST pass `deleted: true`, so the helper also expires the collections whose rows the database removed by cascade (`CASCADE_ON_DELETE`):
 
 | Deleted | Also expires |
 |---|---|
-| position | quizzes, interviews, evaluations, candidates, behavioral-rubrics |
-| quiz | interviews, evaluations |
-| candidate | interviews, evaluations, behavioral-rubrics |
-| interview | evaluations |
+| position | quizzes, assessments, evaluations, candidates, behavioral-rubrics |
+| quiz | assessments, evaluations |
+| candidate | assessments, evaluations, behavioral-rubrics |
+| assessment | evaluations |
 
 ```ts
 await prisma.candidate.delete({ where: { id } });
 invalidateCandidateCache({
   candidateId: id,
-  positionIds: candidate.positions.map((p) => p.positionId),
+  positionIds: candidate.applications.map((a) => a.positionId),
   deleted: true,
 });
 ```
@@ -120,6 +120,6 @@ Every other server call from the client is a server action. Every route handler 
 - Writing tags as literals, with `:` as separator, or `position-{id}` instead of `positions-{id}`.
 - Calling `updateTag`/`revalidatePath` directly, or `invalidateEvaluationCache` inside a route handler.
 - Deleting without `deleted: true`, leaving cascaded rows in cached lists and counts.
-- Updating a candidate's positions and passing only the new position ids.
+- Updating a candidate's positions and passing only the added position ids: a removed position also changes the cache.
 - Caching session-dependent data, or calling `requireUser()`/`getCurrentUser()` inside `"use cache"`.
 - Redirecting from the email verification route to a caller-supplied URL without the same-origin check.

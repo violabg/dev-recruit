@@ -5,6 +5,7 @@ import {
   TextSkeleton,
 } from "@/components/skeletons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Mirrors PositionHeader: title, level/contract badges + date, edit/delete. */
 export function PositionHeaderSkeleton() {
@@ -132,12 +133,24 @@ export function PositionQuizzesSkeleton() {
   );
 }
 
-export function PositionCandidatesSkeleton() {
+/** Mirrors Selection: heading, add button and a row of kanban columns. */
+export function PositionSelectionSkeleton() {
   return (
-    <PositionTabCardsSkeleton
-      title="Candidati"
-      actionClassName="w-40"
-      metaRight={<BadgeSkeleton className="w-20" />}
-    />
+    <>
+      <div className="flex justify-between">
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
+          Selezione
+        </h2>
+        <ButtonSkeleton size="sm" className="w-40" />
+      </div>
+      <div className="flex gap-4 pb-2 overflow-x-auto">
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className="flex flex-col gap-3 min-w-56 shrink-0">
+            <TextSkeleton className="w-24" />
+            <Skeleton className="rounded-lg w-full h-28" />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

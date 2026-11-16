@@ -64,17 +64,17 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
 
 | Action | Credential |
 |---|---|
-| `startInterviewAction(token)` | interview token |
-| `submitAnswerAction(token, questionId, answer)` | interview token |
-| `completeInterviewAction(token)` | interview token |
-| `transcribeAudioAction(formData)` | interview token in the form data, and the interview must still `acceptsAnswers()` |
+| `startAssessmentAction(token)` | assessment token |
+| `submitAnswerAction(token, questionId, answer)` | assessment token |
+| `completeAssessmentAction(token)` | assessment token |
+| `transcribeAudioAction(formData)` | assessment token in the form data, and the assessment must still `acceptsAnswers()` |
 | `applyAsCandidateAction(formData)` | none (public application, `createdBy: null`) |
 | `fetchPositionDataAction(positionId)` | none (public apply form) |
 
 ## Inputs and reads
 
 - Validate every input with a schema from the shared schemas (`schema.parse`). Never define a schema inline in an action or component.
-- Inputs are typed values (an object, or ids). Use `FormData` only when a file is uploaded (candidate resume, interview audio); rebuild a plain object from it and parse it with the schema.
+- Inputs are typed values (an object, or ids). Use `FormData` only when a file is uploaded (candidate resume, assessment audio); rebuild a plain object from it and parse it with the schema.
 - Reads for pages live in the cached data layer, not in actions. A read action is acceptable only for data a client component loads on demand after a user event.
 - Mutations only: an action that writes MUST call the matching `invalidate*Cache` helper before returning or redirecting.
 

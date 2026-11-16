@@ -14,6 +14,7 @@ import { getProfile } from "@/lib/data/profile";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 /** Mirrors EditProfileContent: back button + static heading + ProfileForm. */
@@ -59,6 +60,9 @@ function EditProfileSkeleton() {
 }
 
 async function EditProfileContent() {
+  // The session is read per request, after connection(), never while the
+  // route is prerendered
+  await connection();
   const { profile, user, error } = await getProfile();
 
   if (error || !user) {

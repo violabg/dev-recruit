@@ -13,7 +13,7 @@ Vitest is the runner; its API is in the official docs. This document holds only 
 
 - Tests live in a separate top-level `tests/` tree that mirrors the source tree (`tests/lib/actions/<name>.test.ts` tests the `<name>` actions module, and so on for data, services, utils, schemas, hooks). File names end in `.test.ts`.
 - Environment, globals, the `@` alias and the setup file are defined in the Vitest config: read it instead of assuming.
-- Shared data factories (`mockUser`, `mockQuiz`, `mockPosition`, `mockCandidate`, `mockInterview`, `mockEvaluation`, `mockPreset`, question mocks) are exported from `@/tests/mocks`.
+- Shared data factories (`mockUser`, `mockQuiz`, `mockPosition`, `mockCandidate`, `mockAssessment`, `mockEvaluation`, `mockPreset`, question mocks) are exported from `@/tests/mocks`.
 - Validation before handing work back: `pnpm lint && pnpm test:run && pnpm build`. There is no coverage threshold.
 
 ## Global mocks (already active in every test)
@@ -55,7 +55,7 @@ it("requires a signed-in user", async () => {
 - Actions: assert the returned result (`{ success: false, error }`, or `unwrap(result)` on success), never a thrown error. Assert the `invalidate*Cache` helper call, not `updateTag`. Mock `next/navigation` when the action redirects.
 - Services: they throw; assert with `await expect(fn()).rejects.toThrow("…")` or `.rejects.toMatchObject({ code })`. Services import nothing from `next/*`, so they are tested without Next.js mocks.
 - AI: in service and action tests mock `generateStructured` (`vi.mock("@/lib/services/ai/generate", …)`) or `aiQuizService`; mock the `ai` SDK only when testing the AI layer itself. Assert call options such as `expect.objectContaining({ task: "evaluation", temperature: 0, seed: 42 })`. Pass `config: { retryDelay: 0 }` to avoid backoff waits.
-- Time: no fake timers. Time-dependent rules take a `now` argument (`interviewState`, `acceptsAnswers`, `getRemainingSeconds`); build dates relative to `Date.now()`.
+- Time: no fake timers. Time-dependent rules take a `now` argument (`assessmentState`, `acceptsAnswers`, `getRemainingSeconds`); build dates relative to `Date.now()`.
 - Network: stub `fetch` with `vi.stubGlobal`; never call a real database, network or AI provider.
 
 ## Common mistakes

@@ -6,7 +6,7 @@ import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { mapQuizQuestionsToFlexible } from "@/lib/utils/question-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
-// Type for quiz with linked questions from QuizQuestion join table - exported for use in interviews
+// Type for quiz with linked questions from QuizQuestion join table - exported for use in assessments
 export type QuizWithLinkedQuestions = Prisma.QuizGetPayload<{
   include: {
     position: {
@@ -90,7 +90,7 @@ export type PaginatedQuizzes = {
   uniqueLevels: string[];
 };
 
-// Include pattern for quiz with linked questions - exported for use in interviews.ts
+// Include pattern for quiz with linked questions - exported for use in assessments.ts
 export const QUIZ_INCLUDE_WITH_LINKED_QUESTIONS = {
   position: {
     select: {
@@ -131,7 +131,7 @@ const QUIZ_INCLUDE_WITH_POSITION_DETAILS = {
 
 /**
  * Maps quiz data from Prisma to API response format.
- * Exported for use by interviews.ts
+ * Exported for use by assessments.ts
  */
 export const mapQuizFromPrisma = (
   quiz: QuizWithLinkedQuestions

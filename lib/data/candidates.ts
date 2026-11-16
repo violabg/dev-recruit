@@ -1,24 +1,26 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
+import { APPLICATION_STAGE_VALUES, type ApplicationStage } from "@/lib/schemas";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
-// Prisma type for candidate with position and interviews
+// Prisma type for candidate with applications and assessments
 export type CandidateWithRelations = Prisma.CandidateGetPayload<{
   include: {
-    positions: {
+    applications: {
       include: {
         position: {
           select: {
             id: true;
             title: true;
             experienceLevel: true;
+            status: true;
           };
         };
       };
     };
-    interviews: {
+    assessments: {
       select: {
         id: true;
         status: true;
@@ -28,28 +30,25 @@ export type CandidateWithRelations = Prisma.CandidateGetPayload<{
   };
 }>;
 
-export type CandidateStatusSummary = {
-  status: string;
-  count: number;
-};
-
 // Reusable include pattern for candidate queries
 const CANDIDATE_INCLUDE = {
-  positions: {
+  applications: {
     include: {
       position: {
         select: {
           id: true,
           title: true,
           experienceLevel: true,
+          status: true,
         },
       },
     },
+    // Recent activity first: no application is primary
     orderBy: {
-      isPrimary: "desc" as const, // Primary position first
+      stageChangedAt: "desc" as const,
     },
   },
-  interviews: {
+  assessments: {
     select: {
       id: true,
       status: true,
@@ -60,8 +59,11 @@ const CANDIDATE_INCLUDE = {
 
 export type FetchCandidatesParams = {
   search?: string;
-  status?: string;
+  /** An ApplicationStage or "all" */
+  stage?: string;
+  /** A position id or "all" */
   positionId?: string;
+  /** "newest" | "oldest" | "name" */
   sort?: string;
   page?: number;
   pageSize?: number;
@@ -80,27 +82,32 @@ const ORDER_BY_MAP: Record<string, Prisma.CandidateOrderByWithRelationInput> = {
   newest: { createdAt: "desc" },
   oldest: { createdAt: "asc" },
   name: { lastName: "asc" },
-  status: { status: "asc" },
 };
+
+const isApplicationStage = (value: string): value is ApplicationStage =>
+  (APPLICATION_STAGE_VALUES as readonly string[]).includes(value);
 
 const buildCandidateWhere = ({
   search,
-  status,
+  stage,
   positionId,
 }: Pick<
   FetchCandidatesParams,
-  "search" | "status" | "positionId"
+  "search" | "stage" | "positionId"
 >): Prisma.CandidateWhereInput => {
   const where: Prisma.CandidateWhereInput = {};
 
-  if (status !== "all") {
-    where.status = status;
-  }
+  const stageFilter =
+    stage && stage !== "all" && isApplicationStage(stage) ? stage : null;
+  const positionFilter =
+    positionId && positionId !== "all" ? positionId : null;
 
-  if (positionId !== "all") {
-    where.positions = {
+  // Both conditions apply to the same application
+  if (stageFilter || positionFilter) {
+    where.applications = {
       some: {
-        positionId: positionId,
+        ...(stageFilter ? { stage: stageFilter } : {}),
+        ...(positionFilter ? { positionId: positionFilter } : {}),
       },
     };
   }
@@ -116,40 +123,17 @@ const buildCandidateWhere = ({
   return where;
 };
 
-export async function getCandidateStats() {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CacheTags.CANDIDATES);
-
-  const [statusCountsRaw, totalCandidates] = await Promise.all([
-    prisma.candidate.groupBy({
-      by: ["status"],
-      _count: { _all: true },
-    }),
-    prisma.candidate.count(),
-  ]);
-
-  const statusCounts: CandidateStatusSummary[] = statusCountsRaw.map(
-    (item) => ({
-      status: item.status,
-      count: item._count._all,
-    })
-  );
-
-  return { statusCounts, totalCandidates };
-}
-
 export async function getFilteredCandidates(
   params?: FetchCandidatesParams
 ): Promise<PaginatedCandidates> {
   "use cache";
   cacheLife("hours");
-  // CANDIDATE_INCLUDE joins positions + interviews (status)
-  cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS, CacheTags.INTERVIEWS);
+  // CANDIDATE_INCLUDE joins applications (positions) + assessments (status)
+  cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS, CacheTags.ASSESSMENTS);
 
   const {
     search = "",
-    status = "all",
+    stage = "all",
     positionId = "all",
     sort = "newest",
     page = 1,
@@ -160,7 +144,7 @@ export async function getFilteredCandidates(
   const normalizedPage = typeof page === "number" && page > 0 ? page : 1;
   const normalizedPageSize =
     typeof pageSize === "number" && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
-  const where = buildCandidateWhere({ search, status, positionId });
+  const where = buildCandidateWhere({ search, stage, positionId });
 
   const [candidates, totalCount] = await Promise.all([
     prisma.candidate.findMany({
@@ -193,7 +177,7 @@ export const getCandidatesByPosition = async (positionId: string) => {
 
   return prisma.candidate.findMany({
     where: {
-      positions: {
+      applications: {
         some: {
           positionId,
         },
@@ -211,7 +195,7 @@ export const getCandidateWithDetails = async (
   cacheTag(
     CacheTags.CANDIDATES,
     CacheTags.POSITIONS,
-    CacheTags.INTERVIEWS,
+    CacheTags.ASSESSMENTS,
     entityTag.candidate(id),
   );
 
@@ -219,8 +203,8 @@ export const getCandidateWithDetails = async (
     where: { id },
     include: {
       ...CANDIDATE_INCLUDE,
-      interviews: {
-        ...CANDIDATE_INCLUDE.interviews,
+      assessments: {
+        ...CANDIDATE_INCLUDE.assessments,
         orderBy: { createdAt: "desc" },
       },
     },

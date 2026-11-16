@@ -62,7 +62,7 @@ async function EditPresetContent({ params }: EditPresetPageProps) {
           <CardTitle className="text-2xl">Modifica preset</CardTitle>
           <CardDescription>
             Aggiorna la configurazione di questo preset prima di riutilizzarlo
-            nei tuoi colloqui.
+            nei tuoi test.
           </CardDescription>
         </div>
       </CardHeader>
