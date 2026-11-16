@@ -10,12 +10,17 @@ vi.mock("@/lib/prisma", () => ({
       findMany: vi.fn(),
       updateMany: vi.fn(),
     },
+    interview: {
+      findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
   },
 }));
 
 vi.mock("@/lib/utils/cache-utils", () => ({
   invalidateCandidateCache: vi.fn(),
   invalidateAssessmentCache: vi.fn(),
+  invalidateInterviewCache: vi.fn(),
 }));
 
 import {
@@ -27,6 +32,7 @@ import prisma from "@/lib/prisma";
 import {
   invalidateAssessmentCache,
   invalidateCandidateCache,
+  invalidateInterviewCache,
 } from "@/lib/utils/cache-utils";
 
 const application = (overrides: Record<string, unknown> = {}) => ({
@@ -142,6 +148,29 @@ describe("moveApplicationStageAction", () => {
       data: { status: "cancelled" },
     });
     expect(invalidateAssessmentCache).toHaveBeenCalled();
+    expect(invalidateInterviewCache).not.toHaveBeenCalled();
+  });
+
+  it("refreshes the interviews when withdrawing cancels some", async () => {
+    const db = prisma as any;
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce(
+      application({ stage: "interview" }) as any,
+    );
+    db.interview.findMany.mockResolvedValueOnce([{ id: "int-1" }]);
+
+    const result = await moveApplicationStageAction({
+      applicationId: "app1",
+      stage: "withdrawn",
+    });
+
+    expect(result).toEqual({ success: true, stage: "withdrawn", changed: true });
+    expect(db.interview.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["int-1"] } },
+      data: { status: "cancelled" },
+    });
+    expect(invalidateInterviewCache).toHaveBeenCalledWith({
+      applicationId: "app1",
+    });
   });
 
   it("reopens a rejected application", async () => {

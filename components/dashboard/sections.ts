@@ -1,5 +1,6 @@
 import {
   Briefcase,
+  CalendarDays,
   ClipboardCheck,
   FileQuestion,
   LayoutDashboard,
@@ -23,6 +24,7 @@ export type SectionKey =
   | "positions"
   | "applications"
   | "candidates"
+  | "agenda"
   | "quizzes"
   | "presets"
   | "assessments"
@@ -79,6 +81,16 @@ export const SECTIONS: Record<SectionKey, Section> = {
     tile: "bg-section-candidates/12 ring-section-candidates/20",
     rule: "bg-section-candidates",
   },
+  // Same hue as the candidates: interviews belong to the hiring workflow
+  agenda: {
+    key: "agenda",
+    label: "Agenda colloqui",
+    href: "/dashboard/agenda",
+    icon: CalendarDays,
+    text: "text-section-candidates",
+    tile: "bg-section-candidates/12 ring-section-candidates/20",
+    rule: "bg-section-candidates",
+  },
   quizzes: {
     key: "quizzes",
     label: "Quiz",
@@ -125,7 +137,12 @@ export const NAV_GROUPS: { label: string; items: Section[] }[] = [
   },
   {
     label: "Selezione",
-    items: [SECTIONS.positions, SECTIONS.applications, SECTIONS.candidates],
+    items: [
+      SECTIONS.positions,
+      SECTIONS.applications,
+      SECTIONS.candidates,
+      SECTIONS.agenda,
+    ],
   },
   {
     label: "Libreria",

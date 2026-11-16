@@ -27,6 +27,9 @@ function makeTx() {
       delete: vi.fn(),
     },
     evaluation: { findMany: vi.fn().mockResolvedValue([]) },
+    criterionScore: { count: vi.fn().mockResolvedValue(0) },
+    kitItem: { count: vi.fn().mockResolvedValue(0) },
+    interviewKit: { findMany: vi.fn().mockResolvedValue([]) },
     guideQuestion: {
       findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn(),
@@ -237,6 +240,60 @@ describe("saveScorecard", () => {
     });
     expect(tx.application.update).not.toHaveBeenCalled();
     expect(tx.application.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("criterionHasEvidence with interviews", () => {
+  const params = { criterionId: "c-1", positionId: "pos-1" };
+
+  it("is true with an interviewer criterion score (submitted or not)", async () => {
+    const tx = makeTx();
+    tx.criterionScore.count.mockResolvedValue(1);
+
+    await expect(criterionHasEvidence(tx as any, params)).resolves.toBe(true);
+    expect(tx.criterionScore.count).toHaveBeenCalledWith({
+      where: { criterionId: "c-1" },
+    });
+    expect(tx.kitItem.count).not.toHaveBeenCalled();
+  });
+
+  it("is true with a kit item of the position citing it", async () => {
+    const tx = makeTx();
+    tx.kitItem.count.mockResolvedValue(2);
+
+    await expect(criterionHasEvidence(tx as any, params)).resolves.toBe(true);
+    expect(tx.kitItem.count).toHaveBeenCalledWith({
+      where: {
+        criterionIds: { has: "c-1" },
+        kit: { interview: { application: { positionId: "pos-1" } } },
+      },
+    });
+  });
+
+  it("is true with a kit hypothesis citing it, ignoring invalid shapes", async () => {
+    const tx = makeTx();
+    tx.interviewKit.findMany.mockResolvedValue([
+      { hypotheses: null },
+      { hypotheses: { criterionId: "c-1" } },
+      { hypotheses: ["c-1", null, { criterionId: "c-2" }] },
+      { hypotheses: [{ criterionId: "c-1", hypothesis: "x", howToVerify: "y" }] },
+    ]);
+
+    await expect(criterionHasEvidence(tx as any, params)).resolves.toBe(true);
+    expect(tx.interviewKit.findMany).toHaveBeenCalledWith({
+      where: { interview: { application: { positionId: "pos-1" } } },
+      select: { hypotheses: true },
+    });
+  });
+
+  it("is false when no score, kit item or hypothesis cites it", async () => {
+    const tx = makeTx();
+    tx.interviewKit.findMany.mockResolvedValue([
+      { hypotheses: [{ criterionId: "c-2" }] },
+      { hypotheses: "c-1" },
+    ]);
+
+    await expect(criterionHasEvidence(tx as any, params)).resolves.toBe(false);
   });
 });
 

@@ -98,7 +98,7 @@ async function ApplicationTabs({
       </TabsContent>
       <TabsContent value="colloqui" className="flex flex-col gap-4 pt-4">
         <Suspense fallback={<ApplicationTabSkeleton />}>
-          <InterviewsTab />
+          <InterviewsTab params={params} />
         </Suspense>
       </TabsContent>
       <TabsContent value="decisione" className="flex flex-col gap-4 pt-4">

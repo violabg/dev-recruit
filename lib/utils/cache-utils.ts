@@ -41,6 +41,10 @@ export const CacheTags = {
   SCORECARDS: "scorecards",
   // Interview guides with their sections and questions
   INTERVIEW_GUIDES: "interview-guides",
+  // Interviews with their participants, kits, kit sections, kit items and
+  // submitted interviewer scorecards. Live notes and unsubmitted scorecards
+  // are never cached.
+  INTERVIEWS: "interviews",
 } as const;
 
 /**
@@ -65,6 +69,8 @@ export const entityTag = {
   // A position has at most one scorecard: keyed by the position id
   scorecard: (positionId: string) => `scorecard-${positionId}`,
   interviewGuide: (id: string) => `interview-guide-${id}`,
+  // One interview with its kit and feedback (keyed by the interview id)
+  interview: (id: string) => `interview-${id}`,
 } as const;
 
 /**
@@ -82,12 +88,14 @@ const CASCADE_ON_DELETE = {
     CacheTags.BEHAVIORAL_RUBRICS,
     CacheTags.SCORECARDS,
     CacheTags.INTERVIEW_GUIDES,
+    CacheTags.INTERVIEWS,
   ],
   quiz: [CacheTags.ASSESSMENTS, CacheTags.EVALUATIONS],
   candidate: [
     CacheTags.ASSESSMENTS,
     CacheTags.EVALUATIONS,
     CacheTags.BEHAVIORAL_RUBRICS,
+    CacheTags.INTERVIEWS,
   ],
   assessment: [CacheTags.EVALUATIONS],
 } as const;
@@ -426,6 +434,36 @@ export function invalidateInterviewGuideCache(options: {
     );
   }
 
+  revalidatePath("/dashboard");
+}
+
+// ============================================================================
+// Interview Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate interview cache after an interview, its participants, its kit
+ * (sections, items) or a submitted interviewer scorecard change.
+ * Use this in Server Actions only.
+ */
+export function invalidateInterviewCache(options: {
+  interviewId?: string;
+  applicationId: string;
+}) {
+  updateTag(CacheTags.INTERVIEWS);
+
+  const applicationPath = `/dashboard/applications/${options.applicationId}`;
+
+  if (options.interviewId) {
+    updateTag(entityTag.interview(options.interviewId));
+    const interviewPath = `${applicationPath}/interviews/${options.interviewId}`;
+    revalidatePath(`${interviewPath}/prepare`);
+    revalidatePath(`${interviewPath}/live`);
+    revalidatePath(`${interviewPath}/feedback`);
+  }
+
+  revalidatePath(applicationPath);
+  revalidatePath("/dashboard/agenda");
   revalidatePath("/dashboard");
 }
 

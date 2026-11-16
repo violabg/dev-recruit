@@ -8,6 +8,7 @@ import {
   type ActionCenterData,
 } from "@/lib/data/applications";
 import { isApplicationStale } from "@/lib/utils/application-stage";
+import { isTodayOrTomorrow } from "@/lib/utils/interview-calendar";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -65,16 +66,27 @@ async function MyActions({
   const isMine = (row: { ownerId: string | null }) =>
     !mineOnly || row.ownerId === user.id;
 
-  // Positions with an incomplete setup have no application: never filtered
+  const now = new Date();
+
+  // Positions with an incomplete setup have no application: never filtered.
+  // Interviews: owner or participant; scorecards: their interviewer
   const filtered: ActionCenterData = {
     assessmentsToEvaluate: data.assessmentsToEvaluate.filter(isMine),
     openApplications: data.openApplications.filter(isMine),
     positionsWithIncompleteSetup: data.positionsWithIncompleteSetup,
-    interviewsWithoutKit: data.interviewsWithoutKit.filter(isMine),
-    feedbackToFill: data.feedbackToFill.filter(isMine),
+    interviewsWithoutKit: data.interviewsWithoutKit
+      .filter((row) => isTodayOrTomorrow(row.scheduledAt, now))
+      .filter(
+        (row) =>
+          !mineOnly ||
+          row.ownerId === user.id ||
+          row.participantIds.includes(user.id),
+      ),
+    feedbackToFill: data.feedbackToFill.filter(
+      (row) => !mineOnly || row.interviewerId === user.id,
+    ),
   };
 
-  const now = new Date();
   const staleApplications = filtered.openApplications.filter((application) =>
     isApplicationStale(application, now),
   );

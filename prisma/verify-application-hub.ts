@@ -138,21 +138,40 @@ async function main() {
      WHERE schemaname = 'public'
   `;
 
-  // The Phase 2 table interview_guides (with its columns, types, constraints
-  // and indexes) is a new table, not a leftover of the Phase 1 rename.
+  // The Phase 2 table interview_guides and the Phase 3 interview tables (with
+  // their columns, types, constraints and indexes) and enum types are new
+  // objects, not leftovers of the Phase 1 rename.
   const interviewNames = oldNames.filter(
     (row) =>
       /interview/i.test(row.name) &&
       row.name !== "evaluations.interviewNotes" &&
-      !/^_?interview_guides(?:$|[._])/.test(row.name),
+      !/^_?(?:interview_guides|interviews|interview_participants|interview_kits|interviewer_feedback)(?:$|[._])/.test(
+        row.name,
+      ) &&
+      !/^_?(?:InterviewStatus|InterviewParticipantRole)$/.test(row.name),
   );
   assert(
     interviewNames.length === 0,
     interviewNames.length === 0
-      ? "Nessun nome con interview nel database (a parte evaluations.interviewNotes e la tabella interview_guides della Fase 2)"
+      ? "Nessun nome con interview nel database a parte evaluations.interviewNotes, la tabella interview_guides della Fase 2 e le tabelle dei colloqui della Fase 3"
       : `Errore: nomi con interview ancora presenti: ${interviewNames
           .map((row) => `${row.kind} ${row.name}`)
           .join(", ")}`,
+  );
+
+  // The Phase 3 table interviews must not be the Phase 1 table left un-renamed:
+  // it has scheduledAt and no token column.
+  const interviewsColumns = oldNames.filter(
+    (row) => row.kind === "colonna" && row.name.startsWith("interviews."),
+  );
+  const phase3Interviews =
+    interviewsColumns.some((row) => row.name === "interviews.scheduledAt") &&
+    !interviewsColumns.some((row) => row.name === "interviews.token");
+  assert(
+    phase3Interviews,
+    phase3Interviews
+      ? "La tabella interviews ha la forma della Fase 3"
+      : "Errore: la tabella interviews non ha la forma della Fase 3",
   );
 
   const legacyNames = oldNames.filter((row) =>

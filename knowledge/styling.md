@@ -2,7 +2,7 @@
 title: "styling"
 tier: "PerComponent"
 keywords: ["UI","styling","tokens","OKLCH","status colour","components","tailwind"]
-intent: "When building or changing UI components or pages (project tokens and reusable project components; generic shadcn rules come from the shadcn skill)."
+intent: "When building or changing UI components or pages (project tokens and reusable project components, including interview status, kit and scorecard presentation; generic shadcn rules come from the shadcn skill)."
 editable: true
 ---
 # UI styling conventions
@@ -21,13 +21,14 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | `success` | Positive feedback, good scores, `Button` variant `success` |
 | `warning` | Caution: mid scores, low remaining time, unsaved changes |
 | `destructive` | Errors, delete actions, low scores, required-field asterisk |
-| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` | Assessment statuses `pending`, `in_progress`, `completed`, `cancelled`, and the derived `expired`; also the application stages, through their own map |
+| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` | Assessment statuses `pending`, `in_progress`, `completed`, `cancelled`, and the derived `expired`; interview statuses; also the application stages, through their own map |
 | `section-positions`, `section-candidates`, `section-quizzes`, `section-presets`, `section-assessments`, `section-settings` | Identity hue of each dashboard section (sidebar icon, page-title rule) |
 
 - New colours are added as OKLCH tokens in the global stylesheet (light and dark values), never as palette classes (`text-green-600`), hex or arbitrary values in components.
 - For status feedback prefer a tint (`bg-success/10 text-success`) over a filled background; never pair a token background with `text-white`/`text-black`.
 - Only `primary`, `secondary` and `accent` have a `-foreground` companion. `success` and `destructive` do not: on a filled `bg-success` or `bg-destructive` surface use `text-primary-foreground`.
 - There is no `section-applications` token. The Candidature section reuses the candidates hue (`text-section-candidates`, `bg-section-candidates`); the "Le mie azioni" overview entry uses `primary`.
+- The Agenda section ("Agenda colloqui", icon `CalendarDays`) reuses the candidates hue too, like Candidature, and sits in the Selezione group after Candidati. No new token. `MineToggle` accepts a label (`label`, default "Solo le mie"): the Agenda passes "Solo i miei".
 
 ## Status and score colours
 
@@ -54,10 +55,16 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
   An unknown status falls back to muted. Never write a local status → colour map.
 - Scorecard criteria have one presentation module and no other map. `criterion-presentation.ts` of the scorecard components exports `CRITERION_CATEGORY_LABEL` ("Tecnico", "Soft skill", "Cultura"), `CRITERION_PRIORITY_PRESENTATION` (`must` "Indispensabile" `bg-primary/10 text-primary`, `nice` "Preferibile" `bg-muted text-muted-foreground`), `CRITERION_SOURCE_LABEL` ("Competenza", "Soft skill", "Personalizzato") and the option lists `CRITERION_CATEGORY_OPTIONS`, `CRITERION_PRIORITY_OPTIONS`, `CRITERION_SOURCE_OPTIONS`. Never write a local criterion map: the schema module only holds the value arrays (`CRITERION_CATEGORY_VALUES`, `CRITERION_PRIORITY_VALUES`, `CRITERION_SOURCE_VALUES`), never labels or classes.
 - Interview-guide section kinds have one presentation module too: `guide-section-kind.ts` of the interview-guide components exports `GUIDE_SECTION_KIND_LABEL` ("Introduzione", "Esperienza", "Tecnica", "Comportamentale", "Domande del candidato", "Chiusura") and `GUIDE_SECTION_KIND_OPTIONS`. The select's label is "Tipo".
+- Interviews, kits, kit items, participants and interviewer scorecards have one presentation module: `interview-presentation.ts` of the interview components. It is the only map:
+  - `INTERVIEW_STATUS_PRESENTATION` and `getInterviewStatusPresentation(status)`, with the `stage-*` tokens: Pianificato `stage-pending`, In corso `stage-progress`, Concluso `stage-done`, Annullato `stage-cancelled`, Non presentato `stage-expired`; an unknown status falls back to `bg-muted text-muted-foreground` (dot `bg-muted-foreground`).
+  - `KIT_STATUS_PRESENTATION`: "Kit in bozza" `bg-warning/10 text-warning`, "Kit pronto" `bg-success/10 text-success`.
+  - `KIT_ITEM_ORIGIN_LABEL` and `getKitItemOriginLabel(origin, sourceRound)` ("Round N" for a previous-round question whose scorecard is known, otherwise "Round precedente"), `PARTICIPANT_ROLE_LABEL` ("Conduttore", "Osservatore"), `HIRE_RECOMMENDATION_LABEL` ("Assolutamente sì", "Sì", "Forse", "No", "Assolutamente no"), `MISSING_SOURCE_LABEL`, `LEGAL_REMINDER_TEXT`.
+  - The origin badge of a kit question is neutral (`variant="outline"`), with no colour per origin. The criteria coverage shows "Nessuna prova" `bg-warning/10 text-warning` and "Con prove" `bg-success/10 text-success`. The section timer is `text-warning` under 2 minutes and `text-destructive` past the time.
 - The per-criterion CV assessment compares the score with the expected level of the criterion, in this order: `success` when the score reaches or exceeds `expectedLevel`; `warning` when it is exactly one point below; `destructive` for anything lower; `bg-muted text-muted-foreground` with "Nessuna evidenza nel CV" when the score is `null`. The chip reads `{score}/5 · atteso {expectedLevel}` and adds " (archiviato)" for an archived criterion.
 - Score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
 - Score thresholds in the UI: per-answer score (0–10) ≥ 7 success, ≥ 4 warning, else destructive; percentages ≥ 70 success, ≥ 40 warning, else destructive.
-- Unsaved changes are a `warning` tint: "Modifiche non salvate" with `bg-warning/10 px-2 py-1 rounded-md text-warning text-sm`, in both the scorecard and the interview-guide editor. The scorecard editor adds "Criteri soft di default: non sono ancora salvati" with `bg-warning/10 px-3 py-2 rounded-md text-warning text-sm`, and the guide editor flags a minutes sum that does not match the duration with `bg-warning/10 text-warning` on "Somma sezioni: {minutes} min su {duration}". A generation dialog that will replace existing rows warns with the same `bg-warning/10 … text-warning text-sm` tint.
+- Unsaved changes are a `warning` tint: "Modifiche non salvate" with `bg-warning/10 px-2 py-1 rounded-md text-warning text-sm`, in the scorecard, the interview-guide and the kit editors. The scorecard editor adds "Criteri soft di default: non sono ancora salvati" with `bg-warning/10 px-3 py-2 rounded-md text-warning text-sm`, and the guide editor flags a minutes sum that does not match the duration with `bg-warning/10 text-warning` on "Somma sezioni: {minutes} min su {duration}". A generation dialog that will replace existing rows warns with the same `bg-warning/10 … text-warning text-sm` tint.
+- The legal reminder of the preparation and live pages is `LegalReminder`, a `role="note"` block with `bg-warning/10 text-warning`, holding the fixed `LEGAL_REMINDER_TEXT`. There is no Alert component under `components/ui`, and the reminder is never generated or stored.
 
 ```tsx
 <span aria-hidden className={cn("rounded-full size-2", stage.dot)} /> {/* stage.dot = "bg-stage-pending" */}
@@ -83,6 +90,7 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | Form fields | `rhf-inputs` wrappers (see server_actions); raw `Controller` only for controls without a wrapper (`LLMModelSelect`, `CodeEditor`) |
 | Toasts | `toast` from `sonner` |
 | Preset icons | `getPresetIcon(name)` and `PRESET_ICON_OPTIONS` (the icon name is stored on the preset) |
+| "Solo le mie" / "Solo i miei" toggle | `MineToggle` with `label` |
 
 All UI text, including `aria-label` and screen-reader text, is Italian.
 
@@ -94,7 +102,8 @@ All UI text, including `aria-label` and screen-reader text, is Italian.
 - Building a page title or delete dialog by hand instead of `PageHeader` / `DeleteWithConfirm`.
 - Colouring assessment statuses with anything other than the `stage-*` tokens.
 - A local stage → colour map instead of the shared presentation map, or a candidate status badge for a `Candidate.status` that no longer exists.
-- Inventing a `section-applications` token instead of reusing the candidates hue.
+- Inventing a `section-applications` token instead of reusing the candidates hue, or a new token for the Agenda.
 - Writing a position status badge by hand instead of `getPositionStatusPresentation`.
-- Writing a local criterion or guide-section label/colour map instead of the shared presentation modules.
+- Writing a local criterion, guide-section, interview-status, kit-status or kit-origin label/colour map instead of the shared presentation modules.
 - Colouring a criterion score against a fixed threshold instead of the criterion's expected level.
+- Rendering the legal reminder from generated or stored text, or with an Alert component that does not exist in the project.

@@ -5,6 +5,7 @@ Lo schema cambia solo con migrazioni versionate di Prisma Migrate, salvate in qu
 - `0_init` fotografa lo schema com'era prima della Fase 1. Non va mai eseguita su un database esistente: si segna soltanto come già applicata.
 - `20261115000000_application_hub` è la migrazione della Fase 1 (rinomine, backfill, verifiche e rimozioni).
 - `20261117000000_scorecard_guides` è la migrazione della Fase 2: nuove tabelle `scorecards`, `scorecard_criteria`, `interview_guides`, `guide_sections`, `guide_questions`; nuove colonne `quiz_questions.criterionIds`, `evaluations.answerEvaluations`, `evaluations.criteriaAssessment`. Nessun backfill: i dati esistenti restano invariati.
+- `20261118000000_interviews_kits` è la migrazione della Fase 3: nuove tabelle `interviews`, `interview_participants`, `interview_kits`, `kit_sections`, `kit_items`, `kit_item_notes`, `interviewer_feedback`, `criterion_scores` e i tipi `InterviewStatus`, `InterviewParticipantRole`, `KitStatus`, `KitItemOrigin`. Solo additiva, nessun backfill.
 
 ## Riallineamento una tantum
 
@@ -51,6 +52,8 @@ pnpm db:migrate:deploy
 ```
 
 Lo stesso `pnpm db:migrate:deploy` applica anche la migrazione della Fase 2 `20261117000000_scorecard_guides`, che è solo additiva; se la Fase 1 è già stata applicata, rilancialo per applicare questa migrazione.
+
+Lo stesso `pnpm db:migrate:deploy` applica anche la migrazione della Fase 3 `20261118000000_interviews_kits`, dopo quelle della Fase 1 e della Fase 2; è solo additiva. Se le Fasi 1 e 2 sono già state applicate, rilancialo per applicare questa migrazione.
 
 ### Passo 4 — Verifica
 

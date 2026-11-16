@@ -16,6 +16,8 @@ export { AIQuizService, aiQuizService } from "./core";
 export {
   buildGuidePrompt,
   buildGuideSystemPrompt,
+  buildKitPrompt,
+  buildKitSystemPrompt,
   buildPositionDescriptionPrompt,
   buildQuestionPrompts,
   buildQuizPrompt,

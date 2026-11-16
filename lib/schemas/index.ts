@@ -55,6 +55,9 @@ export * from "./scorecard";
 // Re-export interview guide schemas and types
 export * from "./interview-guide";
 
+// Re-export interview schemas and types
+export * from "./interview";
+
 // ====================
 // UTILITY EXPORTS
 // ====================

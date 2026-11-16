@@ -13,6 +13,7 @@ import {
   invalidateCandidateCacheInRouteHandler,
   invalidateEvaluationCache,
   invalidateEvaluationCacheInRouteHandler,
+  invalidateInterviewCache,
   invalidateInterviewGuideCache,
   invalidatePositionCache,
   invalidateScorecardCache,
@@ -477,5 +478,60 @@ describe("scorecard and interview guide tags", () => {
 
     expect(mockedUpdateTag).not.toHaveBeenCalledWith("scorecards");
     expect(mockedUpdateTag).not.toHaveBeenCalledWith("interview-guides");
+  });
+});
+
+describe("interview tags", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("builds the collection and entity tags", () => {
+    expect(CacheTags.INTERVIEWS).toBe("interviews");
+    expect(entityTag.interview("int-1")).toBe("interview-int-1");
+  });
+
+  it("invalidateInterviewCache with an interview id expires its tag and its pages", () => {
+    invalidateInterviewCache({ interviewId: "int-1", applicationId: "app-1" });
+
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interviews");
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-int-1");
+    expect(mockedUpdateTag).toHaveBeenCalledTimes(2);
+    for (const page of ["prepare", "live", "feedback"]) {
+      expect(mockedRevalidatePath).toHaveBeenCalledWith(
+        `/dashboard/applications/app-1/interviews/int-1/${page}`,
+      );
+    }
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/applications/app-1");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/agenda");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
+    expect(mockedRevalidatePath).toHaveBeenCalledTimes(6);
+    expect(mockedRevalidateTag).not.toHaveBeenCalled();
+  });
+
+  it("invalidateInterviewCache without an interview id expires only the collection", () => {
+    invalidateInterviewCache({ applicationId: "app-1" });
+
+    expect(mockedUpdateTag).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interviews");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/applications/app-1");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/agenda");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
+    expect(mockedRevalidatePath).toHaveBeenCalledTimes(3);
+  });
+
+  it("deleting a position or a candidate expires the interviews", () => {
+    invalidatePositionCache("pos-1", { deleted: true });
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interviews");
+
+    vi.clearAllMocks();
+    invalidateCandidateCache({ candidateId: "cand-1", deleted: true });
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interviews");
+  });
+
+  it("updating a position or a candidate does not expire the interviews", () => {
+    invalidatePositionCache("pos-1");
+    invalidateCandidateCache({ candidateId: "cand-1" });
+    expect(mockedUpdateTag).not.toHaveBeenCalledWith("interviews");
   });
 });

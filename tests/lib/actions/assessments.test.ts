@@ -545,6 +545,7 @@ describe("assessments on applications", () => {
       stage: "assessment",
       changed: true,
       cancelledAssessmentIds: [],
+      cancelledInterviewIds: [],
     });
 
     await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: ["c1"] });

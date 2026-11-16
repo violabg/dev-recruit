@@ -31,6 +31,12 @@ const DASHBOARD_LABELS: Record<string, string> = {
   edit: "Modifica",
   new: "Nuovo",
   invite: "Invita",
+  agenda: "Agenda colloqui",
+  interviews: "Colloqui",
+  prepare: "Preparazione",
+  live: "Live",
+  feedback: "Scheda intervistatore",
+  guides: "Guide colloquio",
 };
 
 const getBreadcrumbSegments = (pathname: string) => {
@@ -58,6 +64,17 @@ const Breadcrumbs = () => {
     const href = "/" + segments.slice(0, idx + 1).join("/");
     const isLast = idx === segments.length - 1;
     const isNewQuiz = segment === "quiz" && idx === 3;
+    // Segments without a page of their own link to the tab that lists them
+    const parentHref = "/" + segments.slice(0, idx).join("/");
+    let linkHref = href;
+    if (segment === "guides" && segments[idx - 2] === "positions") {
+      linkHref = `${parentHref}?tab=guide`;
+    } else if (
+      segment === "interviews" &&
+      segments[idx - 2] === "applications"
+    ) {
+      linkHref = `${parentHref}?tab=colloqui`;
+    }
     // Separator is a sibling <li> of the item (valid list markup)
     return (
       <Fragment key={href}>
@@ -65,7 +82,7 @@ const Breadcrumbs = () => {
           {isLast || isNewQuiz ? (
             <BreadcrumbPage>{getBreadcrumbLabel(segment)}</BreadcrumbPage>
           ) : (
-            <BreadcrumbLink render={<Link href={href as any} />}>
+            <BreadcrumbLink render={<Link href={linkHref as any} />}>
               {getBreadcrumbLabel(segment)}
             </BreadcrumbLink>
           )}

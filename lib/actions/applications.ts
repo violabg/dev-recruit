@@ -12,6 +12,7 @@ import { setApplicationStage } from "../services/applications";
 import {
   invalidateAssessmentCache,
   invalidateCandidateCache,
+  invalidateInterviewCache,
 } from "../utils/cache-utils";
 import { runAction, UserError } from "./run-action";
 
@@ -38,6 +39,10 @@ export async function moveApplicationStageAction(
 
       if (result.cancelledAssessmentIds.length > 0) {
         invalidateAssessmentCache();
+      }
+
+      if (result.cancelledInterviewIds.length > 0) {
+        invalidateInterviewCache({ applicationId: result.applicationId });
       }
     }
 

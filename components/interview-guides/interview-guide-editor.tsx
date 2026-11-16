@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "cn";
 import { BrainCircuit, Loader2, Plus, Save } from "lucide-react";
 import type { Route } from "next";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useMemo,
@@ -230,7 +231,16 @@ export function InterviewGuideEditor({
               </Button>
               {!hasActiveCriteria && (
                 <span className="text-muted-foreground text-xs">
-                  Crea prima la scheda di valutazione
+                  Per generare la guida con l&apos;AI crea prima la scheda di
+                  valutazione.{" "}
+                  <Link
+                    href={
+                      `/dashboard/positions/${positionId}/scorecard` as Route<`/dashboard/positions/${string}/scorecard`>
+                    }
+                    className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                  >
+                    Vai alla scheda
+                  </Link>
                 </span>
               )}
             </div>

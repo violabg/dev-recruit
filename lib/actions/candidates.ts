@@ -23,6 +23,7 @@ import {
 import {
   invalidateAssessmentCache,
   invalidateCandidateCache,
+  invalidateInterviewCache,
 } from "../utils/cache-utils";
 import { runAction, UserError } from "./run-action";
 
@@ -442,6 +443,12 @@ export async function updateCandidateAction(
 
     if (sync && sync.cancelledAssessmentIds.length > 0) {
       invalidateAssessmentCache();
+    }
+
+    if (sync && sync.cancelledInterviewIds.length > 0) {
+      for (const applicationId of sync.touchedApplicationIds) {
+        invalidateInterviewCache({ applicationId });
+      }
     }
   });
 }

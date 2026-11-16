@@ -1,5 +1,9 @@
 import { NextActionCard } from "@/components/applications/next-action-card";
 import { getApplicationDetail } from "@/lib/data/applications";
+import {
+  allFeedbackSubmitted,
+  toNextActionInterviewFacts,
+} from "@/lib/utils/interview-status";
 import { getNextAction, type ApplicationFacts } from "@/lib/utils/next-action";
 
 type Props = {
@@ -15,7 +19,14 @@ export async function NextActionSection({ params }: Props) {
     return null;
   }
 
-  // Interviews and feedback arrive with Phase 3: omitted here
+  const interviews = detail.interviews.map((interview) => ({
+    id: interview.id,
+    status: interview.status,
+    kitStatus: interview.kitStatus,
+    participantIds: interview.participantIds,
+    submittedInterviewerIds: interview.submittedInterviewerIds,
+  }));
+
   const facts: ApplicationFacts = {
     stage: detail.stage,
     hasResume: !!detail.candidate.resumeUrl,
@@ -26,6 +37,8 @@ export async function NextActionSection({ params }: Props) {
       hasEvaluation: !!assessment.evaluation,
       createdAt: assessment.createdAt,
     })),
+    interviews: toNextActionInterviewFacts(interviews),
+    allFeedbackSubmitted: allFeedbackSubmitted(interviews),
   };
 
   return (

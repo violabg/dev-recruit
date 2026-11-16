@@ -7,6 +7,8 @@ import {
   type AssessmentStatus,
   type CriterionCategory,
   type CriterionPriority,
+  type InterviewStatus,
+  type KitStatus,
   type PositionStatus,
 } from "@/lib/schemas";
 import { OPEN_STAGES } from "@/lib/utils/application-stage";
@@ -98,6 +100,16 @@ export type ApplicationDetail = {
     title: string;
     timeLimit: number | null;
     createdAt: Date;
+  }[];
+  /** Interviews of the application, by round: the facts of the next action */
+  interviews: {
+    id: string;
+    round: number;
+    status: InterviewStatus;
+    scheduledAt: Date;
+    kitStatus: KitStatus | null;
+    participantIds: string[];
+    submittedInterviewerIds: string[];
   }[];
 };
 
@@ -198,20 +210,30 @@ export type ActionCenterData = {
     /** Parts not set up yet, in the order scorecard, quiz, guide */
     missing: SetupPart[];
   }[];
-  /** Phase 3: always [] in Phase 1 */
+  /**
+   * Every scheduled interview of an open application whose kit is not ready,
+   * by date: the page keeps today and tomorrow (the cache reads no clock)
+   */
   interviewsWithoutKit: {
+    interviewId: string;
     applicationId: string;
     ownerId: string | null;
+    participantIds: string[];
     candidateName: string;
     positionTitle: string;
+    round: number;
     scheduledAt: Date;
   }[];
-  /** Phase 3: always [] in Phase 1 */
+  /** One row per participant of a completed interview without a submitted scorecard */
   feedbackToFill: {
+    interviewId: string;
     applicationId: string;
     ownerId: string | null;
+    interviewerId: string;
+    interviewerName: string;
     candidateName: string;
     positionTitle: string;
+    round: number;
   }[];
 };
 
@@ -275,6 +297,7 @@ export async function getApplicationDetail(
     CacheTags.EVALUATIONS,
     CacheTags.QUIZZES,
     CacheTags.SCORECARDS,
+    CacheTags.INTERVIEWS,
   );
 
   const application = await prisma.application.findUnique({
@@ -323,6 +346,22 @@ export async function getApplicationDetail(
               fitScore: true,
               createdAt: true,
             },
+          },
+        },
+      },
+      // Interview facts only: never notes, feedback only once submitted
+      interviews: {
+        orderBy: { round: "asc" },
+        select: {
+          id: true,
+          round: true,
+          status: true,
+          scheduledAt: true,
+          kit: { select: { status: true } },
+          participants: { select: { userId: true } },
+          feedback: {
+            where: { submittedAt: { not: null } },
+            select: { interviewerId: true },
           },
         },
       },
@@ -397,6 +436,15 @@ export async function getApplicationDetail(
     assessments: application.assessments,
     resumeEvaluation,
     availableQuizzes,
+    interviews: application.interviews.map((interview) => ({
+      id: interview.id,
+      round: interview.round,
+      status: interview.status,
+      scheduledAt: interview.scheduledAt,
+      kitStatus: interview.kit?.status ?? null,
+      participantIds: interview.participants.map((p) => p.userId),
+      submittedInterviewerIds: interview.feedback.map((f) => f.interviewerId),
+    })),
   };
 }
 
@@ -626,9 +674,16 @@ export async function getActionCenterData(): Promise<ActionCenterData> {
     CacheTags.QUIZZES,
     CacheTags.SCORECARDS,
     CacheTags.INTERVIEW_GUIDES,
+    CacheTags.INTERVIEWS,
   );
 
-  const [assessments, applications, positions] = await Promise.all([
+  const [
+    assessments,
+    applications,
+    positions,
+    interviewsWithoutKit,
+    completedInterviews,
+  ] = await Promise.all([
     prisma.assessment.findMany({
       where: {
         status: "completed",
@@ -679,6 +734,56 @@ export async function getActionCenterData(): Promise<ActionCenterData> {
         },
       },
     }),
+    // Scheduled interviews of open applications whose kit is not ready
+    prisma.interview.findMany({
+      where: {
+        status: "scheduled",
+        OR: [{ kit: { is: null } }, { kit: { status: { not: "ready" } } }],
+        application: { stage: { notIn: CLOSED_STAGES } },
+      },
+      orderBy: { scheduledAt: "asc" },
+      select: {
+        id: true,
+        round: true,
+        scheduledAt: true,
+        participants: { select: { userId: true } },
+        application: {
+          select: {
+            id: true,
+            ownerId: true,
+            candidate: { select: { firstName: true, lastName: true } },
+            position: { select: { title: true } },
+          },
+        },
+      },
+    }),
+    // Completed interviews of open applications: their missing scorecards
+    prisma.interview.findMany({
+      where: {
+        status: "completed",
+        application: { stage: { notIn: CLOSED_STAGES } },
+      },
+      orderBy: { scheduledAt: "asc" },
+      select: {
+        id: true,
+        round: true,
+        participants: {
+          select: { userId: true, user: { select: { name: true } } },
+        },
+        feedback: {
+          where: { submittedAt: { not: null } },
+          select: { interviewerId: true },
+        },
+        application: {
+          select: {
+            id: true,
+            ownerId: true,
+            candidate: { select: { firstName: true, lastName: true } },
+            position: { select: { title: true } },
+          },
+        },
+      },
+    }),
   ]);
 
   return {
@@ -716,8 +821,33 @@ export async function getActionCenterData(): Promise<ActionCenterData> {
           ]
         : [];
     }),
-    interviewsWithoutKit: [],
-    feedbackToFill: [],
+    interviewsWithoutKit: interviewsWithoutKit.map((interview) => ({
+      interviewId: interview.id,
+      applicationId: interview.application.id,
+      ownerId: interview.application.ownerId,
+      participantIds: interview.participants.map((p) => p.userId),
+      candidateName: fullName(interview.application.candidate),
+      positionTitle: interview.application.position.title,
+      round: interview.round,
+      scheduledAt: interview.scheduledAt,
+    })),
+    feedbackToFill: completedInterviews.flatMap((interview) => {
+      const submitted = new Set(
+        interview.feedback.map((feedback) => feedback.interviewerId),
+      );
+      return interview.participants
+        .filter((participant) => !submitted.has(participant.userId))
+        .map((participant) => ({
+          interviewId: interview.id,
+          applicationId: interview.application.id,
+          ownerId: interview.application.ownerId,
+          interviewerId: participant.userId,
+          interviewerName: participant.user.name,
+          candidateName: fullName(interview.application.candidate),
+          positionTitle: interview.application.position.title,
+          round: interview.round,
+        }));
+    }),
   };
 }
 

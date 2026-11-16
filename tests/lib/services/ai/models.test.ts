@@ -15,6 +15,7 @@ describe("getOptimalModel", () => {
   it.each([
     "scorecard_generation",
     "guide_generation",
+    "kit_generation",
     "quiz_generation",
     "question_generation",
     "evaluation",

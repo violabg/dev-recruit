@@ -1,4 +1,8 @@
-import type { ApplicationStage, AssessmentStatus } from "@/lib/schemas";
+import type {
+  ApplicationStage,
+  AssessmentStatus,
+  InterviewStatus,
+} from "@/lib/schemas";
 import { isOpenStage, nextStage, STAGE_LABELS } from "./application-stage";
 
 /**
@@ -16,13 +20,14 @@ export type ApplicationFacts = {
     hasEvaluation: boolean;
     createdAt: Date | string;
   }[];
-  /** Filled from Phase 3 on; omitted in Phase 1 */
+  /** One entry per interview of the application */
   interviews?: readonly {
-    status: "scheduled" | "in_progress" | "completed" | "cancelled" | "no_show";
+    id: string;
+    status: InterviewStatus;
     kitReady: boolean;
     feedbackMissing: boolean;
   }[];
-  /** Filled from Phase 3 on; omitted in Phase 1 */
+  /** Every scorecard of the completed interviews is submitted */
   allFeedbackSubmitted?: boolean;
 };
 
@@ -47,6 +52,8 @@ export type NextAction = {
   assessmentId?: string;
   /** closed only */
   canReopen?: boolean;
+  /** prepare_interview, fill_feedback only */
+  interviewId?: string;
   missingResume: boolean;
 };
 
@@ -101,17 +108,29 @@ export function getNextAction(facts: ApplicationFacts): NextAction {
   }
 
   // 5) A planned conversation whose kit is not ready
-  if (interviews.some((i) => i.status === "scheduled" && !i.kitReady)) {
+  const toPrepare = interviews.find(
+    (i) => i.status === "scheduled" && !i.kitReady,
+  );
+  if (toPrepare) {
     return {
       kind: "prepare_interview",
       label: "Prepara colloquio",
+      interviewId: toPrepare.id,
       missingResume,
     };
   }
 
   // 6) A held conversation without its feedback
-  if (interviews.some((i) => i.status === "completed" && i.feedbackMissing)) {
-    return { kind: "fill_feedback", label: "Compila scheda", missingResume };
+  const toFill = interviews.find(
+    (i) => i.status === "completed" && i.feedbackMissing,
+  );
+  if (toFill) {
+    return {
+      kind: "fill_feedback",
+      label: "Compila scheda",
+      interviewId: toFill.id,
+      missingResume,
+    };
   }
 
   // 7) Every feedback is in

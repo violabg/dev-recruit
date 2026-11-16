@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActionCenterData } from "@/lib/data/applications";
 import { formatDate } from "@/lib/utils";
 import { STALE_APPLICATION_DAYS } from "@/lib/utils/application-stage";
+import { formatInterviewDateTime } from "@/lib/utils/interview-calendar";
 import { SETUP_STEP_LABEL, SETUP_STEP_TAB } from "@/lib/utils/position-setup";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -133,13 +134,14 @@ export function ActionCenter({
       <ActionCard
         title="Colloqui senza kit pronto"
         count={data.interviewsWithoutKit.length}
-        emptyText="Disponibile con la Fase 3"
+        emptyText="Niente da fare"
       >
         {data.interviewsWithoutKit.map((item) => (
           <ActionRow
-            key={item.applicationId}
-            href={`/dashboard/applications/${item.applicationId}`}
+            key={item.interviewId}
+            href={`/dashboard/applications/${item.applicationId}/interviews/${item.interviewId}/prepare`}
             title={`${item.candidateName} · ${item.positionTitle}`}
+            detail={`Round ${item.round} · ${formatInterviewDateTime(item.scheduledAt)}`}
           />
         ))}
       </ActionCard>
@@ -147,13 +149,14 @@ export function ActionCenter({
       <ActionCard
         title="Schede da compilare"
         count={data.feedbackToFill.length}
-        emptyText="Disponibile con la Fase 3"
+        emptyText="Niente da fare"
       >
         {data.feedbackToFill.map((item) => (
           <ActionRow
-            key={item.applicationId}
-            href={`/dashboard/applications/${item.applicationId}`}
+            key={`${item.interviewId}-${item.interviewerId}`}
+            href={`/dashboard/applications/${item.applicationId}/interviews/${item.interviewId}/feedback`}
             title={`${item.candidateName} · ${item.positionTitle}`}
+            detail={`Round ${item.round} · ${item.interviewerName}`}
           />
         ))}
       </ActionCard>

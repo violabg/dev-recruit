@@ -13,9 +13,6 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { MoveStageMenu } from "./move-stage-menu";
 
-const PHASE_3_HINT =
-  "La pianificazione del colloquio arriva con la Fase 3: per ora sposta la fase a mano";
-
 /** Card "Prossima azione": what to do next on this application. */
 export function NextActionCard({
   applicationId,
@@ -70,11 +67,42 @@ export function NextActionCard({
           </Link>
         );
       case "schedule_interview":
+        return (
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={`${applicationHref}/interviews/new` as never}
+              className={linkClass}
+            >
+              Pianifica colloquio
+            </Link>
+            <MoveStageMenu applicationId={applicationId} stage={stage} />
+          </div>
+        );
       case "prepare_interview":
+        return (
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={
+                `${applicationHref}/interviews/${action.interviewId}/prepare` as never
+              }
+              className={linkClass}
+            >
+              Prepara colloquio
+            </Link>
+            <MoveStageMenu applicationId={applicationId} stage={stage} />
+          </div>
+        );
       case "fill_feedback":
         return (
-          <div className="flex flex-col items-start gap-3">
-            <p className="text-muted-foreground text-sm">{PHASE_3_HINT}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={
+                `${applicationHref}/interviews/${action.interviewId}/feedback` as never
+              }
+              className={linkClass}
+            >
+              Compila scheda
+            </Link>
             <MoveStageMenu applicationId={applicationId} stage={stage} />
           </div>
         );

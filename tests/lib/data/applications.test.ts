@@ -13,6 +13,7 @@ vi.mock("@/lib/prisma", () => ({
     position: { findMany: vi.fn() },
     behavioralRubric: { findUnique: vi.fn() },
     scorecardCriterion: { findMany: vi.fn() },
+    interview: { findMany: vi.fn(async () => []) },
   },
 }));
 
@@ -48,6 +49,7 @@ const detailRow = {
   },
   position: { id: "pos1", title: "Dev", experienceLevel: "senior", status: "open" },
   assessments: [],
+  interviews: [],
 };
 
 beforeEach(() => {
@@ -67,6 +69,7 @@ describe("getApplicationDetail", () => {
       "evaluations",
       "quizzes",
       "scorecards",
+      "interviews",
     );
   });
 
@@ -472,6 +475,35 @@ describe("getActionCenterData", () => {
       },
     ]);
 
+    const people = {
+      ownerId: "u1",
+      candidate: { firstName: "Mario", lastName: "Rossi" },
+      position: { title: "Dev" },
+    };
+    db.interview.findMany
+      .mockResolvedValueOnce([
+        {
+          id: "int-draft",
+          round: 1,
+          scheduledAt: new Date("2026-01-10T09:00:00Z"),
+          participants: [{ userId: "u1" }, { userId: "u2" }],
+          application: { id: "app1", ...people },
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: "int-done",
+          round: 2,
+          participants: [
+            { userId: "u1", user: { name: "Laura" } },
+            { userId: "u2", user: { name: "Piero" } },
+            { userId: "u3", user: { name: "Sara" } },
+          ],
+          feedback: [{ interviewerId: "u2" }],
+          application: { id: "app1", ...people },
+        },
+      ]);
+
     const data = await getActionCenterData();
 
     expect(cacheLife).toHaveBeenCalledWith("minutes");
@@ -483,6 +515,7 @@ describe("getActionCenterData", () => {
       "quizzes",
       "scorecards",
       "interview-guides",
+      "interviews",
     );
     expect(db.assessment.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -543,8 +576,62 @@ describe("getActionCenterData", () => {
       positionsWithIncompleteSetup: [
         { positionId: "pos9", title: "Ops", status: "draft", missing: ["quiz"] },
       ],
-      interviewsWithoutKit: [],
-      feedbackToFill: [],
+      interviewsWithoutKit: [
+        {
+          interviewId: "int-draft",
+          applicationId: "app1",
+          ownerId: "u1",
+          participantIds: ["u1", "u2"],
+          candidateName: "Mario Rossi",
+          positionTitle: "Dev",
+          round: 1,
+          scheduledAt: new Date("2026-01-10T09:00:00Z"),
+        },
+      ],
+      // One row per participant without a submitted scorecard
+      feedbackToFill: [
+        {
+          interviewId: "int-done",
+          applicationId: "app1",
+          ownerId: "u1",
+          interviewerId: "u1",
+          interviewerName: "Laura",
+          candidateName: "Mario Rossi",
+          positionTitle: "Dev",
+          round: 2,
+        },
+        {
+          interviewId: "int-done",
+          applicationId: "app1",
+          ownerId: "u1",
+          interviewerId: "u3",
+          interviewerName: "Sara",
+          candidateName: "Mario Rossi",
+          positionTitle: "Dev",
+          round: 2,
+        },
+      ],
+    });
+    // Scheduled interviews of open applications whose kit is not ready
+    expect(db.interview.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: {
+          status: "scheduled",
+          OR: [{ kit: { is: null } }, { kit: { status: { not: "ready" } } }],
+          application: { stage: { notIn: ["rejected", "withdrawn"] } },
+        },
+        orderBy: { scheduledAt: "asc" },
+      }),
+    );
+    // Completed interviews of open applications, submitted feedback only
+    const completedQuery = db.interview.findMany.mock.calls[1][0];
+    expect(completedQuery.where).toEqual({
+      status: "completed",
+      application: { stage: { notIn: ["rejected", "withdrawn"] } },
+    });
+    expect(completedQuery.select.feedback.where).toEqual({
+      submittedAt: { not: null },
     });
   });
 });
@@ -622,5 +709,65 @@ describe("getActionCenterData: incomplete setup", () => {
         missing: ["scorecard", "quiz", "guide"],
       },
     ]);
+  });
+});
+
+describe("getApplicationDetail interviews", () => {
+  it("maps the interview facts (submitted feedback only) by round", async () => {
+    db.application.findUnique.mockResolvedValueOnce({
+      ...detailRow,
+      interviews: [
+        {
+          id: "int-1",
+          round: 1,
+          status: "completed",
+          scheduledAt: new Date("2026-01-03"),
+          kit: { status: "ready" },
+          participants: [{ userId: "u1" }, { userId: "u2" }],
+          feedback: [{ interviewerId: "u1" }],
+        },
+        {
+          id: "int-2",
+          round: 2,
+          status: "scheduled",
+          scheduledAt: new Date("2026-01-09"),
+          kit: null,
+          participants: [{ userId: "u1" }],
+          feedback: [],
+        },
+      ],
+    });
+    db.evaluation.findFirst.mockResolvedValueOnce(null);
+    db.assessment.findMany.mockResolvedValueOnce([]);
+    db.quiz.findMany.mockResolvedValueOnce([]);
+
+    const detail = await getApplicationDetail("app1");
+
+    expect(detail?.interviews).toEqual([
+      {
+        id: "int-1",
+        round: 1,
+        status: "completed",
+        scheduledAt: new Date("2026-01-03"),
+        kitStatus: "ready",
+        participantIds: ["u1", "u2"],
+        submittedInterviewerIds: ["u1"],
+      },
+      {
+        id: "int-2",
+        round: 2,
+        status: "scheduled",
+        scheduledAt: new Date("2026-01-09"),
+        kitStatus: null,
+        participantIds: ["u1"],
+        submittedInterviewerIds: [],
+      },
+    ]);
+    const select = db.application.findUnique.mock.calls[0][0].select;
+    expect(select.interviews.orderBy).toEqual({ round: "asc" });
+    expect(select.interviews.select.feedback.where).toEqual({
+      submittedAt: { not: null },
+    });
+    expect(JSON.stringify(select.interviews)).not.toContain("notes");
   });
 });

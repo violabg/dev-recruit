@@ -1,7 +1,7 @@
 # Preparazione al colloquio e flusso di selezione — Piano
 
 **Data:** 15 novembre 2026 · aggiornato il 16 novembre 2026
-**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · prossima: Fase 3, da progettare (§8)
+**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · Fase 3 implementata (16 novembre 2026), knowledge da aggiornare (§8.1 bis) · prossima: Fase 4, da progettare
 **Ambito:** Kit di preparazione al colloquio, colloquio live, decisione; revisione del flusso dashboard da step 1 a step finale
 
 > **Nomi nel documento.** Le sezioni 1–3 descrivono il punto di partenza (15 novembre) e usano i nomi di allora: `CandidatePosition`, `Interview` per il test, `/dashboard/interviews`. Dalla Fase 1 il codice usa `Application`, `Assessment`, `assessmentId`, `/dashboard/assessments`. Le entità della Fase 3 chiamate qui `LiveInterview` e `LiveInterviewParticipant` si chiameranno `Interview` e `InterviewParticipant` (§3.2). Il vocabolario aggiornato è in `CONTEXT.md`.
@@ -288,7 +288,7 @@ Precompilata con voti e note del live raggruppati per criterio · raccomandazion
 |---|---|---|
 | **1. Candidatura come perno** ✅ *implementata il 16 novembre 2026* | Fasi su `CandidatePosition` e regole di transizione, modifica posizioni come diff, email unica e aggancio dal form pubblico, stato della posizione e blocco eliminazione, rimozione di `Candidate.status` e `isPrimary`, backfill (§3.4), pagina `/applications/[id]` con "Prossima azione", `applicationId` sul test, kanban nella posizione, home "Le mie azioni", rinomina UI "Colloqui" → "Test" | 1, 3, 4, 7, 8, 9, 10 |
 | **2. Scheda di valutazione e guide** ✅ *implementata il 16 novembre 2026* | Scorecard per posizione (proposta AI, archiviazione criteri), collegamento domande ↔ criteri, modelli di guida, salvataggio dettaglio per risposta | 5, 6 (in parte) |
-| **3. Kit e live** | Pianificazione, kit personalizzato AI, pagina preparazione, modalità live, scheda intervistatore | cuore della richiesta |
+| **3. Kit e live** ✅ *implementata il 16 novembre 2026* | Pianificazione, kit personalizzato AI, pagina preparazione, modalità live, scheda intervistatore | cuore della richiesta |
 | **4. Decisione** | Pagina decisione con matrice, pesi dalla scheda, indipendenza intervistatori, avvocato del diavolo; rubrica ed evaluation-dashboard in sola lettura | 2, 6 |
 | **5. Extra** | Registrazione/trascrizione con consenso + sintesi per criterio, guida di preparazione per il candidato, feedback dopo il rifiuto | — |
 
@@ -393,6 +393,43 @@ Ancora aperto:
 3. Verifica legale (§7.3 punto 6) sulla proposta AI dei criteri: oggi la funzione esce con la conferma umana di ogni criterio.
 4. Al rilascio: migrazioni in produzione seguendo `prisma/migrations/README.md` (Fase 1: `pnpm db:duplicates`, `migrate resolve --applied 0_init`; poi `pnpm db:migrate:deploy`, che applica anche `20261117000000_scorecard_guides`; infine `pnpm db:verify`). Ritorno indietro della Fase 1: ramo Neon `backup/pre-application-hub-2026-11-15`, tag git `backup/pre-application-hub`.
 5. Configurare uno shadow database per confrontare le migrazioni con lo schema (`prisma migrate diff --from-migrations`): non è stato possibile né nella Fase 1 né nella Fase 2.
+
+### 8.1 bis Stato a fine Fase 3 (16 novembre 2026)
+
+- **Codice:** Fase 3 implementata sul branch `claude/dreamy-shannon-17omy9`, sopra le Fasi 1 e 2 (ultimo commit `27392ce`); le modifiche della Fase 3 non sono ancora committate. Validazione (operazione IM9): `pnpm lint` pulito, `pnpm test:run` 97 file / 1519 test, `pnpm build` 112/112 pagine.
+- **Cosa c'è:**
+  - colloqui con partecipanti, pianificati dalla candidatura con guida obbligatoria; la fase passa a Colloquio;
+  - riepilogo copiabile e `.ics`, nessuna email;
+  - kit come copia della guida, con briefing, ipotesi, checklist, promemoria legale fisso e "Segna come pronto";
+  - proposta AI del kit (CV, lacune del CV, risposte deboli del test, round precedenti, fonti mancanti, limite del 40%), salvata solo con "Salva kit";
+  - modalità live con timer, ancore, note autosalvate con bozza locale, "Coperta" condivisa e copertura dei criteri;
+  - scheda intervistatore pre-compilata, bloccata all'invio, con passaggio a Decisione quando tutte sono inviate;
+  - collegamenti di "Prossima azione"; righe di "Le mie azioni"; pagina Agenda colloqui con "Solo i miei" e voce di menu;
+  - prove: un colloquio tiene in vita la candidatura; voti e kit fanno archiviare un criterio; il ritiro annulla i colloqui pianificati.
+- **Database:** migrazione `20261118000000_interviews_kits` (solo additiva, nessun backfill), applicata con `pnpm db:migrate` solo al ramo Neon `development`. Contenuto:
+  - tabelle `interviews`, `interview_participants`, `interview_kits`, `kit_sections`, `kit_items`, `kit_item_notes`, `interviewer_feedback`, `criterion_scores`;
+  - tipi `InterviewStatus`, `InterviewParticipantRole`, `KitStatus`, `KitItemOrigin`.
+
+  `prisma migrate status` aggiornato, confronto database ↔ schema senza differenze, `pnpm db:verify` OK con gli stessi conteggi. `prisma/verify-application-hub.ts` ora accetta le tabelle dei colloqui e verifica che `interviews` sia quella della Fase 3 (`scheduledAt` sì, `token` no).
+- **Design della Fase 3:** sessione `fase3_interview_prep_design`, piano `fase3_design`.
+- **Accettazione:** `next-steps/FASE3_ACCEPTANCE.md` (O1–O72), con passi manuali M1–M19, limiti noti e punti aperti.
+- **Knowledge:** delta pronto in `next-steps/FASE3_KNOWLEDGE_DELTA.md` (nomina `CONTEXT.md`); `knowledge/` e `CONTEXT.md` non sono ancora aggiornati.
+- **Conflitti con la knowledge** (sezione 9 del delta, da decidere):
+  - D1: le schede inviate sono visibili a tutti; la regola "nascoste finché non invii la tua" vale solo per il materiale non inviato, attenuata con una sezione chiusa.
+  - D2: l'invio blocca la scheda per tutti, autore compreso.
+
+**Ancora da fare:**
+1. Passi manuali ☐ di `next-steps/FASE3_ACCEPTANCE.md` (M1–M19, alcuni con due utenti) e quelli rimasti delle Fasi 1 e 2, in `pnpm dev`.
+2. Decidere D1 e D2, poi eseguire `knowledge-builder` con `next-steps/FASE2_KNOWLEDGE_DELTA.md` (se non ancora applicato) e `next-steps/FASE3_KNOWLEDGE_DELTA.md`, nominando anche `CONTEXT.md`.
+3. Verifica legale (§7.3 punto 6) su conservazione di note e schede e sulla proposta AI del kit: ancora aperta. Misure adottate:
+   - minimizzazione dei dati nel prompt;
+   - cancellazione a cascata con la candidatura o il candidato;
+   - nessuna conservazione automatica;
+   - conferma umana di ogni proposta.
+
+   Tempi di conservazione ed esportazioni dipendono dall'esito.
+4. Al rilascio: migrazioni in produzione seguendo `prisma/migrations/README.md`. `pnpm db:migrate:deploy` applica `20261118000000_interviews_kits` dopo quelle delle Fasi 1 e 2; poi `pnpm db:verify`.
+5. Configurare uno shadow database per `prisma migrate diff --from-migrations` (non possibile nemmeno nella Fase 3).
 
 ### 8.2 Avviare la Fase 3 in una nuova sessione
 

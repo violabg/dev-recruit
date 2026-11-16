@@ -215,8 +215,9 @@ export function ScorecardEditor({
       >
         <div className="flex flex-wrap justify-between items-end gap-4">
           <div className="flex flex-wrap items-end gap-2">
-            <div className="w-80 max-w-full">
+            <div className="w-80 max-w-full min-w-0">
               <LLMModelSelect
+                className="w-full"
                 value={specificModel}
                 onValueChange={(value) =>
                   setSpecificModel(value || DEFAULT_GENERATION_MODEL)

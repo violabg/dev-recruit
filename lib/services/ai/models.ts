@@ -55,6 +55,7 @@ export type LLMTaskType =
   | "resume_evaluation" // Resume-based candidate evaluation against position
   | "scorecard_generation" // Proposal of the scorecard criteria of a position
   | "guide_generation" // Interview guide generation from the scorecard
+  | "kit_generation" // Personalized interview kit from CV, test and previous rounds
   | "simple_task"; // Basic text processing
 
 // Type for available model names
@@ -141,6 +142,7 @@ export const getOptimalModel = (
 
     case "scorecard_generation":
     case "guide_generation":
+    case "kit_generation":
       // Structured Italian content tied to the position requirements
       return LLM_MODELS.GPT_OSS_120B;
 

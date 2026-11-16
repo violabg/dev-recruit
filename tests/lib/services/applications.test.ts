@@ -18,6 +18,11 @@ vi.mock("@/lib/prisma", () => ({
       count: vi.fn(),
     },
     evaluation: { findFirst: vi.fn() },
+    interview: {
+      count: vi.fn(async () => 0),
+      findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
     position: { findMany: vi.fn() },
   },
 }));
@@ -72,6 +77,7 @@ describe("setApplicationStage", () => {
       stage: "screening",
       changed: false,
       cancelledAssessmentIds: [],
+      cancelledInterviewIds: [],
     });
     expect(prisma.application.update).not.toHaveBeenCalled();
   });
@@ -132,6 +138,51 @@ describe("setApplicationStage", () => {
 
     expect(prisma.assessment.updateMany).not.toHaveBeenCalled();
     expect(result.cancelledAssessmentIds).toEqual([]);
+  });
+
+  it("cancels only the scheduled interviews when withdrawn", async () => {
+    const db = prisma as any;
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce(
+      application({ stage: "interview" }) as any,
+    );
+    db.interview.findMany.mockResolvedValueOnce([{ id: "int-sched" }]);
+
+    const result = await setApplicationStage(client, "app1", "withdrawn");
+
+    expect(db.interview.findMany).toHaveBeenCalledWith({
+      where: { applicationId: "app1", status: "scheduled" },
+      select: { id: true },
+    });
+    expect(db.interview.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["int-sched"] } },
+      data: { status: "cancelled" },
+    });
+    expect(result.cancelledInterviewIds).toEqual(["int-sched"]);
+  });
+
+  it("writes no interview when none is scheduled", async () => {
+    const db = prisma as any;
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce(
+      application({ stage: "interview" }) as any,
+    );
+
+    const result = await setApplicationStage(client, "app1", "withdrawn");
+
+    expect(db.interview.updateMany).not.toHaveBeenCalled();
+    expect(result.cancelledInterviewIds).toEqual([]);
+  });
+
+  it("never cancels interviews when rejected", async () => {
+    const db = prisma as any;
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce(
+      application({ stage: "interview" }) as any,
+    );
+
+    const result = await setApplicationStage(client, "app1", "rejected");
+
+    expect(db.interview.findMany).not.toHaveBeenCalled();
+    expect(db.interview.updateMany).not.toHaveBeenCalled();
+    expect(result.cancelledInterviewIds).toEqual([]);
   });
 });
 
@@ -217,6 +268,18 @@ describe("applicationHasEvidence", () => {
 
     await expect(applicationHasEvidence(client, target)).resolves.toBe(false);
   });
+
+  it("is true with only an interview, of any status", async () => {
+    const db = prisma as any;
+    vi.mocked(prisma.assessment.count).mockResolvedValueOnce(0);
+    db.interview.count.mockResolvedValueOnce(1);
+
+    await expect(applicationHasEvidence(client, target)).resolves.toBe(true);
+    expect(db.interview.count).toHaveBeenCalledWith({
+      where: { applicationId: "app1" },
+    });
+    expect(prisma.evaluation.findFirst).not.toHaveBeenCalled();
+  });
 });
 
 describe("syncCandidateApplications", () => {
@@ -266,6 +329,7 @@ describe("syncCandidateApplications", () => {
       deletedPositionIds: [],
       unchangedPositionIds: [],
       cancelledAssessmentIds: [],
+      cancelledInterviewIds: [],
       touchedApplicationIds: ["app-new"],
     });
   });
@@ -334,6 +398,31 @@ describe("syncCandidateApplications", () => {
     });
   });
 
+  it("withdraws (never deletes) a removed application with only an interview, cancelling it", async () => {
+    const db = prisma as any;
+    positionsExist(["p1"]);
+    vi.mocked(prisma.application.findMany).mockResolvedValueOnce([
+      existing("p1", "applied"),
+      existing("p2", "interview"),
+    ] as any);
+    vi.mocked(prisma.assessment.count).mockResolvedValueOnce(0);
+    db.interview.count.mockResolvedValueOnce(1);
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce(
+      existing("p2", "interview") as any,
+    );
+    db.interview.findMany.mockResolvedValueOnce([{ id: "int-1" }]);
+
+    const result = await syncCandidateApplications(client, input(["p1"]));
+
+    expect(prisma.application.delete).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      withdrawnPositionIds: ["p2"],
+      deletedPositionIds: [],
+      cancelledInterviewIds: ["int-1"],
+      touchedApplicationIds: ["app-p2"],
+    });
+  });
+
   it("reopens a withdrawn application selected again", async () => {
     positionsExist(["p1"]);
     vi.mocked(prisma.application.findMany).mockResolvedValueOnce([
@@ -373,6 +462,7 @@ describe("syncCandidateApplications", () => {
       deletedPositionIds: [],
       unchangedPositionIds: ["p1"],
       cancelledAssessmentIds: [],
+      cancelledInterviewIds: [],
       touchedApplicationIds: [],
     });
   });

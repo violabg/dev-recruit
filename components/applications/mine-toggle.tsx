@@ -9,7 +9,7 @@ import { useId, useTransition } from "react";
  * "Solo le mie": a view filter on the applications the user is in charge of.
  * Off by default; it never limits what the user can open.
  */
-export function MineToggle() {
+export function MineToggle({ label = "Solo le mie" }: { label?: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
@@ -41,7 +41,7 @@ export function MineToggle() {
         onCheckedChange={handleChange}
         disabled={isPending}
       />
-      <Label htmlFor={id}>Solo le mie</Label>
+      <Label htmlFor={id}>{label}</Label>
     </div>
   );
 }

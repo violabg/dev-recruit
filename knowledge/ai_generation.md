@@ -2,7 +2,7 @@
 title: "ai generation"
 tier: "PerContext"
 keywords: ["AI","generateStructured","LLM","Groq","prompt","evaluation","model","streaming","transcription"]
-intent: "When touching AI quiz/question generation, scorecard criteria proposal, interview guide generation, assessment or resume evaluation, prompts, model selection, streaming routes or transcription."
+intent: "When touching AI quiz/question generation, scorecard criteria proposal, interview guide or interview kit generation, assessment or resume evaluation, prompts, model selection, streaming routes or transcription."
 editable: true
 ---
 # AI generation and evaluation
@@ -11,7 +11,7 @@ The provider is Groq through the Vercel AI SDK. SDK APIs are in the official doc
 
 ## Single entry point
 
-- Structured output (quiz, question, scorecard criteria proposal, interview guide, every evaluation) goes ONLY through `generateStructured()`. It owns model choice, retry, timeout, fallback and the Italian error mapping.
+- Structured output (quiz, question, scorecard criteria proposal, interview guide, interview kit, every evaluation) goes ONLY through `generateStructured()`. It owns model choice, retry, timeout, fallback and the Italian error mapping.
 - Streaming text uses `getLanguageModel(getOptimalModel(task))` with the SDK's `streamText`. A text model is never taken from `groq(...)` directly.
 - Audio transcription is the one provider path outside `generateStructured` and `streamText`: `transcribeAudio(audio)` in the transcription module of the AI layer calls the SDK's `transcribe` with `groq.transcription(LLM_MODELS.WHISPER_LARGE_V3_TURBO)`. The server action keeps the token and size checks; no action or component calls `groq` itself.
 - A failed transcription MUST reach the candidate as its own message, "Trascrizione non riuscita. Riprova o scrivi la risposta.", thrown as `UserError` after logging the provider error. It never goes through `describeAIError`: the generic "Servizio AI temporaneamente non disponibile" does not tell the candidate they can type the answer instead.
@@ -34,7 +34,7 @@ const result = await generateStructured({
 - Models are defined in the models module (`LLM_MODELS`, `getOptimalModel`, `DEFAULT_GENERATION_MODEL`, `FALLBACK_MODELS`). It has no imports and is used by client components: NEVER import server code into it.
 - Only models of Groq's free plan are used. Model ids live only in `LLM_MODELS`; never write a model id string anywhere else.
 - `getOptimalModel(task, specificModel?)` picks the model: `specificModel` wins, then the per-task default (`simple_task` gets the small model, every other `LLMTaskType` the large one). Forms default to `DEFAULT_GENERATION_MODEL`.
-- `LLMTaskType` includes `scorecard_generation` and `guide_generation`, both on the large model: they produce structured Italian content tied to the position requirements. The small model stays reserved to `simple_task`.
+- `LLMTaskType` includes `scorecard_generation`, `guide_generation` and `kit_generation`, all on the large model: they produce structured Italian content tied to the position requirements and to the candidate's evidence. The small model stays reserved to `simple_task`.
 - `FALLBACK_MODELS` is the ordered fallback chain; the primary is skipped when it appears in it.
 - `DEFAULT_CONFIG` holds the retry count, backoff and timeout: the primary is retried with backoff and the timeout bounds its whole retry sequence; each fallback gets one attempt bounded by the timeout. Content-filtered failures are never retried or sent to another model.
 - Failures are `AIGenerationError` with an `AIErrorCode`; `runAction` turns them into Italian messages through `describeAIError` (transcription excepted, see Single entry point).
@@ -44,10 +44,10 @@ const result = await generateStructured({
 
 | Use | temperature | seed |
 |---|---|---|
-| Quiz generation, question generation, position description, scorecard criteria proposal, interview guide generation | 0.7 | none |
+| Quiz generation, question generation, position description, scorecard criteria proposal, interview guide generation, interview kit generation | 0.7 | none |
 | Every evaluation (answer, overall assessment, resume, and the per-criterion part of the resume evaluation, which travels in the same stream) | 0 | 42 |
 
-`generateStructured` defaults to 0.7 when `temperature` is omitted: evaluation calls MUST pass `temperature: 0, seed: 42`. A call with no `seed` sends none to the provider, so the two new flows are non-deterministic exactly like quiz and question generation.
+`generateStructured` defaults to 0.7 when `temperature` is omitted: evaluation calls MUST pass `temperature: 0, seed: 42`. A call with no `seed` sends none to the provider, so the generation flows are non-deterministic exactly like quiz and question generation.
 
 ## Prompts: Italian and sanitization
 
@@ -59,12 +59,15 @@ const result = await generateStructured({
 - Every answer of the candidate goes through `sanitizeInput(answer, MAX_ANSWER_CHARS)` in the answer evaluation prompt. Question text, options, sample answer and explanation are not sanitized there, and neither are the candidate name nor the strengths and weaknesses of the overall evaluation: never claim that all candidate-provided text is sanitized.
 - In the resume prompt the candidate name and the position texts (title, experience level, skills, soft skills, description) also pass through `sanitizeInput`, and so do the name and description of every criterion.
 - The model never sees the ids of the criteria. Criteria are listed with the keys `C1`, `C2`, … and the model answers with those keys; the service translates them back into ids. The AI output schemas never contain criterion ids.
+- **Interview kit: no identifying data.** The kit prompt calls the candidate "il candidato" and never receives name, email, date of birth, photo or CV URL. The context read selects only `resumeUrl` of the candidate, to extract the text. The resume text passes through `redactBirthDate` and then `sanitizeInput(text, MAX_RESUME_CHARS)`. Weaknesses, question texts and position texts pass through `sanitizeInput`; answers through `sanitizeInput(answer, MAX_ANSWER_CHARS)` (for a multiple-choice question, the text of the chosen option); criterion names and descriptions through `sanitizeInput`.
+- **Interview kit: previous rounds are statistics only.** They arrive as per-criterion statistics ("senza prove", "voti discordanti" with a gap ≥ 2) under the `F<n>` keys of the scorecards, never as free text and never with the interviewers' names.
 
-## Criterion keys
+## Criterion and source keys
 
 - `buildCriterionKeys(criteria)` assigns `C<n>` by position in the input array, starting at 1: the first criterion is `C1`, the second `C2`. It neither sorts nor filters, so the keys follow the order received, which is the scorecard order.
 - `resolveCriterionKeys(keyed, keys)` returns the ids matching the keys the model wrote. Comparison trims the key and upper-cases it, so case and surrounding spaces do not matter; unknown and non-string keys are discarded, a repeated id is kept once, and the returned ids follow the order of the model's keys, not the scorecard order. An `undefined` key list gives an empty array.
 - The prompts list the criteria as bullet lines headed by the key, with name, category and priority, and the model is told to use only the keys it was given: one to three keys per quiz question, only listed keys per guide question, one `criterionKey` per CV assessment entry.
+- The interview kit adds two key families: `Q<n>` for the weak answers of the test and `F<n>` for the scorecards of previous rounds. The service translates them into `sourceRef`: `quiz:{questionId}`, `feedback:{feedbackId}`, and `cv:{quote}` (at most 300 characters) for the CV and CV-gap questions. An unknown key drops the criterion, drops the hypothesis, or keeps the question without a source.
 
 ## Flows
 
@@ -95,6 +98,19 @@ Interview guide generation (editor):
 4. The service normalizes the output: each section keeps `title` and `kind`, its `minutes` become an integer of at least 1 by rounding, and each question keeps `text`, `followUps`, `anchors`, `required` and receives `criterionIds` resolved from `criterionKeys`, which is dropped. The minutes sum is not corrected.
 5. The action returns the proposal: it writes nothing and invalidates nothing. The guide is stored only by "Salva guida".
 
+Interview kit generation (editor):
+1. `generateInterviewKitAction` works only while the interview is scheduled ("Il kit si modifica solo prima del colloquio") and calls `buildKitGenerationContext(interviewId)`. The context collects:
+   - the position, its active criteria (none → "Crea prima la scheda di valutazione della posizione") and the sections of the kit;
+   - the text of the CV; an unreadable PDF leaves the text null and marks the missing source `cv`;
+   - the weaknesses and the criteria below the expected level of the CV evaluation;
+   - the weak answers of the last completed and evaluated test: score < 7, lowest first, at most 6 entries;
+   - the previous completed rounds of the same application;
+   - the missing sources `cv`, `cv_evaluation`, `assessment`, `answer_detail`.
+2. `generateInterviewKit` computes the limit. With `T` template questions it is `floor(2T/3)`, so personalised questions are at most 40% of the total; with no template question it is `floor(0.4 · duration / 5)`. The AI rows already in the kit and marked `edited` are subtracted from the limit. Then it calls `generateStructured("kit_generation", aiInterviewKitGenerationSchema)` with temperature 0.7 and no seed.
+3. The result is normalised: the keys become ids; each question goes to the first section of the indicated kind, otherwise to the last section that is not a closing one, otherwise to the last section; only the first N questions within the limit are kept; the briefing is cut to 5 points.
+4. The action returns `{ proposal }`: no write, no invalidation. The editor merges it as unsaved changes (`mergeKitProposal`) and only "Salva kit" persists it.
+5. The prohibition of questions about age, marital status, family, children, religion, political opinions and health is prompt text only.
+
 Assessment evaluation:
 1. Per answered question: `evaluateAssessmentAnswerAction(assessmentId, questionId)`. The server reads question and answer from the database (the client sends only ids) and scores 0–10. Multiple choice is scored by the AI, told server-side whether the chosen option is correct.
 2. `completeAssessmentEvaluationAction({ assessmentId, questionEvaluations })`: refuses a second evaluation and questions that were not answered, computes `quizScore`, generates the overall evaluation, stores one `Evaluation` (`fitScore / 10`) with `answerEvaluations`, invalidates the evaluation cache.
@@ -121,6 +137,7 @@ Transcription: public `transcribeAudioAction(formData)` with the assessment `tok
 - Adding a server import to the models module (breaks client bundles).
 - Writing a model id string outside `LLM_MODELS`.
 - Putting criterion ids in a prompt or in an AI output schema instead of the `C1`, `C2` keys.
-- Saving or invalidating cache inside a generation action, including the scorecard criteria proposal and the interview guide.
+- Saving or invalidating cache inside a generation action, including the scorecard criteria proposal, the interview guide and the interview kit.
 - Trusting client-sent question or answer text for evaluation; only ids come from the client.
 - Letting a transcription failure fall through to `describeAIError` instead of the dedicated transcription message.
+- Sending the candidate's name, email, birth date, photo or CV URL to the kit prompt, or sending the free text of a previous round instead of per-criterion statistics.

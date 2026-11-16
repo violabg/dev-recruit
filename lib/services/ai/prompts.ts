@@ -7,6 +7,7 @@
 
 import type { KeyedCriterion } from "../../utils/criterion-keys";
 import { DEFAULT_SOFT_CRITERIA } from "../../utils/scorecard-defaults";
+import type { KitGenerationContext } from "../interview-kits";
 import type { ActiveCriterion } from "../scorecards";
 import type { GenerateInterviewGuideParams } from "./guide-generation";
 import { sanitizeInput } from "./sanitize";
@@ -909,4 +910,193 @@ ${criteriaLines}
           7. The intro, candidate_questions and closing sections may have questions with no criteria.
           8. Never ask about age, family, children, religion or health.
           9. Write every value in Italian.`;
+}
+
+// ====================
+// INTERVIEW KIT PROMPTS
+// ====================
+
+/** Keys handed to the model instead of ids */
+export type KitPromptKeys = {
+  criteria: KeyedCriterion<ActiveCriterion>[];
+  answers: { key: string; questionId: string }[];
+  feedback: { key: string; feedbackId: string }[];
+};
+
+/**
+ * System prompt of the personalized interview kit generation
+ */
+export function buildKitSystemPrompt(): string {
+  return `
+          You are an expert interviewer preparing a personalized interview kit for one candidate.
+
+          Answer ONLY with a valid JSON object with this shape:
+          {
+            "briefing": string[],
+            "hypotheses": [
+              { "criterionKey": string, "hypothesis": string, "howToVerify": string }
+            ],
+            "items": [
+              {
+                "text": string,
+                "followUps": string[],
+                "criterionKeys": string[],
+                "sectionKind": "intro" | "experience" | "technical" | "behavioral" | "candidate_questions" | "closing",
+                "origin": "cv" | "resume_gap" | "quiz_answer" | "previous_round",
+                "rationale": string,
+                "sourceKey": string (optional),
+                "cvQuote": string (optional),
+                "anchors": { "weak": string, "medium": string, "strong": string }
+              }
+            ],
+            "suggestedChecklist": [
+              { "category": "communicate" | "logistics", "text": string }
+            ]
+          }
+
+          Field names stay in English; EVERY value (briefing, hypotheses, questions, follow-ups, rationales, anchors, checklist) MUST be written in Italian.
+          The personalized questions ADD to the questions of the interview template: they never replace them.
+          Never ask about age, marital status, family, children, religion, political opinions or health.
+          Always refer to the person as "il candidato": you are never given a name.`;
+}
+
+/**
+ * User prompt of the personalized interview kit generation
+ */
+export function buildKitPrompt(
+  context: KitGenerationContext,
+  keys: KitPromptKeys,
+  cap: number,
+): string {
+  const criterionKey = new Map(
+    keys.criteria.map((criterion) => [criterion.id, criterion.key]),
+  );
+  const answerKey = new Map(
+    keys.answers.map((answer) => [answer.questionId, answer.key]),
+  );
+  const feedbackKey = new Map(
+    keys.feedback.map((feedback) => [feedback.feedbackId, feedback.key]),
+  );
+
+  const sanitizedTitle = sanitizeInput(context.position.title);
+  const sanitizedLevel = sanitizeInput(context.position.experienceLevel);
+  const sanitizedSkills = context.position.skills.map((skill) =>
+    sanitizeInput(skill),
+  );
+  const sanitizedSoftSkills = context.position.softSkills.map((skill) =>
+    sanitizeInput(skill),
+  );
+
+  const sectionLines = context.sections
+    .map(
+      (section) =>
+        `- ${sanitizeInput(section.title)} (kind: ${section.kind}, ${section.minutes} min)`,
+    )
+    .join("\n");
+  const kinds = [...new Set(context.sections.map((section) => section.kind))];
+
+  const criteriaLines = keys.criteria
+    .map((criterion) => {
+      const description = criterion.description
+        ? sanitizeInput(criterion.description)
+        : "";
+      return `- ${criterion.key}: ${sanitizeInput(criterion.name)} (${criterion.category}, ${criterion.priority}, peso ${criterion.weight}, livello atteso ${criterion.expectedLevel})${
+        description ? ` — ${description}` : ""
+      }`;
+    })
+    .join("\n");
+
+  const gapLines = context.resumeCriteriaGaps
+    .flatMap((gap) => {
+      const key = criterionKey.get(gap.criterionId);
+      if (!key) return [];
+      return [
+        gap.score === null
+          ? `- ${key}: nessuna evidenza nel CV (atteso ${gap.expectedLevel})`
+          : `- ${key}: punteggio CV ${gap.score} (atteso ${gap.expectedLevel})`,
+      ];
+    })
+    .join("\n");
+
+  const weaknessLines = context.resumeWeaknesses
+    .map((weakness) => `- ${weakness}`)
+    .join("\n");
+
+  const answerLines = context.weakAnswers
+    .flatMap((answer) => {
+      const key = answerKey.get(answer.questionId);
+      if (!key) return [];
+      const weaknesses = answer.weaknesses.length
+        ? ` — debolezze: ${answer.weaknesses.join("; ")}`
+        : "";
+      return [
+        `- ${key}: domanda: ${answer.question} — risposta: ${answer.answer} — punteggio ${answer.score}/10${weaknesses}`,
+      ];
+    })
+    .join("\n");
+
+  const roundLines = context.previousRounds
+    .map((round) => {
+      const feedbackKeys = round.feedbackIds
+        .map((id) => feedbackKey.get(id))
+        .filter((key): key is string => Boolean(key));
+      const criteria = round.criteria
+        .flatMap((entry) => {
+          const key = criterionKey.get(entry.criterionId);
+          if (!key) return [];
+          return [
+            entry.status === "no_evidence"
+              ? `${key}: senza prove`
+              : `${key}: voti discordanti (${entry.scores.join(", ")})`,
+          ];
+        })
+        .join("; ");
+      return `- Schede ${feedbackKeys.join(", ")}${criteria ? ` — ${criteria}` : " — nessun criterio da approfondire"}`;
+    })
+    .join("\n");
+
+  return `
+          Position:
+          - Title: ${sanitizedTitle}
+          - Experience level: ${sanitizedLevel}
+          - Skills: ${sanitizedSkills.join(", ")}
+          - Soft skills: ${sanitizedSoftSkills.join(", ")}
+
+          Interview: round ${context.interview.round}, ${context.interview.durationMinutes} minutes.
+
+          Sections of the interview (from the template):
+${sectionLines}
+
+          Evaluation criteria of this position:
+${criteriaLines}
+
+          CV of il candidato:
+          ${context.resumeText ?? "CV non disponibile"}
+
+          Weaknesses from the CV evaluation:
+${weaknessLines || "          (nessuna)"}
+
+          Criteria without evidence or below the expected level in the CV:
+${gapLines || "          (nessuno)"}
+
+          Weak answers of the test (key Q<n>):
+${answerLines || "          (nessuna)"}
+
+          Previous interview rounds (scorecard keys F<n>):
+${roundLines || "          (nessuno)"}
+
+          Rules:
+          1. Propose at most ${cap} personalized questions: together they take at most 30-40% of the interview time. They are added to the template questions, never replace them.
+          2. Each question has two or three follow-ups.
+          3. "criterionKeys" uses only keys from the criteria list above.
+          4. "origin" is one of cv, resume_gap, quiz_answer, previous_round, and "rationale" explains why the question is asked (for example: "nel test ha sbagliato la domanda Q4 sulla concorrenza").
+          5. "sourceKey" is the Q<n> or F<n> key the question comes from, when there is one.
+          6. For questions with origin cv or resume_gap, "cvQuote" quotes the CV passage (at most 300 characters).
+          7. The anchors describe how a weak, a medium and a strong answer sound.
+          8. "sectionKind" is one of: ${kinds.join(", ")}.
+          9. "briefing" has exactly 5 short points about il candidato.
+          10. Each hypothesis has a "criterionKey" from the list, the hypothesis and how to verify it.
+          11. "suggestedChecklist" items have category communicate or logistics.
+          12. Never ask about age, marital status, family, children, religion, political opinions or health.
+          13. Write every value in Italian.`;
 }

@@ -26,6 +26,8 @@ export type StageChangeResult = {
   changed: boolean;
   /** Assessments set to cancelled because the application became withdrawn */
   cancelledAssessmentIds: string[];
+  /** Scheduled interviews set to cancelled because the application became withdrawn */
+  cancelledInterviewIds: string[];
 };
 
 export type ApplicationSyncResult = {
@@ -35,6 +37,7 @@ export type ApplicationSyncResult = {
   deletedPositionIds: string[];
   unchangedPositionIds: string[];
   cancelledAssessmentIds: string[];
+  cancelledInterviewIds: string[];
   /** Ids of the applications created, reopened or withdrawn */
   touchedApplicationIds: string[];
 };
@@ -62,7 +65,9 @@ async function loadApplication(client: DbClient, applicationId: string) {
 /**
  * Move an application to `stage` (manual or automatic). A real change also
  * updates stageChangedAt; moving to withdrawn cancels the assessments that
- * are not completed (they are never deleted).
+ * are not completed and the scheduled interviews (they are never deleted).
+ * Completed and in-progress interviews are never touched; rejected cancels
+ * nothing.
  */
 export async function setApplicationStage(
   client: DbClient,
@@ -84,6 +89,7 @@ export async function setApplicationStage(
       stage,
       changed: false,
       cancelledAssessmentIds: [],
+      cancelledInterviewIds: [],
     };
   }
 
@@ -93,6 +99,7 @@ export async function setApplicationStage(
   });
 
   let cancelledAssessmentIds: string[] = [];
+  let cancelledInterviewIds: string[] = [];
 
   if (stage === "withdrawn") {
     const open = await client.assessment.findMany({
@@ -110,9 +117,28 @@ export async function setApplicationStage(
         data: { status: "cancelled" },
       });
     }
+
+    const scheduled = await client.interview.findMany({
+      where: { applicationId: application.id, status: "scheduled" },
+      select: { id: true },
+    });
+    cancelledInterviewIds = scheduled.map((interview) => interview.id);
+
+    if (cancelledInterviewIds.length > 0) {
+      await client.interview.updateMany({
+        where: { id: { in: cancelledInterviewIds } },
+        data: { status: "cancelled" },
+      });
+    }
   }
 
-  return { ...base, stage, changed: true, cancelledAssessmentIds };
+  return {
+    ...base,
+    stage,
+    changed: true,
+    cancelledAssessmentIds,
+    cancelledInterviewIds,
+  };
 }
 
 /**
@@ -137,6 +163,7 @@ export async function advanceApplicationStage(
       stage: application.stage,
       changed: false,
       cancelledAssessmentIds: [],
+      cancelledInterviewIds: [],
     };
   }
 
@@ -144,8 +171,8 @@ export async function advanceApplicationStage(
 }
 
 /**
- * Whether the application holds evidence: an assessment, or the resume
- * evaluation of the same candidate and position.
+ * Whether the application holds evidence: an assessment, an interview (any
+ * status), or the resume evaluation of the same candidate and position.
  */
 export async function applicationHasEvidence(
   client: DbClient,
@@ -155,6 +182,11 @@ export async function applicationHasEvidence(
     where: { applicationId: application.id },
   });
   if (assessments > 0) return true;
+
+  const interviews = await client.interview.count({
+    where: { applicationId: application.id },
+  });
+  if (interviews > 0) return true;
 
   const resumeEvaluation = await client.evaluation.findFirst({
     where: {
@@ -200,6 +232,7 @@ export async function syncCandidateApplications(
     deletedPositionIds: [],
     unchangedPositionIds: [],
     cancelledAssessmentIds: [],
+    cancelledInterviewIds: [],
     touchedApplicationIds: [],
   };
 
@@ -238,6 +271,7 @@ export async function syncCandidateApplications(
       result.withdrawnPositionIds.push(application.positionId);
       result.touchedApplicationIds.push(application.id);
       result.cancelledAssessmentIds.push(...change.cancelledAssessmentIds);
+      result.cancelledInterviewIds.push(...change.cancelledInterviewIds);
     } else {
       await tx.application.delete({ where: { id: application.id } });
       result.deletedPositionIds.push(application.positionId);

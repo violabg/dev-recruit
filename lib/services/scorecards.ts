@@ -80,10 +80,12 @@ export async function assertActiveCriteria(
  * Whether a criterion has evidence, so that removing it archives it instead of
  * deleting it. This is the SINGLE place that decides delete versus archive.
  *
- * In this phase the only evidence is a saved CV evaluation of the position
+ * Evidence is, checked in this order: a saved CV evaluation of the position
  * (an Evaluation with no assessment) whose criteriaAssessment has an entry for
- * the criterion. Phase 3 adds here the interviewer scores and the kit items
- * that cite the criterion.
+ * the criterion; an interviewer criterion score of the criterion (submitted or
+ * not); a kit item of an interview of the position citing the criterion; a kit
+ * hypothesis of an interview of the position citing the criterion. Any
+ * interview status counts.
  */
 export async function criterionHasEvidence(
   tx: Prisma.TransactionClient,
@@ -94,7 +96,7 @@ export async function criterionHasEvidence(
     select: { criteriaAssessment: true },
   });
 
-  return evaluations.some(({ criteriaAssessment }) => {
+  const inCvAssessment = evaluations.some(({ criteriaAssessment }) => {
     if (
       !criteriaAssessment ||
       typeof criteriaAssessment !== "object" ||
@@ -107,6 +109,43 @@ export async function criterionHasEvidence(
       params.criterionId,
     );
   });
+  if (inCvAssessment) return true;
+
+  const scores = await tx.criterionScore.count({
+    where: { criterionId: params.criterionId },
+  });
+  if (scores > 0) return true;
+
+  const positionInterviews = {
+    interview: { application: { positionId: params.positionId } },
+  };
+
+  const kitItems = await tx.kitItem.count({
+    where: {
+      criterionIds: { has: params.criterionId },
+      kit: positionInterviews,
+    },
+  });
+  if (kitItems > 0) return true;
+
+  const kits = await tx.interviewKit.findMany({
+    where: positionInterviews,
+    select: { hypotheses: true },
+  });
+
+  // Invalid JSON shapes are ignored
+  return kits.some(
+    ({ hypotheses }) =>
+      Array.isArray(hypotheses) &&
+      hypotheses.some(
+        (hypothesis) =>
+          hypothesis !== null &&
+          typeof hypothesis === "object" &&
+          !Array.isArray(hypothesis) &&
+          (hypothesis as { criterionId?: unknown }).criterionId ===
+            params.criterionId,
+      ),
+  );
 }
 
 function toCriterionData(row: ScorecardCriterionInput, order: number) {

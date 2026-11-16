@@ -36,12 +36,14 @@ type LLMModelSelectProps = {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  className?: string;
 };
 
 export const LLMModelSelect = ({
   value,
   onValueChange,
   placeholder,
+  className,
 }: LLMModelSelectProps) => {
   const options = placeholder
     ? [
@@ -58,8 +60,8 @@ export const LLMModelSelect = ({
       value={value}
       onValueChange={(value) => onValueChange(value || "")}
     >
-      <SelectTrigger>
-        <SelectValue />
+      <SelectTrigger className={className}>
+        <SelectValue className="truncate" />
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (

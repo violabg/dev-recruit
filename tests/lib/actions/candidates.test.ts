@@ -36,6 +36,11 @@ vi.mock("../../../lib/prisma", () => {
     evaluation: {
       findFirst: vi.fn(),
     },
+    interview: {
+      count: vi.fn(async () => 0),
+      findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
   };
   prismaMock.$transaction = vi.fn((fn: (tx: unknown) => unknown) =>
     fn(prismaMock),
@@ -60,6 +65,7 @@ vi.mock("../../../lib/services/r2-storage", () => ({
 vi.mock("../../../lib/utils/cache-utils", () => ({
   invalidateCandidateCache: vi.fn(),
   invalidateAssessmentCache: vi.fn(),
+  invalidateInterviewCache: vi.fn(),
 }));
 
 vi.mock("../../../lib/services/logger", () => ({
@@ -929,6 +935,44 @@ describe("candidates actions — applications, email and public form", () => {
         applicationIds: ["app-gone"],
       });
       expect(cache.invalidateAssessmentCache).toHaveBeenCalled();
+      expect(cache.invalidateInterviewCache).not.toHaveBeenCalled();
+    });
+
+    it("refreshes the interviews when a withdrawn application cancels some", async () => {
+      const { prisma, cache } = await getMocks();
+      prisma.candidate.findUnique.mockResolvedValueOnce(
+        candidateRow([{ positionId: "pos-keep" }, { positionId: "pos-gone" }]),
+      );
+      prisma.position.findMany.mockResolvedValueOnce([{ id: "pos-keep" }]);
+      prisma.application.findMany.mockResolvedValueOnce([
+        { id: "app-keep", candidateId: "cand-1", positionId: "pos-keep", stage: "applied" },
+        { id: "app-gone", candidateId: "cand-1", positionId: "pos-gone", stage: "interview" },
+      ]);
+      // Evidence: only an interview
+      prisma.assessment.count.mockResolvedValueOnce(0);
+      prisma.interview.count.mockResolvedValueOnce(1);
+      prisma.application.findUnique.mockResolvedValueOnce({
+        id: "app-gone",
+        candidateId: "cand-1",
+        positionId: "pos-gone",
+        stage: "interview",
+      });
+      prisma.assessment.findMany.mockResolvedValueOnce([]);
+      prisma.interview.findMany.mockResolvedValueOnce([{ id: "int-1" }]);
+
+      await updateCandidateAction(
+        "cand-1",
+        form({ positionIds: JSON.stringify(["pos-keep"]) }),
+      );
+
+      expect(prisma.application.delete).not.toHaveBeenCalled();
+      expect(prisma.interview.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ["int-1"] } },
+        data: { status: "cancelled" },
+      });
+      expect(cache.invalidateInterviewCache).toHaveBeenCalledWith({
+        applicationId: "app-gone",
+      });
     });
 
     it("refuses the email of another candidate", async () => {

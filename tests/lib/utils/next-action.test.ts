@@ -23,6 +23,7 @@ const assessment = (
 const interview = (
   overrides: Partial<NonNullable<ApplicationFacts["interviews"]>[number]> = {},
 ) => ({
+  id: "interview-1",
   status: "scheduled" as const,
   kitReady: true,
   feedbackMissing: false,
@@ -87,7 +88,11 @@ describe("getNextAction rows", () => {
       getNextAction(
         facts({ stage: "interview", interviews: [interview({ kitReady: false })] }),
       ),
-    ).toMatchObject({ kind: "prepare_interview", label: "Prepara colloquio" });
+    ).toMatchObject({
+      kind: "prepare_interview",
+      label: "Prepara colloquio",
+      interviewId: "interview-1",
+    });
   });
 
   it("6) fill_feedback when a held interview misses its feedback", () => {
@@ -98,7 +103,11 @@ describe("getNextAction rows", () => {
           interviews: [interview({ status: "completed", feedbackMissing: true })],
         }),
       ),
-    ).toMatchObject({ kind: "fill_feedback", label: "Compila scheda" });
+    ).toMatchObject({
+      kind: "fill_feedback",
+      label: "Compila scheda",
+      interviewId: "interview-1",
+    });
   });
 
   it("7) go_to_decision when every feedback is in", () => {
@@ -229,5 +238,51 @@ describe("getNextAction in Phase 1", () => {
     expect(getNextAction(facts({ stage: "interview" })).kind).toBe(
       "schedule_interview",
     );
+  });
+});
+
+describe("getNextAction interview ids", () => {
+  it("prepare_interview points to the first scheduled interview without a ready kit", () => {
+    const action = getNextAction(
+      facts({
+        stage: "interview",
+        interviews: [
+          interview({ id: "ready", kitReady: true }),
+          interview({ id: "draft-1", kitReady: false }),
+          interview({ id: "draft-2", kitReady: false }),
+        ],
+      }),
+    );
+    expect(action).toMatchObject({ kind: "prepare_interview", interviewId: "draft-1" });
+  });
+
+  it("fill_feedback points to the first completed interview with missing feedback", () => {
+    const action = getNextAction(
+      facts({
+        stage: "interview",
+        interviews: [
+          interview({ id: "done", status: "completed", feedbackMissing: false }),
+          interview({ id: "missing", status: "completed", feedbackMissing: true }),
+        ],
+      }),
+    );
+    expect(action).toMatchObject({ kind: "fill_feedback", interviewId: "missing" });
+  });
+
+  it("prepare_interview still wins over fill_feedback (row order unchanged)", () => {
+    const action = getNextAction(
+      facts({
+        stage: "interview",
+        interviews: [
+          interview({ id: "missing", status: "completed", feedbackMissing: true }),
+          interview({ id: "draft", kitReady: false }),
+        ],
+      }),
+    );
+    expect(action).toMatchObject({ kind: "prepare_interview", interviewId: "draft" });
+  });
+
+  it("other rows carry no interview id", () => {
+    expect(getNextAction(facts({ stage: "interview" })).interviewId).toBeUndefined();
   });
 });
