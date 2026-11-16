@@ -14,10 +14,14 @@ export { AIQuizService, aiQuizService } from "./core";
 
 // Prompts
 export {
+  buildGuidePrompt,
+  buildGuideSystemPrompt,
   buildPositionDescriptionPrompt,
   buildQuestionPrompts,
   buildQuizPrompt,
   buildQuizSystemPrompt,
+  buildScorecardPrompt,
+  buildScorecardSystemPrompt,
   questionPromptBuilders,
 } from "./prompts";
 
@@ -25,7 +29,7 @@ export {
 export { withRetry, withTimeout } from "./retry";
 
 // Sanitization
-export { sanitizeInput } from "./sanitize";
+export { redactBirthDate, sanitizeInput } from "./sanitize";
 
 // Streaming
 export { streamPositionDescription } from "./streaming";

@@ -7,6 +7,7 @@ import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-la
 import { getPositionById } from "@/lib/data/positions";
 import { getAllPresets } from "@/lib/data/presets";
 import { getFavoriteQuestions } from "@/lib/data/questions";
+import { getCriterionOptionsByPosition } from "@/lib/data/scorecards";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { QuizGeneratorSkeleton } from "./fallbacks";
@@ -33,7 +34,10 @@ async function QuizGeneratorContent({
   const presetsPromise = getAllPresets().catch(() => []);
   const favoriteQuestionsPromise = getFavoriteQuestions().catch(() => []);
   const { id } = await incomingParams;
-  const position = await getPositionById(id);
+  const [position, criteriaByPosition] = await Promise.all([
+    getPositionById(id),
+    getCriterionOptionsByPosition(),
+  ]);
 
   if (!position) {
     redirect("/dashboard/positions");
@@ -49,6 +53,7 @@ async function QuizGeneratorContent({
   return (
     <NewQuizCreationPage
       fixedPosition={positionOption}
+      criteriaByPosition={criteriaByPosition}
       presetsPromise={presetsPromise}
       favoriteQuestionsPromise={favoriteQuestionsPromise}
       languageOptions={

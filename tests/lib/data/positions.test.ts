@@ -4,8 +4,10 @@ import {
   getPositionById,
   getPositionLevelsForSelect,
   getPositions,
+  getPositionSetupStatus,
 } from "@/lib/data/positions";
 import prisma from "@/lib/prisma";
+import { cacheLife, cacheTag } from "next/cache";
 import { describe, expect, it } from "vitest";
 
 describe("positions data layer", () => {
@@ -77,5 +79,77 @@ describe("positions data layer", () => {
       select: { id: true, title: true },
       orderBy: { title: "asc" },
     });
+  });
+});
+
+describe("getPositionSetupStatus", () => {
+  it("tags every collection it counts and the position", async () => {
+    (prisma.position.findUnique as any).mockResolvedValueOnce(null);
+
+    await getPositionSetupStatus("pos-1");
+
+    expect(cacheLife).toHaveBeenCalledWith("hours");
+    expect(cacheTag).toHaveBeenCalledWith(
+      "positions",
+      "scorecards",
+      "quizzes",
+      "interview-guides",
+      "positions-pos-1",
+    );
+    expect(prisma.position.findUnique).toHaveBeenCalledWith({
+      where: { id: "pos-1" },
+      select: {
+        id: true,
+        _count: { select: { quizzes: true, interviewGuides: true } },
+        scorecard: {
+          select: {
+            _count: { select: { criteria: { where: { archivedAt: null } } } },
+          },
+        },
+      },
+    });
+  });
+
+  it("returns null for a missing position", async () => {
+    (prisma.position.findUnique as any).mockResolvedValueOnce(null);
+
+    expect(await getPositionSetupStatus("nope")).toBeNull();
+  });
+
+  it("turns the counts into the setup steps", async () => {
+    (prisma.position.findUnique as any).mockResolvedValueOnce({
+      id: "pos-1",
+      _count: { quizzes: 2, interviewGuides: 0 },
+      scorecard: { _count: { criteria: 3 } },
+    });
+
+    expect(await getPositionSetupStatus("pos-1")).toEqual({
+      steps: [
+        { key: "details", done: true },
+        { key: "scorecard", done: true },
+        { key: "quiz", done: true },
+        { key: "guide", done: false },
+      ],
+      missing: ["guide"],
+      complete: false,
+    });
+  });
+
+  it("counts a scorecard without active criteria (or no scorecard) as missing", async () => {
+    (prisma.position.findUnique as any).mockResolvedValueOnce({
+      id: "pos-1",
+      _count: { quizzes: 1, interviewGuides: 1 },
+      scorecard: { _count: { criteria: 0 } },
+    });
+    expect((await getPositionSetupStatus("pos-1"))?.missing).toEqual([
+      "scorecard",
+    ]);
+
+    (prisma.position.findUnique as any).mockResolvedValueOnce({
+      id: "pos-1",
+      _count: { quizzes: 1, interviewGuides: 1 },
+      scorecard: null,
+    });
+    expect((await getPositionSetupStatus("pos-1"))?.complete).toBe(false);
   });
 });

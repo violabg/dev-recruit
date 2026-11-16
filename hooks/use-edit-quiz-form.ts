@@ -88,6 +88,7 @@ export const useEditQuizForm = ({
       question: "",
       keywords: [],
       explanation: "",
+      criterionIds: [],
     };
 
     switch (type) {
@@ -201,6 +202,8 @@ export const useEditQuizForm = ({
         sampleSolution: q.sampleSolution || "",
         sampleAnswer: q.sampleAnswer || "",
         keywords: q.keywords || [],
+        // Order of the selected criteria does not matter
+        criterionIds: [...(q.criterionIds ?? [])].sort(),
       });
 
       const currentNormalized = normalizeQuestion(currentQuestion);

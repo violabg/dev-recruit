@@ -2,6 +2,10 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/services/logger";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
+import {
+  getPositionSetup,
+  type PositionSetup,
+} from "@/lib/utils/position-setup";
 import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { Position, Prisma } from "../prisma/client";
@@ -85,6 +89,45 @@ export const getPositionById = cache(
     });
   }
 );
+
+/**
+ * Setup steps of a position (details, scorecard, quiz, guide) for the
+ * checklist of the position page. Null when the position does not exist.
+ */
+export async function getPositionSetupStatus(
+  positionId: string,
+): Promise<PositionSetup | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(
+    CacheTags.POSITIONS,
+    CacheTags.SCORECARDS,
+    CacheTags.QUIZZES,
+    CacheTags.INTERVIEW_GUIDES,
+    entityTag.position(positionId),
+  );
+
+  const position = await prisma.position.findUnique({
+    where: { id: positionId },
+    select: {
+      id: true,
+      _count: { select: { quizzes: true, interviewGuides: true } },
+      scorecard: {
+        select: {
+          _count: { select: { criteria: { where: { archivedAt: null } } } },
+        },
+      },
+    },
+  });
+
+  if (!position) return null;
+
+  return getPositionSetup({
+    activeCriteriaCount: position.scorecard?._count.criteria ?? 0,
+    quizCount: position._count.quizzes,
+    guideCount: position._count.interviewGuides,
+  });
+}
 
 /**
  * Returns all positions without pagination.

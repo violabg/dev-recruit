@@ -1,10 +1,15 @@
 "use server";
 
 import { requireUser } from "../auth-server";
-import { assessmentEvaluationInputSchema, baseSchemas } from "../schemas";
+import {
+  assessmentEvaluationInputSchema,
+  baseSchemas,
+  recalculateAnswerEvaluationsSchema,
+} from "../schemas";
 import {
   completeAssessmentEvaluation,
   evaluateAssessmentAnswer,
+  recalculateAnswerEvaluations,
 } from "../services/assessment-evaluation";
 import { invalidateEvaluationCache } from "../utils/cache-utils";
 import { runAction } from "./run-action";
@@ -43,6 +48,31 @@ export async function completeAssessmentEvaluationAction(input: unknown) {
       assessmentId,
       questionEvaluations,
       userId: user.id,
+    });
+
+    invalidateEvaluationCache({
+      evaluationId: result.evaluationId,
+      assessmentId,
+    });
+
+    return result;
+  });
+}
+
+/**
+ * Store the per-answer detail ("Ricalcola dettaglio risposte") on an
+ * evaluation saved without it. Only answerEvaluations is written: quizScore
+ * and fitScore stay as they were.
+ */
+export async function recalculateAnswerEvaluationsAction(input: unknown) {
+  return runAction("recalculateAnswerEvaluationsAction", async () => {
+    await requireUser();
+    const { assessmentId, questionEvaluations } =
+      recalculateAnswerEvaluationsSchema.parse(input);
+
+    const result = await recalculateAnswerEvaluations({
+      assessmentId,
+      questionEvaluations,
     });
 
     invalidateEvaluationCache({

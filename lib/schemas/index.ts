@@ -49,6 +49,12 @@ export * from "./evaluation";
 // Re-export preset schemas and types
 export * from "./preset";
 
+// Re-export scorecard schemas and types
+export * from "./scorecard";
+
+// Re-export interview guide schemas and types
+export * from "./interview-guide";
+
 // ====================
 // UTILITY EXPORTS
 // ====================

@@ -22,15 +22,24 @@ vi.mock("@/lib/services/applications", () => ({
   })),
 }));
 
+// Active criteria of the position scorecard (the scorecard reads have their
+// own tests)
+vi.mock("@/lib/services/scorecards", () => ({
+  getActiveCriteria: vi.fn(),
+}));
+
 import prisma from "@/lib/prisma";
+import { Prisma } from "@/lib/prisma/client";
 import { advanceApplicationStage } from "@/lib/services/applications";
 import { MAX_RESUME_CHARS } from "@/lib/services/ai/evaluation-prompts";
 import {
+  buildCriteriaAssessment,
   cleanJsonResponse,
   prepareResumeEvaluation,
   ResumeEvaluationError,
   saveResumeEvaluation,
 } from "@/lib/services/resume-evaluation";
+import { getActiveCriteria } from "@/lib/services/scorecards";
 import { extractText } from "unpdf";
 
 const RESUME =
@@ -61,6 +70,7 @@ describe("prepareResumeEvaluation", () => {
     } as any);
     vi.mocked(prisma.evaluation.findFirst).mockResolvedValue(null);
     vi.mocked(extractText).mockResolvedValue({ text: RESUME } as any);
+    vi.mocked(getActiveCriteria).mockResolvedValue([]);
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({
@@ -163,6 +173,58 @@ describe("prepareResumeEvaluation", () => {
     expect(error.status).toBe(status);
   });
 
+  it("without criteria asks nothing more and returns an empty key map", async () => {
+    const prepared = await prepareResumeEvaluation("cand1", "pos1");
+
+    expect(getActiveCriteria).toHaveBeenCalledWith("pos1");
+    expect(prepared.criterionKeys).toEqual([]);
+    expect(prepared.prompt).not.toContain("criteriaAssessment");
+  });
+
+  it("lists the active criteria by key and returns the key map", async () => {
+    vi.mocked(getActiveCriteria).mockResolvedValue([
+      {
+        id: "crit-react",
+        name: "React",
+        description: "Componenti",
+        category: "technical",
+        priority: "must",
+        weight: 3,
+        expectedLevel: 4,
+      },
+      {
+        id: "crit-comm",
+        name: "Comunicazione",
+        description: null,
+        category: "soft",
+        priority: "nice",
+        weight: 2,
+        expectedLevel: 3,
+      },
+    ]);
+
+    const prepared = await prepareResumeEvaluation("cand1", "pos1");
+
+    expect(prepared.criterionKeys).toEqual([
+      { id: "crit-react", key: "C1" },
+      { id: "crit-comm", key: "C2" },
+    ]);
+    expect(prepared.prompt).toContain("C1 - React (livello atteso 4/5): Componenti");
+    expect(prepared.prompt).toContain("C2 - Comunicazione (livello atteso 3/5)");
+    expect(prepared.prompt).toContain("criteriaAssessment");
+  });
+
+  it("removes a marked birth date from the CV before the prompt", async () => {
+    vi.mocked(extractText).mockResolvedValue({
+      text: `${RESUME}\nData di nascita: 12/03/1990`,
+    } as any);
+
+    const prepared = await prepareResumeEvaluation("cand1", "pos1");
+
+    expect(prepared.prompt).toContain("Data di nascita: [rimosso]");
+    expect(prepared.prompt).not.toContain("12/03/1990");
+  });
+
   it("reports an unreadable PDF", async () => {
     vi.stubGlobal(
       "fetch",
@@ -189,6 +251,7 @@ describe("saveResumeEvaluation", () => {
     applicationId: "app1",
     title: "Frontend Developer",
     userId: "user1",
+    criterionKeys: [],
   };
 
   beforeEach(() => {
@@ -212,8 +275,83 @@ describe("saveResumeEvaluation", () => {
         weaknesses: ["Testing"],
         recommendation: "Colloquio tecnico",
         fitScore: 8,
+        criteriaAssessment: Prisma.JsonNull,
         createdBy: "user1",
       },
+      select: { id: true },
+    });
+  });
+
+  it("stores the assessment per criterion keyed by id, inside the transaction", async () => {
+    await saveResumeEvaluation({
+      ...params,
+      criterionKeys: [
+        { id: "crit-react", key: "C1" },
+        { id: "crit-ts", key: "C2" },
+        { id: "crit-comm", key: "C3" },
+        { id: "crit-lead", key: "C4" },
+      ],
+      responseText: JSON.stringify({
+        ...response,
+        criteriaAssessment: [
+          { criterionKey: "c1", score: 7, evidence: "  Molti progetti React  " },
+          { criterionKey: "C2", score: 0, evidence: "Poco TypeScript" },
+          { criterionKey: "C3", score: null, evidence: "" },
+          { criterionKey: "C9", score: 4, evidence: "sconosciuto" },
+          { criterionKey: "C1", score: 2, evidence: "duplicato" },
+        ],
+      }),
+    });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(advanceApplicationStage).toHaveBeenCalledWith(
+      prisma,
+      "app1",
+      "cv_evaluated",
+    );
+    const { data } = vi.mocked(prisma.evaluation.create).mock.calls[0][0] as {
+      data: { criteriaAssessment: unknown; fitScore: number };
+    };
+    expect(data.fitScore).toBe(8);
+    expect(data.criteriaAssessment).toEqual({
+      // 7 clamped to 5, evidence trimmed; the duplicate C1 is ignored
+      "crit-react": { score: 5, evidence: "Molti progetti React" },
+      // 0 clamped to 1
+      "crit-ts": { score: 1, evidence: "Poco TypeScript" },
+      // null stays null
+      "crit-comm": { score: null, evidence: "" },
+      // not returned by the model: no evidence
+      "crit-lead": { score: null, evidence: "" },
+    });
+  });
+
+  it("stores JsonNull when the model returned no valid criterion", async () => {
+    await saveResumeEvaluation({
+      ...params,
+      criterionKeys: [{ id: "crit-react", key: "C1" }],
+      responseText: JSON.stringify({
+        ...response,
+        criteriaAssessment: [{ criterionKey: "C7", score: 3, evidence: "x" }],
+      }),
+    });
+
+    expect(prisma.evaluation.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ criteriaAssessment: Prisma.JsonNull }),
+      select: { id: true },
+    });
+  });
+
+  it("stores JsonNull without criteria even when the model returns some", async () => {
+    await saveResumeEvaluation({
+      ...params,
+      responseText: JSON.stringify({
+        ...response,
+        criteriaAssessment: [{ criterionKey: "C1", score: 3, evidence: "x" }],
+      }),
+    });
+
+    expect(prisma.evaluation.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ criteriaAssessment: Prisma.JsonNull }),
       select: { id: true },
     });
   });
@@ -258,5 +396,32 @@ describe("cleanJsonResponse", () => {
     expect(cleanJsonResponse('```json\n{"a":1}\n```')).toBe('{"a":1}');
     expect(cleanJsonResponse('```\n{"a":1}\n```')).toBe('{"a":1}');
     expect(cleanJsonResponse(' {"a":1} ')).toBe('{"a":1}');
+  });
+});
+
+describe("buildCriteriaAssessment", () => {
+  const keys = [
+    { id: "a", key: "C1" },
+    { id: "b", key: "C2" },
+  ];
+
+  it("returns null without keys or without items", () => {
+    expect(
+      buildCriteriaAssessment([{ criterionKey: "C1", score: 3, evidence: "" }], []),
+    ).toBeNull();
+    expect(buildCriteriaAssessment(undefined, keys)).toBeNull();
+    expect(buildCriteriaAssessment([], keys)).toBeNull();
+  });
+
+  it("rounds a decimal score", () => {
+    expect(
+      buildCriteriaAssessment(
+        [{ criterionKey: "C1", score: 3.6, evidence: "x" }],
+        keys,
+      ),
+    ).toEqual({
+      a: { score: 4, evidence: "x" },
+      b: { score: null, evidence: "" },
+    });
   });
 });

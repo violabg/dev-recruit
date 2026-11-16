@@ -11,6 +11,9 @@ const baseQuestionSchema = z.object({
   question: z.string().min(1, "Il testo della domanda è obbligatorio"),
   keywords: z.array(z.string()).optional(),
   explanation: z.string().optional(),
+  // Ids of the scorecard criteria the question verifies in a quiz: data of the
+  // quiz-question link, never written on the Question row
+  criterionIds: z.array(z.string()).optional(),
 });
 
 // Specific question type schemas with strict validation
@@ -73,6 +76,8 @@ export const questionSchemas = {
       codeSnippet: z.string().optional(),
       sampleSolution: z.string().optional(),
       isFavorite: z.boolean().optional(),
+      // Criteria verified by the question in this quiz (quiz-question link)
+      criterionIds: z.array(z.string()).optional(),
     })
     .superRefine((data, ctx) => {
       // For multiple choice questions, validate options
@@ -153,7 +158,9 @@ export const isCodeSnippetQuestion = (
 export const convertToStrictQuestion = (
   flexibleQuestion: FlexibleQuestion,
 ): Question => {
-  // Ensure required fields are present for strict validation
+  // Ensure required fields are present for strict validation.
+  // The spread keeps criterionIds (part of every strict schema); parsing still
+  // strips dbId and isFavorite.
   const normalizedQuestion = { ...flexibleQuestion };
 
   // For open questions, ensure sampleAnswer is present

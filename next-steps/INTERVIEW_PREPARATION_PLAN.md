@@ -1,7 +1,7 @@
 # Preparazione al colloquio e flusso di selezione — Piano
 
 **Data:** 15 novembre 2026 · aggiornato il 16 novembre 2026
-**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · prossima: Fase 2, da progettare (§8)
+**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · prossima: Fase 3, da progettare (§8)
 **Ambito:** Kit di preparazione al colloquio, colloquio live, decisione; revisione del flusso dashboard da step 1 a step finale
 
 > **Nomi nel documento.** Le sezioni 1–3 descrivono il punto di partenza (15 novembre) e usano i nomi di allora: `CandidatePosition`, `Interview` per il test, `/dashboard/interviews`. Dalla Fase 1 il codice usa `Application`, `Assessment`, `assessmentId`, `/dashboard/assessments`. Le entità della Fase 3 chiamate qui `LiveInterview` e `LiveInterviewParticipant` si chiameranno `Interview` e `InterviewParticipant` (§3.2). Il vocabolario aggiornato è in `CONTEXT.md`.
@@ -22,6 +22,8 @@
 10. **La posizione non ha uno stato** (aperta/chiusa) e cancellarla elimina a cascata candidature, test e valutazioni, anche degli assunti.
 
 **Dopo la Fase 1:** chiusi i gap 1, 3, 4, 7, 8, 9, 10. Il gap 2 è chiuso a metà: il punteggio complessivo ora riceve la candidatura (tab "Decisione" di `/dashboard/applications/[id]`, la pagina `evaluation-dashboard` non esiste più), ma i pesi sono ancora fissi (Fase 4). Restano aperti i gap 5 (Fase 2) e 6 (Fasi 2 e 4).
+
+**Dopo la Fase 2:** chiuso il gap 5 (i punteggi per risposta si salvano in `answerEvaluations` con la valutazione del test, e "Ricalcola dettaglio risposte" li ricostruisce per le valutazioni precedenti). Il gap 6 è chiuso in parte: ogni posizione ha la propria scheda di valutazione con criteri e pesi, e le 5 dimensioni della rubrica sono i criteri soft di default; la distinzione tra intervistatori e la rubrica in sola lettura restano alle Fasi 3 e 4.
 
 **Principio guida:** la **Candidatura** diventa il perno. CV, test, colloqui e decisione sono *prove* raccolte su una candidatura, e la pagina della candidatura indica sempre la **prossima azione**.
 
@@ -285,7 +287,7 @@ Precompilata con voti e note del live raggruppati per criterio · raccomandazion
 | Fase | Contenuto | Gap chiusi |
 |---|---|---|
 | **1. Candidatura come perno** ✅ *implementata il 16 novembre 2026* | Fasi su `CandidatePosition` e regole di transizione, modifica posizioni come diff, email unica e aggancio dal form pubblico, stato della posizione e blocco eliminazione, rimozione di `Candidate.status` e `isPrimary`, backfill (§3.4), pagina `/applications/[id]` con "Prossima azione", `applicationId` sul test, kanban nella posizione, home "Le mie azioni", rinomina UI "Colloqui" → "Test" | 1, 3, 4, 7, 8, 9, 10 |
-| **2. Scheda di valutazione e guide** | Scorecard per posizione (proposta AI, archiviazione criteri), collegamento domande ↔ criteri, modelli di guida, salvataggio dettaglio per risposta | 5, 6 (in parte) |
+| **2. Scheda di valutazione e guide** ✅ *implementata il 16 novembre 2026* | Scorecard per posizione (proposta AI, archiviazione criteri), collegamento domande ↔ criteri, modelli di guida, salvataggio dettaglio per risposta | 5, 6 (in parte) |
 | **3. Kit e live** | Pianificazione, kit personalizzato AI, pagina preparazione, modalità live, scheda intervistatore | cuore della richiesta |
 | **4. Decisione** | Pagina decisione con matrice, pesi dalla scheda, indipendenza intervistatori, avvocato del diavolo; rubrica ed evaluation-dashboard in sola lettura | 2, 6 |
 | **5. Extra** | Registrazione/trascrizione con consenso + sintesi per criterio, guida di preparazione per il candidato, feedback dopo il rifiuto | — |
@@ -299,6 +301,15 @@ La fase 1 non usa l'AI ma è il prerequisito: senza candidatura non c'è dove ag
 - "Le mie azioni" ha già la sezione `interviewsWithoutKit` (oggi vuota) e lista come setup incompleto le posizioni `draft`/`open` senza quiz: la Fase 2 la estende alla scheda di valutazione e alle guide.
 - La pagina candidatura ha già le tab Colloqui (segnaposto, `interviews-tab.tsx`) e Decisione (punteggio con pesi fissi, da sostituire nella Fase 4).
 - Il responsabile (`ownerId`, "Prendi in carico" / "Rilascia", filtro "Solo le mie") esiste: il filtro "i miei" di Agenda (Fase 3) lo riusa.
+
+**Cosa la Fase 2 ha già predisposto per le fasi successive** (non va rifatto):
+- Criteri attivi e guide sono pronti per il kit (Fase 3): `getActiveCriteria` (`lib/services/scorecards.ts`) esclude gli archiviati; `getInterviewGuideById` (`lib/data/interview-guides.ts`) restituisce sezioni e domande ordinate con criteri, ancore e approfondimenti, da copiare come snapshot nel kit. `GuideSectionKind` e le ancore hanno la stessa forma prevista per `KitItem`.
+- `criterionHasEvidence` (`lib/services/scorecards.ts`) è l'unico punto che decide se un criterio tolto dalla scheda si archivia o si elimina: la Fase 3 vi aggiunge voti (`CriterionScore`) e voci di kit (`KitItem.criterionIds`).
+- `answerEvaluations` (punteggio, punti di forza, debolezze per domanda) è pronto come input del kit per le domande sulle risposte deboli del test; "Ricalcola dettaglio risposte" lo ricostruisce per i test valutati prima.
+- `criteriaAssessment` della valutazione CV è già su scala 1–5 (o null = nessuna evidenza) per id di criterio: è pronto per la matrice della pagina Decisione (Fase 4).
+- `QuizQuestion.criterionIds` collega le domande dei quiz generati dalla scheda ai criteri: la Fase 4 può riportare il test per criterio. Un id di un criterio eliminato può restare su un collegamento di quiz e va ignorato da ogni lettura.
+- `Application.decisionWeights` resta da riempire nella Fase 4, al momento della decisione, con i pesi (1–5) dei criteri della scheda: il cambio di peso non lo tocca mai.
+- Le tag di cache `scorecards` e `interview-guides`, gli helper `invalidateScorecardCache` e `invalidateInterviewGuideCache` e la regola di setup `getPositionSetup` (checklist e "Le mie azioni") esistono già.
 
 ---
 
@@ -343,7 +354,7 @@ Il design applica la knowledge come vincolo superiore al requisito: queste regol
 | 1 | Glossario: Interview = "Colloquio" | `Assessment` = "Test"; "Colloquio" è la conversazione | ✅ |
 | 1 | Simboli `Interview`, `CandidatePosition`, tag di cache `interviews` in tutti i documenti | `Assessment`, `Application` e relativi tag | ✅ |
 | 1 | Schema applicato con `db push` | Migrazioni versionate | ✅ |
-| 2 | Punteggio per risposta non salvato | Salvato in `answerEvaluations` | da fare prima del design della Fase 2 |
+| 2 | Punteggio per risposta non salvato | Salvato in `answerEvaluations` | ✅ |
 | 3 | MAI filtri per utente | Eccezione limitata a note e schede degli intervistatori; il filtro "Solo le mie" (`ownerId`) esiste già e non limita l'accesso | da fare prima del design della Fase 3 |
 | 3 | La generazione AI non salva mai | Invariata: vale anche per scheda, guida e kit | — |
 | 4 | Formula della "Dashboard valutazione" con pesi fissi (oggi: "application evaluation summary", tab Decisione) | Formula della pagina Decisione | da fare prima del design della Fase 4 |
@@ -353,10 +364,12 @@ Il design applica la knowledge come vincolo superiore al requisito: queste regol
 Punti 1–5 chiusi nel design della Fase 1:
 
 1. ✅ Il candidato legge "test" ovunque ("Inizia il test"); `/recruiting/[token]` invariato.
-2. ✅ Per la Fase 1: le candidature non hanno un tag proprio, sono coperte da `candidates` + tag di entità; nessun tag per gli utenti (accettato). **Va ripetuto per ogni fase** per le sue nuove entità (Fase 2: scheda, criteri, guide; Fase 3: colloqui, kit, note, schede; pagina live non in cache). Fase 3: decidere un tag per gli utenti (oggi assente, accettato in Fase 1), perché colloqui, partecipanti e schede mostrano nomi di utenti.
+2. ✅ Per la Fase 1: le candidature non hanno un tag proprio, sono coperte da `candidates` + tag di entità; nessun tag per gli utenti (accettato). **Va ripetuto per ogni fase** per le sue nuove entità (Fase 3: colloqui, kit, note, schede; pagina live non in cache). Fase 3: decidere un tag per gli utenti (oggi assente, accettato in Fase 1), perché colloqui, partecipanti e schede mostrano nomi di utenti.
+   ✅ Per la Fase 2: tag `scorecards` (con `scorecard-{positionId}`) e `interview-guides` (con `interview-guide-{id}`); i criteri sono coperti da `scorecards`, sezioni e domande delle guide da `interview-guides`, i collegamenti quiz-criteri da `quizzes` + `questions`; helper `invalidateScorecardCache` e `invalidateInterviewGuideCache`; la cancellazione di una posizione scade anche le due nuove collezioni.
 3. ✅ Valutazione CV collegata via candidato + posizione, ed esiste solo se la candidatura esiste.
 4. ✅ `knowledge-builder` riceve un file delta (`next-steps/FASE1_KNOWLEDGE_DELTA.md`) che nomina esplicitamente `CONTEXT.md`. Stessa procedura per le fasi successive.
 5. ✅ Per la Fase 1: `next-steps/FASE1_ACCEPTANCE.md`. **Va ripetuto per ogni fase** (`FASEn_ACCEPTANCE.md`).
+   ✅ Per la Fase 2: `next-steps/FASE2_ACCEPTANCE.md` (O1–O48).
 
 Ancora aperto:
 
@@ -366,35 +379,38 @@ Ancora aperto:
 
 ## 8. Prossimi passi quando si riprende
 
-### 8.1 Stato a fine Fase 1 (16 novembre 2026)
+### 8.1 Stato a fine Fase 2 (16 novembre 2026)
 
-- **Codice:** Fase 1 implementata sul branch `claude/dreamy-shannon-17omy9` (commit `4bf9750`, documentazione in `feab4db`). Validazione: `pnpm lint` pulito, `pnpm test:run` 65 file / 1055 test, `pnpm build` 81/81 pagine.
-- **Database:** migrazioni `0_init` (base) e `20261115000000_application_hub` applicate solo al ramo Neon `development`; `pnpm db:verify` OK, dati conservati. Procedura in `prisma/migrations/README.md`.
-- **Knowledge:** aggiornata da `knowledge-builder` con `next-steps/FASE1_KNOWLEDGE_DELTA.md` (`knowledge/*` e `CONTEXT.md`, da committare).
-- **Design della Fase 1:** sessione `fase1_application_design`, piano `fase1_application_hub`, documento in `agentic-system-sessions/fase1_application_design/designs/fase1_application/design.html`.
-- **Accettazione:** `next-steps/FASE1_ACCEPTANCE.md` (O1–O81).
+- **Codice:** Fase 2 implementata sul branch `claude/dreamy-shannon-17omy9`, sopra la Fase 1 (ultimo commit `7880e62`); le modifiche della Fase 2 non sono ancora committate. Validazione (operazione IM9): `pnpm lint` pulito, `pnpm test:run` 82 file / 1308 test, `pnpm build` 96/96 pagine.
+- **Database:** migrazione `20261117000000_scorecard_guides` (solo additiva: tabelle `scorecards`, `scorecard_criteria`, `interview_guides`, `guide_sections`, `guide_questions`; colonne `quiz_questions.criterionIds`, `evaluations.answerEvaluations`, `evaluations.criteriaAssessment`; nessun backfill) applicata con `pnpm db:migrate` solo al ramo Neon `development`. `prisma migrate status` aggiornato, confronto database ↔ schema senza differenze, `pnpm db:verify` OK con gli stessi conteggi. `prisma/verify-application-hub.ts` ora esclude dal controllo dei vecchi nomi la tabella `interview_guides`.
+- **Design della Fase 2:** sessione `fase2_scorecard_design`, piano `fase2_scorecard`, documento in `agentic-system-sessions/fase2_scorecard_design/designs/fase2_scorecard/design.html`.
+- **Accettazione:** `next-steps/FASE2_ACCEPTANCE.md` (O1–O48), con passi manuali, limiti noti e punti aperti.
+- **Knowledge:** delta pronto in `next-steps/FASE2_KNOWLEDGE_DELTA.md` (nomina `CONTEXT.md`); `knowledge/` e `CONTEXT.md` non sono ancora aggiornati.
 
-**Ancora da fare per la Fase 1 (non bloccano il design della Fase 2):**
-1. Passi manuali ☐ di `next-steps/FASE1_ACCEPTANCE.md`, da loggati in `pnpm dev`.
-2. Verificare da loggati che `/dashboard/applications/<id>`, `/dashboard/profile` e `/dashboard/profile/edit` non producano più l'errore "Blocking Route" in `.next/dev/logs/next-development.log` (correzione: `await connection()` prima della lettura della sessione).
-3. Al rilascio: ripetere la migrazione in produzione seguendo `prisma/migrations/README.md` (`pnpm db:duplicates`, `migrate resolve --applied 0_init`, `pnpm db:migrate:deploy`, `pnpm db:verify`). Ritorno indietro: ramo Neon `backup/pre-application-hub-2026-11-15`, tag git `backup/pre-application-hub`.
-4. Configurare uno shadow database per poter confrontare le migrazioni con lo schema (`prisma migrate diff --from-migrations`): oggi non è stato possibile; il confronto database ↔ schema invece non ha differenze.
-5. Due ritocchi minori per `knowledge-builder` (§8.3).
+**Ancora da fare:**
+1. Passi manuali ☐ di `next-steps/FASE2_ACCEPTANCE.md` (M1–M17) e quelli rimasti di `next-steps/FASE1_ACCEPTANCE.md`, da loggati in `pnpm dev`.
+2. Eseguire `knowledge-builder` con `next-steps/FASE2_KNOWLEDGE_DELTA.md`, nominando anche `CONTEXT.md`, più i due ritocchi di §8.3.
+3. Verifica legale (§7.3 punto 6) sulla proposta AI dei criteri: oggi la funzione esce con la conferma umana di ogni criterio.
+4. Al rilascio: migrazioni in produzione seguendo `prisma/migrations/README.md` (Fase 1: `pnpm db:duplicates`, `migrate resolve --applied 0_init`; poi `pnpm db:migrate:deploy`, che applica anche `20261117000000_scorecard_guides`; infine `pnpm db:verify`). Ritorno indietro della Fase 1: ramo Neon `backup/pre-application-hub-2026-11-15`, tag git `backup/pre-application-hub`.
+5. Configurare uno shadow database per confrontare le migrazioni con lo schema (`prisma migrate diff --from-migrations`): non è stato possibile né nella Fase 1 né nella Fase 2.
 
-### 8.2 Avviare la Fase 2 in una nuova sessione
+### 8.2 Avviare la Fase 3 in una nuova sessione
 
 Ordine (vedi §8.4):
-1. **Knowledge, prima:** `knowledge-builder` aggiorna solo la regola della Fase 2 in §7.2 (punteggio per risposta salvato in `answerEvaluations`). Nessuna descrizione di entità non ancora scritte (Scorecard, criteri, guide).
+1. **Knowledge, prima:** dopo aver applicato il delta della Fase 2, `knowledge-builder` aggiorna solo la regola della Fase 3 in §7.2 (eccezione limitata ai filtri per utente su note e schede degli intervistatori). Nessuna descrizione di entità non ancora scritte (colloqui, kit, schede).
 2. **Design:** nuova sessione dell'orchestrator, workflow `DESIGN`. Richiesta suggerita:
-   > Realizza la Fase 2 del piano `next-steps/INTERVIEW_PREPARATION_PLAN.md` (§6, riga 2: Scheda di valutazione e guide), con le regole di §3.1 (Scorecard, ScorecardCriterion, modifiche dopo i primi voti, collegamento quiz ↔ criteri, InterviewGuide), §3.2 (`answerEvaluations`, `criteriaAssessment`, "Ricalcola dettaglio risposte"), §4.2 (tab della posizione, checklist di setup, editor scheda e guide) e §5 per le regole di proposta AI, e le decisioni di §7.1. Parti dal codice della Fase 1 (§6, "Cosa la Fase 1 ha già predisposto"). Chiudi nel design i punti 2 e 5 di §7.3 per la Fase 2.
+   > Realizza la Fase 3 del piano `next-steps/INTERVIEW_PREPARATION_PLAN.md` (§6, riga 3: Kit e live), con le regole di §3.1 (InterviewKit, KitItem, KitItemNote, LiveInterview, LiveInterviewParticipant, InterviewerFeedback, CriterionScore), §4.2 (pianificazione, preparazione, modalità live, scheda intervistatore, Agenda) e §5 (generazione AI del kit), e le decisioni di §7.1. Parti dal codice delle Fasi 1 e 2 (§6, "Cosa la Fase 1 ha già predisposto" e "Cosa la Fase 2 ha già predisposto"). Chiudi nel design i punti 2 e 5 di §7.3 per la Fase 3.
 3. **Implementazione** e validazione nello stesso workflow; nuova migrazione con `pnpm db:migrate` (mai `db push`), prima su `development`.
-4. **Knowledge, dopo:** file `next-steps/FASE2_KNOWLEDGE_DELTA.md` per `knowledge-builder`, che nomini `CONTEXT.md`.
+4. **Knowledge, dopo:** file `next-steps/FASE3_KNOWLEDGE_DELTA.md` per `knowledge-builder`, che nomini `CONTEXT.md`.
 
-**Da decidere nel design della Fase 2** (non decisi in §7.1):
-- dove vive `answerEvaluations` rispetto alle valutazioni esistenti e come "Ricalcola dettaglio risposte" si comporta su una valutazione già salvata senza toccare `quizScore`/`fitScore`;
-- quale parte delle guide (§3.1 InterviewGuide) entra nella Fase 2 e quale resta alla Fase 3 (il kit è Fase 3);
-- come la rubrica comportamentale attuale (5 dimensioni) diventa criteri soft di default senza cambiare lo storico (in sola lettura dalla Fase 4);
-- l'estensione di "Le mie azioni" (setup incompleto: scheda e guida mancanti) e la checklist di setup della posizione.
+**Da decidere nel design della Fase 3** (non decisi in §7.1):
+- i tag di cache di colloqui, kit, note e schede, se la pagina live resta fuori dalla cache, e se serve un tag per gli utenti (§7.3 punto 2);
+- come il kit copia la guida (snapshot di sezioni, domande, criteri e ancore) e come la rigenerazione distingue domande del modello, manuali e ritoccate;
+- come `criterionHasEvidence` include voti (`CriterionScore`) e voci di kit, e quindi quando un criterio diventa da archiviare;
+- come il kit usa `answerEvaluations` (risposte deboli) e `criteriaAssessment` (criteri senza evidenza nel CV), e cosa fa quando mancano;
+- la regola d'accesso per note e schede degli intervistatori (nascoste fino all'invio), unica eccezione ai "MAI filtri per utente";
+- l'estensione di "Le mie azioni" (colloqui senza kit pronto, schede da compilare) e della "Prossima azione";
+- la verifica legale su conservazione di note e schede (§7.3 punto 6), da chiudere prima del design.
 
 ### 8.3 Residui della revisione della knowledge (per `knowledge-builder`)
 

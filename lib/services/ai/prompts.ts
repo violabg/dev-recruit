@@ -5,7 +5,12 @@
  * Each question type has its own specialized prompt builder.
  */
 
+import type { KeyedCriterion } from "../../utils/criterion-keys";
+import { DEFAULT_SOFT_CRITERIA } from "../../utils/scorecard-defaults";
+import type { ActiveCriterion } from "../scorecards";
+import type { GenerateInterviewGuideParams } from "./guide-generation";
 import { sanitizeInput } from "./sanitize";
+import type { GenerateScorecardCriteriaParams } from "./scorecard-generation";
 import type {
   BaseQuestionParams,
   BehavioralScenarioQuestionParams,
@@ -28,7 +33,7 @@ function buildCommonContext(params: BaseQuestionParams): string {
   const sanitizedQuizTitle = sanitizeInput(params.quizTitle);
   const sanitizedPositionTitle = sanitizeInput(params.positionTitle);
   const sanitizedExperienceLevel = sanitizeInput(params.experienceLevel);
-  const sanitizedSkills = params.skills.map(sanitizeInput).join(", ");
+  const sanitizedSkills = params.skills.map((value) => sanitizeInput(value)).join(", ");
   const sanitizedInstructions = params.instructions
     ? sanitizeInput(params.instructions)
     : "";
@@ -110,7 +115,7 @@ export const questionPromptBuilders = {
 
       if (params.focusAreas?.length) {
         requirements.push(
-          `Focus areas: ${params.focusAreas.map(sanitizeInput).join(", ")}`,
+          `Focus areas: ${params.focusAreas.map((value) => sanitizeInput(value)).join(", ")}`,
         );
       }
       if (params.distractorComplexity) {
@@ -189,7 +194,7 @@ export const questionPromptBuilders = {
       if (params.evaluationCriteria?.length) {
         requirements.push(
           `Evaluation criteria: ${params.evaluationCriteria
-            .map(sanitizeInput)
+            .map((value) => sanitizeInput(value))
             .join(", ")}`,
         );
       }
@@ -387,7 +392,7 @@ export const questionPromptBuilders = {
       if (params.evaluationCriteria?.length) {
         requirements.push(
           `Evaluation criteria: ${params.evaluationCriteria
-            .map(sanitizeInput)
+            .map((value) => sanitizeInput(value))
             .join(", ")}`,
         );
       }
@@ -454,9 +459,24 @@ export function buildQuestionPrompts(params: GenerateQuestionParams): {
 // ====================
 
 /**
- * Builds the system prompt for quiz generation
+ * Line added to the quiz system prompt only when the position has criteria
  */
-export function buildQuizSystemPrompt(): string {
+const QUIZ_CRITERION_KEYS_FIELD = `
+        Optional field of every question (only when criteria are provided in the request):
+          - criterionKeys: array of criterion keys (only when criteria are provided), e.g. ["C1", "C3"]
+`;
+
+/**
+ * Builds the system prompt for quiz generation.
+ * With `withCriteria` it also documents the optional criterionKeys field;
+ * without it the prompt is unchanged.
+ */
+export function buildQuizSystemPrompt(withCriteria = false): string {
+  const prompt = buildBaseQuizSystemPrompt();
+  return withCriteria ? `${prompt}${QUIZ_CRITERION_KEYS_FIELD}` : prompt;
+}
+
+function buildBaseQuizSystemPrompt(): string {
   return `
         You are a technical recruitment expert specializing in creating assessment quizzes. 
         Generate valid JSON that contains a questions array with individual question objects that adheres to the following specifications:
@@ -540,10 +560,49 @@ export function buildQuizSystemPrompt(): string {
       `;
 }
 
+/** A scorecard criterion listed in the quiz prompt under its key (C1, C2, ...) */
+export type QuizPromptCriterion = {
+  key: string;
+  name: string;
+  description: string | null;
+  category: string;
+  priority: string;
+};
+
 /**
- * Builds the user prompt for quiz generation
+ * Block appended to the quiz prompt when the position has criteria
  */
-export function buildQuizPrompt(params: GenerateQuizParams): string {
+function buildQuizCriteriaBlock(keyedCriteria: QuizPromptCriterion[]): string {
+  const lines = keyedCriteria
+    .map((criterion) => {
+      const description = criterion.description
+        ? sanitizeInput(criterion.description)
+        : "";
+      return `- ${criterion.key} - ${sanitizeInput(criterion.name)} (${criterion.category}, ${criterion.priority})${
+        description ? `: ${description}` : ""
+      }`;
+    })
+    .join("\n");
+
+  return `
+
+                    Evaluation criteria of this position:
+${lines}
+
+                    Criteria rules:
+                    - Every question must list in "criterionKeys" the keys of the criteria it verifies (one to three keys, only keys from the list above).
+                    - The criteria with priority "must" should be covered by at least one question when the question count allows.`;
+}
+
+/**
+ * Builds the user prompt for quiz generation.
+ * With `keyedCriteria` (not empty) it lists the criteria of the position and
+ * asks the keys each question verifies; without them the prompt is unchanged.
+ */
+export function buildQuizPrompt(
+  params: GenerateQuizParams,
+  keyedCriteria?: QuizPromptCriterion[],
+): string {
   const {
     positionTitle,
     experienceLevel,
@@ -576,7 +635,7 @@ export function buildQuizPrompt(params: GenerateQuizParams): string {
 
                     Position Details:
                     - Experience Level: ${sanitizeInput(experienceLevel)}
-                    - Required Skills: ${skills.map(sanitizeInput).join(", ")}
+                    - Required Skills: ${skills.map((value) => sanitizeInput(value)).join(", ")}
                     ${
                       sanitizedDescription
                         ? `- Description: ${sanitizedDescription}`
@@ -615,6 +674,10 @@ export function buildQuizPrompt(params: GenerateQuizParams): string {
 
                     Generate exactly ${questionCount} questions following these specifications.`;
 
+  if (keyedCriteria && keyedCriteria.length > 0) {
+    return `${prompt}${buildQuizCriteriaBlock(keyedCriteria)}`;
+  }
+
   return prompt;
 }
 
@@ -629,9 +692,9 @@ export function buildPositionDescriptionPrompt(
   params: GeneratePositionDescriptionParams,
 ): string {
   const sanitizedTitle = sanitizeInput(params.title);
-  const sanitizedSkills = params.skills.map(sanitizeInput).join(", ");
+  const sanitizedSkills = params.skills.map((value) => sanitizeInput(value)).join(", ");
   const sanitizedSoftSkills = params.softSkills
-    ? params.softSkills.map(sanitizeInput).join(", ")
+    ? params.softSkills.map((value) => sanitizeInput(value)).join(", ")
     : "Not specified";
   const sanitizedContract = params.contractType
     ? sanitizeInput(params.contractType)
@@ -665,4 +728,185 @@ export function buildPositionDescriptionPrompt(
           Generate a short summary that highlights responsibilities, required experience.
           Write only the description text in Italian (4-8 sentences). Do not include JSON, markdown, or any formatting - just the plain description text.
           `;
+}
+
+// ====================
+// SCORECARD PROMPTS
+// ====================
+
+/**
+ * System prompt of the scorecard criteria proposal
+ */
+export function buildScorecardSystemPrompt(): string {
+  return `
+          You are a senior technical recruiter defining the evaluation scorecard of a job position.
+
+          Answer ONLY with a valid JSON object: { "criteria": [ ... ] }.
+          Field names stay in English; EVERY value (name, description, anchors) MUST be written in Italian.
+
+          Each criterion has these fields:
+          - name: short Italian name of the criterion
+          - description: one Italian sentence describing what is evaluated
+          - category: "technical" | "soft" | "culture"
+          - priority: "must" (indispensable) | "nice" (preferable)
+          - weight: integer from 1 to 5, the relative importance of the criterion
+          - expectedLevel: integer from 1 to 5, the level expected for this position
+          - anchors: { "weak": string, "medium": string, "strong": string }: how a weak, a medium and a strong answer sound, one or two Italian sentences each
+          - source: "skill" for criteria derived from the technical skills, "softSkill" for criteria derived from the soft skills
+
+          Example:
+          {
+            "criteria": [
+              {
+                "name": "React",
+                "description": "Capacità di progettare componenti React manutenibili",
+                "category": "technical",
+                "priority": "must",
+                "weight": 4,
+                "expectedLevel": 4,
+                "anchors": {
+                  "weak": "Conosce solo la sintassi di base e non sa motivare le scelte.",
+                  "medium": "Usa hook e stato in modo corretto in casi comuni.",
+                  "strong": "Progetta componenti riutilizzabili e spiega i trade-off di prestazioni."
+                },
+                "source": "skill"
+              }
+            ]
+          }`;
+}
+
+/**
+ * User prompt of the scorecard criteria proposal
+ */
+export function buildScorecardPrompt(
+  params: GenerateScorecardCriteriaParams,
+): string {
+  const sanitizedTitle = sanitizeInput(params.positionTitle);
+  const sanitizedLevel = sanitizeInput(params.experienceLevel);
+  const sanitizedSkills = params.skills
+    .map((value) => sanitizeInput(value))
+    .join(", ");
+  const sanitizedSoftSkills = params.softSkills
+    .map((value) => sanitizeInput(value))
+    .join(", ");
+  const sanitizedDescription = params.description
+    ? sanitizeInput(params.description)
+    : "";
+  const excludedNames = [
+    ...params.existingNames,
+    ...DEFAULT_SOFT_CRITERIA.map((criterion) => criterion.name),
+  ]
+    .map((value) => sanitizeInput(value))
+    .filter(Boolean);
+
+  return `
+          Position:
+          - Title: ${sanitizedTitle}
+          - Experience level: ${sanitizedLevel}
+          - Technical skills: ${sanitizedSkills || "Not specified"}
+          - Soft skills: ${sanitizedSoftSkills || "Not specified"}
+          ${sanitizedDescription ? `- Description: ${sanitizedDescription}` : ""}
+
+          Rules:
+          1. Propose one technical criterion (category "technical", source "skill") for each relevant technical skill; merge skills that are too close into one criterion.
+          2. Propose soft criteria (source "softSkill") from the listed soft skills.
+          3. Use category "culture" only when a soft skill is about values or way of working; otherwise use "soft".
+          4. Calibrate expectedLevel on the experience level: lower for junior positions, higher for senior positions.
+          5. Propose at most 12 criteria.
+          6. Write every value in Italian.
+          ${
+            excludedNames.length > 0
+              ? `7. Do not propose criteria named like these, they already exist: ${excludedNames.join(", ")}`
+              : ""
+          }`;
+}
+
+// ====================
+// INTERVIEW GUIDE PROMPTS
+// ====================
+
+/**
+ * System prompt of the interview guide generation
+ */
+export function buildGuideSystemPrompt(): string {
+  return `
+          You are an expert interviewer designing a structured interview guide for a job position.
+
+          Answer ONLY with a valid JSON object with this shape:
+          {
+            "sections": [
+              {
+                "title": string,
+                "minutes": number,
+                "kind": "intro" | "experience" | "technical" | "behavioral" | "candidate_questions" | "closing",
+                "questions": [
+                  {
+                    "text": string,
+                    "followUps": string[],
+                    "criterionKeys": string[],
+                    "anchors": { "weak": string, "medium": string, "strong": string },
+                    "required": boolean
+                  }
+                ]
+              }
+            ]
+          }
+
+          Field names stay in English; EVERY value (titles, questions, follow-ups, anchors) MUST be written in Italian.
+          "kind" is one of: intro, experience, technical, behavioral, candidate_questions, closing.`;
+}
+
+/**
+ * User prompt of the interview guide generation
+ */
+export function buildGuidePrompt(
+  params: GenerateInterviewGuideParams,
+  keyedCriteria: KeyedCriterion<ActiveCriterion>[],
+): string {
+  const sanitizedPositionTitle = sanitizeInput(params.positionTitle);
+  const sanitizedLevel = sanitizeInput(params.experienceLevel);
+  const sanitizedDescription = params.description
+    ? sanitizeInput(params.description)
+    : "";
+  const sanitizedGuideTitle = sanitizeInput(params.title);
+  const sanitizedInstructions = params.instructions
+    ? sanitizeInput(params.instructions)
+    : "";
+
+  const criteriaLines = keyedCriteria
+    .map((criterion) => {
+      const description = criterion.description
+        ? sanitizeInput(criterion.description)
+        : "";
+      return `- ${criterion.key} - ${sanitizeInput(criterion.name)} (${criterion.category}, ${criterion.priority}, expected level ${criterion.expectedLevel})${
+        description ? `: ${description}` : ""
+      }`;
+    })
+    .join("\n");
+
+  return `
+          Position:
+          - Title: ${sanitizedPositionTitle}
+          - Experience level: ${sanitizedLevel}
+          ${sanitizedDescription ? `- Description: ${sanitizedDescription}` : ""}
+
+          Interview guide:
+          - Title: ${sanitizedGuideTitle}
+          - Round: ${params.round}
+          - Total duration: ${params.durationMinutes} minutes
+          ${sanitizedInstructions ? `- Special instructions: ${sanitizedInstructions}` : ""}
+
+          Evaluation criteria of this position:
+${criteriaLines}
+
+          Rules:
+          1. Start with an "intro" section and end with a "candidate_questions" section followed by a "closing" section.
+          2. The sum of the section minutes must equal the total duration (${params.durationMinutes} minutes).
+          3. Every question lists in "criterionKeys" only keys from the list above.
+          4. Each criterion with priority "must" has at least one question with "required": true.
+          5. Give two or three follow-ups per question.
+          6. The anchors describe how a weak, a medium and a strong answer sound.
+          7. The intro, candidate_questions and closing sections may have questions with no criteria.
+          8. Never ask about age, family, children, religion or health.
+          9. Write every value in Italian.`;
 }

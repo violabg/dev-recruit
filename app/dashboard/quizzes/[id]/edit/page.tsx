@@ -4,6 +4,7 @@ import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-la
 import { getAllPresets } from "@/lib/data/presets";
 import { getFavoriteQuestions } from "@/lib/data/questions";
 import { getQuizData } from "@/lib/data/quizzes";
+import { getScorecardByPositionId } from "@/lib/data/scorecards";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EditQuizSkeleton } from "./fallbacks";
@@ -36,10 +37,46 @@ async function EditQuizContent({
 
   const { quiz, position } = data;
 
+  // Criteria of the quiz position: the active ones are selectable, the
+  // archived ones stay visible where already linked
+  const scorecard = await getScorecardByPositionId(position.id);
+  const criteria = [
+    ...(scorecard?.criteria ?? []).map((criterion) => ({
+      id: criterion.id,
+      name: criterion.name,
+      category: criterion.category,
+      priority: criterion.priority,
+    })),
+    ...(scorecard?.archivedCriteria ?? []).map((criterion) => ({
+      id: criterion.id,
+      name: criterion.name,
+      category: criterion.category,
+      priority: criterion.priority,
+      archived: true,
+    })),
+  ];
+
+  // Ids of deleted criteria are dropped here, so the next save removes them
+  const knownCriterionIds = new Set(criteria.map((criterion) => criterion.id));
+  const quizForEditor = {
+    ...quiz,
+    questions: quiz.questions.map((question) =>
+      question.criterionIds
+        ? {
+            ...question,
+            criterionIds: question.criterionIds.filter((id) =>
+              knownCriterionIds.has(id),
+            ),
+          }
+        : question,
+    ),
+  };
+
   return (
     <EditQuizForm
-      quiz={quiz}
+      quiz={quizForEditor}
       position={position}
+      criteria={criteria}
       presetsPromise={presetsPromise}
       favoriteQuestionsPromise={favoriteQuestionsPromise}
       languageOptions={

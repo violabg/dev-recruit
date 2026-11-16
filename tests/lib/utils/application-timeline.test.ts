@@ -48,6 +48,7 @@ describe("buildApplicationTimeline", () => {
           weaknesses: [],
           recommendation: null,
           createdAt: new Date("2026-01-02T09:00:00Z"),
+          criteriaAssessment: null,
         },
         assessments: [
           {

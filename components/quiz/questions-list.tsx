@@ -1,5 +1,6 @@
 "use client";
 
+import type { CriterionOption } from "@/lib/data/scorecards";
 import { questionSchemas } from "@/lib/schemas";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import * as z from "zod";
@@ -22,6 +23,7 @@ type QuestionsListProps = {
   aiLoading: boolean;
   hasQuestionChanges: (index: number) => boolean;
   languageOptions?: React.ReactNode;
+  criteria: (CriterionOption & { archived?: boolean })[];
 };
 
 export const QuestionsList = ({
@@ -37,6 +39,7 @@ export const QuestionsList = ({
   aiLoading,
   hasQuestionChanges,
   languageOptions,
+  criteria,
 }: QuestionsListProps) => {
   // Re-render when any question changes (fine-grained subscription)
   useWatch({ control: form.control, name: "questions" });
@@ -71,6 +74,7 @@ export const QuestionsList = ({
             aiLoading={aiLoading}
             hasQuestionChanges={hasQuestionChanges(actualIndex)}
             languageOptions={languageOptions}
+            criteria={criteria}
           />
         );
       })}

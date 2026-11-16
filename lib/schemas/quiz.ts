@@ -15,9 +15,16 @@ import { questionSchemas } from "./question";
 
 // AI Generation schema - only includes fields that the AI should generate
 // This schema excludes backend-managed fields like IDs, timestamps, etc.
+// Each question may carry the keys (C1, C2, ...) of the criteria it verifies:
+// the AI answers with keys, never ids. Intersection because the flexible
+// schema is refined and cannot be extended.
 export const aiQuizGenerationSchema = z.object({
   title: baseSchemas.title,
-  questions: z.array(questionSchemas.flexible),
+  questions: z.array(
+    questionSchemas.flexible.and(
+      z.object({ criterionKeys: z.array(z.string()).optional() }),
+    ),
+  ),
   timeLimit: z.number().nullable().optional(),
   difficulty: baseSchemas.difficulty.optional(),
   instructions: baseSchemas.instructions.optional(),

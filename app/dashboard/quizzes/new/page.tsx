@@ -3,6 +3,7 @@ import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-la
 import { getAllPositions } from "@/lib/data/positions";
 import { getAllPresets } from "@/lib/data/presets";
 import { getFavoriteQuestions } from "@/lib/data/questions";
+import { getCriterionOptionsByPosition } from "@/lib/data/scorecards";
 import type { Position } from "@/lib/prisma/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
@@ -50,7 +51,10 @@ async function PositionsContent({
 }) {
   const presetsPromise = getAllPresets().catch(() => []);
   const favoriteQuestionsPromise = getFavoriteQuestions().catch(() => []);
-  const positions = await positionsPromise;
+  const [positions, criteriaByPosition] = await Promise.all([
+    positionsPromise,
+    getCriterionOptionsByPosition(),
+  ]);
 
   const serializedPositions: PositionOption[] = positions.map((position) => ({
     id: position.id,
@@ -62,6 +66,7 @@ async function PositionsContent({
   return (
     <NewQuizCreationPage
       positions={serializedPositions}
+      criteriaByPosition={criteriaByPosition}
       presetsPromise={presetsPromise}
       favoriteQuestionsPromise={favoriteQuestionsPromise}
       languageOptions={

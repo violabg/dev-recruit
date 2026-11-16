@@ -6,6 +6,7 @@
  */
 
 import type { EvaluationResult, FlexibleQuestion } from "../../schemas";
+import { redactBirthDate, sanitizeInput } from "./sanitize";
 
 export const ANSWER_EVALUATION_SYSTEM_PROMPT =
   "You are an expert technical evaluator. You must respond ONLY with valid JSON matching the exact schema: {evaluation: string, score: number, strengths: string[], weaknesses: string[]}. No additional text, formatting, or nested objects.";
@@ -19,15 +20,20 @@ export const RESUME_EVALUATION_SYSTEM_PROMPT =
 /** Resume text beyond this length is cut (models have a 131K context). */
 export const MAX_RESUME_CHARS = 80000;
 
+/** Candidate answers are sanitized and cut at this length. */
+export const MAX_ANSWER_CHARS = 10000;
+
 /**
  * Prompt asking the model to score one answer.
  * `answer` is the candidate's answer as text; for multiple choice it is the
- * index of the selected option.
+ * index of the selected option. It is written by the candidate, so it is
+ * sanitized before it enters the prompt.
  */
 export function buildAnswerEvaluationPrompt(
   question: FlexibleQuestion,
-  answer: string,
+  rawAnswer: string,
 ): string {
+  const answer = sanitizeInput(rawAnswer, MAX_ANSWER_CHARS);
   let prompt = "";
 
   // Parse answer index for multiple choice - handle various formats
@@ -246,6 +252,10 @@ export function buildOverallEvaluationPrompt(params: {
 /**
  * Prompt asking the model to evaluate a resume against a position.
  * The response is streamed as text, so the JSON shape is spelled out.
+ *
+ * The CV text loses the birth date (after a marker) and is sanitized; no
+ * personal field of the candidate other than the name enters the prompt.
+ * With `criteria` (not empty) the model also assesses each criterion by key.
  */
 export function buildResumeEvaluationPrompt(params: {
   candidateName: string;
@@ -257,26 +267,63 @@ export function buildResumeEvaluationPrompt(params: {
     skills: string[];
     softSkills: string[];
   };
+  criteria?: {
+    key: string;
+    name: string;
+    description: string | null;
+    expectedLevel: number;
+  }[];
 }): string {
-  const { candidateName, resumeText, position } = params;
-  const truncatedResume = resumeText.substring(0, MAX_RESUME_CHARS);
+  const { resumeText, position } = params;
+  // Birth date removed FIRST: sanitizeInput rewrites "data:" patterns
+  const cleanedResume = sanitizeInput(
+    redactBirthDate(resumeText),
+    MAX_RESUME_CHARS,
+  );
   const resumeSuffix =
     resumeText.length > MAX_RESUME_CHARS ? "... [troncato]" : "";
+
+  const candidateName = sanitizeInput(params.candidateName);
+  const title = sanitizeInput(position.title);
+  const experienceLevel = sanitizeInput(position.experienceLevel);
+  const skills = position.skills.map((skill) => sanitizeInput(skill)).join(", ");
+  const softSkills = position.softSkills
+    .map((skill) => sanitizeInput(skill))
+    .join(", ");
+  const description = position.description
+    ? sanitizeInput(position.description)
+    : "";
+
+  const criteria = params.criteria ?? [];
+  const withCriteria = criteria.length > 0;
+  const criteriaBlock = withCriteria
+    ? `
+          CRITERI DELLA SCHEDA DI VALUTAZIONE:
+${criteria
+  .map((criterion) => {
+    const criterionDescription = criterion.description
+      ? sanitizeInput(criterion.description)
+      : "";
+    return `          ${criterion.key} - ${sanitizeInput(criterion.name)} (livello atteso ${criterion.expectedLevel}/5)${
+      criterionDescription ? `: ${criterionDescription}` : ""
+    }`;
+  })
+  .join("\n")}
+`
+    : "";
 
   return `Analizza il seguente curriculum vitae e valuta l'idoneità del candidato per la posizione specificata.
 
           CURRICULUM DEL CANDIDATO (${candidateName}):
-          ${truncatedResume}${resumeSuffix}
+          ${cleanedResume}${resumeSuffix}
 
           POSIZIONE DA VALUTARE:
-          - Titolo: ${position.title}
-          - Livello di esperienza richiesto: ${position.experienceLevel}
-          - Competenze tecniche richieste: ${position.skills.join(", ")}
-          - Soft skills richieste: ${position.softSkills.join(", ")}
-          ${
-            position.description ? `- Descrizione: ${position.description}` : ""
-          }
-
+          - Titolo: ${title}
+          - Livello di esperienza richiesto: ${experienceLevel}
+          - Competenze tecniche richieste: ${skills}
+          - Soft skills richieste: ${softSkills}
+          ${description ? `- Descrizione: ${description}` : ""}
+${criteriaBlock}
           Fornisci una valutazione dettagliata considerando:
           1. Corrispondenza delle competenze tecniche
           2. Esperienza lavorativa rilevante
@@ -290,7 +337,12 @@ export function buildResumeEvaluationPrompt(params: {
           - strengths: array di punti di forza del candidato
           - weaknesses: array di aree di miglioramento o lacune
           - recommendation: una raccomandazione su come procedere con il candidato
-          - fitScore: un punteggio da 0 a 100 che indica l'idoneità complessiva per la posizione
+          - fitScore: un punteggio da 0 a 100 che indica l'idoneità complessiva per la posizione${
+            withCriteria
+              ? `
+          - criteriaAssessment: per ogni criterio, un oggetto con criterionKey (la chiave del criterio), score (intero da 1 a 5, oppure null se il CV non contiene evidenze per quel criterio) ed evidence (breve motivazione in italiano basata sul CV)`
+              : ""
+          }
 
           IMPORTANTE: Rispondi SOLO con un oggetto JSON valido, senza markdown o altri formati. L'oggetto deve avere questa struttura esatta:
           {
@@ -298,6 +350,11 @@ export function buildResumeEvaluationPrompt(params: {
             "strengths": ["punto 1", "punto 2", ...],
             "weaknesses": ["punto 1", "punto 2", ...],
             "recommendation": "testo della raccomandazione",
-            "fitScore": numero da 0 a 100
+            "fitScore": numero da 0 a 100${
+              withCriteria
+                ? `,
+            "criteriaAssessment": [{ "criterionKey": "C1", "score": 4, "evidence": "..." }]`
+                : ""
+            }
           }`;
 }

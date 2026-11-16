@@ -44,6 +44,50 @@ export const assessmentEvaluationInputSchema = z.object({
   ),
 });
 
+// Stored shape of Evaluation.answerEvaluations (keyed by Question id)
+export const answerEvaluationSchema = z.object({
+  score: baseSchemas.score,
+  strengths: z.array(z.string()),
+  weaknesses: z.array(z.string()),
+});
+
+export const answerEvaluationsSchema = z.record(
+  z.string(),
+  answerEvaluationSchema,
+);
+
+// Input of recalculateAnswerEvaluationsAction (same per-question payload as
+// assessmentEvaluationInputSchema)
+export const recalculateAnswerEvaluationsSchema =
+  assessmentEvaluationInputSchema;
+
+// Stored shape of Evaluation.criteriaAssessment (keyed by ScorecardCriterion
+// id): score 1-5, or null when the CV gives no evidence
+export const criterionAssessmentSchema = z.object({
+  score: z.int().min(1).max(5).nullable(),
+  evidence: z.string(),
+});
+
+export const criteriaAssessmentSchema = z.record(
+  z.string(),
+  criterionAssessmentSchema,
+);
+
+// Shape the model returns for a CV evaluation: the overall fields plus the
+// criteria by key (C1, C2, ...). Any number is accepted here: the save rounds
+// and clamps it to 1-5 before validating the stored shape.
+export const resumeEvaluationResultSchema = overallEvaluationSchema.extend({
+  criteriaAssessment: z
+    .array(
+      z.object({
+        criterionKey: z.string(),
+        score: z.number().nullable(),
+        evidence: z.string(),
+      }),
+    )
+    .optional(),
+});
+
 // Input of updateEvaluationNotesAction
 export const evaluationNotesSchema = z.object({
   id: baseSchemas.id,
@@ -95,3 +139,8 @@ export const hiringNotesSchema = z
 
 export type EvaluationResult = z.infer<typeof evaluationResultSchema>;
 export type OverallEvaluation = z.infer<typeof overallEvaluationSchema>;
+export type AnswerEvaluations = z.infer<typeof answerEvaluationsSchema>;
+export type CriteriaAssessment = z.infer<typeof criteriaAssessmentSchema>;
+export type ResumeEvaluationResult = z.infer<
+  typeof resumeEvaluationResultSchema
+>;

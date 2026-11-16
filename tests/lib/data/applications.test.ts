@@ -12,6 +12,7 @@ vi.mock("@/lib/prisma", () => ({
     quiz: { findMany: vi.fn() },
     position: { findMany: vi.fn() },
     behavioralRubric: { findUnique: vi.fn() },
+    scorecardCriterion: { findMany: vi.fn() },
   },
 }));
 
@@ -65,7 +66,114 @@ describe("getApplicationDetail", () => {
       "assessments",
       "evaluations",
       "quizzes",
+      "scorecards",
     );
+  });
+
+  it("resolves the CV assessment per criterion with names, order and archived flag", async () => {
+    db.application.findUnique.mockResolvedValueOnce(detailRow);
+    db.evaluation.findFirst.mockResolvedValueOnce({
+      id: "e1",
+      fitScore: 7,
+      evaluation: "Buono",
+      strengths: [],
+      weaknesses: [],
+      recommendation: null,
+      createdAt: new Date("2026-01-03"),
+      criteriaAssessment: {
+        "c-comm": { score: null, evidence: "" },
+        "c-react": { score: 4, evidence: "Progetti React" },
+        "c-deleted": { score: 2, evidence: "Criterio eliminato" },
+      },
+    });
+    db.scorecardCriterion.findMany.mockResolvedValueOnce([
+      {
+        id: "c-react",
+        name: "React",
+        category: "technical",
+        priority: "must",
+        expectedLevel: 4,
+        archivedAt: null,
+      },
+      {
+        id: "c-comm",
+        name: "Comunicazione",
+        category: "soft",
+        priority: "nice",
+        expectedLevel: 3,
+        archivedAt: new Date("2026-01-04"),
+      },
+      {
+        id: "c-unassessed",
+        name: "Node",
+        category: "technical",
+        priority: "nice",
+        expectedLevel: 2,
+        archivedAt: null,
+      },
+    ]);
+    db.assessment.findMany.mockResolvedValueOnce([]);
+    db.quiz.findMany.mockResolvedValueOnce([]);
+
+    const detail = await getApplicationDetail("app1");
+
+    expect(db.evaluation.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ criteriaAssessment: true }),
+      }),
+    );
+    // Active and archived criteria of the position scorecard, in order
+    expect(db.scorecardCriterion.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { scorecard: { positionId: "pos1" } },
+        orderBy: { order: "asc" },
+      }),
+    );
+    expect(detail?.resumeEvaluation?.criteriaAssessment).toEqual([
+      {
+        criterionId: "c-react",
+        name: "React",
+        category: "technical",
+        priority: "must",
+        expectedLevel: 4,
+        archived: false,
+        score: 4,
+        evidence: "Progetti React",
+      },
+      {
+        criterionId: "c-comm",
+        name: "Comunicazione",
+        category: "soft",
+        priority: "nice",
+        expectedLevel: 3,
+        archived: true,
+        score: null,
+        evidence: "",
+      },
+    ]);
+  });
+
+  it("reads criteriaAssessment as null when missing or invalid", async () => {
+    for (const stored of [null, { "c-1": { score: 9, evidence: "" } }]) {
+      db.application.findUnique.mockResolvedValueOnce(detailRow);
+      db.evaluation.findFirst.mockResolvedValueOnce({
+        id: "e1",
+        fitScore: 7,
+        evaluation: null,
+        strengths: [],
+        weaknesses: [],
+        recommendation: null,
+        createdAt: new Date("2026-01-03"),
+        criteriaAssessment: stored,
+      });
+      db.assessment.findMany.mockResolvedValueOnce([]);
+      db.quiz.findMany.mockResolvedValueOnce([]);
+
+      const detail = await getApplicationDetail("app1");
+
+      expect(detail?.resumeEvaluation?.criteriaAssessment).toBeNull();
+    }
+    expect(db.scorecardCriterion.findMany).not.toHaveBeenCalled();
   });
 
   it("loads the resume evaluation and the quizzes not yet sent", async () => {
@@ -355,7 +463,13 @@ describe("getActionCenterData", () => {
       },
     ]);
     db.position.findMany.mockResolvedValueOnce([
-      { id: "pos9", title: "Ops", status: "draft" },
+      {
+        id: "pos9",
+        title: "Ops",
+        status: "draft",
+        _count: { quizzes: 0, interviewGuides: 1 },
+        scorecard: { _count: { criteria: 2 } },
+      },
     ]);
 
     const data = await getActionCenterData();
@@ -367,6 +481,8 @@ describe("getActionCenterData", () => {
       "assessments",
       "evaluations",
       "quizzes",
+      "scorecards",
+      "interview-guides",
     );
     expect(db.assessment.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -387,11 +503,21 @@ describe("getActionCenterData", () => {
         },
       }),
     );
-    expect(db.position.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { status: { in: ["draft", "open"] }, quizzes: { none: {} } },
-      }),
-    );
+    expect(db.position.findMany).toHaveBeenCalledWith({
+      where: { status: { in: ["draft", "open"] } },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        _count: { select: { quizzes: true, interviewGuides: true } },
+        scorecard: {
+          select: {
+            _count: { select: { criteria: { where: { archivedAt: null } } } },
+          },
+        },
+      },
+    });
     expect(data).toEqual({
       assessmentsToEvaluate: [
         {
@@ -434,5 +560,67 @@ describe("getRecentApplicationIds", () => {
       take: 2,
       select: { id: true },
     });
+  });
+});
+
+describe("getActionCenterData: incomplete setup", () => {
+  const position = (
+    id: string,
+    counts: { criteria: number | null; quizzes: number; guides: number },
+  ) => ({
+    id,
+    title: `Posizione ${id}`,
+    status: "open",
+    _count: { quizzes: counts.quizzes, interviewGuides: counts.guides },
+    scorecard:
+      counts.criteria === null
+        ? null
+        : { _count: { criteria: counts.criteria } },
+  });
+
+  beforeEach(() => {
+    db.assessment.findMany.mockResolvedValueOnce([]);
+    db.application.findMany.mockResolvedValueOnce([]);
+  });
+
+  it("lists every missing part in the order scorecard, quiz, guide and skips complete positions", async () => {
+    db.position.findMany.mockResolvedValueOnce([
+      // quiz and guide, no scorecard row at all
+      position("only-scorecard", { criteria: null, quizzes: 1, guides: 1 }),
+      // scorecard whose criteria are all archived: still missing
+      position("archived-only", { criteria: 0, quizzes: 2, guides: 1 }),
+      position("only-guide", { criteria: 3, quizzes: 1, guides: 0 }),
+      position("all-missing", { criteria: null, quizzes: 0, guides: 0 }),
+      position("complete", { criteria: 2, quizzes: 1, guides: 2 }),
+    ]);
+
+    const data = await getActionCenterData();
+
+    expect(data.positionsWithIncompleteSetup).toEqual([
+      {
+        positionId: "only-scorecard",
+        title: "Posizione only-scorecard",
+        status: "open",
+        missing: ["scorecard"],
+      },
+      {
+        positionId: "archived-only",
+        title: "Posizione archived-only",
+        status: "open",
+        missing: ["scorecard"],
+      },
+      {
+        positionId: "only-guide",
+        title: "Posizione only-guide",
+        status: "open",
+        missing: ["guide"],
+      },
+      {
+        positionId: "all-missing",
+        title: "Posizione all-missing",
+        status: "open",
+        missing: ["scorecard", "quiz", "guide"],
+      },
+    ]);
   });
 });

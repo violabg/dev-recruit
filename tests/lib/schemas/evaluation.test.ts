@@ -3,8 +3,11 @@
  */
 
 import {
+  answerEvaluationsSchema,
+  criteriaAssessmentSchema,
   evaluationResultSchema,
   overallEvaluationSchema,
+  resumeEvaluationResultSchema,
 } from "@/lib/schemas/evaluation";
 import { describe, expect, it } from "vitest";
 
@@ -212,5 +215,76 @@ describe("overallEvaluationSchema", () => {
       const result = overallEvaluationSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
     });
+  });
+});
+
+describe("answerEvaluationsSchema", () => {
+  const entry = (score: number) => ({
+    "q-1": { score, strengths: ["Chiara"], weaknesses: [] },
+  });
+
+  it.each([0, 10])("accepts score %i", (score) => {
+    expect(answerEvaluationsSchema.safeParse(entry(score)).success).toBe(true);
+  });
+
+  it("refuses score 11", () => {
+    expect(answerEvaluationsSchema.safeParse(entry(11)).success).toBe(false);
+  });
+
+  it("strips fields other than score, strengths and weaknesses", () => {
+    const result = answerEvaluationsSchema.parse({
+      "q-1": { score: 5, strengths: [], weaknesses: [], evaluation: "testo" },
+    });
+    expect(result["q-1"]).toEqual({ score: 5, strengths: [], weaknesses: [] });
+  });
+});
+
+describe("criteriaAssessmentSchema", () => {
+  it.each([1, 5, null])("accepts score %s", (score) => {
+    expect(
+      criteriaAssessmentSchema.safeParse({ "c-1": { score, evidence: "" } })
+        .success,
+    ).toBe(true);
+  });
+
+  it.each([0, 6, 2.5])("refuses score %s", (score) => {
+    expect(
+      criteriaAssessmentSchema.safeParse({ "c-1": { score, evidence: "" } })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("resumeEvaluationResultSchema", () => {
+  const overall = {
+    evaluation: "Profilo solido",
+    strengths: ["React"],
+    weaknesses: ["Testing"],
+    recommendation: "Colloquio",
+    fitScore: 80,
+  };
+
+  it("accepts the overall fields without criteriaAssessment", () => {
+    expect(resumeEvaluationResultSchema.safeParse(overall).success).toBe(true);
+  });
+
+  it("accepts criteriaAssessment with any number or null as score", () => {
+    const result = resumeEvaluationResultSchema.parse({
+      ...overall,
+      criteriaAssessment: [
+        { criterionKey: "C1", score: 3.5, evidence: "x" },
+        { criterionKey: "C2", score: null, evidence: "" },
+      ],
+    });
+    expect(result.criteriaAssessment).toHaveLength(2);
+  });
+
+  it("refuses a criteriaAssessment item without criterionKey", () => {
+    expect(
+      resumeEvaluationResultSchema.safeParse({
+        ...overall,
+        criteriaAssessment: [{ score: 3, evidence: "x" }],
+      }).success,
+    ).toBe(false);
   });
 });

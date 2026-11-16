@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Preset } from "@/lib/data/presets";
+import type { CriterionOption } from "@/lib/data/scorecards";
 import type { QuestionWithMetadata } from "@/lib/data/questions";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import { FlexibleQuestion, QuestionType } from "@/lib/schemas";
@@ -55,6 +56,11 @@ type EditQuizFormProps = {
   presetsPromise: Promise<Preset[]>;
   /** Un-awaited server promise of favorite questions (see getFavoriteQuestions) */
   favoriteQuestionsPromise: Promise<QuestionWithMetadata[]>;
+  /**
+   * Criteria of the position scorecard the questions can verify. Archived
+   * criteria are flagged: they are shown only where already selected.
+   */
+  criteria: (CriterionOption & { archived?: boolean })[];
 };
 
 export function EditQuizForm({
@@ -65,6 +71,7 @@ export function EditQuizForm({
   languageOptions,
   presetsPromise,
   favoriteQuestionsPromise,
+  criteria,
 }: EditQuizFormProps) {
   const router = useRouter();
 
@@ -265,6 +272,7 @@ export function EditQuizForm({
                   aiLoading={aiLoading}
                   hasQuestionChanges={hasQuestionChanges}
                   languageOptions={languageOptions}
+                  criteria={criteria}
                 />
               </div>
             </div>

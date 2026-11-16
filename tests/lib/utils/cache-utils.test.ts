@@ -13,7 +13,9 @@ import {
   invalidateCandidateCacheInRouteHandler,
   invalidateEvaluationCache,
   invalidateEvaluationCacheInRouteHandler,
+  invalidateInterviewGuideCache,
   invalidatePositionCache,
+  invalidateScorecardCache,
   invalidatePresetCache,
   invalidateProfileCache,
   invalidateQuestionCache,
@@ -406,5 +408,74 @@ describe("invalidateProfileCache", () => {
       "/dashboard/profile/edit"
     );
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
+  });
+});
+
+describe("scorecard and interview guide tags", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("builds the collection and entity tags", () => {
+    expect(CacheTags.SCORECARDS).toBe("scorecards");
+    expect(CacheTags.INTERVIEW_GUIDES).toBe("interview-guides");
+    expect(entityTag.scorecard("pos-1")).toBe("scorecard-pos-1");
+    expect(entityTag.interviewGuide("g-1")).toBe("interview-guide-g-1");
+  });
+
+  it("invalidateScorecardCache expires the tags and revalidates the pages", () => {
+    invalidateScorecardCache({ positionId: "pos-1" });
+
+    expect(mockedUpdateTag).toHaveBeenCalledWith("scorecards");
+    expect(mockedUpdateTag).toHaveBeenCalledWith("scorecard-pos-1");
+    expect(mockedUpdateTag).toHaveBeenCalledTimes(2);
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/positions/pos-1",
+    );
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/positions/pos-1/scorecard",
+    );
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
+    expect(mockedRevalidateTag).not.toHaveBeenCalled();
+  });
+
+  it("invalidateInterviewGuideCache with a guide id expires its entity tag and page", () => {
+    invalidateInterviewGuideCache({ guideId: "g-1", positionId: "pos-1" });
+
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-guides");
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-guide-g-1");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/positions/pos-1",
+    );
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/positions/pos-1/guides/g-1",
+    );
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("invalidateInterviewGuideCache without a guide id expires only the collection", () => {
+    invalidateInterviewGuideCache({ positionId: "pos-1" });
+
+    expect(mockedUpdateTag).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-guides");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/positions/pos-1",
+    );
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
+    expect(mockedRevalidatePath).toHaveBeenCalledTimes(2);
+  });
+
+  it("deleting a position also expires scorecards and interview guides", () => {
+    invalidatePositionCache("pos-1", { deleted: true });
+
+    expect(mockedUpdateTag).toHaveBeenCalledWith("scorecards");
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-guides");
+  });
+
+  it("updating a position does not expire them", () => {
+    invalidatePositionCache("pos-1");
+
+    expect(mockedUpdateTag).not.toHaveBeenCalledWith("scorecards");
+    expect(mockedUpdateTag).not.toHaveBeenCalledWith("interview-guides");
   });
 });

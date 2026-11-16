@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CriteriaAssessmentList } from "./criteria-assessment-list";
 
 /** Fit score tint on the 0–10 scale: ≥ 7 success, ≥ 4 warning, else destructive */
 function scoreTint(value: number) {
@@ -180,6 +181,12 @@ export function ResumeEvaluationPanel({
                 <p>{evaluation.recommendation}</p>
               </div>
             )}
+            {evaluation.criteriaAssessment &&
+              evaluation.criteriaAssessment.length > 0 && (
+                <CriteriaAssessmentList
+                  items={evaluation.criteriaAssessment}
+                />
+              )}
           </CardContent>
         </Card>
       ) : (

@@ -9,6 +9,39 @@ import prisma from "@/lib/prisma";
 import { unwrap } from "@/lib/utils/action-result";
 import { aiQuizService } from "@/lib/services/ai-service";
 
+// File-level Prisma mock: the quiz actions also read the scorecard criteria,
+// which the global mock has no delegate for
+vi.mock("@/lib/prisma", () => ({
+  default: {
+    quiz: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    question: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    quizQuestion: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    position: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+    },
+    scorecardCriterion: {
+      findMany: vi.fn(),
+    },
+    $transaction: vi.fn(),
+  },
+}));
+
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
   unstable_rethrow: vi.fn(),
@@ -83,6 +116,8 @@ describe("quizzes actions", () => {
       id: "qq1",
     } as any);
     vi.mocked(prisma.quizQuestion.deleteMany).mockResolvedValue({ count: 0 });
+    // No scorecard by default
+    vi.mocked(prisma.scorecardCriterion.findMany).mockResolvedValue([]);
 
     // Mock transaction
     vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
@@ -593,6 +628,250 @@ describe("quizzes actions", () => {
       // Should create 2 questions
       expect(prisma.question.create).toHaveBeenCalledTimes(2);
       expect(prisma.quizQuestion.create).toHaveBeenCalledTimes(2);
+    });
+  });
+});
+
+describe("quizzes actions: criteria links", () => {
+  const activeCriteria = [
+    {
+      id: "c-active",
+      name: "React",
+      description: null,
+      category: "technical",
+      priority: "must",
+      weight: 3,
+      expectedLevel: 3,
+    },
+  ];
+  // Every criterion of the scorecard (active and archived); deleted ones are absent
+  const allCriterionIds = [{ id: "c-active" }, { id: "c-archived" }];
+
+  const linkRow = (questionId: string) => ({
+    order: 0,
+    questionId,
+    criterionIds: ["c-archived"],
+    question: {
+      id: questionId,
+      type: "open_question",
+      question: "Domanda",
+      keywords: [],
+      explanation: null,
+      options: [],
+      correctAnswer: null,
+      sampleAnswer: "Risposta",
+      codeSnippet: null,
+      sampleSolution: null,
+      language: null,
+      isFavorite: false,
+    },
+  });
+
+  const openQuestion = (criterionIds?: string[], dbId?: string) => ({
+    ...(dbId ? { dbId } : {}),
+    type: "open_question" as const,
+    question: "Domanda",
+    sampleAnswer: "Risposta",
+    ...(criterionIds ? { criterionIds } : {}),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.position.findUnique).mockResolvedValue({
+      id: "pos1",
+      title: "Senior Developer",
+      experienceLevel: "Senior",
+      skills: ["React"],
+      description: null,
+    } as any);
+    vi.mocked(prisma.quiz.findUnique).mockResolvedValue({
+      positionId: "pos1",
+      title: "Quiz",
+      timeLimit: null,
+      quizQuestions: [linkRow("q1")],
+    } as any);
+    vi.mocked(prisma.quiz.create).mockResolvedValue({ id: "new-quiz" } as any);
+    vi.mocked(prisma.question.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.question.create).mockResolvedValue({ id: "q-new" } as any);
+    vi.mocked(prisma.quizQuestion.findMany).mockResolvedValue([]);
+    // Active criteria (archivedAt: null) vs every criterion of the scorecard
+    vi.mocked(prisma.scorecardCriterion.findMany).mockImplementation(((args: {
+      where: { archivedAt?: null };
+    }) =>
+      Promise.resolve(
+        "archivedAt" in args.where ? activeCriteria : allCriterionIds,
+      )) as any);
+    vi.mocked(prisma.$transaction).mockImplementation((async (
+      callback: (tx: unknown) => unknown,
+    ) => callback(prisma)) as any);
+  });
+
+  it("generate passes the active criteria of the position to the AI service", async () => {
+    vi.mocked(aiQuizService.generateQuiz).mockResolvedValueOnce({
+      questions: [],
+    } as any);
+
+    await generateNewQuizAction({
+      positionId: "pos1",
+      quizTitle: "Quiz",
+      questionCount: 3,
+      difficulty: 3,
+      includeMultipleChoice: true,
+      includeOpenQuestions: false,
+      includeCodeSnippets: false,
+      includeBehavioralScenarios: false,
+    });
+
+    expect(prisma.scorecardCriterion.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { scorecard: { positionId: "pos1" }, archivedAt: null },
+      }),
+    );
+    expect(aiQuizService.generateQuiz).toHaveBeenCalledWith(
+      expect.objectContaining({ criteria: activeCriteria }),
+    );
+    // Generation never saves
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.quizQuestion.create).not.toHaveBeenCalled();
+  });
+
+  it("upsert refuses a criterion that is not active on the position and saves nothing", async () => {
+    vi.mocked(prisma.scorecardCriterion.findMany).mockImplementation(((args: {
+      where: { archivedAt?: null };
+    }) =>
+      Promise.resolve(
+        "archivedAt" in args.where
+          ? activeCriteria
+          : [...allCriterionIds, { id: "c-other-archived" }],
+      )) as any);
+
+    const result = await upsertQuizAction({
+      title: "Quiz",
+      positionId: "pos1",
+      timeLimit: null,
+      questions: [openQuestion(["c-active", "c-other-archived"])],
+    } as any);
+
+    expect(result).toEqual({
+      success: false,
+      error:
+        "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.quizQuestion.create).not.toHaveBeenCalled();
+  });
+
+  it("upsert stores the active criteria on the link", async () => {
+    await upsertQuizAction({
+      title: "Quiz",
+      positionId: "pos1",
+      timeLimit: null,
+      questions: [openQuestion(["c-active"])],
+    } as any);
+
+    expect(prisma.quizQuestion.create).toHaveBeenCalledWith({
+      data: {
+        quizId: "new-quiz",
+        questionId: "q-new",
+        order: 0,
+        criterionIds: ["c-active"],
+      },
+    });
+  });
+
+  it("upsert accepts an archived id already stored anywhere on the same quiz", async () => {
+    // c-archived is stored on the link of q1; here it moves to a new question
+    vi.mocked(prisma.quizQuestion.findMany).mockResolvedValue([
+      { criterionIds: ["c-archived"] },
+    ] as any);
+
+    const result = await upsertQuizAction({
+      quizId: "quiz1",
+      title: "Quiz",
+      timeLimit: null,
+      questions: [openQuestion(["c-archived", "c-active"])],
+    } as any);
+
+    expect(result).toEqual({ success: true, id: "quiz1" });
+    expect(prisma.quizQuestion.findMany).toHaveBeenCalledWith({
+      where: { quizId: "quiz1" },
+      select: { criterionIds: true },
+    });
+    expect(prisma.quizQuestion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        criterionIds: ["c-archived", "c-active"],
+      }),
+    });
+  });
+
+  it("upsert refuses an archived id that was not already on the quiz", async () => {
+    const result = await upsertQuizAction({
+      title: "Quiz",
+      positionId: "pos1",
+      timeLimit: null,
+      questions: [openQuestion(["c-archived"])],
+    } as any);
+
+    expect(result).toMatchObject({ success: false });
+    expect(prisma.quizQuestion.create).not.toHaveBeenCalled();
+  });
+
+  it("upsert drops the ids of deleted criteria before saving", async () => {
+    const result = await upsertQuizAction({
+      title: "Quiz",
+      positionId: "pos1",
+      timeLimit: null,
+      questions: [openQuestion(["c-deleted", "c-active"])],
+    } as any);
+
+    expect(result).toEqual({ success: true, id: "new-quiz" });
+    expect(prisma.quizQuestion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ criterionIds: ["c-active"] }),
+    });
+  });
+
+  it("upsert of a quiz without criteria skips the stored-links read", async () => {
+    await upsertQuizAction({
+      quizId: "quiz1",
+      title: "Quiz",
+      timeLimit: null,
+      questions: [openQuestion()],
+    } as any);
+
+    expect(prisma.quizQuestion.findMany).not.toHaveBeenCalledWith({
+      where: { quizId: "quiz1" },
+      select: { criterionIds: true },
+    });
+    expect(prisma.quizQuestion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ criterionIds: [] }),
+    });
+  });
+
+  it("duplicate keeps the criteria when the copy stays on the same position", async () => {
+    await duplicateQuizAction({
+      quizId: "quiz1",
+      newPositionId: "pos1",
+      newTitle: "Copia",
+    });
+
+    expect(prisma.quizQuestion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ criterionIds: ["c-archived"] }),
+    });
+    // A copy: the question is created anew, not shared
+    expect(prisma.question.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("duplicate clears the criteria when the copy goes to another position", async () => {
+    vi.mocked(prisma.position.findUnique).mockResolvedValue({ id: "pos2" } as any);
+
+    await duplicateQuizAction({
+      quizId: "quiz1",
+      newPositionId: "pos2",
+      newTitle: "Copia",
+    });
+
+    expect(prisma.quizQuestion.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ criterionIds: [] }),
     });
   });
 });

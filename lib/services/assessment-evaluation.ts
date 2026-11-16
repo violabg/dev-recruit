@@ -10,6 +10,7 @@ import prisma from "../prisma";
 import {
   evaluationResultSchema,
   overallEvaluationSchema,
+  type AnswerEvaluations,
   type EvaluationResult,
   type FlexibleQuestion,
   type OverallEvaluation,
@@ -86,7 +87,7 @@ async function loadAssessment(assessmentId: string) {
           title: true,
           quizQuestions: {
             orderBy: { order: "asc" },
-            select: { order: true, question: true },
+            select: { order: true, criterionIds: true, question: true },
           },
         },
       },
@@ -103,6 +104,40 @@ async function loadAssessment(assessmentId: string) {
   const answers = (assessment.answers as StoredAnswers | null) ?? {};
 
   return { assessment, questions, answers };
+}
+
+type PerQuestionResults = Record<
+  string,
+  Pick<QuestionEvaluation, "score" | "strengths" | "weaknesses">
+>;
+
+/** Ids of the questions of the assessment that have an answer */
+function answeredQuestionIds(
+  questions: SavedQuestion[],
+  answers: StoredAnswers,
+): Set<string> {
+  return new Set(
+    questions
+      .filter((q) => answerToText(q, answers[q.dbId]) !== null)
+      .map((q) => q.dbId),
+  );
+}
+
+/**
+ * Stored per-answer detail: for each question id only score (0-10),
+ * strengths and weaknesses.
+ */
+function toAnswerEvaluations(results: PerQuestionResults): AnswerEvaluations {
+  return Object.fromEntries(
+    Object.entries(results).map(([questionId, result]) => [
+      questionId,
+      {
+        score: result.score,
+        strengths: result.strengths,
+        weaknesses: result.weaknesses,
+      },
+    ]),
+  );
 }
 
 /**
@@ -144,10 +179,7 @@ export async function evaluateAssessmentAnswer(
  */
 export async function completeAssessmentEvaluation(params: {
   assessmentId: string;
-  questionEvaluations: Record<string, Pick<
-    QuestionEvaluation,
-    "score" | "strengths" | "weaknesses"
-  >>;
+  questionEvaluations: PerQuestionResults;
   userId: string;
 }): Promise<{
   evaluationId: string;
@@ -162,11 +194,7 @@ export async function completeAssessmentEvaluation(params: {
     throw new UserError("Esiste già una valutazione per questo test");
   }
 
-  const answeredIds = new Set(
-    questions
-      .filter((q) => answerToText(q, answers[q.dbId]) !== null)
-      .map((q) => q.dbId),
-  );
+  const answeredIds = answeredQuestionIds(questions, answers);
 
   const evaluated = Object.entries(questionEvaluations);
   if (evaluated.length === 0) {
@@ -206,10 +234,53 @@ export async function completeAssessmentEvaluation(params: {
       recommendation: overall.recommendation,
       fitScore: Math.round(overall.fitScore / 10), // 0-100 -> 0-10
       quizScore,
+      // Per-answer detail, shown again when the evaluation is reopened
+      answerEvaluations: toAnswerEvaluations(questionEvaluations),
       createdBy: userId,
     },
     select: { id: true },
   });
 
   return { evaluationId: evaluation.id, overall, quizScore };
+}
+
+/**
+ * Store the per-answer detail on an evaluation saved without it.
+ * The per-question results come from evaluateAssessmentAnswer; this function
+ * neither calls the AI nor recomputes a score: it writes `answerEvaluations`
+ * only, so quizScore, fitScore and the overall texts never change.
+ */
+export async function recalculateAnswerEvaluations(params: {
+  assessmentId: string;
+  questionEvaluations: PerQuestionResults;
+}): Promise<{ evaluationId: string; answerEvaluations: AnswerEvaluations }> {
+  const { assessmentId, questionEvaluations } = params;
+  const { questions, answers } = await loadAssessment(assessmentId);
+
+  const evaluation = await prisma.evaluation.findUnique({
+    where: { assessmentId },
+    select: { id: true },
+  });
+  if (!evaluation) {
+    throw new UserError("Valutazione non trovata");
+  }
+
+  const evaluated = Object.keys(questionEvaluations);
+  if (evaluated.length === 0) {
+    throw new UserError("Nessuna risposta valutata");
+  }
+
+  const answeredIds = answeredQuestionIds(questions, answers);
+  if (evaluated.some((questionId) => !answeredIds.has(questionId))) {
+    throw new UserError("Una o più domande non hanno una risposta");
+  }
+
+  const answerEvaluations = toAnswerEvaluations(questionEvaluations);
+
+  await prisma.evaluation.update({
+    where: { id: evaluation.id },
+    data: { answerEvaluations },
+  });
+
+  return { evaluationId: evaluation.id, answerEvaluations };
 }

@@ -22,6 +22,7 @@ import { updateEvaluationNotesAction } from "@/lib/actions/evaluation-entity";
 import {
   completeAssessmentEvaluationAction,
   evaluateAssessmentAnswerAction,
+  recalculateAnswerEvaluationsAction,
 } from "@/lib/actions/evaluations";
 import type { EvaluationWithRelations } from "@/lib/data/evaluations";
 import type { EvaluationResult, SavedQuestion } from "@/lib/schemas";
@@ -29,7 +30,7 @@ import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import { cn } from "cn";
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 
-import { Loader2, Save, Sparkles } from "lucide-react";
+import { Loader2, RefreshCw, Save, Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -62,9 +63,27 @@ export function AssessmentResultsClient({
   initialEvaluation,
 }: AssessmentResultsClientProps) {
   const [loading, setLoading] = useState(false);
+  // Seeded from the saved per-answer detail. Its narrative text is not
+  // stored: it exists only for answers evaluated in this session.
   const [evaluations, setEvaluations] = useState<
     Record<string, QuestionEvaluation>
-  >({});
+  >(() =>
+    Object.fromEntries(
+      Object.entries(initialEvaluation?.answerEvaluations ?? {}).map(
+        ([questionId, detail]) => [
+          questionId,
+          {
+            evaluation: "",
+            score: detail.score,
+            strengths: detail.strengths,
+            weaknesses: detail.weaknesses,
+            maxScore: 10,
+          },
+        ],
+      ),
+    ),
+  );
+  const [isRecalculating, startRecalculating] = useTransition();
   const [savedEvaluation, setSavedEvaluation] = useState<{
     id: string;
     notes: string | null;
@@ -88,7 +107,7 @@ export function AssessmentResultsClient({
   // This is different from fitScore which is the AI's candidate fit assessment
   // quizScore is persisted in the database for assessment evaluations
   const [overallScore, setOverallScore] = useState<number | null>(
-    (initialEvaluation as any)?.quizScore ?? null,
+    initialEvaluation?.quizScore ?? null,
   );
   const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
   const [totalQuestionsToEvaluate, setTotalQuestionsToEvaluate] = useState(0);
@@ -188,6 +207,74 @@ export function AssessmentResultsClient({
       setCurrentQuestionTitle("");
       setIsGeneratingOverallEvaluation(false);
     }
+  };
+
+  // Answered questions of a saved evaluation that have no stored detail
+  // (evaluations saved before the per-answer detail existed)
+  const answeredQuestions = quizQuestions.filter((q) =>
+    hasAnswer(answers[q.dbId]),
+  );
+  const missingDetail =
+    savedEvaluation !== null &&
+    answeredQuestions.some((q) => !evaluations[q.dbId]);
+
+  // "Ricalcola dettaglio risposte": re-scores every answered question and
+  // stores only the per-answer detail. quizScore, fitScore and the overall
+  // evaluation are not touched.
+  const recalculateAnswerDetail = () => {
+    startRecalculating(async () => {
+      const successful: Record<string, QuestionEvaluation> = {};
+      let failed = 0;
+
+      setTotalQuestionsToEvaluate(answeredQuestions.length);
+      setCurrentEvaluationIndex(0);
+
+      try {
+        for (let i = 0; i < answeredQuestions.length; i++) {
+          const question = answeredQuestions[i];
+          setCurrentEvaluationIndex(i + 1);
+          setCurrentQuestionTitle(
+            question.question.slice(0, 60) +
+              (question.question.length > 60 ? "..." : ""),
+          );
+
+          // A failed answer is skipped and counted: no fallback score is
+          // stored as if it were real detail
+          try {
+            successful[question.dbId] = unwrap(
+              await evaluateAssessmentAnswerAction(assessmentId, question.dbId),
+            ).evaluation;
+          } catch {
+            failed++;
+          }
+        }
+
+        if (Object.keys(successful).length === 0) {
+          toast.error("Nessuna risposta è stata valutata. Riprova.");
+          return;
+        }
+
+        unwrap(
+          await recalculateAnswerEvaluationsAction({
+            assessmentId,
+            questionEvaluations: successful,
+          }),
+        );
+
+        setEvaluations((previous) => ({ ...previous, ...successful }));
+        if (failed > 0) {
+          toast.warning(`${failed} risposte non sono state valutate. Riprova.`);
+        } else {
+          toast.success("Dettaglio risposte ricalcolato");
+        }
+      } catch (error) {
+        toast.error(errorMessage(error));
+      } finally {
+        setCurrentEvaluationIndex(0);
+        setTotalQuestionsToEvaluate(0);
+        setCurrentQuestionTitle("");
+      }
+    });
   };
 
   const getAnsweredQuestionsCount = () => {
@@ -391,6 +478,53 @@ export function AssessmentResultsClient({
         </CardContent>
       </Card>
 
+      {missingDetail && (
+        <Card>
+          <CardContent className="flex flex-col gap-4">
+            <p className="text-muted-foreground text-sm">
+              Il dettaglio per risposta non è disponibile per questa
+              valutazione.
+            </p>
+            <div>
+              <Button
+                onClick={recalculateAnswerDetail}
+                size="sm"
+                variant="outline"
+                disabled={isRecalculating || loading}
+              >
+                {isRecalculating ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-1 size-4" />
+                )}
+                Ricalcola dettaglio risposte
+              </Button>
+            </div>
+            {isRecalculating && totalQuestionsToEvaluate > 0 && (
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center text-muted-foreground text-sm">
+                  <span>Valutazione in corso...</span>
+                  <span>
+                    {currentEvaluationIndex} di {totalQuestionsToEvaluate}
+                  </span>
+                </div>
+                <Progress
+                  value={
+                    (currentEvaluationIndex / totalQuestionsToEvaluate) * 100
+                  }
+                  className="w-full"
+                />
+                {currentQuestionTitle && (
+                  <p className="text-muted-foreground text-xs">
+                    {currentQuestionTitle}
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">Tutte le domande</TabsTrigger>
@@ -536,10 +670,16 @@ export function AssessmentResultsClient({
 
                           {evaluation && (
                             <div className="flex flex-col gap-2">
-                              <div className="font-medium">Valutazione AI:</div>
-                              <div className="p-3 border rounded-md whitespace-pre-wrap">
-                                {evaluation.evaluation}
-                              </div>
+                              {evaluation.evaluation && (
+                                <>
+                                  <div className="font-medium">
+                                    Valutazione AI:
+                                  </div>
+                                  <div className="p-3 border rounded-md whitespace-pre-wrap">
+                                    {evaluation.evaluation}
+                                  </div>
+                                </>
+                              )}
 
                               {evaluation.strengths &&
                                 evaluation.strengths.length > 0 && (

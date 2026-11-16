@@ -1,13 +1,17 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
-import type {
-  ApplicationStage,
-  AssessmentStatus,
-  PositionStatus,
+import {
+  criteriaAssessmentSchema,
+  type ApplicationStage,
+  type AssessmentStatus,
+  type CriterionCategory,
+  type CriterionPriority,
+  type PositionStatus,
 } from "@/lib/schemas";
 import { OPEN_STAGES } from "@/lib/utils/application-stage";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
+import { getPositionSetup, type SetupPart } from "@/lib/utils/position-setup";
 import { cacheLife, cacheTag } from "next/cache";
 
 /**
@@ -41,6 +45,17 @@ export type ApplicationAssessment = {
   } | null;
 };
 
+export type ResumeCriterionAssessment = {
+  criterionId: string;
+  name: string;
+  category: CriterionCategory;
+  priority: CriterionPriority;
+  expectedLevel: number;
+  archived: boolean;
+  score: number | null;
+  evidence: string;
+};
+
 export type ApplicationDetail = {
   id: string;
   stage: ApplicationStage;
@@ -71,6 +86,12 @@ export type ApplicationDetail = {
     weaknesses: string[];
     recommendation: string | null;
     createdAt: Date;
+    /**
+     * Assessment per scorecard criterion, in the order of the criteria.
+     * Null for evaluations without it; entries of deleted criteria are
+     * dropped, archived criteria are kept and flagged.
+     */
+    criteriaAssessment: ResumeCriterionAssessment[] | null;
   } | null;
   availableQuizzes: {
     id: string;
@@ -174,7 +195,8 @@ export type ActionCenterData = {
     positionId: string;
     title: string;
     status: PositionStatus;
-    missing: "quiz"[];
+    /** Parts not set up yet, in the order scorecard, quiz, guide */
+    missing: SetupPart[];
   }[];
   /** Phase 3: always [] in Phase 1 */
   interviewsWithoutKit: {
@@ -196,6 +218,50 @@ export type ActionCenterData = {
 const fullName = (candidate: { firstName: string; lastName: string }) =>
   `${candidate.firstName} ${candidate.lastName}`.trim();
 
+/**
+ * Resolve a stored CV assessment per criterion against the criteria of the
+ * position scorecard (active and archived), in the order of the criteria.
+ * Null when missing or invalid; entries of deleted criteria are dropped.
+ */
+async function resolveCriteriaAssessment(
+  positionId: string,
+  raw: Prisma.JsonValue | null,
+): Promise<ResumeCriterionAssessment[] | null> {
+  if (raw === null) return null;
+  const parsed = criteriaAssessmentSchema.safeParse(raw);
+  if (!parsed.success) return null;
+
+  const criteria = await prisma.scorecardCriterion.findMany({
+    where: { scorecard: { positionId } },
+    orderBy: { order: "asc" },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      priority: true,
+      expectedLevel: true,
+      archivedAt: true,
+    },
+  });
+
+  return criteria.flatMap((criterion) => {
+    const entry = parsed.data[criterion.id];
+    if (!entry) return [];
+    return [
+      {
+        criterionId: criterion.id,
+        name: criterion.name,
+        category: criterion.category,
+        priority: criterion.priority,
+        expectedLevel: criterion.expectedLevel,
+        archived: criterion.archivedAt !== null,
+        score: entry.score,
+        evidence: entry.evidence,
+      },
+    ];
+  });
+}
+
 /** Everything the application page shows */
 export async function getApplicationDetail(
   id: string,
@@ -208,6 +274,7 @@ export async function getApplicationDetail(
     CacheTags.ASSESSMENTS,
     CacheTags.EVALUATIONS,
     CacheTags.QUIZZES,
+    CacheTags.SCORECARDS,
   );
 
   const application = await prisma.application.findUnique({
@@ -273,7 +340,7 @@ export async function getApplicationDetail(
 
   // The resume evaluation of an application: same candidate and position,
   // no assessment
-  const resumeEvaluation = await prisma.evaluation.findFirst({
+  const storedResumeEvaluation = await prisma.evaluation.findFirst({
     where: {
       candidateId: application.candidateId,
       positionId: application.positionId,
@@ -287,8 +354,22 @@ export async function getApplicationDetail(
       weaknesses: true,
       recommendation: true,
       createdAt: true,
+      criteriaAssessment: true,
     },
   });
+
+  let resumeEvaluation: ApplicationDetail["resumeEvaluation"] = null;
+  if (storedResumeEvaluation) {
+    const { criteriaAssessment: rawAssessment, ...evaluation } =
+      storedResumeEvaluation;
+    resumeEvaluation = {
+      ...evaluation,
+      criteriaAssessment: await resolveCriteriaAssessment(
+        application.positionId,
+        rawAssessment,
+      ),
+    };
+  }
 
   // Quizzes of the position not yet sent to this candidate, newest first
   const sentQuizzes = await prisma.assessment.findMany({
@@ -543,6 +624,8 @@ export async function getActionCenterData(): Promise<ActionCenterData> {
     CacheTags.ASSESSMENTS,
     CacheTags.EVALUATIONS,
     CacheTags.QUIZZES,
+    CacheTags.SCORECARDS,
+    CacheTags.INTERVIEW_GUIDES,
   );
 
   const [assessments, applications, positions] = await Promise.all([
@@ -579,10 +662,22 @@ export async function getActionCenterData(): Promise<ActionCenterData> {
         position: { select: { title: true } },
       },
     }),
+    // Draft and open positions with the counts the setup rule needs; closed
+    // positions are never listed
     prisma.position.findMany({
-      where: { status: { in: ["draft", "open"] }, quizzes: { none: {} } },
+      where: { status: { in: ["draft", "open"] } },
       orderBy: { createdAt: "desc" },
-      select: { id: true, title: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        _count: { select: { quizzes: true, interviewGuides: true } },
+        scorecard: {
+          select: {
+            _count: { select: { criteria: { where: { archivedAt: null } } } },
+          },
+        },
+      },
     }),
   ]);
 
@@ -604,12 +699,23 @@ export async function getActionCenterData(): Promise<ActionCenterData> {
       stage: application.stage,
       stageChangedAt: application.stageChangedAt,
     })),
-    positionsWithIncompleteSetup: positions.map((position) => ({
-      positionId: position.id,
-      title: position.title,
-      status: position.status,
-      missing: ["quiz"],
-    })),
+    positionsWithIncompleteSetup: positions.flatMap((position) => {
+      const { missing } = getPositionSetup({
+        activeCriteriaCount: position.scorecard?._count.criteria ?? 0,
+        quizCount: position._count.quizzes,
+        guideCount: position._count.interviewGuides,
+      });
+      return missing.length > 0
+        ? [
+            {
+              positionId: position.id,
+              title: position.title,
+              status: position.status,
+              missing,
+            },
+          ]
+        : [];
+    }),
     interviewsWithoutKit: [],
     feedbackToFill: [],
   };

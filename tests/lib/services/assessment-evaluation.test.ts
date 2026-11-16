@@ -11,6 +11,7 @@ import {
   completeAssessmentEvaluation,
   computeQuizScore,
   evaluateAssessmentAnswer,
+  recalculateAnswerEvaluations,
 } from "@/lib/services/assessment-evaluation";
 
 const dbQuestion = (id: string, type: string, extra = {}) => ({
@@ -255,5 +256,110 @@ describe("completeAssessmentEvaluation", () => {
       }),
     ).rejects.toThrow();
     expect(prisma.evaluation.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("per-answer detail (answerEvaluations)", () => {
+  const overall = {
+    evaluation: "Buon candidato",
+    strengths: ["a"],
+    weaknesses: ["b"],
+    recommendation: "Procedere",
+    fitScore: 84,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.assessment.findUnique).mockResolvedValue(
+      assessment() as any,
+    );
+    vi.mocked(prisma.evaluation.create).mockResolvedValue({ id: "eval1" } as any);
+    vi.mocked(prisma.evaluation.findUnique).mockResolvedValue({
+      id: "eval1",
+    } as any);
+    vi.mocked(prisma.evaluation.update).mockResolvedValue({ id: "eval1" } as any);
+    vi.mocked(generateStructured).mockResolvedValue(overall);
+  });
+
+  it("completeAssessmentEvaluation stores only score, strengths and weaknesses per question", async () => {
+    await completeAssessmentEvaluation({
+      assessmentId: "int1",
+      questionEvaluations: {
+        mc: { ...result(0), maxScore: 10 } as any,
+        open: { ...result(10), maxScore: 10 } as any,
+      },
+      userId: "user1",
+    });
+
+    const { data } = vi.mocked(prisma.evaluation.create).mock.calls[0][0] as {
+      data: { answerEvaluations: unknown };
+    };
+    expect(data.answerEvaluations).toEqual({
+      mc: { score: 0, strengths: ["s"], weaknesses: ["w"] },
+      open: { score: 10, strengths: ["s"], weaknesses: ["w"] },
+    });
+  });
+
+  it("recalculateAnswerEvaluations writes answerEvaluations only", async () => {
+    const outcome = await recalculateAnswerEvaluations({
+      assessmentId: "int1",
+      questionEvaluations: { mc: result(7), beh: result(3) },
+    });
+
+    expect(prisma.evaluation.findUnique).toHaveBeenCalledWith({
+      where: { assessmentId: "int1" },
+      select: { id: true },
+    });
+    const update = vi.mocked(prisma.evaluation.update).mock.calls[0][0] as {
+      where: unknown;
+      data: Record<string, unknown>;
+    };
+    expect(update.where).toEqual({ id: "eval1" });
+    expect(Object.keys(update.data)).toEqual(["answerEvaluations"]);
+    expect(update.data).not.toHaveProperty("quizScore");
+    expect(update.data).not.toHaveProperty("fitScore");
+    expect(update.data.answerEvaluations).toEqual({
+      mc: { score: 7, strengths: ["s"], weaknesses: ["w"] },
+      beh: { score: 3, strengths: ["s"], weaknesses: ["w"] },
+    });
+    expect(outcome).toEqual({
+      evaluationId: "eval1",
+      answerEvaluations: update.data.answerEvaluations,
+    });
+    // No AI call and no new evaluation
+    expect(generateStructured).not.toHaveBeenCalled();
+    expect(prisma.evaluation.create).not.toHaveBeenCalled();
+  });
+
+  it("recalculateAnswerEvaluations refuses an assessment without a saved evaluation", async () => {
+    vi.mocked(prisma.evaluation.findUnique).mockResolvedValue(null);
+
+    await expect(
+      recalculateAnswerEvaluations({
+        assessmentId: "int1",
+        questionEvaluations: { mc: result(7) },
+      }),
+    ).rejects.toThrow("Valutazione non trovata");
+    expect(prisma.evaluation.update).not.toHaveBeenCalled();
+  });
+
+  it("recalculateAnswerEvaluations refuses an empty result set", async () => {
+    await expect(
+      recalculateAnswerEvaluations({
+        assessmentId: "int1",
+        questionEvaluations: {},
+      }),
+    ).rejects.toThrow("Nessuna risposta valutata");
+    expect(prisma.evaluation.update).not.toHaveBeenCalled();
+  });
+
+  it("recalculateAnswerEvaluations refuses a question that was not answered", async () => {
+    await expect(
+      recalculateAnswerEvaluations({
+        assessmentId: "int1",
+        questionEvaluations: { mc: result(7), skipped: result(2) },
+      }),
+    ).rejects.toThrow("Una o più domande non hanno una risposta");
+    expect(prisma.evaluation.update).not.toHaveBeenCalled();
   });
 });

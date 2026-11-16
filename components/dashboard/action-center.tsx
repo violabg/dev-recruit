@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActionCenterData } from "@/lib/data/applications";
 import { formatDate } from "@/lib/utils";
 import { STALE_APPLICATION_DAYS } from "@/lib/utils/application-stage";
+import { SETUP_STEP_LABEL, SETUP_STEP_TAB } from "@/lib/utils/position-setup";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -120,9 +121,11 @@ export function ActionCenter({
         {data.positionsWithIncompleteSetup.map((item) => (
           <ActionRow
             key={item.positionId}
-            href={`/dashboard/positions/${item.positionId}`}
+            href={`/dashboard/positions/${item.positionId}?tab=${SETUP_STEP_TAB[item.missing[0]]}`}
             title={item.title}
-            detail="Manca: Quiz"
+            detail={`Manca: ${item.missing
+              .map((part) => SETUP_STEP_LABEL[part])
+              .join(", ")}`}
           />
         ))}
       </ActionCard>

@@ -483,3 +483,103 @@ describe("AIQuizService", () => {
     });
   });
 });
+
+describe("AIQuizService.generateQuiz with scorecard criteria", () => {
+  const baseParams = {
+    positionTitle: "Developer",
+    experienceLevel: "senior",
+    skills: ["React"],
+    quizTitle: "Quiz",
+    questionCount: 2,
+    difficulty: 3,
+    includeMultipleChoice: false,
+    includeOpenQuestions: true,
+    includeCodeSnippets: false,
+    includeBehavioralScenarios: false,
+  };
+
+  const criteria = [
+    {
+      id: "crit-react",
+      name: "React",
+      description: null,
+      category: "technical",
+      priority: "must",
+    },
+    {
+      id: "crit-comm",
+      name: "Comunicazione",
+      description: "Chiarezza",
+      category: "soft",
+      priority: "nice",
+    },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("maps the proposed keys to criterion ids and removes criterionKeys", async () => {
+    const { generateText } = await import("ai");
+    vi.mocked(generateText).mockResolvedValueOnce({
+      output: {
+        title: "Quiz",
+        questions: [
+          {
+            type: "open_question",
+            question: "Spiega gli hook",
+            criterionKeys: ["c1", "C9"],
+          },
+          {
+            type: "open_question",
+            question: "Racconta un conflitto",
+            criterionKeys: ["C2", "C1"],
+          },
+        ],
+      },
+    } as any);
+    const prompts = await import("../../../lib/services/ai/prompts");
+
+    const result = await new AIQuizService().generateQuiz({
+      ...baseParams,
+      criteria,
+    });
+
+    expect(result.questions[0]).toMatchObject({ criterionIds: ["crit-react"] });
+    expect(result.questions[1]).toMatchObject({
+      criterionIds: ["crit-comm", "crit-react"],
+    });
+    for (const question of result.questions) {
+      expect(question).not.toHaveProperty("criterionKeys");
+    }
+    // The prompts receive the keyed criteria and the system prompt documents
+    // the criterionKeys field
+    expect(prompts.buildQuizSystemPrompt).toHaveBeenCalledWith(true);
+    expect(prompts.buildQuizPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ criteria }),
+      [
+        expect.objectContaining({ id: "crit-react", key: "C1" }),
+        expect.objectContaining({ id: "crit-comm", key: "C2" }),
+      ],
+    );
+  });
+
+  it("without criteria returns the questions as before, with no criterionIds", async () => {
+    const { generateText } = await import("ai");
+    vi.mocked(generateText).mockResolvedValueOnce({
+      output: {
+        title: "Quiz",
+        questions: [{ type: "open_question", question: "Spiega gli hook" }],
+      },
+    } as any);
+    const prompts = await import("../../../lib/services/ai/prompts");
+
+    const result = await new AIQuizService().generateQuiz(baseParams);
+
+    expect(result.questions).toEqual([
+      { type: "open_question", question: "Spiega gli hook" },
+    ]);
+    expect(prompts.buildQuizSystemPrompt).toHaveBeenCalledWith(false);
+    expect(prompts.buildQuizPrompt).toHaveBeenCalledWith(baseParams, []);
+  });
+});

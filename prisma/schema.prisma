@@ -38,6 +38,8 @@ model User {
   behavioralRubrics BehavioralRubric[] @relation("UserBehavioralRubrics")
   ownedApplications   Application[] @relation("UserOwnedApplications")
   decidedApplications Application[] @relation("UserDecidedApplications")
+  scorecards          Scorecard[]      @relation("UserScorecards")
+  interviewGuides     InterviewGuide[] @relation("UserInterviewGuides")
 
   isAnonymous Boolean?
 
@@ -137,9 +139,123 @@ model Position {
   quizzes           Quiz[]
   evaluations       Evaluation[]
   behavioralRubrics BehavioralRubric[]
+  scorecard         Scorecard?
+  interviewGuides   InterviewGuide[]
 
   @@index([status])
   @@map("positions")
+}
+
+enum CriterionCategory {
+  technical
+  soft
+  culture
+}
+
+enum CriterionPriority {
+  must
+  nice
+}
+
+enum CriterionSource {
+  skill
+  softSkill
+  custom
+}
+
+enum GuideSectionKind {
+  intro
+  experience
+  technical
+  behavioral
+  candidate_questions
+  closing
+}
+
+// The evaluation scorecard ("Scheda di valutazione") of a position: at most one per position
+model Scorecard {
+  id         String   @id @default(cuid())
+  positionId String   @unique
+  createdBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  position Position             @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator  User                 @relation("UserScorecards", fields: [createdBy], references: [id], onDelete: Cascade)
+  criteria ScorecardCriterion[]
+
+  @@map("scorecards")
+}
+
+model ScorecardCriterion {
+  id            String            @id @default(cuid())
+  scorecardId   String
+  name          String
+  description   String?
+  category      CriterionCategory
+  priority      CriterionPriority
+  weight        Int // 1-5
+  expectedLevel Int // 1-5
+  anchors       Json? // { weak, medium, strong }
+  source        CriterionSource
+  order         Int
+  archivedAt    DateTime?
+  createdAt     DateTime          @default(now())
+
+  scorecard Scorecard @relation(fields: [scorecardId], references: [id], onDelete: Cascade)
+
+  @@index([scorecardId])
+  @@map("scorecard_criteria")
+}
+
+// Interview guide ("Guida colloquio"): a template of the position, for example one per round
+model InterviewGuide {
+  id              String   @id @default(cuid())
+  positionId      String
+  title           String
+  round           Int // 1-based order of the round
+  durationMinutes Int
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  position Position       @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator  User           @relation("UserInterviewGuides", fields: [createdBy], references: [id], onDelete: Cascade)
+  sections GuideSection[]
+
+  @@index([positionId])
+  @@map("interview_guides")
+}
+
+model GuideSection {
+  id      String           @id @default(cuid())
+  guideId String
+  title   String
+  minutes Int
+  order   Int
+  kind    GuideSectionKind
+
+  guide     InterviewGuide  @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  questions GuideQuestion[]
+
+  @@index([guideId])
+  @@map("guide_sections")
+}
+
+model GuideQuestion {
+  id           String   @id @default(cuid())
+  sectionId    String
+  text         String
+  followUps    String[] @default([])
+  criterionIds String[] @default([])
+  anchors      Json? // { weak, medium, strong }
+  required     Boolean  @default(false)
+  order        Int
+
+  section GuideSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId])
+  @@map("guide_questions")
 }
 
 model Candidate {
@@ -292,6 +408,8 @@ model QuizQuestion {
   quizId     String
   questionId String
   order      Int      // Order of question in the quiz
+  // Ids of the scorecard criteria this question verifies in this quiz
+  criterionIds String[] @default([])
   createdAt  DateTime @default(now())
 
   quiz     Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
@@ -325,6 +443,10 @@ model Evaluation {
   recommendation String?
   fitScore       Int?     // 0-10 scale (AI's candidate fit assessment)
   quizScore      Int?     // 0-100 percentage score from quiz answers (assessment evals only)
+
+  // Per-answer detail (assessment evals) and per-criterion assessment (CV evals); null on rows saved before Phase 2
+  answerEvaluations  Json?
+  criteriaAssessment Json?
 
   // Hiring manager notes and decision
   interviewNotes    String?

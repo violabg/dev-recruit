@@ -69,6 +69,7 @@ export async function POST(request: Request) {
               title: prepared.title,
               responseText: fullText,
               userId: user.id,
+              criterionKeys: prepared.criterionKeys,
             });
 
             // Invalidate cache to show the new evaluation and the new stage

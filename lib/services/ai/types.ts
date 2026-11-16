@@ -60,6 +60,15 @@ export interface GenerateQuizParams {
   instructions?: string;
   previousQuestions?: { question: string }[];
   specificModel?: string;
+  // Active criteria of the position scorecard: when given, each question
+  // comes back with the criteria it verifies
+  criteria?: {
+    id: string;
+    name: string;
+    description: string | null;
+    category: string;
+    priority: string;
+  }[];
 }
 
 // Base parameters for all question types

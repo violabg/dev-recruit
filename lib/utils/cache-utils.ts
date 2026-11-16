@@ -37,6 +37,10 @@ export const CacheTags = {
   BEHAVIORAL_RUBRICS: "behavioral-rubrics",
   PRESETS: "presets",
   REFERENCE_DATA: "reference-data",
+  // Scorecards and their criteria (criteria have no tag of their own)
+  SCORECARDS: "scorecards",
+  // Interview guides with their sections and questions
+  INTERVIEW_GUIDES: "interview-guides",
 } as const;
 
 /**
@@ -58,6 +62,9 @@ export const entityTag = {
     `behavioral-rubric-${candidateId}-${positionId}`,
   preset: (id: string) => `preset-${id}`,
   referenceCategory: (category: string) => `reference-data-${category}`,
+  // A position has at most one scorecard: keyed by the position id
+  scorecard: (positionId: string) => `scorecard-${positionId}`,
+  interviewGuide: (id: string) => `interview-guide-${id}`,
 } as const;
 
 /**
@@ -73,6 +80,8 @@ const CASCADE_ON_DELETE = {
     CacheTags.EVALUATIONS,
     CacheTags.CANDIDATES,
     CacheTags.BEHAVIORAL_RUBRICS,
+    CacheTags.SCORECARDS,
+    CacheTags.INTERVIEW_GUIDES,
   ],
   quiz: [CacheTags.ASSESSMENTS, CacheTags.EVALUATIONS],
   candidate: [
@@ -373,6 +382,51 @@ export function invalidateEvaluationCacheInRouteHandler(options?: {
     revalidatePath(`/dashboard/candidates/${options.candidateId}`);
     revalidatePath(`/dashboard/candidates/${options.candidateId}/evaluations`);
   }
+}
+
+// ============================================================================
+// Scorecard Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate scorecard cache after a scorecard or its criteria change.
+ * Use this in Server Actions only.
+ */
+export function invalidateScorecardCache(options: { positionId: string }) {
+  updateTag(CacheTags.SCORECARDS);
+  updateTag(entityTag.scorecard(options.positionId));
+  revalidatePath(`/dashboard/positions/${options.positionId}`);
+  revalidatePath(`/dashboard/positions/${options.positionId}/scorecard`);
+  revalidatePath("/dashboard");
+}
+
+// ============================================================================
+// Interview Guide Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate interview guide cache after a guide, its sections or its
+ * questions change. Use this in Server Actions only.
+ */
+export function invalidateInterviewGuideCache(options: {
+  guideId?: string;
+  positionId: string;
+}) {
+  updateTag(CacheTags.INTERVIEW_GUIDES);
+
+  if (options.guideId) {
+    updateTag(entityTag.interviewGuide(options.guideId));
+  }
+
+  revalidatePath(`/dashboard/positions/${options.positionId}`);
+
+  if (options.guideId) {
+    revalidatePath(
+      `/dashboard/positions/${options.positionId}/guides/${options.guideId}`,
+    );
+  }
+
+  revalidatePath("/dashboard");
 }
 
 // ============================================================================

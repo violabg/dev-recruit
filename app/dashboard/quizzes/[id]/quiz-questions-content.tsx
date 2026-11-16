@@ -8,6 +8,7 @@ import { SaveFavoriteButton } from "@/components/quiz/save-favorite-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuizById } from "@/lib/data/quizzes";
+import { getScorecardByPositionId } from "@/lib/data/scorecards";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -24,6 +25,23 @@ export async function QuizQuestionsContent({ params }: Props) {
       </div>
     );
   }
+
+  // Names of the criteria of the quiz position; ids of deleted criteria are
+  // not found and skipped
+  const scorecard = await getScorecardByPositionId(quiz.positionId);
+  const criterionLabels = new Map<string, string>([
+    ...(scorecard?.criteria ?? []).map(
+      (criterion) => [criterion.id, criterion.name] as const,
+    ),
+    ...(scorecard?.archivedCriteria ?? []).map(
+      (criterion) => [criterion.id, `${criterion.name} (archiviato)`] as const,
+    ),
+  ]);
+  const criterionNamesOf = (criterionIds: string[] | undefined) =>
+    (criterionIds ?? []).flatMap((criterionId) => {
+      const label = criterionLabels.get(criterionId);
+      return label ? [{ id: criterionId, label }] : [];
+    });
 
   return (
     <>
@@ -59,6 +77,19 @@ export async function QuizQuestionsContent({ params }: Props) {
               <h3 className="font-bold text-heading text-sm">Domanda:</h3>
               <p className="mt-1">{question.question}</p>
             </div>
+
+            {criterionNamesOf(question.criterionIds).length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-muted-foreground text-sm">
+                  Criteri verificati:
+                </span>
+                {criterionNamesOf(question.criterionIds).map((criterion) => (
+                  <Badge key={criterion.id} variant="outline">
+                    {criterion.label}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {question.type === "multiple_choice" && (
               <MultipleChoiceDisplay question={question} />
