@@ -21,17 +21,37 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
 | `success` | Positive feedback, good scores, `Button` variant `success` |
 | `warning` | Caution: mid scores, low remaining time, unsaved changes |
 | `destructive` | Errors, delete actions, low scores, required-field asterisk |
-| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` | Assessment statuses `pending`, `in_progress`, `completed`, `cancelled`, and the derived `expired` |
+| `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` | Assessment statuses `pending`, `in_progress`, `completed`, `cancelled`, and the derived `expired`; also the application stages, through their own map |
 | `section-positions`, `section-candidates`, `section-quizzes`, `section-presets`, `section-assessments`, `section-settings` | Identity hue of each dashboard section (sidebar icon, page-title rule) |
 
 - New colours are added as OKLCH tokens in the global stylesheet (light and dark values), never as palette classes (`text-green-600`), hex or arbitrary values in components.
 - For status feedback prefer a tint (`bg-success/10 text-success`) over a filled background; never pair a token background with `text-white`/`text-black`.
 - Only `primary`, `secondary` and `accent` have a `-foreground` companion. `success` and `destructive` do not: on a filled `bg-success` or `bg-destructive` surface use `text-primary-foreground`.
+- There is no `section-applications` token. The Candidature section reuses the candidates hue (`text-section-candidates`, `bg-section-candidates`); the "Le mie azioni" overview entry uses `primary`.
 
 ## Status and score colours
 
 - Assessment status → `stage-*` token, badge `bg-stage-<state>/10 text-stage-<state>`. Italian labels: `pending` "In attesa", `in_progress` "In corso", `completed` "Completato", `cancelled` "Annullato", `expired` "Scaduto". Every state's label and tint comes from `ASSESSMENT_STATE_PRESENTATION` through `getAssessmentStatePresentation(state)`: never write a local state → colour map.
-- The application stage never comes from `Candidate.status`, which does not exist: no candidate status badge, no candidate status → colour map. An application stage is shown with a badge tinted from the same `stage-*` tokens (their name predates the application stage: they are not reserved to assessments), through one shared presentation map for application stages, separate from the assessment one. Which token each stage gets is a design decision: change it only in that map.
+- The application stage never comes from `Candidate.status`, which does not exist: no candidate status badge, no candidate status → colour map. An application stage is shown with a badge tinted from the same `stage-*` tokens (their name predates the application stage: they are not reserved to assessments), through `APPLICATION_STAGE_PRESENTATION` and `getApplicationStagePresentation(stage)`, separate from the assessment map:
+
+| Stage | Token |
+|---|---|
+| `applied` | `stage-pending` |
+| `screening`, `assessment`, `interview`, `decision` | `stage-progress` |
+| `offer`, `hired` | `stage-done` |
+| `rejected` | `stage-cancelled` |
+| `withdrawn` | `stage-expired` |
+
+  An unknown stage falls back to `bg-muted text-muted-foreground` (dot `bg-muted-foreground`). Kanban columns reuse the stage labels; the last column is titled "Chiuse".
+- `Position.status` → `POSITION_STATUS_PRESENTATION` through `getPositionStatusPresentation(status)`:
+
+| Status | Label | Badge |
+|---|---|---|
+| `draft` | Bozza | `bg-warning/10 text-warning` |
+| `open` | Aperta | `bg-success/10 text-success` |
+| `closed` | Chiusa | `bg-muted text-muted-foreground` |
+
+  An unknown status falls back to muted. Never write a local status → colour map.
 - Score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
 - Score thresholds in the UI: per-answer score (0–10) ≥ 7 success, ≥ 4 warning, else destructive; percentages ≥ 70 success, ≥ 40 warning, else destructive.
 
@@ -70,3 +90,5 @@ All UI text, including `aria-label` and screen-reader text, is Italian.
 - Building a page title or delete dialog by hand instead of `PageHeader` / `DeleteWithConfirm`.
 - Colouring assessment statuses with anything other than the `stage-*` tokens.
 - A local stage → colour map instead of the shared presentation map, or a candidate status badge for a `Candidate.status` that no longer exists.
+- Inventing a `section-applications` token instead of reusing the candidates hue.
+- Writing a position status badge by hand instead of `getPositionStatusPresentation`.

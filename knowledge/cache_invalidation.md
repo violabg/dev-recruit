@@ -15,6 +15,7 @@ Cache Components and Partial Prefetching are on. The framework itself is NOT res
 - Every cached read sets `cacheLife("hours")`, or `cacheLife("minutes")` for short-lived data. No other profile and no custom profiles.
 - Two reads are uncached on purpose: `getProfile` (depends on the session) and `getAssessmentByToken` (live assessment state while the candidate answers). Follow the same choice for any session-dependent or live read.
 - `requireUser()` and `getCurrentUser()` read the session cookie, so the framework's rules for request APIs apply to them: never inside a `"use cache"` scope.
+- A server component that reads the session MUST first await a request value: `await connection()`, or `await searchParams` when it already receives them. With Partial Prefetching on, `headers()` resolves in the App Shell, so a component that awaits only `params` known from `generateStaticParams` (or nothing at all) runs the session read during prerender and the route fails with the blocking-route error on `new Date()`.
 
 ## Tag vocabulary
 
@@ -34,6 +35,8 @@ Always build tags with the helpers from the cache utils; never write tag strings
 
 `entityTag` is an object of functions; the separator is always `-`.
 
+There is no tag for `User`. Cached application reads include the owner's name (`owner: { select: { id: true, name: true } }`) but carry only the tags of the entities they join and of the collections they read. A user rename therefore does not refresh those reads until another tag or the `cacheLife` window expires; this is accepted, not compensated with a new tag.
+
 ## Dependency-tag rule
 
 A cached read MUST tag the collection tag of every entity it reads, including every relation pulled in through `include` or `select`. Mutations invalidate only their own entity, so a missing dependency tag means stale UI. Add the entity tag too when the read targets one row.
@@ -48,7 +51,7 @@ export async function getFilteredCandidates(params?: FetchCandidatesParams) {
 }
 ```
 
-Join tables have no tag of their own: `QuizQuestion` is covered by `quizzes` + `questions`.
+`Application` is an entity, not a join table: it carries the stage and the owner, and it has no tag of its own. Its reads are covered by `candidates` plus the candidate and position entity tags; every write on an application calls `invalidateCandidateCache` with the candidate, the position(s) and the application id(s). The real join table, `QuizQuestion`, is covered by `quizzes` + `questions`.
 
 ## Invalidating mutations
 
@@ -59,11 +62,12 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | `invalidateQuizCache({ quizId?, positionId?, deleted? })` | `quizzes`, `questions` | entity tags for quiz and position |
 | `invalidateQuestionCache({ questionId?, quizId? })` | `questions` | `quizId` also expires the quiz. A favorite toggle needs no extra option: the `questions` collection covers favorite status |
 | `invalidatePositionCache(positionId?, { deleted? })` | `positions` | positional id, then options |
-| `invalidateCandidateCache({ candidateId?, positionId?, positionIds?, deleted? })` | `candidates` | pass every position whose application was added or withdrawn |
-| `invalidateAssessmentCache({ assessmentId?, quizId?, deleted? })` | `assessments` | |
+| `invalidateCandidateCache({ candidateId?, positionId?, positionIds?, applicationId?, applicationIds?, deleted? })` | `candidates` | candidate and position entity tags; revalidates `/dashboard/candidates` and `/dashboard/applications` always, `/dashboard/applications/{id}` for every application id given, `/dashboard/candidates/{id}` when a candidate id is given, `/dashboard/positions/{id}` for every position id, and `/dashboard` |
+| `invalidateCandidateCacheInRouteHandler({ candidateId?, positionId?, applicationId? })` | `candidates` | same entity tags and paths as the action variant; for route handlers, such as the resume evaluation stream that can advance an application's stage |
+| `invalidateAssessmentCache({ assessmentId?, quizId?, deleted? })` | `assessments` | revalidates `/dashboard/assessments`, `/dashboard/assessments/{id}` and `/dashboard` (the home lists the tests to evaluate) |
 | `invalidateEvaluationCache({ evaluationId?, assessmentId?, candidateId? })` | `evaluations` | server actions only |
 | `invalidateEvaluationCacheInRouteHandler({ … })` | `evaluations` | same options; for route handlers |
-| `invalidateBehavioralRubricCache({ candidateId, positionId })` | `behavioral-rubrics` | both required |
+| `invalidateBehavioralRubricCache({ candidateId, positionId })` | `behavioral-rubrics` | both required; revalidates `/dashboard/candidates/{candidateId}` and `/dashboard/applications` |
 | `invalidatePresetCache(presetId?)` | `presets` | pass the id whenever there is one |
 | `invalidateReferenceDataCache(category?)` | `reference-data` | |
 | `invalidateProfileCache()` | profile paths | |
@@ -121,5 +125,7 @@ Every other server call from the client is a server action. Every route handler 
 - Calling `updateTag`/`revalidatePath` directly, or `invalidateEvaluationCache` inside a route handler.
 - Deleting without `deleted: true`, leaving cascaded rows in cached lists and counts.
 - Updating a candidate's positions and passing only the added position ids: a removed position also changes the cache.
+- Writing to an application without passing its id, so `/dashboard/applications/{id}` stays stale, or using the action variant inside a route handler.
 - Caching session-dependent data, or calling `requireUser()`/`getCurrentUser()` inside `"use cache"`.
+- Reading the session in a server component without first awaiting `connection()` or `searchParams`.
 - Redirecting from the email verification route to a caller-supplied URL without the same-origin check.

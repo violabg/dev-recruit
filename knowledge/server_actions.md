@@ -68,8 +68,11 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
 | `submitAnswerAction(token, questionId, answer)` | assessment token |
 | `completeAssessmentAction(token)` | assessment token |
 | `transcribeAudioAction(formData)` | assessment token in the form data, and the assessment must still `acceptsAnswers()` |
-| `applyAsCandidateAction(formData)` | none (public application, `createdBy: null`) |
+| `applyAsCandidateAction(formData)` | none (public application, `createdBy: null`, no owner) |
 | `fetchPositionDataAction(positionId)` | none (public apply form) |
+
+- `fetchPositionDataAction` returns `position: null` both when the position does not exist and when it exists but is not `open`.
+- Every other action, including the entity actions of the application hub (`moveApplicationStageAction`, `setApplicationOwnerAction`, `updatePositionStatusAction`), calls `requireUser()` and applies no role or ownership check. `moveApplicationStageAction` accepts any stage to any stage, including reopening a closed application; `setApplicationOwnerAction` takes `owner: "me" | "none"`.
 
 ## Inputs and reads
 
@@ -121,3 +124,4 @@ Use the logger service: `logger`, or the scoped `aiLogger`, `dbLogger`, `authLog
 - Omitting `requireUser()` because "the page is protected": actions are callable directly.
 - Parsing input or touching the database before `requireUser()`.
 - Adding a read action for page data instead of a cached data-layer function.
+- Gating a stage, owner or status change on the current user's role or ownership: `requireUser()` is the only guard.

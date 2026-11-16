@@ -18,7 +18,7 @@ Prisma Client API semantics and migration behaviour are in the official docs (co
 | `Question` | Reusable question row | `type` (`QuestionType`), `question`, type-specific fields, `isFavorite` | its `QuizQuestion` links in every quiz |
 | `QuizQuestion` | Quiz ↔ Question link with `order` (0-based) | unique (`quizId`, `questionId`): a question appears at most once per quiz | — |
 | `Candidate` | A person applying; never signs in | `firstName`, `lastName`, `email` (unique, compared in lower case and without spaces), `dateOfBirth?` (18+), `resumeUrl?`, `doNotContact`, `doNotContactNote?`, `createdBy?` (null when self-applied) | its applications, assessments, evaluations, rubrics |
-| `Application` | A candidacy: one Candidate for one Position | unique (`candidateId`, `positionId`), `stage` (`ApplicationStage`), `stageChangedAt`, `ownerId?` (the recruiter in charge) | its assessments (and their evaluations). An application is deleted only when it holds no evidence: no assessment, evaluation or conversation |
+| `Application` | A candidacy: one Candidate for one Position | unique (`candidateId`, `positionId`), `stage` (`ApplicationStage`), `stageChangedAt`, `ownerId?` (the recruiter in charge), and the closing decision: `decision?`, `decisionRationale?`, `decidedBy?` (the deciding user, `onDelete: SetNull`), `decidedAt?`, `decisionWeights?` (JSON) | its assessments (and their evaluations). An application is deleted only when it holds no evidence: no assessment, evaluation or conversation |
 | `Assessment` | One Candidate taking one Quiz, inside one Application | `applicationId` (required), `token` (unique), `status` (`AssessmentStatus`), `startedAt?`, `completedAt?`, `answers` (JSON keyed by Question id) | its evaluation |
 | `Evaluation` | AI assessment, two kinds (see Evaluations) | `assessmentId?` (unique), `candidateId?`, `positionId?`, `fitScore`, `quizScore?`, hiring fields | — |
 | `BehavioralRubric` | Recruiter's manual soft-skill scores | unique (`candidateId`, `positionId`), four required scores 1–5, `leadershipScore?` | — |
@@ -33,7 +33,11 @@ Every signed-in user sees and edits every entity. `createdBy` records the author
 
 - NEVER add `where: { createdBy: user.id }` or any per-user filter to a read or a mutation.
 - NEVER add role or permission checks. `requireUser()` only checks that a session exists.
-- `Application.ownerId` names the recruiter in charge. It may feed a view filter the user can switch off ("le mie"); it never limits what a user can open or edit.
+- `Application.ownerId` names the recruiter in charge. It may feed a view filter the user can switch off ("Solo le mie"); it never limits what a user can open or edit.
+  - Creating an application from the dashboard makes the signed-in user the owner.
+  - Applications added by editing a candidate's positions take the user who performs the edit as owner.
+  - A public application has no owner (`createdBy: null`).
+  - "Prendi in carico" sets the current user as owner, "Rilascia" clears it (`owner: "me" | "none"`), and the filter is labelled "Solo le mie".
 - Candidates are not users: they reach the public apply page and the assessment page through public routes only.
 
 ## Quiz and questions: one write path
@@ -66,19 +70,24 @@ for (const [order, question] of questions.entries()) {
 - An update that sends `positionIds` is a diff, never a replace-all:
   - an id that is new gets an `Application` in stage `applied`;
   - an id that is unchanged is left untouched, with everything already recorded on it;
+  - a previously withdrawn id that is selected again reopens the same `Application` at `applied`, keeping its history, instead of creating a new one; a withdrawn application that is not selected again stays as it is;
   - an id that disappears moves its `Application` to `withdrawn` and keeps every assessment, evaluation and note already recorded; it is deleted only when it holds no evidence. The non-completed assessments of a withdrawn application are set to `cancelled`, never deleted.
 - Stages (`ApplicationStage`): `applied`, `screening`, `assessment`, `interview`, `decision`, `offer`, `hired`, `rejected`, `withdrawn`.
 - The stage lives on the `Application`. An action that reaches a later step advances it and updates `stageChangedAt`; automation never moves a stage backwards. The recruiter can still move it by hand in either direction, from any stage, and can reopen a `rejected` or `withdrawn` application.
-- Automatic advances: a stored resume evaluation moves the application to `screening`; creating an assessment moves it to `assessment`. Both only when the application is in an earlier stage.
-- A quiz can be assigned only to candidates with an application for the quiz's position; the assessment is created on that application.
+- Automation never touches a closed application: no event advances a `rejected` or `withdrawn` one. Only the manual move reopens it. The next-action card shows "Candidatura chiusa" for `hired`, `rejected` and `withdrawn`, and offers reopening only for `rejected` and `withdrawn`.
+- An open application whose stage has not changed for more than `STALE_APPLICATION_DAYS` (7) days is stale. Decide it with `isApplicationStale(application, now)`; `hired`, `rejected` and `withdrawn` are never stale.
+- Automatic advances: a saved resume evaluation moves the application to `screening`; creating an assessment moves it to `assessment`. Both only when the application is in an earlier stage.
+- A resume evaluation is evidence of an application: it exists only for a candidate already applied to that position (a candidate with no application gets a 404). Saving it and moving the application to `screening` happen in the same transaction.
+- A quiz can be assigned only to a candidate with an application for the quiz's position that is neither `rejected` nor `withdrawn`; the assessment is created on that application. A missing and a closed application give the same error.
 - The public application matches on the normalised email (lower case, no surrounding spaces). An email that already exists attaches the new application to that existing candidate and refreshes the CV; a candidate already applied to that position gets a confirmation and nothing is created. The candidate-facing response is identical in every case, so it never reveals whether the email already exists. `Candidate.email` is unique.
 - `doNotContact` (with `doNotContactNote`) is the only state kept on the candidate: a personal-record flag, unrelated to any stage.
 
 ## Position lifecycle
 
 - `Position.status`: `draft` (being set up), `open`, `closed`.
-- Only `open` positions appear in the public apply form and accept a public application. A `closed` position keeps its applications and everything recorded on them.
+- Only `open` positions appear in the public apply form, accept a public application, and feed the position selectors of the dashboard candidate forms. A `closed` position keeps its applications and everything recorded on them.
 - A position that has at least one application cannot be deleted: the action fails with a `UserError`. Close it instead.
+- A `draft` or `open` position with no quiz is an incomplete setup: the action center lists it.
 
 ```ts
 // Only positions that are new create an Application; the ones that stay are untouched
@@ -112,14 +121,14 @@ if (!acceptsAnswers(assessment)) {
 | | Assessment evaluation | Resume evaluation |
 |---|---|---|
 | Ids set | `assessmentId` only (`candidateId`, `positionId` null) | `candidateId` + `positionId` (`assessmentId` null) |
-| Uniqueness | one per assessment (unique `assessmentId` + app check) | one per candidate + position (app check, HTTP 409) |
+| Uniqueness | one per assessment (unique `assessmentId` + app check) | one per candidate + position, and only for an existing application (app check, HTTP 409) |
 | Scores | `quizScore` 0–100 and `fitScore` 0–10 | `fitScore` 0–10, no `quizScore` |
 | `title` | quiz title | position title |
 
 - Score scales: per-answer score 0–10 (not stored); `quizScore` = earned points over the evaluated questions, as a 0–100 percentage; the AI returns `fitScore` 0–100 and it is ALWAYS stored as `Math.round(fitScore / 10)`, i.e. 0–10, for both kinds.
 - To find a candidate's assessment evaluations go through `assessment.candidateId`; filtering `Evaluation.candidateId` returns resume evaluations only.
 - `recommendation` is AI free text. `hireRecommendation` is the hiring manager's enum (`strong_yes`, `yes`, `maybe`, `no`, `strong_no`), saved with `interviewNotes`, `redFlags`, `standoutMoments`, `nextSteps` by `updateHiringManagerNotesAction`, which also sets `assessedBy`/`assessedAt`. `notes` is a separate free-text field ("Note manuali").
-- The evaluation dashboard belongs to one application: it reads the assessments, the rubric and the hiring decision of that application's candidate and position. Its score is computed, never stored: quiz (`quizScore / 10`, weight 0.5), rubric (average of the four required scores × 2, weight 0.3), `hireRecommendation` (10/8/6/4/2, weight 0.2), weighted over the parts present.
+- The application evaluation summary belongs to one application: it reads the assessments, the rubric and the hiring decision of that application's candidate and position. Its score is computed, never stored: quiz (`quizScore / 10`, weight 0.5), rubric (average of the four required scores × 2, weight 0.3), `hireRecommendation` (10/8/6/4/2, weight 0.2), weighted over the parts present.
 
 ## Behavioral rubrics and presets
 
@@ -130,7 +139,7 @@ if (!acceptsAnswers(assessment)) {
 ## Schema changes
 
 - The schema is applied with Prisma Migrate. Every schema change is a versioned migration committed with the code that needs it.
-- NEVER apply the schema with `prisma db push` (the `db:push` script): it drops and recreates a renamed table instead of renaming it, so the rows the rename must keep are lost.
+- NEVER apply the schema with `prisma db push`: it drops and recreates a renamed table instead of renaming it, so the rows the rename must keep are lost.
 - A rename is an `ALTER TABLE … RENAME` (table or column) written in the migration, never a drop and a create. When a change needs existing rows converted, the backfill is SQL in the same migration, placed before the removal of the columns it reads.
 - The same migration runs on development first and then on production: a development database is never copied over production.
 
@@ -138,7 +147,7 @@ if (!acceptsAnswers(assessment)) {
 
 All user-facing text is Italian: UI labels, toasts, `UserError` messages, custom Zod messages, AI-generated content. Code identifiers and JSON field names stay in English.
 
-Recruiter-facing UI calls an `Assessment` **Test**. **Colloquio** names the live conversation and is never used for an `Assessment` or for a `Quiz`.
+Both audiences call an `Assessment` a **Test**: recruiters see "Test" / "Test inviati", and the candidate's pages say "Inizia il test". **Colloquio** names the live conversation and is never used for an `Assessment` or for a `Quiz`.
 
 ## Common mistakes
 
@@ -150,9 +159,13 @@ Recruiter-facing UI calls an `Assessment` **Test**. **Colloquio** names the live
 - Reading assessment evaluations by `Evaluation.candidateId`.
 - Relying on a database constraint for "one assessment per candidate + quiz" or "one resume evaluation per candidate + position": both are application checks.
 - Treating an update that sends `positionIds` as a replace-all: it is a diff, and a removed position becomes `withdrawn` with its history.
+- Creating a new application when a withdrawn position is selected again instead of reopening the existing one.
 - Reintroducing `Candidate.status`, `isPrimary`, a primary-position ordering or a candidate status badge.
 - Deleting a position that has applications, or deleting the assessments of a withdrawn application instead of cancelling them.
-- Using `Application.ownerId` to restrict access.
+- Using `Application.ownerId` to restrict access, or deriving the owner from anything but the creating/editing user, "Prendi in carico" and "Rilascia".
+- Advancing or reopening a `rejected`/`withdrawn` application from an automatic rule.
+- Producing a resume evaluation without an application, or outside the transaction that advances the stage.
+- Assigning a quiz to a `rejected` or `withdrawn` application.
 - Confusing `BehavioralRubric` with `behavioral_scenario` questions, or Preset with ReferenceData.
 - Filtering by `createdBy`, or calling `requireUser()` in a candidate-facing action.
 - Running `prisma db push`, or changing the schema without a versioned migration.
