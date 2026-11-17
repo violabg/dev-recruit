@@ -44,7 +44,7 @@ Ordine: **B → C → A**. U è già rilasciata e ha chiuso il rischio di access
 
 Limiti rimasti aperti: vedi §4.
 
-Rilascio avvenuto il 17 novembre 2026: migrazione applicata al ramo Neon `production`, amministratori impostati, applicazione distribuita.
+Rilascio avvenuto il 17 novembre 2026: migrazione applicata al ramo Neon `production`, amministratori impostati, applicazione distribuita. Verifica manuale end-to-end superata in produzione, incluso il giro utenti (registrazione in attesa, verifica, nuovo utente, blocco e sessioni).
 
 ### 1.A Registrazione, trascrizione e sintesi per criterio
 
@@ -138,8 +138,6 @@ Le righe della funzione U sono chiuse: la knowledge descrive già ruolo `admin`,
 ## 4. Punti aperti già noti (backlog, fuori dal perimetro B, C, A)
 
 Da valutare insieme alle aree di miglioramento della guida operativa (§11), senza duplicarle qui.
-
-**Verifica manuale end-to-end.** Le verifiche automatiche passano (`pnpm lint`, `pnpm test:run`, `pnpm build`), ma il percorso completo non è mai stato ripetuto a mano dopo la pulizia: posizione con scheda, quiz e guida → candidatura dal form pubblico → CV e test valutati → due colloqui con due utenti (kit, live, schede) → Decisione → esito, più il giro utenti (registrazione in attesa, verifica, nuovo utente, blocco e sessioni). Seguire il §12 della guida operativa ("Percorso consigliato per la demo") su produzione.
 
 **Limiti noti del comportamento attuale:**
 - Non resta traccia di chi crea o modifica un utente, né dei blocchi: nessun registro delle modifiche.
