@@ -13,6 +13,9 @@ export type TimelineEntryKind =
   | "assessment_started"
   | "assessment_completed"
   | "assessment_evaluated"
+  | "interview_scheduled"
+  | "interview_started"
+  | "interview_completed"
   | "stage_changed";
 
 export type TimelineEntry = {
@@ -69,6 +72,20 @@ export function buildApplicationTimeline(
       `Test valutato: ${quizTitle}`,
       href,
     );
+  }
+
+  for (const interview of application.interviews) {
+    const label = `Colloquio ${interview.round}`;
+    const href = `/dashboard/applications/${application.id}?tab=colloqui`;
+
+    add(
+      "interview_scheduled",
+      interview.scheduledAt,
+      `${label} pianificato`,
+      href,
+    );
+    add("interview_started", interview.startedAt, `${label} iniziato`, href);
+    add("interview_completed", interview.endedAt, `${label} concluso`, href);
   }
 
   // The stage changed after the application was received

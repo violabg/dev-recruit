@@ -33,7 +33,13 @@ export type CriterionCoverage = {
 
 const PRIORITY_RANK: Record<CriterionPriority, number> = { must: 0, nice: 1 };
 
-/** Criteria cited by the kit, must first then scorecard order; hasEvidence = an item citing it is covered or has the viewer's own score. */
+/**
+ * Coverage of the scorecard criteria: every active criterion, must first then
+ * scorecard order, including the ones no kit item cites (itemCount 0: the kit
+ * cannot gather evidence for them). An archived criterion appears only when
+ * the kit still cites it. hasEvidence = an item citing it is covered or has
+ * the viewer's own score.
+ */
 export function computeCriterionCoverage(
   criteria: readonly CoverageCriterion[],
   items: readonly CoverageItem[],
@@ -43,7 +49,7 @@ export function computeCriterionCoverage(
       criterion,
       citing: items.filter((item) => item.criterionIds.includes(criterion.id)),
     }))
-    .filter(({ citing }) => citing.length > 0)
+    .filter(({ criterion, citing }) => citing.length > 0 || !criterion.archived)
     .sort(
       (a, b) =>
         PRIORITY_RANK[a.criterion.priority] -

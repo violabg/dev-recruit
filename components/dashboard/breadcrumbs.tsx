@@ -37,6 +37,10 @@ const DASHBOARD_LABELS: Record<string, string> = {
   live: "Live",
   feedback: "Scheda intervistatore",
   guides: "Guide colloquio",
+  scorecard: "Scheda di valutazione",
+  decision: "Decisione",
+  quiz: "Quiz",
+  "change-password": "Cambia password",
 };
 
 const getBreadcrumbSegments = (pathname: string) => {
@@ -44,11 +48,13 @@ const getBreadcrumbSegments = (pathname: string) => {
   return pathname.split("?")[0].split("#")[0].split("/").filter(Boolean);
 };
 
+const isRecordId = (segment: string) =>
+  /^\d+$/.test(segment) || /^[a-z0-9]{20,}$/.test(segment);
+
 const getBreadcrumbLabel = (segment: string) => {
   if (DASHBOARD_LABELS[segment]) return DASHBOARD_LABELS[segment];
   // Record ids (cuid / numeric) mean nothing to a recruiter
-  if (/^\d+$/.test(segment) || /^[a-z0-9]{20,}$/.test(segment))
-    return "Dettaglio";
+  if (isRecordId(segment)) return "Dettaglio";
   return segment.charAt(0).toUpperCase() + segment.slice(1);
 };
 
@@ -74,13 +80,24 @@ const Breadcrumbs = () => {
       segments[idx - 2] === "applications"
     ) {
       linkHref = `${parentHref}?tab=colloqui`;
+    } else if (segment === "settings") {
+      // The settings section has no page of its own: it opens its first page
+      linkHref = `${href}/reference-data`;
     }
+    // An interview has no page of its own: only its tabs (prepare, live,
+    // feedback) do, so the id is a label and never a broken link
+    const interviewId =
+      isRecordId(segment) && segments[idx - 1] === "interviews";
     // Separator is a sibling <li> of the item (valid list markup)
     return (
       <Fragment key={href}>
         <BreadcrumbItem>
           {isLast || isNewQuiz ? (
             <BreadcrumbPage>{getBreadcrumbLabel(segment)}</BreadcrumbPage>
+          ) : interviewId ? (
+            <span className="text-muted-foreground">
+              {getBreadcrumbLabel(segment)}
+            </span>
           ) : (
             <BreadcrumbLink render={<Link href={linkHref as any} />}>
               {getBreadcrumbLabel(segment)}

@@ -19,6 +19,7 @@ const detail = (overrides: Partial<ApplicationDetail> = {}): ApplicationDetail =
   },
   position: { id: "p1", title: "Dev", experienceLevel: "senior", status: "open" },
   assessments: [],
+  interviews: [],
   resumeEvaluation: null,
   availableQuizzes: [],
   ...overrides,
@@ -92,6 +93,47 @@ describe("buildApplicationTimeline", () => {
       expect(entry.href).toBe("/dashboard/assessments/a1");
     }
     expect(entries.find((e) => e.kind === "applied")?.href).toBeUndefined();
+  });
+
+  it("lists the interviews: planned, started and concluded", () => {
+    const entries = buildApplicationTimeline(
+      detail({
+        interviews: [
+          {
+            id: "i1",
+            round: 1,
+            status: "completed",
+            scheduledAt: new Date("2026-01-03T09:00:00Z"),
+            startedAt: new Date("2026-01-03T09:05:00Z"),
+            endedAt: new Date("2026-01-03T10:00:00Z"),
+            kitStatus: "ready",
+            participantIds: [],
+            submittedInterviewerIds: [],
+          },
+          {
+            id: "i2",
+            round: 2,
+            status: "scheduled",
+            scheduledAt: new Date("2026-01-09T09:00:00Z"),
+            startedAt: null,
+            endedAt: null,
+            kitStatus: null,
+            participantIds: [],
+            submittedInterviewerIds: [],
+          },
+        ],
+      }),
+    );
+    const interviews = entries.filter((e) => e.kind.startsWith("interview_"));
+    expect(interviews.map((entry) => entry.label)).toEqual([
+      "Colloquio 2 pianificato",
+      "Colloquio 1 concluso",
+      "Colloquio 1 iniziato",
+      "Colloquio 1 pianificato",
+    ]);
+    for (const entry of interviews) {
+      expect(entry.href).toBe("/dashboard/applications/app1?tab=colloqui");
+    }
   });
 
   it("skips facts whose date is null", () => {

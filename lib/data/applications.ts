@@ -113,6 +113,8 @@ export type ApplicationDetail = {
     round: number;
     status: InterviewStatus;
     scheduledAt: Date;
+    startedAt: Date | null;
+    endedAt: Date | null;
     kitStatus: KitStatus | null;
     participantIds: string[];
     submittedInterviewerIds: string[];
@@ -335,6 +337,8 @@ export async function getApplicationDetail(
           round: true,
           status: true,
           scheduledAt: true,
+          startedAt: true,
+          endedAt: true,
           kit: { select: { status: true } },
           participants: { select: { userId: true } },
           feedback: {
@@ -419,6 +423,8 @@ export async function getApplicationDetail(
       round: interview.round,
       status: interview.status,
       scheduledAt: interview.scheduledAt,
+      startedAt: interview.startedAt,
+      endedAt: interview.endedAt,
       kitStatus: interview.kit?.status ?? null,
       participantIds: interview.participants.map((p) => p.userId),
       submittedInterviewerIds: interview.feedback.map((f) => f.interviewerId),

@@ -5,8 +5,9 @@ import type { CriterionCoverage } from "@/lib/utils/interview-feedback";
 import { cn } from "cn";
 
 /**
- * Coverage of the scorecard criteria cited by the kit: must first, then
- * scorecard order; criteria with no evidence yet are highlighted.
+ * Coverage of the scorecard criteria: must first, then scorecard order;
+ * criteria with no evidence yet are highlighted, and a criterion no kit
+ * question covers is called out (the kit can never gather evidence for it).
  */
 export function CriteriaCoveragePanel({
   coverage,
@@ -21,7 +22,7 @@ export function CriteriaCoveragePanel({
       <CardContent className="flex flex-col gap-3">
         {coverage.length === 0 && (
           <p className="text-muted-foreground text-sm">
-            Nessun criterio citato dalle domande del kit.
+            Nessun criterio nella scheda di valutazione.
           </p>
         )}
         {coverage.map((criterion) => {
@@ -37,19 +38,27 @@ export function CriteriaCoveragePanel({
               </span>
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <Badge className={priority.className}>{priority.label}</Badge>
-                <span className="text-muted-foreground">
-                  {criterion.coveredCount}/{criterion.itemCount} coperte
-                </span>
-                <span
-                  className={cn(
-                    "px-2 py-0.5 rounded-md",
-                    criterion.hasEvidence
-                      ? "bg-success/10 text-success"
-                      : "bg-warning/10 text-warning",
-                  )}
-                >
-                  {criterion.hasEvidence ? "Con prove" : "Nessuna prova"}
-                </span>
+                {criterion.itemCount === 0 ? (
+                  <span className="px-2 py-0.5 rounded-md bg-warning/10 text-warning">
+                    Nessuna domanda
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-muted-foreground">
+                      {criterion.coveredCount}/{criterion.itemCount} coperte
+                    </span>
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded-md",
+                        criterion.hasEvidence
+                          ? "bg-success/10 text-success"
+                          : "bg-warning/10 text-warning",
+                      )}
+                    >
+                      {criterion.hasEvidence ? "Con prove" : "Nessuna prova"}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           );

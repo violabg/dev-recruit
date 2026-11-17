@@ -13,7 +13,7 @@ const criteria: CoverageCriterion[] = [
 ];
 
 describe("computeCriterionCoverage", () => {
-  it("lists only cited criteria, must first then scorecard order", () => {
+  it("lists every active criterion, must first then scorecard order", () => {
     const coverage = computeCriterionCoverage(criteria, [
       { id: "i1", criterionIds: ["c-nice", "c-must-2"], covered: false, ownScore: null },
       { id: "i2", criterionIds: ["c-must-1"], covered: false, ownScore: null },
@@ -21,9 +21,27 @@ describe("computeCriterionCoverage", () => {
     expect(coverage.map((row) => row.criterionId)).toEqual([
       "c-must-1",
       "c-must-2",
+      "c-unused",
       "c-nice",
     ]);
     expect(coverage[0]).toMatchObject({ name: "React", archived: true, priority: "must" });
+    expect(coverage[2]).toMatchObject({
+      name: "SQL",
+      itemCount: 0,
+      coveredCount: 0,
+      hasEvidence: false,
+    });
+  });
+
+  it("lists an archived criterion only when the kit still cites it", () => {
+    const coverage = computeCriterionCoverage(
+      [
+        { id: "c-arch", name: "Vecchio criterio", priority: "must", order: 0, archived: true },
+        { id: "c-live", name: "Criterio attivo", priority: "nice", order: 1, archived: false },
+      ],
+      [{ id: "i1", criterionIds: ["c-live"], covered: false, ownScore: null }],
+    );
+    expect(coverage.map((row) => row.criterionId)).toEqual(["c-live"]);
   });
 
   it("counts evidence from covered items or the viewer's own score", () => {
@@ -48,11 +66,17 @@ describe("computeCriterionCoverage", () => {
   });
 
   it("ignores criterion ids the scorecard does not know", () => {
-    expect(
-      computeCriterionCoverage(criteria, [
-        { id: "i1", criterionIds: ["deleted"], covered: true, ownScore: 5 },
-      ]),
-    ).toEqual([]);
+    const coverage = computeCriterionCoverage(criteria, [
+      { id: "i1", criterionIds: ["deleted"], covered: true, ownScore: 5 },
+    ]);
+    // The archived criterion no longer cited is the only one left out
+    expect(coverage.map((row) => row.criterionId)).toEqual([
+      "c-must-2",
+      "c-unused",
+      "c-nice",
+    ]);
+    expect(coverage.every((row) => row.itemCount === 0)).toBe(true);
+    expect(coverage.every((row) => !row.hasEvidence)).toBe(true);
   });
 });
 

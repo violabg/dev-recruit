@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAllPositions } from "@/lib/data/positions";
+import { getAllPositions, getPositionById } from "@/lib/data/positions";
 import { POSITION_TABS, type PositionTab } from "@/lib/utils/position-setup";
 import { Suspense } from "react";
 import { Guides } from "./components/guides";
@@ -68,6 +68,11 @@ async function PositionTabs({
   const tab: PositionTab = POSITION_TABS.includes(rawTab as PositionTab)
     ? (rawTab as PositionTab)
     : "dettagli";
+
+  // The header already renders "Posizione non trovata": no tabs for a
+  // position that does not exist
+  const position = await getPositionById((await params).id);
+  if (!position) return null;
 
   return (
     <Tabs key={tab} defaultValue={tab}>

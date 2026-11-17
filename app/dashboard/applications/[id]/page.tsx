@@ -1,5 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getRecentApplicationIds } from "@/lib/data/applications";
+import {
+  getApplicationDetail,
+  getRecentApplicationIds,
+} from "@/lib/data/applications";
 import { Suspense } from "react";
 import { ApplicationHeader } from "./application-header";
 import { AssessmentsTab } from "./assessments-tab";
@@ -71,6 +74,11 @@ async function ApplicationTabs({
   const tab: ApplicationTab = TABS.includes(rawTab as ApplicationTab)
     ? (rawTab as ApplicationTab)
     : "panoramica";
+
+  // The header already renders "Candidatura non trovata": no tabs for an
+  // application that does not exist
+  const detail = await getApplicationDetail((await params).id);
+  if (!detail) return null;
 
   return (
     <Tabs key={tab} defaultValue={tab}>
