@@ -7,8 +7,6 @@ editable: true
 ---
 # Server actions and forms
 
-Next.js Server Actions, `redirect()`, `useTransition`, react-hook-form and sonner are in their docs. Only this project's contract is here.
-
 ## Action shape
 
 ```ts
@@ -23,7 +21,7 @@ export async function updatePositionAction(id: string, values: PositionFormData)
 }
 ```
 
-- Every exported action wraps its whole body in `runAction(operationName, body)`; `operationName` is the action's own name and appears in the log of unexpected errors.
+- Every exported action wraps its whole body in `runAction(operationName, body)`; `operationName` is the action's own name.
 - Order: `requireUser()` → `schema.parse(input)` → Prisma → `invalidate*Cache` → return data or `redirect()`.
 - The result is `{ success: true, ...data }`; returning nothing gives `{ success: true }`.
 - `runAction` and `UserError` come from the `run-action` module of the actions layer (not a `"use server"` module).
@@ -41,20 +39,15 @@ A failure never escapes as a throw: `runAction` turns anything thrown into `{ su
 | `Error("UNAUTHENTICATED")` from `requireUser()` | "Sessione scaduta. Accedi di nuovo per continuare." |
 | anything else | logged, then `GENERIC_ERROR` ("Si è verificato un errore. Riprova.") in every environment |
 
-- Expected failure → `throw new UserError` with an Italian message; it is the only way to send a custom message.
+- Expected failure → `throw new UserError` with an Italian message; it is the only way to send a custom message. A schema `.refine()` message reaches the client through the same contract.
 - New code uses `UserError` or `schema.parse`, never `QuizSystemError`. Domain services may throw `UserError`; the action lets it propagate.
-- A schema `.refine()` message is a `ZodError` message and reaches the client through the same contract.
-
-## Redirecting actions
-
-- `redirect()` and `notFound()` pass through `runAction` unchanged; call them at the top level of the body, after invalidation, and never inside `try/catch`.
-- A redirecting action resolves to nothing on success. Callers MUST NOT `unwrap()` it; check `if (result && !result.success) toast.error(errorMessage(result.error))`.
-- Redirecting actions: `deleteInterviewGuideAction` (→ `/dashboard/positions/{positionId}?tab=guide`, used through `DeleteWithConfirm` without `unwrap`) and `scheduleInterviewAction` (→ `/dashboard/applications/{id}/interviews/{interviewId}/prepare?scheduled=1`).
+- `redirect()` and `notFound()` pass through `runAction` unchanged: call them at the top level of the body, after invalidation, never inside `try/catch`. A redirecting action resolves to nothing on success, so callers check `if (result && !result.success) toast.error(errorMessage(result.error))` and never `unwrap()` it.
+- Redirecting actions: `deleteInterviewGuideAction` (→ `/dashboard/positions/{positionId}?tab=guide`, used through `DeleteWithConfirm`) and `scheduleInterviewAction` (→ `…/interviews/{interviewId}/prepare?scheduled=1`).
 
 ## Authentication and public actions
 
-- `requireUser()` throws `Error("UNAUTHENTICATED")`, never redirects. `getCurrentUser()` returns `null`.
-- The request proxy protects page visits only. Every non-public action and every route handler MUST call `requireUser()` itself.
+- `requireUser()` throws `Error("UNAUTHENTICATED")`, never redirects; `getCurrentUser()` returns `null`.
+- The request proxy protects page visits only: every non-public action and every route handler MUST call `requireUser()` itself.
 - Exactly six actions are public on purpose and skip `requireUser()`:
 
 | Action | Credential |
@@ -64,34 +57,18 @@ A failure never escapes as a throw: `runAction` turns anything thrown into `{ su
 | `applyAsCandidateAction(formData)` | none (public application, `createdBy: null`, no owner) |
 | `fetchPositionDataAction(positionId)` | none; returns `position: null` for a missing and for a non-`open` position |
 
-- Every other action calls `requireUser()` and applies no ownership check. The only role check: user-management actions also require the `admin` role, checked on the server right after the session and before parsing input; a non-admin gets a `UserError`. No other action checks a role. `moveApplicationStageAction` accepts any stage to any stage (reopening included); `setApplicationOwnerAction` takes `owner: "me" | "none"`.
+- Every other action calls `requireUser()` and applies no ownership check. The only role check: user-management actions also require the `admin` role, on the server right after the session and before parsing input (a non-admin gets a `UserError`). `moveApplicationStageAction` accepts any stage to any stage (reopening included); `setApplicationOwnerAction` takes `owner: "me" | "none"`.
 
 ## Expected failures by action
 
-All are `UserError`, and every action calls `requireUser()` first.
+Every expected failure is a `UserError`. The non-obvious ones:
 
-| Action | Messages |
-|---|---|
-| `saveScorecardAction` | "Posizione non trovata", "Uno o più criteri non appartengono a questa scheda". Saves the whole scorecard in one transaction, returns no id |
-| `generateScorecardCriteriaAction` | "Posizione non trovata" |
-| `upsertInterviewGuideAction` | "Guida non trovata" (with a guide id), "Posizione non trovata", "Uno o più criteri selezionati non appartengono alla scheda della posizione". Returns `{ id }`. A guide created without a position fails earlier on the schema refine "La posizione è obbligatoria per creare una guida" |
-| `deleteInterviewGuideAction` | "Guida non trovata" |
-| `generateInterviewGuideAction` | "Posizione non trovata", "Crea prima la scheda di valutazione della posizione" |
-| `recalculateAnswerEvaluationsAction` | "Valutazione non trovata", "Nessuna risposta valutata", "Una o più domande non hanno una risposta" (thrown by the service) |
-| `recordApplicationDecisionAction({ applicationId, outcome, rationale })` | "Candidatura non trovata", "Candidatura chiusa: riaprila per registrare la decisione", "La motivazione deve avere almeno 10 caratteri", "La motivazione può avere al massimo 5000 caratteri", "Esito della decisione non valido". Returns `{ stage }`, invalidates the candidate cache, does not redirect (client calls `router.refresh()`) |
-| `challengeDecisionAction({ applicationId, outcome, rationale?, specificModel? })` | "Candidatura non trovata", "Crea prima la scheda di valutazione della posizione", plus AI errors through `describeAIError`. Returns `{ challenge: { reasons: { title, explanation, criterionIds }[] } }` |
-| `scheduleInterviewAction` | "Candidatura non trovata o chiusa" (also for `rejected`, `withdrawn`, `hired`), "Guida non trovata per questa posizione", "Uno o più partecipanti non sono utenti dell'app", "Indica un solo conduttore", "Un partecipante è indicato più volte", "Data e ora non valide", "Durata minima 10 minuti", "Durata massima 480 minuti", "Link della call non valido". Creates interview, participants and kit and advances the stage in one transaction, then redirects |
-| `rescheduleInterviewAction` | "Colloquio non trovato", "Operazione non consentita nello stato attuale del colloquio", "Il partecipante ha già note o una scheda", "Uno o più partecipanti non sono utenti dell'app" |
-| `cancelInterviewAction`, `markInterviewNoShowAction`, `startInterviewAction`, `completeInterviewAction` | "Colloquio non trovato", "Operazione non consentita nello stato attuale del colloquio" |
-| `generateInterviewKitAction` | "Il kit si modifica solo prima del colloquio", "Crea prima la scheda di valutazione della posizione" |
-| `saveInterviewKitAction` | "Il kit si modifica solo prima del colloquio", "Una o più domande non appartengono a questo kit", "Sezione del kit non valida", "Uno o più criteri selezionati non appartengono alla scheda della posizione" |
-| `setInterviewKitStatusAction` | "Il kit si modifica solo prima del colloquio" |
-| `saveKitItemNoteAction` | "Domanda non trovata", "Non partecipi a questo colloquio", "Il colloquio non accetta più note", "La scheda è già stata inviata" |
-| `setKitItemCoveredAction` | "Domanda non trovata", "Il colloquio non accetta più note" |
-| `saveInterviewerFeedbackAction` | "Non partecipi a questo colloquio", "La scheda è già stata inviata", "Operazione non consentita nello stato attuale del colloquio", "Uno o più criteri selezionati non appartengono alla scheda della posizione" |
-| `submitInterviewerFeedbackAction` | as the draft, plus "Puoi inviare la scheda solo a colloquio concluso", "Indica la raccomandazione finale" |
-
-- The three generation actions and `challengeDecisionAction` are read-only: they return a proposal and never write or invalidate cache.
+- A missing resource and a refused state often share one message: scheduling gives "Candidatura non trovata o chiusa" for a missing application and for `rejected`, `withdrawn`, `hired`; kit and live-note actions share "Il kit si modifica solo prima del colloquio" and "Il colloquio non accetta più note"; a state refusal is "Operazione non consentita nello stato attuale del colloquio".
+- Criteria sent with a save are validated against the position scorecard: scorecard ("Uno o più criteri non appartengono a questa scheda"), guide, kit and interviewer scorecard all reject a foreign criterion.
+- Scheduling: "Indica un solo conduttore", "Un partecipante è indicato più volte", "Uno o più partecipanti non sono utenti dell'app", "Durata minima 10 minuti", "Durata massima 480 minuti"; it creates interview, participants and kit and advances the stage in one transaction, then redirects.
+- `upsertInterviewGuideAction` returns `{ id }`; a guide created without a position fails earlier on the schema refine "La posizione è obbligatoria per creare una guida".
+- `recordApplicationDecisionAction({ applicationId, outcome, rationale })`: rationale 10–5000 characters, closed application refused ("Candidatura chiusa: riaprila per registrare la decisione"), invalid outcome refused; returns `{ stage }` and does not redirect (the client calls `router.refresh()`).
+- `challengeDecisionAction` and the three generation actions are read-only and return a proposal; `challengeDecisionAction` returns `{ challenge: { reasons: { title, explanation, criterionIds }[] } }` plus AI errors through `describeAIError`.
 
 ## Inputs and reads
 
@@ -102,24 +79,18 @@ All are `UserError`, and every action calls `requireUser()` first.
 
 ## Client forms
 
-- `useForm` with `zodResolver(schema)` from the shared schemas; fields from the `rhf-inputs` wrappers (`InputField`, `TextareaField`, `SelectField`, `MultiSelectField`, `CheckboxField`, `SwitchField`, `PasswordField`, `SliderField`, `InputWithTagField`) with `control` and `name`.
-- Submit inside `startTransition` from `useTransition`; feedback through `toast` from sonner; navigate with `router.push` or let the action redirect.
-- Client error text comes from `errorMessage(error)` (fallback `GENERIC_ERROR`).
-- When schema defaults make input differ from output, type `useForm<z.input<typeof schema>, unknown, Output>` (scorecard, guide and kit editors, whose anchors are optional in input and required in output). Use `values`, not `defaultValues`, so the form follows server data after a save and new rows are not created twice, and pass `keyName: "fieldKey"` to `useFieldArray` (each row carries its database `id` in `id`).
+- `useForm` with `zodResolver(schema)` from the shared schemas; fields from the `rhf-inputs` wrappers with `control` and `name`; raw `Controller` only for `LLMModelSelect` and `CodeEditor`.
+- Submit inside `startTransition` from `useTransition`; feedback through `toast` from sonner; navigate with `router.push` or let the action redirect. Client error text comes from `errorMessage(error)`.
+- When schema defaults make input differ from output, type `useForm<z.input<typeof schema>, unknown, Output>` (scorecard, guide and kit editors, whose anchors are optional in input and required in output). Use `values`, not `defaultValues`, so the form follows server data after a save and new rows are not created twice, and pass `keyName: "fieldKey"` to `useFieldArray`.
 - The scheduling form keeps `datetime-local` as a local string and converts it with the browser offset in a resolver (`withLocalScheduledAt`) before validation.
 
 ## Logging
 
-Use the logger service (`logger`, or scoped `aiLogger`, `dbLogger`, `authLogger`, `storageLogger`) with a context object. NEVER call `console.*`. Logs are silent under tests.
+- Use the logger service (`logger`, or scoped `aiLogger`, `dbLogger`, `authLogger`, `storageLogger`) with a context object. NEVER call `console.*`.
 
 ## Prohibitions
 
 - NEVER `throw new Error("…")` for an expected failure (the user sees the generic text), and never an English `UserError` or Zod message.
 - NEVER return a hand-built `{ success, … }` object instead of `runAction`.
-- NEVER `unwrap()` a redirecting action, or wrap `redirect()` in `try/catch`.
-- NEVER omit `requireUser()` because "the page is protected", and never parse input or touch the database before it.
-- NEVER add a read action for page data instead of a cached data-layer function.
-- NEVER gate a stage, owner or status change, or any other selection-data action, on role or ownership: there `requireUser()` is the only guard.
-- NEVER leave a user-management action without the server-side `admin` check, or rely on the hidden menu entry instead.
-- NEVER take the interviewer of a scorecard from the input instead of the session.
-- NEVER use `defaultValues` for a form the server rewrites after a save.
+- NEVER omit `requireUser()` because "the page is protected", or parse input or touch the database before it.
+- NEVER gate a stage, owner or status change, or any other selection-data action, on role or ownership.
