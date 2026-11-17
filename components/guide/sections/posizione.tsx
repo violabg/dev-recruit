@@ -84,8 +84,13 @@ export function PosizioneSection() {
               <>
                 Uno o più modelli (round), con sezioni (intro, esperienza,
                 tecnico, comportamentale, domande del candidato, chiusura),
-                minuti e domande con approfondimenti e ancore. &quot;Genera dalla
-                scheda&quot; propone il modello a partire dai criteri.
+                minuti e domande con approfondimenti e ancore. La guida si apre
+                in sola lettura: scaletta con minuti e domande, criteri della
+                scheda con quante domande li verificano (in evidenza quelli senza
+                domande), poi le domande sezione per sezione.{" "}
+                <strong>Modifica guida</strong> apre l&apos;editor, dove
+                &quot;Genera dalla scheda&quot; propone il modello a partire dai
+                criteri.
               </>
             ),
           },
@@ -120,6 +125,13 @@ export function PosizioneSection() {
           caption="Guide colloquio della posizione"
           width={1440}
           height={1000}
+        />
+        <GuideFigure
+          src="/guida/15-guida-sola-lettura.png"
+          alt="Guida colloquio in sola lettura con scaletta, criteri della scheda e domande"
+          caption="Guida in sola lettura: scaletta, criteri coperti e domande"
+          width={1440}
+          height={1500}
         />
         <GuideFigure
           src="/guida/14-editor-guida.png"

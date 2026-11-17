@@ -1,4 +1,7 @@
-import { InterviewGuideEditor } from "@/components/interview-guides/interview-guide-editor";
+import {
+  GuideView,
+  type GuideViewCriterion,
+} from "@/components/interview-guides/guide-view";
 import PageHeader from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
@@ -7,19 +10,20 @@ import { getInterviewGuideById } from "@/lib/data/interview-guides";
 import { getPositionById } from "@/lib/data/positions";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
 import { cn } from "cn";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { GuideEditorSkeleton } from "../../fallbacks";
+import { GuideViewSkeleton } from "../../fallbacks";
 
 type GuidePageProps = {
   params: Promise<{ id: string; guideId: string }>;
 };
 
+/** Read-only interview guide; the editor is on /edit. */
 export default function GuidePage({ params }: GuidePageProps) {
   return (
-    <Suspense fallback={<GuideEditorSkeleton />}>
+    <Suspense fallback={<GuideViewSkeleton />}>
       <GuideContent params={params} />
     </Suspense>
   );
@@ -29,7 +33,7 @@ async function GuideContent({ params }: GuidePageProps) {
   const { id, guideId } = await params;
   const guide = await getInterviewGuideById(guideId);
 
-  // A guide is edited only from the route of its own position
+  // A guide is shown only under the route of its own position
   if (!guide || guide.positionId !== id) {
     notFound();
   }
@@ -43,18 +47,16 @@ async function GuideContent({ params }: GuidePageProps) {
     notFound();
   }
 
-  // Active criteria are selectable; archived ones are kept only where a
-  // question of this guide still uses them
+  // Archived criteria are kept only where a question still uses them
   const usedIds = new Set(
     guide.sections.flatMap((section) =>
       section.questions.flatMap((question) => question.criterionIds),
     ),
   );
-  const criteria = [
+  const criteria: GuideViewCriterion[] = [
     ...(scorecard?.criteria ?? []).map((criterion) => ({
       id: criterion.id,
       name: criterion.name,
-      category: criterion.category,
       priority: criterion.priority,
     })),
     ...(scorecard?.archivedCriteria ?? [])
@@ -62,7 +64,6 @@ async function GuideContent({ params }: GuidePageProps) {
       .map((criterion) => ({
         id: criterion.id,
         name: criterion.name,
-        category: criterion.category,
         priority: criterion.priority,
         archived: true,
       })),
@@ -73,9 +74,16 @@ async function GuideContent({ params }: GuidePageProps) {
       <PageHeader
         section="positions"
         title={guide.title}
-        description={position.title}
+        description={`${position.title} · Round ${guide.round} · ${guide.durationMinutes} min`}
         actionBtns={
           <>
+            <Link
+              href={`/dashboard/positions/${id}/guides/${guide.id}/edit` as never}
+              className={cn(buttonVariants({ size: "sm" }), "inline-flex")}
+            >
+              <Pencil className="mr-1 size-4" />
+              Modifica guida
+            </Link>
             <Link
               href={`/dashboard/positions/${id}?tab=guide`}
               className={cn(
@@ -94,18 +102,7 @@ async function GuideContent({ params }: GuidePageProps) {
           </>
         }
       />
-      <InterviewGuideEditor
-        mode="edit"
-        positionId={id}
-        guide={{
-          id: guide.id,
-          title: guide.title,
-          round: guide.round,
-          durationMinutes: guide.durationMinutes,
-          sections: guide.sections,
-        }}
-        criteria={criteria}
-      />
+      <GuideView guide={guide} criteria={criteria} />
     </>
   );
 }

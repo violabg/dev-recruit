@@ -306,3 +306,34 @@ export function PositionSelectionSkeleton() {
     </>
   );
 }
+
+/** Mirrors the read-only guide: header, outline + criteria, section chapters. */
+export function GuideViewSkeleton() {
+  return (
+    <>
+      <PageHeaderSkeleton
+        section="positions"
+        description
+        actions={
+          <>
+            <ButtonSkeleton size="sm" className="w-32" />
+            <ButtonSkeleton size="sm" className="w-40" />
+            <ButtonSkeleton size="sm" />
+          </>
+        }
+      />
+      <div className="flex flex-col gap-8">
+        <div className="items-start gap-6 grid xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <Skeleton className="rounded-xl w-full h-72" />
+          <Skeleton className="rounded-xl w-full h-72" />
+        </div>
+        {Array.from({ length: 2 }, (_, i) => (
+          <div key={i} className="flex flex-col gap-3">
+            <TextSkeleton className="w-56" />
+            <Skeleton className="rounded-xl w-full h-48" />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}

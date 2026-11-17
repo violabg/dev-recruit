@@ -413,6 +413,9 @@ export function invalidateInterviewGuideCache(options: {
     revalidatePath(
       `/dashboard/positions/${options.positionId}/guides/${options.guideId}`,
     );
+    revalidatePath(
+      `/dashboard/positions/${options.positionId}/guides/${options.guideId}/edit`,
+    );
   }
 
   revalidatePath("/dashboard");

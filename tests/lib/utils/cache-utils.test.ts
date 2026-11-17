@@ -458,6 +458,9 @@ describe("scorecard and interview guide tags", () => {
     expect(mockedRevalidatePath).toHaveBeenCalledWith(
       "/dashboard/positions/pos-1/guides/g-1",
     );
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/positions/pos-1/guides/g-1/edit",
+    );
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
   });
 
