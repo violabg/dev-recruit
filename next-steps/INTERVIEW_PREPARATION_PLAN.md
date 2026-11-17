@@ -1,7 +1,7 @@
 # Preparazione al colloquio e flusso di selezione — Piano
 
 **Data:** 15 novembre 2026 · aggiornato il 17 novembre 2026
-**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · Fase 3 implementata (16 novembre 2026), knowledge da aggiornare (§8.1 bis) · Fase 4 implementata e knowledge aggiornata (17 novembre 2026) · prossima: Fase 5, da progettare
+**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026) e knowledge aggiornata · Fase 3 implementata (16 novembre 2026) e knowledge aggiornata · Fase 4 implementata e knowledge aggiornata (17 novembre 2026) · prossima: Fase 5, da progettare
 **Ambito:** Kit di preparazione al colloquio, colloquio live, decisione; revisione del flusso dashboard da step 1 a step finale
 
 > **Nomi nel documento.** Le sezioni 1–3 descrivono il punto di partenza (15 novembre) e usano i nomi di allora: `CandidatePosition`, `Interview` per il test, `/dashboard/interviews`. Dalla Fase 1 il codice usa `Application`, `Assessment`, `assessmentId`, `/dashboard/assessments`. Le entità della Fase 3 chiamate qui `LiveInterview` e `LiveInterviewParticipant` si chiameranno `Interview` e `InterviewParticipant` (§3.2). Il vocabolario aggiornato è in `CONTEXT.md`.
@@ -357,7 +357,7 @@ Il design applica la knowledge come vincolo superiore al requisito: queste regol
 | 1 | Simboli `Interview`, `CandidatePosition`, tag di cache `interviews` in tutti i documenti | `Assessment`, `Application` e relativi tag | ✅ |
 | 1 | Schema applicato con `db push` | Migrazioni versionate | ✅ |
 | 2 | Punteggio per risposta non salvato | Salvato in `answerEvaluations` | ✅ |
-| 3 | MAI filtri per utente | Eccezione limitata a note e schede degli intervistatori; il filtro "Solo le mie" (`ownerId`) esiste già e non limita l'accesso | da fare prima del design della Fase 3 |
+| 3 | MAI filtri per utente | Eccezione limitata a note e schede degli intervistatori; il filtro "Solo le mie" (`ownerId`) esiste già e non limita l'accesso | ✅ |
 | 3 | La generazione AI non salva mai | Invariata: vale anche per scheda, guida e kit | — |
 | 4 | Formula della "Dashboard valutazione" con pesi fissi (oggi: "application evaluation summary", tab Decisione) | Formula della pagina Decisione | fatto (17 novembre 2026, dopo l'implementazione, con il delta Fase 4) |
 
@@ -387,11 +387,11 @@ Ancora aperto:
 - **Database:** migrazione `20261117000000_scorecard_guides` (solo additiva: tabelle `scorecards`, `scorecard_criteria`, `interview_guides`, `guide_sections`, `guide_questions`; colonne `quiz_questions.criterionIds`, `evaluations.answerEvaluations`, `evaluations.criteriaAssessment`; nessun backfill) applicata con `pnpm db:migrate` solo al ramo Neon `development`. `prisma migrate status` aggiornato, confronto database ↔ schema senza differenze, `pnpm db:verify` OK con gli stessi conteggi. `prisma/verify-application-hub.ts` ora esclude dal controllo dei vecchi nomi la tabella `interview_guides`.
 - **Design della Fase 2:** sessione `fase2_scorecard_design`, piano `fase2_scorecard`, documento in `agentic-system-sessions/fase2_scorecard_design/designs/fase2_scorecard/design.html`.
 - **Accettazione:** `next-steps/FASE2_ACCEPTANCE.md` (O1–O48), con passi manuali, limiti noti e punti aperti.
-- **Knowledge:** delta pronto in `next-steps/FASE2_KNOWLEDGE_DELTA.md` (nomina `CONTEXT.md`); `knowledge/` e `CONTEXT.md` non sono ancora aggiornati.
+- **Knowledge:** aggiornata con `knowledge-builder` dal delta `next-steps/FASE2_KNOWLEDGE_DELTA.md`, incluso `CONTEXT.md`.
 
 **Ancora da fare:**
 1. Passi manuali ☐ di `next-steps/FASE2_ACCEPTANCE.md` (M1–M17) e quelli rimasti di `next-steps/FASE1_ACCEPTANCE.md`, da loggati in `pnpm dev`.
-2. Eseguire `knowledge-builder` con `next-steps/FASE2_KNOWLEDGE_DELTA.md`, nominando anche `CONTEXT.md`, più i due ritocchi di §8.3.
+2. ✅ `knowledge-builder` eseguito con `next-steps/FASE2_KNOWLEDGE_DELTA.md` (incluso `CONTEXT.md`) e con i due ritocchi di §8.3.
 3. Verifica legale (§7.3 punto 6) sulla proposta AI dei criteri: oggi la funzione esce con la conferma umana di ogni criterio.
 4. Al rilascio: migrazioni in produzione seguendo `prisma/migrations/README.md` (Fase 1: `pnpm db:duplicates`, `migrate resolve --applied 0_init`; poi `pnpm db:migrate:deploy`, che applica anche `20261117000000_scorecard_guides`; infine `pnpm db:verify`). Ritorno indietro della Fase 1: ramo Neon `backup/pre-application-hub-2026-11-15`, tag git `backup/pre-application-hub`.
 5. Configurare uno shadow database per confrontare le migrazioni con lo schema (`prisma migrate diff --from-migrations`): non è stato possibile né nella Fase 1 né nella Fase 2.
@@ -415,14 +415,14 @@ Ancora aperto:
   `prisma migrate status` aggiornato, confronto database ↔ schema senza differenze, `pnpm db:verify` OK con gli stessi conteggi. `prisma/verify-application-hub.ts` ora accetta le tabelle dei colloqui e verifica che `interviews` sia quella della Fase 3 (`scheduledAt` sì, `token` no).
 - **Design della Fase 3:** sessione `fase3_interview_prep_design`, piano `fase3_design`.
 - **Accettazione:** `next-steps/FASE3_ACCEPTANCE.md` (O1–O72), con passi manuali M1–M19, limiti noti e punti aperti.
-- **Knowledge:** delta pronto in `next-steps/FASE3_KNOWLEDGE_DELTA.md` (nomina `CONTEXT.md`); `knowledge/` e `CONTEXT.md` non sono ancora aggiornati.
-- **Conflitti con la knowledge** (sezione 9 del delta, da decidere):
+- **Knowledge:** aggiornata con `knowledge-builder` dal delta `next-steps/FASE3_KNOWLEDGE_DELTA.md`, incluso `CONTEXT.md`.
+- **Conflitti con la knowledge** (sezione 9 del delta), chiusi e ora scritti in `knowledge/domain_model.md`:
   - D1: le schede inviate sono visibili a tutti; la regola "nascoste finché non invii la tua" vale solo per il materiale non inviato, attenuata con una sezione chiusa.
   - D2: l'invio blocca la scheda per tutti, autore compreso.
 
 **Ancora da fare:**
 1. Passi manuali ☐ di `next-steps/FASE3_ACCEPTANCE.md` (M1–M19, alcuni con due utenti) e quelli rimasti delle Fasi 1 e 2, in `pnpm dev`.
-2. Decidere D1 e D2, poi eseguire `knowledge-builder` con `next-steps/FASE2_KNOWLEDGE_DELTA.md` (se non ancora applicato) e `next-steps/FASE3_KNOWLEDGE_DELTA.md`, nominando anche `CONTEXT.md`.
+2. ✅ D1 e D2 decisi; `knowledge-builder` eseguito con `next-steps/FASE3_KNOWLEDGE_DELTA.md` (incluso `CONTEXT.md`).
 3. Verifica legale (§7.3 punto 6) su conservazione di note e schede e sulla proposta AI del kit: ancora aperta. Misure adottate:
    - minimizzazione dei dati nel prompt;
    - cancellazione a cascata con la candidatura o il candidato;
@@ -435,7 +435,7 @@ Ancora aperto:
 
 ### 8.1 ter Stato a fine Fase 4 (17 novembre 2026)
 
-- **Codice:** Fase 4 implementata sul branch `claude/dreamy-shannon-17omy9`, sopra le Fasi 1–3 (ultimo commit `d0def20`); le modifiche della Fase 4 non sono ancora committate. Validazione (operazione IM6): `pnpm lint` pulito, `pnpm test:run` 101 file / 1596 test, `pnpm build` 114/114 pagine.
+- **Codice:** Fase 4 implementata sul branch `claude/dreamy-shannon-17omy9`, sopra le Fasi 1–3, committata in `d1972c5` (aggiornamento del piano in `e2b8e7a`). Validazione (operazione IM6): `pnpm lint` pulito, `pnpm test:run` 101 file / 1596 test, `pnpm build` 114/114 pagine.
 - **Cosa c'è:**
   - pagina Decisione `/dashboard/applications/[id]/decision` con matrice criteri × fonti (CV, Test, Colloquio N con media e singoli intervistatori), celle senza prove evidenziate e badge "Disaccordo";
   - punteggio complessivo con i pesi della scheda, solo sui criteri con prove, fonti su scala 1–5; CV e Test globali mostrati ma esclusi dalla media;
@@ -458,29 +458,39 @@ Ancora aperto:
 3. Al rilascio: migrazioni in produzione invariate rispetto alla Fase 3 (nessuna migrazione nuova), seguendo `prisma/migrations/README.md`; poi `pnpm db:verify`.
 4. Correggere l'errore di tipo preesistente in `tests/lib/utils/application-timeline.test.ts` segnalato da `npx tsc --noEmit` (non blocca la build).
 
-### 8.2 Avviare la Fase 3 in una nuova sessione
+### 8.2 Avviare la Fase 5 in una nuova sessione
+
+Le Fasi 1–4 sono implementate, con knowledge aggiornata. La Fase 5 (§6, riga 5: Extra) non ha ancora requisiti dettagliati in §3–§5: oggi il piano ne fissa solo il perimetro (§6) e i campi previsti sul colloquio (`recordingConsent`, `transcript`, `aiSummary`, §3.1). Contiene tre funzioni indipendenti, che possono diventare tre design separati:
+- registrazione e trascrizione del colloquio con consenso, più sintesi AI per criterio;
+- guida di preparazione per il candidato;
+- feedback al candidato dopo il rifiuto.
 
 Ordine (vedi §8.4):
-1. **Knowledge, prima:** dopo aver applicato il delta della Fase 2, `knowledge-builder` aggiorna solo la regola della Fase 3 in §7.2 (eccezione limitata ai filtri per utente su note e schede degli intervistatori). Nessuna descrizione di entità non ancora scritte (colloqui, kit, schede).
-2. **Design:** nuova sessione dell'orchestrator, workflow `DESIGN`. Richiesta suggerita:
-   > Realizza la Fase 3 del piano `next-steps/INTERVIEW_PREPARATION_PLAN.md` (§6, riga 3: Kit e live), con le regole di §3.1 (InterviewKit, KitItem, KitItemNote, LiveInterview, LiveInterviewParticipant, InterviewerFeedback, CriterionScore), §4.2 (pianificazione, preparazione, modalità live, scheda intervistatore, Agenda) e §5 (generazione AI del kit), e le decisioni di §7.1. Parti dal codice delle Fasi 1 e 2 (§6, "Cosa la Fase 1 ha già predisposto" e "Cosa la Fase 2 ha già predisposto"). Chiudi nel design i punti 2 e 5 di §7.3 per la Fase 3.
-3. **Implementazione** e validazione nello stesso workflow; nuova migrazione con `pnpm db:migrate` (mai `db push`), prima su `development`.
-4. **Knowledge, dopo:** file `next-steps/FASE3_KNOWLEDGE_DELTA.md` per `knowledge-builder`, che nomini `CONTEXT.md`.
+1. **Verifica legale, prima di tutto:** §7.3 punto 6 è ancora aperto. Per la Fase 5 riguarda consenso alla registrazione, conservazione e cancellazione di audio e trascrizioni (GDPR), obblighi dell'AI Act per la sintesi AI usata nella selezione, e cosa si può comunicare al candidato nel feedback dopo il rifiuto.
+2. **Requisiti:** completare §3–§5 per la funzione scelta (entità, pagine, generazione AI) e aggiungere a §7.2 le regole della knowledge che la funzione ribalta. Da controllare almeno:
+   - la decisione "l'app non invia email" (§7.1, Avvisi di pianificazione): guida e feedback devono arrivare al candidato per un altro canale, oppure la decisione va rivista;
+   - le regole sui dati identificativi nei prompt (`knowledge/ai_generation.md`): una trascrizione contiene nomi e dati del candidato e degli intervistatori;
+   - la trascrizione audio oggi esiste solo per le risposte del candidato al test (`transcribeAudio`, `knowledge/ai_generation.md`), con i suoi limiti di dimensione;
+   - la regola "la generazione AI non salva mai" (§7.2): la sintesi per criterio va salvata solo dopo una conferma umana.
+3. **Knowledge, prima:** `knowledge-builder` aggiorna solo le regole di §7.2 che la funzione ribalta. Nessuna descrizione di entità non ancora scritte.
+4. **Design:** nuova sessione dell'orchestrator, workflow `DESIGN`. Richiesta suggerita (per la registrazione; adattarla alle altre due funzioni):
+   > Realizza la Fase 5 del piano `next-steps/INTERVIEW_PREPARATION_PLAN.md` (§6, riga 5), limitata a registrazione e trascrizione del colloquio con consenso e sintesi AI per criterio, con le regole di §3–§5 per questa funzione e le decisioni di §7.1. Parti dal codice delle Fasi 1–4 (colloqui, kit, schede intervistatore, pagina Decisione). Chiudi nel design i punti 2 e 5 di §7.3 per la Fase 5.
+5. **Implementazione** e validazione nello stesso workflow; migrazione con `pnpm db:migrate` (mai `db push`), prima su `development`.
+6. **Knowledge, dopo:** file `next-steps/FASE5_KNOWLEDGE_DELTA.md` per `knowledge-builder`, che nomini `CONTEXT.md`; poi `FASE5_ACCEPTANCE.md` e l'aggiornamento di questo piano (§6, §8.1).
 
-**Da decidere nel design della Fase 3** (non decisi in §7.1):
-- i tag di cache di colloqui, kit, note e schede, se la pagina live resta fuori dalla cache, e se serve un tag per gli utenti (§7.3 punto 2);
-- come il kit copia la guida (snapshot di sezioni, domande, criteri e ancore) e come la rigenerazione distingue domande del modello, manuali e ritoccate;
-- come `criterionHasEvidence` include voti (`CriterionScore`) e voci di kit, e quindi quando un criterio diventa da archiviare;
-- come il kit usa `answerEvaluations` (risposte deboli) e `criteriaAssessment` (criteri senza evidenza nel CV), e cosa fa quando mancano;
-- la regola d'accesso per note e schede degli intervistatori (nascoste fino all'invio), unica eccezione ai "MAI filtri per utente";
-- l'estensione di "Le mie azioni" (colloqui senza kit pronto, schede da compilare) e della "Prossima azione";
-- la verifica legale su conservazione di note e schede (§7.3 punto 6), da chiudere prima del design.
+**Da decidere nel design della Fase 5:**
+- dove si conserva l'audio, per quanto tempo e come si cancella (con la candidatura, il candidato o a richiesta);
+- come si raccoglie, si mostra e si revoca il consenso, e cosa succede al colloquio senza consenso;
+- se la sintesi per criterio entra nella scheda intervistatore o nella pagina Decisione, e come resta una proposta da confermare;
+- se e come la trascrizione e la sintesi rispettano la regola d'indipendenza (materiale non inviato visibile solo all'autore);
+- il canale con cui guida e feedback arrivano al candidato, e da quali dati nasce il feedback (mai il testo libero degli intervistatori senza revisione);
+- i tag di cache delle nuove entità (§7.3 punto 2).
 
 ### 8.3 Residui della revisione della knowledge (per `knowledge-builder`)
 
-Revisione del 16 novembre 2026: le 24 voci del delta sono state applicate e coincidono con il codice. Restano due ritocchi minori:
-- `knowledge/domain_model.md`, sezione "Schema changes": cita "the `db:push` script", che non esiste più in `package.json`; può nominare gli script attuali (`db:migrate`, `db:migrate:deploy`) e `prisma/migrations/README.md`.
-- `knowledge/cache_invalidation.md`, riga di `invalidateCandidateCache`: elenca i percorsi rivalidati ma non `/dashboard/candidates/{candidateId}` e `/dashboard/positions/{positionId}`, che il codice rivalida (`lib/utils/cache-utils.ts`).
+Revisione del 16 novembre 2026: le 24 voci del delta sono state applicate e coincidono con il codice. I due ritocchi minori sono stati applicati (verificato il 17 novembre 2026):
+- ✅ `knowledge/domain_model.md`: nessun riferimento allo script `db:push`; `prisma db push` resta citato solo come divieto.
+- ✅ `knowledge/cache_invalidation.md`, riga di `invalidateCandidateCache`: elenca anche `/dashboard/candidates/{id}` e `/dashboard/positions/{id}`.
 
 ### 8.4 Metodo, per ogni fase
 
