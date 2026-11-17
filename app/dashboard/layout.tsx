@@ -2,12 +2,15 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import Breadcrumbs from "@/components/dashboard/breadcrumbs";
 import { SessionRefreshProvider } from "@/components/dashboard/session-refresh-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { buttonVariants } from "@/components/ui/button";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CircleHelp } from "lucide-react";
+import Link from "next/link";
 import type React from "react";
 import { Suspense, ViewTransition } from "react";
 
@@ -31,7 +34,19 @@ export default async function DashboardLayout({
           <Suspense fallback={<Skeleton className="w-40 h-4" />}>
             <Breadcrumbs />
           </Suspense>
-          <div className="ml-auto">
+          <div className="flex items-center gap-1 ml-auto">
+            <Link
+              href="/guida"
+              title="Guida operativa"
+              aria-label="Apri la guida operativa"
+              className={buttonVariants({
+                variant: "ghost",
+                size: "icon-sm",
+                className: "text-muted-foreground",
+              })}
+            >
+              <CircleHelp className="size-[1.2rem]" />
+            </Link>
             <ThemeToggle />
           </div>
         </header>

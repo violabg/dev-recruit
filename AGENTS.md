@@ -58,6 +58,7 @@ Validate every change with `pnpm lint && pnpm test:run && pnpm build` before han
 
 ## Documentation
 
-- `docs/guida-operativa.md` and `docs/guida-operativa.html` describe the app as it is now. A change to a page, menu item, label, stage, rule or known limit they describe updates both in the same change; a screenshot that no longer matches is retaken or removed.
+- The in-app guide at `/guida` (page `app/guida`, sections in `components/guide/sections`) describes the app as it is now. A change to a page, menu item, label, stage, rule or known limit it describes updates the guide's section in the same change; a screenshot in `public/guida` that no longer matches is retaken or removed. Section ids in `components/guide/sections.ts` are public deep links (`/guida#decisione`): never rename one.
+- `docs/guida-poc.md` holds the material that does not belong to the app (demo script, improvement list, first-admin procedure).
 - Docs, code comments and knowledge describe the current state only: no references to past phases or to how things used to be.
 - Open work lives in `next-steps/` (`FASE5_PLAN.md`, `FASE5_PROMPT.md`).

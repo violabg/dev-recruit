@@ -46,6 +46,12 @@ export default async function Home() {
                 </div>
                 <div className="flex min-[400px]:flex-row flex-col items-center gap-2">
                   <ThemeToggle />
+                  <Link
+                    href="/guida"
+                    className={buttonVariants({ variant: "outline", size: "lg" })}
+                  >
+                    Guida
+                  </Link>
                   <Suspense fallback={<Skeleton className="rounded-lg w-36 h-9" />}>
                     <StartButton />
                   </Suspense>
@@ -153,6 +159,9 @@ export default async function Home() {
             <span>© 2025 DevRecruit AI. Tutti i diritti riservati.</span>
           </div>
           <div className="flex gap-4 text-muted-foreground text-sm">
+            <Link href="/guida" className="hover:underline">
+              Guida
+            </Link>
             <Link href="/" className="hover:underline">
               Privacy
             </Link>

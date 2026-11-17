@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "./lib/auth";
 
+/** Reached without a session: sign-in, the candidate's pages and the guide. */
+const PUBLIC_PREFIXES = ["/auth", "/recruiting", "/guida"];
+
 export async function proxy(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -15,11 +18,10 @@ export async function proxy(request: NextRequest) {
       : NextResponse.next();
   }
 
-  // Protected routes: if user is not authenticated and not in auth or recruiting paths, redirect
+  // Protected routes: if user is not authenticated and not in a public path, redirect
   if (
     !session?.user &&
-    !pathname.startsWith("/auth") &&
-    !pathname.startsWith("/recruiting")
+    !PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
   ) {
     // Preserve the intended destination for redirect after login
     const loginUrl = new URL("/auth/login", request.url);

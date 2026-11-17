@@ -9,7 +9,7 @@ L'applicazione si descrive com'è oggi, senza storia. Le fonti, in ordine di aut
 
 1. **Codice** e `prisma/schema.prisma` (migrazioni versionate in `prisma/migrations`, baseline `0_init`).
 2. **Knowledge** in `knowledge/` e vocabolario in `CONTEXT.md`.
-3. **Guida operativa** `docs/guida-operativa.md` (e la versione `.html`): come si usa l'app, pagina per pagina, con le aree di miglioramento (§11).
+3. **Guida operativa** in-app (`/guida`): come si usa l'app, pagina per pagina. Le aree di miglioramento (§11) sono nelle note interne `docs/guida-poc.md`.
 
 Flusso attuale in una riga: Posizione (scheda di valutazione, quiz, guide colloquio) → Candidatura (fasi, prossima azione) → prove (CV, Test, Colloqui con kit, live e schede intervistatore) → Decisione (matrice criteri × fonti, pesi della scheda, avvocato del diavolo) → esito.
 
@@ -137,7 +137,7 @@ Le righe della funzione U sono chiuse: la knowledge descrive già ruolo `admin`,
 
 ## 4. Punti aperti già noti (backlog, fuori dal perimetro B, C, A)
 
-Da valutare insieme alle aree di miglioramento della guida operativa (§11), senza duplicarle qui.
+Da valutare insieme alle aree di miglioramento delle note interne del POC (`docs/guida-poc.md` §2), senza duplicarle qui.
 
 **Limiti noti del comportamento attuale:**
 - Non resta traccia di chi crea o modifica un utente, né dei blocchi: nessun registro delle modifiche.
@@ -171,8 +171,8 @@ Da valutare insieme alle aree di miglioramento della guida operativa (§11), sen
 3. **Design:** orchestrator, workflow `DESIGN`, sulla sola funzione: schema Prisma, rotte, contratti delle server action, cache invalidation, prompt AI.
 4. **Implementazione** e validazione: `pnpm lint && pnpm test:run && pnpm build`. Ogni modifica dello schema è una migrazione versionata (`pnpm db:migrate` su `development`, mai `db push`).
 5. **Knowledge, dopo:** `knowledge-builder` documenta dal codice reale le nuove entità, regole e termini (incluso `CONTEXT.md`).
-6. **Guida operativa:** aggiornare `docs/guida-operativa.md` e `docs/guida-operativa.html` nello stesso commit (regola in `AGENTS.md`).
+6. **Guida operativa:** aggiornare la guida in-app `/guida` nello stesso commit (regola in `AGENTS.md`).
 7. **Chiusura:** aggiornare questo piano (stato della funzione, punti aperti). I documenti di lavoro della funzione (criteri di accettazione, delta per la knowledge) si eliminano dopo il rilascio: la verità resta nel codice, nella knowledge e nella guida.
-8. **Rilascio:** `pnpm db:migrate:deploy` sul database di produzione, poi `pnpm exec prisma migrate status`, quindi il deploy dell'applicazione e la verifica del §12 della guida operativa.
+8. **Rilascio:** `pnpm db:migrate:deploy` sul database di produzione, poi `pnpm exec prisma migrate status`, quindi il deploy dell'applicazione e la verifica del percorso demo (`docs/guida-poc.md` §4).
 
 Il prompt per avviare il lavoro è in `next-steps/FASE5_PROMPT.md`.
