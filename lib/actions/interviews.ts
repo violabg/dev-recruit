@@ -1,360 +1,247 @@
 "use server";
 
-import {
-  candidateQuizAssignmentSchema,
-  candidateQuizSelectionSchema,
-  submitAnswerSchema,
-} from "@/lib/schemas";
-import { acceptsAnswers, interviewState } from "@/lib/utils/interview-utils";
-import { generateInterviewToken } from "@/lib/utils/token";
+import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
-import { Prisma } from "../prisma/client";
-import { invalidateInterviewCache } from "../utils/cache-utils";
+import {
+  interviewIdSchema,
+  rescheduleInterviewSchema,
+  scheduleInterviewSchema,
+  type InterviewIdInput,
+  type RescheduleInterviewInput,
+  type ScheduleInterviewInput,
+} from "../schemas";
+import {
+  advanceApplicationStage,
+  type StageChangeResult,
+} from "../services/applications";
+import { loadGuideForSnapshot } from "../services/interview-kits";
+import {
+  applyAllFeedbackCheck,
+  assertInterviewStatus,
+  assertUsersExist,
+  createInterviewWithKit,
+  loadInterview,
+  syncInterviewParticipants,
+} from "../services/interviews";
+import { getActiveCriteria } from "../services/scorecards";
+import {
+  invalidateCandidateCache,
+  invalidateInterviewCache,
+} from "../utils/cache-utils";
+import { INTERVIEW_TRANSITIONS } from "../utils/interview-status";
 import { runAction, UserError } from "./run-action";
 
-// ============================================================================
-// Candidate-facing actions. Public by design: the interview token in the URL
-// is the credential, so these never call requireUser().
-// ============================================================================
+/** Stages from which no interview can be scheduled */
+const CLOSED_FOR_SCHEDULING = ["rejected", "withdrawn", "hired"] as const;
 
-const lifecycleSelect = {
-  id: true,
-  quizId: true,
-  status: true,
-  startedAt: true,
-  answers: true,
-  quiz: { select: { timeLimit: true } },
-} as const;
-
-async function findInterviewByToken(token: string) {
-  const interview = await prisma.interview.findUnique({
-    where: { token },
-    select: lifecycleSelect,
+/** Refresh the application reads when an interview moved its stage */
+function invalidateStageChange(change: StageChangeResult | null) {
+  if (!change?.changed) return;
+  invalidateCandidateCache({
+    candidateId: change.candidateId,
+    positionId: change.positionId,
+    applicationId: change.applicationId,
   });
-
-  if (!interview) {
-    throw new UserError("Colloquio non trovato");
-  }
-
-  return {
-    ...interview,
-    timeLimit: interview.quiz.timeLimit,
-  };
 }
 
-/** Mark an interview as completed. An interview that ran out of time ends here too. */
-async function closeInterview(interviewId: string) {
-  await prisma.interview.update({
-    where: { id: interviewId },
-    data: { status: "completed", completedAt: new Date() },
-  });
-  invalidateInterviewCache({ interviewId });
-}
+/**
+ * Creates the interview, its participants and its kit (draft, snapshot of the
+ * guide, default checklist) and advances the stage with 'interview_scheduled'
+ * in one transaction. Redirects to the preparation page of the interview.
+ * No email is sent. Any signed-in user may schedule.
+ */
+export async function scheduleInterviewAction(input: ScheduleInterviewInput) {
+  return runAction("scheduleInterviewAction", async () => {
+    const user = await requireUser();
+    const payload = scheduleInterviewSchema.parse(input);
 
-export async function startInterviewAction(token: string) {
-  return runAction("startInterviewAction", async () => {
-    const interview = await findInterviewByToken(token);
+    const application = await prisma.application.findUnique({
+      where: { id: payload.applicationId },
+      select: { id: true, stage: true, candidateId: true, positionId: true },
+    });
 
-    // If already started, return existing startedAt
-    if (interview.status !== "pending") {
-      return {
-        startedAt: interview.startedAt?.toISOString() ?? new Date().toISOString(),
-      };
+    if (
+      !application ||
+      (CLOSED_FOR_SCHEDULING as readonly string[]).includes(application.stage)
+    ) {
+      throw new UserError("Candidatura non trovata o chiusa");
     }
 
-    const startedAt = new Date();
+    await assertUsersExist(
+      prisma,
+      payload.participants.map((participant) => participant.userId),
+    );
 
+    const guide = await loadGuideForSnapshot(
+      prisma,
+      payload.guideId,
+      application.positionId,
+    );
+    const activeCriterionIds = new Set(
+      (await getActiveCriteria(application.positionId)).map(
+        (criterion) => criterion.id,
+      ),
+    );
+
+    const { interviewId, stage } = await prisma.$transaction(async (tx) => {
+      const created = await createInterviewWithKit(
+        tx,
+        payload,
+        guide,
+        user.id,
+        activeCriterionIds,
+      );
+      const change = await advanceApplicationStage(
+        tx,
+        application.id,
+        "interview_scheduled",
+      );
+      return { interviewId: created.interviewId, stage: change };
+    });
+
+    invalidateInterviewCache({ interviewId, applicationId: application.id });
+    invalidateStageChange(stage);
+
+    redirect(
+      // Typed routes: the preparation page is a nested dynamic route
+      `/dashboard/applications/${application.id}/interviews/${interviewId}/prepare?scheduled=1` as never,
+    );
+  });
+}
+
+/**
+ * While scheduled: changes date, duration, call link and participants of the
+ * same interview and increments its calendar sequence. The kit is kept.
+ */
+export async function rescheduleInterviewAction(
+  input: RescheduleInterviewInput,
+) {
+  return runAction("rescheduleInterviewAction", async () => {
+    await requireUser();
+    const payload = rescheduleInterviewSchema.parse(input);
+
+    const interview = await loadInterview(prisma, payload.interviewId);
+    assertInterviewStatus(interview, INTERVIEW_TRANSITIONS.reschedule);
+    await assertUsersExist(
+      prisma,
+      payload.participants.map((participant) => participant.userId),
+    );
+
+    await prisma.$transaction(async (tx) => {
+      await tx.interview.update({
+        where: { id: interview.id },
+        data: {
+          scheduledAt: new Date(payload.scheduledAt),
+          durationMinutes: payload.durationMinutes,
+          meetingUrl: payload.meetingUrl || null,
+          sequence: { increment: 1 },
+        },
+      });
+      await syncInterviewParticipants(tx, interview.id, payload.participants);
+    });
+
+    invalidateInterviewCache({
+      interviewId: interview.id,
+      applicationId: interview.applicationId,
+    });
+
+    return { interviewId: interview.id };
+  });
+}
+
+/** Ends a scheduled interview as cancelled or no-show, then runs the all-feedback check */
+async function closeScheduledInterview(
+  rawInput: InterviewIdInput,
+  status: "cancelled" | "no_show",
+) {
+  const { interviewId } = interviewIdSchema.parse(rawInput);
+
+  const interview = await loadInterview(prisma, interviewId);
+  assertInterviewStatus(
+    interview,
+    status === "cancelled"
+      ? INTERVIEW_TRANSITIONS.cancel
+      : INTERVIEW_TRANSITIONS.no_show,
+  );
+
+  const change = await prisma.$transaction(async (tx) => {
+    await tx.interview.update({
+      where: { id: interview.id },
+      data: { status },
+    });
+    return applyAllFeedbackCheck(tx, interview.applicationId);
+  });
+
+  invalidateInterviewCache({
+    interviewId: interview.id,
+    applicationId: interview.applicationId,
+  });
+  invalidateStageChange(change);
+
+  return { interviewId: interview.id };
+}
+
+/** scheduled -> cancelled; then runs the all-feedback check. */
+export async function cancelInterviewAction(input: InterviewIdInput) {
+  return runAction("cancelInterviewAction", async () => {
+    await requireUser();
+    return closeScheduledInterview(input, "cancelled");
+  });
+}
+
+/** scheduled -> no_show; then runs the all-feedback check. */
+export async function markInterviewNoShowAction(input: InterviewIdInput) {
+  return runAction("markInterviewNoShowAction", async () => {
+    await requireUser();
+    return closeScheduledInterview(input, "no_show");
+  });
+}
+
+/** scheduled -> in_progress, startedAt = now. */
+export async function startInterviewAction(input: InterviewIdInput) {
+  return runAction("startInterviewAction", async () => {
+    await requireUser();
+    const { interviewId } = interviewIdSchema.parse(input);
+
+    const interview = await loadInterview(prisma, interviewId);
+    assertInterviewStatus(interview, INTERVIEW_TRANSITIONS.start);
+
+    const startedAt = new Date();
     await prisma.interview.update({
       where: { id: interview.id },
       data: { status: "in_progress", startedAt },
     });
 
-    invalidateInterviewCache({ interviewId: interview.id });
+    invalidateInterviewCache({
+      interviewId: interview.id,
+      applicationId: interview.applicationId,
+    });
 
-    return { startedAt: startedAt.toISOString() };
+    return { interviewId: interview.id, startedAt };
   });
 }
 
-export async function submitAnswerAction(
-  token: string,
-  questionId: string,
-  answer: Prisma.JsonValue,
-) {
-  return runAction("submitAnswerAction", async () => {
-    const parsed = submitAnswerSchema.parse({ token, questionId, answer });
+/** in_progress -> completed, endedAt = now. */
+export async function completeInterviewAction(input: InterviewIdInput) {
+  return runAction("completeInterviewAction", async () => {
+    await requireUser();
+    const { interviewId } = interviewIdSchema.parse(input);
 
-    const interview = await findInterviewByToken(parsed.token);
+    const interview = await loadInterview(prisma, interviewId);
+    assertInterviewStatus(interview, INTERVIEW_TRANSITIONS.complete);
 
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: interview.quizId },
-      select: { quizQuestions: { select: { questionId: true } } },
-    });
-
-    if (
-      !quiz?.quizQuestions.some(
-        (link) => link.questionId === parsed.questionId,
-      )
-    ) {
-      throw new UserError("Domanda non valida per questo colloquio");
-    }
-
-    const state = interviewState(interview);
-
-    if (state === "completed" || state === "cancelled") {
-      throw new UserError("Il colloquio è già concluso");
-    }
-
-    if (!acceptsAnswers(interview)) {
-      // Out of time: the interview ends with the answers given so far
-      await closeInterview(interview.id);
-      throw new UserError("Il tempo a disposizione è scaduto");
-    }
-
-    const currentAnswers =
-      (interview.answers as Record<string, Prisma.JsonValue>) ?? {};
-
+    const endedAt = new Date();
     await prisma.interview.update({
       where: { id: interview.id },
-      data: {
-        answers: { ...currentAnswers, [parsed.questionId]: parsed.answer },
-      },
-    });
-
-    invalidateInterviewCache({ interviewId: interview.id });
-  });
-}
-
-export async function completeInterviewAction(token: string) {
-  return runAction("completeInterviewAction", async () => {
-    const interview = await findInterviewByToken(token);
-
-    // Already closed: keep the original completion time and never reopen a
-    // cancelled interview
-    if (interview.status === "completed" || interview.status === "cancelled") {
-      return;
-    }
-
-    await closeInterview(interview.id);
-  });
-}
-
-// ============================================================================
-// Recruiter actions
-// ============================================================================
-
-export async function deleteInterviewAction(id: string) {
-  return runAction("deleteInterviewAction", async () => {
-    await requireUser();
-
-    const interview = await prisma.interview.findUnique({
-      where: { id },
-      select: {
-        quizId: true,
-        quiz: {
-          select: {
-            createdBy: true,
-          },
-        },
-      },
-    });
-
-    if (!interview) {
-      throw new UserError("Colloquio non trovato");
-    }
-
-    await prisma.interview.delete({
-      where: { id },
+      data: { status: "completed", endedAt },
     });
 
     invalidateInterviewCache({
-      interviewId: id,
-      quizId: interview.quizId,
-      deleted: true,
+      interviewId: interview.id,
+      applicationId: interview.applicationId,
     });
 
-  });
-}
-
-/**
- * Close an in-progress interview whose time limit has passed, so the
- * dashboard stops showing it as running. It ends as "completed": the answers
- * given before time ran out still count.
- */
-export async function closeExpiredInterviewAction(interviewId: string) {
-  return runAction("closeExpiredInterviewAction", async () => {
-    await requireUser();
-
-    const interview = await prisma.interview.findUnique({
-      where: { id: interviewId },
-      select: lifecycleSelect,
-    });
-
-    if (!interview) {
-      throw new UserError("Colloquio non trovato");
-    }
-
-    const expired =
-      interviewState({ ...interview, timeLimit: interview.quiz.timeLimit }) ===
-      "expired";
-
-    if (expired) {
-      await closeInterview(interview.id);
-    }
-
-    return { closed: expired };
-  });
-}
-
-// ============================================================================
-// Assignment: creating interviews for candidate/quiz pairs
-// ============================================================================
-
-/**
- * Create a pending interview for the pair, unless one already exists.
- * Returns the new token, or null when the pair already has an interview.
- */
-async function createPendingInterview(candidateId: string, quizId: string) {
-  const existing = await prisma.interview.findFirst({
-    where: { candidateId, quizId },
-    select: { id: true },
-  });
-
-  if (existing) return null;
-
-  const interview = await prisma.interview.create({
-    data: {
-      candidateId,
-      quizId,
-      status: "pending",
-      token: await generateInterviewToken(),
-      answers: {},
-    },
-    select: { token: true },
-  });
-
-  return interview.token;
-}
-
-/**
- * Invite several candidates to one quiz. Candidates must be linked to the
- * quiz's position. Pairs that already have an interview are skipped and
- * reported in `skipped`.
- */
-export async function assignCandidatesToQuizAction(input: {
-  quizId: string;
-  candidateIds: string[];
-}) {
-  return runAction("assignCandidatesToQuizAction", async () => {
-    await requireUser();
-    const { quizId, candidateIds } = candidateQuizSelectionSchema.parse(input);
-
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: quizId },
-      select: { id: true, positionId: true },
-    });
-
-    if (!quiz) {
-      throw new UserError("Quiz non trovato");
-    }
-
-    const candidates = await prisma.candidate.findMany({
-      where: {
-        id: { in: candidateIds },
-        positions: { some: { positionId: quiz.positionId } },
-      },
-      select: { id: true, firstName: true, lastName: true, email: true },
-    });
-
-    if (candidates.length !== new Set(candidateIds).size) {
-      throw new UserError(
-        "Alcuni candidati non sono validi per la posizione di questo quiz",
-      );
-    }
-
-    const created: {
-      candidateId: string;
-      token: string;
-      candidateName: string;
-      candidateEmail: string;
-    }[] = [];
-    const skipped: string[] = [];
-
-    for (const candidate of candidates) {
-      const candidateName = `${candidate.firstName} ${candidate.lastName}`.trim();
-      const token = await createPendingInterview(candidate.id, quiz.id);
-
-      if (!token) {
-        skipped.push(`Esiste già un colloquio per ${candidateName}.`);
-        continue;
-      }
-
-      created.push({
-        candidateId: candidate.id,
-        token,
-        candidateName,
-        candidateEmail: candidate.email,
-      });
-    }
-
-    if (created.length > 0) {
-      invalidateInterviewCache({ quizId: quiz.id });
-    }
-
-    return { created, skipped };
-  });
-}
-
-/**
- * Invite one candidate to several quizzes. Every quiz must belong to one of
- * the candidate's positions. Pairs that already have an interview are skipped
- * and reported in `skipped`.
- */
-export async function assignQuizzesToCandidateAction(input: {
-  candidateId: string;
-  quizIds: string[];
-}) {
-  return runAction("assignQuizzesToCandidateAction", async () => {
-    await requireUser();
-    const { candidateId, quizIds } = candidateQuizAssignmentSchema.parse(input);
-
-    const candidate = await prisma.candidate.findUnique({
-      where: { id: candidateId },
-      select: { id: true, positions: { select: { positionId: true } } },
-    });
-
-    if (!candidate) {
-      throw new UserError("Candidato non trovato");
-    }
-
-    const positionIds = candidate.positions.map((p) => p.positionId);
-
-    const quizzes = await prisma.quiz.findMany({
-      where: { id: { in: quizIds }, positionId: { in: positionIds } },
-      select: { id: true, title: true },
-    });
-
-    if (quizzes.length !== new Set(quizIds).size) {
-      throw new UserError(
-        "Alcuni quiz non sono validi per le posizioni di questo candidato",
-      );
-    }
-
-    const created: { quizId: string; token: string; quizTitle: string }[] = [];
-    const skipped: string[] = [];
-
-    for (const quiz of quizzes) {
-      const token = await createPendingInterview(candidate.id, quiz.id);
-
-      if (!token) {
-        skipped.push(`Esiste già un colloquio per ${quiz.title}.`);
-        continue;
-      }
-
-      created.push({ quizId: quiz.id, token, quizTitle: quiz.title });
-      invalidateInterviewCache({ quizId: quiz.id });
-    }
-
-    return { created, skipped };
+    return { interviewId: interview.id, endedAt };
   });
 }

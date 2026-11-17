@@ -53,3 +53,9 @@ Repository skills live in `.agents/skills (workflow skills), .claude/skills (Cla
 
 Validate every change with `pnpm lint && pnpm test:run && pnpm build` before handing work back.
 <!-- agentic-system:end -->
+
+## Documentation
+
+- `docs/guida-operativa.md` and `docs/guida-operativa.html` describe the app as it is now. A change to a page, menu item, label, stage, rule or known limit they describe updates both in the same change; a screenshot that no longer matches is retaken or removed.
+- Docs, code comments and knowledge describe the current state only: no references to past phases or to how things used to be.
+- Open work lives in `next-steps/` (`FASE5_PLAN.md`, `FASE5_PROMPT.md`).

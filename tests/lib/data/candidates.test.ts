@@ -1,33 +1,18 @@
 import {
   getCandidatesByPosition,
   getCandidatesCount,
-  getCandidateStats,
   getCandidateWithDetails,
   getFilteredCandidates,
   getRecentCandidateIds,
 } from "@/lib/data/candidates";
 import prisma from "@/lib/prisma";
-import { describe, expect, it, vi } from "vitest";
+import { cacheTag } from "next/cache";
+import { describe, expect, it } from "vitest";
 
 describe("candidates data layer", () => {
-  it("getCandidateStats returns aggregated counts", async () => {
-    (prisma.candidate.groupBy as any) = vi.fn().mockResolvedValueOnce([
-      { status: "active", _count: { _all: 2 } },
-      { status: "inactive", _count: { _all: 1 } },
-    ]);
-    (prisma.candidate.count as any).mockResolvedValueOnce(3);
-
-    const res = await getCandidateStats();
-    expect(res.totalCandidates).toBe(3);
-    expect(res.statusCounts).toEqual([
-      { status: "active", count: 2 },
-      { status: "inactive", count: 1 },
-    ]);
-  });
-
   it("getFilteredCandidates returns paginated data and applies filters", async () => {
     const fake = [
-      { id: "c1", createdAt: new Date(), interviews: [], positions: [] },
+      { id: "c1", createdAt: new Date(), assessments: [], applications: [] },
     ];
     (prisma.candidate.findMany as any).mockResolvedValueOnce(fake);
     (prisma.candidate.count as any).mockResolvedValueOnce(1);
@@ -49,7 +34,7 @@ describe("candidates data layer", () => {
     (prisma.candidate.findFirst as any).mockResolvedValueOnce(null);
     expect(await getCandidateWithDetails("x")).toBeNull();
 
-    const rec = { id: "c3", interviews: [] };
+    const rec = { id: "c3", assessments: [] };
     (prisma.candidate.findFirst as any).mockResolvedValueOnce(rec);
     expect(await getCandidateWithDetails("c3")).toEqual(rec);
   });
@@ -63,5 +48,67 @@ describe("candidates data layer", () => {
       { id: "r2" },
     ]);
     expect(await getRecentCandidateIds(2)).toEqual(["r1", "r2"]);
+  });
+
+  it("filters by stage on the applications", async () => {
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([]);
+    (prisma.candidate.count as any).mockResolvedValueOnce(0);
+
+    await getFilteredCandidates({ stage: "interview" });
+
+    expect(prisma.candidate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { applications: { some: { stage: "interview" } } },
+      }),
+    );
+  });
+
+  it("applies stage and position to the same application", async () => {
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([]);
+    (prisma.candidate.count as any).mockResolvedValueOnce(0);
+
+    await getFilteredCandidates({ stage: "assessment", positionId: "p1" });
+
+    const where = {
+      applications: { some: { stage: "assessment", positionId: "p1" } },
+    };
+    expect(prisma.candidate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where }),
+    );
+    expect(prisma.candidate.count).toHaveBeenCalledWith({ where });
+  });
+
+  it("ignores an unknown stage", async () => {
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([]);
+    (prisma.candidate.count as any).mockResolvedValueOnce(0);
+
+    await getFilteredCandidates({ stage: "pending" });
+
+    expect(prisma.candidate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {} }),
+    );
+  });
+
+  it("orders the applications by recent activity and tags the joins", async () => {
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([]);
+    (prisma.candidate.count as any).mockResolvedValueOnce(0);
+
+    await getFilteredCandidates();
+
+    const { include } = (prisma.candidate.findMany as any).mock.calls[0][0];
+    expect(include.applications.orderBy).toEqual({ stageChangedAt: "desc" });
+    expect(JSON.stringify(include)).not.toContain("isPrimary");
+    expect(cacheTag).toHaveBeenCalledWith("candidates", "positions", "assessments");
+  });
+
+  it("getCandidatesByPosition filters through the applications", async () => {
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([]);
+
+    await getCandidatesByPosition("p1");
+
+    expect(prisma.candidate.findMany).toHaveBeenCalledWith({
+      where: { applications: { some: { positionId: "p1" } } },
+      orderBy: { createdAt: "desc" },
+    });
   });
 });

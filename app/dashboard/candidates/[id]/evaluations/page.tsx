@@ -3,7 +3,6 @@ import { buttonVariants } from "@/components/ui/button";
 
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { getEvaluationsByCandidateId } from "@/lib/data/evaluations";
-import { getAllPositions } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { CandidateEvaluationsView } from "./evaluations-view";
@@ -32,10 +31,9 @@ async function CandidateEvaluationsContent({
 }) {
   const { id } = await params;
 
-  const [candidate, evaluations, positions] = await Promise.all([
+  const [candidate, evaluations] = await Promise.all([
     getCandidateWithDetails(id),
     getEvaluationsByCandidateId(id),
-    getAllPositions(),
   ]);
 
   if (!candidate) {
@@ -53,6 +51,11 @@ async function CandidateEvaluationsContent({
   }
 
   const fullName = `${candidate.firstName} ${candidate.lastName}`;
+  // A resume evaluation needs an application: only the positions applied to
+  const positions = candidate.applications.map((application) => ({
+    id: application.position.id,
+    title: application.position.title,
+  }));
 
   return (
     <div className="flex flex-col gap-6">

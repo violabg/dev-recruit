@@ -11,7 +11,7 @@ import { CandidatesRuntimeSection } from "./runtime-section";
 
 export type CandidatesSearchParams = Promise<{
   search?: string;
-  status?: string;
+  stage?: string;
   position?: string;
   sort?: string;
   view?: string;

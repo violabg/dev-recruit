@@ -3,26 +3,35 @@ import { describe, expect, it } from "vitest";
 
 import {
   getEvaluationById,
-  getEvaluationByInterviewId,
+  getEvaluationByAssessmentId,
   getEvaluationsByCandidateId,
   getEvaluationStats,
   hasEvaluationForPosition,
 } from "@/lib/data/evaluations";
 
 describe("evaluations data layer", () => {
-  it("getEvaluationByInterviewId returns record or null", async () => {
+  it("getEvaluationByAssessmentId returns record or null", async () => {
     (prisma.evaluation.findUnique as any).mockResolvedValueOnce(null);
-    const none = await getEvaluationByInterviewId("nope");
+    const none = await getEvaluationByAssessmentId("nope");
     expect(none).toBeNull();
 
-    const fake = { id: "e1", interview: { id: "i1" } };
+    // Rows saved before the per-answer detail existed have null JSON columns
+    const fake = {
+      id: "e1",
+      assessment: { id: "a1" },
+      answerEvaluations: null,
+      criteriaAssessment: null,
+    };
     (prisma.evaluation.findUnique as any).mockResolvedValueOnce(fake);
-    const res = await getEvaluationByInterviewId("i1");
+    const res = await getEvaluationByAssessmentId("a1");
     expect(res).toEqual(fake);
   });
 
   it("getEvaluationsByCandidateId returns array", async () => {
-    const list = [{ id: "e1" }, { id: "e2" }];
+    const list = [
+      { id: "e1", answerEvaluations: null, criteriaAssessment: null },
+      { id: "e2", answerEvaluations: null, criteriaAssessment: null },
+    ];
     (prisma.evaluation.findMany as any).mockResolvedValueOnce(list);
     const res = await getEvaluationsByCandidateId("c1");
     expect(res).toEqual(list);
@@ -32,9 +41,43 @@ describe("evaluations data layer", () => {
     (prisma.evaluation.findUnique as any).mockResolvedValueOnce(null);
     expect(await getEvaluationById("x")).toBeNull();
 
-    const rec = { id: "e2" };
+    const rec = { id: "e2", answerEvaluations: null, criteriaAssessment: null };
     (prisma.evaluation.findUnique as any).mockResolvedValueOnce(rec);
     expect(await getEvaluationById("e2")).toEqual(rec);
+  });
+
+  it("returns the stored per-answer detail and CV assessment typed", async () => {
+    const answerEvaluations = {
+      q1: { score: 8, strengths: ["Chiara"], weaknesses: [] },
+      q2: { score: 0, strengths: [], weaknesses: ["Assente"] },
+    };
+    const criteriaAssessment = {
+      c1: { score: 4, evidence: "React" },
+      c2: { score: null, evidence: "" },
+    };
+    (prisma.evaluation.findUnique as any).mockResolvedValueOnce({
+      id: "e1",
+      answerEvaluations,
+      criteriaAssessment,
+    });
+
+    const res = await getEvaluationByAssessmentId("a1");
+
+    expect(res?.answerEvaluations).toEqual(answerEvaluations);
+    expect(res?.criteriaAssessment).toEqual(criteriaAssessment);
+  });
+
+  it("reads JSON that does not match the schema as null", async () => {
+    (prisma.evaluation.findUnique as any).mockResolvedValueOnce({
+      id: "e1",
+      answerEvaluations: { q1: { score: 15, strengths: [], weaknesses: [] } },
+      criteriaAssessment: { c1: { score: 0, evidence: "" } },
+    });
+
+    const res = await getEvaluationById("e1");
+
+    expect(res?.answerEvaluations).toBeNull();
+    expect(res?.criteriaAssessment).toBeNull();
   });
 
   it("hasEvaluationForPosition returns boolean based on count", async () => {
@@ -50,7 +93,7 @@ describe("evaluations data layer", () => {
     (prisma.evaluation.count as any).mockResolvedValueOnce(4);
     const stats = await getEvaluationStats();
     expect(stats).toEqual({
-      interviewEvaluations: 3,
+      assessmentEvaluations: 3,
       candidateEvaluations: 4,
       total: 7,
     });

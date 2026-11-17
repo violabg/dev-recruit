@@ -1,10 +1,12 @@
 import {
   BadgeSkeleton,
   ButtonSkeleton,
+  FieldSkeleton,
   PageHeaderSkeleton,
   TextSkeleton,
 } from "@/components/skeletons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Mirrors PositionHeader: title, level/contract badges + date, edit/delete. */
 export function PositionHeaderSkeleton() {
@@ -122,6 +124,69 @@ function PositionTabCardsSkeleton({
   );
 }
 
+/** Mirrors SetupChecklist: title and the four step links. */
+export function SetupChecklistSkeleton() {
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-base">Setup della posizione</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {["w-20", "w-40", "w-12", "w-32"].map((w, i) => (
+            <div key={i} className="flex items-center gap-2 px-2 py-1">
+              <Skeleton className="rounded-full size-4" />
+              <TextSkeleton className={w} />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Mirrors ScorecardSummary: heading + button, then a category card. */
+export function PositionScorecardSkeleton() {
+  return (
+    <>
+      <div className="flex justify-between">
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
+          Scheda di valutazione
+        </h2>
+        <ButtonSkeleton size="sm" className="w-36" />
+      </div>
+      <Card>
+        <CardHeader>
+          <TextSkeleton lineClassName="h-7" className="w-24 h-5" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex flex-col gap-1">
+                <div className="flex justify-between items-center">
+                  <TextSkeleton className="w-40" />
+                  <BadgeSkeleton className="w-24" />
+                </div>
+                <TextSkeleton className="w-3/4" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+export function PositionGuidesSkeleton() {
+  return (
+    <PositionTabCardsSkeleton
+      title="Guide colloquio"
+      actionClassName="w-28"
+      metaRight={<TextSkeleton className="w-20" />}
+    />
+  );
+}
+
 export function PositionQuizzesSkeleton() {
   return (
     <PositionTabCardsSkeleton
@@ -132,12 +197,112 @@ export function PositionQuizzesSkeleton() {
   );
 }
 
-export function PositionCandidatesSkeleton() {
+/**
+ * Mirrors the scorecard editor page: page header with the back link, the
+ * toolbar (model select, AI proposal, add) and a few criterion rows.
+ */
+export function ScorecardEditorSkeleton() {
   return (
-    <PositionTabCardsSkeleton
-      title="Candidati"
-      actionClassName="w-40"
-      metaRight={<BadgeSkeleton className="w-20" />}
-    />
+    <>
+      <PageHeaderSkeleton
+        section="positions"
+        title="Scheda di valutazione"
+        description
+        actions={<ButtonSkeleton size="sm" className="w-40" />}
+      />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap justify-between items-end gap-4">
+          <div className="flex flex-wrap items-end gap-2">
+            <ButtonSkeleton className="w-80" />
+            <ButtonSkeleton className="w-48" />
+          </div>
+          <ButtonSkeleton className="w-40" />
+        </div>
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="flex flex-col gap-4 p-4 border rounded-lg">
+            <FieldSkeleton label="Nome" />
+            <FieldSkeleton label="Descrizione" controlClassName="h-16" />
+            <div className="gap-4 grid md:grid-cols-2">
+              <FieldSkeleton label="Categoria" />
+              <FieldSkeleton label="Priorità" />
+            </div>
+          </div>
+        ))}
+        <div className="flex justify-end">
+          <ButtonSkeleton className="w-32" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+/**
+ * Mirrors the interview guide editor pages: page header, the guide fields
+ * (title, round, duration), the toolbar and a few section cards.
+ */
+export function GuideEditorSkeleton() {
+  return (
+    <>
+      <PageHeaderSkeleton
+        section="positions"
+        description
+        actions={
+          <>
+            <ButtonSkeleton size="sm" className="w-40" />
+            <ButtonSkeleton size="sm" />
+          </>
+        }
+      />
+      <div className="flex flex-col gap-6">
+        <div className="gap-4 grid md:grid-cols-[1fr_8rem_10rem]">
+          <FieldSkeleton label="Titolo" />
+          <FieldSkeleton label="Round" />
+          <FieldSkeleton label="Durata (minuti)" />
+        </div>
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <TextSkeleton className="w-48" />
+          <div className="flex gap-2">
+            <ButtonSkeleton className="w-44" />
+            <ButtonSkeleton className="w-40" />
+          </div>
+        </div>
+        {Array.from({ length: 2 }, (_, i) => (
+          <div key={i} className="flex flex-col gap-4 p-4 border rounded-lg">
+            <div className="gap-4 grid md:grid-cols-[1fr_14rem_8rem]">
+              <FieldSkeleton label="Titolo sezione" />
+              <FieldSkeleton label="Tipo" />
+              <FieldSkeleton label="Minuti" />
+            </div>
+            <Skeleton className="rounded-lg w-full h-40" />
+            <ButtonSkeleton size="sm" className="w-36" />
+          </div>
+        ))}
+        <div className="flex justify-end">
+          <ButtonSkeleton className="w-32" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Mirrors Selection: heading, add button and a row of kanban columns. */
+export function PositionSelectionSkeleton() {
+  return (
+    <>
+      <div className="flex justify-between">
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
+          Selezione
+        </h2>
+        <ButtonSkeleton size="sm" className="w-40" />
+      </div>
+      <div className="flex gap-4 pb-2 overflow-x-auto">
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className="flex flex-col gap-3 min-w-56 shrink-0">
+            <TextSkeleton className="w-24" />
+            <Skeleton className="rounded-lg w-full h-28" />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

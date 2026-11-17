@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
-import { InputField } from "@/components/ui/rhf-inputs";
+import { InputField, MultiSelectField } from "@/components/ui/rhf-inputs";
 import {
   Tooltip,
   TooltipContent,
@@ -19,13 +19,14 @@ import {
   deleteQuestionFromQuizAction,
   toggleQuestionFavoriteAction,
 } from "@/lib/actions/questions";
+import type { CriterionOption } from "@/lib/data/scorecards";
 import { CodeSnippetQuestion, questionSchemas } from "@/lib/schemas";
 import { cn } from "cn";
 import { errorMessage } from "@/lib/utils/action-result";
 import { getQuestionTypeLabel } from "@/lib/utils/quiz-form-utils";
 import { ChevronDown, ChevronUp, Heart, Sparkles, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { EditQuizFormData } from "../../hooks/use-edit-quiz-form";
@@ -44,6 +45,8 @@ type QuestionItemProps = {
   aiLoading: boolean;
   hasQuestionChanges: boolean;
   languageOptions?: React.ReactNode;
+  /** Criteria of the position scorecard; archived ones are flagged */
+  criteria: (CriterionOption & { archived?: boolean })[];
 };
 
 export const QuestionItem = ({
@@ -58,7 +61,30 @@ export const QuestionItem = ({
   aiLoading,
   hasQuestionChanges,
   languageOptions,
+  criteria,
 }: QuestionItemProps) => {
+  // Criteria this question verifies in this quiz (current form value)
+  const selectedCriterionIds =
+    useWatch({
+      control: form.control,
+      name: `questions.${actualIndex}.criterionIds`,
+    }) ?? [];
+  const showCriteria = criteria.length > 0 || selectedCriterionIds.length > 0;
+
+  // Active criteria are selectable; an archived criterion is listed only on
+  // a question that already has it
+  const criterionOptions = criteria
+    .filter(
+      (criterion) =>
+        !criterion.archived || selectedCriterionIds.includes(criterion.id),
+    )
+    .map((criterion) => ({
+      value: criterion.id,
+      label: criterion.archived
+        ? `${criterion.name} (archiviato)`
+        : criterion.name,
+    }));
+
   // Track local optimistic update state for favorite toggle
   // null means use the field value, boolean means we have a pending/optimistic update
   const [localFavoriteOverride, setLocalFavoriteOverride] = useState<
@@ -132,6 +158,13 @@ export const QuestionItem = ({
             <Badge variant="secondary" className="font-normal text-xs">
               {getQuestionTypeLabel(field.type)}
             </Badge>
+            {!isExpanded && selectedCriterionIds.length > 0 && (
+              <span className="text-muted-foreground text-xs">
+                {selectedCriterionIds.length === 1
+                  ? "1 criterio"
+                  : `${selectedCriterionIds.length} criteri`}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1">
             <Tooltip>
@@ -270,6 +303,17 @@ export const QuestionItem = ({
                 className="bg-background"
               />
             </div>
+
+            {showCriteria && (
+              <MultiSelectField
+                control={form.control}
+                name={`questions.${actualIndex}.criterionIds`}
+                label="Criteri verificati"
+                description="Criteri della scheda di valutazione che questa domanda verifica"
+                options={criterionOptions}
+                placeholder="Seleziona i criteri..."
+              />
+            )}
 
             <div className="pl-1">
               {field.type === "multiple_choice" && (

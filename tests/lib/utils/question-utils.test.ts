@@ -17,6 +17,7 @@ describe("mapQuizQuestionsToFlexible", () => {
     const quizQuestions = [
       {
         order: 0,
+        criterionIds: [],
         question: {
           id: "question-1",
           type: "multiple_choice",
@@ -34,6 +35,7 @@ describe("mapQuizQuestionsToFlexible", () => {
       },
       {
         order: 1,
+        criterionIds: [],
         question: {
           id: "question-2",
           type: "open_question",
@@ -80,6 +82,7 @@ describe("mapQuizQuestionsToFlexible", () => {
     const quizQuestions = [
       {
         order: 0,
+        criterionIds: [],
         question: {
           id: "question-1",
           type: "multiple_choice",
@@ -179,5 +182,57 @@ describe("prepareQuestionForUpdate", () => {
 
     expect(mcResult.options).toEqual(mcQuestion.options);
     expect(openResult.sampleAnswer).toBe(openQuestion.sampleAnswer);
+  });
+});
+
+describe("criterionIds belong to the quiz-question link", () => {
+  const link = (criterionIds: string[]) => ({
+    order: 0,
+    criterionIds,
+    question: {
+      id: "question-1",
+      type: "open_question",
+      question: "Spiega le closure",
+      keywords: [],
+      explanation: null,
+      options: [],
+      correctAnswer: null,
+      sampleAnswer: "Risposta",
+      codeSnippet: null,
+      sampleSolution: null,
+      language: null,
+      isFavorite: true,
+    },
+  });
+
+  it("mapQuizQuestionsToFlexible returns the criterionIds of the link", () => {
+    const [first, second] = mapQuizQuestionsToFlexible([
+      link(["c-1", "c-2"]),
+      link([]),
+    ]);
+    expect(first.criterionIds).toEqual(["c-1", "c-2"]);
+    expect(second.criterionIds).toEqual([]);
+  });
+
+  it("the same question row keeps independent lists in two quizzes", () => {
+    const [inQuizA] = mapQuizQuestionsToFlexible([link(["c-1"])]);
+    const [inQuizB] = mapQuizQuestionsToFlexible([link(["c-9"])]);
+    expect(inQuizA.dbId).toBe(inQuizB.dbId);
+    expect(inQuizA.criterionIds).not.toEqual(inQuizB.criterionIds);
+  });
+
+  it("prepareQuestionForCreate never writes criterionIds on the Question row", () => {
+    const data = prepareQuestionForCreate(
+      mockOpenQuestion({ criterionIds: ["c-1"] }),
+      "user-1",
+    );
+    expect(data).not.toHaveProperty("criterionIds");
+  });
+
+  it("prepareQuestionForUpdate never writes criterionIds on the Question row", () => {
+    const data = prepareQuestionForUpdate(
+      mockMultipleChoiceQuestion({ criterionIds: ["c-1"] }),
+    );
+    expect(data).not.toHaveProperty("criterionIds");
   });
 });

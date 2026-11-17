@@ -11,6 +11,10 @@ import {
   Question,
   questionSchemas,
 } from "../../schemas";
+import {
+  buildCriterionKeys,
+  resolveCriterionKeys,
+} from "../../utils/criterion-keys";
 import { generateStructured } from "./generate";
 import {
   buildQuestionPrompts,
@@ -36,11 +40,15 @@ export class AIQuizService {
   async generateQuiz(
     params: GenerateQuizParams,
   ): Promise<{ questions: Question[] }> {
+    // Criteria are listed to the AI by key (C1, C2, ...), never by id
+    const keyed = buildCriterionKeys(params.criteria ?? []);
+    const withCriteria = keyed.length > 0;
+
     const output = await generateStructured({
       task: "quiz_generation",
       schema: aiQuizGenerationSchema,
-      system: buildQuizSystemPrompt(),
-      prompt: buildQuizPrompt(params),
+      system: buildQuizSystemPrompt(withCriteria),
+      prompt: buildQuizPrompt(params, keyed),
       specificModel: params.specificModel,
       temperature: 0.7,
       config: this.config,
@@ -54,7 +62,19 @@ export class AIQuizService {
       );
     }
 
-    return { questions: convertToStrictQuestions(output.questions) };
+    // Map the proposed keys back to criterion ids (unknown keys are dropped)
+    // and remove criterionKeys from the questions
+    const questions = output.questions.map(
+      ({ criterionKeys, ...question }) =>
+        withCriteria
+          ? {
+              ...question,
+              criterionIds: resolveCriterionKeys(keyed, criterionKeys),
+            }
+          : question,
+    );
+
+    return { questions: convertToStrictQuestions(questions) };
   }
 
   async generateQuestion(params: GenerateQuestionParams): Promise<Question> {

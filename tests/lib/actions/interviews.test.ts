@@ -2,415 +2,398 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
   default: {
-    interview: {
-      findUnique: vi.fn(),
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      delete: vi.fn(),
-      update: vi.fn(),
-    },
-    quiz: { findUnique: vi.fn(), findMany: vi.fn() },
-    candidate: { findUnique: vi.fn(), findMany: vi.fn() },
+    application: { findUnique: vi.fn() },
+    interview: { findUnique: vi.fn(), update: vi.fn() },
+    user: { count: vi.fn() },
+    $transaction: vi.fn(),
   },
+}));
+
+vi.mock("@/lib/services/interviews", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/services/interviews")>();
+  return {
+    ...actual,
+    createInterviewWithKit: vi.fn(),
+    syncInterviewParticipants: vi.fn(),
+    applyAllFeedbackCheck: vi.fn(),
+  };
+});
+
+vi.mock("@/lib/services/interview-kits", () => ({
+  loadGuideForSnapshot: vi.fn(),
+}));
+
+vi.mock("@/lib/services/applications", () => ({
+  advanceApplicationStage: vi.fn(),
+}));
+
+vi.mock("@/lib/services/scorecards", () => ({
+  getActiveCriteria: vi.fn(),
 }));
 
 vi.mock("@/lib/utils/cache-utils", () => ({
   invalidateInterviewCache: vi.fn(),
+  invalidateCandidateCache: vi.fn(),
 }));
 
-vi.mock("@/lib/utils/token", () => ({
-  generateInterviewToken: vi.fn(async () => "new-token"),
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(),
+  unstable_rethrow: vi.fn(),
 }));
 
 import {
-  assignCandidatesToQuizAction,
-  assignQuizzesToCandidateAction,
-  closeExpiredInterviewAction,
+  cancelInterviewAction,
   completeInterviewAction,
-  deleteInterviewAction,
+  markInterviewNoShowAction,
+  rescheduleInterviewAction,
+  scheduleInterviewAction,
   startInterviewAction,
-  submitAnswerAction,
 } from "@/lib/actions/interviews";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
-import { unwrap } from "@/lib/utils/action-result";
-import { invalidateInterviewCache } from "@/lib/utils/cache-utils";
+import { advanceApplicationStage } from "@/lib/services/applications";
+import { loadGuideForSnapshot } from "@/lib/services/interview-kits";
+import {
+  applyAllFeedbackCheck,
+  createInterviewWithKit,
+  syncInterviewParticipants,
+} from "@/lib/services/interviews";
+import { getActiveCriteria } from "@/lib/services/scorecards";
+import { UserError } from "@/lib/services/user-error";
+import {
+  invalidateCandidateCache,
+  invalidateInterviewCache,
+} from "@/lib/utils/cache-utils";
+import { redirect } from "next/navigation";
 
-const minutesAgo = (minutes: number) =>
-  new Date(Date.now() - minutes * 60 * 1000);
+const db = prisma as any;
+const tx = { marker: "tx" };
+const WRONG_STATE = "Operazione non consentita nello stato attuale del colloquio";
 
-const stored = (overrides: Record<string, unknown> = {}) => ({
-  id: "int1",
-  quizId: "quiz-1",
-  status: "in_progress",
-  startedAt: minutesAgo(5),
-  answers: { q1: "a" },
-  quiz: { timeLimit: 30 },
-  ...overrides,
+const participants = [
+  { userId: "u1", role: "lead" as const },
+  { userId: "u2", role: "observer" as const },
+];
+
+const scheduleInput = {
+  applicationId: "app-1",
+  guideId: "guide-1",
+  round: 1,
+  scheduledAt: "2026-11-17T10:00:00+01:00",
+  durationMinutes: 60,
+  meetingUrl: "",
+  participants,
+};
+
+const guide = { id: "guide-1", positionId: "pos-1", sections: [] };
+
+const stageChange = (changed: boolean) => ({
+  applicationId: "app-1",
+  candidateId: "cand-1",
+  positionId: "pos-1",
+  previousStage: "assessment",
+  stage: changed ? "interview" : "assessment",
+  changed,
+  cancelledAssessmentIds: [],
+  cancelledInterviewIds: [],
 });
 
-const findUnique = () => vi.mocked(prisma.interview.findUnique);
-const update = () => vi.mocked(prisma.interview.update);
+const interviewRow = (status: string) => ({
+  id: "int-1",
+  applicationId: "app-1",
+  status,
+  round: 1,
+  application: { candidateId: "cand-1", positionId: "pos-1" },
+});
 
 beforeEach(() => {
-  vi.clearAllMocks();
-  vi.mocked(requireUser).mockResolvedValue({ id: "user1" } as any);
-  vi.mocked(prisma.quiz.findUnique).mockResolvedValue({
-    quizQuestions: [{ questionId: "q1" }, { questionId: "q2" }],
-  } as any);
+  vi.mocked(requireUser).mockResolvedValue({ id: "user-123" } as any);
+  vi.mocked(prisma.$transaction).mockImplementation(((fn: any) => fn(tx)) as any);
+  db.user.count.mockResolvedValue(2);
 });
 
-describe("startInterviewAction", () => {
-  it("starts a pending interview", async () => {
-    findUnique().mockResolvedValueOnce(
-      stored({ status: "pending", startedAt: null }) as any,
-    );
-
-    const result = unwrap(await startInterviewAction("tok"));
-
-    expect(result.success).toBe(true);
-    expect(update()).toHaveBeenCalledWith({
-      where: { id: "int1" },
-      data: { status: "in_progress", startedAt: expect.any(Date) },
+describe("scheduleInterviewAction", () => {
+  beforeEach(() => {
+    db.application.findUnique.mockResolvedValue({
+      id: "app-1",
+      stage: "assessment",
+      candidateId: "cand-1",
+      positionId: "pos-1",
     });
-  });
-
-  it("returns the original start time when already started", async () => {
-    const startedAt = minutesAgo(10);
-    findUnique().mockResolvedValueOnce(stored({ startedAt }) as any);
-
-    const result = unwrap(await startInterviewAction("tok"));
-
-    expect(result.startedAt).toBe(startedAt.toISOString());
-    expect(update()).not.toHaveBeenCalled();
-  });
-
-  it("throws when the token is unknown", async () => {
-    findUnique().mockResolvedValueOnce(null);
-
-    expect(await startInterviewAction("nope")).toMatchObject({ success: false, error: expect.stringContaining("Colloquio non trovato") });
-  });
-});
-
-describe("submitAnswerAction", () => {
-  it("stores the answer alongside the previous ones", async () => {
-    findUnique().mockResolvedValueOnce(stored() as any);
-
-    await submitAnswerAction("tok", "q2", "b");
-
-    expect(update()).toHaveBeenCalledWith({
-      where: { id: "int1" },
-      data: { answers: { q1: "a", q2: "b" } },
+    vi.mocked(loadGuideForSnapshot).mockResolvedValue(guide as any);
+    vi.mocked(getActiveCriteria).mockResolvedValue([{ id: "c-active" }] as any);
+    vi.mocked(createInterviewWithKit).mockResolvedValue({
+      interviewId: "int-new",
+      kitId: "kit-new",
     });
+    vi.mocked(advanceApplicationStage).mockResolvedValue(stageChange(true) as any);
   });
 
-  it("accepts a last answer just after the time limit", async () => {
-    findUnique().mockResolvedValueOnce(
-      stored({ startedAt: minutesAgo(30.5) }) as any,
-    );
-
-    await expect(submitAnswerAction("tok", "q2", "b")).resolves.toEqual({
-      success: true,
-    });
-  });
-
-  it("closes the interview as completed once time has run out", async () => {
-    findUnique().mockResolvedValueOnce(
-      stored({ startedAt: minutesAgo(45) }) as any,
-    );
-
-    expect(await submitAnswerAction("tok", "q2", "b")).toMatchObject({ success: false, error: expect.stringContaining("Il tempo a disposizione è scaduto") });
-    expect(update()).toHaveBeenCalledTimes(1);
-    expect(update()).toHaveBeenCalledWith({
-      where: { id: "int1" },
-      data: { status: "completed", completedAt: expect.any(Date) },
-    });
-  });
-
-  it.each(["completed", "cancelled"])(
-    "refuses answers for a %s interview",
-    async (status) => {
-      findUnique().mockResolvedValueOnce(stored({ status }) as any);
-
-      expect(await submitAnswerAction("tok", "q2", "b")).toMatchObject({ success: false, error: expect.stringContaining("già concluso") });
-      expect(update()).not.toHaveBeenCalled();
-    },
-  );
-
-  it("refuses a question that does not belong to the interview's quiz", async () => {
-    findUnique().mockResolvedValueOnce(stored() as any);
-
-    expect(await submitAnswerAction("tok", "q9", "b")).toMatchObject({
+  it("requires a signed-in user", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+    expect(await scheduleInterviewAction(scheduleInput)).toMatchObject({
       success: false,
-      error: "Domanda non valida per questo colloquio",
     });
-    expect(update()).not.toHaveBeenCalled();
+    expect(db.application.findUnique).not.toHaveBeenCalled();
   });
 
-  it("refuses an invalid answer before reading the interview", async () => {
-    for (const answer of [null, true, "", { code: "" }]) {
-      expect(await submitAnswerAction("token", "q2", answer)).toMatchObject({
+  it.each([null, "rejected", "withdrawn", "hired"])(
+    "refuses a missing or closed application (%s)",
+    async (stage) => {
+      db.application.findUnique.mockResolvedValue(
+        stage === null
+          ? null
+          : { id: "app-1", stage, candidateId: "cand-1", positionId: "pos-1" },
+      );
+
+      expect(await scheduleInterviewAction(scheduleInput)).toEqual({
         success: false,
+        error: "Candidatura non trovata o chiusa",
       });
-    }
-
-    expect(prisma.interview.findUnique).not.toHaveBeenCalled();
-    expect(prisma.interview.update).not.toHaveBeenCalled();
-  });
-
-  it("has no time limit when the quiz has none", async () => {
-    findUnique().mockResolvedValueOnce(
-      stored({ startedAt: minutesAgo(600), quiz: { timeLimit: null } }) as any,
-    );
-
-    await expect(submitAnswerAction("tok", "q2", "b")).resolves.toEqual({
-      success: true,
-    });
-  });
-});
-
-describe("completeInterviewAction", () => {
-  it("completes an in-progress interview", async () => {
-    findUnique().mockResolvedValueOnce(stored() as any);
-
-    await completeInterviewAction("tok");
-
-    expect(update()).toHaveBeenCalledWith({
-      where: { id: "int1" },
-      data: { status: "completed", completedAt: expect.any(Date) },
-    });
-  });
-
-  it.each(["completed", "cancelled"])(
-    "leaves a %s interview untouched",
-    async (status) => {
-      findUnique().mockResolvedValueOnce(stored({ status }) as any);
-
-      await expect(completeInterviewAction("tok")).resolves.toEqual({
-        success: true,
-      });
-      expect(update()).not.toHaveBeenCalled();
+      expect(createInterviewWithKit).not.toHaveBeenCalled();
+      expect(invalidateInterviewCache).not.toHaveBeenCalled();
     },
   );
-});
 
-describe("closeExpiredInterviewAction", () => {
-  it("requires a signed-in user", async () => {
-    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
-
-    expect(await closeExpiredInterviewAction("int1")).toMatchObject({ success: false, error: expect.stringContaining("Sessione scaduta") });
-    expect(findUnique()).not.toHaveBeenCalled();
+  it("refuses a participant who is not a user of the app", async () => {
+    db.user.count.mockResolvedValue(1);
+    expect(await scheduleInterviewAction(scheduleInput)).toEqual({
+      success: false,
+      error: "Uno o più partecipanti non sono utenti dell'app",
+    });
+    expect(createInterviewWithKit).not.toHaveBeenCalled();
   });
 
-  it("completes an interview that is past its time limit", async () => {
-    findUnique().mockResolvedValueOnce(
-      stored({ startedAt: minutesAgo(45) }) as any,
+  it("refuses a guide of another position", async () => {
+    vi.mocked(loadGuideForSnapshot).mockRejectedValue(
+      new UserError("Guida non trovata per questa posizione"),
     );
-
-    await expect(closeExpiredInterviewAction("int1")).resolves.toEqual({
-      success: true,
-      closed: true,
+    expect(await scheduleInterviewAction(scheduleInput)).toEqual({
+      success: false,
+      error: "Guida non trovata per questa posizione",
     });
-    expect(update()).toHaveBeenCalledWith({
-      where: { id: "int1" },
-      data: { status: "completed", completedAt: expect.any(Date) },
-    });
+    expect(loadGuideForSnapshot).toHaveBeenCalledWith(prisma, "guide-1", "pos-1");
+    expect(createInterviewWithKit).not.toHaveBeenCalled();
   });
 
-  it("does nothing while there is still time", async () => {
-    findUnique().mockResolvedValueOnce(stored() as any);
-
-    await expect(closeExpiredInterviewAction("int1")).resolves.toEqual({
-      success: true,
-      closed: false,
-    });
-    expect(update()).not.toHaveBeenCalled();
-  });
-});
-
-describe("deleteInterviewAction", () => {
-  it("requires a signed-in user", async () => {
-    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
-
-    expect(await deleteInterviewAction("int1")).toMatchObject({ success: false, error: expect.stringContaining("Sessione scaduta") });
-    expect(prisma.interview.delete).not.toHaveBeenCalled();
+  it("refuses two leads with the schema message", async () => {
+    expect(
+      await scheduleInterviewAction({
+        ...scheduleInput,
+        participants: [
+          { userId: "u1", role: "lead" },
+          { userId: "u2", role: "lead" },
+        ],
+      }),
+    ).toEqual({ success: false, error: "Indica un solo conduttore" });
   });
 
-  it("deletes the interview and expires its caches", async () => {
-    findUnique().mockResolvedValueOnce({ quizId: "quiz1" } as any);
+  it("creates the interview with its kit and advances the stage in the same transaction", async () => {
+    await scheduleInterviewAction(scheduleInput);
 
-    await expect(deleteInterviewAction("int1")).resolves.toEqual({ success: true });
-    expect(prisma.interview.delete).toHaveBeenCalledWith({
-      where: { id: "int1" },
-    });
+    expect(createInterviewWithKit).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ applicationId: "app-1", guideId: "guide-1" }),
+      guide,
+      "user-123",
+      new Set(["c-active"]),
+    );
+    expect(advanceApplicationStage).toHaveBeenCalledWith(
+      tx,
+      "app-1",
+      "interview_scheduled",
+    );
     expect(invalidateInterviewCache).toHaveBeenCalledWith({
-      interviewId: "int1",
-      quizId: "quiz1",
-      deleted: true,
+      interviewId: "int-new",
+      applicationId: "app-1",
     });
-  });
-
-  it("throws when the interview does not exist", async () => {
-    findUnique().mockResolvedValueOnce(null);
-
-    expect(await deleteInterviewAction("nope")).toMatchObject({ success: false, error: expect.stringContaining("Colloquio non trovato") });
-  });
-});
-
-describe("assignCandidatesToQuizAction", () => {
-  const candidates = [
-    { id: "c1", firstName: "Mario", lastName: "Rossi", email: "m@x.it" },
-    { id: "c2", firstName: "Anna", lastName: "Bianchi", email: "a@x.it" },
-  ];
-
-  beforeEach(() => {
-    vi.mocked(prisma.quiz.findUnique).mockResolvedValue({
-      id: "quiz1",
-      positionId: "pos1",
-    } as any);
-    vi.mocked(prisma.candidate.findMany).mockResolvedValue(candidates as any);
-    vi.mocked(prisma.interview.findFirst).mockResolvedValue(null);
-    vi.mocked(prisma.interview.create).mockResolvedValue({
-      token: "new-token",
-    } as any);
-  });
-
-  it("creates one pending interview per candidate", async () => {
-    const result = unwrap(await assignCandidatesToQuizAction({
-      quizId: "quiz1",
-      candidateIds: ["c1", "c2"],
-    }));
-
-    expect(result.skipped).toEqual([]);
-    expect(result.created).toEqual([
-      {
-        candidateId: "c1",
-        token: "new-token",
-        candidateName: "Mario Rossi",
-        candidateEmail: "m@x.it",
-      },
-      {
-        candidateId: "c2",
-        token: "new-token",
-        candidateName: "Anna Bianchi",
-        candidateEmail: "a@x.it",
-      },
-    ]);
-    expect(prisma.interview.create).toHaveBeenCalledTimes(2);
-  });
-
-  it("only accepts candidates linked to the quiz position", async () => {
-    await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: ["c1", "c2"] });
-
-    expect(prisma.candidate.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          id: { in: ["c1", "c2"] },
-          positions: { some: { positionId: "pos1" } },
-        },
-      }),
+    expect(invalidateCandidateCache).toHaveBeenCalledWith({
+      candidateId: "cand-1",
+      positionId: "pos-1",
+      applicationId: "app-1",
+    });
+    expect(redirect).toHaveBeenCalledWith(
+      "/dashboard/applications/app-1/interviews/int-new/prepare?scheduled=1",
+    );
+    // Invalidation happens before the redirect
+    expect(vi.mocked(invalidateInterviewCache).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(redirect).mock.invocationCallOrder[0],
     );
   });
 
-  it("rejects the request when a candidate is not valid for the position", async () => {
-    vi.mocked(prisma.candidate.findMany).mockResolvedValueOnce([
-      candidates[0],
-    ] as any);
+  it("does not refresh the candidates when the stage did not move", async () => {
+    vi.mocked(advanceApplicationStage).mockResolvedValue(stageChange(false) as any);
+    db.application.findUnique.mockResolvedValue({
+      id: "app-1",
+      stage: "decision",
+      candidateId: "cand-1",
+      positionId: "pos-1",
+    });
 
-    expect(await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: ["c1", "c2"] }),).toMatchObject({ success: false, error: expect.stringContaining("non sono validi") });
-    expect(prisma.interview.create).not.toHaveBeenCalled();
-  });
+    await scheduleInterviewAction(scheduleInput);
 
-  it("skips a candidate who already has an interview for the quiz", async () => {
-    vi.mocked(prisma.interview.findFirst)
-      .mockResolvedValueOnce({ id: "existing" } as any)
-      .mockResolvedValueOnce(null);
-
-    const result = unwrap(await assignCandidatesToQuizAction({
-      quizId: "quiz1",
-      candidateIds: ["c1", "c2"],
-    }));
-
-    expect(result.created.map((c) => c.candidateId)).toEqual(["c2"]);
-    expect(result.skipped).toEqual(["Esiste già un colloquio per Mario Rossi."]);
-  });
-
-  it("requires at least one candidate", async () => {
-    expect(await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: [] }),).toMatchObject({ success: false });
-  });
-
-  it("throws when the quiz does not exist", async () => {
-    vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
-
-    expect(await assignCandidatesToQuizAction({ quizId: "nope", candidateIds: ["c1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Quiz non trovato") });
+    expect(invalidateInterviewCache).toHaveBeenCalled();
+    expect(invalidateCandidateCache).not.toHaveBeenCalled();
+    expect(redirect).toHaveBeenCalled();
   });
 });
 
-describe("assignQuizzesToCandidateAction", () => {
-  beforeEach(() => {
-    vi.mocked(prisma.candidate.findUnique).mockResolvedValue({
-      id: "c1",
-      positions: [{ positionId: "pos1" }],
-    } as any);
-    vi.mocked(prisma.quiz.findMany).mockResolvedValue([
-      { id: "quiz1", title: "Quiz A" },
-      { id: "quiz2", title: "Quiz B" },
-    ] as any);
-    vi.mocked(prisma.interview.findFirst).mockResolvedValue(null);
-    vi.mocked(prisma.interview.create).mockResolvedValue({
-      token: "new-token",
-    } as any);
+describe("rescheduleInterviewAction", () => {
+  const input = {
+    interviewId: "int-1",
+    scheduledAt: "2026-11-18T10:00:00+01:00",
+    durationMinutes: 45,
+    meetingUrl: "https://meet.example.com/y",
+    participants,
+  };
+
+  it("updates the same interview, increments the sequence and syncs participants", async () => {
+    db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
+    const update = vi.fn();
+    vi.mocked(prisma.$transaction).mockImplementation(((fn: any) =>
+      fn({ interview: { update } })) as any);
+
+    const result = await rescheduleInterviewAction(input);
+
+    expect(result).toEqual({ success: true, interviewId: "int-1" });
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "int-1" },
+      data: {
+        scheduledAt: new Date("2026-11-18T10:00:00+01:00"),
+        durationMinutes: 45,
+        meetingUrl: "https://meet.example.com/y",
+        sequence: { increment: 1 },
+      },
+    });
+    expect(syncInterviewParticipants).toHaveBeenCalledWith(
+      expect.objectContaining({ interview: { update } }),
+      "int-1",
+      participants,
+    );
+    expect(invalidateInterviewCache).toHaveBeenCalledWith({
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
   });
 
-  it("creates one pending interview per quiz", async () => {
-    const result = unwrap(await assignQuizzesToCandidateAction({
-      candidateId: "c1",
-      quizIds: ["quiz1", "quiz2"],
-    }));
+  it.each(["in_progress", "completed", "cancelled", "no_show"])(
+    "is refused when the interview is %s",
+    async (status) => {
+      db.interview.findUnique.mockResolvedValue(interviewRow(status));
+      expect(await rescheduleInterviewAction(input)).toEqual({
+        success: false,
+        error: WRONG_STATE,
+      });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
 
-    expect(result).toEqual({
+  it("refuses a missing interview", async () => {
+    db.interview.findUnique.mockResolvedValue(null);
+    expect(await rescheduleInterviewAction(input)).toEqual({
+      success: false,
+      error: "Colloquio non trovato",
+    });
+  });
+});
+
+describe("cancelInterviewAction / markInterviewNoShowAction", () => {
+  it.each([
+    [cancelInterviewAction, "cancelled"],
+    [markInterviewNoShowAction, "no_show"],
+  ] as const)("sets the status from scheduled and runs the feedback check", async (action, status) => {
+    db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
+    const update = vi.fn();
+    const txWithUpdate = { interview: { update } };
+    vi.mocked(prisma.$transaction).mockImplementation(((fn: any) =>
+      fn(txWithUpdate)) as any);
+    vi.mocked(applyAllFeedbackCheck).mockResolvedValue(null);
+
+    expect(await action({ interviewId: "int-1" })).toEqual({
       success: true,
-      created: [
-        { quizId: "quiz1", token: "new-token", quizTitle: "Quiz A" },
-        { quizId: "quiz2", token: "new-token", quizTitle: "Quiz B" },
-      ],
-      skipped: [],
+      interviewId: "int-1",
+    });
+    expect(update).toHaveBeenCalledWith({ where: { id: "int-1" }, data: { status } });
+    expect(applyAllFeedbackCheck).toHaveBeenCalledWith(txWithUpdate, "app-1");
+    expect(invalidateInterviewCache).toHaveBeenCalledWith({
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
+    expect(invalidateCandidateCache).not.toHaveBeenCalled();
+  });
+
+  it("refreshes the candidates when the check moved the application to decision", async () => {
+    db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
+    vi.mocked(prisma.$transaction).mockImplementation(((fn: any) =>
+      fn({ interview: { update: vi.fn() } })) as any);
+    vi.mocked(applyAllFeedbackCheck).mockResolvedValue(stageChange(true) as any);
+
+    await cancelInterviewAction({ interviewId: "int-1" });
+
+    expect(invalidateCandidateCache).toHaveBeenCalledWith({
+      candidateId: "cand-1",
+      positionId: "pos-1",
+      applicationId: "app-1",
     });
   });
 
-  it("only accepts quizzes of the candidate's positions", async () => {
-    vi.mocked(prisma.quiz.findMany).mockResolvedValueOnce([
-      { id: "quiz1", title: "Quiz A" },
-    ] as any);
+  it.each([
+    [cancelInterviewAction, "in_progress"],
+    [cancelInterviewAction, "completed"],
+    [markInterviewNoShowAction, "in_progress"],
+    [markInterviewNoShowAction, "cancelled"],
+  ] as const)("refuses a transition from a wrong state", async (action, status) => {
+    db.interview.findUnique.mockResolvedValue(interviewRow(status));
+    expect(await action({ interviewId: "int-1" })).toEqual({
+      success: false,
+      error: WRONG_STATE,
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+});
 
-    expect(await assignQuizzesToCandidateAction({
-        candidateId: "c1",
-        quizIds: ["quiz1", "quiz2"],
-      }),).toMatchObject({ success: false, error: expect.stringContaining("non sono validi") });
-    expect(prisma.quiz.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: { in: ["quiz1", "quiz2"] }, positionId: { in: ["pos1"] } },
-      }),
-    );
+describe("startInterviewAction / completeInterviewAction", () => {
+  it("starts a scheduled interview and records the start time", async () => {
+    db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
+    const before = Date.now();
+
+    const result = await startInterviewAction({ interviewId: "int-1" });
+
+    expect(result).toMatchObject({ success: true, interviewId: "int-1" });
+    const { data } = db.interview.update.mock.calls[0][0];
+    expect(data.status).toBe("in_progress");
+    expect(data.startedAt).toBeInstanceOf(Date);
+    expect(data.startedAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect((result as any).startedAt).toBe(data.startedAt);
+    expect(invalidateInterviewCache).toHaveBeenCalledWith({
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
   });
 
-  it("skips a quiz the candidate already has an interview for", async () => {
-    vi.mocked(prisma.interview.findFirst)
-      .mockResolvedValueOnce({ id: "existing" } as any)
-      .mockResolvedValueOnce(null);
+  it("completes an interview in progress and records the end time", async () => {
+    db.interview.findUnique.mockResolvedValue(interviewRow("in_progress"));
 
-    const result = unwrap(await assignQuizzesToCandidateAction({
-      candidateId: "c1",
-      quizIds: ["quiz1", "quiz2"],
-    }));
+    const result = await completeInterviewAction({ interviewId: "int-1" });
 
-    expect(result.created.map((c) => c.quizId)).toEqual(["quiz2"]);
-    expect(result.skipped).toEqual(["Esiste già un colloquio per Quiz A."]);
+    expect(result).toMatchObject({ success: true, interviewId: "int-1" });
+    const { data } = db.interview.update.mock.calls[0][0];
+    expect(data.status).toBe("completed");
+    expect(data.endedAt).toBeInstanceOf(Date);
   });
 
-  it("throws when the candidate does not exist", async () => {
-    vi.mocked(prisma.candidate.findUnique).mockResolvedValueOnce(null);
+  it("refuses to start a running interview and to complete a scheduled one", async () => {
+    db.interview.findUnique.mockResolvedValue(interviewRow("in_progress"));
+    expect(await startInterviewAction({ interviewId: "int-1" })).toEqual({
+      success: false,
+      error: WRONG_STATE,
+    });
 
-    expect(await assignQuizzesToCandidateAction({ candidateId: "nope", quizIds: ["quiz1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Candidato non trovato") });
+    db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
+    expect(await completeInterviewAction({ interviewId: "int-1" })).toEqual({
+      success: false,
+      error: WRONG_STATE,
+    });
+    expect(db.interview.update).not.toHaveBeenCalled();
   });
 });

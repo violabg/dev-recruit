@@ -1,10 +1,13 @@
 import {
   Briefcase,
+  CalendarDays,
+  ClipboardCheck,
   FileQuestion,
+  LayoutDashboard,
   type LucideIcon,
-  MessageSquareMore,
   Settings,
   Sparkles,
+  SquareKanban,
   Users,
 } from "lucide-react";
 
@@ -17,11 +20,14 @@ import {
  * written out in full so Tailwind can detect them.
  */
 export type SectionKey =
+  | "overview"
   | "positions"
+  | "applications"
   | "candidates"
+  | "agenda"
   | "quizzes"
   | "presets"
-  | "interviews"
+  | "assessments"
   | "settings";
 
 export type Section = {
@@ -38,6 +44,15 @@ export type Section = {
 };
 
 export const SECTIONS: Record<SectionKey, Section> = {
+  overview: {
+    key: "overview",
+    label: "Le mie azioni",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    text: "text-primary",
+    tile: "bg-primary/12 ring-primary/20",
+    rule: "bg-primary",
+  },
   positions: {
     key: "positions",
     label: "Posizioni",
@@ -47,11 +62,31 @@ export const SECTIONS: Record<SectionKey, Section> = {
     tile: "bg-section-positions/12 ring-section-positions/20",
     rule: "bg-section-positions",
   },
+  // Same hue as the candidates: no section token exists for applications
+  applications: {
+    key: "applications",
+    label: "Candidature",
+    href: "/dashboard/applications",
+    icon: SquareKanban,
+    text: "text-section-candidates",
+    tile: "bg-section-candidates/12 ring-section-candidates/20",
+    rule: "bg-section-candidates",
+  },
   candidates: {
     key: "candidates",
     label: "Candidati",
     href: "/dashboard/candidates",
     icon: Users,
+    text: "text-section-candidates",
+    tile: "bg-section-candidates/12 ring-section-candidates/20",
+    rule: "bg-section-candidates",
+  },
+  // Same hue as the candidates: interviews belong to the hiring workflow
+  agenda: {
+    key: "agenda",
+    label: "Agenda colloqui",
+    href: "/dashboard/agenda",
+    icon: CalendarDays,
     text: "text-section-candidates",
     tile: "bg-section-candidates/12 ring-section-candidates/20",
     rule: "bg-section-candidates",
@@ -74,14 +109,14 @@ export const SECTIONS: Record<SectionKey, Section> = {
     tile: "bg-section-presets/12 ring-section-presets/20",
     rule: "bg-section-presets",
   },
-  interviews: {
-    key: "interviews",
-    label: "Colloqui",
-    href: "/dashboard/interviews",
-    icon: MessageSquareMore,
-    text: "text-section-interviews",
-    tile: "bg-section-interviews/12 ring-section-interviews/20",
-    rule: "bg-section-interviews",
+  assessments: {
+    key: "assessments",
+    label: "Test inviati",
+    href: "/dashboard/assessments",
+    icon: ClipboardCheck,
+    text: "text-section-assessments",
+    tile: "bg-section-assessments/12 ring-section-assessments/20",
+    rule: "bg-section-assessments",
   },
   settings: {
     key: "settings",
@@ -94,15 +129,24 @@ export const SECTIONS: Record<SectionKey, Section> = {
   },
 };
 
-/** Sidebar groups: the hiring workflow first, reusable material second. */
+/** Sidebar groups: what needs me, the hiring workflow, reusable material. */
 export const NAV_GROUPS: { label: string; items: Section[] }[] = [
   {
+    label: "Panoramica",
+    items: [SECTIONS.overview],
+  },
+  {
     label: "Selezione",
-    items: [SECTIONS.positions, SECTIONS.candidates, SECTIONS.interviews],
+    items: [
+      SECTIONS.positions,
+      SECTIONS.applications,
+      SECTIONS.candidates,
+      SECTIONS.agenda,
+    ],
   },
   {
     label: "Libreria",
-    items: [SECTIONS.quizzes, SECTIONS.presets],
+    items: [SECTIONS.quizzes, SECTIONS.assessments, SECTIONS.presets],
   },
 ];
 

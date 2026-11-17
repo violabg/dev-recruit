@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCandidateQuizData } from "@/lib/data/interviews";
+import { getCandidateQuizData } from "@/lib/data/assessments";
 import { Suspense } from "react";
 import { CandidateQuizSkeleton } from "../sub-page-fallbacks";
 
@@ -50,32 +50,14 @@ async function CandidateQuizContent({
     );
   }
 
-  const { candidate, position, availableQuizzes, assignedInterviews } = data;
+  const { candidate, availableQuizzes, assignedAssessments } = data;
   const normalizedAvailableQuizzes = availableQuizzes.map((quiz) => ({
     id: quiz.id,
     title: quiz.title,
     createdAt: quiz.createdAt,
     timeLimit: quiz.timeLimit,
+    positionTitle: quiz.positionTitle,
   }));
-
-  if (!candidate || !position) {
-    return (
-      <div className="flex flex-col justify-center items-center h-100">
-        <p className="font-medium text-lg">Candidato o posizione non trovati</p>
-        <Link
-          href="/dashboard/candidates"
-          className={buttonVariants({
-            variant: "default",
-            size: "sm",
-            className: "mt-4",
-          })}
-        >
-          <ArrowLeft className="mr-1 size-4" />
-          Torna ai candidati
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -95,15 +77,14 @@ async function CandidateQuizContent({
       <div>
         <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assegna quiz al candidato</h1>
         <p className="text-muted-foreground">
-          Assegna i quiz della posizione &quot;{position.title}&quot; a &quot;
-          {candidate.name}&quot; ({candidate.email})
+          {candidate.name} ({candidate.email})
         </p>
       </div>
 
       <Tabs defaultValue="quizzes">
         <TabsList variant="line">
           <TabsTrigger value="quizzes">Assegna quiz</TabsTrigger>
-          <TabsTrigger value="interviews">Colloqui esistenti</TabsTrigger>
+          <TabsTrigger value="assessments">Test esistenti</TabsTrigger>
         </TabsList>
 
         <TabsContent value="quizzes" className="flex flex-col gap-4 pt-4">
@@ -111,7 +92,7 @@ async function CandidateQuizContent({
             <CardHeader>
               <CardTitle>Assegna quiz al candidato</CardTitle>
               <CardDescription>
-                Seleziona i quiz e crea i link di colloquio per questo candidato
+                Seleziona i quiz e crea i link del test per questo candidato
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -123,16 +104,16 @@ async function CandidateQuizContent({
           </Card>
         </TabsContent>
 
-        <TabsContent value="interviews" className="flex flex-col gap-4 pt-4">
+        <TabsContent value="assessments" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Colloqui esistenti</CardTitle>
+              <CardTitle>Test esistenti</CardTitle>
               <CardDescription>
-                Gestisci i colloqui creati per questo candidato
+                Gestisci i test creati per questo candidato
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <InvitesList assignedInterviews={assignedInterviews} />
+              <InvitesList assignedAssessments={assignedAssessments} />
             </CardContent>
           </Card>
         </TabsContent>

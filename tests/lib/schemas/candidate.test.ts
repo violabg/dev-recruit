@@ -3,10 +3,81 @@
  */
 
 import {
+  candidateEmailSchema,
   candidateFormSchema,
   candidateUpdateSchema,
 } from "@/lib/schemas/candidate";
 import { describe, expect, it } from "vitest";
+
+describe("candidateEmailSchema", () => {
+  it("trims and lower-cases the email", () => {
+    expect(candidateEmailSchema.parse("  Mario@Example.COM ")).toBe(
+      "mario@example.com",
+    );
+  });
+
+  it("refuses an invalid email with the Italian message", () => {
+    const result = candidateEmailSchema.safeParse("non-una-email");
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe(
+      "Inserisci un indirizzo email valido",
+    );
+  });
+
+  it("normalises the email in both candidate schemas", () => {
+    expect(
+      candidateFormSchema.parse({
+        firstName: "Mario",
+        lastName: "Rossi",
+        email: " MARIO@example.com",
+        positionIds: ["p1"],
+      }).email,
+    ).toBe("mario@example.com");
+    expect(candidateUpdateSchema.parse({ email: "Anna@X.it " }).email).toBe(
+      "anna@x.it",
+    );
+  });
+});
+
+describe("candidateUpdateSchema — Non ricontattare", () => {
+  it("accepts the flag and its note", () => {
+    expect(
+      candidateUpdateSchema.parse({
+        doNotContact: true,
+        doNotContactNote: "Non interessato",
+      }),
+    ).toEqual({ doNotContact: true, doNotContactNote: "Non interessato" });
+  });
+
+  it("accepts a null note", () => {
+    expect(
+      candidateUpdateSchema.safeParse({ doNotContact: false, doNotContactNote: null })
+        .success,
+    ).toBe(true);
+  });
+
+  it("refuses a note over 500 characters", () => {
+    const result = candidateUpdateSchema.safeParse({
+      doNotContactNote: "x".repeat(501),
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe(
+      "La nota non può superare 500 caratteri",
+    );
+  });
+
+  it("has no status field", () => {
+    const parsed = candidateUpdateSchema.parse({
+      firstName: "Mario",
+      status: "hired",
+    } as any);
+    expect(parsed).not.toHaveProperty("status");
+    // A status alone is not an update
+    expect(candidateUpdateSchema.safeParse({ status: "hired" }).success).toBe(
+      false,
+    );
+  });
+});
 
 describe("candidateFormSchema", () => {
   describe("valid inputs", () => {
@@ -169,21 +240,6 @@ describe("candidateUpdateSchema", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should accept status update", () => {
-      const validStatuses = [
-        "pending",
-        "contacted",
-        "interviewing",
-        "hired",
-        "rejected",
-      ];
-
-      validStatuses.forEach((status) => {
-        const result = candidateUpdateSchema.safeParse({ status });
-        expect(result.success).toBe(true);
-      });
-    });
-
     it("should accept resume URL update", () => {
       const validData = {
         resumeUrl: "https://example.com/resume.pdf",
@@ -224,7 +280,6 @@ describe("candidateUpdateSchema", () => {
       const validData = {
         firstName: "Mario",
         lastName: "Bianchi",
-        status: "interviewing",
       };
 
       const result = candidateUpdateSchema.safeParse(validData);
@@ -244,15 +299,6 @@ describe("candidateUpdateSchema", () => {
   describe("invalid inputs", () => {
     it("should reject empty object", () => {
       const invalidData = {};
-
-      const result = candidateUpdateSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject invalid status", () => {
-      const invalidData = {
-        status: "invalid-status",
-      };
 
       const result = candidateUpdateSchema.safeParse(invalidData);
       expect(result.success).toBe(false);

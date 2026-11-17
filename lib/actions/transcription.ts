@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { transcriptionRequestSchema } from "@/lib/schemas";
 import { transcribeAudio } from "@/lib/services/ai/transcription";
-import { acceptsAnswers } from "@/lib/utils/interview-utils";
+import { acceptsAnswers } from "@/lib/utils/assessment-utils";
 import type { ActionResult } from "@/lib/utils/action-result";
 import { runAction, UserError } from "./run-action";
 
@@ -13,8 +13,8 @@ const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
 /**
  * Transcribe a spoken answer.
  *
- * Candidate-facing, so there is no signed-in user: the interview token is the
- * credential, and it only works while that interview still accepts answers.
+ * Candidate-facing, so there is no signed-in user: the assessment token is the
+ * credential, and it only works while that assessment still accepts answers.
  */
 export async function transcribeAudioAction(
   formData: FormData,
@@ -25,7 +25,7 @@ export async function transcribeAudioAction(
       token: formData.get("token") ?? "",
     });
 
-    const interview = await prisma.interview.findUnique({
+    const assessment = await prisma.assessment.findUnique({
       where: { token },
       select: {
         status: true,
@@ -34,8 +34,8 @@ export async function transcribeAudioAction(
       },
     });
 
-    if (!interview) {
-      throw new UserError("Colloquio non valido");
+    if (!assessment) {
+      throw new UserError("Test non valido");
     }
 
     if (!audio || !(audio instanceof Blob)) {
@@ -48,12 +48,12 @@ export async function transcribeAudioAction(
 
     if (
       !acceptsAnswers({
-        status: interview.status,
-        startedAt: interview.startedAt,
-        timeLimit: interview.quiz.timeLimit,
+        status: assessment.status,
+        startedAt: assessment.startedAt,
+        timeLimit: assessment.quiz.timeLimit,
       })
     ) {
-      throw new UserError("Il colloquio non è più attivo");
+      throw new UserError("Il test non è più attivo");
     }
 
     const text = await transcribeAudio(

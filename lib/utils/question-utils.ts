@@ -6,6 +6,8 @@ import type { FlexibleQuestion, SavedQuestion } from "@/lib/schemas";
 
 type QuizQuestionWithQuestion = {
   order: number;
+  // Criteria the question verifies in this quiz: data of the link row
+  criterionIds: string[];
   question: {
     id: string;
     type: string;
@@ -43,12 +45,15 @@ export function mapQuizQuestionsToFlexible(
     sampleSolution: qq.question.sampleSolution || undefined,
     language: qq.question.language || undefined,
     isFavorite: qq.question.isFavorite,
+    criterionIds: qq.criterionIds,
   }));
 }
 
 /**
  * Prepare question data for Prisma create operation
- * Converts FlexibleQuestion to the shape needed for prisma.question.create
+ * Converts FlexibleQuestion to the shape needed for prisma.question.create.
+ * Built field by field: criterionIds belongs to the quiz-question link and is
+ * never written on the Question row.
  */
 export function prepareQuestionForCreate(
   question: FlexibleQuestion,

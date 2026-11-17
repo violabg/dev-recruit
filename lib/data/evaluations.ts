@@ -1,12 +1,18 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/lib/prisma/client";
+import {
+  answerEvaluationsSchema,
+  criteriaAssessmentSchema,
+  type AnswerEvaluations,
+  type CriteriaAssessment,
+} from "@/lib/schemas";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { cacheLife, cacheTag } from "next/cache";
 
-// Prisma type for evaluation with relations
-export type EvaluationWithRelations = Prisma.EvaluationGetPayload<{
+// Prisma type for evaluation with relations (JSON columns still raw)
+type EvaluationRowWithRelations = Prisma.EvaluationGetPayload<{
   include: {
-    interview: {
+    assessment: {
       select: {
         id: true;
         status: true;
@@ -48,10 +54,43 @@ export type EvaluationWithRelations = Prisma.EvaluationGetPayload<{
   };
 }>;
 
+// Evaluation with relations and its JSON columns typed. Rows saved before the
+// detail existed, or with JSON that does not match the schema, read as null.
+export type EvaluationWithRelations = Omit<
+  EvaluationRowWithRelations,
+  "answerEvaluations" | "criteriaAssessment"
+> & {
+  answerEvaluations: AnswerEvaluations | null;
+  criteriaAssessment: CriteriaAssessment | null;
+};
+
+function toEvaluationWithRelations(
+  row: EvaluationRowWithRelations,
+): EvaluationWithRelations {
+  const answerEvaluations =
+    row.answerEvaluations === null
+      ? null
+      : answerEvaluationsSchema.safeParse(row.answerEvaluations);
+  const criteriaAssessment =
+    row.criteriaAssessment === null
+      ? null
+      : criteriaAssessmentSchema.safeParse(row.criteriaAssessment);
+
+  return {
+    ...row,
+    answerEvaluations: answerEvaluations?.success
+      ? answerEvaluations.data
+      : null,
+    criteriaAssessment: criteriaAssessment?.success
+      ? criteriaAssessment.data
+      : null,
+  };
+}
+
 // EVALUATION_INCLUDE joins these collections; reads must be tagged with them
-// so renaming a candidate/position/quiz or rescoring an interview refreshes.
+// so renaming a candidate/position/quiz or rescoring an assessment refreshes.
 const EVALUATION_RELATION_TAGS = [
-  CacheTags.INTERVIEWS,
+  CacheTags.ASSESSMENTS,
   CacheTags.CANDIDATES,
   CacheTags.POSITIONS,
   CacheTags.QUIZZES,
@@ -59,7 +98,7 @@ const EVALUATION_RELATION_TAGS = [
 
 // Reusable include pattern for evaluation queries
 const EVALUATION_INCLUDE = {
-  interview: {
+  assessment: {
     select: {
       id: true,
       status: true,
@@ -101,23 +140,24 @@ const EVALUATION_INCLUDE = {
 } as const;
 
 /**
- * Get evaluation for a specific interview (1:1 relationship)
+ * Get evaluation for a specific assessment (1:1 relationship)
  */
-export async function getEvaluationByInterviewId(
-  interviewId: string,
+export async function getEvaluationByAssessmentId(
+  assessmentId: string,
 ): Promise<EvaluationWithRelations | null> {
   "use cache";
   cacheLife("hours");
   cacheTag(
     CacheTags.EVALUATIONS,
     ...EVALUATION_RELATION_TAGS,
-    entityTag.evaluationInterview(interviewId),
+    entityTag.evaluationAssessment(assessmentId),
   );
 
-  return prisma.evaluation.findUnique({
-    where: { interviewId },
+  const row = await prisma.evaluation.findUnique({
+    where: { assessmentId },
     include: EVALUATION_INCLUDE,
   });
+  return row ? toEvaluationWithRelations(row) : null;
 }
 
 /**
@@ -134,11 +174,12 @@ export async function getEvaluationsByCandidateId(
     entityTag.evaluationCandidate(candidateId),
   );
 
-  return prisma.evaluation.findMany({
+  const rows = await prisma.evaluation.findMany({
     where: { candidateId },
     include: EVALUATION_INCLUDE,
     orderBy: { createdAt: "desc" },
   });
+  return rows.map(toEvaluationWithRelations);
 }
 
 /**
@@ -155,35 +196,11 @@ export async function getEvaluationById(
     entityTag.evaluation(id),
   );
 
-  return prisma.evaluation.findUnique({
+  const row = await prisma.evaluation.findUnique({
     where: { id },
     include: EVALUATION_INCLUDE,
   });
-}
-
-/**
- * Get latest interview evaluation for a candidate
- */
-export async function getLatestInterviewEvaluationByCandidateId(
-  candidateId: string,
-): Promise<EvaluationWithRelations | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(
-    CacheTags.EVALUATIONS,
-    ...EVALUATION_RELATION_TAGS,
-    entityTag.evaluationCandidate(candidateId),
-  );
-
-  return prisma.evaluation.findFirst({
-    where: {
-      interview: {
-        candidateId,
-      },
-    },
-    include: EVALUATION_INCLUDE,
-    orderBy: { createdAt: "desc" },
-  });
+  return row ? toEvaluationWithRelations(row) : null;
 }
 
 /**
@@ -204,7 +221,7 @@ export async function hasEvaluationForPosition(
     where: {
       candidateId,
       positionId,
-      interviewId: null, // Only candidate (resume) evaluations, not interview ones
+      assessmentId: null, // Only candidate (resume) evaluations, not assessment ones
     },
   });
 
@@ -219,16 +236,16 @@ export async function getEvaluationStats() {
   cacheLife("hours");
   cacheTag(CacheTags.EVALUATIONS);
 
-  const [interviewEvaluations, candidateEvaluations] = await Promise.all([
-    prisma.evaluation.count({ where: { interviewId: { not: null } } }),
+  const [assessmentEvaluations, candidateEvaluations] = await Promise.all([
+    prisma.evaluation.count({ where: { assessmentId: { not: null } } }),
     prisma.evaluation.count({
-      where: { candidateId: { not: null }, interviewId: null },
+      where: { candidateId: { not: null }, assessmentId: null },
     }),
   ]);
 
   return {
-    interviewEvaluations,
+    assessmentEvaluations,
     candidateEvaluations,
-    total: interviewEvaluations + candidateEvaluations,
+    total: assessmentEvaluations + candidateEvaluations,
   };
 }

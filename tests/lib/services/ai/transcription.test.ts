@@ -18,7 +18,7 @@ describe("transcribeAudio", () => {
     vi.mocked(aiTranscribe).mockResolvedValue({ text: "Testo" } as any);
   });
 
-  it("transcribes the received bytes with the interview Whisper model", async () => {
+  it("transcribes the received bytes with the assessment Whisper model", async () => {
     const bytes = new Uint8Array([1, 2, 3]);
 
     const text = await transcribeAudio(bytes);

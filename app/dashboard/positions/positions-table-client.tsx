@@ -1,14 +1,17 @@
 "use client";
+import { getPositionStatusPresentation } from "@/components/positions/position-status";
 import { Badge } from "@/components/ui/badge";
 import { EntityActionsMenu } from "@/components/ui/entity-actions-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { TableRowLink } from "@/components/ui/table-row-link";
 import { deletePositionAction } from "@/lib/actions/positions";
 import { formatDate } from "@/lib/utils";
+import { cn } from "cn";
 
 type Position = {
   id: string;
   title: string;
+  status: string;
   experienceLevel: string;
   skills: string[];
   createdAt: string;
@@ -21,11 +24,17 @@ type PositionsTableClientProps = {
 export function PositionsTableClient({ positions }: PositionsTableClientProps) {
   return (
     <>
-      {positions.map((position) => (
+      {positions.map((position) => {
+        const status = getPositionStatusPresentation(position.status);
+
+        return (
         <TableRow key={position.id} className="group">
           <TableCell className="relative font-medium">
             <TableRowLink href={`/dashboard/positions/${position.id}`} />
             {position.title}
+          </TableCell>
+          <TableCell>
+            <Badge className={cn("w-fit", status.badge)}>{status.label}</Badge>
           </TableCell>
           <TableCell>
             <Badge variant="outline">{position.experienceLevel}</Badge>
@@ -54,7 +63,8 @@ export function PositionsTableClient({ positions }: PositionsTableClientProps) {
             />
           </TableCell>
         </TableRow>
-      ))}
+        );
+      })}
     </>
   );
 }

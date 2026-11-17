@@ -8,6 +8,9 @@ vi.mock("@/lib/prisma", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    application: {
+      count: vi.fn(),
+    },
   },
 }));
 
@@ -29,6 +32,7 @@ import {
   deletePositionAction,
   fetchPositionDataAction,
   updatePositionAction,
+  updatePositionStatusAction,
 } from "@/lib/actions/positions";
 import { getPositionById } from "@/lib/data/positions";
 import { requireUser } from "@/lib/auth-server";
@@ -52,6 +56,8 @@ beforeEach(() => {
     id: "pos-123",
   } as any);
   vi.mocked(prisma.position.create).mockResolvedValue({ id: "pos-123" } as any);
+  // No application: deleting is allowed
+  vi.mocked(prisma.application.count).mockResolvedValue(0);
 });
 
 describe("createPositionAction", () => {
@@ -66,6 +72,7 @@ describe("createPositionAction", () => {
         skills: ["JavaScript", "React"],
         softSkills: ["Comunicazione"],
         contractType: "full-time",
+        status: "draft",
         createdBy: "user-123",
       },
       select: { id: true },
@@ -193,11 +200,90 @@ describe("deletePositionAction", () => {
     expect(result).toEqual({ success: false, error: "Posizione non trovata" });
     expect(prisma.position.delete).not.toHaveBeenCalled();
   });
+
+  it("refuses to delete a position with applications", async () => {
+    vi.mocked(prisma.application.count).mockResolvedValueOnce(3);
+
+    const result = await deletePositionAction("pos-123");
+
+    expect(result).toEqual({
+      success: false,
+      error: "Impossibile eliminare una posizione con candidature: chiudila",
+    });
+    expect(prisma.application.count).toHaveBeenCalledWith({
+      where: { positionId: "pos-123" },
+    });
+    expect(prisma.position.delete).not.toHaveBeenCalled();
+    expect(invalidatePositionCache).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe("updatePositionStatusAction", () => {
+  it("requires a signed-in user", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+
+    const result = await updatePositionStatusAction({
+      positionId: "pos-123",
+      status: "open",
+    });
+
+    expect(result).toMatchObject({ success: false });
+    expect(prisma.position.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unknown status", async () => {
+    const result = await updatePositionStatusAction({
+      positionId: "pos-123",
+      status: "archived" as any,
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Stato della posizione non valido",
+    });
+    expect(prisma.position.update).not.toHaveBeenCalled();
+  });
+
+  it("reports a missing position", async () => {
+    vi.mocked(prisma.position.findUnique).mockResolvedValueOnce(null);
+
+    const result = await updatePositionStatusAction({
+      positionId: "nope",
+      status: "open",
+    });
+
+    expect(result).toEqual({ success: false, error: "Posizione non trovata" });
+    expect(prisma.position.update).not.toHaveBeenCalled();
+  });
+
+  it.each(["open", "closed", "draft"] as const)(
+    "sets the status %s and refreshes the position",
+    async (status) => {
+      const result = await updatePositionStatusAction({
+        positionId: "pos-123",
+        status,
+      });
+
+      expect(result).toEqual({ success: true, status });
+      expect(prisma.position.update).toHaveBeenCalledWith({
+        where: { id: "pos-123" },
+        data: { status },
+      });
+      expect(invalidatePositionCache).toHaveBeenCalledWith("pos-123");
+      // Closing keeps everything: nothing is deleted
+      expect(prisma.position.delete).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("fetchPositionDataAction", () => {
   it("returns the position wrapped in the action result", async () => {
-    const position = { id: "pos-123", title: "Senior Developer" };
+    const position = {
+      id: "pos-123",
+      title: "Senior Developer",
+      status: "open",
+    };
     vi.mocked(getPositionById).mockResolvedValueOnce(position as any);
 
     const result = await fetchPositionDataAction("pos-123");
@@ -212,5 +298,28 @@ describe("fetchPositionDataAction", () => {
     const result = await fetchPositionDataAction("nope");
 
     expect(result).toEqual({ success: true, position: null });
+  });
+
+  it.each(["draft", "closed"])(
+    "hides a %s position from the public form",
+    async (status) => {
+      vi.mocked(getPositionById).mockResolvedValueOnce({
+        id: "pos-123",
+        title: "Senior Developer",
+        status,
+      } as any);
+
+      const result = await fetchPositionDataAction("pos-123");
+
+      expect(result).toEqual({ success: true, position: null });
+    },
+  );
+
+  it("is public: no signed-in user needed", async () => {
+    vi.mocked(getPositionById).mockResolvedValueOnce(null);
+
+    await fetchPositionDataAction("pos-123");
+
+    expect(requireUser).not.toHaveBeenCalled();
   });
 });

@@ -259,3 +259,39 @@ describe("convertToStrictQuestions", () => {
     expect(strict[1].type).toBe("open_question");
   });
 });
+
+describe("criterionIds on question schemas", () => {
+  it("is accepted by the flexible schema", () => {
+    const result = questionSchemas.flexible.parse(
+      mockOpenQuestion({ criterionIds: ["c-1", "c-2"] }),
+    );
+    expect(result.criterionIds).toEqual(["c-1", "c-2"]);
+  });
+
+  it("is accepted by the strict schema", () => {
+    const result = questionSchemas.strict.parse({
+      ...mockMultipleChoiceQuestion(),
+      criterionIds: ["c-1"],
+    });
+    expect(result.criterionIds).toEqual(["c-1"]);
+  });
+
+  it("is optional: questions without it stay valid", () => {
+    expect(questionSchemas.flexible.safeParse(mockOpenQuestion()).success).toBe(
+      true,
+    );
+  });
+
+  it("is kept by convertToStrictQuestion, which still strips dbId and isFavorite", () => {
+    const strict = convertToStrictQuestion(
+      mockCodeSnippetQuestion({
+        dbId: "q-1",
+        isFavorite: true,
+        criterionIds: ["c-3"],
+      }),
+    );
+    expect(strict.criterionIds).toEqual(["c-3"]);
+    expect(strict).not.toHaveProperty("dbId");
+    expect(strict).not.toHaveProperty("isFavorite");
+  });
+});

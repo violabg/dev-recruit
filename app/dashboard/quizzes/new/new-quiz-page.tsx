@@ -14,6 +14,7 @@ import {
 import { SaveQuizResult } from "@/hooks/use-edit-quiz-form";
 import type { Preset } from "@/lib/data/presets";
 import type { QuestionWithMetadata } from "@/lib/data/questions";
+import type { CriterionOption } from "@/lib/data/scorecards";
 import { QuizForEdit } from "@/lib/data/quizzes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,8 @@ type NewQuizPageProps = {
   languageOptions?: React.ReactNode;
   presetsPromise: Promise<Preset[]>;
   favoriteQuestionsPromise: Promise<QuestionWithMetadata[]>;
+  /** Active scorecard criteria of every position, keyed by position id */
+  criteriaByPosition: Record<string, CriterionOption[]>;
 };
 
 export const NewQuizCreationPage = ({
@@ -40,6 +43,7 @@ export const NewQuizCreationPage = ({
   languageOptions,
   presetsPromise,
   favoriteQuestionsPromise,
+  criteriaByPosition,
 }: NewQuizPageProps) => {
   const [selectedPositionId, setSelectedPositionId] = useState(
     fixedPosition?.id ?? ""
@@ -146,6 +150,7 @@ export const NewQuizCreationPage = ({
           languageOptions={languageOptions}
           presetsPromise={presetsPromise}
           favoriteQuestionsPromise={favoriteQuestionsPromise}
+          criteria={criteriaByPosition[selectedPosition.id] ?? []}
         />
       )}
     </>

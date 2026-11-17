@@ -34,8 +34,13 @@ model User {
   quizzes     Quiz[]       @relation("UserQuizzes")
   questions   Question[]   @relation("UserQuestions")
   evaluations Evaluation[] @relation("UserEvaluations")
-  assessmentEvaluations Evaluation[] @relation("UserEvaluationAssessments")
-  behavioralRubrics BehavioralRubric[] @relation("UserBehavioralRubrics")
+  ownedApplications   Application[] @relation("UserOwnedApplications")
+  decidedApplications Application[] @relation("UserDecidedApplications")
+  scorecards          Scorecard[]      @relation("UserScorecards")
+  interviewGuides     InterviewGuide[] @relation("UserInterviewGuides")
+  createdInterviews       Interview[]            @relation("UserCreatedInterviews")
+  interviewParticipations InterviewParticipant[] @relation("UserInterviewParticipations")
+  interviewerFeedback     InterviewerFeedback[]  @relation("UserInterviewerFeedback")
 
   isAnonymous Boolean?
 
@@ -112,62 +117,397 @@ model Profile {
   @@map("profiles")
 }
 
+enum PositionStatus {
+  draft
+  open
+  closed
+}
+
 model Position {
-  id              String   @id @default(cuid())
+  id              String         @id @default(cuid())
   title           String
   description     String?
   experienceLevel String
   skills          String[]
   softSkills      String[]
   contractType    String?
+  status          PositionStatus @default(draft)
   createdBy       String
-  createdAt       DateTime @default(now())
+  createdAt       DateTime       @default(now())
 
-  creator            User                @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
-  candidatePositions CandidatePosition[]
-  quizzes            Quiz[]
-  evaluations        Evaluation[]
-  behavioralRubrics  BehavioralRubric[]
+  creator           User               @relation("UserPositions", fields: [createdBy], references: [id], onDelete: Cascade)
+  applications      Application[]
+  quizzes           Quiz[]
+  evaluations       Evaluation[]
+  scorecard         Scorecard?
+  interviewGuides   InterviewGuide[]
 
+  @@index([status])
   @@map("positions")
 }
 
-model Candidate {
-  id          String    @id @default(cuid())
-  firstName   String
-  lastName    String
-  email       String
-  dateOfBirth DateTime?
-  status      String    @default("pending")
-  resumeUrl   String?
-  // Null when the candidate applied through the public form
-  createdBy   String?
-  createdAt   DateTime  @default(now())
+enum CriterionCategory {
+  technical
+  soft
+  culture
+}
 
-  positions          CandidatePosition[]
-  creator            User?               @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
-  interviews         Interview[]
-  evaluations        Evaluation[]
-  behavioralRubrics  BehavioralRubric[]
+enum CriterionPriority {
+  must
+  nice
+}
+
+enum CriterionSource {
+  skill
+  softSkill
+  custom
+}
+
+enum GuideSectionKind {
+  intro
+  experience
+  technical
+  behavioral
+  candidate_questions
+  closing
+}
+
+// The evaluation scorecard ("Scheda di valutazione") of a position: at most one per position
+model Scorecard {
+  id         String   @id @default(cuid())
+  positionId String   @unique
+  createdBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  position Position             @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator  User                 @relation("UserScorecards", fields: [createdBy], references: [id], onDelete: Cascade)
+  criteria ScorecardCriterion[]
+
+  @@map("scorecards")
+}
+
+model ScorecardCriterion {
+  id            String            @id @default(cuid())
+  scorecardId   String
+  name          String
+  description   String?
+  category      CriterionCategory
+  priority      CriterionPriority
+  weight        Int // 1-5
+  expectedLevel Int // 1-5
+  anchors       Json? // { weak, medium, strong }
+  source        CriterionSource
+  order         Int
+  archivedAt    DateTime?
+  createdAt     DateTime          @default(now())
+
+  scorecard Scorecard        @relation(fields: [scorecardId], references: [id], onDelete: Cascade)
+  scores    CriterionScore[]
+
+  @@index([scorecardId])
+  @@map("scorecard_criteria")
+}
+
+// Interview guide ("Guida colloquio"): a template of the position, for example one per round
+model InterviewGuide {
+  id              String   @id @default(cuid())
+  positionId      String
+  title           String
+  round           Int // 1-based order of the round
+  durationMinutes Int
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  position Position       @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  creator  User           @relation("UserInterviewGuides", fields: [createdBy], references: [id], onDelete: Cascade)
+  sections   GuideSection[]
+  interviews Interview[]
+
+  @@index([positionId])
+  @@map("interview_guides")
+}
+
+model GuideSection {
+  id      String           @id @default(cuid())
+  guideId String
+  title   String
+  minutes Int
+  order   Int
+  kind    GuideSectionKind
+
+  guide     InterviewGuide  @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  questions GuideQuestion[]
+
+  @@index([guideId])
+  @@map("guide_sections")
+}
+
+model GuideQuestion {
+  id           String   @id @default(cuid())
+  sectionId    String
+  text         String
+  followUps    String[] @default([])
+  criterionIds String[] @default([])
+  anchors      Json? // { weak, medium, strong }
+  required     Boolean  @default(false)
+  order        Int
+
+  section GuideSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId])
+  @@map("guide_questions")
+}
+
+model Candidate {
+  id               String    @id @default(cuid())
+  firstName        String
+  lastName         String
+  // Stored normalised: lower case, no surrounding spaces
+  email            String    @unique
+  dateOfBirth      DateTime?
+  resumeUrl        String?
+  doNotContact     Boolean   @default(false)
+  doNotContactNote String?
+  // Null when the candidate applied through the public form
+  createdBy        String?
+  createdAt        DateTime  @default(now())
+
+  applications      Application[]
+  creator           User?              @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
+  assessments       Assessment[]
+  evaluations       Evaluation[]
 
   @@map("candidates")
 }
 
-// Join table for Candidate-Position many-to-many relationship
-model CandidatePosition {
-  id          String   @id @default(cuid())
-  candidateId String
-  positionId  String
-  isPrimary   Boolean  @default(false) // Flag to mark the primary position
-  createdAt   DateTime @default(now())
+enum ApplicationStage {
+  applied
+  screening
+  assessment
+  interview
+  decision
+  offer
+  hired
+  rejected
+  withdrawn
+}
 
-  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  position  Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+// A candidacy: one Candidate for one Position
+model Application {
+  id                String           @id @default(cuid())
+  candidateId       String
+  positionId        String
+  stage             ApplicationStage @default(applied)
+  stageChangedAt    DateTime         @default(now())
+  // The recruiter in charge; never restricts access
+  ownerId           String?
+  decision          String?
+  decisionRationale String?
+  decidedBy         String?
+  decidedAt         DateTime?
+  decisionWeights   Json?
+  createdAt         DateTime         @default(now())
+
+  candidate   Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  position    Position     @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  owner       User?        @relation("UserOwnedApplications", fields: [ownerId], references: [id], onDelete: SetNull)
+  decider     User?        @relation("UserDecidedApplications", fields: [decidedBy], references: [id], onDelete: SetNull)
+  assessments Assessment[]
+  interviews  Interview[]
 
   @@unique([candidateId, positionId])
   @@index([candidateId])
   @@index([positionId])
-  @@map("candidate_positions")
+  @@index([stage])
+  @@index([ownerId])
+  @@map("applications")
+}
+
+enum InterviewStatus {
+  scheduled
+  in_progress
+  completed
+  cancelled
+  no_show
+}
+
+enum InterviewParticipantRole {
+  lead
+  observer
+}
+
+enum KitStatus {
+  draft
+  ready
+}
+
+enum KitItemOrigin {
+  template
+  cv
+  resume_gap
+  quiz_answer
+  previous_round
+  manual
+}
+
+// An interview ("Colloquio") of an application, prepared from an interview guide
+model Interview {
+  id              String          @id @default(cuid())
+  applicationId   String
+  guideId         String?
+  round           Int
+  scheduledAt     DateTime
+  durationMinutes Int
+  meetingUrl      String?
+  status          InterviewStatus @default(scheduled)
+  startedAt       DateTime?
+  endedAt         DateTime?
+  sequence        Int             @default(0) // .ics SEQUENCE, +1 on every reschedule
+  createdBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  application  Application            @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  guide        InterviewGuide?        @relation(fields: [guideId], references: [id], onDelete: SetNull)
+  creator      User?                  @relation("UserCreatedInterviews", fields: [createdBy], references: [id], onDelete: SetNull)
+  participants InterviewParticipant[]
+  kit          InterviewKit?
+  feedback     InterviewerFeedback[]
+
+  @@index([applicationId])
+  @@index([status, scheduledAt])
+  @@map("interviews")
+}
+
+model InterviewParticipant {
+  id          String                   @id @default(cuid())
+  interviewId String
+  userId      String
+  role        InterviewParticipantRole
+
+  interview Interview     @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  user      User          @relation("UserInterviewParticipations", fields: [userId], references: [id], onDelete: Cascade)
+  notes     KitItemNote[]
+
+  @@unique([interviewId, userId])
+  @@index([userId])
+  @@map("interview_participants")
+}
+
+// The interview kit: a snapshot of the guide, prepared for one interview
+model InterviewKit {
+  id             String    @id @default(cuid())
+  interviewId    String    @unique
+  status         KitStatus @default(draft)
+  briefing       Json? // string[] (max 5 points)
+  hypotheses     Json? // { criterionId, hypothesis, howToVerify }[]
+  checklist      Json // KitChecklistItem[]
+  missingSources String[]  @default([])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  interview Interview    @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  sections  KitSection[]
+  items     KitItem[]
+
+  @@map("interview_kits")
+}
+
+model KitSection {
+  id      String           @id @default(cuid())
+  kitId   String
+  title   String
+  minutes Int
+  order   Int
+  kind    GuideSectionKind
+
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  items KitItem[]
+
+  @@index([kitId])
+  @@map("kit_sections")
+}
+
+model KitItem {
+  id           String        @id @default(cuid())
+  kitId        String
+  sectionId    String
+  text         String
+  followUps    String[]      @default([])
+  criterionIds String[]      @default([])
+  anchors      Json? // { weak, medium, strong }
+  required     Boolean       @default(false)
+  order        Int // position inside its section
+  origin       KitItemOrigin
+  rationale    String?
+  sourceRef    String? // 'quiz:{questionId}' | 'feedback:{feedbackId}' | 'cv:{quote}'
+  edited       Boolean       @default(false)
+  covered      Boolean       @default(false)
+  coveredAt    DateTime?
+
+  kit     InterviewKit  @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  section KitSection    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  notes   KitItemNote[]
+
+  @@index([kitId])
+  @@index([sectionId])
+  @@map("kit_items")
+}
+
+model KitItemNote {
+  id            String   @id @default(cuid())
+  kitItemId     String
+  participantId String
+  note          String?
+  score         Int? // 1-5
+  evidenceQuote String?
+  updatedAt     DateTime @updatedAt
+
+  kitItem     KitItem              @relation(fields: [kitItemId], references: [id], onDelete: Cascade)
+  participant InterviewParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([kitItemId, participantId])
+  @@index([participantId])
+  @@map("kit_item_notes")
+}
+
+// The scorecard filled by one interviewer for one interview
+model InterviewerFeedback {
+  id                 String    @id @default(cuid())
+  interviewId        String
+  interviewerId      String
+  hireRecommendation String? // strong_yes | yes | maybe | no | strong_no
+  notes              String?
+  redFlags           String[]  @default([])
+  standoutMoments    String[]  @default([])
+  submittedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  interview   Interview        @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  interviewer User             @relation("UserInterviewerFeedback", fields: [interviewerId], references: [id], onDelete: Cascade)
+  scores      CriterionScore[]
+
+  @@unique([interviewId, interviewerId])
+  @@index([interviewerId])
+  @@map("interviewer_feedback")
+}
+
+model CriterionScore {
+  id          String  @id @default(cuid())
+  feedbackId  String
+  criterionId String
+  score       Int // 1-5
+  evidence    String?
+
+  feedback  InterviewerFeedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  criterion ScorecardCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@unique([feedbackId, criterionId])
+  @@index([criterionId])
+  @@map("criterion_scores")
 }
 
 model Quiz {
@@ -180,31 +520,35 @@ model Quiz {
 
   position      Position       @relation(fields: [positionId], references: [id], onDelete: Cascade)
   creator       User           @relation("UserQuizzes", fields: [createdBy], references: [id], onDelete: Cascade)
-  interviews    Interview[]
+  assessments   Assessment[]
   quizQuestions QuizQuestion[] // New: linked reusable questions
 
   @@map("quizzes")
 }
 
-model Interview {
-  id          String          @id @default(cuid())
-  candidateId String
-  quizId      String
-  status      InterviewStatus @default(pending)
-  startedAt   DateTime?
-  completedAt DateTime?
-  answers     Json?
-  token       String          @unique
-  createdAt   DateTime        @default(now())
+// A quiz sent to a candidate (the test)
+model Assessment {
+  id            String           @id @default(cuid())
+  applicationId String
+  candidateId   String
+  quizId        String
+  status        AssessmentStatus @default(pending)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  answers       Json?
+  token         String           @unique
+  createdAt     DateTime         @default(now())
 
-  candidate  Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  quiz       Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  evaluation Evaluation?
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidate   Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  quiz        Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  evaluation  Evaluation?
 
-  @@map("interviews")
+  @@index([applicationId])
+  @@map("assessments")
 }
 
-enum InterviewStatus {
+enum AssessmentStatus {
   pending
   in_progress
   completed
@@ -251,6 +595,8 @@ model QuizQuestion {
   quizId     String
   questionId String
   order      Int      // Order of question in the quiz
+  // Ids of the scorecard criteria this question verifies in this quiz
+  criterionIds String[] @default([])
   createdAt  DateTime @default(now())
 
   quiz     Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
@@ -267,13 +613,13 @@ enum QuestionType {
   behavioral_scenario
 }
 
-// AI-generated evaluations for interviews (quiz-based) and candidates (resume-based)
+// AI-generated evaluations for assessments (quiz-based) and candidates (resume-based)
 model Evaluation {
   id    String @id @default(cuid())
-  title String // Quiz name for interview eval, Position name for candidate eval
+  title String // Quiz name for assessment eval, Position name for candidate eval
 
-  // Polymorphic: one of interviewId or candidateId will be set
-  interviewId String?    @unique // 1:1 with interview
+  // Polymorphic: one of assessmentId or candidateId will be set
+  assessmentId String?    @unique // 1:1 with assessment
   candidateId String?    // Many evaluations per candidate (different positions)
   positionId  String?    // Required for candidate evaluations to track which position
 
@@ -283,18 +629,13 @@ model Evaluation {
   weaknesses     String[] @default([])
   recommendation String?
   fitScore       Int?     // 0-10 scale (AI's candidate fit assessment)
-  quizScore      Int?     // 0-100 percentage score from quiz answers (interview evals only)
+  quizScore      Int?     // 0-100 percentage score from quiz answers (assessment evals only)
 
-  // Hiring manager notes and decision
-  interviewNotes    String?
-  redFlags          String[] @default([])
-  standoutMoments   String[] @default([])
-  hireRecommendation String?
-  nextSteps         String?
-  assessedBy        String?
-  assessedAt        DateTime?
+  // Per-answer detail (assessment evals) and per-criterion assessment (CV evals)
+  answerEvaluations  Json?
+  criteriaAssessment Json?
 
-  // Manual notes field (legacy)
+  // Recruiter's manual notes ("Note manuali")
   notes String?
 
   // Metadata
@@ -303,44 +644,14 @@ model Evaluation {
   updatedAt DateTime @updatedAt
 
   // Relations
-  interview Interview? @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-  candidate Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  position  Position?  @relation(fields: [positionId], references: [id], onDelete: SetNull)
-  creator   User       @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
-  assessor  User?      @relation("UserEvaluationAssessments", fields: [assessedBy], references: [id], onDelete: SetNull)
+  assessment Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  candidate  Candidate?  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  position   Position?   @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  creator    User        @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@index([candidateId])
   @@index([positionId])
   @@map("evaluations")
-}
-
-model BehavioralRubric {
-  id            String   @id @default(cuid())
-  candidateId   String
-  positionId    String
-
-  communicationScore  Int
-  collaborationScore  Int
-  problemSolvingScore Int
-  cultureFitScore     Int
-  leadershipScore     Int?
-
-  strengthExamples String[] @default([])
-  improvementAreas String[] @default([])
-  overallComments  String?
-
-  createdBy String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  position  Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  creator   User      @relation("UserBehavioralRubrics", fields: [createdBy], references: [id], onDelete: Cascade)
-
-  @@unique([candidateId, positionId])
-  @@index([candidateId])
-  @@index([positionId])
-  @@map("behavioral_rubrics")
 }
 
 model Preset {

@@ -7,12 +7,20 @@
  */
 
 import prisma from "../prisma";
-import { overallEvaluationSchema } from "../schemas";
+import { Prisma } from "../prisma/client";
+import {
+  resumeEvaluationResultSchema,
+  type CriteriaAssessment,
+  type ResumeEvaluationResult,
+} from "../schemas";
+import { buildCriterionKeys } from "../utils/criterion-keys";
 import {
   buildResumeEvaluationPrompt,
   RESUME_EVALUATION_SYSTEM_PROMPT,
 } from "./ai/evaluation-prompts";
+import { advanceApplicationStage, type StageChangeResult } from "./applications";
 import { aiLogger } from "./logger";
+import { getActiveCriteria } from "./scorecards";
 
 /** A request that cannot be fulfilled; `status` is the HTTP status to return. */
 export class ResumeEvaluationError extends Error {
@@ -104,8 +112,21 @@ export async function prepareResumeEvaluation(
     throw new ResumeEvaluationError("Posizione non trovata", 404);
   }
 
+  // A resume evaluation is evidence of an application
+  const application = await prisma.application.findUnique({
+    where: { candidateId_positionId: { candidateId, positionId } },
+    select: { id: true },
+  });
+
+  if (!application) {
+    throw new ResumeEvaluationError(
+      "Il candidato non è candidato a questa posizione",
+      404,
+    );
+  }
+
   const existingEvaluation = await prisma.evaluation.findFirst({
-    where: { candidateId, positionId, interviewId: null },
+    where: { candidateId, positionId, assessmentId: null },
     select: { id: true },
   });
 
@@ -125,46 +146,122 @@ export async function prepareResumeEvaluation(
     );
   }
 
+  // Active criteria of the position scorecard, listed to the model by key.
+  // The key map travels to the save, so the stored ids are the ones the
+  // prompt used even if the scorecard changes meanwhile.
+  const criteria = await getActiveCriteria(position.id);
+  const keyed = buildCriterionKeys(criteria);
+
   return {
     candidateId: candidate.id,
     positionId: position.id,
+    applicationId: application.id,
     title: position.title,
     system: RESUME_EVALUATION_SYSTEM_PROMPT,
     prompt: buildResumeEvaluationPrompt({
       candidateName: `${candidate.firstName} ${candidate.lastName}`,
       resumeText,
       position,
+      criteria: keyed.map(({ key, name, description, expectedLevel }) => ({
+        key,
+        name,
+        description,
+        expectedLevel,
+      })),
     }),
+    criterionKeys: keyed.map(({ id, key }) => ({ id, key })),
   };
 }
 
 /**
- * Parse the model's full text response and store it as an Evaluation.
+ * Assessment per criterion, keyed by criterion id, from the model output.
+ * Unknown keys and repeated criteria are dropped; a score is rounded and
+ * clamped to 1-5 (null = no evidence in the CV). When at least one item is
+ * valid, every criterion the model skipped is stored as "no evidence", so the
+ * result has one entry per criterion. Returns null when nothing is valid.
+ */
+export function buildCriteriaAssessment(
+  items: ResumeEvaluationResult["criteriaAssessment"],
+  criterionKeys: { id: string; key: string }[],
+): CriteriaAssessment | null {
+  if (criterionKeys.length === 0 || !items || items.length === 0) return null;
+
+  const idByKey = new Map(
+    criterionKeys.map(({ id, key }) => [key.trim().toUpperCase(), id]),
+  );
+
+  const assessment: CriteriaAssessment = {};
+  for (const item of items) {
+    const id = idByKey.get(item.criterionKey.trim().toUpperCase());
+    if (!id || id in assessment) continue;
+
+    assessment[id] = {
+      score:
+        item.score === null
+          ? null
+          : Math.min(5, Math.max(1, Math.round(item.score))),
+      evidence: item.evidence.trim(),
+    };
+  }
+
+  if (Object.keys(assessment).length === 0) return null;
+
+  for (const { id } of criterionKeys) {
+    if (!(id in assessment)) {
+      assessment[id] = { score: null, evidence: "" };
+    }
+  }
+
+  return assessment;
+}
+
+/**
+ * Parse the model's full text response, store it as an Evaluation and advance
+ * the application to screening, in one transaction.
  * Throws when the response is not a valid evaluation.
  */
 export async function saveResumeEvaluation(params: {
   candidateId: string;
   positionId: string;
+  applicationId: string;
   title: string;
   responseText: string;
   userId: string;
-}) {
-  const parsed = overallEvaluationSchema.parse(
+  /** Key map built by prepareResumeEvaluation (empty without criteria) */
+  criterionKeys: { id: string; key: string }[];
+}): Promise<{ id: string; stageChange: StageChangeResult }> {
+  const parsed = resumeEvaluationResultSchema.parse(
     JSON.parse(cleanJsonResponse(params.responseText)),
   );
 
-  return prisma.evaluation.create({
-    data: {
-      title: params.title,
-      candidateId: params.candidateId,
-      positionId: params.positionId,
-      evaluation: parsed.evaluation,
-      strengths: parsed.strengths,
-      weaknesses: parsed.weaknesses,
-      recommendation: parsed.recommendation,
-      fitScore: Math.round(parsed.fitScore / 10), // 0-100 -> 0-10
-      createdBy: params.userId,
-    },
-    select: { id: true },
+  const criteriaAssessment = buildCriteriaAssessment(
+    parsed.criteriaAssessment,
+    params.criterionKeys,
+  );
+
+  return prisma.$transaction(async (tx) => {
+    const evaluation = await tx.evaluation.create({
+      data: {
+        title: params.title,
+        candidateId: params.candidateId,
+        positionId: params.positionId,
+        evaluation: parsed.evaluation,
+        strengths: parsed.strengths,
+        weaknesses: parsed.weaknesses,
+        recommendation: parsed.recommendation,
+        fitScore: Math.round(parsed.fitScore / 10), // 0-100 -> 0-10
+        criteriaAssessment: criteriaAssessment ?? Prisma.JsonNull,
+        createdBy: params.userId,
+      },
+      select: { id: true },
+    });
+
+    const stageChange = await advanceApplicationStage(
+      tx,
+      params.applicationId,
+      "cv_evaluated",
+    );
+
+    return { id: evaluation.id, stageChange };
   });
 }

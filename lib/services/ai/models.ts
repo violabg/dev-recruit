@@ -26,7 +26,7 @@ export const LLM_MODELS = {
 
   // Audio transcription
   WHISPER_LARGE_V3: "whisper-large-v3", // Highest accuracy
-  WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo", // Faster, used for interviews
+  WHISPER_LARGE_V3_TURBO: "whisper-large-v3-turbo", // Faster, used for assessments
 
   // ============================================================================
   // PREVIEW MODELS - may be discontinued by Groq at short notice
@@ -53,6 +53,10 @@ export type LLMTaskType =
   | "evaluation" // Answer evaluation and scoring
   | "overall_evaluation" // Comprehensive candidate assessment
   | "resume_evaluation" // Resume-based candidate evaluation against position
+  | "scorecard_generation" // Proposal of the scorecard criteria of a position
+  | "guide_generation" // Interview guide generation from the scorecard
+  | "kit_generation" // Personalized interview kit from CV, test and previous rounds
+  | "decision_review" // Devil's advocate on a hiring decision
   | "simple_task"; // Basic text processing
 
 // Type for available model names
@@ -135,6 +139,13 @@ export const getOptimalModel = (
 
     case "resume_evaluation":
       // Full resume + position requirements fit easily in 131K context
+      return LLM_MODELS.GPT_OSS_120B;
+
+    case "scorecard_generation":
+    case "guide_generation":
+    case "kit_generation":
+    case "decision_review":
+      // Structured Italian content tied to the position requirements
       return LLM_MODELS.GPT_OSS_120B;
 
     case "simple_task":

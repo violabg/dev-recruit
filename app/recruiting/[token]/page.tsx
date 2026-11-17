@@ -1,53 +1,53 @@
-import { InterviewClient } from "@/components/recruiting/interview-client";
-import { getInterviewByToken } from "@/lib/data/interviews";
+import { AssessmentClient } from "@/components/recruiting/assessment-client";
+import { getAssessmentByToken } from "@/lib/data/assessments";
 import { Quiz } from "@/lib/data/quizzes";
 import { Suspense } from "react";
-import { InterviewSkeleton } from "./fallbacks";
+import { AssessmentSkeleton } from "./fallbacks";
 
-// Server component for interview page
-export default async function InterviewPage({
+// Server component for the candidate's assessment page
+export default async function AssessmentPage({
   params,
 }: {
   params: Promise<{ token: string }>;
 }) {
   return (
-    <Suspense fallback={<InterviewSkeleton />}>
-      <InterviewContent params={params} />
+    <Suspense fallback={<AssessmentSkeleton />}>
+      <AssessmentContent params={params} />
     </Suspense>
   );
 }
 
-async function InterviewContent({
+async function AssessmentContent({
   params,
 }: {
   params: Promise<{ token: string }>;
 }) {
-  const interviewParams = await params;
-  const interviewData = await getInterviewByToken(interviewParams.token);
+  const assessmentParams = await params;
+  const assessmentData = await getAssessmentByToken(assessmentParams.token);
 
-  if (!interviewData) {
+  if (!assessmentData) {
     return (
       <div className="flex flex-col justify-center items-center min-h-dvh">
         <div className="bg-card shadow-lg p-6 border rounded-lg w-full max-w-md">
           <h1 className="font-bold text-2xl text-center">
-            Intervista non trovata
+            Test non trovato
           </h1>
           <p className="mt-2 text-muted-foreground text-center">
-            Il link che hai seguito non è valido o l&apos;intervista è stata
-            cancellata.
+            Il link che hai seguito non è valido o il test è stato
+            cancellato.
           </p>
         </div>
       </div>
     );
   }
   return (
-    <InterviewClient
-      interview={interviewData.interview}
-      quiz={interviewData.quiz as Quiz}
+    <AssessmentClient
+      assessment={assessmentData.assessment}
+      quiz={assessmentData.quiz as Quiz}
       candidate={{
-        id: interviewData.candidate.id,
-        name: interviewData.candidate.name ?? "",
-        email: interviewData.candidate.email ?? "",
+        id: assessmentData.candidate.id,
+        name: assessmentData.candidate.name ?? "",
+        email: assessmentData.candidate.email ?? "",
       }}
     />
   );

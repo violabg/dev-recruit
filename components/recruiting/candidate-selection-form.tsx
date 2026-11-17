@@ -10,19 +10,13 @@ import { errorMessage, unwrap } from "@/lib/utils/action-result";
 
 import { Button } from "@/components/ui/button";
 import { MultiSelectField } from "@/components/ui/rhf-inputs";
-import { assignCandidatesToQuizAction } from "@/lib/actions/interviews";
+import { assignCandidatesToQuizAction } from "@/lib/actions/assessments";
+import type { UnassignedCandidate } from "@/lib/data/assessments";
 import { CandidateSelection, candidateSelectionSchema } from "@/lib/schemas";
-
-interface Candidate {
-  id: string;
-  name: string;
-  email: string;
-  status: string;
-}
 
 interface CandidateSelectionFormProps {
   quizId: string;
-  unassignedCandidates: Candidate[];
+  unassignedCandidates: UnassignedCandidate[];
   onSuccess?: () => void;
 }
 
@@ -57,7 +51,7 @@ export function CandidateSelectionForm({
         setCreatedLinks(result.created);
 
         if (result.created.length > 0) {
-          toast.success("Link di colloquio creati", {
+          toast.success("Link del test creati", {
             description: `${result.created.length} link creati con successo`,
           });
           form.reset();
@@ -65,23 +59,23 @@ export function CandidateSelectionForm({
         }
 
         if (result.skipped.length > 0) {
-          toast.warning("Alcuni colloqui non sono stati creati", {
+          toast.warning("Alcuni test non sono stati creati", {
             description: result.skipped.join(" "),
           });
         }
       } catch (error) {
-        toast.error("Errore nella creazione dei colloqui", {
+        toast.error("Errore nella creazione dei test", {
           description: errorMessage(error),
         });
       }
     });
   };
 
-  const copyInterviewLink = (token: string) => {
+  const copyAssessmentLink = (token: string) => {
     const link = `${window.location.origin}/recruiting/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiato", {
-      description: "Il link del colloquio è stato copiato negli appunti",
+      description: "Il link del test è stato copiato negli appunti",
     });
   };
 
@@ -122,12 +116,12 @@ export function CandidateSelectionForm({
             {isPending ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Creazione colloqui...
+                Creazione test...
               </>
             ) : (
               <>
                 <Plus className="mr-1 size-4" />
-                Crea link di colloquio
+                Crea link del test
               </>
             )}
           </Button>
@@ -136,7 +130,7 @@ export function CandidateSelectionForm({
 
       {createdLinks.length > 0 && (
         <div className="flex flex-col gap-4">
-          <h3 className="font-medium">Link di colloquio generati</h3>
+          <h3 className="font-medium">Link del test generati</h3>
           <div className="flex flex-col gap-2">
             {createdLinks.map((link) => (
               <div
@@ -146,14 +140,14 @@ export function CandidateSelectionForm({
                 <div>
                   <div className="font-medium">{link.candidateName}</div>
                   <div className="text-muted-foreground text-sm">
-                    {link.candidateEmail} • Link del colloquio pronto
+                    {link.candidateEmail} • Link del test pronto
                   </div>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => copyInterviewLink(link.token)}
+                  onClick={() => copyAssessmentLink(link.token)}
                 >
                   <Copy className="mr-1 size-4" />
                   Copia link

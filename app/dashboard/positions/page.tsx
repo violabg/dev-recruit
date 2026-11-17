@@ -1,4 +1,5 @@
 import PageHeader from "@/components/page-header";
+import { PositionStatusFilter } from "@/components/positions/position-status-filter";
 import { SearchPositions } from "@/components/positions/search-positions";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -22,6 +23,7 @@ import {
   UrlPagination,
 } from "@/components/ui/url-pagination";
 import { getPositions } from "@/lib/data/positions";
+import { POSITION_STATUS_VALUES, type PositionStatus } from "@/lib/schemas";
 import { Briefcase, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -30,8 +32,17 @@ import { PositionsTableClient } from "./positions-table-client";
 
 type PositionsSearchParams = Promise<{
   q?: string;
+  status?: string;
   page?: string;
 }>;
+
+/** Absent or invalid → the open positions */
+const normalizeStatus = (value?: string): PositionStatus | "all" => {
+  if (value === "all") return "all";
+  return (POSITION_STATUS_VALUES as readonly string[]).includes(value ?? "")
+    ? (value as PositionStatus)
+    : "open";
+};
 
 // Server component for positions page
 export default async function PositionsPage({
@@ -58,6 +69,7 @@ export default async function PositionsPage({
       <div className="flex items-center gap-4">
         <Suspense fallback={<SearchPositionsSkeleton />}>
           <SearchPositions />
+          <PositionStatusFilter />
         </Suspense>
       </div>
       <Suspense fallback={<PositionsSkeleton />}>
@@ -74,6 +86,7 @@ const PositionsTable = async ({
 }) => {
   const params = await searchParams;
   const query = params.q?.trim();
+  const status = normalizeStatus(params.status);
   const page = Math.max(1, Math.floor(Number(params.page)) || 1);
 
   const {
@@ -85,6 +98,7 @@ const PositionsTable = async ({
     hasPrevPage,
   } = await getPositions({
     search: query,
+    status,
     page,
     pageSize: DEFAULT_PAGE_SIZE,
   });
@@ -98,6 +112,7 @@ const PositionsTable = async ({
               <TableHeader>
                 <TableRow>
                   <TableHead>Titolo</TableHead>
+                  <TableHead>Stato</TableHead>
                   <TableHead>Livello</TableHead>
                   <TableHead>Competenze</TableHead>
                   <TableHead>Data Creazione</TableHead>

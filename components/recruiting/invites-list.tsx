@@ -16,32 +16,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { INTERVIEW_STATE_PRESENTATION } from "@/components/interviews/interview-status";
-import { deleteInterviewAction } from "@/lib/actions/interviews";
-import type { AssignedInterview } from "@/lib/data/interviews";
-import { interviewState, type InterviewState } from "@/lib/utils/interview-utils";
+import { ASSESSMENT_STATE_PRESENTATION } from "@/components/assessments/assessment-status";
+import { deleteAssessmentAction } from "@/lib/actions/assessments";
+import type { AssignedAssessment } from "@/lib/data/assessments";
+import {
+  assessmentState,
+  type AssessmentState,
+} from "@/lib/utils/assessment-utils";
 import { cn } from "cn";
 import { toast } from "sonner";
 import { TableRowLink } from "../ui/table-row-link";
 
 interface InvitesListProps {
-  assignedInterviews: AssignedInterview[];
+  assignedAssessments: AssignedAssessment[];
 }
 
-export function InvitesList({ assignedInterviews }: InvitesListProps) {
-  const [interviews, setInterviews] =
-    useState<AssignedInterview[]>(assignedInterviews);
+export function InvitesList({ assignedAssessments }: InvitesListProps) {
+  const [assessments, setAssessments] =
+    useState<AssignedAssessment[]>(assignedAssessments);
 
-  const copyInterviewLink = (token: string) => {
+  const copyAssessmentLink = (token: string) => {
     const link = `${window.location.origin}/recruiting/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiato", {
-      description: "Il link del colloquio è stato copiato negli appunti",
+      description: "Il link del test è stato copiato negli appunti",
     });
   };
 
-  const statusBadge = (state: InterviewState) => {
-    const { label, badge } = INTERVIEW_STATE_PRESENTATION[state];
+  const statusBadge = (state: AssessmentState) => {
+    const { label, badge } = ASSESSMENT_STATE_PRESENTATION[state];
     return <Badge className={cn("w-fit", badge)}>{label}</Badge>;
   };
 
@@ -57,11 +60,11 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
     }
   };
 
-  if (interviews.length === 0) {
+  if (assessments.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-40 text-center">
         <p className="text-muted-foreground text-sm">
-          Non è ancora stato creato nessun colloquio.
+          Non è ancora stato creato nessun test.
         </p>
       </div>
     );
@@ -81,52 +84,54 @@ export function InvitesList({ assignedInterviews }: InvitesListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {interviews.map((interview) => (
-              <TableRow key={interview.id}>
+            {assessments.map((assessment) => (
+              <TableRow key={assessment.id}>
                 <TableCell className="relative font-medium">
                   <TableRowLink
-                    href={`/dashboard/interviews/${interview.id}`}
+                    href={`/dashboard/assessments/${assessment.id}`}
                   />
-                  {interview.candidateName}
+                  {assessment.candidateName}
                 </TableCell>
-                <TableCell>{interview.quizTitle}</TableCell>
+                <TableCell>{assessment.quizTitle}</TableCell>
                 <TableCell>
                   {statusBadge(
-                    interviewState({
-                      status: interview.status,
-                      startedAt: interview.startedAt,
-                      timeLimit: interview.quizTimeLimit,
+                    assessmentState({
+                      status: assessment.status,
+                      startedAt: assessment.startedAt,
+                      timeLimit: assessment.quizTimeLimit,
                     }),
                   )}
                 </TableCell>
-                <TableCell>{formatDate(interview.createdAt)}</TableCell>
+                <TableCell>{formatDate(assessment.createdAt)}</TableCell>
                 <TableCell className="z-10 relative text-right">
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyInterviewLink(interview.token)}
-                      title="Copia il link del colloquio"
+                      onClick={() => copyAssessmentLink(assessment.token)}
+                      title="Copia il link del test"
                     >
                       <Copy className="size-4" />
                     </Button>
                     <DeleteWithConfirm
                       deleteAction={async () => {
-                        const result = await deleteInterviewAction(interview.id);
+                        const result = await deleteAssessmentAction(
+                          assessment.id,
+                        );
                         if (result.success) {
-                          setInterviews(
-                            interviews.filter((i) => i.id !== interview.id),
+                          setAssessments(
+                            assessments.filter((a) => a.id !== assessment.id),
                           );
                         }
                         return result;
                       }}
-                      title="Eliminare il colloquio?"
-                      description="Il colloquio verrà eliminato definitivamente. L'azione non può essere annullata."
+                      title="Eliminare il test?"
+                      description="Il test verrà eliminato definitivamente. L'azione non può essere annullata."
                       label="Elimina"
                       iconOnly
-                      successMessage="Colloquio eliminato con successo"
-                      errorMessage="Errore durante l'eliminazione del colloquio"
-                      disabled={interview.status === "completed"}
+                      successMessage="Test eliminato con successo"
+                      errorMessage="Errore durante l'eliminazione del test"
+                      disabled={assessment.status === "completed"}
                       variant="outline"
                     />
                   </div>

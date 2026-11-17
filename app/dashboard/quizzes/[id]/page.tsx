@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getRecentQuizIds } from "@/lib/data/quizzes";
+import { getQuizById, getRecentQuizIds } from "@/lib/data/quizzes";
 import { Suspense } from "react";
 import {
   QuizHeaderSkeleton,
@@ -19,7 +19,7 @@ export async function generateStaticParams() {
   return quizIds.map((id) => ({ id }));
 }
 
-export default async function QuizDetailPage({
+export default function QuizDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -31,36 +31,47 @@ export default async function QuizDetailPage({
         <QuizHeader params={params} />
       </Suspense>
 
-      {/* Tabs shell - static, content loaded via Suspense */}
-      <Tabs defaultValue="questions">
-        <TabsList variant="line">
-          <TabsTrigger value="questions">Domande</TabsTrigger>
-          <TabsTrigger value="settings">Impostazioni</TabsTrigger>
-          <TabsTrigger value="results">Risultati</TabsTrigger>
-        </TabsList>
-        <TabsContent value="questions" className="flex flex-col gap-6 pt-4">
-          <Suspense fallback={<QuizQuestionsTabSkeleton />}>
-            <QuizQuestionsContent params={params} />
-          </Suspense>
-        </TabsContent>
-        <TabsContent value="settings" className="flex flex-col gap-4 pt-4">
-          <Suspense fallback={<QuizSettingsTabSkeleton />}>
-            <QuizSettingsContent params={params} />
-          </Suspense>
-        </TabsContent>
-        <TabsContent value="results" className="flex flex-col gap-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Risultati</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Suspense fallback={<QuizResultsSkeleton />}>
-                <QuizResultsContent params={params} />
-              </Suspense>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Suspense fallback={<QuizQuestionsTabSkeleton />}>
+        <QuizTabs params={params} />
+      </Suspense>
     </div>
+  );
+}
+
+/** The tabs; nothing is shown for a quiz that does not exist (the header already says so) */
+async function QuizTabs({ params }: { params: Promise<{ id: string }> }) {
+  const quiz = await getQuizById((await params).id);
+  if (!quiz) return null;
+
+  return (
+    <Tabs defaultValue="questions">
+      <TabsList variant="line">
+        <TabsTrigger value="questions">Domande</TabsTrigger>
+        <TabsTrigger value="settings">Impostazioni</TabsTrigger>
+        <TabsTrigger value="results">Risultati</TabsTrigger>
+      </TabsList>
+      <TabsContent value="questions" className="flex flex-col gap-6 pt-4">
+        <Suspense fallback={<QuizQuestionsTabSkeleton />}>
+          <QuizQuestionsContent params={params} />
+        </Suspense>
+      </TabsContent>
+      <TabsContent value="settings" className="flex flex-col gap-4 pt-4">
+        <Suspense fallback={<QuizSettingsTabSkeleton />}>
+          <QuizSettingsContent params={params} />
+        </Suspense>
+      </TabsContent>
+      <TabsContent value="results" className="flex flex-col gap-4 pt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Risultati</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Suspense fallback={<QuizResultsSkeleton />}>
+              <QuizResultsContent params={params} />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }

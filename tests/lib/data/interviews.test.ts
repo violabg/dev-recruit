@@ -1,344 +1,515 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/prisma", () => ({
+  default: {
+    interview: { findMany: vi.fn(), findUnique: vi.fn() },
+    scorecardCriterion: { findMany: vi.fn() },
+    interviewParticipant: { findUnique: vi.fn() },
+    kitItemNote: { findMany: vi.fn() },
+    interviewerFeedback: { findUnique: vi.fn(), findMany: vi.fn() },
+  },
+}));
+
 import {
-  getCandidateQuizData,
-  getCompletedInterviewsCount,
-  getFilteredInterviews,
-  getInterviewByToken,
-  getInterviewDetail,
-  getInterviewsByQuiz,
-  getInterviewsStatus,
-  getQuizAssignmentData,
-  getRecentInterviewIds,
-  mapAssignedInterview,
-  mapInterviewListItem,
+  getAgendaInterviews,
+  getInterviewFeedbackPage,
+  getInterviewForPreparation,
+  getInterviewsByApplication,
+  getInterviewLiveSession,
 } from "@/lib/data/interviews";
 import prisma from "@/lib/prisma";
-import { describe, expect, it } from "vitest";
+import { cacheLife, cacheTag } from "next/cache";
 
-describe("interviews data layer", () => {
-  it("mapAssignedInterview maps prisma record correctly", () => {
-    const record: any = {
-      id: "i1",
-      token: "t1",
-      status: "pending",
-      createdAt: new Date("2020-01-01T00:00:00.000Z"),
-      startedAt: null,
-      completedAt: null,
-      candidate: {
-        id: "c1",
-        firstName: "Jane",
-        lastName: "Doe",
-        email: "jane@example.com",
-      },
-      quiz: { id: "q1", title: "Quiz 1" },
-    };
+const db = prisma as any;
 
-    const mapped = mapAssignedInterview(record as any);
-    expect(mapped.id).toBe("i1");
-    expect(mapped.candidateName).toBe("Jane Doe");
-    expect(mapped.quizTitle).toBe("Quiz 1");
-  });
+const listRow = {
+  id: "int-1",
+  applicationId: "app-1",
+  round: 2,
+  status: "scheduled",
+  scheduledAt: new Date("2026-11-17T09:00:00Z"),
+  durationMinutes: 60,
+  meetingUrl: null,
+  sequence: 1,
+  kit: { status: "draft" },
+  guide: { title: "Colloquio tecnico" },
+  participants: [
+    { id: "p-lead", userId: "u-lead", role: "lead", user: { id: "u-lead", name: "Anna" } },
+    { id: "p-obs", userId: "u-obs", role: "observer", user: { id: "u-obs", name: "Luca" } },
+  ],
+  feedback: [
+    {
+      id: "fb-1",
+      interviewerId: "u-obs",
+      hireRecommendation: "yes",
+      submittedAt: new Date("2026-11-18"),
+      interviewer: { name: "Luca" },
+    },
+  ],
+};
 
-  it("mapInterviewListItem maps full relations correctly", () => {
-    const record: any = {
-      id: "i2",
-      token: "t2",
-      status: "completed",
-      startedAt: new Date("2020-01-01T00:00:00.000Z"),
-      completedAt: new Date("2020-01-01T01:00:00.000Z"),
-      createdAt: new Date("2020-01-01T00:00:00.000Z"),
-      candidateId: "c2",
-      candidate: {
-        firstName: "John",
-        lastName: "Smith",
-        email: "john@example.com",
-      },
-      quizId: "q2",
-      quiz: {
-        title: "Quiz 2",
-        timeLimit: 30,
-        position: { id: "p1", title: "Dev", skills: ["js"] },
-      },
-    };
-
-    const mapped = mapInterviewListItem(record as any);
-    expect(mapped.id).toBe("i2");
-    expect(mapped.positionTitle).toBe("Dev");
-    expect(mapped.positionSkills).toEqual(["js"]);
-  });
-
-  it("getFilteredInterviews returns paginated results", async () => {
-    const fakeRecords = Array.from({ length: 2 }).map((_, i) => ({
-      id: `i${i}`,
-      token: `t${i}`,
-      status: i % 2 === 0 ? "completed" : "pending",
-      createdAt: new Date(),
-      startedAt: null,
-      completedAt: null,
-      candidateId: `c${i}`,
-      candidate: { firstName: "A", lastName: "B", email: "a@b" },
-      quizId: `q${i}`,
-      quiz: {
-        title: `Quiz ${i}`,
-        timeLimit: 10,
-        position: { id: "p1", title: "P", skills: [] },
-      },
-    }));
-
-    (prisma.interview.findMany as any).mockResolvedValue(fakeRecords);
-    (prisma.interview.count as any).mockResolvedValue(2);
-
-    const result = await getFilteredInterviews({ page: 1, pageSize: 10 });
-    expect(result.interviews.length).toBe(2);
-    expect(result.totalCount).toBe(2);
-    expect(result.currentPage).toBe(1);
-  });
-
-  it("getQuizAssignmentData returns quiz assignment data", async () => {
-    const fakeQuiz = {
-      id: "q1",
-      title: "Quiz 1",
-      positionId: "p1",
-      timeLimit: 30,
-      createdBy: "u1",
-      position: { id: "p1", title: "Position 1" },
-    };
-    const fakeInterviews = [
+const preparationRow = {
+  ...listRow,
+  application: {
+    positionId: "pos-1",
+    candidate: { id: "cand-1", firstName: "Mario", lastName: "Rossi" },
+    position: { id: "pos-1", title: "Dev" },
+  },
+  kit: {
+    id: "kit-1",
+    status: "draft",
+    briefing: ["Punto", 3, null],
+    hypotheses: [
+      { criterionId: "c1", hypothesis: "Ipotesi valida", howToVerify: "Chiedi esempi" },
+      { criterionId: "c1" },
+    ],
+    checklist: "invalid",
+    missingSources: ["cv", "unknown"],
+    sections: [{ id: "s1", title: "Tecnica", minutes: 30, order: 0, kind: "technical" }],
+    items: [
       {
-        id: "i1",
-        createdAt: new Date(),
-        candidate: {
-          id: "c1",
-          firstName: "John",
-          lastName: "Doe",
-          email: "john@example.com",
-        },
-        quiz: { id: "q1", title: "Quiz 1" },
+        id: "item-1",
+        sectionId: "s1",
+        text: "Domanda",
+        followUps: [],
+        criterionIds: ["c1"],
+        anchors: { weak: "w" },
+        required: true,
+        order: 0,
+        origin: "template",
+        rationale: null,
+        sourceRef: null,
+        edited: false,
+        covered: true,
       },
-    ];
-    const fakeCandidates = [
+    ],
+  },
+};
+
+const criteriaRows = [
+  { id: "c1", name: "React", priority: "must", order: 0, archivedAt: null },
+  { id: "c2", name: "SQL", priority: "nice", order: 1, archivedAt: new Date() },
+];
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe("getInterviewsByApplication", () => {
+  it("is cached for hours with interviews, candidates, positions and guide tags", async () => {
+    db.interview.findMany.mockResolvedValueOnce([listRow]);
+
+    const rows = await getInterviewsByApplication("app-1");
+
+    expect(cacheLife).toHaveBeenCalledWith("hours");
+    expect(cacheTag).toHaveBeenCalledWith(
+      "interviews",
+      "candidates",
+      "positions",
+      "interview-guides",
+    );
+    const query = db.interview.findMany.mock.calls[0][0];
+    expect(query.where).toEqual({ applicationId: "app-1" });
+    expect(query.orderBy).toEqual([{ round: "desc" }, { scheduledAt: "desc" }]);
+    expect(query.select.feedback.where).toEqual({ submittedAt: { not: null } });
+    expect(JSON.stringify(query.select)).not.toContain("notes");
+
+    expect(rows).toEqual([
       {
-        id: "c2",
-        firstName: "Jane",
-        lastName: "Smith",
-        email: "jane@example.com",
-        status: "active",
+        id: "int-1",
+        applicationId: "app-1",
+        round: 2,
+        status: "scheduled",
+        scheduledAt: listRow.scheduledAt,
+        durationMinutes: 60,
+        meetingUrl: null,
+        sequence: 1,
+        kitStatus: "draft",
+        guideTitle: "Colloquio tecnico",
+        participants: [
+          { userId: "u-lead", name: "Anna", role: "lead" },
+          { userId: "u-obs", name: "Luca", role: "observer" },
+        ],
+        submittedFeedback: [
+          {
+            id: "fb-1",
+            interviewerId: "u-obs",
+            interviewerName: "Luca",
+            hireRecommendation: "yes",
+            submittedAt: new Date("2026-11-18"),
+          },
+        ],
       },
-    ];
-
-    (prisma.quiz.findUnique as any).mockResolvedValue(fakeQuiz);
-    (prisma.interview.findMany as any).mockResolvedValue(fakeInterviews);
-    (prisma.candidate.findMany as any).mockResolvedValue(fakeCandidates);
-
-    const result = await getQuizAssignmentData("q1");
-    expect(result).toBeTruthy();
-    expect(result?.quiz.id).toBe("q1");
-    expect(result?.assignedInterviews.length).toBe(1);
-    expect(result?.unassignedCandidates.length).toBe(1);
+    ]);
   });
 
-  it("getCandidateQuizData returns candidate quiz data", async () => {
-    const fakeCandidate = {
-      id: "c1",
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@example.com",
-      status: "active",
-      positions: [
-        {
-          position: { id: "p1", title: "Position 1" },
-          isPrimary: true,
-        },
+  it("reads an unknown recommendation as null and a deleted guide as no title", async () => {
+    db.interview.findMany.mockResolvedValueOnce([
+      {
+        ...listRow,
+        guide: null,
+        kit: null,
+        feedback: [{ ...listRow.feedback[0], hireRecommendation: "forse" }],
+      },
+    ]);
+
+    const [row] = await getInterviewsByApplication("app-1");
+    expect(row.guideTitle).toBeNull();
+    expect(row.kitStatus).toBeNull();
+    expect(row.submittedFeedback[0].hireRecommendation).toBeNull();
+  });
+});
+
+describe("getInterviewForPreparation", () => {
+  it("is tagged with every collection it reads and the interview entity tag", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(null);
+
+    expect(await getInterviewForPreparation("int-1")).toBeNull();
+    expect(cacheLife).toHaveBeenCalledWith("hours");
+    expect(cacheTag).toHaveBeenCalledWith(
+      "interviews",
+      "candidates",
+      "positions",
+      "scorecards",
+      "interview-guides",
+      "interview-int-1",
+    );
+    expect(db.scorecardCriterion.findMany).not.toHaveBeenCalled();
+  });
+
+  it("parses the kit JSON defensively and resolves the whole scorecard", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(preparationRow);
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+
+    const interview = await getInterviewForPreparation("int-1");
+
+    const select = db.interview.findUnique.mock.calls[0][0].select;
+    expect(JSON.stringify(select)).not.toContain("notes");
+    expect(select.feedback.where).toEqual({ submittedAt: { not: null } });
+    expect(db.scorecardCriterion.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { scorecard: { positionId: "pos-1" } },
+        orderBy: { order: "asc" },
+      }),
+    );
+
+    expect(interview?.kit).toMatchObject({
+      id: "kit-1",
+      briefing: ["Punto"],
+      hypotheses: [
+        { criterionId: "c1", hypothesis: "Ipotesi valida", howToVerify: "Chiedi esempi" },
       ],
-    };
-    const fakeInterviews = [
-      {
-        id: "i1",
-        token: "t1",
-        status: "pending",
-        createdAt: new Date(),
-        startedAt: null,
-        completedAt: null,
-        candidateId: "c1",
-        quiz: {
-          id: "q1",
-          title: "Quiz 1",
-          createdAt: new Date(),
-          timeLimit: 30,
-          positionId: "p1",
-        },
-      },
-    ];
-    const fakeQuizzes = [
-      {
-        id: "q2",
-        title: "Quiz 2",
-        createdAt: new Date(),
-        timeLimit: 20,
-        positionId: "p1",
-      },
-    ];
+      checklist: [],
+      missingSources: ["cv"],
+    });
+    expect(interview?.kit?.items[0].anchors).toEqual({
+      weak: "w",
+      medium: "",
+      strong: "",
+    });
+    expect(interview?.criteria).toEqual([
+      { id: "c1", name: "React", priority: "must", order: 0, archived: false },
+      { id: "c2", name: "SQL", priority: "nice", order: 1, archived: true },
+    ]);
+    expect(interview?.candidate).toEqual({
+      id: "cand-1",
+      firstName: "Mario",
+      lastName: "Rossi",
+    });
+    expect(interview?.kitStatus).toBe("draft");
+  });
+});
 
-    (prisma.candidate.findUnique as any).mockResolvedValue(fakeCandidate);
-    (prisma.interview.findMany as any).mockResolvedValue(fakeInterviews);
-    (prisma.quiz.findMany as any).mockResolvedValue(fakeQuizzes);
-
-    const result = await getCandidateQuizData("c1");
-    expect(result).toBeTruthy();
-    expect(result?.candidate.id).toBe("c1");
-    expect(result?.assignedInterviews.length).toBe(1);
-    expect(result?.availableQuizzes.length).toBe(1);
+describe("sourceRound of the kit questions", () => {
+  const item = (id: string, origin: string, sourceRef: string | null) => ({
+    ...preparationRow.kit.items[0],
+    id,
+    origin,
+    sourceRef,
   });
 
-  it("getInterviewByToken returns interview data", async () => {
-    const fakeInterview = {
-      id: "i1",
-      token: "t1",
-      status: "in_progress",
-      answers: { q1: "answer" },
-      startedAt: new Date(),
-      quiz: {
-        id: "q1",
-        title: "Quiz 1",
-        createdAt: new Date(),
-        position: {
-          id: "p1",
-          title: "Pos",
-          experienceLevel: "junior",
-          description: "desc",
-          skills: ["js"],
-        },
-        quizQuestions: [
-          {
-            order: 1,
-            question: {
-              id: "qst1",
-              type: "multiple_choice",
-              question: "Q?",
-              options: ["a", "b"],
-              correctAnswer: 0,
-            },
-          },
+  it("resolves the round of every cited scorecard with one query", async () => {
+    db.interview.findUnique.mockResolvedValueOnce({
+      ...preparationRow,
+      kit: {
+        ...preparationRow.kit,
+        items: [
+          item("prev-1", "previous_round", "feedback:fb-r1"),
+          item("prev-2", "previous_round", "feedback:fb-r1"),
+          item("prev-3", "previous_round", "feedback:fb-r2"),
+          item("prev-unknown", "previous_round", "feedback:fb-deleted"),
+          item("quiz", "quiz_answer", "quiz:q-1"),
+          item("template", "template", null),
         ],
       },
-      candidate: {
-        id: "c1",
-        firstName: "John",
-        lastName: "Doe",
-        email: "john@example.com",
-      },
-    };
+    });
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+    db.interviewerFeedback.findMany.mockResolvedValueOnce([
+      { id: "fb-r1", interview: { round: 1 } },
+      { id: "fb-r2", interview: { round: 2 } },
+    ]);
 
-    (prisma.interview.findUnique as any).mockResolvedValue(fakeInterview);
+    const interview = await getInterviewForPreparation("int-1");
 
-    const result = await getInterviewByToken("t1");
-    expect(result).toBeTruthy();
-    expect(result?.interview.token).toBe("t1");
-    expect(result?.quiz.id).toBe("q1");
-    expect(result?.candidate.id).toBe("c1");
+    expect(db.interviewerFeedback.findMany).toHaveBeenCalledTimes(1);
+    expect(db.interviewerFeedback.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ["fb-r1", "fb-r2", "fb-deleted"] } },
+      select: { id: true, interview: { select: { round: true } } },
+    });
+    expect(
+      interview?.kit?.items.map((row) => [row.id, row.sourceRound]),
+    ).toEqual([
+      ["prev-1", 1],
+      ["prev-2", 1],
+      ["prev-3", 2],
+      // A scorecard that no longer exists: no round
+      ["prev-unknown", null],
+      ["quiz", null],
+      ["template", null],
+    ]);
   });
 
-  it("getInterviewDetail returns detailed interview data", async () => {
-    const fakeInterview = {
-      id: "i1",
-      token: "t1",
-      status: "completed",
-      startedAt: new Date(),
-      completedAt: new Date(),
-      createdAt: new Date(),
-      answers: { q1: "answer" },
-      quiz: {
-        id: "q1",
-        title: "Quiz 1",
-        createdAt: new Date(),
-        position: {
-          id: "p1",
-          title: "Pos",
-          experienceLevel: "junior",
-          description: "desc",
-          skills: ["js"],
+  it("makes no extra query when no question cites a scorecard", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(preparationRow);
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+
+    const interview = await getInterviewForPreparation("int-1");
+
+    expect(db.interviewerFeedback.findMany).not.toHaveBeenCalled();
+    expect(interview?.kit?.items[0].sourceRound).toBeNull();
+  });
+
+  it("is resolved in the live read too", async () => {
+    db.interview.findUnique.mockResolvedValueOnce({
+      ...preparationRow,
+      kit: {
+        ...preparationRow.kit,
+        items: [item("prev-1", "previous_round", "feedback:fb-r1")],
+      },
+    });
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+    db.interviewerFeedback.findMany.mockResolvedValueOnce([
+      { id: "fb-r1", interview: { round: 1 } },
+    ]);
+    db.interviewParticipant.findUnique.mockResolvedValueOnce(null);
+    db.interviewerFeedback.findUnique.mockResolvedValueOnce(null);
+
+    const session = await getInterviewLiveSession("int-2", "u1");
+
+    expect(session?.kit?.items[0].sourceRound).toBe(1);
+  });
+});
+
+describe("getAgendaInterviews", () => {
+  it("is cached for minutes and lists scheduled and running interviews of open applications", async () => {
+    db.interview.findMany.mockResolvedValueOnce([
+      {
+        id: "int-1",
+        applicationId: "app-1",
+        round: 1,
+        status: "scheduled",
+        scheduledAt: new Date("2026-11-17T09:00:00Z"),
+        durationMinutes: 45,
+        kit: null,
+        application: {
+          ownerId: "u-owner",
+          candidate: { firstName: "Mario", lastName: "Rossi" },
+          position: { title: "Dev" },
         },
-        quizQuestions: [
-          {
-            order: 1,
-            question: {
-              id: "qst1",
-              type: "multiple_choice",
-              question: "Q?",
-              options: ["a", "b"],
-              correctAnswer: 0,
-            },
-          },
+        participants: [{ userId: "u1", role: "lead", user: { name: "Anna" } }],
+      },
+    ]);
+
+    const rows = await getAgendaInterviews();
+
+    expect(cacheLife).toHaveBeenCalledWith("minutes");
+    expect(cacheTag).toHaveBeenCalledWith("interviews", "candidates", "positions");
+    expect(db.interview.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: { in: ["scheduled", "in_progress"] },
+          application: { stage: { notIn: ["rejected", "withdrawn"] } },
+        },
+        orderBy: { scheduledAt: "asc" },
+      }),
+    );
+    expect(rows).toEqual([
+      {
+        id: "int-1",
+        applicationId: "app-1",
+        round: 1,
+        status: "scheduled",
+        scheduledAt: new Date("2026-11-17T09:00:00Z"),
+        durationMinutes: 45,
+        kitStatus: null,
+        candidateName: "Mario Rossi",
+        positionTitle: "Dev",
+        ownerId: "u-owner",
+        participants: [{ userId: "u1", name: "Anna", role: "lead" }],
+      },
+    ]);
+  });
+});
+
+describe("getInterviewLiveSession", () => {
+  it("is never cached and returns only the viewer's own notes", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(preparationRow);
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+    db.interviewParticipant.findUnique.mockResolvedValueOnce({ id: "p-lead", role: "lead" });
+    db.kitItemNote.findMany.mockResolvedValueOnce([
+      { kitItemId: "item-1", note: "ok", score: 4, evidenceQuote: null, updatedAt: new Date() },
+    ]);
+    db.interviewerFeedback.findUnique.mockResolvedValueOnce({ submittedAt: null });
+
+    const session = await getInterviewLiveSession("int-1", "u-lead");
+
+    expect(cacheTag).not.toHaveBeenCalled();
+    expect(cacheLife).not.toHaveBeenCalled();
+    expect(db.interviewParticipant.findUnique).toHaveBeenCalledWith({
+      where: { interviewId_userId: { interviewId: "int-1", userId: "u-lead" } },
+      select: { id: true, role: true },
+    });
+    expect(db.kitItemNote.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { participantId: "p-lead" } }),
+    );
+    expect(db.interviewerFeedback.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { interviewId_interviewerId: { interviewId: "int-1", interviewerId: "u-lead" } },
+      }),
+    );
+    expect(session).toMatchObject({
+      viewerParticipantId: "p-lead",
+      viewerRole: "lead",
+      viewerSubmitted: false,
+      ownNotes: [expect.objectContaining({ kitItemId: "item-1", score: 4 })],
+    });
+  });
+
+  it("gives a non-participant no notes and reports a submitted scorecard", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(preparationRow);
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+    db.interviewParticipant.findUnique.mockResolvedValueOnce(null);
+    db.interviewerFeedback.findUnique.mockResolvedValueOnce({ submittedAt: new Date() });
+
+    const session = await getInterviewLiveSession("int-1", "u-other");
+
+    expect(db.kitItemNote.findMany).not.toHaveBeenCalled();
+    expect(session).toMatchObject({
+      viewerParticipantId: null,
+      viewerRole: null,
+      ownNotes: [],
+      viewerSubmitted: true,
+    });
+  });
+
+  it("returns null for a missing interview", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(null);
+    expect(await getInterviewLiveSession("nope", "u1")).toBeNull();
+  });
+});
+
+describe("getInterviewFeedbackPage", () => {
+  const feedbackRow = (overrides: Record<string, unknown> = {}) => ({
+    id: "fb-own",
+    interviewerId: "u-lead",
+    hireRecommendation: null,
+    notes: "bozza",
+    redFlags: [],
+    standoutMoments: [],
+    submittedAt: null,
+    interviewer: { name: "Anna" },
+    scores: [{ criterionId: "c1", score: 3, evidence: null }],
+    ...overrides,
+  });
+
+  it("returns own draft and notes, and only the others' submitted scorecards with their published notes", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(preparationRow);
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+    db.interviewParticipant.findUnique.mockResolvedValueOnce({ id: "p-lead", role: "lead" });
+    db.interviewerFeedback.findUnique.mockResolvedValueOnce(feedbackRow());
+    db.kitItemNote.findMany
+      .mockResolvedValueOnce([
+        { kitItemId: "item-1", note: "mia", score: 4, evidenceQuote: null, kitItem: { criterionIds: ["c1"] } },
+      ])
+      .mockResolvedValueOnce([
+        {
+          kitItemId: "item-1",
+          note: "di Luca",
+          score: 2,
+          evidenceQuote: "cit",
+          participant: { userId: "u-obs" },
+          kitItem: { text: "Domanda" },
+        },
+      ]);
+    db.interviewerFeedback.findMany.mockResolvedValueOnce([
+      feedbackRow({
+        id: "fb-obs",
+        interviewerId: "u-obs",
+        hireRecommendation: "no",
+        submittedAt: new Date("2026-11-18"),
+        interviewer: { name: "Luca" },
+      }),
+    ]);
+
+    const page = await getInterviewFeedbackPage("int-1", "u-lead");
+
+    expect(cacheTag).not.toHaveBeenCalled();
+    expect(cacheLife).not.toHaveBeenCalled();
+    // Others: submitted only, never the viewer's
+    expect(db.interviewerFeedback.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          interviewId: "int-1",
+          interviewerId: { not: "u-lead" },
+          submittedAt: { not: null },
+        },
+      }),
+    );
+    // Own notes by the viewer's participant row
+    expect(db.kitItemNote.findMany.mock.calls[0][0].where).toEqual({
+      participantId: "p-lead",
+    });
+    // Published notes: only of the interviewers who submitted
+    expect(db.kitItemNote.findMany.mock.calls[1][0].where).toEqual({
+      participant: { interviewId: "int-1", userId: { in: ["u-obs"] } },
+    });
+
+    expect(page?.ownFeedback).toMatchObject({ id: "fb-own", notes: "bozza", submittedAt: null });
+    expect(page?.ownNotes).toEqual([
+      { kitItemId: "item-1", criterionIds: ["c1"], note: "mia", score: 4, evidenceQuote: null },
+    ]);
+    expect(page?.othersSubmitted).toEqual([
+      {
+        id: "fb-obs",
+        interviewerName: "Luca",
+        hireRecommendation: "no",
+        notes: "bozza",
+        redFlags: [],
+        standoutMoments: [],
+        submittedAt: new Date("2026-11-18"),
+        scores: [{ criterionId: "c1", score: 3, evidence: null }],
+        liveNotes: [
+          { kitItemId: "item-1", itemText: "Domanda", note: "di Luca", score: 2, evidenceQuote: "cit" },
         ],
       },
-      candidate: {
-        id: "c1",
-        firstName: "John",
-        lastName: "Doe",
-        email: "john@example.com",
-      },
-    };
-
-    (prisma.interview.findFirst as any).mockResolvedValue(fakeInterview);
-
-    const result = await getInterviewDetail("i1");
-    expect(result).toBeTruthy();
-    expect(result?.interview.id).toBe("i1");
-    expect(result?.quiz.id).toBe("q1");
+    ]);
   });
 
-  it("getCompletedInterviewsCount returns count", async () => {
-    (prisma.interview.count as any).mockResolvedValue(5);
+  it("reads no other notes when nobody else submitted", async () => {
+    db.interview.findUnique.mockResolvedValueOnce(preparationRow);
+    db.scorecardCriterion.findMany.mockResolvedValueOnce(criteriaRows);
+    db.interviewParticipant.findUnique.mockResolvedValueOnce(null);
+    db.interviewerFeedback.findUnique.mockResolvedValueOnce(null);
+    db.interviewerFeedback.findMany.mockResolvedValueOnce([]);
 
-    const result = await getCompletedInterviewsCount();
-    expect(result).toBe(5);
-  });
+    const page = await getInterviewFeedbackPage("int-1", "u-other");
 
-  it("getInterviewsByQuiz returns interviews for quiz", async () => {
-    const fakeInterviews = [
-      {
-        id: "i1",
-        token: "t1",
-        status: "pending",
-        createdAt: new Date(),
-        startedAt: null,
-        completedAt: null,
-        candidate: {
-          id: "c1",
-          firstName: "John",
-          lastName: "Doe",
-          email: "john@example.com",
-        },
-        quiz: { id: "q1", title: "Quiz 1" },
-      },
-    ];
-
-    (prisma.interview.findMany as any).mockResolvedValue(fakeInterviews);
-
-    const result = await getInterviewsByQuiz("q1");
-    expect(result.length).toBe(1);
-    expect(result[0].id).toBe("i1");
-  });
-
-  it("getRecentInterviewIds returns recent IDs", async () => {
-    const fakeInterviews = [{ id: "i1" }, { id: "i2" }];
-
-    (prisma.interview.findMany as any).mockResolvedValue(fakeInterviews);
-
-    const result = await getRecentInterviewIds(2);
-    expect(result).toEqual(["i1", "i2"]);
-  });
-
-  it("getInterviewsStatus returns status counts", async () => {
-    const fakeInterviews = [
-      { status: "completed" },
-      { status: "completed" },
-      { status: "pending" },
-    ];
-
-    (prisma.interview.findMany as any).mockResolvedValue(fakeInterviews);
-
-    const result = await getInterviewsStatus();
-    expect(result.completed).toBe(2);
-    expect(result.pending).toBe(1);
+    expect(db.kitItemNote.findMany).not.toHaveBeenCalled();
+    expect(page).toMatchObject({
+      viewerParticipant: null,
+      ownFeedback: null,
+      ownNotes: [],
+      othersSubmitted: [],
+    });
   });
 });

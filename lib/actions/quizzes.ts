@@ -20,6 +20,10 @@ import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
 import { logger } from "../services/logger";
 import { invalidateQuizCache } from "../utils/cache-utils";
 import { syncQuizQuestions } from "../services/quiz-questions";
+import {
+  assertActiveCriteria,
+  getActiveCriteria,
+} from "../services/scorecards";
 import { mapQuizQuestionsToFlexible } from "../utils/question-utils";
 import { runAction, UserError } from "./run-action";
 
@@ -51,11 +55,16 @@ export async function generateNewQuizAction(input: GenerateQuizInput) {
       );
     }
 
+    // Active criteria of the position scorecard: the AI proposes for each
+    // question the criteria it verifies (none when the list is empty)
+    const criteria = await getActiveCriteria(position.id);
+
     return aiQuizService.generateQuiz({
       positionTitle: position.title,
       experienceLevel: position.experienceLevel,
       skills: position.skills,
       description: position.description || undefined,
+      criteria,
       ...config,
     });
   });
@@ -116,6 +125,58 @@ export async function deleteQuizAction(quizId: string) {
 }
 
 /**
+ * Check the criteria linked to the questions of a quiz before it is saved.
+ * Ids that are neither active nor archived criteria of the position belong to
+ * deleted criteria: they are dropped. Every other id must be an active
+ * criterion, unless it is already stored on a link of the same quiz (an
+ * archived criterion stays where it was).
+ */
+async function checkQuestionCriteria(
+  positionId: string,
+  quizId: string | undefined,
+  questions: FlexibleQuestion[],
+): Promise<FlexibleQuestion[]> {
+  const knownIds = new Set(
+    (
+      await prisma.scorecardCriterion.findMany({
+        where: { scorecard: { positionId } },
+        select: { id: true },
+      })
+    ).map((criterion) => criterion.id),
+  );
+
+  const cleaned = questions.map((question) =>
+    question.criterionIds
+      ? {
+          ...question,
+          criterionIds: question.criterionIds.filter((id) => knownIds.has(id)),
+        }
+      : question,
+  );
+
+  const requested = new Set(cleaned.flatMap((q) => q.criterionIds ?? []));
+  if (requested.size === 0) return cleaned;
+
+  const alreadyStored = new Set<string>();
+  if (quizId) {
+    const links = await prisma.quizQuestion.findMany({
+      where: { quizId },
+      select: { criterionIds: true },
+    });
+    for (const link of links) {
+      for (const id of link.criterionIds) alreadyStored.add(id);
+    }
+  }
+
+  await assertActiveCriteria(
+    positionId,
+    [...requested].filter((id) => !alreadyStored.has(id)),
+  );
+
+  return cleaned;
+}
+
+/**
  * Create or update a quiz together with its ordered question set.
  * With `quizId` it updates that quiz; without it, it creates one for
  * `positionId`. Always returns the quiz id.
@@ -130,7 +191,7 @@ export async function upsertQuizAction(input: SaveQuizInput) {
         parsed.error.issues[0]?.message ?? "Dati del quiz non validi",
       );
     }
-    const { quizId, positionId, title, timeLimit, questions } = parsed.data;
+    const { quizId, positionId, title, timeLimit } = parsed.data;
 
     if (quizId) {
       const quiz = await prisma.quiz.findUnique({
@@ -145,6 +206,12 @@ export async function upsertQuizAction(input: SaveQuizInput) {
           { quizId },
         );
       }
+
+      const questions = await checkQuestionCriteria(
+        quiz.positionId,
+        quizId,
+        parsed.data.questions,
+      );
 
       await prisma.$transaction(async (tx) => {
         await tx.quiz.update({
@@ -174,6 +241,12 @@ export async function upsertQuizAction(input: SaveQuizInput) {
         { positionId },
       );
     }
+
+    const questions = await checkQuestionCriteria(
+      position.id,
+      undefined,
+      parsed.data.questions,
+    );
 
     const quiz = await prisma.$transaction(async (tx) => {
       const newQuiz = await tx.quiz.create({
@@ -213,6 +286,7 @@ export async function duplicateQuizAction(input: DuplicateQuizInput) {
     const originalQuiz = await prisma.quiz.findUnique({
       where: { id: quizId },
       select: {
+        positionId: true,
         title: true,
         timeLimit: true,
         quizQuestions: {
@@ -244,10 +318,19 @@ export async function duplicateQuizAction(input: DuplicateQuizInput) {
     }
 
     // Copies carry no dbId, so every question is created fresh for the new
-    // quiz. Favorite status stays with the original.
+    // quiz. Favorite status stays with the original. The criteria belong to
+    // the scorecard of the position: kept only when the copy stays on it.
+    const samePosition = newPositionId === originalQuiz.positionId;
     const copies: FlexibleQuestion[] = mapQuizQuestionsToFlexible(
       originalQuiz.quizQuestions,
-    ).map(({ dbId: _dbId, isFavorite: _isFavorite, ...question }) => question);
+    ).map(
+      ({
+        dbId: _dbId,
+        isFavorite: _isFavorite,
+        criterionIds,
+        ...question
+      }) => (samePosition ? { ...question, criterionIds } : question),
+    );
 
     const newQuiz = await prisma.$transaction(async (tx) => {
       const quiz = await tx.quiz.create({

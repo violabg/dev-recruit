@@ -69,6 +69,15 @@ export async function syncQuizQuestions(
       questionId = created.id;
     }
 
-    await tx.quizQuestion.create({ data: { quizId, questionId, order } });
+    // The criteria the question verifies live on the link: the same question
+    // can verify different criteria in another quiz
+    await tx.quizQuestion.create({
+      data: {
+        quizId,
+        questionId,
+        order,
+        criterionIds: question.criterionIds ?? [],
+      },
+    });
   }
 }

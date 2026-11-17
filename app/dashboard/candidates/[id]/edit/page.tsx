@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
-import { getPositionsForSelect } from "@/lib/data/positions";
+import { getOpenPositionsForSelect } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -31,9 +31,9 @@ export default async function CandidateEditPage({
 
 async function CandidateEditContent({ params }: CandidateEditPageProps) {
   const { id } = await params;
-  const [candidate, positions] = await Promise.all([
+  const [candidate, openPositions] = await Promise.all([
     getCandidateWithDetails(id),
-    getPositionsForSelect(),
+    getOpenPositionsForSelect(),
   ]);
 
   if (!candidate) {
@@ -55,7 +55,23 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
     );
   }
 
-  const positionOptions = positions || [];
+  // Open positions plus the ones the candidate already holds: saving never
+  // drops a position only because it is no longer open
+  const optionsById = new Map(
+    openPositions.map((position) => [position.id, position]),
+  );
+  for (const application of candidate.applications) {
+    if (application.stage === "withdrawn") continue;
+    if (!optionsById.has(application.position.id)) {
+      optionsById.set(application.position.id, {
+        id: application.position.id,
+        title: application.position.title,
+      });
+    }
+  }
+  const positionOptions = [...optionsById.values()].sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
 
   return (
     <Card>
@@ -88,8 +104,12 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
             lastName: candidate.lastName,
             email: candidate.email,
             dateOfBirth: candidate.dateOfBirth,
-            positionIds: candidate.positions.map((cp) => cp.position.id),
-            status: candidate.status,
+            // A withdrawn application does not count as a selected position
+            positionIds: candidate.applications
+              .filter((application) => application.stage !== "withdrawn")
+              .map((application) => application.positionId),
+            doNotContact: candidate.doNotContact,
+            doNotContactNote: candidate.doNotContactNote,
             resumeUrl: candidate.resumeUrl,
           }}
         />

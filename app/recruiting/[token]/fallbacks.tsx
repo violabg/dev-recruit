@@ -17,11 +17,11 @@ const DETAIL_ROWS = [
 ] as const;
 
 /**
- * Mirrors the InterviewClient start screen (first view of a new invite):
+ * Mirrors the AssessmentClient start screen (first view of a new invite):
  * full-width card with static welcome copy, quiz details, instructions,
  * warning box and the start button. Only quiz data is skeletoned.
  */
-export function InterviewSkeleton() {
+export function AssessmentSkeleton() {
   return (
     <div className="flex flex-col justify-center items-center p-4 min-h-dvh">
       <Card className="w-full">
@@ -31,16 +31,16 @@ export function InterviewSkeleton() {
             <h2 className="font-bold text-xl">DevRecruit AI</h2>
           </div>
           <CardTitle className="text-2xl text-center">
-            Benvenuto al colloquio tecnico
+            Benvenuto al test tecnico
           </CardTitle>
           <CardDescription className="flex justify-center items-center gap-1 text-center">
-            Stai per iniziare il quiz per la posizione di
+            Stai per iniziare il test per la posizione di
             <Skeleton className="w-32 h-3.5" />
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="p-4 border rounded-lg">
-            <h3 className="font-medium">Dettagli del quiz</h3>
+            <h3 className="font-medium">Dettagli del test</h3>
             <div className="flex flex-col gap-2 mt-2 text-sm">
               {DETAIL_ROWS.map(([label, width]) => (
                 <div key={label} className="flex justify-between">
@@ -75,7 +75,7 @@ export function InterviewSkeleton() {
               Importante
             </h3>
             <p className="mt-1 text-warning text-sm">
-              Non chiudere o aggiornare questa pagina durante il quiz. Farlo
+              Non chiudere o aggiornare questa pagina durante il test. Farlo
               potrebbe causare la perdita delle tue risposte.
             </p>
           </div>

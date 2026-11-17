@@ -54,7 +54,7 @@
   --color-section-candidates: var(--section-candidates);
   --color-section-quizzes: var(--section-quizzes);
   --color-section-presets: var(--section-presets);
-  --color-section-interviews: var(--section-interviews);
+  --color-section-assessments: var(--section-assessments);
   --color-section-settings: var(--section-settings);
   --color-shiki-foreground: var(--shiki-foreground);
   --color-shiki-background: var(--shiki-background);
@@ -128,7 +128,7 @@
   --section-candidates: oklch(0.55 0.1 185);
   --section-quizzes: oklch(0.62 0.14 70);
   --section-presets: oklch(0.54 0.17 300);
-  --section-interviews: oklch(0.56 0.17 350);
+  --section-assessments: oklch(0.56 0.17 350);
   --section-settings: oklch(0.55 0.02 260);
   /* Syntax highlighting (Shiki css-variables theme, light values) */
   --shiki-foreground: oklch(0.23 0.035 258);
@@ -188,7 +188,7 @@
   --section-candidates: oklch(0.78 0.1 185);
   --section-quizzes: oklch(0.82 0.13 75);
   --section-presets: oklch(0.76 0.14 300);
-  --section-interviews: oklch(0.77 0.13 350);
+  --section-assessments: oklch(0.77 0.13 350);
   --section-settings: oklch(0.74 0.02 260);
   /* Syntax highlighting (Shiki css-variables theme, dark values) */
   --shiki-foreground: oklch(0.93 0.01 245);
@@ -212,7 +212,7 @@
   --section-candidates: oklch(0.8 0.1 185);
   --section-quizzes: oklch(0.84 0.12 75);
   --section-presets: oklch(0.78 0.13 300);
-  --section-interviews: oklch(0.79 0.12 350);
+  --section-assessments: oklch(0.79 0.12 350);
   --section-settings: oklch(0.78 0.02 260);
 }
 

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUpDown } from "lucide-react";
 
-/** Mirrors SearchAndFilterCandidates: search + status, position, sort. */
+/** Mirrors SearchAndFilterCandidates: search + stage, position, sort. */
 export const FiltersSkeleton = () => <FilterBarSkeleton selects={3} />;
 
 /** Mirrors CandidatesRuntimeSection (table view, the default). */
@@ -35,7 +35,7 @@ export const CandidatesListSkeleton = () => (
                 },
                 { header: "Email", cell: "muted" },
                 { header: "Posizione", cell: "stacked" },
-                { header: "Stato", cell: "badge" },
+                { header: "Fase", cell: "badge" },
                 { header: "Data", cell: "muted" },
                 {
                   header: "Azioni",

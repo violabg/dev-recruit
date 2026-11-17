@@ -63,8 +63,10 @@ function NavItem({ item, isActive }: { item: Section; isActive: boolean }) {
 
 function useIsActive() {
   const pathname = usePathname();
-  // Match on the section root (settings links to its first sub-page).
+  // Match on the section root (settings links to its first sub-page). The
+  // dashboard home is the root of every section, so it matches only exactly.
   return (href: string) => {
+    if (href === "/dashboard") return pathname === href;
     const root = href.split("/").slice(0, 3).join("/");
     return pathname === root || pathname.startsWith(`${root}/`);
   };

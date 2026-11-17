@@ -36,10 +36,20 @@ const dateOfBirthSchema = z.coerce
 // CANDIDATE SCHEMAS
 // ====================
 
+/**
+ * Candidate email, normalised (no surrounding spaces, lower case) before it is
+ * validated: every action receives and compares the normalised value.
+ */
+export const candidateEmailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: "Inserisci un indirizzo email valido" }));
+
 export const candidateFormSchema = z.object({
   firstName: baseSchemas.name,
   lastName: baseSchemas.name,
-  email: baseSchemas.email,
+  email: candidateEmailSchema,
   dateOfBirth: dateOfBirthSchema.optional(),
   positionIds: z
     .array(z.string())
@@ -56,7 +66,7 @@ export const candidateUpdateSchema = z
   .object({
     firstName: baseSchemas.name.optional(),
     lastName: baseSchemas.name.optional(),
-    email: baseSchemas.email.optional(),
+    email: candidateEmailSchema.optional(),
     dateOfBirth: dateOfBirthSchema.optional().nullable(),
     positionIds: z
       .array(z.string())
@@ -67,11 +77,12 @@ export const candidateUpdateSchema = z
         error: "Massimo 10 posizioni.",
       })
       .optional(),
-    status: z
-      .enum(["pending", "contacted", "interviewing", "hired", "rejected"], {
-        error: "Stato candidato non valido",
-      })
-      .optional(),
+    doNotContact: z.boolean().optional(),
+    doNotContactNote: z
+      .string()
+      .max(500, { error: "La nota non può superare 500 caratteri" })
+      .optional()
+      .nullable(),
     // Resume URL is set after file upload, not directly from form
     resumeUrl: z
       .union([

@@ -6,7 +6,7 @@ import {
 } from "@/components/skeletons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-/** Mirrors CandidateHeader (PageHeader with status/position badges + 5 actions). */
+/** Mirrors CandidateHeader (PageHeader with the stage badge + 4 actions). */
 export function CandidateHeaderSkeleton() {
   return (
     <PageHeaderSkeleton
@@ -14,7 +14,6 @@ export function CandidateHeaderSkeleton() {
       info={
         <>
           <BadgeSkeleton className="w-20" />
-          <BadgeSkeleton className="w-28" />
           <TextSkeleton className="w-44" />
         </>
       }
@@ -22,7 +21,6 @@ export function CandidateHeaderSkeleton() {
         <>
           <ButtonSkeleton className="w-28" />
           <ButtonSkeleton className="w-28" />
-          <ButtonSkeleton className="w-44" />
           <ButtonSkeleton className="w-24" />
           <ButtonSkeleton size="sm" />
         </>
@@ -36,8 +34,7 @@ const DETAIL_LABELS = [
   "Cognome",
   "Email",
   "Data di nascita",
-  "Stato",
-  "Posizioni",
+  "Non ricontattare",
 ];
 
 /** Mirrors CandidateDetailsContent: real labels, skeleton values. */
@@ -52,11 +49,7 @@ export function CandidateDetailsSkeleton() {
           {DETAIL_LABELS.map((label) => (
             <div key={label}>
               <div className="font-semibold">{label}</div>
-              {label === "Stato" ? (
-                <BadgeSkeleton className="w-20" />
-              ) : (
-                <TextSkeleton lineClassName="h-6" className="w-36 h-4" />
-              )}
+              <TextSkeleton lineClassName="h-6" className="w-36 h-4" />
             </div>
           ))}
           <div className="md:col-span-2">
@@ -69,12 +62,12 @@ export function CandidateDetailsSkeleton() {
   );
 }
 
-/** Mirrors CandidateInterviewsContent rows (status + date). */
-export function CandidateInterviewsSkeleton() {
+/** Mirrors CandidateApplicationsContent rows (position, date, stage). */
+export function CandidateApplicationsSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Colloqui</CardTitle>
+        <CardTitle>Candidature</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-2">

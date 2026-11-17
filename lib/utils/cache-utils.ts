@@ -12,7 +12,7 @@
  * TAGGING RULE (prevents stale data):
  * Every cached read must `cacheTag()` the collection tag of EVERY entity it
  * reads, including joined/included relations (e.g. a candidate list that
- * includes interview status is tagged CANDIDATES + INTERVIEWS + POSITIONS).
+ * includes assessment status is tagged CANDIDATES + ASSESSMENTS + POSITIONS).
  * Every mutation calls the helper of its own entity, and deletes pass
  * `deleted: true` so collections removed by DB cascades are expired too.
  */
@@ -32,11 +32,18 @@ export const CacheTags = {
   QUESTIONS: "questions",
   POSITIONS: "positions",
   CANDIDATES: "candidates",
-  INTERVIEWS: "interviews",
+  ASSESSMENTS: "assessments",
   EVALUATIONS: "evaluations",
-  BEHAVIORAL_RUBRICS: "behavioral-rubrics",
   PRESETS: "presets",
   REFERENCE_DATA: "reference-data",
+  // Scorecards and their criteria (criteria have no tag of their own)
+  SCORECARDS: "scorecards",
+  // Interview guides with their sections and questions
+  INTERVIEW_GUIDES: "interview-guides",
+  // Interviews with their participants, kits, kit sections, kit items and
+  // submitted interviewer scorecards. Live notes and unsubmitted scorecards
+  // are never cached.
+  INTERVIEWS: "interviews",
 } as const;
 
 /**
@@ -48,16 +55,19 @@ export const entityTag = {
   // Plural for historical reasons: renaming it would orphan cached entries
   position: (id: string) => `positions-${id}`,
   candidate: (id: string) => `candidate-${id}`,
-  interview: (id: string) => `interview-${id}`,
+  assessment: (id: string) => `assessment-${id}`,
   evaluation: (id: string) => `evaluation-${id}`,
-  evaluationInterview: (interviewId: string) =>
-    `evaluation-interview-${interviewId}`,
+  evaluationAssessment: (assessmentId: string) =>
+    `evaluation-assessment-${assessmentId}`,
   evaluationCandidate: (candidateId: string) =>
     `evaluation-candidate-${candidateId}`,
-  behavioralRubric: (candidateId: string, positionId: string) =>
-    `behavioral-rubric-${candidateId}-${positionId}`,
   preset: (id: string) => `preset-${id}`,
   referenceCategory: (category: string) => `reference-data-${category}`,
+  // A position has at most one scorecard: keyed by the position id
+  scorecard: (positionId: string) => `scorecard-${positionId}`,
+  interviewGuide: (id: string) => `interview-guide-${id}`,
+  // One interview with its kit and feedback (keyed by the interview id)
+  interview: (id: string) => `interview-${id}`,
 } as const;
 
 /**
@@ -69,18 +79,20 @@ export const entityTag = {
 const CASCADE_ON_DELETE = {
   position: [
     CacheTags.QUIZZES,
-    CacheTags.INTERVIEWS,
+    CacheTags.ASSESSMENTS,
     CacheTags.EVALUATIONS,
     CacheTags.CANDIDATES,
-    CacheTags.BEHAVIORAL_RUBRICS,
-  ],
-  quiz: [CacheTags.INTERVIEWS, CacheTags.EVALUATIONS],
-  candidate: [
+    CacheTags.SCORECARDS,
+    CacheTags.INTERVIEW_GUIDES,
     CacheTags.INTERVIEWS,
-    CacheTags.EVALUATIONS,
-    CacheTags.BEHAVIORAL_RUBRICS,
   ],
-  interview: [CacheTags.EVALUATIONS],
+  quiz: [CacheTags.ASSESSMENTS, CacheTags.EVALUATIONS],
+  candidate: [
+    CacheTags.ASSESSMENTS,
+    CacheTags.EVALUATIONS,
+    CacheTags.INTERVIEWS,
+  ],
+  assessment: [CacheTags.EVALUATIONS],
 } as const;
 
 function expireTags(tags: readonly string[]) {
@@ -97,7 +109,7 @@ function expireTags(tags: readonly string[]) {
 export function invalidateQuizCache(options?: {
   quizId?: string;
   positionId?: string;
-  /** Quiz was deleted: also expire cascaded interviews/evaluations */
+  /** Quiz was deleted: also expire cascaded assessments/evaluations */
   deleted?: boolean;
 }) {
   updateTag(CacheTags.QUIZZES);
@@ -154,7 +166,7 @@ export function invalidateQuestionCache(options?: {
 export function invalidatePositionCache(
   positionId?: string,
   options?: {
-    /** Position was deleted: also expire cascaded quizzes/interviews/etc. */
+    /** Position was deleted: also expire cascaded quizzes/assessments/etc. */
     deleted?: boolean;
   },
 ) {
@@ -178,13 +190,29 @@ export function invalidatePositionCache(
 // ============================================================================
 
 /**
- * Invalidate candidate cache after create/update/delete operations
+ * Revalidate the pages that show applications: the list, each given
+ * application and the home.
+ */
+function revalidateApplicationPaths(applicationIds: readonly string[]) {
+  revalidatePath("/dashboard/applications");
+  for (const applicationId of applicationIds) {
+    revalidatePath(`/dashboard/applications/${applicationId}`);
+  }
+  revalidatePath("/dashboard");
+}
+
+/**
+ * Invalidate candidate cache after create/update/delete operations.
+ * Applications have no tag of their own: an application write calls this
+ * helper with the candidate, the position(s) and the application id(s).
  */
 export function invalidateCandidateCache(options?: {
   candidateId?: string;
   positionId?: string;
   positionIds?: string[];
-  /** Candidate was deleted: also expire cascaded interviews/evaluations/rubrics */
+  applicationId?: string;
+  applicationIds?: string[];
+  /** Candidate was deleted: also expire cascaded assessments, evaluations and interviews */
   deleted?: boolean;
 }) {
   updateTag(CacheTags.CANDIDATES);
@@ -211,36 +239,63 @@ export function invalidateCandidateCache(options?: {
   }
 
   revalidatePath("/dashboard/candidates");
+  revalidateApplicationPaths([
+    ...(options?.applicationId ? [options.applicationId] : []),
+    ...(options?.applicationIds ?? []),
+  ]);
 }
 
-// ============================================================================
-// Interview Cache Invalidation
-// ============================================================================
-
-// Reference data cache invalidation
-export function invalidateReferenceDataCache(category?: string) {
-  updateTag(CacheTags.REFERENCE_DATA);
-  if (category) updateTag(entityTag.referenceCategory(category));
-}
 /**
- * Invalidate interview cache after create/update/delete operations
- * Use this in Server Actions only.
+ * Invalidate candidate cache from Route Handlers (uses revalidateTag instead
+ * of updateTag). Used by the resume evaluation stream, which can advance the
+ * stage of an application.
  */
-export function invalidateInterviewCache(options?: {
-  interviewId?: string;
-  quizId?: string;
-  /** Interview(s) deleted: also expire cascaded evaluations */
-  deleted?: boolean;
+export function invalidateCandidateCacheInRouteHandler(options?: {
+  candidateId?: string;
+  positionId?: string;
+  applicationId?: string;
 }) {
-  updateTag(CacheTags.INTERVIEWS);
+  revalidateTag(CacheTags.CANDIDATES, { expire: 0 });
 
-  if (options?.deleted) {
-    expireTags(CASCADE_ON_DELETE.interview);
+  if (options?.candidateId) {
+    revalidateTag(entityTag.candidate(options.candidateId), { expire: 0 });
+    revalidatePath(`/dashboard/candidates/${options.candidateId}`);
   }
 
-  if (options?.interviewId) {
-    updateTag(entityTag.interview(options.interviewId));
-    revalidatePath(`/dashboard/interviews/${options.interviewId}`);
+  if (options?.positionId) {
+    revalidateTag(entityTag.position(options.positionId), { expire: 0 });
+    revalidatePath(`/dashboard/positions/${options.positionId}`);
+  }
+
+  revalidatePath("/dashboard/candidates");
+  revalidateApplicationPaths(
+    options?.applicationId ? [options.applicationId] : [],
+  );
+}
+
+// ============================================================================
+// Assessment Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate assessment cache after create/update/delete operations
+ * Use this in Server Actions only.
+ */
+export function invalidateAssessmentCache(options?: {
+  assessmentId?: string;
+  quizId?: string;
+  /** Assessment(s) deleted: also expire cascaded evaluations */
+  deleted?: boolean;
+}) {
+  updateTag(CacheTags.ASSESSMENTS);
+
+  if (options?.deleted) {
+    expireTags(CASCADE_ON_DELETE.assessment);
+  }
+
+  if (options?.assessmentId) {
+    updateTag(entityTag.assessment(options.assessmentId));
+    revalidatePath(`/dashboard/assessments/${options.assessmentId}`);
   }
 
   if (options?.quizId) {
@@ -248,7 +303,8 @@ export function invalidateInterviewCache(options?: {
     revalidatePath(`/dashboard/quizzes/${options.quizId}/invite`);
   }
 
-  revalidatePath("/dashboard/interviews");
+  revalidatePath("/dashboard/assessments");
+  revalidatePath("/dashboard");
 }
 
 // ============================================================================
@@ -261,7 +317,7 @@ export function invalidateInterviewCache(options?: {
  */
 export function invalidateEvaluationCache(options?: {
   evaluationId?: string;
-  interviewId?: string;
+  assessmentId?: string;
   candidateId?: string;
 }) {
   updateTag(CacheTags.EVALUATIONS);
@@ -270,9 +326,9 @@ export function invalidateEvaluationCache(options?: {
     updateTag(entityTag.evaluation(options.evaluationId));
   }
 
-  if (options?.interviewId) {
-    updateTag(entityTag.evaluationInterview(options.interviewId));
-    revalidatePath(`/dashboard/interviews/${options.interviewId}`);
+  if (options?.assessmentId) {
+    updateTag(entityTag.evaluationAssessment(options.assessmentId));
+    revalidatePath(`/dashboard/assessments/${options.assessmentId}`);
   }
 
   if (options?.candidateId) {
@@ -280,24 +336,6 @@ export function invalidateEvaluationCache(options?: {
     revalidatePath(`/dashboard/candidates/${options.candidateId}`);
     revalidatePath(`/dashboard/candidates/${options.candidateId}/evaluations`);
   }
-}
-
-// ============================================================================
-// Behavioral Rubric Cache Invalidation
-// ============================================================================
-
-export function invalidateBehavioralRubricCache(options: {
-  candidateId: string;
-  positionId: string;
-}) {
-  updateTag(CacheTags.BEHAVIORAL_RUBRICS);
-  updateTag(
-    entityTag.behavioralRubric(options.candidateId, options.positionId),
-  );
-  revalidatePath(`/dashboard/candidates/${options.candidateId}`);
-  revalidatePath(
-    `/dashboard/candidates/${options.candidateId}/evaluation-dashboard`,
-  );
 }
 
 /**
@@ -308,7 +346,7 @@ export function invalidateBehavioralRubricCache(options: {
  */
 export function invalidateEvaluationCacheInRouteHandler(options?: {
   evaluationId?: string;
-  interviewId?: string;
+  assessmentId?: string;
   candidateId?: string;
 }) {
   revalidateTag(CacheTags.EVALUATIONS, { expire: 0 });
@@ -317,11 +355,11 @@ export function invalidateEvaluationCacheInRouteHandler(options?: {
     revalidateTag(entityTag.evaluation(options.evaluationId), { expire: 0 });
   }
 
-  if (options?.interviewId) {
-    revalidateTag(entityTag.evaluationInterview(options.interviewId), {
+  if (options?.assessmentId) {
+    revalidateTag(entityTag.evaluationAssessment(options.assessmentId), {
       expire: 0,
     });
-    revalidatePath(`/dashboard/interviews/${options.interviewId}`);
+    revalidatePath(`/dashboard/assessments/${options.assessmentId}`);
   }
 
   if (options?.candidateId) {
@@ -331,6 +369,81 @@ export function invalidateEvaluationCacheInRouteHandler(options?: {
     revalidatePath(`/dashboard/candidates/${options.candidateId}`);
     revalidatePath(`/dashboard/candidates/${options.candidateId}/evaluations`);
   }
+}
+
+// ============================================================================
+// Scorecard Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate scorecard cache after a scorecard or its criteria change.
+ * Use this in Server Actions only.
+ */
+export function invalidateScorecardCache(options: { positionId: string }) {
+  updateTag(CacheTags.SCORECARDS);
+  updateTag(entityTag.scorecard(options.positionId));
+  revalidatePath(`/dashboard/positions/${options.positionId}`);
+  revalidatePath(`/dashboard/positions/${options.positionId}/scorecard`);
+  revalidatePath("/dashboard");
+}
+
+// ============================================================================
+// Interview Guide Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate interview guide cache after a guide, its sections or its
+ * questions change. Use this in Server Actions only.
+ */
+export function invalidateInterviewGuideCache(options: {
+  guideId?: string;
+  positionId: string;
+}) {
+  updateTag(CacheTags.INTERVIEW_GUIDES);
+
+  if (options.guideId) {
+    updateTag(entityTag.interviewGuide(options.guideId));
+  }
+
+  revalidatePath(`/dashboard/positions/${options.positionId}`);
+
+  if (options.guideId) {
+    revalidatePath(
+      `/dashboard/positions/${options.positionId}/guides/${options.guideId}`,
+    );
+  }
+
+  revalidatePath("/dashboard");
+}
+
+// ============================================================================
+// Interview Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate interview cache after an interview, its participants, its kit
+ * (sections, items) or a submitted interviewer scorecard change.
+ * Use this in Server Actions only.
+ */
+export function invalidateInterviewCache(options: {
+  interviewId?: string;
+  applicationId: string;
+}) {
+  updateTag(CacheTags.INTERVIEWS);
+
+  const applicationPath = `/dashboard/applications/${options.applicationId}`;
+
+  if (options.interviewId) {
+    updateTag(entityTag.interview(options.interviewId));
+    const interviewPath = `${applicationPath}/interviews/${options.interviewId}`;
+    revalidatePath(`${interviewPath}/prepare`);
+    revalidatePath(`${interviewPath}/live`);
+    revalidatePath(`${interviewPath}/feedback`);
+  }
+
+  revalidatePath(applicationPath);
+  revalidatePath("/dashboard/agenda");
+  revalidatePath("/dashboard");
 }
 
 // ============================================================================
@@ -350,6 +463,18 @@ export function invalidatePresetCache(presetId?: string) {
   }
 
   revalidatePath("/dashboard/presets");
+}
+
+// ============================================================================
+// Reference Data Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate reference data cache after create/update/delete operations
+ */
+export function invalidateReferenceDataCache(category?: string) {
+  updateTag(CacheTags.REFERENCE_DATA);
+  if (category) updateTag(entityTag.referenceCategory(category));
 }
 
 // ============================================================================
