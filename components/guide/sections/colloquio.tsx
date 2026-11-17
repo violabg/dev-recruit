@@ -82,14 +82,19 @@ export function ColloquioSection() {
             title: "Modalità live",
             body: (
               <>
-                A sinistra le sezioni con il <strong>timer</strong>. Al centro la
-                domanda con approfondimenti e le tre ancore (debole/media/forte);
-                nota rapida, voto 1–5, citazione, <strong>Coperta</strong>{" "}
-                (condivisa). A destra la <strong>copertura dei criteri</strong>,
-                con &quot;Nessuna prova&quot; finché non arriva evidenza e
-                &quot;Nessuna domanda&quot; se il kit non copre un criterio. Note
-                e voti si salvano da soli e restano in locale se cade la
-                connessione.
+                In alto lo stato, le domande coperte con una barra di
+                avanzamento e i pulsanti per avviare o concludere. A sinistra la{" "}
+                <strong>scaletta</strong>: sezioni con il <strong>timer</strong>{" "}
+                e domande numerate (spunta verde se coperte, pallino blu se
+                obbligatorie). Al centro la domanda con approfondimenti e le tre
+                risposte attese (debole, media, forte); sotto, nel riquadro{" "}
+                <strong>Le tue note</strong>: nota rapida, voto 1–5, citazione e{" "}
+                <strong>Coperta</strong> (condivisa). La{" "}
+                <strong>copertura dei criteri</strong> sta a destra sugli schermi
+                larghi, sotto la scaletta sugli altri, con &quot;Nessuna
+                prova&quot; finché non arriva evidenza e &quot;Nessuna
+                domanda&quot; se il kit non copre un criterio. Note e voti si
+                salvano da soli e restano in locale se cade la connessione.
               </>
             ),
           },
@@ -125,7 +130,7 @@ export function ColloquioSection() {
         />
         <GuideFigure
           src="/guida/10-live-copertura.png"
-          alt="Modalità live con timer, domanda, ancore e copertura dei criteri"
+          alt="Modalità live con scaletta e timer, domanda, risposte attese, note e copertura dei criteri"
           caption="Modalità live con la copertura dei criteri"
           width={1440}
           height={1063}

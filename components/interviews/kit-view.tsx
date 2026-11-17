@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import {
+  AnswerAnchors,
+  BlockLabel,
+  FollowUpList,
+  hasAnchors,
+} from "./kit-blocks";
+import {
   getKitItemOriginLabel,
   MISSING_SOURCE_LABEL,
 } from "./interview-presentation";
@@ -26,37 +32,7 @@ const CHECKLIST_GROUPS = [
   { category: "logistics", title: "Logistica" },
 ] as const;
 
-const ANCHORS = [
-  {
-    key: "weak",
-    label: "Debole",
-    className: "border-l-destructive bg-destructive/5",
-    labelClassName: "text-destructive",
-  },
-  {
-    key: "medium",
-    label: "Media",
-    className: "border-l-warning bg-warning/5",
-    labelClassName: "text-warning",
-  },
-  {
-    key: "strong",
-    label: "Forte",
-    className: "border-l-success bg-success/5",
-    labelClassName: "text-success",
-  },
-] as const;
-
 const sectionAnchor = (sectionId: string) => `kit-sezione-${sectionId}`;
-
-/** Small uppercase label that separates a block's name from its content. */
-function Label({ children }: { children: ReactNode }) {
-  return (
-    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-      {children}
-    </span>
-  );
-}
 
 function Stat({ value, label }: { value: ReactNode; label: string }) {
   return (
@@ -218,7 +194,7 @@ export function KitView({
                     </div>
                   )}
                   <div className="flex flex-col gap-0.5">
-                    <Label>Come verificarla</Label>
+                    <BlockLabel>Come verificarla</BlockLabel>
                     <p className="text-muted-foreground leading-relaxed">
                       {hypothesis.howToVerify || "—"}
                     </p>
@@ -258,8 +234,6 @@ export function KitView({
           )}
 
           {sectionItems.map((item, index) => {
-            const hasAnchors =
-              item.anchors.weak || item.anchors.medium || item.anchors.strong;
 
             return (
               <Card
@@ -299,57 +273,16 @@ export function KitView({
                   )}
 
                   {item.followUps.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      <Label>Approfondimenti</Label>
-                      <ul className="flex flex-col gap-1.5">
-                        {item.followUps.map((followUp, followUpIndex) => (
-                          <li
-                            key={followUpIndex}
-                            className="flex items-start gap-2 leading-relaxed"
-                          >
-                            <ChevronRight
-                              className="mt-0.5 size-4 text-primary shrink-0"
-                              aria-hidden
-                            />
-                            <span>{followUp}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    <FollowUpList followUps={item.followUps} />
                   )}
 
-                  {hasAnchors && (
-                    <div className="flex flex-col gap-2">
-                      <Label>Come valutare la risposta</Label>
-                      <div className="gap-2 grid md:grid-cols-3">
-                        {ANCHORS.map((anchor) => (
-                          <div
-                            key={anchor.key}
-                            className={cn(
-                              "flex flex-col gap-1 px-3 py-2 border-l-4 rounded-md",
-                              anchor.className,
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "font-semibold text-xs uppercase tracking-wide",
-                                anchor.labelClassName,
-                              )}
-                            >
-                              {anchor.label}
-                            </span>
-                            <p className="leading-relaxed">
-                              {item.anchors[anchor.key] || "—"}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                  {hasAnchors(item.anchors) && (
+                    <AnswerAnchors anchors={item.anchors} />
                   )}
 
                   {item.criterionIds.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 pt-3 border-t">
-                      <Label>Criteri</Label>
+                      <BlockLabel>Criteri</BlockLabel>
                       {item.criterionIds.map((criterionId) => (
                         <Badge key={criterionId} variant="secondary">
                           {criterionLabel(criterionId)}
@@ -382,7 +315,7 @@ export function KitView({
 
             return (
               <div key={group.category} className="flex flex-col gap-2">
-                <Label>{group.title}</Label>
+                <BlockLabel>{group.title}</BlockLabel>
                 {groupItems.length === 0 && (
                   <p className="text-muted-foreground">Nessuna voce.</p>
                 )}
