@@ -28,6 +28,9 @@ export * from "./auth";
 // Re-export profile schemas and types
 export * from "./profile";
 
+// Re-export user management schemas and types
+export * from "./user";
+
 // Re-export position schemas and types
 export * from "./position";
 

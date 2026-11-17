@@ -125,6 +125,9 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/auth-server", () => ({
   getCurrentUser: vi.fn(),
   requireUser: vi.fn(() => ({ id: "user1" })),
+  requireAdmin: vi.fn(),
+  requireAdminPage: vi.fn(),
+  isAdmin: vi.fn(),
 }));
 
 // Test environment variables

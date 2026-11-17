@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -13,16 +14,20 @@ export default function Page() {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">
-                Thank you for signing up!
-              </CardTitle>
-              <CardDescription>Check your email to confirm</CardDescription>
+              <CardTitle className="text-2xl">Registrazione completata</CardTitle>
+              <CardDescription>Il tuo account è stato creato</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-4">
               <p className="text-muted-foreground text-sm">
-                You&apos;ve successfully signed up. Please check your email to
-                confirm your account before signing in.
+                Prima di accedere, un amministratore deve verificare la tua
+                email. Avvisalo e poi accedi.
               </p>
+              <Link
+                href="/auth/login"
+                className="underline underline-offset-4 text-sm"
+              >
+                Vai al login
+              </Link>
             </CardContent>
           </Card>
         </div>

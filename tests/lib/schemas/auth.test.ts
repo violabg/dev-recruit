@@ -4,10 +4,8 @@
 
 import {
   changePasswordSchema,
-  forgotPasswordSchema,
   loginSchema,
   signUpSchema,
-  updatePasswordSchema,
 } from "@/lib/schemas/auth";
 import { describe, expect, it } from "vitest";
 
@@ -154,38 +152,6 @@ describe("signUpSchema", () => {
       const result = signUpSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
     });
-  });
-});
-
-describe("forgotPasswordSchema", () => {
-  it("should accept valid email", () => {
-    const result = forgotPasswordSchema.safeParse({
-      email: "user@example.com",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("should reject invalid email", () => {
-    const result = forgotPasswordSchema.safeParse({
-      email: "invalid",
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
-describe("updatePasswordSchema", () => {
-  it("should accept valid password", () => {
-    const result = updatePasswordSchema.safeParse({
-      password: "newpassword123",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("should reject short password", () => {
-    const result = updatePasswordSchema.safeParse({
-      password: "12345",
-    });
-    expect(result.success).toBe(false);
   });
 });
 

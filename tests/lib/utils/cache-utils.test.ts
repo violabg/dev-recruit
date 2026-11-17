@@ -20,6 +20,7 @@ import {
   invalidateProfileCache,
   invalidateQuestionCache,
   invalidateQuizCache,
+  invalidateUserCache,
 } from "@/lib/utils/cache-utils";
 import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -39,6 +40,7 @@ describe("CacheTags", () => {
     expect(CacheTags.EVALUATIONS).toBe("evaluations");
     expect(CacheTags.PRESETS).toBe("presets");
     expect(CacheTags.REFERENCE_DATA).toBe("reference-data");
+    expect(CacheTags.USERS).toBe("users");
   });
 });
 
@@ -388,6 +390,32 @@ describe("invalidateProfileCache", () => {
       "/dashboard/profile/edit"
     );
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
+  });
+});
+
+describe("invalidateUserCache", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("expires the users tag and revalidates the users list", () => {
+    invalidateUserCache();
+
+    expect(mockedUpdateTag).toHaveBeenCalledWith(CacheTags.USERS);
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/settings/users"
+    );
+    expect(mockedRevalidatePath).toHaveBeenCalledTimes(1);
+  });
+
+  it("also revalidates the detail page of the user", () => {
+    invalidateUserCache("u-1");
+
+    expect(mockedUpdateTag).toHaveBeenCalledWith(CacheTags.USERS);
+    expect(mockedRevalidatePath).toHaveBeenCalledWith(
+      "/dashboard/settings/users/u-1"
+    );
+    expect(mockedRevalidatePath).toHaveBeenCalledTimes(2);
   });
 });
 

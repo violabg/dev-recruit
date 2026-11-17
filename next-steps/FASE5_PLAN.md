@@ -17,7 +17,7 @@ Flusso attuale in una riga: Posizione (scheda di valutazione, quiz, guide colloq
 
 ## 1. Perimetro della Fase 5
 
-Quattro funzioni, da progettare e realizzare **una alla volta**, ognuna con un proprio design. La prima è la gestione degli utenti (U): oggi chiunque trovi `/auth/sign-up` può registrarsi, nessuno può vedere o gestire gli utenti, e non esiste un amministratore.
+Quattro funzioni, da progettare e realizzare **una alla volta**, ognuna con un proprio design. La prima è la gestione degli utenti (U): oggi chi si registra da `/auth/sign-up` non riceve l'email di verifica e resta bloccato, nessuno può vedere o gestire gli utenti, e non esiste un amministratore.
 
 | # | Funzione | Valore | Dipende dalla verifica legale |
 |---|---|---|---|
@@ -32,11 +32,11 @@ Ordine: **U** per prima, poi **B → C → A**. U non dipende dalle altre e chiu
 
 **Stato attuale.** Login e logout con email e password (sessioni di 7 giorni, massimo 30). Il plugin `admin` di better-auth è già attivo (`lib/auth.ts`, `lib/auth-client.ts`) e la tabella `user` ha già `role`, `banned`, `banReason`, `banExpires`, ma nessuna pagina li usa e tutti gli utenti hanno `role = "user"`. La registrazione pubblica `/auth/sign-up` è aperta e linkata dal login. `requireEmailVerification` è attivo ma **nessun invio email è configurato**: un nuovo iscritto non riceve mai il link e non può entrare finché `emailVerified` non viene impostato a mano nel database; anche "Password dimenticata" non può funzionare.
 
-**Decisione: per il POC nessun invio email.** Gli account li crea e li sblocca un amministratore dall'app.
+**Decisione: per il POC nessun invio email.** La registrazione resta aperta: chi si registra avvisa un amministratore con altri mezzi (fuori dall'app) e l'amministratore imposta l'email come verificata dall'app. Un amministratore può anche creare un account.
 
 Requisiti:
-1. **Registrazione chiusa.** `emailAndPassword.disableSignUp: true`; via le pagine `/auth/sign-up` e `/auth/sign-up-success` e il link dal login. Nessun utente si crea da solo.
-2. **Password dimenticata.** Senza email non funziona: la pagina e il link si sostituiscono con l'indicazione "Chiedi a un amministratore di reimpostare la password" (da confermare nel design se togliere anche `/auth/update-password`).
+1. **Registrazione aperta, verifica manuale.** Il form `/auth/sign-up` e il link dal login restano. Nessuna email parte: la pagina dopo la registrazione (`/auth/sign-up-success`) e il messaggio al login di un account non verificato dicono di chiedere a un amministratore di verificare l'email, non di controllare la posta.
+2. **Password.** Il cambio password dal Profilo con la password attuale resta com'è. "Password dimenticata" senza email non funziona: la pagina e il link si sostituiscono con l'indicazione "Chiedi a un amministratore di reimpostare la password" (da confermare nel design se togliere anche `/auth/update-password`).
 3. **Pagina Impostazioni → Utenti** (`/dashboard/settings/users`), visibile e raggiungibile **solo dagli amministratori**:
    - elenco con nome, email, ruolo (Utente / Amministratore), email verificata, stato (attivo / bloccato), data di creazione, ultimo accesso e sessioni attive;
    - ricerca per nome o email.
@@ -59,11 +59,11 @@ Requisiti:
 
 Da decidere nel design:
 1. Azioni del plugin `admin` (`createUser`, `listUsers`, `adminUpdateUser`, `setRole`, `banUser`/`unbanUser`, `setUserPassword`, `listUserSessions`, `revokeUserSession(s)`) chiamate lato server tramite `auth.api` dentro le server action del progetto (con `runAction` e messaggi italiani), oppure dal client: preferibile lato server, per tenere un solo contratto d'errore.
-2. Se `createUser` del plugin funziona con `disableSignUp: true` (da verificare) e come impostare `emailVerified` alla creazione.
+2. Come impostare `emailVerified` alla creazione con `createUser` e dopo, dall'interruttore "Email verificata".
 3. Tag di cache per gli utenti: oggi non esiste (`getUserOptions` è in cache per minuti senza tag). Con modifica di nomi, ruoli e blocchi serve un tag `users` e la sua invalidazione.
 4. Se mostrare chi ha creato o modificato l'utente (nessun registro oggi).
 
-Rilascio: il primo amministratore va impostato in produzione **prima** del deploy che chiude la registrazione, altrimenti nessuno può creare utenti.
+Rilascio: il primo amministratore va impostato in produzione con il deploy della funzione, altrimenti nessuno può verificare i nuovi iscritti.
 
 ### 1.A Registrazione, trascrizione e sintesi per criterio
 
@@ -138,7 +138,7 @@ Da affidare a `knowledge-builder` **prima** del design della funzione che li toc
 |---|---|---|
 | "NEVER add role or permission checks. `requireUser()` only checks that a session exists" (`knowledge/domain_model.md`, access) | U | Eccezione limitata alla gestione degli utenti: ruolo `admin` verificato lato server; i dati di selezione restano accessibili a tutti |
 | "No tag for `User`" (`knowledge/cache_invalidation.md`) | U | Tag `users` e invalidazione dopo creazione, modifica, ruolo, blocco |
-| Pagine `app/auth/` con registrazione e password dimenticata (`CONTEXT.md`) | U | Registrazione chiusa; password reimpostata da un amministratore |
+| Pagine `app/auth/` con registrazione e password dimenticata (`CONTEXT.md`) | U | Registrazione aperta, email verificata a mano da un amministratore; cambio password dal Profilo; password dimenticata reimpostata da un amministratore |
 | "No email is sent: the summary and the `.ics` are shared by hand" (`knowledge/domain_model.md`, interviews) | B, C | Se resta: canale a link pubblico con token. Se cade: nuova regola su invio e provider |
 | Prompt non identificativi e solo statistiche dai colloqui (`knowledge/ai_generation.md`, "Non-identifying and statistics-only prompts") | A | Regola di anonimizzazione della trascrizione prima della sintesi |
 | Trascrizione solo per le risposte del test, sotto `MAX_AUDIO_BYTES`, azione pubblica con token (`knowledge/ai_generation.md`, `knowledge/server_actions.md`) | A | Nuovo percorso per audio lunghi e autenticato |

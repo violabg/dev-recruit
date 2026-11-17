@@ -61,6 +61,7 @@ mindmap
       Preset
     Impostazioni
       Dati di riferimento
+      Utenti #40;solo amministratori#41;
       Profilo
 ```
 
@@ -76,8 +77,28 @@ mindmap
 | **Quiz** | Libreria dei test | Creazione manuale o con AI, domande riusabili, invio |
 | **Test inviati** | Monitorare i test | Stato per candidato (in attesa, completato, valutato), valutazione AI |
 | **Preset** | Modelli di generazione | Parametri per la generazione delle domande |
+| **Utenti** (Impostazioni, solo amministratori) | Gestire chi accede | Elenco con ricerca per nome o email, ruolo, email verificata, stato, data di creazione, ultimo accesso e sessioni attive; **Nuovo utente**; dettaglio con dati, ruolo, verifica email, reimposta password, blocca/sblocca, sessioni |
 
 **Come si legge una pagina.** In alto a sinistra il titolo e il contesto (per esempio il nome del candidato e la posizione), sotto la **card "Prossima azione"** quando la pagina è una candidatura, poi i tab. Le briciole di pane (Panoramica / Candidature / Dettaglio) riportano sempre al livello superiore.
+
+### Accesso e utenti
+
+**Due ruoli: Utente e Amministratore.** Il ruolo cambia solo chi vede **Impostazioni → Utenti**: ogni utente autenticato, amministratore o no, vede e modifica tutti i dati di selezione (posizioni, candidature, colloqui, decisioni).
+
+- **Registrazione aperta.** Chiunque si registra da **Registrati** nella pagina di accesso. L'app non invia email: un nuovo account può accedere solo dopo che un amministratore ha attivato **Email verificata** dal suo dettaglio in Impostazioni → Utenti. Il nuovo utente avvisa l'amministratore con altri mezzi, fuori dall'app; finché la verifica non è attiva, l'accesso mostra "La tua email non è ancora verificata. Chiedi a un amministratore di verificarla per poter accedere."
+- **Account creati da un amministratore.** In Impostazioni → Utenti → **Nuovo utente** l'amministratore indica nome, cognome, email, password iniziale, ruolo e **Email verificata** (attiva: l'utente entra subito). La password iniziale si comunica a mano.
+- **La propria password.** Un utente autenticato la cambia da **Profilo → Cambia password**, indicando quella attuale. Una password dimenticata non si recupera via email: la reimposta un amministratore dal dettaglio utente (**Reimposta password**) e la comunica a mano.
+- **Blocco.** Un amministratore blocca un utente indicando il motivo: l'utente non può più accedere, le sue sessioni aperte si chiudono e non compare tra i partecipanti proponibili per un colloquio. **Sblocca utente** gli restituisce l'accesso. Gli utenti non si eliminano mai: si bloccano.
+- **Sessioni.** Il dettaglio utente elenca le sessioni attive: **Chiudi sessione** ne chiude una, **Chiudi tutte** le chiude tutte. Togliere la verifica email o reimpostare la password non chiude le sessioni aperte.
+- **Regole di sicurezza.** Resta sempre almeno un amministratore attivo: l'ultimo non perde il ruolo e non si blocca. Nessuno blocca sé stesso né cambia il proprio ruolo o la verifica della propria email.
+
+**Il primo amministratore.** `pnpm user:make-admin <email>` promuove ad amministratore un account già esistente (email verificata, account attivo); non crea mai account. In produzione si esegue insieme al rilascio di questa funzione, altrimenti nessuno può verificare le nuove registrazioni né gestire gli utenti. L'ordine è:
+
+1. `pnpm db:migrate:deploy` sul database di produzione;
+2. `pnpm user:make-admin <email>` con il `DATABASE_URL` di produzione;
+3. il deploy dell'applicazione.
+
+Gli altri amministratori si nominano dall'app, in Impostazioni → Utenti.
 
 ---
 
@@ -369,7 +390,7 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 | 4 | **Nessun promemoria** per colloqui imminenti o kit non pronti: solo la dashboard | Medio | Notifiche in-app, digest, integrazione calendario |
 | 5 | **Criterio archiviato non ripristinabile** dall'interfaccia | Basso/medio | Vista "Archiviati" con ripristino |
 | 6 | **Stessa persona con due email**: l'email è unica, ma due indirizzi diversi creano due candidati e non esiste una fusione | Medio in import massivo | Procedura guidata di fusione in app |
-| 7 | **Nessuna gestione degli utenti**: la registrazione `/auth/sign-up` è aperta, non esistono amministratori né una pagina utenti, e senza invio email la verifica dell'account e "Password dimenticata" richiedono un intervento sul database; ogni utente autenticato può fare tutto | Alto se l'app esce dal POC | Fase 5, funzione U (`next-steps/FASE5_PLAN.md`): registrazione chiusa, Impostazioni → Utenti per gli amministratori |
+| 7 | **Ruoli e accesso essenziali**: due soli ruoli (Utente / Amministratore) e ogni utente autenticato vede e modifica tutti i dati di selezione; senza email ogni nuova registrazione attende che un amministratore la verifichi e le password dimenticate si reimpostano a mano; non resta traccia di chi ha creato o modificato un utente | Medio se l'app esce dal POC | Ruoli per area; registro delle modifiche agli utenti; invio email per verifica e recupero password |
 | 8 | **Il candidato non ha una guida di preparazione né feedback dopo il rifiuto** | Medio per l'esperienza | Fase 5 (`next-steps/FASE5_PLAN.md`) |
 
 ### Attriti di interfaccia
@@ -430,6 +451,10 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 | Vedere tutti i colloqui di domani | **Agenda colloqui** |
 | Trovare il form che vede il candidato | `/recruiting` (posizioni aperte) e `/recruiting/[token]` (test) |
 | Capire cosa ha fatto un candidato | Candidatura → **Panoramica** (cronologia) |
+| Aggiungere un collega | Impostazioni → **Utenti** → **Nuovo utente** (solo amministratori) |
+| Mi sono registrato ma non riesco ad accedere | Un amministratore deve attivare **Email verificata** dal tuo dettaglio in Impostazioni → Utenti |
+| Ho dimenticato la password | Chiedi a un amministratore: la reimposta dal dettaglio utente (**Reimposta password**) |
+| Non riesco ad accedere: email non verificata o account bloccato | Rivolgiti a un amministratore |
 
 ---
 

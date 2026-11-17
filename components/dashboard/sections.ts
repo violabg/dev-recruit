@@ -8,6 +8,7 @@ import {
   Settings,
   Sparkles,
   SquareKanban,
+  UserCog,
   Users,
 } from "lucide-react";
 
@@ -28,7 +29,8 @@ export type SectionKey =
   | "quizzes"
   | "presets"
   | "assessments"
-  | "settings";
+  | "settings"
+  | "users";
 
 export type Section = {
   key: SectionKey;
@@ -41,6 +43,11 @@ export type Section = {
   tile: string;
   /** Solid fill for the page-title rule */
   rule: string;
+  /**
+   * Shown in the menu to administrators only. Presentation, not the guard:
+   * the pages and actions check the role on the server.
+   */
+  adminOnly?: boolean;
 };
 
 export const SECTIONS: Record<SectionKey, Section> = {
@@ -127,6 +134,17 @@ export const SECTIONS: Record<SectionKey, Section> = {
     tile: "bg-section-settings/12 ring-section-settings/20",
     rule: "bg-section-settings",
   },
+  // Same hue as the settings: user management lives under Impostazioni
+  users: {
+    key: "users",
+    label: "Utenti",
+    href: "/dashboard/settings/users",
+    icon: UserCog,
+    text: "text-section-settings",
+    tile: "bg-section-settings/12 ring-section-settings/20",
+    rule: "bg-section-settings",
+    adminOnly: true,
+  },
 };
 
 /** Sidebar groups: what needs me, the hiring workflow, reusable material. */
@@ -151,4 +169,15 @@ export const NAV_GROUPS: { label: string; items: Section[] }[] = [
 ];
 
 /** Pinned above the user menu */
-export const NAV_FOOTER: Section[] = [SECTIONS.settings];
+export const NAV_FOOTER: Section[] = [SECTIONS.settings, SECTIONS.users];
+
+/**
+ * Menu entries the role may see: admin-only entries are hidden unless the
+ * role is `admin` (also while the session is still loading).
+ */
+export function visibleNavItems(
+  items: Section[],
+  role: string | null | undefined,
+): Section[] {
+  return items.filter((item) => !item.adminOnly || role === "admin");
+}

@@ -4,7 +4,11 @@ import { BrainCircuit } from "lucide-react";
 
 import { NavMain, NavMainFallback } from "@/components/dashboard/nav-main";
 import { NavUser } from "@/components/dashboard/nav-user";
-import { NAV_FOOTER, NAV_GROUPS } from "@/components/dashboard/sections";
+import {
+  NAV_FOOTER,
+  NAV_GROUPS,
+  visibleNavItems,
+} from "@/components/dashboard/sections";
 import {
   Sidebar,
   SidebarContent,
@@ -14,10 +18,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { Suspense } from "react";
-
-const FOOTER_GROUPS = [{ items: NAV_FOOTER }];
 
 /**
  * Sidebar: near-white in light mode, navy ink rail in dark mode. The `ink`
@@ -25,6 +28,18 @@ const FOOTER_GROUPS = [{ items: NAV_FOOTER }];
  * slot so the mobile sheet gets it too.
  */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Admin-only entries (Utenti) are hidden until the session says admin.
+  // Presentation only: the pages and actions check the role on the server.
+  const { data } = authClient.useSession();
+  const footerGroups = [
+    {
+      items: visibleNavItems(
+        NAV_FOOTER,
+        (data?.user as { role?: string | null } | undefined)?.role,
+      ),
+    },
+  ];
+
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
       <SidebarHeader className="ink px-2 pt-3 pb-2">
@@ -57,8 +72,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Suspense>
       </SidebarContent>
       <SidebarFooter className="ink gap-1 p-0 pb-3">
-        <Suspense fallback={<NavMainFallback groups={FOOTER_GROUPS} />}>
-          <NavMain groups={FOOTER_GROUPS} />
+        <Suspense fallback={<NavMainFallback groups={footerGroups} />}>
+          <NavMain groups={footerGroups} />
         </Suspense>
         <div className="mx-4 border-sidebar-border border-t" />
         <div className="px-2">

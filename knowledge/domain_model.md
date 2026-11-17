@@ -32,8 +32,9 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 
 ## Users and accounts
 
-- Users are staff accounts, created only by an administrator. Nobody signs up: public registration is closed.
-- The app sends no email of any kind. Sign-in requires a verified email, and an administrator sets the verification by hand; a forgotten password is reset by an administrator.
+- Users are staff accounts. Public registration stays open: anyone can sign up from `/auth/sign-up`. Administrators can also create users.
+- The app sends no email of any kind, so no verification link ever arrives. Sign-in requires a verified email: a new account cannot sign in until an administrator switches its email verification on from user management. How the new user tells an administrator happens outside the app.
+- A signed-in user changes their own password from Profilo by giving the current one. A forgotten password cannot be recovered by email: an administrator resets it.
 - At least one active administrator always exists: the last non-banned `admin` can neither lose the role nor be banned.
 - An administrator never bans themself. Nobody changes their own role or their own email verification.
 - Users are never deleted (they author positions, applications, decisions and scorecards): an administrator bans them instead. A ban carries a reason and ends the user's sessions; unbanning restores access.

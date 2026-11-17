@@ -10,6 +10,7 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/utils/cache-utils", () => ({
   invalidateProfileCache: vi.fn(),
+  invalidateUserCache: vi.fn(),
 }));
 
 import { updatePasswordAction, updateProfileAction } from "@/lib/actions/profile";
@@ -17,7 +18,10 @@ import { auth } from "@/lib/auth";
 import { requireUser } from "@/lib/auth-server";
 import { getProfile } from "@/lib/data/profile";
 import prisma from "@/lib/prisma";
-import { invalidateProfileCache } from "@/lib/utils/cache-utils";
+import {
+  invalidateProfileCache,
+  invalidateUserCache,
+} from "@/lib/utils/cache-utils";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -94,6 +98,7 @@ describe("updateProfileAction", () => {
       expect.objectContaining({ body: { name: "Mario Rossi" } }),
     );
     expect(invalidateProfileCache).toHaveBeenCalled();
+    expect(invalidateUserCache).toHaveBeenCalledWith("user-123");
   });
 
   it("returns the validation message for an invalid user name", async () => {

@@ -44,6 +44,8 @@ export const CacheTags = {
   // submitted interviewer scorecards. Live notes and unsubmitted scorecards
   // are never cached.
   INTERVIEWS: "interviews",
+  // Users (staff accounts): reads whose subject is users. Reads that only join a user's name never use it.
+  USERS: "users",
 } as const;
 
 /**
@@ -488,4 +490,20 @@ export function invalidateProfileCache() {
   revalidatePath("/dashboard/profile");
   revalidatePath("/dashboard/profile/edit");
   revalidatePath("/dashboard");
+}
+
+// ============================================================================
+// User Cache Invalidation
+// ============================================================================
+
+/**
+ * Invalidate the users cache. Every change to a user: creation, name, email,
+ * role, email verification, password, ban, unban, sessions.
+ * Users have no entity tag: the collection tag covers the list, the detail
+ * and the participant options.
+ */
+export function invalidateUserCache(userId?: string) {
+  updateTag(CacheTags.USERS);
+  revalidatePath("/dashboard/settings/users");
+  if (userId) revalidatePath(`/dashboard/settings/users/${userId}`);
 }

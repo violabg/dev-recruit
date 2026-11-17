@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { LoginFormData, loginSchema } from "@/lib/schemas";
 import { errorMessage } from "@/lib/utils/action-result";
+import { loginErrorMessage } from "@/lib/utils/auth-errors";
 import { cn } from "cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -46,7 +47,7 @@ export function LoginForm({
 
         if (result.error) {
           setError("email", {
-            message: errorMessage(result.error, "Credenziali non valide"),
+            message: loginErrorMessage(result.error),
           });
           return;
         }
@@ -98,12 +99,6 @@ export function LoginForm({
                 <FieldLabel htmlFor={passwordId} className="font-bold">
                   Password
                 </FieldLabel>
-                <Link
-                  href="/auth/forgot-password"
-                  className="inline-block ml-auto text-sm hover:underline underline-offset-4"
-                >
-                  Password dimenticata?
-                </Link>
               </div>
               <PasswordField<LoginFormData>
                 name="password"
@@ -113,6 +108,10 @@ export function LoginForm({
                 disabled={isPending}
                 required
               />
+              <p className="text-muted-foreground text-sm">
+                Password dimenticata? Chiedi a un amministratore di
+                reimpostarla.
+              </p>
             </>
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Accesso in corso..." : "Accedi"}

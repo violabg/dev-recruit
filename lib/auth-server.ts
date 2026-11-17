@@ -1,4 +1,6 @@
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { UserError } from "@/lib/services/user-error";
 import { auth } from "./auth";
 import { authLogger } from "./services/logger";
 
@@ -59,4 +61,44 @@ export async function requireUser() {
   }
 
   return user;
+}
+
+/**
+ * Whether the user has the `admin` role. The only role check in the app:
+ * it guards user management and nothing else.
+ */
+export function isAdmin(
+  user: { role?: string | null } | null | undefined
+): boolean {
+  return user?.role === "admin";
+}
+
+/**
+ * Require an authenticated administrator. Use it in user-management server
+ * actions only, before parsing any input: the session is checked first
+ * (Error("UNAUTHENTICATED") as requireUser), then the role (UserError).
+ */
+export async function requireAdmin() {
+  const user = await requireUser();
+
+  if (!isAdmin(user)) {
+    throw new UserError("Operazione riservata agli amministratori");
+  }
+
+  return user;
+}
+
+/**
+ * Require an administrator in a user-management server component; anyone
+ * else gets the not-found page. Call it after awaiting a request value
+ * (`await connection()` or `await searchParams`), never inside "use cache".
+ */
+export async function requireAdminPage() {
+  const user = await getCurrentUser();
+
+  if (!isAdmin(user)) {
+    notFound();
+  }
+
+  return user!;
 }

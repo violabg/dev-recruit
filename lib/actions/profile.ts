@@ -10,7 +10,10 @@ import {
   type ProfileFormData,
 } from "@/lib/schemas";
 import { headers } from "next/headers";
-import { invalidateProfileCache } from "../utils/cache-utils";
+import {
+  invalidateProfileCache,
+  invalidateUserCache,
+} from "@/lib/utils/cache-utils";
 import { runAction, UserError } from "./run-action";
 
 export async function updateProfileAction(values: ProfileFormData) {
@@ -32,6 +35,7 @@ export async function updateProfileAction(values: ProfileFormData) {
     });
 
     invalidateProfileCache();
+    invalidateUserCache(user.id);
   });
 }
 

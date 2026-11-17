@@ -37,14 +37,6 @@ export const signUpSchema = z
     error: "Le password non corrispondono",
   });
 
-export const forgotPasswordSchema = z.object({
-  email: baseSchemas.email,
-});
-
-export const updatePasswordSchema = z.object({
-  password: baseSchemas.password,
-});
-
 export const changePasswordSchema = z
   .object({
     current_password: baseSchemas.password,
@@ -73,6 +65,4 @@ export const changePasswordSchema = z
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type SignUpFormData = z.infer<typeof signUpSchema>;
-export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
-export type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
