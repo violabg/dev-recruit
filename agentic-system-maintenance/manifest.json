@@ -2,9 +2,9 @@
   "version": 1,
   "kit": {
     "skill": "bootstrap-orchestrator-system",
-    "version": "7.0.1"
+    "version": "7.0.2"
   },
-  "appliedOn": "2026-11-14",
+  "appliedOn": "2026-11-17",
   "answersSha256": "d86b5a430078c3a362c2b3a50caea969afea329e9b035484b8ca6cfb64984045",
   "files": {
     ".agents/skills/author-repo-skill/SKILL.md": {
@@ -147,7 +147,7 @@
       "customizable": false
     },
     ".claude/skills/dr-knowledge-builder/SKILL.md": {
-      "sha256": "51403a06c4430f1945b3ea608d739339173ec56126c8e5c98c2d441cc0644a50",
+      "sha256": "9633960222c3f10d4af27dad3cfb4298e1f3b6c67c036941ab8d6178ce48d58c",
       "kind": "role-skill",
       "mode": "file",
       "envs": [
@@ -273,7 +273,7 @@
       "customizable": false
     },
     ".github/skills/dr-knowledge-builder/SKILL.md": {
-      "sha256": "7f4ac726e29e853eca3f067d7bb89c706b6c90d6a912dd321b3096de6696cd7b",
+      "sha256": "13e48349e7e115b1a21bec09e63aaee8ac93ab6de91be6e2bef668d3ed34fae2",
       "kind": "role-skill",
       "mode": "file",
       "envs": [
@@ -389,7 +389,7 @@
       "customizable": false
     },
     ".opencode/skills/dr-knowledge-builder/SKILL.md": {
-      "sha256": "c2198588bb05dd1d2a787be905ca00e04615b771639b98565069c11437c51dcd",
+      "sha256": "8dd20dff4f27ac979aff069cd71ce052a34f21f75946baf568d941965aabd22c",
       "kind": "role-skill",
       "mode": "file",
       "envs": [
@@ -827,7 +827,7 @@
       "customizable": false
     },
     "AGENTS.md": {
-      "sha256": "c3aa9668fd6cbc464697c8d45d2e29febc456d567cdd65c3317a22e6dca0ec8c",
+      "sha256": "ee482d01beb4028ac58a0756d33f1e4ce64d8cf03639d27a0e0deb61346f0c35",
       "kind": "router",
       "mode": "block",
       "envs": [],

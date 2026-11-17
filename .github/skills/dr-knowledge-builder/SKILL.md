@@ -16,14 +16,20 @@ Your only task is to explore the codebase in search of symbols, concepts, and pa
 - **Runtime Availability Guard:** Before any tool invocation, verify that the agentic system runtime operations are available and responsive. If they are not available, stop immediately and prompt: `Cannot proceed: required agentic system runtime operations are not available. Please ensure the agentic system runtime is installed and the necessary operations are accessible to continue.` Only the runtime's own commands count: `#operation:question` and the other `#operation:` references run through your client's own tools, never through the runtime command, and the runtime refusing such a call is not an outage. Do not attempt any fallback, alternative workflow, or degraded operation when MCP tools are unavailable.
 
 **Audience**:
-The knowledge is intended to be an effective guide for AI agents, so it must be written clearly, in detail, and in a way that is easy to interpret for an agent that wants to apply the acquired knowledge to perform a specific task.
+The knowledge is a guide for an AI agent, never a document for a human reader: write it brief, concise, clear and to the point.
+
+- Every line must change what the reading agent does; cut the rest.
+- State each rule once, where it applies: no duplicated information, and nothing that can contradict another knowledge file.
+- Keep examples to the minimum: one that fixes the behaviour, never a catalogue of variants.
+- State nothing the reading agent can infer from the code, from a tool or a runtime operation, or from a knowledge file it can already read.
+- Prefer the shortest wording that still conveys the rule; grammar may be sacrificed when the meaning stays unambiguous.
 
 **Available tools**:
 
 - Agent Memory: Use session memory to keep track of collected evidence, questions asked to the user, and received answers. Memory is persistent, so you can rely on it heavily.
 - #operation:question: Use this tool to conduct interviews with the user. You can ask open or closed questions, but each question must be targeted to guide subsequent deepening. Questions must be asked assuming the user has no knowledge of the codebase.
 
-**Completeness Constraints**:
+**Completeness Constraints** (evidence collection only: they never govern the knowledge files you write, which follow the Audience rules):
 
 - Do not use ellipsis (...), nor phrases like 'etc.' or 'list omitted for brevity'.
 - Provide the complete answer, even if it's very long. Do not truncate the list. If necessary, continue until you have listed everything.

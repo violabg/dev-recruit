@@ -15,6 +15,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Route the current request through this file, then load only what that request needs. Keep this file under 80 lines: it is a router, not a knowledge base.
 
+Be extremely concise. Sacrifice grammar for the sake of concision.
+
 ## Roles
 
 Started by the developer, each as the main conversation of its session:
