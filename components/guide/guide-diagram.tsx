@@ -177,7 +177,7 @@ async function getMermaid(theme: Theme): Promise<MermaidModule> {
       layout: "dagre",
       // Fit the column on desktop; the wrapper below keeps a readable floor on
       // a phone, where Mermaid would otherwise shrink the labels to nothing
-      flowchart: { curve: "basis", htmlLabels: true },
+      flowchart: { curve: "step", htmlLabels: true },
     });
     configuredTheme = theme;
   }
