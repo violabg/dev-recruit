@@ -2,7 +2,7 @@
 title: "server actions"
 tier: "MustHave"
 keywords: ["server action","runAction","UserError","ActionResult","requireUser","form","react-hook-form"]
-intent: "Always: shape and error contract of every server action, public candidate-facing actions, scorecard, guide, interview, kit and interviewer-scorecard actions, the application decision actions, and how client forms call actions."
+intent: "Always: shape and error contract of every server action, public candidate-facing actions, the admin-only check of user-management actions, scorecard, guide, interview, kit and interviewer-scorecard actions, the application decision actions, and how client forms call actions."
 editable: true
 ---
 # Server actions and forms
@@ -64,7 +64,7 @@ A failure never escapes as a throw: `runAction` turns anything thrown into `{ su
 | `applyAsCandidateAction(formData)` | none (public application, `createdBy: null`, no owner) |
 | `fetchPositionDataAction(positionId)` | none; returns `position: null` for a missing and for a non-`open` position |
 
-- Every other action calls `requireUser()` and applies no role or ownership check. `moveApplicationStageAction` accepts any stage to any stage (reopening included); `setApplicationOwnerAction` takes `owner: "me" | "none"`.
+- Every other action calls `requireUser()` and applies no ownership check. The only role check: user-management actions also require the `admin` role, checked on the server right after the session and before parsing input; a non-admin gets a `UserError`. No other action checks a role. `moveApplicationStageAction` accepts any stage to any stage (reopening included); `setApplicationOwnerAction` takes `owner: "me" | "none"`.
 
 ## Expected failures by action
 
@@ -119,6 +119,7 @@ Use the logger service (`logger`, or scoped `aiLogger`, `dbLogger`, `authLogger`
 - NEVER `unwrap()` a redirecting action, or wrap `redirect()` in `try/catch`.
 - NEVER omit `requireUser()` because "the page is protected", and never parse input or touch the database before it.
 - NEVER add a read action for page data instead of a cached data-layer function.
-- NEVER gate a stage, owner or status change on role or ownership: `requireUser()` is the only guard.
+- NEVER gate a stage, owner or status change, or any other selection-data action, on role or ownership: there `requireUser()` is the only guard.
+- NEVER leave a user-management action without the server-side `admin` check, or rely on the hidden menu entry instead.
 - NEVER take the interviewer of a scorecard from the input instead of the session.
 - NEVER use `defaultValues` for a form the server rewrites after a save.

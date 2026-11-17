@@ -2,7 +2,7 @@
 title: "cache invalidation"
 tier: "PerContext"
 keywords: ["cache","use cache","cacheTag","invalidate","CacheTags","entityTag","data layer"]
-intent: "When adding or changing a cached read in the data layer or any mutation that must invalidate cache (including interviews, kits, interviewer scorecards and the application decision), or passing server data to client components."
+intent: "When adding or changing a cached read in the data layer or any mutation that must invalidate cache (including interviews, kits, interviewer scorecards, the application decision and users), or passing server data to client components."
 editable: true
 ---
 # Cache tagging and invalidation
@@ -29,7 +29,8 @@ Always build tags with the helpers from the cache utils; never write tag strings
 - `entityTag.interviewGuide` takes the guide id, never the position id nor a section id.
 - No tag of their own: criteria (covered by `scorecards`), guide sections and questions (`interview-guides`), `QuizQuestion` links (`quizzes` + `questions`).
 - `interviews` covers interviews, participants, kits, sections, items and submitted scorecards. Live notes and unsubmitted scorecards are never in a cached read.
-- No tag for `User`. Reads that join the owner's name carry only the tags of the entities they join; a user rename is refreshed by another tag or the `cacheLife` window. `getUserOptions` uses `cacheLife("minutes")` and no tag.
+- `User` has the collection tag `users`, a `CacheTags` entry built with the helpers like every other tag. Every cached read whose subject is users (the participant options, the user list) tags `users`; every change to a user (creation, name, email, role, email verification, ban, unban) expires it through its invalidation helper.
+- Reads that only join a user's name (owner, participants, `decidedBy`, interviewer) carry only the tags of the entities they read, never `users`: a rename shows through another tag or the `cacheLife` window.
 
 ## Dependency-tag rule
 

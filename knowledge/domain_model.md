@@ -2,7 +2,7 @@
 title: "domain model"
 tier: "MustHave"
 keywords: ["domain model","entities","quiz","question","candidate","application","stage","assessment","position status","evaluation","preset","migration","business rules"]
-intent: "Always: entities, relations, cascades and business rules (quiz save path, scorecard and interview guide, interviews with kits, live notes and interviewer scorecards, applications and their stage, the decision of an application with its matrix and score, assessment lifecycle, evaluation kinds and scores, access with no per-user filtering except unsubmitted interviewer material, Italian)."
+intent: "Always: entities, relations, cascades and business rules (quiz save path, scorecard and interview guide, interviews with kits, live notes and interviewer scorecards, applications and their stage, the decision of an application with its matrix and score, assessment lifecycle, evaluation kinds and scores, access with no per-user filtering except unsubmitted interviewer material, user management for administrators only, accounts with no email, environments and the shared resume bucket, Italian)."
 editable: true
 ---
 # Domain model and business rules
@@ -18,16 +18,26 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 - `Evaluation` is polymorphic: assessment evaluation (`assessmentId` only) or resume evaluation (`candidateId` + `positionId`).
 - `Question` is reusable and shared across quizzes. Order and criteria live on the `QuizQuestion` link.
 
-## Access: no roles, no ownership filtering
+## Access: no ownership filtering, one admin-only area
 
-- Every signed-in user reads and edits everything. NEVER add `where: { createdBy }` or any per-user filter.
-- Only exception, and it is visibility, never ownership or permission: an interviewer's live notes and scorecard are visible to their author until submitted.
+- Every signed-in user reads and edits all selection data, whatever their role. NEVER add `where: { createdBy }` or any per-user filter.
+- Only visibility exception, never ownership or permission: an interviewer's live notes and scorecard are visible to their author until submitted.
 - Submission publishes and locks: a submitted scorecard, its criterion scores and its author's notes on that interview become read-only for everyone, author included. No action reopens.
 - Independence views are arrangements, never filtered reads: submitted scorecards are returned to everyone and the UI collapses them ("Schede già inviate (n)"), and the Decision columns, overall score and must-warning lists stay closed behind "Per un giudizio indipendente, invia prima la tua scheda" while the participant has not submitted. Outcome and rationale stay usable.
-- NEVER add role or permission checks. `requireUser()` only checks that a session exists.
+- `User.role` is `user` or `admin`. The only role check in the app guards user management (creating users, editing them, their role, email verification, password, ban and sessions): its pages and actions check `admin` on the server, after the session check. Hiding the menu entry is presentation, never the guard.
+- NEVER add a role or permission check anywhere else: positions, candidates, applications, interviews, decisions and every other selection datum stay the same for every signed-in user, admin or not. `requireUser()` only checks that a session exists.
 - `Application.ownerId` = recruiter in charge, for the optional "Solo le mie" flag only. Dashboard-created application → session user; candidate edit → editor; public application → null. "Prendi in carico" sets, "Rilascia" clears.
 - The "Solo i miei" Agenda filter and the "Solo le mie" home filter are view filters too (participant or owner for interviews, interviewer for scorecards to fill in).
 - Candidates are not users: public routes only.
+
+## Users and accounts
+
+- Users are staff accounts, created only by an administrator. Nobody signs up: public registration is closed.
+- The app sends no email of any kind. Sign-in requires a verified email, and an administrator sets the verification by hand; a forgotten password is reset by an administrator.
+- At least one active administrator always exists: the last non-banned `admin` can neither lose the role nor be banned.
+- An administrator never bans themself. Nobody changes their own role or their own email verification.
+- Users are never deleted (they author positions, applications, decisions and scorecards): an administrator bans them instead. A ban carries a reason and ends the user's sessions; unbanning restores access.
+- Banned users are never offered as interview participants.
 
 ## Quiz and questions: one write path
 
@@ -177,6 +187,14 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 - Renaming is `ALTER TABLE … RENAME` in the migration. A backfill is SQL in the same migration, before the removal of the columns it reads.
 - The same migration runs on development then production; never copy a development database over production.
 
+## Environments and storage
+
+- One Neon database with two branches: `production` and `development`. Locally `DATABASE_URL` in `.env.local` points to `development`; production variables live in the hosting project settings.
+- Next.js loads the env files itself. The Prisma CLI and the seed load `.env.local`, then `.env`, through the Prisma env loader, and never overwrite a value already set, so `.env.local` wins.
+- Resumes (CV) live in one Cloudflare R2 bucket (`R2_BUCKET_NAME`) shared by both environments. Key `resumes/{candidateId}/{timestamp}.{ext}`; `Candidate.resumeUrl` stores the public URL and the key is recovered from it.
+- The R2 object is deleted when its candidate is deleted and when the CV is replaced (candidate edit with a new file, public application of a known email with a new file). A missing object is ignored; a failed delete is logged and never blocks the database change.
+- A `development` branch created from production holds production rows, `resumeUrl` included: deleting such a candidate, or replacing its CV, in development deletes the production file.
+
 ## Language
 
 - All user-facing text is Italian: UI, toasts, `UserError`, custom Zod messages, AI content. Identifiers and JSON field names stay English. Kit proposal values are Italian too.
@@ -199,6 +217,8 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 - NEVER confuse `Preset` with `ReferenceData`.
 - NEVER filter by `createdBy`, call `requireUser()` in a candidate-facing action, hide submitted material behind the visibility exception, or leave a submitted scorecard editable.
 - NEVER use `prisma db push`, or write `QuizQuestion` from the scorecard save.
+- NEVER add a role check outside user management, guard user management only in the UI, delete a user, leave the app without an active administrator, or send an email.
+- NEVER delete a candidate or replace a CV copied from production while working on `development`: test with candidates created there.
 - NEVER delete a criterion that has evidence instead of archiving it, or treat an archived criterion as editable, restorable or linkable.
 - NEVER write `criterionIds` on `Question`, or count an unresolved criterion id as evidence.
 - NEVER save an AI proposal without the user's confirmation, or create the default soft criteria as stored rows.
