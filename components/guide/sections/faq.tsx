@@ -33,22 +33,6 @@ export function FaqSection() {
             "/recruiting (posizioni aperte) e /recruiting/[token] (test)",
           ],
           ["Capire cosa ha fatto un candidato", "Candidatura → Panoramica (cronologia)"],
-          [
-            "Aggiungere un collega",
-            "Impostazioni → Utenti → Nuovo utente (solo amministratori)",
-          ],
-          [
-            "Mi sono registrato ma non riesco ad accedere",
-            "Un amministratore deve attivare Email verificata dal tuo dettaglio in Impostazioni → Utenti",
-          ],
-          [
-            "Ho dimenticato la password",
-            "Chiedi a un amministratore: la reimposta dal dettaglio utente (Reimposta password)",
-          ],
-          [
-            "Non riesco ad accedere: email non verificata o account bloccato",
-            "Rivolgiti a un amministratore",
-          ],
         ]}
       />
     </GuideSection>

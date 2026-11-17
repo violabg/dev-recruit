@@ -59,6 +59,8 @@ Validate every change with `pnpm lint && pnpm test:run && pnpm build` before han
 ## Documentation
 
 - The in-app guide at `/guida` (page `app/guida`, sections in `components/guide/sections`) describes the app as it is now. A change to a page, menu item, label, stage, rule or known limit it describes updates the guide's section in the same change; a screenshot in `public/guida` that no longer matches is retaken or removed. Section ids in `components/guide/sections.ts` are public deep links (`/guida#decisione`): never rename one.
+- The guide documents the selection flow only: positions, applications, tests, interviews, decision. Sign-in, registration, users, roles, sessions and passwords are not documented while that flow is not final: no section, paragraph, table row or FAQ entry about them, and the first-admin/deploy procedure lives in `docs/guida-poc.md`. The menu map may still show the real menu entries.
+- The guide is Italian, but established technical terms stay in English (`breadcrumbs`, `badge`, `tab`, `stepper`, `sidebar`, `dropdown`, `tooltip`): do not translate them into Italian.
 - `docs/guida-poc.md` holds the material that does not belong to the app (demo script, improvement list, first-admin procedure).
 - Docs, code comments and knowledge describe the current state only: no references to past phases or to how things used to be.
 - Open work lives in `next-steps/` (`FASE5_PLAN.md`, `FASE5_PROMPT.md`).

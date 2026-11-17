@@ -15,82 +15,6 @@ import { useEffect, useId, useRef, useState } from "react";
  */
 type Theme = "light" | "dark";
 
-/**
- * Mindmap palette: one entry per section level, in Mermaid's `cScale` order.
- * Index 0 is the root, 1–4 the four branches of the app map, 5–11 spare
- * colours. The hues follow the dashboard sections (blue, teal, violet, amber).
- *
- * They are spelled out because Mermaid's base theme derives `cScale` from
- * `primaryColor` and darkens it by 75% in dark mode, which turns every node
- * black; explicit values are re-applied after that pass.
- */
-const LIGHT_SCALE = [
-  { fill: "#8fb4f5", line: "#2f6fd0" }, // root
-  { fill: "#dce6fb", line: "#2f6fd0" }, // Panoramica
-  { fill: "#cdeee9", line: "#0f7f76" }, // Selezione
-  { fill: "#e4dcfb", line: "#6f4bd8" }, // Libreria
-  { fill: "#f8e6c8", line: "#a96a10" }, // Impostazioni
-  { fill: "#fadde6", line: "#b8336a" },
-  { fill: "#d4f0dd", line: "#1f7a45" },
-  { fill: "#d3ecf7", line: "#106f96" },
-  { fill: "#dfddfb", line: "#4a4bc4" },
-  { fill: "#fbe0d8", line: "#b14326" },
-  { fill: "#e3f2cd", line: "#5d7a1d" },
-  { fill: "#eedcf4", line: "#7c3f96" },
-] as const;
-
-const DARK_SCALE = [
-  { fill: "#33598f", line: "#6d9bea" }, // root
-  { fill: "#23395c", line: "#6d9bea" }, // Panoramica
-  { fill: "#17463f", line: "#4fd1c5" }, // Selezione
-  { fill: "#33285a", line: "#a78bfa" }, // Libreria
-  { fill: "#4a3a1c", line: "#f0b64a" }, // Impostazioni
-  { fill: "#4a2333", line: "#f472b6" },
-  { fill: "#1e3f2b", line: "#5fd08a" },
-  { fill: "#1b3b4a", line: "#67c7e8" },
-  { fill: "#2b2f5c", line: "#8b93f8" },
-  { fill: "#4a2a22", line: "#f09070" },
-  { fill: "#333f1b", line: "#a3c95f" },
-  { fill: "#3f2748", line: "#c48fdf" },
-] as const;
-
-/** `cScale*`, `cScaleInv*`, `cScaleLabel*` and the root colours of the mindmap. */
-function paletteVariables(
-  scale: typeof LIGHT_SCALE | typeof DARK_SCALE,
-  label: string,
-): Record<string, string> {
-  const variables: Record<string, string> = {
-    git0: scale[0].fill,
-    gitBranchLabel0: label,
-    scaleLabelColor: label,
-  };
-  scale.forEach((entry, index) => {
-    variables[`cScale${index}`] = entry.fill;
-    variables[`cScaleInv${index}`] = entry.line;
-    variables[`cScaleLabel${index}`] = label;
-    variables[`cScalePeer${index}`] = entry.line;
-  });
-  return variables;
-}
-
-/**
- * Mermaid paints mindmap connectors with the section fill, which is a tint: on
- * the card they almost vanish. `themeCSS` is appended to the generated styles,
- * so the saturated `cScaleInv` colour wins and the labels get a heavier weight.
- */
-function paletteStyles(scale: typeof LIGHT_SCALE | typeof DARK_SCALE) {
-  const connectors = scale
-    .map(
-      (entry, index) =>
-        `.section-edge-${index - 1} { stroke: ${entry.line} !important; }`,
-    )
-    .join("\n");
-  return [
-    connectors,
-    ".mindmap-node text, .mindmap-node span, .mindmap-node .text-inner-tspan { font-weight: 600; }",
-  ].join("\n");
-}
-
 const LIGHT_THEME = {
   background: "#ffffff",
   primaryColor: "#e8effd",
@@ -117,7 +41,6 @@ const LIGHT_THEME = {
   noteBkgColor: "#fff8e8",
   noteTextColor: "#5b4a1e",
   noteBorderColor: "#f0b429",
-  ...paletteVariables(LIGHT_SCALE, "#0f172a"),
 } as const;
 
 const DARK_THEME = {
@@ -146,7 +69,6 @@ const DARK_THEME = {
   noteBkgColor: "#2b2513",
   noteTextColor: "#f3e2b6",
   noteBorderColor: "#8a6b1f",
-  ...paletteVariables(DARK_SCALE, "#e6edf7"),
 } as const;
 
 type MermaidModule = typeof import("mermaid").default;
@@ -169,11 +91,11 @@ async function getMermaid(theme: Theme): Promise<MermaidModule> {
       themeVariables: isDark
         ? { ...DARK_THEME, darkMode: true }
         : { ...LIGHT_THEME, darkMode: false },
-      themeCSS: paletteStyles(isDark ? DARK_SCALE : LIGHT_SCALE),
       fontFamily: getComputedStyle(document.body).fontFamily,
       // Mermaid 12 defaults to the ELK layout engine (~450 KB gzipped, pulled
       // as its own chunk); dagre draws these small box-and-arrow diagrams the
-      // same and is already part of the core
+      // same and is already part of the core. The app map is not a Mermaid
+      // diagram, so no layout here needs ELK.
       layout: "dagre",
       // Fit the column on desktop; the wrapper below keeps a readable floor on
       // a phone, where Mermaid would otherwise shrink the labels to nothing
