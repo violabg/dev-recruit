@@ -1,7 +1,7 @@
 # Preparazione al colloquio e flusso di selezione — Piano
 
 **Data:** 15 novembre 2026 · aggiornato il 17 novembre 2026
-**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · Fase 3 implementata (16 novembre 2026), knowledge da aggiornare (§8.1 bis) · Fase 4 implementata (17 novembre 2026), knowledge da aggiornare (§8.1 ter) · prossima: Fase 5, da progettare
+**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · Fase 3 implementata (16 novembre 2026), knowledge da aggiornare (§8.1 bis) · Fase 4 implementata e knowledge aggiornata (17 novembre 2026) · prossima: Fase 5, da progettare
 **Ambito:** Kit di preparazione al colloquio, colloquio live, decisione; revisione del flusso dashboard da step 1 a step finale
 
 > **Nomi nel documento.** Le sezioni 1–3 descrivono il punto di partenza (15 novembre) e usano i nomi di allora: `CandidatePosition`, `Interview` per il test, `/dashboard/interviews`. Dalla Fase 1 il codice usa `Application`, `Assessment`, `assessmentId`, `/dashboard/assessments`. Le entità della Fase 3 chiamate qui `LiveInterview` e `LiveInterviewParticipant` si chiameranno `Interview` e `InterviewParticipant` (§3.2). Il vocabolario aggiornato è in `CONTEXT.md`.
@@ -359,7 +359,7 @@ Il design applica la knowledge come vincolo superiore al requisito: queste regol
 | 2 | Punteggio per risposta non salvato | Salvato in `answerEvaluations` | ✅ |
 | 3 | MAI filtri per utente | Eccezione limitata a note e schede degli intervistatori; il filtro "Solo le mie" (`ownerId`) esiste già e non limita l'accesso | da fare prima del design della Fase 3 |
 | 3 | La generazione AI non salva mai | Invariata: vale anche per scheda, guida e kit | — |
-| 4 | Formula della "Dashboard valutazione" con pesi fissi (oggi: "application evaluation summary", tab Decisione) | Formula della pagina Decisione | da fare dopo (delta Fase 4) |
+| 4 | Formula della "Dashboard valutazione" con pesi fissi (oggi: "application evaluation summary", tab Decisione) | Formula della pagina Decisione | fatto (17 novembre 2026, dopo l'implementazione, con il delta Fase 4) |
 
 ### 7.3 Ancora da definire nel design di fase
 
@@ -448,16 +448,15 @@ Ancora aperto:
 - **Database:** nessuna migrazione. I campi `decision`, `decisionRationale`, `decidedBy`, `decidedAt`, `decisionWeights` esistono dalla Fase 1.
 - **Design della Fase 4:** sessione `fase4_interview_prep_design`, job `phase4-design`.
 - **Accettazione:** `next-steps/FASE4_ACCEPTANCE.md` (O1–O27), con passi manuali M1–M13, limiti noti e punti aperti.
-- **Knowledge:** delta pronto in `next-steps/FASE4_KNOWLEDGE_DELTA.md` (nomina `CONTEXT.md`); `knowledge/` e `CONTEXT.md` non sono ancora aggiornati.
+- **Knowledge:** aggiornata (17 novembre 2026) con `knowledge-builder` dal delta `next-steps/FASE4_KNOWLEDGE_DELTA.md`, incluso `CONTEXT.md`: formula della pagina Decisione al posto dei pesi fissi, rubrica e note hiring in sola lettura, action e helper di cache rimossi non più citati.
 - **Conflitti con la knowledge** (sezione 9 del delta):
-  - D1: la regola della formula a pesi fissi (§7.2, riga della Fase 4) non è stata aggiornata prima del design; il design l'ha sostituita e il delta riporta le righe superate.
+  - D1: la regola della formula a pesi fissi (§7.2, riga della Fase 4) non è stata aggiornata prima del design; il design l'ha sostituita, lo sviluppatore ha confermato e la knowledge ora è allineata (conflitto chiuso).
 
 **Ancora da fare:**
 1. Passi manuali ☐ di `next-steps/FASE4_ACCEPTANCE.md` (M1–M13, M11 con due utenti) e quelli rimasti delle Fasi 1–3, in `pnpm dev`.
-2. Confermare D1, poi eseguire `knowledge-builder` con `next-steps/FASE4_KNOWLEDGE_DELTA.md` (dopo i delta delle Fasi 2 e 3, se non ancora applicati), nominando anche `CONTEXT.md`.
-3. Verifica legale (§7.3 punto 6), ora anche per l'avvocato del diavolo: ancora aperta. Misure adottate: solo statistiche per criterio nel prompt, nessun dato identificativo del candidato né nomi o testi liberi degli intervistatori, proposta non salvata, decisione sempre umana.
-4. Al rilascio: migrazioni in produzione invariate rispetto alla Fase 3 (nessuna migrazione nuova), seguendo `prisma/migrations/README.md`; poi `pnpm db:verify`.
-5. Correggere l'errore di tipo preesistente in `tests/lib/utils/application-timeline.test.ts` segnalato da `npx tsc --noEmit` (non blocca la build).
+2. Verifica legale (§7.3 punto 6), ora anche per l'avvocato del diavolo: ancora aperta. Misure adottate: solo statistiche per criterio nel prompt, nessun dato identificativo del candidato né nomi o testi liberi degli intervistatori, proposta non salvata, decisione sempre umana.
+3. Al rilascio: migrazioni in produzione invariate rispetto alla Fase 3 (nessuna migrazione nuova), seguendo `prisma/migrations/README.md`; poi `pnpm db:verify`.
+4. Correggere l'errore di tipo preesistente in `tests/lib/utils/application-timeline.test.ts` segnalato da `npx tsc --noEmit` (non blocca la build).
 
 ### 8.2 Avviare la Fase 3 in una nuova sessione
 
