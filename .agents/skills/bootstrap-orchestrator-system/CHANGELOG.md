@@ -2,6 +2,13 @@
 
 Versions follow semantic versioning. The installer reads the first version heading as the kit version it records in the target's manifest.
 
+## 7.0.2
+
+A patch: two wording changes in the rendered files. Re-installing keeps the answers and the sessions.
+
+- **Knowledge for agent readers.** The `knowledge-builder` contract states the audience the knowledge is written for: a guide for an AI agent, never a human document, so brief, concise and to the point; each rule stated once, with no duplication and nothing that can contradict another knowledge file; examples kept to the minimum; nothing restated that the reading agent can infer from the code, a tool or a runtime operation, or a knowledge file it can already read; the shortest wording, grammar sacrificed when the meaning stays unambiguous. Its completeness constraints now say they bind evidence collection only, never the knowledge files the role writes. The gates, the approval and the saved knowledge are unchanged.
+- **Router concision.** The router's `AGENTS.md` asks every role to be extremely concise and to sacrifice grammar for the sake of concision. It governs output style, never completeness: an instruction that demands a full report still binds that report.
+
 ## 7.0.1
 
 - **Copilot part size.** GitHub Copilot answers now come in parts of up to 18,000 bytes instead of 7,000. Copilot CLI 1.0.105 and 1.0.110 show shell results of about 20 KB whole; only the 1.0.103 pre-release builds cut them at 8 KB. A long instruction or design section takes about half the calls. Re-render a target to apply it.
