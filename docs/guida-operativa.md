@@ -369,7 +369,7 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 | 4 | **Nessun promemoria** per colloqui imminenti o kit non pronti: solo la dashboard | Medio | Notifiche in-app, digest, integrazione calendario |
 | 5 | **Criterio archiviato non ripristinabile** dall'interfaccia | Basso/medio | Vista "Archiviati" con ripristino |
 | 6 | **Stessa persona con due email**: l'email è unica, ma due indirizzi diversi creano due candidati e non esiste una fusione | Medio in import massivo | Procedura guidata di fusione in app |
-| 7 | **Nessun ruolo/permesso**: ogni utente autenticato può fare tutto | Alto se l'app esce dal POC | Ruoli recruiter/intervistatore/admin |
+| 7 | **Nessuna gestione degli utenti**: la registrazione `/auth/sign-up` è aperta, non esistono amministratori né una pagina utenti, e senza invio email la verifica dell'account e "Password dimenticata" richiedono un intervento sul database; ogni utente autenticato può fare tutto | Alto se l'app esce dal POC | Fase 5, funzione U (`next-steps/FASE5_PLAN.md`): registrazione chiusa, Impostazioni → Utenti per gli amministratori |
 | 8 | **Il candidato non ha una guida di preparazione né feedback dopo il rifiuto** | Medio per l'esperienza | Fase 5 (`next-steps/FASE5_PLAN.md`) |
 
 ### Attriti di interfaccia

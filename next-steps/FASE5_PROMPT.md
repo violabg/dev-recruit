@@ -1,9 +1,9 @@
 # Fase 5 — Prompt di avvio
 
-Prompt pronti da incollare, uno per sessione. Ogni sessione lavora su **una sola funzione** della Fase 5 (`next-steps/FASE5_PLAN.md` §1). Ordine consigliato: B → C → A.
+Prompt pronti da incollare, uno per sessione. Ogni sessione lavora su **una sola funzione** della Fase 5 (`next-steps/FASE5_PLAN.md` §1). Ordine: **U** (gestione utenti) per prima, poi B → C → A.
 
 Prima di ogni sessione di design:
-- la verifica legale della funzione è chiusa (piano §2), o lo sviluppatore ha deciso esplicitamente di procedere con le misure in essere;
+- la verifica legale della funzione è chiusa (piano §2; non serve per U), o lo sviluppatore ha deciso esplicitamente di procedere con le misure in essere;
 - `knowledge-builder` ha aggiornato le regole che la funzione ribalta (piano §3.1);
 - il branch è creato da `main` aggiornato, e `DATABASE_URL` punta al ramo Neon `development`.
 
@@ -11,9 +11,21 @@ Prima di ogni sessione di design:
 
 ## 1. Knowledge, prima (ruolo `knowledge-builder`)
 
-> Aggiorna la knowledge per la funzione **<A | B | C>** della Fase 5 descritta in `next-steps/FASE5_PLAN.md`. Applica solo le regole della tabella §3.1 che riguardano questa funzione, con le decisioni seguenti: <decisioni dello sviluppatore, una per riga>. Colma anche le lacune generali di §3.2 che conosci dal codice (ambienti, bucket R2 condiviso). Non descrivere entità, pagine o azioni che non esistono ancora. Aggiorna `CONTEXT.md` solo per i termini che cambiano significato.
+> Aggiorna la knowledge per la funzione **<U | A | B | C>** della Fase 5 descritta in `next-steps/FASE5_PLAN.md`. Applica solo le regole della tabella §3.1 che riguardano questa funzione, con le decisioni seguenti: <decisioni dello sviluppatore, una per riga>. Colma anche le lacune generali di §3.2 che conosci dal codice (ambienti, bucket R2 condiviso). Non descrivere entità, pagine o azioni che non esistono ancora. Aggiorna `CONTEXT.md` solo per i termini che cambiano significato.
 
 ## 2. Design e implementazione (ruolo `orchestrator`, workflow `DESIGN`)
+
+### Funzione U — Gestione utenti e amministratori (primo passo)
+
+Knowledge, prima (`knowledge-builder`):
+
+> Aggiorna la knowledge per la funzione **U** della Fase 5 (`next-steps/FASE5_PLAN.md` §1.U). Regole da cambiare (§3.1, righe U): "NEVER add role or permission checks" diventa un'eccezione limitata alla gestione degli utenti, con il ruolo `admin` verificato lato server, mentre i dati di selezione restano accessibili a ogni utente autenticato; "No tag for `User`" diventa un tag `users` da invalidare quando un utente cambia; la registrazione pubblica è chiusa e la password si reimposta da un amministratore. Nessun invio email: la verifica dell'email si sblocca a mano da un amministratore. Non descrivere pagine o azioni che non esistono ancora.
+
+Design e implementazione (`orchestrator`, workflow `DESIGN`):
+
+> Progetta e realizza la funzione **U** della Fase 5 (`next-steps/FASE5_PLAN.md` §1.U): gestione degli utenti della dashboard. Chiudi la registrazione pubblica (`disableSignUp`, via le pagine di registrazione e il link dal login) e sostituisci "Password dimenticata" con l'indicazione di rivolgersi a un amministratore, perché l'app non invia email. Aggiungi Impostazioni → Utenti (`/dashboard/settings/users`), solo per amministratori: elenco con ruolo, verifica email, stato, ultimo accesso e sessioni; nuovo utente con password iniziale, ruolo e "Email verificata"; dettaglio e modifica con nome, email, ruolo (ogni amministratore può nominare o revocare altri amministratori), interruttore "Email verificata" per sbloccare l'accesso senza email, reimposta password, blocca/sblocca, chiudi sessioni. Usa il plugin `admin` di better-auth già attivo, chiamato lato server dentro server action del progetto (`runAction`, messaggi in italiano) e un controllo `requireAdmin()` accanto a `requireUser()`; il menu mostra "Utenti" solo agli amministratori. Regole: almeno un amministratore attivo sempre, nessuno blocca sé stesso, nessuna eliminazione di utenti, i bloccati non sono selezionabili come partecipanti. Decidi come si imposta il primo amministratore (SQL una tantum o script `pnpm`) e un tag di cache `users`. Il resto dell'app non cambia: ogni utente autenticato continua a vedere e modificare tutti i dati di selezione. Ogni modifica dello schema è una migrazione versionata. Valida con `pnpm lint && pnpm test:run && pnpm build`. Alla fine aggiorna `docs/guida-operativa.md` e `docs/guida-operativa.html` (menu Impostazioni, accesso, area di miglioramento sui ruoli) e riporta i punti della knowledge diventati stantii per `knowledge-builder`.
+
+Rilascio: impostare il primo amministratore in produzione prima del deploy che chiude la registrazione.
 
 ### Funzione B — Guida di preparazione per il candidato
 
@@ -29,7 +41,7 @@ Prima di ogni sessione di design:
 
 ## 3. Knowledge, dopo (ruolo `knowledge-builder`)
 
-> Documenta dal codice reale la funzione **<A | B | C>** della Fase 5 appena realizzata: nuove entità, azioni, regole, cache e prompt, e i termini nuovi in `CONTEXT.md`. Sostituisci ogni affermazione superata; non lasciare riferimenti a fasi o a com'era prima.
+> Documenta dal codice reale la funzione **<U | A | B | C>** della Fase 5 appena realizzata: nuove entità, azioni, regole, cache e prompt, e i termini nuovi in `CONTEXT.md`. Sostituisci ogni affermazione superata; non lasciare riferimenti a fasi o a com'era prima.
 
 ## 4. Chiusura
 

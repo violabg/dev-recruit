@@ -17,15 +17,53 @@ Flusso attuale in una riga: Posizione (scheda di valutazione, quiz, guide colloq
 
 ## 1. Perimetro della Fase 5
 
-Tre funzioni indipendenti, da progettare e realizzare **una alla volta**, ognuna con un proprio design:
+Quattro funzioni, da progettare e realizzare **una alla volta**, ognuna con un proprio design. La prima è la gestione degli utenti (U): oggi chiunque trovi `/auth/sign-up` può registrarsi, nessuno può vedere o gestire gli utenti, e non esiste un amministratore.
 
 | # | Funzione | Valore | Dipende dalla verifica legale |
 |---|---|---|---|
+| U | **Gestione utenti e amministratori** | Controllo su chi accede all'app; prerequisito per uscire dal POC | No |
 | A | **Registrazione e trascrizione del colloquio** con consenso, più **sintesi AI per criterio** | Prove più ricche e meno lavoro manuale per gli intervistatori | Sì, fortemente |
 | B | **Guida di preparazione per il candidato** | Esperienza del candidato, colloqui più confrontabili | Poco |
 | C | **Feedback al candidato dopo il rifiuto** | Esperienza del candidato, reputazione | Sì (cosa si può comunicare) |
 
-Ordine consigliato: **B → C → A**. B non tocca dati personali nuovi e chiarisce il canale verso il candidato, che serve anche a C. A è la più rischiosa (audio, dati personali, AI Act) e va fatta per ultima, dopo la verifica legale.
+Ordine: **U** per prima, poi **B → C → A**. U non dipende dalle altre e chiude un rischio di accesso. B non tocca dati personali nuovi e chiarisce il canale verso il candidato, che serve anche a C. A è la più rischiosa (audio, dati personali, AI Act) e va fatta per ultima, dopo la verifica legale.
+
+### 1.U Gestione utenti e amministratori (primo passo)
+
+**Stato attuale.** Login e logout con email e password (sessioni di 7 giorni, massimo 30). Il plugin `admin` di better-auth è già attivo (`lib/auth.ts`, `lib/auth-client.ts`) e la tabella `user` ha già `role`, `banned`, `banReason`, `banExpires`, ma nessuna pagina li usa e tutti gli utenti hanno `role = "user"`. La registrazione pubblica `/auth/sign-up` è aperta e linkata dal login. `requireEmailVerification` è attivo ma **nessun invio email è configurato**: un nuovo iscritto non riceve mai il link e non può entrare finché `emailVerified` non viene impostato a mano nel database; anche "Password dimenticata" non può funzionare.
+
+**Decisione: per il POC nessun invio email.** Gli account li crea e li sblocca un amministratore dall'app.
+
+Requisiti:
+1. **Registrazione chiusa.** `emailAndPassword.disableSignUp: true`; via le pagine `/auth/sign-up` e `/auth/sign-up-success` e il link dal login. Nessun utente si crea da solo.
+2. **Password dimenticata.** Senza email non funziona: la pagina e il link si sostituiscono con l'indicazione "Chiedi a un amministratore di reimpostare la password" (da confermare nel design se togliere anche `/auth/update-password`).
+3. **Pagina Impostazioni → Utenti** (`/dashboard/settings/users`), visibile e raggiungibile **solo dagli amministratori**:
+   - elenco con nome, email, ruolo (Utente / Amministratore), email verificata, stato (attivo / bloccato), data di creazione, ultimo accesso e sessioni attive;
+   - ricerca per nome o email.
+4. **Nuovo utente** (solo amministratori): nome, cognome, email, password iniziale, ruolo, e il campo **"Email verificata"** già attivabile, così l'utente entra subito senza email.
+5. **Dettaglio e modifica utente** (solo amministratori):
+   - nome, cognome, email;
+   - **ruolo**: ogni amministratore può rendere amministratore un altro utente o togliergli il ruolo;
+   - **"Email verificata"**: interruttore che sblocca l'accesso a un utente non verificato (bypass della verifica, perché l'app non invia email);
+   - reimposta password;
+   - blocca / sblocca (con motivo), che chiude anche le sue sessioni;
+   - elenco delle sessioni attive con "Chiudi sessione" e "Chiudi tutte".
+6. **Regole di sicurezza:**
+   - deve restare sempre almeno un amministratore attivo: non si toglie il ruolo né si blocca l'ultimo;
+   - un amministratore non può bloccare sé stesso;
+   - eliminare un utente non è previsto (possiede posizioni, candidature, decisioni): si blocca;
+   - un utente bloccato non compare tra i partecipanti selezionabili (già oggi `getUserOptions` esclude i bloccati).
+7. **Primo amministratore.** Oggi non ce n'è nessuno: il primo si imposta una volta, a mano, sul database di produzione (`role = 'admin'` sull'account dello sviluppatore), oppure con uno script `pnpm` dedicato da decidere nel design. Dopo, gli amministratori si nominano dall'app.
+8. **Accesso.** Server action e pagine degli utenti verificano il ruolo lato server (un helper tipo `requireAdmin()` accanto a `requireUser()`); il menu mostra "Utenti" solo agli amministratori. Tutto il resto dell'app resta com'è: ogni utente autenticato vede e modifica tutti i dati di selezione.
+9. **Profilo.** La pagina Profilo resta per tutti; un utente non può cambiare il proprio ruolo né il proprio stato di verifica.
+
+Da decidere nel design:
+1. Azioni del plugin `admin` (`createUser`, `listUsers`, `adminUpdateUser`, `setRole`, `banUser`/`unbanUser`, `setUserPassword`, `listUserSessions`, `revokeUserSession(s)`) chiamate lato server tramite `auth.api` dentro le server action del progetto (con `runAction` e messaggi italiani), oppure dal client: preferibile lato server, per tenere un solo contratto d'errore.
+2. Se `createUser` del plugin funziona con `disableSignUp: true` (da verificare) e come impostare `emailVerified` alla creazione.
+3. Tag di cache per gli utenti: oggi non esiste (`getUserOptions` è in cache per minuti senza tag). Con modifica di nomi, ruoli e blocchi serve un tag `users` e la sua invalidazione.
+4. Se mostrare chi ha creato o modificato l'utente (nessun registro oggi).
+
+Rilascio: il primo amministratore va impostato in produzione **prima** del deploy che chiude la registrazione, altrimenti nessuno può creare utenti.
 
 ### 1.A Registrazione, trascrizione e sintesi per criterio
 
@@ -98,6 +136,9 @@ Da affidare a `knowledge-builder` **prima** del design della funzione che li toc
 
 | Regola attuale (dove) | Funzione | Cosa decidere |
 |---|---|---|
+| "NEVER add role or permission checks. `requireUser()` only checks that a session exists" (`knowledge/domain_model.md`, access) | U | Eccezione limitata alla gestione degli utenti: ruolo `admin` verificato lato server; i dati di selezione restano accessibili a tutti |
+| "No tag for `User`" (`knowledge/cache_invalidation.md`) | U | Tag `users` e invalidazione dopo creazione, modifica, ruolo, blocco |
+| Pagine `app/auth/` con registrazione e password dimenticata (`CONTEXT.md`) | U | Registrazione chiusa; password reimpostata da un amministratore |
 | "No email is sent: the summary and the `.ics` are shared by hand" (`knowledge/domain_model.md`, interviews) | B, C | Se resta: canale a link pubblico con token. Se cade: nuova regola su invio e provider |
 | Prompt non identificativi e solo statistiche dai colloqui (`knowledge/ai_generation.md`, "Non-identifying and statistics-only prompts") | A | Regola di anonimizzazione della trascrizione prima della sintesi |
 | Trascrizione solo per le risposte del test, sotto `MAX_AUDIO_BYTES`, azione pubblica con token (`knowledge/ai_generation.md`, `knowledge/server_actions.md`) | A | Nuovo percorso per audio lunghi e autenticato |
@@ -141,9 +182,9 @@ Da valutare insieme alle aree di miglioramento della guida operativa (§11), sen
 
 ---
 
-## 5. Metodo, per ogni funzione (A, B, C)
+## 5. Metodo, per ogni funzione (U, A, B, C)
 
-1. **Verifica legale** chiusa per la funzione (§2).
+1. **Verifica legale** chiusa per la funzione (§2); non serve per U.
 2. **Knowledge, prima:** `knowledge-builder` aggiorna solo le regole di §3.1 che la funzione ribalta. Nessuna descrizione di entità non ancora scritte.
 3. **Design:** orchestrator, workflow `DESIGN`, sulla sola funzione: schema Prisma, rotte, contratti delle server action, cache invalidation, prompt AI.
 4. **Implementazione** e validazione: `pnpm lint && pnpm test:run && pnpm build`. Ogni modifica dello schema è una migrazione versionata (`pnpm db:migrate` su `development`, mai `db push`).
