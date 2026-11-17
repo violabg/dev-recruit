@@ -1,86 +1,126 @@
+import { SECTIONS, type SectionKey } from "@/components/dashboard/sections";
 import { cn } from "cn";
 import { BrainCircuit } from "lucide-react";
-import { Fragment } from "react";
 
 /**
- * The map of the application, section 2 of the guide.
- *
- * It is plain markup on purpose: Mermaid laid this out as a wide fan whose
- * labels were scaled to a few pixels, and no layout engine gives a reliable
- * result for a menu. Here the branches stack vertically, the text keeps its
- * size at every width, and the colours are the dashboard section hues.
+ * The map of the application, section 2 of the guide: a sitemap with the
+ * menu groups as columns and every entry as a tile with its sidebar icon and
+ * colour, what it is for and the tabs it holds. Plain markup on purpose: the
+ * text keeps its size at every width.
  */
-type Tone = "primary" | "candidates" | "quizzes" | "settings";
-
-const TONES: Record<Tone, { label: string; dot: string }> = {
-  primary: {
-    label: "bg-primary/10 text-primary ring-primary/25",
-    dot: "bg-primary",
-  },
-  candidates: {
-    label:
-      "bg-section-candidates/10 text-section-candidates ring-section-candidates/25",
-    dot: "bg-section-candidates",
-  },
-  quizzes: {
-    label:
-      "bg-section-quizzes/10 text-section-quizzes ring-section-quizzes/25",
-    dot: "bg-section-quizzes",
-  },
-  settings: {
-    label: "bg-section-settings/10 text-section-settings ring-section-settings/25",
-    dot: "bg-section-settings",
-  },
-};
-
-type BranchItem = {
-  label: string;
-  /** Menu entries that live inside the item */
+type MapItem = {
+  section: SectionKey;
+  label?: string;
+  purpose: string;
+  /** Tabs or sub-pages inside the entry */
   children?: string[];
 };
 
-const BRANCHES: { label: string; tone: Tone; items: BranchItem[] }[] = [
-  {
-    label: "Panoramica",
-    tone: "primary",
-    items: [{ label: "Le mie azioni" }],
-  },
-  {
-    label: "Selezione",
-    tone: "candidates",
-    items: [
-      {
-        label: "Posizioni",
-        children: [
-          "Scheda di valutazione",
-          "Selezione kanban",
-          "Quiz",
-          "Guide colloquio",
-        ],
-      },
-      {
-        label: "Candidature",
-        children: ["CV", "Test", "Colloqui", "Decisione"],
-      },
-      { label: "Candidati" },
-      { label: "Agenda colloqui" },
-    ],
-  },
-  {
-    label: "Libreria",
-    tone: "quizzes",
-    items: [{ label: "Quiz" }, { label: "Test inviati" }, { label: "Preset" }],
-  },
-  {
-    label: "Impostazioni",
-    tone: "settings",
-    items: [{ label: "Dati di riferimento" }],
-  },
-];
+type MapGroup = { label: string; dot: string; items: MapItem[] };
+
+const PANORAMICA: MapGroup = {
+  label: "Panoramica",
+  dot: "bg-primary",
+  items: [{ section: "overview", purpose: "Cosa aspetta me, oggi" }],
+};
+
+const SELEZIONE: MapGroup = {
+  label: "Selezione",
+  dot: "bg-section-candidates",
+  items: [
+    {
+      section: "positions",
+      purpose: "Le offerte e tutto ciò che serve a valutarle",
+      children: ["Dettagli", "Scheda di valutazione", "Selezione", "Quiz", "Guide colloquio"],
+    },
+    {
+      section: "applications",
+      purpose: "Il percorso di ogni candidato per una posizione",
+      children: ["Panoramica", "CV", "Test", "Colloqui", "Decisione"],
+    },
+    { section: "candidates", purpose: "Le persone, con dati e CV" },
+    { section: "agenda", purpose: "I colloqui in calendario" },
+  ],
+};
+
+const LIBRERIA: MapGroup = {
+  label: "Libreria",
+  dot: "bg-section-quizzes",
+  items: [
+    { section: "quizzes", purpose: "I test da assegnare ai candidati" },
+    { section: "assessments", purpose: "I test assegnati e i risultati" },
+    { section: "presets", purpose: "Modelli per generare domande" },
+  ],
+};
+
+const IMPOSTAZIONI: MapGroup = {
+  label: "Impostazioni",
+  dot: "bg-section-settings",
+  items: [
+    {
+      section: "settings",
+      label: "Dati di riferimento",
+      purpose: "Gli elenchi usati nei moduli",
+    },
+  ],
+};
+
+function Group({ group }: { group: MapGroup }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="flex items-center gap-2 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+        <span aria-hidden className={cn("rounded-full size-2", group.dot)} />
+        {group.label}
+      </h3>
+      <ul className="flex flex-col gap-2">
+        {group.items.map((item) => {
+          const section = SECTIONS[item.section];
+          const Icon = section.icon;
+          return (
+            <li
+              key={item.section}
+              className="flex items-start gap-3 bg-background/60 p-3 rounded-lg ring-1 ring-border"
+            >
+              <span
+                className={cn(
+                  "grid place-items-center rounded-md size-9 shrink-0 ring-1 ring-inset",
+                  section.tile,
+                  section.text,
+                )}
+              >
+                <Icon className="size-4" aria-hidden />
+              </span>
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="font-semibold text-foreground text-sm leading-tight">
+                  {item.label ?? section.label}
+                </span>
+                <span className="text-muted-foreground text-xs leading-snug">
+                  {item.purpose}
+                </span>
+                {item.children && (
+                  <ul className="flex flex-wrap gap-1 mt-1">
+                    {item.children.map((child) => (
+                      <li
+                        key={child}
+                        className="bg-muted px-1.5 py-0.5 rounded font-medium text-[0.7rem] text-muted-foreground"
+                      >
+                        {child}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
 
 export function AppMap() {
   return (
-    <div className="bg-card p-5 md:p-6 rounded-xl ring-1 ring-border">
+    <div className="flex flex-col gap-5 bg-card p-5 md:p-6 rounded-xl ring-1 ring-border">
       <div className="flex items-center gap-3">
         <span className="grid place-items-center bg-primary rounded-lg size-9 text-primary-foreground aspect-square">
           <BrainCircuit className="size-5" />
@@ -88,53 +128,17 @@ export function AppMap() {
         <span className="font-display font-extrabold text-heading text-lg tracking-[-0.02em]">
           DevRecruit
         </span>
+        <span className="text-muted-foreground text-sm">· menu laterale</span>
       </div>
 
-      <ol className="border-border mt-5 ml-2 pl-5 border-l space-y-5">
-        {BRANCHES.map((branch) => (
-          <li key={branch.label} className="relative">
-            <span
-              aria-hidden
-              className={cn(
-                "top-2 -left-[25px] absolute rounded-full size-2.5 ring-4 ring-card",
-                TONES[branch.tone].dot,
-              )}
-            />
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
-              <span
-                className={cn(
-                  "inline-flex items-center shrink-0 px-2.5 py-1 rounded-md ring-1 ring-inset font-semibold text-xs w-fit",
-                  TONES[branch.tone].label,
-                )}
-              >
-                {branch.label}
-              </span>
-              <ul className="flex flex-wrap gap-2">
-                {branch.items.map((item) => (
-                  <li
-                    key={item.label}
-                    className="bg-muted/40 px-3 py-2 rounded-lg ring-1 ring-border"
-                  >
-                    <p className="font-medium text-foreground text-sm">
-                      {item.label}
-                    </p>
-                    {item.children && (
-                      <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-muted-foreground text-xs">
-                        {item.children.map((child, index) => (
-                          <Fragment key={child}>
-                            {index > 0 && <span aria-hidden>·</span>}
-                            <span>{child}</span>
-                          </Fragment>
-                        ))}
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <div className="gap-5 grid md:grid-cols-2">
+        <div className="flex flex-col gap-5">
+          <Group group={PANORAMICA} />
+          <Group group={LIBRERIA} />
+          <Group group={IMPOSTAZIONI} />
+        </div>
+        <Group group={SELEZIONE} />
+      </div>
     </div>
   );
 }

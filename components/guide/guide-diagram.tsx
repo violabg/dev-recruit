@@ -76,6 +76,11 @@ const DARK_THEME = {
  * theme: entity = the main objects, step = neutral evidence/steps, outcome =
  * a good end state, danger = a closed/negative end, warn = needs attention,
  * ai = done by the AI.
+ *
+ * Each fill and stroke is mirrored by the `--guide-<class>-fill` and
+ * `--guide-<class>-stroke` custom properties in `app/globals.css`, which colour
+ * the legend swatches below: CSS follows the theme class, so the server and the
+ * client render the same markup.
  */
 const CLASS_DEFS: Record<Theme, Record<string, string>> = {
   light: {
@@ -124,11 +129,12 @@ function usedClasses(chart: string) {
   );
 }
 
-/** Swatch colours parsed from the class definition of the current theme. */
-function swatch(name: string, theme: Theme) {
-  const style = CLASS_DEFS[theme][name] ?? "";
-  const pick = (key: string) => style.match(new RegExp(`${key}:([^,]+)`))?.[1];
-  return { background: pick("fill"), borderColor: pick("stroke") };
+/** Swatch colour of a legend entry, resolved by CSS from the current theme. */
+function swatch(name: string) {
+  return {
+    background: `var(--guide-${name}-fill)`,
+    borderColor: `var(--guide-${name}-stroke)`,
+  };
 }
 
 type MermaidModule = typeof import("mermaid").default;
@@ -205,7 +211,6 @@ export function GuideDiagram({
   const [svg, setSvg] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [scrollable, setScrollable] = useState(false);
-  const theme: Theme = resolvedTheme === "dark" ? "dark" : "light";
   const legend = usedClasses(chart);
 
   // Load Mermaid only when the diagram is about to become visible
@@ -281,7 +286,7 @@ export function GuideDiagram({
           </pre>
         ) : svg ? (
           <div
-            className="m-auto w-full min-w-0 [&_svg]:block [&_svg]:h-auto [&_svg]:max-w-full max-lg:[&_svg]:min-w-[680px]"
+            className="m-auto w-full min-w-0 [&_svg]:block [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:max-w-full max-lg:[&_svg]:min-w-[680px]"
             // Mermaid returns its own sanitised SVG for our static source
             dangerouslySetInnerHTML={{ __html: svg }}
           />
@@ -303,7 +308,7 @@ export function GuideDiagram({
               <span
                 aria-hidden
                 className="border rounded-sm size-3"
-                style={swatch(name, theme)}
+                style={swatch(name)}
               />
               {CLASS_LABELS[name]}
             </li>

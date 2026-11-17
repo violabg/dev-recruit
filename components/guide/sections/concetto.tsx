@@ -1,22 +1,12 @@
 import {
-  GuideDiagram,
   GuideSection,
   GuideTable,
   GuideText,
 } from "@/components/guide/guide-blocks";
+import { GuideFlow } from "@/components/guide/guide-flow";
 import { GUIDE_SECTION } from "@/components/guide/sections";
 
 const meta = GUIDE_SECTION.concetto;
-
-const flow = `flowchart TD
-    P["<b>Posizione</b><br/>cosa conta e quanto pesa"]:::entity --> C["<b>Candidatura</b><br/>una per candidato × posizione"]:::entity
-    C --> E1["<b>CV</b><br/>valutazione per criterio"]:::step
-    C --> E2["<b>Test</b><br/>punteggio per risposta"]:::step
-    C --> E3["<b>Colloqui</b><br/>kit, live, schede"]:::step
-    E1 --> D["<b>Decisione</b><br/>matrice criteri × fonti"]:::entity
-    E2 --> D
-    E3 --> D
-    D --> O["<b>Esito</b><br/>Offerta · Assunto · Scartato"]:::outcome`;
 
 export function ConcettoSection() {
   return (
@@ -28,7 +18,32 @@ export function ConcettoSection() {
         intervistatori. Ogni schermata dice qual è il prossimo passo.
       </GuideText>
 
-      <GuideDiagram chart={flow} title="Dalla posizione all'esito" />
+      <GuideFlow
+        title="Dalla posizione all'esito"
+        stages={[
+          [{ title: "Posizione", detail: "cosa conta e quanto pesa", tone: "entity" }],
+          [
+            {
+              title: "Candidatura",
+              detail: "una per candidato × posizione",
+              tone: "entity",
+            },
+          ],
+          [
+            { title: "CV", detail: "valutazione per criterio", tone: "step" },
+            { title: "Test", detail: "punteggio per risposta", tone: "step" },
+            { title: "Colloqui", detail: "kit, live, schede", tone: "step" },
+          ],
+          [{ title: "Decisione", detail: "matrice criteri × fonti", tone: "entity" }],
+          [
+            {
+              title: "Esito",
+              detail: "Offerta · Assunto · Scartato",
+              tone: "outcome",
+            },
+          ],
+        ]}
+      />
 
       <GuideTable
         head={["Entità", "In una frase", "Dove si gestisce"]}

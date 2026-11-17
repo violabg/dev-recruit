@@ -142,6 +142,21 @@
   --shiki-token-string-expression: oklch(0.55 0.1 185);
   --shiki-token-punctuation: oklch(0.48 0.02 250);
   --shiki-token-link: oklch(0.536 0.16 238);
+  /* Guide diagrams: legend swatch colours, the same class colours the Mermaid
+     charts use (see CLASS_DEFS in components/guide/guide-diagram.tsx). They
+     live here so the swatches follow the theme class on the server too. */
+  --guide-entity-fill: #0b6aa8;
+  --guide-entity-stroke: #085a8f;
+  --guide-step-fill: #f1f5fb;
+  --guide-step-stroke: #c3d0e4;
+  --guide-outcome-fill: #e3f6ec;
+  --guide-outcome-stroke: #2f9e68;
+  --guide-danger-fill: #fde8e8;
+  --guide-danger-stroke: #d64545;
+  --guide-warn-fill: #fff4dc;
+  --guide-warn-stroke: #d99a1b;
+  --guide-ai-fill: #f1eafd;
+  --guide-ai-stroke: #8b5cf6;
 }
 
 .dark {
@@ -202,6 +217,18 @@
   --shiki-token-string-expression: oklch(0.8 0.1 185);
   --shiki-token-punctuation: oklch(0.72 0.02 250);
   --shiki-token-link: oklch(0.7 0.14 238);
+  --guide-entity-fill: #1572b6;
+  --guide-entity-stroke: #4ea3e0;
+  --guide-step-fill: #18273f;
+  --guide-step-stroke: #33507a;
+  --guide-outcome-fill: #123526;
+  --guide-outcome-stroke: #3fb27f;
+  --guide-danger-fill: #3a1717;
+  --guide-danger-stroke: #e06363;
+  --guide-warn-fill: #33280f;
+  --guide-warn-stroke: #d9a43a;
+  --guide-ai-fill: #271a44;
+  --guide-ai-stroke: #a78bfa;
 }
 
 /* Ink rail scope (dark mode only): text + section hues tuned for the navy sidebar */
