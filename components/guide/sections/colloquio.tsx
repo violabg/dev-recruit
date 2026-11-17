@@ -61,12 +61,20 @@ export function ColloquioSection() {
             title: "Preparazione",
             body: (
               <>
-                Briefing e ipotesi da verificare; domande del modello + domande
-                personalizzate con badge di origine (CV, Test, Round precedente,
-                Manuale) e il <strong>perché</strong>; si possono modificare,
-                riordinare, aggiungere, rimuovere. C&apos;è la checklist (cosa
-                comunicare, logistica) e il promemoria legale fisso sulle domande
-                vietate. &quot;Segna come pronto&quot; chiude la preparazione.
+                La pagina è in sola lettura. In alto la{" "}
+                <strong>scaletta</strong>: minuti previsti, numero di domande e
+                obbligatorie, avanzamento della checklist e l&apos;elenco delle
+                sezioni (un clic porta alla sezione). Poi briefing e ipotesi da
+                verificare; le domande, sezione per sezione, con badge di
+                origine (CV, Test, Round precedente, Manuale), il{" "}
+                <strong>perché</strong>, gli approfondimenti e le risposte
+                attese su tre livelli (debole, media, forte); la checklist
+                (cosa comunicare, logistica).{" "}
+                <strong>Modifica kit</strong> apre l&apos;editor, dove si
+                modificano, riordinano, aggiungono o rimuovono domande,
+                ipotesi e voci. &quot;Segna come pronto&quot; chiude la
+                preparazione. C&apos;è il promemoria legale fisso sulle domande
+                vietate.
               </>
             ),
           },
@@ -110,10 +118,10 @@ export function ColloquioSection() {
         />
         <GuideFigure
           src="/guida/09-preparazione-colloquio.png"
-          alt="Preparazione del colloquio con briefing, domande e checklist"
-          caption="Preparazione: briefing, domande e checklist"
+          alt="Preparazione del colloquio in sola lettura con dettagli, scaletta, briefing e domande"
+          caption="Preparazione in sola lettura: dettagli, scaletta, briefing e domande"
           width={1440}
-          height={2103}
+          height={1500}
         />
         <GuideFigure
           src="/guida/10-live-copertura.png"

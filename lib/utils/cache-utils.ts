@@ -439,6 +439,7 @@ export function invalidateInterviewCache(options: {
     updateTag(entityTag.interview(options.interviewId));
     const interviewPath = `${applicationPath}/interviews/${options.interviewId}`;
     revalidatePath(`${interviewPath}/prepare`);
+    revalidatePath(`${interviewPath}/prepare/edit`);
     revalidatePath(`${interviewPath}/live`);
     revalidatePath(`${interviewPath}/feedback`);
   }

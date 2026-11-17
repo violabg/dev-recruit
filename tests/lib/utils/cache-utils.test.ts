@@ -504,7 +504,7 @@ describe("interview tags", () => {
     expect(mockedUpdateTag).toHaveBeenCalledWith("interviews");
     expect(mockedUpdateTag).toHaveBeenCalledWith("interview-int-1");
     expect(mockedUpdateTag).toHaveBeenCalledTimes(2);
-    for (const page of ["prepare", "live", "feedback"]) {
+    for (const page of ["prepare", "prepare/edit", "live", "feedback"]) {
       expect(mockedRevalidatePath).toHaveBeenCalledWith(
         `/dashboard/applications/app-1/interviews/int-1/${page}`,
       );
@@ -512,7 +512,7 @@ describe("interview tags", () => {
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/applications/app-1");
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/agenda");
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
-    expect(mockedRevalidatePath).toHaveBeenCalledTimes(6);
+    expect(mockedRevalidatePath).toHaveBeenCalledTimes(7);
     expect(mockedRevalidateTag).not.toHaveBeenCalled();
   });
 

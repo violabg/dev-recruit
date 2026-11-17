@@ -1,12 +1,17 @@
 import { InterviewCardActions } from "@/components/interviews/interview-card-actions";
 import { InterviewInvitePanel } from "@/components/interviews/interview-invite-panel";
-import { getInterviewStatusPresentation } from "@/components/interviews/interview-presentation";
-import { KitEditor } from "@/components/interviews/kit-editor";
+import {
+  getInterviewStatusPresentation,
+  KIT_STATUS_PRESENTATION,
+  PARTICIPANT_ROLE_LABEL,
+} from "@/components/interviews/interview-presentation";
+import { KitView } from "@/components/interviews/kit-view";
 import { LegalReminder } from "@/components/interviews/legal-reminder";
 import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -15,11 +20,22 @@ import {
 } from "@/components/ui/empty";
 import { getInterviewForPreparation } from "@/lib/data/interviews";
 import { getUserOptions } from "@/lib/data/users";
+import { formatInterviewDateTime } from "@/lib/utils/interview-calendar";
 import { cn } from "cn";
-import { ArrowLeft, NotebookPen, Radio } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarClock,
+  Clock,
+  type LucideIcon,
+  NotebookPen,
+  Pencil,
+  Radio,
+  Users,
+  Video,
+} from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 
 type PrepareParams = Promise<{ id: string; interviewId: string }>;
 type PrepareSearchParams = Promise<{ scheduled?: string }>;
@@ -29,7 +45,10 @@ export async function generateStaticParams() {
   return [{ id: "placeholder", interviewId: "placeholder" }];
 }
 
-/** Preparation page of an interview: summary, legal reminder and kit editor. */
+/**
+ * Read-only preparation of an interview: details, invite summary, legal
+ * reminder and the kit. The editor is on /prepare/edit.
+ */
 export default function PrepareInterviewPage({
   params,
   searchParams,
@@ -49,9 +68,34 @@ function PrepareSkeleton() {
     <div className="flex flex-col gap-6">
       <PageHeaderSkeleton section="applications" description />
       <div className="flex flex-col gap-4">
+        <FieldSkeleton label="Dettagli colloquio" />
+        <FieldSkeleton label="Scaletta" />
         <FieldSkeleton label="Briefing" />
         <FieldSkeleton label="Ipotesi da verificare" />
         <FieldSkeleton label="Domande" />
+        <FieldSkeleton label="Checklist" />
+      </div>
+    </div>
+  );
+}
+
+function DetailFact({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: LucideIcon;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3 min-w-0">
+      <span className="flex justify-center items-center bg-primary/10 rounded-md size-8 shrink-0 text-primary">
+        <Icon className="size-4" aria-hidden />
+      </span>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-muted-foreground text-xs">{label}</span>
+        <div className="font-medium text-sm">{children}</div>
       </div>
     </div>
   );
@@ -76,6 +120,9 @@ async function PrepareContent({
   const candidateName =
     `${interview.candidate.firstName} ${interview.candidate.lastName}`.trim();
   const status = getInterviewStatusPresentation(interview.status);
+  const kitStatus = interview.kit
+    ? KIT_STATUS_PRESENTATION[interview.kit.status]
+    : null;
   const basePath = `/dashboard/applications/${id}/interviews/${interviewId}`;
   const linkClass = cn(
     buttonVariants({ variant: "outline", size: "sm" }),
@@ -86,11 +133,27 @@ async function PrepareContent({
     <div className="flex flex-col gap-6">
       <PageHeader
         section="applications"
-        title="Prepara colloquio"
+        title="Preparazione colloquio"
         description={`${candidateName} · ${interview.position.title} · Round ${interview.round}`}
-        info={<Badge className={status.badge}>{status.label}</Badge>}
+        info={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className={status.badge}>{status.label}</Badge>
+            {kitStatus && (
+              <Badge className={kitStatus.badge}>{kitStatus.label}</Badge>
+            )}
+          </div>
+        }
         actionBtns={
           <div className="flex flex-wrap items-center gap-2">
+            {interview.kit && interview.status === "scheduled" && (
+              <Link
+                href={`${basePath}/prepare/edit` as never}
+                className={cn(buttonVariants({ size: "sm" }), "inline-flex")}
+              >
+                <Pencil className="size-4" />
+                Modifica kit
+              </Link>
+            )}
             <Link
               href={`/dashboard/applications/${id}?tab=colloqui` as never}
               className={linkClass}
@@ -124,6 +187,45 @@ async function PrepareContent({
         }
       />
 
+      <Card size="sm">
+        <CardContent className="gap-4 grid sm:grid-cols-2 xl:grid-cols-4">
+          <DetailFact icon={CalendarClock} label="Quando">
+            {formatInterviewDateTime(interview.scheduledAt)}
+          </DetailFact>
+          <DetailFact icon={Clock} label="Durata">
+            {interview.durationMinutes} min
+          </DetailFact>
+          <DetailFact icon={Users} label="Partecipanti">
+            <ul className="flex flex-col">
+              {interview.participants.map((participant) => (
+                <li key={participant.userId}>
+                  {participant.name}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    · {PARTICIPANT_ROLE_LABEL[participant.role]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </DetailFact>
+          <DetailFact icon={Video} label="Link della call">
+            {interview.meetingUrl ? (
+              <a
+                href={interview.meetingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary break-all underline"
+              >
+                {interview.meetingUrl}
+              </a>
+            ) : (
+              <span className="font-normal text-muted-foreground">
+                Non indicato
+              </span>
+            )}
+          </DetailFact>
+        </CardContent>
+      </Card>
+
       <InterviewInvitePanel
         defaultOpen={scheduled === "1"}
         interviewId={interview.id}
@@ -144,13 +246,7 @@ async function PrepareContent({
       <LegalReminder />
 
       {interview.kit ? (
-        <KitEditor
-          interviewId={interview.id}
-          applicationId={id}
-          editable={interview.status === "scheduled"}
-          kit={interview.kit}
-          criteria={interview.criteria}
-        />
+        <KitView kit={interview.kit} criteria={interview.criteria} />
       ) : (
         <Empty className="border h-[200px]">
           <EmptyHeader>
