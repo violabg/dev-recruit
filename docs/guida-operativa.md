@@ -92,7 +92,7 @@ mindmap
 - **Sessioni.** Il dettaglio utente elenca le sessioni attive: **Chiudi sessione** ne chiude una, **Chiudi tutte** le chiude tutte. Togliere la verifica email o reimpostare la password non chiude le sessioni aperte.
 - **Regole di sicurezza.** Resta sempre almeno un amministratore attivo: l'ultimo non perde il ruolo e non si blocca. Nessuno blocca sé stesso né cambia il proprio ruolo o la verifica della propria email.
 
-**Il primo amministratore.** `pnpm user:make-admin <email>` promuove ad amministratore un account già esistente (email verificata, account attivo); non crea mai account. In produzione si esegue insieme al rilascio di questa funzione, altrimenti nessuno può verificare le nuove registrazioni né gestire gli utenti. L'ordine è:
+**Il primo amministratore.** `pnpm user:make-admin <email>` promuove ad amministratore un account già esistente (email verificata, account attivo); non crea mai account. Serve a verificare le nuove registrazioni e a gestire gli utenti. In produzione la procedura, nell'ordine, è:
 
 1. `pnpm db:migrate:deploy` sul database di produzione;
 2. `pnpm user:make-admin <email>` con il `DATABASE_URL` di produzione;

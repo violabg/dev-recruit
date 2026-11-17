@@ -181,7 +181,7 @@ hr{border:0;border-top:1px solid var(--line);margin:40px 0}
 <li><strong>Sessioni.</strong> Il dettaglio utente elenca le sessioni attive: <strong>Chiudi sessione</strong> ne chiude una, <strong>Chiudi tutte</strong> le chiude tutte. Togliere la verifica email o reimpostare la password non chiude le sessioni aperte.</li>
 <li><strong>Regole di sicurezza.</strong> Resta sempre almeno un amministratore attivo: l'ultimo non perde il ruolo e non si blocca. Nessuno blocca sé stesso né cambia il proprio ruolo o la verifica della propria email.</li>
 </ul>
-<p><strong>Il primo amministratore.</strong> <code>pnpm user:make-admin &lt;email&gt;</code> promuove ad amministratore un account già esistente (email verificata, account attivo); non crea mai account. In produzione si esegue insieme al rilascio di questa funzione, altrimenti nessuno può verificare le nuove registrazioni né gestire gli utenti. L'ordine è:</p>
+<p><strong>Il primo amministratore.</strong> <code>pnpm user:make-admin &lt;email&gt;</code> promuove ad amministratore un account già esistente (email verificata, account attivo); non crea mai account. Serve a verificare le nuove registrazioni e a gestire gli utenti. In produzione la procedura, nell'ordine, è:</p>
 <ol>
 <li><code>pnpm db:migrate:deploy</code> sul database di produzione;</li>
 <li><code>pnpm user:make-admin &lt;email&gt;</code> con il <code>DATABASE_URL</code> di produzione;</li>

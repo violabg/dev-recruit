@@ -1,13 +1,13 @@
 # Fase 5 — Piano
 
 **Data:** 17 novembre 2026
-**Stato:** da progettare. Nessun codice scritto.
+**Stato:** U realizzata e rilasciata in produzione. B, C e A da progettare.
 
 ## 0. Punto di partenza
 
 L'applicazione si descrive com'è oggi, senza storia. Le fonti, in ordine di autorità:
 
-1. **Codice** e `prisma/schema.prisma` (baseline unica `prisma/migrations/0_init`).
+1. **Codice** e `prisma/schema.prisma` (migrazioni versionate in `prisma/migrations`, baseline `0_init`).
 2. **Knowledge** in `knowledge/` e vocabolario in `CONTEXT.md`.
 3. **Guida operativa** `docs/guida-operativa.md` (e la versione `.html`): come si usa l'app, pagina per pagina, con le aree di miglioramento (§11).
 
@@ -17,53 +17,34 @@ Flusso attuale in una riga: Posizione (scheda di valutazione, quiz, guide colloq
 
 ## 1. Perimetro della Fase 5
 
-Quattro funzioni, da progettare e realizzare **una alla volta**, ognuna con un proprio design. La prima è la gestione degli utenti (U): oggi chi si registra da `/auth/sign-up` non riceve l'email di verifica e resta bloccato, nessuno può vedere o gestire gli utenti, e non esiste un amministratore.
+Quattro funzioni, realizzate una alla volta con un proprio design: U è rilasciata, restano B, C e A.
 
-| # | Funzione | Valore | Dipende dalla verifica legale |
-|---|---|---|---|
-| U | **Gestione utenti e amministratori** | Controllo su chi accede all'app; prerequisito per uscire dal POC | No |
-| A | **Registrazione e trascrizione del colloquio** con consenso, più **sintesi AI per criterio** | Prove più ricche e meno lavoro manuale per gli intervistatori | Sì, fortemente |
-| B | **Guida di preparazione per il candidato** | Esperienza del candidato, colloqui più confrontabili | Poco |
-| C | **Feedback al candidato dopo il rifiuto** | Esperienza del candidato, reputazione | Sì (cosa si può comunicare) |
+| # | Funzione | Valore | Dipende dalla verifica legale | Stato |
+|---|---|---|---|---|
+| U | **Gestione utenti e amministratori** | Controllo su chi accede all'app; prerequisito per uscire dal POC | No | Rilasciata |
+| B | **Guida di preparazione per il candidato** | Esperienza del candidato, colloqui più confrontabili | Poco | Da progettare |
+| C | **Feedback al candidato dopo il rifiuto** | Esperienza del candidato, reputazione | Sì (cosa si può comunicare) | Da progettare |
+| A | **Registrazione e trascrizione del colloquio** con consenso, più **sintesi AI per criterio** | Prove più ricche e meno lavoro manuale per gli intervistatori | Sì, fortemente | Da progettare |
 
-Ordine: **U** per prima, poi **B → C → A**. U non dipende dalle altre e chiude un rischio di accesso. B non tocca dati personali nuovi e chiarisce il canale verso il candidato, che serve anche a C. A è la più rischiosa (audio, dati personali, AI Act) e va fatta per ultima, dopo la verifica legale.
+Ordine: **B → C → A**. U è già rilasciata e ha chiuso il rischio di accesso. B non tocca dati personali nuovi e chiarisce il canale verso il candidato, che serve anche a C. A è la più rischiosa (audio, dati personali, AI Act) e va fatta per ultima, dopo la verifica legale.
 
-### 1.U Gestione utenti e amministratori (primo passo)
+### 1.U Gestione utenti e amministratori (rilasciata)
 
-**Stato attuale.** Login e logout con email e password (sessioni di 7 giorni, massimo 30). Il plugin `admin` di better-auth è già attivo (`lib/auth.ts`, `lib/auth-client.ts`) e la tabella `user` ha già `role`, `banned`, `banReason`, `banExpires`, ma nessuna pagina li usa e tutti gli utenti hanno `role = "user"`. La registrazione pubblica `/auth/sign-up` è aperta e linkata dal login. `requireEmailVerification` è attivo ma **nessun invio email è configurato**: un nuovo iscritto non riceve mai il link e non può entrare finché `emailVerified` non viene impostato a mano nel database; anche "Password dimenticata" non può funzionare.
+**Com'è oggi.**
 
-**Decisione: per il POC nessun invio email.** La registrazione resta aperta: chi si registra avvisa un amministratore con altri mezzi (fuori dall'app) e l'amministratore imposta l'email come verificata dall'app. Un amministratore può anche creare un account.
+- Login e logout con email e password (sessioni di 7 giorni, massimo 30). La registrazione pubblica `/auth/sign-up` è aperta; l'app non invia email.
+- Ruoli `user` e `admin`. Solo gli amministratori vedono e raggiungono **Impostazioni → Utenti** (`/dashboard/settings/users`); ogni utente autenticato, amministratore o no, legge e modifica tutti i dati di selezione.
+- **Elenco**: ricerca per nome o email, ruolo, email verificata, stato, data di creazione, ultimo accesso e sessioni attive. **Nuovo utente** con nome, cognome, email, password iniziale, ruolo ed "Email verificata".
+- **Dettaglio**: dati, ruolo, interruttore "Email verificata", reimposta password, blocca/sblocca con motivo (chiude le sessioni), elenco sessioni con chiusura singola o totale.
+- **Regole**: resta sempre almeno un amministratore attivo; nessuno blocca sé stesso né cambia il proprio ruolo o la verifica della propria email; gli utenti non si eliminano, si bloccano; un bloccato non compare tra i partecipanti selezionabili.
+- **Accesso**: `requireAdmin()` e `requireAdminPage()` accanto a `requireUser()`; le server action usano il plugin `admin` di better-auth dentro `runAction`, con messaggi in italiano. Menu e voci "Utenti" filtrati per ruolo solo come presentazione.
+- **Cache**: tag `users`, invalidato da ogni modifica a un utente (creazione, nome, email, ruolo, verifica, blocco, sblocco).
+- **Ultimo accesso**: `lastLoginAt` sulla tabella `user`, aggiornato al login; migrazione `20261117142129_user_last_login_at`.
+- **Primo amministratore**: `pnpm user:make-admin <email>` promuove un account esistente (email verificata, account attivo), senza crearlo. Già eseguito in produzione; gli altri amministratori si nominano dall'app.
 
-Requisiti:
-1. **Registrazione aperta, verifica manuale.** Il form `/auth/sign-up` e il link dal login restano. Nessuna email parte: la pagina dopo la registrazione (`/auth/sign-up-success`) e il messaggio al login di un account non verificato dicono di chiedere a un amministratore di verificare l'email, non di controllare la posta.
-2. **Password.** Il cambio password dal Profilo con la password attuale resta com'è. "Password dimenticata" senza email non funziona: la pagina e il link si sostituiscono con l'indicazione "Chiedi a un amministratore di reimpostare la password" (da confermare nel design se togliere anche `/auth/update-password`).
-3. **Pagina Impostazioni → Utenti** (`/dashboard/settings/users`), visibile e raggiungibile **solo dagli amministratori**:
-   - elenco con nome, email, ruolo (Utente / Amministratore), email verificata, stato (attivo / bloccato), data di creazione, ultimo accesso e sessioni attive;
-   - ricerca per nome o email.
-4. **Nuovo utente** (solo amministratori): nome, cognome, email, password iniziale, ruolo, e il campo **"Email verificata"** già attivabile, così l'utente entra subito senza email.
-5. **Dettaglio e modifica utente** (solo amministratori):
-   - nome, cognome, email;
-   - **ruolo**: ogni amministratore può rendere amministratore un altro utente o togliergli il ruolo;
-   - **"Email verificata"**: interruttore che sblocca l'accesso a un utente non verificato (bypass della verifica, perché l'app non invia email);
-   - reimposta password;
-   - blocca / sblocca (con motivo), che chiude anche le sue sessioni;
-   - elenco delle sessioni attive con "Chiudi sessione" e "Chiudi tutte".
-6. **Regole di sicurezza:**
-   - deve restare sempre almeno un amministratore attivo: non si toglie il ruolo né si blocca l'ultimo;
-   - un amministratore non può bloccare sé stesso;
-   - eliminare un utente non è previsto (possiede posizioni, candidature, decisioni): si blocca;
-   - un utente bloccato non compare tra i partecipanti selezionabili (già oggi `getUserOptions` esclude i bloccati).
-7. **Primo amministratore.** Oggi non ce n'è nessuno: il primo si imposta una volta, a mano, sul database di produzione (`role = 'admin'` sull'account dello sviluppatore), oppure con uno script `pnpm` dedicato da decidere nel design. Dopo, gli amministratori si nominano dall'app.
-8. **Accesso.** Server action e pagine degli utenti verificano il ruolo lato server (un helper tipo `requireAdmin()` accanto a `requireUser()`); il menu mostra "Utenti" solo agli amministratori. Tutto il resto dell'app resta com'è: ogni utente autenticato vede e modifica tutti i dati di selezione.
-9. **Profilo.** La pagina Profilo resta per tutti; un utente non può cambiare il proprio ruolo né il proprio stato di verifica.
+Limiti rimasti aperti: vedi §4.
 
-Da decidere nel design:
-1. Azioni del plugin `admin` (`createUser`, `listUsers`, `adminUpdateUser`, `setRole`, `banUser`/`unbanUser`, `setUserPassword`, `listUserSessions`, `revokeUserSession(s)`) chiamate lato server tramite `auth.api` dentro le server action del progetto (con `runAction` e messaggi italiani), oppure dal client: preferibile lato server, per tenere un solo contratto d'errore.
-2. Come impostare `emailVerified` alla creazione con `createUser` e dopo, dall'interruttore "Email verificata".
-3. Tag di cache per gli utenti: oggi non esiste (`getUserOptions` è in cache per minuti senza tag). Con modifica di nomi, ruoli e blocchi serve un tag `users` e la sua invalidazione.
-4. Se mostrare chi ha creato o modificato l'utente (nessun registro oggi).
-
-Rilascio: il primo amministratore va impostato in produzione con il deploy della funzione, altrimenti nessuno può verificare i nuovi iscritti.
+Rilascio avvenuto il 17 novembre 2026: migrazione applicata al ramo Neon `production`, amministratori impostati, applicazione distribuita.
 
 ### 1.A Registrazione, trascrizione e sintesi per criterio
 
@@ -134,11 +115,10 @@ Da affidare a `knowledge-builder` **prima** del design della funzione che li toc
 
 ### 3.1 Regole che la Fase 5 può ribaltare
 
+Le righe della funzione U sono chiuse: la knowledge descrive già ruolo `admin`, tag `users`, verifica manuale e assenza di email.
+
 | Regola attuale (dove) | Funzione | Cosa decidere |
 |---|---|---|
-| "NEVER add role or permission checks. `requireUser()` only checks that a session exists" (`knowledge/domain_model.md`, access) | U | Eccezione limitata alla gestione degli utenti: ruolo `admin` verificato lato server; i dati di selezione restano accessibili a tutti |
-| "No tag for `User`" (`knowledge/cache_invalidation.md`) | U | Tag `users` e invalidazione dopo creazione, modifica, ruolo, blocco |
-| Pagine `app/auth/` con registrazione e password dimenticata (`CONTEXT.md`) | U | Registrazione aperta, email verificata a mano da un amministratore; cambio password dal Profilo; password dimenticata reimpostata da un amministratore |
 | "No email is sent: the summary and the `.ics` are shared by hand" (`knowledge/domain_model.md`, interviews) | B, C | Se resta: canale a link pubblico con token. Se cade: nuova regola su invio e provider |
 | Prompt non identificativi e solo statistiche dai colloqui (`knowledge/ai_generation.md`, "Non-identifying and statistics-only prompts") | A | Regola di anonimizzazione della trascrizione prima della sintesi |
 | Trascrizione solo per le risposte del test, sotto `MAX_AUDIO_BYTES`, azione pubblica con token (`knowledge/ai_generation.md`, `knowledge/server_actions.md`) | A | Nuovo percorso per audio lunghi e autenticato |
@@ -155,13 +135,17 @@ Da affidare a `knowledge-builder` **prima** del design della funzione che li toc
 
 ---
 
-## 4. Punti aperti già noti (backlog, fuori dal perimetro A–C)
+## 4. Punti aperti già noti (backlog, fuori dal perimetro B, C, A)
 
 Da valutare insieme alle aree di miglioramento della guida operativa (§11), senza duplicarle qui.
 
-**Verifica manuale end-to-end.** Le verifiche automatiche passano (`pnpm lint`, `pnpm test:run`, `pnpm build`), ma il percorso completo non è mai stato ripetuto a mano dopo la pulizia: posizione con scheda, quiz e guida → candidatura dal form pubblico → CV e test valutati → due colloqui con due utenti (kit, live, schede) → Decisione → esito. Seguire il §12 della guida operativa ("Percorso consigliato per la demo") su produzione dopo il rilascio.
+**Verifica manuale end-to-end.** Le verifiche automatiche passano (`pnpm lint`, `pnpm test:run`, `pnpm build`), ma il percorso completo non è mai stato ripetuto a mano dopo la pulizia: posizione con scheda, quiz e guida → candidatura dal form pubblico → CV e test valutati → due colloqui con due utenti (kit, live, schede) → Decisione → esito, più il giro utenti (registrazione in attesa, verifica, nuovo utente, blocco e sessioni). Seguire il §12 della guida operativa ("Percorso consigliato per la demo") su produzione.
 
 **Limiti noti del comportamento attuale:**
+- Non resta traccia di chi crea o modifica un utente, né dei blocchi: nessun registro delle modifiche.
+- Togliere la verifica email o reimpostare la password non chiude le sessioni aperte.
+- Due soli ruoli (Utente / Amministratore), nessun permesso per area; ogni utente autenticato vede e modifica tutti i dati di selezione.
+- Nessuna email: la verifica dell'email e il recupero password passano a mano da un amministratore.
 - `redactBirthDate` toglie una data solo se preceduta sulla stessa riga da un marcatore ("nato il", "data di nascita", "DOB"…).
 - Un criterio archiviato non si può ripristinare; l'id di un criterio eliminato resta sui collegamenti di un quiz finché il quiz non si salva di nuovo (ogni lettura lo ignora).
 - Esiste una sola valutazione CV per candidato e posizione: non si rigenera (409).
@@ -182,14 +166,15 @@ Da valutare insieme alle aree di miglioramento della guida operativa (§11), sen
 
 ---
 
-## 5. Metodo, per ogni funzione (U, A, B, C)
+## 5. Metodo, per ogni funzione (B, C, A)
 
-1. **Verifica legale** chiusa per la funzione (§2); non serve per U.
+1. **Verifica legale** chiusa per la funzione (§2).
 2. **Knowledge, prima:** `knowledge-builder` aggiorna solo le regole di §3.1 che la funzione ribalta. Nessuna descrizione di entità non ancora scritte.
 3. **Design:** orchestrator, workflow `DESIGN`, sulla sola funzione: schema Prisma, rotte, contratti delle server action, cache invalidation, prompt AI.
 4. **Implementazione** e validazione: `pnpm lint && pnpm test:run && pnpm build`. Ogni modifica dello schema è una migrazione versionata (`pnpm db:migrate` su `development`, mai `db push`).
 5. **Knowledge, dopo:** `knowledge-builder` documenta dal codice reale le nuove entità, regole e termini (incluso `CONTEXT.md`).
 6. **Guida operativa:** aggiornare `docs/guida-operativa.md` e `docs/guida-operativa.html` nello stesso commit (regola in `AGENTS.md`).
 7. **Chiusura:** aggiornare questo piano (stato della funzione, punti aperti). I documenti di lavoro della funzione (criteri di accettazione, delta per la knowledge) si eliminano dopo il rilascio: la verità resta nel codice, nella knowledge e nella guida.
+8. **Rilascio:** `pnpm db:migrate:deploy` sul database di produzione, poi `pnpm exec prisma migrate status`, quindi il deploy dell'applicazione e la verifica del §12 della guida operativa.
 
 Il prompt per avviare il lavoro è in `next-steps/FASE5_PROMPT.md`.
