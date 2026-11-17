@@ -1,3 +1,8 @@
+import { ArrowLeft } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
+import { cn } from "cn";
+import PageHeader from "@/components/page-header";
 import { SelectOptionsSkeleton } from "@/components/skeletons";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getAllPositions } from "@/lib/data/positions";
@@ -28,15 +33,23 @@ export default function NewQuizPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3">
-        <div>
-          <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Crea un nuovo quiz</h1>
-          <p className="text-muted-foreground text-sm">
-            Seleziona una posizione e costruisci il quiz con le domande che
-            preferisci o fai partire la generazione AI completa.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        section="quizzes"
+        title="Nuovo quiz"
+        description="Scegli una posizione e costruisci il quiz con le domande che preferisci, oppure avvia la generazione AI completa."
+        actionBtns={
+          <Link
+            href={"/dashboard/quizzes" as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Quiz
+          </Link>
+        }
+      />
       <Suspense fallback={positionsLoaderFallback}>
         <PositionsContent positionsPromise={positionsPromise} />
       </Suspense>

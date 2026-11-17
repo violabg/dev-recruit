@@ -29,7 +29,12 @@ export function ColloquioSection() {
     <GuideSection meta={meta}>
       <GuideText>
         <strong>Dove:</strong> candidatura → tab Colloqui →{" "}
-        <strong>Pianifica colloquio</strong>.
+        <strong>Pianifica colloquio</strong>. Le pagine del colloquio hanno in
+        alto le quattro fasi (<strong>Preparazione → Live → Scheda →
+        Decisione</strong>): la fase aperta è evidenziata, quelle superate hanno
+        la spunta verde e ogni fase è un link. Il riquadro{" "}
+        <strong>Prossima azione</strong> indica cosa fare dopo, con il pulsante
+        per farlo.
       </GuideText>
 
       <GuideDiagram chart={flow} title="Il ciclo del colloquio" />
@@ -102,7 +107,12 @@ export function ColloquioSection() {
             title: "Scheda intervistatore",
             body: (
               <>
-                Precompilata con i propri voti e note; raccomandazione finale;
+                In alto il riepilogo (criteri con voto, senza prove,
+                raccomandazione, stato); poi una scheda per criterio con voto
+                1–5 o &quot;Senza prove&quot; ed evidenze; infine il giudizio
+                complessivo. Salva bozza e Invia scheda restano in una barra
+                fissa in basso. Precompilata con i propri voti e note;
+                raccomandazione finale;
                 invio <strong>bloccante</strong> (dopo non si modifica più,
                 nemmeno dall&apos;autore). Note e voti non inviati degli altri non
                 sono mai visibili; le schede già inviate sono in una sezione
@@ -137,10 +147,10 @@ export function ColloquioSection() {
         />
         <GuideFigure
           src="/guida/11-scheda-inviata.png"
-          alt="Scheda intervistatore già inviata, in sola lettura"
-          caption="Scheda inviata: non è più modificabile"
+          alt="Scheda intervistatore con le fasi del colloquio e le schede già inviate, in sola lettura"
+          caption="Schede inviate: in sola lettura, non più modificabili"
           width={1440}
-          height={1507}
+          height={1500}
         />
       </div>
     </GuideSection>

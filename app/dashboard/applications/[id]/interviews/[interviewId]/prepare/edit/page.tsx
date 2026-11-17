@@ -12,7 +12,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getInterviewForPreparation } from "@/lib/data/interviews";
 import { getUserOptions } from "@/lib/data/users";
 import { cn } from "cn";
-import { ArrowLeft, NotebookPen, Radio } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -88,14 +88,6 @@ async function EditPrepareContent({ params }: { params: EditPrepareParams }) {
             <Link href={`${basePath}/prepare` as never} className={linkClass}>
               <ArrowLeft className="size-4" />
               Preparazione
-            </Link>
-            <Link href={`${basePath}/live` as never} className={linkClass}>
-              <Radio className="size-4" />
-              Live
-            </Link>
-            <Link href={`${basePath}/feedback` as never} className={linkClass}>
-              <NotebookPen className="size-4" />
-              Scheda
             </Link>
             <InterviewCardActions
               interview={{

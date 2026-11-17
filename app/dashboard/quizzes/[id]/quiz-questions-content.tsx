@@ -6,7 +6,8 @@ import {
 } from "@/components/quiz/question-display";
 import { SaveFavoriteButton } from "@/components/quiz/save-favorite-button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { BlockLabel } from "@/components/detail-blocks";
 import { getQuizById } from "@/lib/data/quizzes";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
 
@@ -43,72 +44,63 @@ export async function QuizQuestionsContent({ params }: Props) {
       return label ? [{ id: criterionId, label }] : [];
     });
 
+  const TYPE_LABEL: Record<string, string> = {
+    multiple_choice: "Risposta multipla",
+    open_question: "Domanda aperta",
+    behavioral_scenario: "Scenario comportamentale",
+    code_snippet: "Snippet di codice",
+  };
+
   return (
     <>
-      {quiz.questions.map((question, index) => (
-        <Card
-          key={index}
-          className="pt-0"
-        >
-          <CardHeader className="gap-0 bg-primary/10 pt-4 [.border-b]:pb-4 border-b">
-            <CardTitle className="flex justify-between items-center gap-2 text-lg">
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className="flex justify-center items-center p-0 rounded-full w-6 h-6"
-                >
-                  {index + 1}
-                </Badge>
-                <span>
-                  {question.type === "multiple_choice"
-                    ? "Risposta multipla"
-                    : question.type === "open_question"
-                      ? "Domanda aperta"
-                      : question.type === "behavioral_scenario"
-                        ? "Scenario comportamentale"
-                        : "Snippet di codice"}
+      {quiz.questions.map((question, index) => {
+        const criteria = criterionNamesOf(question.criterionIds);
+        return (
+          <Card key={index}>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 font-display font-bold text-muted-foreground text-sm tabular-nums">
+                  {index + 1}.
                 </span>
+                <div className="flex flex-col flex-1 gap-2 min-w-0">
+                  <BlockLabel>{TYPE_LABEL[question.type] ?? question.type}</BlockLabel>
+                  <p className="font-semibold text-foreground text-base leading-snug whitespace-pre-wrap">
+                    {question.question}
+                  </p>
+                </div>
+                <SaveFavoriteButton question={question} />
               </div>
-              <SaveFavoriteButton question={question} />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <h3 className="font-bold text-heading text-sm">Domanda:</h3>
-              <p className="mt-1">{question.question}</p>
-            </div>
 
-            {criterionNamesOf(question.criterionIds).length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-muted-foreground text-sm">
-                  Criteri verificati:
-                </span>
-                {criterionNamesOf(question.criterionIds).map((criterion) => (
-                  <Badge key={criterion.id} variant="outline">
-                    {criterion.label}
-                  </Badge>
-                ))}
-              </div>
-            )}
+              {question.type === "multiple_choice" && (
+                <MultipleChoiceDisplay question={question} />
+              )}
 
-            {question.type === "multiple_choice" && (
-              <MultipleChoiceDisplay question={question} />
-            )}
+              {question.type === "open_question" && (
+                <OpenQuestionDisplay question={question} />
+              )}
 
-            {question.type === "open_question" && (
-              <OpenQuestionDisplay question={question} />
-            )}
+              {question.type === "code_snippet" && (
+                <CodeSnippetDisplay question={question} />
+              )}
 
-            {question.type === "code_snippet" && (
-              <CodeSnippetDisplay question={question} />
-            )}
+              {question.type === "behavioral_scenario" && (
+                <BehavioralScenarioDisplay question={question} />
+              )}
 
-            {question.type === "behavioral_scenario" && (
-              <BehavioralScenarioDisplay question={question} />
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              {criteria.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-3 border-t">
+                  <BlockLabel>Criteri</BlockLabel>
+                  {criteria.map((criterion) => (
+                    <Badge key={criterion.id} variant="secondary">
+                      {criterion.label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </>
   );
 }

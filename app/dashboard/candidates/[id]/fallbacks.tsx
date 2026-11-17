@@ -1,3 +1,4 @@
+import { FactStripSkeleton } from "@/components/detail-blocks";
 import {
   BadgeSkeleton,
   ButtonSkeleton,
@@ -29,36 +30,12 @@ export function CandidateHeaderSkeleton() {
   );
 }
 
-const DETAIL_LABELS = [
-  "Nome",
-  "Cognome",
-  "Email",
-  "Data di nascita",
-  "Non ricontattare",
-];
-
 /** Mirrors CandidateDetailsContent: real labels, skeleton values. */
 export function CandidateDetailsSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Dettagli Candidato</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="gap-4 grid md:grid-cols-2">
-          {DETAIL_LABELS.map((label) => (
-            <div key={label}>
-              <div className="font-semibold">{label}</div>
-              <TextSkeleton lineClassName="h-6" className="w-36 h-4" />
-            </div>
-          ))}
-          <div className="md:col-span-2">
-            <div className="font-semibold">Curriculum</div>
-            <TextSkeleton lineClassName="h-6" className="w-44 h-4" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <FactStripSkeleton
+      labels={["Email", "Data di nascita", "Curriculum", "Ricontattabile"]}
+    />
   );
 }
 

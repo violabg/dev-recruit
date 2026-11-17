@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { cn } from "cn";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -59,25 +60,23 @@ async function CandidateEvaluationsContent({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-2">
-        <Link
-          href={`/dashboard/candidates/${id}`}
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "inline-flex",
-          )}
-        >
-          <ArrowLeft className="mr-1 size-4" />
-          Torna al candidato
-        </Link>
-      </div>
-
-      <div>
-        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Valutazioni: {fullName}</h1>
-        <p className="mt-1 text-muted-foreground">
-          Valutazioni del curriculum per diverse posizioni
-        </p>
-      </div>
+      <PageHeader
+        section="candidates"
+        title="Valutazioni CV"
+        description={`${fullName} · valutazioni del curriculum per posizione`}
+        actionBtns={
+          <Link
+            href={`/dashboard/candidates/${id}` as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Torna al candidato
+          </Link>
+        }
+      />
 
       <CandidateEvaluationsView
         candidateId={candidate.id}

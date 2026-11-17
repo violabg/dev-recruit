@@ -9,15 +9,15 @@ import { GUIDE_SECTION } from "@/components/guide/sections";
 
 const meta = GUIDE_SECTION["giorno-per-giorno"];
 
-const flow = `flowchart LR
-    A["Le mie azioni<br/>cosa aspetta me"] --> B{"Tipo di lavoro"}
-    B -->|Test completato| C["Valuta il test<br/>Test inviati"]
-    B -->|Colloquio oggi/domani| D["Prepara il kit<br/>o apri il Live"]
-    B -->|Colloquio concluso| E["Compila la scheda"]
-    B -->|Posizione da completare| F["Scheda / Quiz / Guida"]
-    C --> G["Candidature<br/>pipeline e kanban"]
+const flow = `flowchart TD
+    A["<b>Le mie azioni</b><br/>cosa aspetta me"]:::entity --> B{"Tipo di lavoro"}:::step
+    B -->|Test completato| C["<b>Valuta il test</b><br/>Test inviati"]:::step
+    B -->|Colloquio oggi/domani| D["<b>Prepara il kit</b><br/>o apri il Live"]:::step
+    B -->|Colloquio concluso| E["<b>Compila la scheda</b>"]:::step
+    B -->|Posizione da completare| F["<b>Scheda · Quiz · Guida</b>"]:::step
+    C --> G["<b>Candidature</b><br/>pipeline e kanban"]:::entity
     D --> G
-    E --> H["Decisione"]
+    E --> H["<b>Decisione</b>"]:::outcome
     F --> G
     G --> H`;
 

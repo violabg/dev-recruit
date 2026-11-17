@@ -87,28 +87,24 @@ export function QuizQuestionsTabSkeleton() {
 }
 
 const SETTINGS_LABELS = [
-  ["Titolo", "w-40"],
+  ["Posizione", "w-40"],
+  ["Livello", "w-20"],
   ["Limite di tempo", "w-20"],
-  ["Numero di domande", "w-8"],
-  ["Posizione", "w-48"],
+  ["Domande", "w-8"],
 ] as const;
 
 /** Mirrors QuizSettingsContent: real labels, skeleton values. */
+/** Mirrors the quiz facts strip. */
 export function QuizSettingsTabSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Impostazioni del quiz</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="gap-4 grid md:grid-cols-2">
-          {SETTINGS_LABELS.map(([label, width]) => (
-            <div key={label}>
-              <h3 className="font-medium">{label}</h3>
-              <TextSkeleton className={width} />
-            </div>
-          ))}
-        </div>
+    <Card size="sm">
+      <CardContent className="gap-4 grid sm:grid-cols-2 xl:grid-cols-4">
+        {SETTINGS_LABELS.map(([label, width]) => (
+          <div key={label} className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">{label}</span>
+            <TextSkeleton className={width} />
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

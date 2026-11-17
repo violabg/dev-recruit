@@ -1,11 +1,13 @@
+import { ArrowLeft } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
+import { cn } from "cn";
+import PageHeader from "@/components/page-header";
 import { CandidateForm } from "@/components/candidates/candidate-form";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  } from "@/components/ui/card";
 import { getOpenPositionsForSelect } from "@/lib/data/positions";
 import { Suspense } from "react";
 import { CandidateFormSkeleton } from "./fallbacks";
@@ -38,13 +40,25 @@ async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
       : undefined;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl">Nuovo Candidato</CardTitle>
-        <CardDescription>
-          Inserisci i dati del candidato da aggiungere
-        </CardDescription>
-      </CardHeader>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        section="candidates"
+        title="Nuovo candidato"
+        description="Inserisci i dati del candidato da aggiungere"
+        actionBtns={
+          <Link
+            href={"/dashboard/candidates" as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Candidati
+          </Link>
+        }
+      />
+      <Card>
       <CardContent>
         <CandidateForm
           mode="new"
@@ -52,6 +66,7 @@ async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
           defaultPositionId={validPositionId}
         />
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

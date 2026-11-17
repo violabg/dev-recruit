@@ -1,8 +1,8 @@
+import { InterviewSteps } from "@/components/interviews/interview-steps";
 import { LegalReminder } from "@/components/interviews/legal-reminder";
 import { InterviewLiveMode } from "@/components/interviews/interview-live-mode";
 import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -11,9 +11,6 @@ import {
 } from "@/components/ui/empty";
 import { getCurrentUser } from "@/lib/auth-server";
 import { getInterviewLiveSession } from "@/lib/data/interviews";
-import { cn } from "cn";
-import { ClipboardList } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -70,20 +67,14 @@ async function LiveContent({ params }: { params: LiveParams }) {
         section="applications"
         title="Colloquio live"
         description={`${candidateName} · ${session.position.title} · Round ${session.round}`}
-        actionBtns={
-          <Link
-            href={
-              `/dashboard/applications/${id}/interviews/${interviewId}/prepare` as never
-            }
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ClipboardList className="size-4" />
-            Preparazione
-          </Link>
-        }
+      />
+
+      <InterviewSteps
+        applicationId={id}
+        interviewId={interviewId}
+        current="live"
+        status={session.status}
+        feedbackSubmitted={session.viewerSubmitted}
       />
 
       <LegalReminder />

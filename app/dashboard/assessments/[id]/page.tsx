@@ -1,6 +1,8 @@
 import { cn } from "cn";
 import { AssessmentExpiryChecker } from "@/components/assessments/assessment-expiry-checker";
 import { getAssessmentStatePresentation } from "@/components/assessments/assessment-status";
+import { Fact, FactStrip } from "@/components/detail-blocks";
+import { Flag, PlayCircle, Timer, User } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { AssessmentResults } from "@/components/recruiting/assessment-results";
 import { Badge } from "@/components/ui/badge";
@@ -140,59 +142,31 @@ async function AssessmentDetailContent({
           </>
         }
       />
-      <div className="gap-4 grid md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="font-medium text-sm">Candidato</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <div>
-                <div className="font-medium">
-                  {candidate.name ?? "Nome non disponibile"}
-                </div>
-                <div className="text-muted-foreground text-sm">
-                  {candidate.email ?? "Email non disponibile"}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="font-medium text-sm">Stato</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Inizio:</span>
-                <span>{formatDate(assessment.startedAt, true)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Fine:</span>
-                <span>{formatDate(assessment.completedAt, true)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="font-medium text-sm">Durata</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <span>
-                {calculateDuration(
-                  assessment.startedAt,
-                  assessment.completedAt
-                ) ?? (assessment.status === "in_progress" ? "In corso" : "N/A")}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <FactStrip>
+        <Fact icon={User} label="Candidato">
+          {candidate.name ?? "Nome non disponibile"}
+          <span className="block font-normal text-muted-foreground text-xs break-all">
+            {candidate.email ?? "Email non disponibile"}
+          </span>
+        </Fact>
+        <Fact icon={PlayCircle} label="Inizio">
+          {formatDate(assessment.startedAt, true)}
+        </Fact>
+        <Fact icon={Flag} label="Fine">
+          {formatDate(assessment.completedAt, true)}
+        </Fact>
+        <Fact icon={Timer} label="Durata">
+          {calculateDuration(assessment.startedAt, assessment.completedAt) ??
+            (assessment.status === "in_progress" ? "In corso" : "N/A")}
+          {quiz.timeLimit ? (
+            <span className="block font-normal text-muted-foreground text-xs">
+              su {quiz.timeLimit} minuti
+            </span>
+          ) : null}
+        </Fact>
+      </FactStrip>
 
-      <div className="flex flex-col gap-4 pt-4">
+      <div className="flex flex-col gap-4">
         {assessment.status === "completed" ? (
           <AssessmentResults
             assessmentId={assessment.id}

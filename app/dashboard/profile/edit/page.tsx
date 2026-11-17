@@ -1,3 +1,6 @@
+import { PageHeaderSkeleton } from "@/components/skeletons";
+import { cn } from "cn";
+import PageHeader from "@/components/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -21,15 +24,7 @@ import { Suspense } from "react";
 function EditProfileSkeleton() {
   return (
     <div className="flex flex-col gap-6 mx-auto w-full max-w-2xl">
-      <div className="flex items-center gap-4">
-        <Skeleton className="rounded-lg size-8" />
-        <div className="flex flex-col gap-1">
-          <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Modifica Profilo</h1>
-          <p className="text-muted-foreground">
-            Aggiorna le informazioni del tuo profilo
-          </p>
-        </div>
-      </div>
+      <PageHeaderSkeleton description />
 
       <Card>
         <CardHeader>
@@ -71,23 +66,22 @@ async function EditProfileContent() {
 
   return (
     <div className="flex flex-col gap-6 mx-auto w-full max-w-2xl">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/dashboard/profile"
-          className={buttonVariants({ variant: "outline", size: "icon" })}
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-
-        <div className="flex flex-col gap-1">
-          <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">
-            Modifica Profilo
-          </h1>
-          <p className="text-muted-foreground">
-            Aggiorna le informazioni del tuo profilo
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Modifica profilo"
+        description="Aggiorna le informazioni del tuo profilo"
+        actionBtns={
+          <Link
+            href={"/dashboard/profile" as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Profilo
+          </Link>
+        }
+      />
 
       <ProfileForm profile={profile} userEmail={user.email} />
     </div>

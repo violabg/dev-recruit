@@ -71,6 +71,66 @@ const DARK_THEME = {
   noteBorderColor: "#8a6b1f",
 } as const;
 
+/**
+ * Node classes the charts use (`A:::entity`, `class x outcome`), coloured per
+ * theme: entity = the main objects, step = neutral evidence/steps, outcome =
+ * a good end state, danger = a closed/negative end, warn = needs attention,
+ * ai = done by the AI.
+ */
+const CLASS_DEFS: Record<Theme, Record<string, string>> = {
+  light: {
+    entity: "fill:#0b6aa8,stroke:#085a8f,color:#ffffff,font-weight:600",
+    step: "fill:#f1f5fb,stroke:#c3d0e4,color:#1e293b",
+    outcome: "fill:#e3f6ec,stroke:#2f9e68,color:#14532d",
+    danger: "fill:#fde8e8,stroke:#d64545,color:#7f1d1d",
+    warn: "fill:#fff4dc,stroke:#d99a1b,color:#5b4a1e",
+    ai: "fill:#f1eafd,stroke:#8b5cf6,color:#4c1d95",
+  },
+  dark: {
+    entity: "fill:#1572b6,stroke:#4ea3e0,color:#ffffff,font-weight:600",
+    step: "fill:#18273f,stroke:#33507a,color:#dbe5f4",
+    outcome: "fill:#123526,stroke:#3fb27f,color:#c6f2db",
+    danger: "fill:#3a1717,stroke:#e06363,color:#fbd5d5",
+    warn: "fill:#33280f,stroke:#d9a43a,color:#f6e3b4",
+    ai: "fill:#271a44,stroke:#a78bfa,color:#e4d9ff",
+  },
+};
+
+/** Appends the class definitions to flowcharts and state diagrams. */
+function withClassDefs(chart: string, theme: Theme) {
+  const head = chart.trimStart();
+  if (!head.startsWith("flowchart") && !head.startsWith("stateDiagram")) {
+    return chart;
+  }
+  const defs = Object.entries(CLASS_DEFS[theme])
+    .map(([name, style]) => `    classDef ${name} ${style}`)
+    .join("\n");
+  return `${chart}\n${defs}`;
+}
+
+const CLASS_LABELS: Record<string, string> = {
+  entity: "Entità principale",
+  step: "Passo o prova",
+  outcome: "Esito positivo",
+  danger: "Chiusura",
+  warn: "Da verificare",
+  ai: "AI",
+};
+
+/** Classes a chart actually uses, in legend order. */
+function usedClasses(chart: string) {
+  return Object.keys(CLASS_LABELS).filter((name) =>
+    new RegExp(`:::${name}\\b|\\bclass\\s[^\\n]*\\s${name}\\s*$`, "m").test(chart),
+  );
+}
+
+/** Swatch colours parsed from the class definition of the current theme. */
+function swatch(name: string, theme: Theme) {
+  const style = CLASS_DEFS[theme][name] ?? "";
+  const pick = (key: string) => style.match(new RegExp(`${key}:([^,]+)`))?.[1];
+  return { background: pick("fill"), borderColor: pick("stroke") };
+}
+
 type MermaidModule = typeof import("mermaid").default;
 
 let mermaidPromise: Promise<MermaidModule> | null = null;
@@ -89,8 +149,8 @@ async function getMermaid(theme: Theme): Promise<MermaidModule> {
       theme: "base",
       // Follows the app theme, never the OS: the page can be light on a dark machine
       themeVariables: isDark
-        ? { ...DARK_THEME, darkMode: true }
-        : { ...LIGHT_THEME, darkMode: false },
+        ? { ...DARK_THEME, darkMode: true, fontSize: "15px" }
+        : { ...LIGHT_THEME, darkMode: false, fontSize: "15px" },
       fontFamily: getComputedStyle(document.body).fontFamily,
       // Mermaid 12 defaults to the ELK layout engine (~450 KB gzipped, pulled
       // as its own chunk); dagre draws these small box-and-arrow diagrams the
@@ -99,7 +159,22 @@ async function getMermaid(theme: Theme): Promise<MermaidModule> {
       layout: "dagre",
       // Fit the column on desktop; the wrapper below keeps a readable floor on
       // a phone, where Mermaid would otherwise shrink the labels to nothing
-      flowchart: { curve: "step", htmlLabels: true },
+      flowchart: {
+        curve: "basis",
+        htmlLabels: true,
+        wrappingWidth: 150,
+        nodeSpacing: 28,
+        rankSpacing: 36,
+        padding: 10,
+      },
+      state: { padding: 12 },
+      sequence: {
+        actorMargin: 28,
+        width: 120,
+        boxMargin: 8,
+        messageMargin: 32,
+        mirrorActors: false,
+      },
     });
     configuredTheme = theme;
   }
@@ -130,6 +205,8 @@ export function GuideDiagram({
   const [svg, setSvg] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [scrollable, setScrollable] = useState(false);
+  const theme: Theme = resolvedTheme === "dark" ? "dark" : "light";
+  const legend = usedClasses(chart);
 
   // Load Mermaid only when the diagram is about to become visible
   useEffect(() => {
@@ -160,7 +237,7 @@ export function GuideDiagram({
       const id = `guide-diagram-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}-${renderCount++}`;
       try {
         const mermaid = await getMermaid(theme);
-        const result = await mermaid.render(id, chart);
+        const result = await mermaid.render(id, withClassDefs(chart, theme));
         if (!cancelled) {
           setSvg(result.svg);
           setFailed(false);
@@ -190,6 +267,9 @@ export function GuideDiagram({
 
   return (
     <figure className={cn("m-0 flex flex-col gap-2", className)}>
+      <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+        Schema · {title}
+      </span>
       <div
         ref={hostRef}
         className="flex bg-card p-4 rounded-xl ring-1 ring-border overflow-x-auto"
@@ -216,12 +296,30 @@ export function GuideDiagram({
           </div>
         )}
       </div>
+      {legend.length > 0 && (
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-xs">
+          {legend.map((name) => (
+            <li key={name} className="flex items-center gap-1.5">
+              <span
+                aria-hidden
+                className="border rounded-sm size-3"
+                style={swatch(name, theme)}
+              />
+              {CLASS_LABELS[name]}
+            </li>
+          ))}
+        </ul>
+      )}
       {scrollable && (
         <p className="text-muted-foreground text-xs">
           Diagramma più largo dello schermo: scorrilo in orizzontale.
         </p>
       )}
-      <figcaption className="sr-only">{caption ?? title}</figcaption>
+      {caption ? (
+        <figcaption className="text-muted-foreground text-xs">{caption}</figcaption>
+      ) : (
+        <figcaption className="sr-only">{title}</figcaption>
+      )}
     </figure>
   );
 }

@@ -11,15 +11,15 @@ const meta = GUIDE_SECTION.arrivo;
 
 const flow = `flowchart LR
     subgraph Esterno["Lato candidato (senza account)"]
-        F["Form pubblico<br/>/recruiting"] --> CV["Carica CV"]
+        F["<b>Form pubblico</b><br/>/recruiting"]:::step --> CV["<b>Carica il CV</b>"]:::step
     end
     subgraph Interno["Lato recruiter"]
-        N["Nuovo candidato<br/>/dashboard/candidates/new"]
-        AP["Candidatura creata<br/>fase: Candidato"]
+        N["<b>Nuovo candidato</b><br/>/dashboard/candidates/new"]:::step
+        AP["<b>Candidatura creata</b><br/>fase: Candidato"]:::entity
     end
     F --> AP
     N --> AP
-    AP --> LIST["Compare in Candidature,<br/>nella pipeline e nel kanban della posizione"]`;
+    AP --> LIST["<b>Visibile ovunque</b><br/>Candidature, pipeline e kanban della posizione"]:::outcome`;
 
 export function ArrivoSection() {
   return (

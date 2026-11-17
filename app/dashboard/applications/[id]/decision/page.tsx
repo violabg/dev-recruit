@@ -15,13 +15,13 @@ import {
   TableSkeleton,
 } from "@/components/skeletons";
 import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  BlockLabel,
+  ChapterHeader,
+  Stat,
+  StatGrid,
+} from "@/components/detail-blocks";
 import { getCurrentUser } from "@/lib/auth-server";
 import { getApplicationDecision } from "@/lib/data/applications";
 import type { ApplicationStage } from "@/lib/schemas";
@@ -29,7 +29,7 @@ import { computeDecisionScore } from "@/lib/utils/decision-score";
 import { cn } from "cn";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { ArrowLeft } from "lucide-react";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -115,6 +115,15 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
   const candidateName =
     `${decision.candidate.firstName} ${decision.candidate.lastName}`.trim();
 
+  const expectedCount = decision.interviews.reduce(
+    (sum, interview) => sum + interview.participantIds.length,
+    0,
+  );
+  const submittedCount = decision.interviews.reduce(
+    (sum, interview) => sum + interview.submittedInterviewerIds.length,
+    0,
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -135,102 +144,169 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
         }
       />
 
+      {recorded.outcome && (
+        <div
+          className={cn(
+            "flex flex-col gap-1 px-4 py-3 border rounded-xl",
+            recorded.outcome === "rejected"
+              ? "border-destructive/40 bg-destructive/5"
+              : "border-success/40 bg-success/5",
+          )}
+        >
+          <span
+            className={cn(
+              "font-semibold text-xs uppercase tracking-wide",
+              recorded.outcome === "rejected"
+                ? "text-destructive"
+                : "text-success",
+            )}
+          >
+            Decisione registrata
+          </span>
+          <span className="font-display font-bold text-heading text-xl">
+            {DECISION_OUTCOME_LABEL[recorded.outcome]}
+          </span>
+          <span className="text-muted-foreground text-sm">
+            {[
+              recorded.decidedBy?.name,
+              recorded.decidedAt && formatDate(recorded.decidedAt),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+          {recorded.rationale && (
+            <p className="mt-1 text-sm whitespace-pre-wrap">
+              {recorded.rationale}
+            </p>
+          )}
+        </div>
+      )}
+
       {collapsedInterviewIds.length > 0 && (
-        <p className="bg-warning/10 px-3 py-2 rounded-md text-warning text-sm">
-          Per un giudizio indipendente, invia prima la tua scheda: punteggio e
-          schede degli altri sono nascosti finché non la mostri
+        <p className="flex items-start gap-2 bg-warning/10 px-3 py-2 rounded-md text-warning text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            Per un giudizio indipendente, invia prima la tua scheda: punteggio
+            e schede degli altri sono nascosti finché non la mostri
+          </span>
         </p>
       )}
 
       <DecisionColumnsProvider collapsedInterviewIds={collapsedInterviewIds}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Punteggio complessivo</CardTitle>
-            <CardDescription>
-              {score.weightsSource === "decision" && recorded.decidedAt
-                ? `Pesi salvati con la decisione del ${formatDate(recorded.decidedAt)}`
-                : "Pesi della scheda di valutazione"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <span className="font-bold text-2xl tabular-nums">
-              <DecisionCollapsible
-                interviewIds={collapsedInterviewIds}
-                placeholder="Visibile dopo l'invio della tua scheda"
-              >
-                {score.overall !== null ? `${score.overall}/5` : "Nessuna prova"}
-              </DecisionCollapsible>
-            </span>
-            <p className="text-muted-foreground text-sm">
+        {/* At a glance */}
+        <Card size="sm">
+          <CardContent className="flex flex-col gap-3">
+            <StatGrid>
+              <Stat
+                value={
+                  <DecisionCollapsible
+                    interviewIds={collapsedInterviewIds}
+                    placeholder="Dopo la tua scheda"
+                  >
+                    {score.overall !== null ? `${score.overall}/5` : "—"}
+                  </DecisionCollapsible>
+                }
+                label="punteggio complessivo"
+              />
+              <Stat
+                value={`${submittedCount}/${expectedCount}`}
+                label="schede inviate"
+                tone={
+                  expectedCount > 0 && submittedCount === expectedCount
+                    ? "success"
+                    : "warning"
+                }
+              />
+              <Stat
+                value={decision.interviews.length}
+                label={decision.interviews.length === 1 ? "colloquio" : "colloqui"}
+              />
+              <Stat
+                value={
+                  <DecisionCollapsible
+                    interviewIds={collapsedInterviewIds}
+                    placeholder="—"
+                  >
+                    {score.warnings.length}
+                  </DecisionCollapsible>
+                }
+                label="indispensabili da motivare"
+                tone={
+                  collapsedInterviewIds.length === 0 && score.warnings.length > 0
+                    ? "warning"
+                    : undefined
+                }
+              />
+            </StatGrid>
+            <p className="text-muted-foreground text-xs">
               Media pesata sui soli criteri con prove; CV e test globali non
-              inclusi
+              inclusi.{" "}
+              {score.weightsSource === "decision" && recorded.decidedAt
+                ? `Pesi salvati con la decisione del ${formatDate(recorded.decidedAt)}.`
+                : "Pesi della scheda di valutazione."}
             </p>
           </CardContent>
         </Card>
 
-        {score.warnings.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Criteri indispensabili da motivare</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DecisionCollapsible
-                interviewIds={collapsedInterviewIds}
-                placeholder="Visibile dopo l'invio della tua scheda"
-              >
-                <ul className="flex flex-col gap-1 pl-5 text-warning text-sm list-disc">
+        <section className="flex flex-col gap-3">
+          <ChapterHeader
+            number={1}
+            title="Prove per criterio"
+            meta="CV, test e colloqui a confronto"
+          />
+          {score.warnings.length > 0 && (
+            <DecisionCollapsible
+              interviewIds={collapsedInterviewIds}
+              placeholder="Avvisi visibili dopo l'invio della tua scheda"
+            >
+              <div className="flex flex-col gap-2 bg-warning/10 px-4 py-3 rounded-xl text-warning">
+                <BlockLabel>Criteri indispensabili da motivare</BlockLabel>
+                <ul className="flex flex-col gap-1 text-sm">
                   {score.warnings.map((warning) => (
-                    <li key={warning.criterionId}>
-                      {mustWarningText(warning)}
+                    <li
+                      key={warning.criterionId}
+                      className="flex items-start gap-2"
+                    >
+                      <AlertTriangle
+                        className="mt-0.5 size-4 shrink-0"
+                        aria-hidden
+                      />
+                      <span>{mustWarningText(warning)}</span>
                     </li>
                   ))}
                 </ul>
-              </DecisionCollapsible>
-            </CardContent>
-          </Card>
-        )}
-
-        <DecisionMatrix
-          decision={decision}
-          score={score}
-          collapsedInterviewIds={collapsedInterviewIds}
-        />
-
-        <DecisionWorkspace
-          applicationId={id}
-          warnings={score.warnings}
-          collapsedInterviewIds={collapsedInterviewIds}
-          initial={{ outcome: recorded.outcome, rationale: recorded.rationale }}
-          disabledReason={
-            DECISION_CLOSED_STAGES.includes(decision.stage)
-              ? "Candidatura chiusa: riaprila per registrare la decisione"
-              : null
-          }
-          criteriaById={Object.fromEntries(
-            decision.criteria.map((criterion) => [criterion.id, criterion.name]),
+              </div>
+            </DecisionCollapsible>
           )}
-        />
+          <DecisionMatrix
+            decision={decision}
+            score={score}
+            collapsedInterviewIds={collapsedInterviewIds}
+          />
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <ChapterHeader
+            number={2}
+            title={recorded.outcome ? "Aggiorna la decisione" : "Registra la decisione"}
+            meta="L'avvocato del diavolo argomenta contro l'esito scelto"
+          />
+          <DecisionWorkspace
+            applicationId={id}
+            warnings={score.warnings}
+            collapsedInterviewIds={collapsedInterviewIds}
+            initial={{ outcome: recorded.outcome, rationale: recorded.rationale }}
+            disabledReason={
+              DECISION_CLOSED_STAGES.includes(decision.stage)
+                ? "Candidatura chiusa: riaprila per registrare la decisione"
+                : null
+            }
+            criteriaById={Object.fromEntries(
+              decision.criteria.map((criterion) => [criterion.id, criterion.name]),
+            )}
+          />
+        </section>
       </DecisionColumnsProvider>
-
-      {recorded.outcome && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Decisione registrata</CardTitle>
-            <CardDescription>
-              {DECISION_OUTCOME_LABEL[recorded.outcome]}
-              {recorded.decidedBy && ` · ${recorded.decidedBy.name}`}
-              {recorded.decidedAt && ` · ${formatDate(recorded.decidedAt)}`}
-            </CardDescription>
-          </CardHeader>
-          {recorded.rationale && (
-            <CardContent>
-              <p className="text-sm whitespace-pre-wrap">
-                {recorded.rationale}
-              </p>
-            </CardContent>
-          )}
-        </Card>
-      )}
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { cn } from "cn";
 import { ChevronRight } from "lucide-react";
-import type { ReactNode } from "react";
+import { BlockLabel } from "@/components/detail-blocks";
+
+export { BlockLabel };
 
 /**
  * Presentational blocks shared by the kit view (/prepare) and the live mode:
@@ -29,15 +31,6 @@ const ANCHORS = [
 ] as const;
 
 type Anchors = { weak: string; medium: string; strong: string };
-
-/** Small uppercase label that separates a block's name from its content. */
-export function BlockLabel({ children }: { children: ReactNode }) {
-  return (
-    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-      {children}
-    </span>
-  );
-}
 
 export function hasAnchors(anchors: Anchors) {
   return Boolean(anchors.weak || anchors.medium || anchors.strong);

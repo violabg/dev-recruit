@@ -26,9 +26,12 @@ export default function QuizDetailPage({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      {/* Back button - static */}
       <Suspense fallback={<QuizHeaderSkeleton />}>
         <QuizHeader params={params} />
+      </Suspense>
+
+      <Suspense fallback={<QuizSettingsTabSkeleton />}>
+        <QuizSettingsContent params={params} />
       </Suspense>
 
       <Suspense fallback={<QuizQuestionsTabSkeleton />}>
@@ -47,17 +50,11 @@ async function QuizTabs({ params }: { params: Promise<{ id: string }> }) {
     <Tabs defaultValue="questions">
       <TabsList variant="line">
         <TabsTrigger value="questions">Domande</TabsTrigger>
-        <TabsTrigger value="settings">Impostazioni</TabsTrigger>
         <TabsTrigger value="results">Risultati</TabsTrigger>
       </TabsList>
       <TabsContent value="questions" className="flex flex-col gap-6 pt-4">
         <Suspense fallback={<QuizQuestionsTabSkeleton />}>
           <QuizQuestionsContent params={params} />
-        </Suspense>
-      </TabsContent>
-      <TabsContent value="settings" className="flex flex-col gap-4 pt-4">
-        <Suspense fallback={<QuizSettingsTabSkeleton />}>
-          <QuizSettingsContent params={params} />
         </Suspense>
       </TabsContent>
       <TabsContent value="results" className="flex flex-col gap-4 pt-4">

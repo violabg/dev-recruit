@@ -1,3 +1,5 @@
+import PageHeader from "@/components/page-header";
+import { PageHeaderSkeleton } from "@/components/skeletons";
 import { cn } from "cn";
 import { PositionFormWithData } from "@/components/positions/position-form-with-data";
 import { buttonVariants } from "@/components/ui/button";
@@ -5,10 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  } from "@/components/ui/card";
 import { PositionFormSkeleton } from "@/components/positions/position-form-skeleton";
 import { TextSkeleton } from "@/components/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,18 +23,14 @@ type EditPositionPageProps = {
 /** Mirrors EditPositionContent: card header (back + title) and the form. */
 function EditPositionSkeleton() {
   return (
-    <Card>
-      <CardHeader className="flex items-center gap-4">
-        <Skeleton className="rounded-lg size-8" />
-        <div>
-          <CardTitle className="text-2xl"> Posizione</CardTitle>
-          <TextSkeleton className="w-72" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <PositionFormSkeleton />
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <PageHeaderSkeleton section="positions" description />
+      <Card>
+        <CardContent>
+          <PositionFormSkeleton />
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -68,25 +63,29 @@ async function EditPositionContent({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex items-center gap-4">
-        <Link
-          href={`/dashboard/positions/${params.id}`}
-          className={buttonVariants({ variant: "ghost", size: "icon" })}
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-
-        <div>
-          <CardTitle className="text-2xl"> Posizione</CardTitle>
-          <CardDescription>
-            Modifica i dettagli della posizione&ldquo;{position.title}&rdquo;
-          </CardDescription>
-        </div>
-      </CardHeader>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        section="positions"
+        title="Modifica posizione"
+        description={`${position.title}`}
+        actionBtns={
+          <Link
+            href={`/dashboard/positions/${params.id}` as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Torna alla posizione
+          </Link>
+        }
+      />
+      <Card>
       <CardContent>
         <PositionFormWithData position={position} />
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Fact, FactStrip } from "@/components/detail-blocks";
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deletePresetAction } from "@/lib/actions/presets";
 import { getPresetData } from "@/lib/data/presets";
 import { getRecentPresetIds } from "@/lib/data/presets";
-import { Edit } from "lucide-react";
+import { Edit, Gauge, Hash, ListChecks, Star } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -159,32 +160,34 @@ async function PresetDetailContent({
           </>
         }
       />
+      <FactStrip>
+        <Fact icon={ListChecks} label="Tipo di domanda">
+          <span className="capitalize">
+            {preset.questionType.replace(/_/g, " ")}
+          </span>
+        </Fact>
+        <Fact icon={Gauge} label="Livello">
+          {preset.difficulty}
+        </Fact>
+        <Fact icon={Hash} label="Identificatore">
+          <span className="break-all">{preset.name}</span>
+        </Fact>
+        <Fact icon={Star} label="Predefinito">
+          {preset.isDefault ? "Sì" : "No"}
+        </Fact>
+      </FactStrip>
       <div className="flex flex-col gap-4">
         <Card>
           <CardHeader className="flex flex-col gap-1">
             <CardTitle>Configurazione</CardTitle>
             <CardDescription>
-              Metadati essenziali catturati in questo preset.
+              Icona e tag di questo preset.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="capitalize">
-                {preset.questionType.replace(/_/g, " ")}
-              </Badge>
-              <Badge variant="secondary">Livello {preset.difficulty}</Badge>
-              {preset.isDefault && <Badge variant="default">Predefinito</Badge>}
-            </div>
-
-            <div className="gap-4 grid sm:grid-cols-2">
-              <div>
-                <p className="text-muted-foreground text-sm">Identificatore</p>
-                <p className="font-medium">{preset.name}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">Icona</p>
-                <p className="font-medium">{preset.icon}</p>
-              </div>
+            <div>
+              <p className="text-muted-foreground text-sm">Icona</p>
+              <p className="font-medium">{preset.icon}</p>
             </div>
 
             <div>

@@ -12,7 +12,11 @@ import {
   ListChecks,
   Target,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  ChapterHeader,
+  Stat,
+  StatGrid,
+} from "@/components/detail-blocks";
 import {
   AnswerAnchors,
   BlockLabel,
@@ -33,17 +37,6 @@ const CHECKLIST_GROUPS = [
 ] as const;
 
 const sectionAnchor = (sectionId: string) => `kit-sezione-${sectionId}`;
-
-function Stat({ value, label }: { value: ReactNode; label: string }) {
-  return (
-    <div className="flex flex-col">
-      <span className="font-display font-bold text-heading text-2xl tabular-nums leading-none">
-        {value}
-      </span>
-      <span className="mt-1 text-muted-foreground text-xs">{label}</span>
-    </div>
-  );
-}
 
 /**
  * Read-only preparation of an interview: outline, briefing, hypotheses,
@@ -88,7 +81,7 @@ export function KitView({
           <CardTitle>Scaletta</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          <div className="gap-4 grid grid-cols-2 sm:grid-cols-4">
+          <StatGrid>
             <Stat value={totalMinutes} label="minuti previsti" />
             <Stat value={items.length} label="domande" />
             <Stat value={requiredCount} label="obbligatorie" />
@@ -96,7 +89,7 @@ export function KitView({
               value={`${doneChecklist}/${kit.checklist.length}`}
               label="checklist completata"
             />
-          </div>
+          </StatGrid>
 
           {sections.length > 0 && (
             <ol className="flex flex-col border-t">
@@ -213,19 +206,17 @@ export function KitView({
           id={sectionAnchor(section.id)}
           className="flex flex-col gap-3 scroll-mt-20"
         >
-          <header className="flex flex-wrap items-end gap-x-3 gap-y-1 pb-2 border-b-2 border-primary/30">
-            <span className="font-display font-bold text-primary text-sm tabular-nums">
-              {String(sectionIndex + 1).padStart(2, "0")}
-            </span>
-            <h2 className="font-display font-bold text-heading text-xl leading-tight tracking-[-0.02em]">
-              {section.title}
-            </h2>
-            <span className="ml-auto text-muted-foreground text-sm">
-              {GUIDE_SECTION_KIND_LABEL[section.kind]} · {section.minutes} min ·{" "}
+          <ChapterHeader
+            number={sectionIndex + 1}
+            title={section.title}
+            meta={
+              <>
+                {GUIDE_SECTION_KIND_LABEL[section.kind]} · {section.minutes} min ·{" "}
               {sectionItems.length}{" "}
               {sectionItems.length === 1 ? "domanda" : "domande"}
-            </span>
-          </header>
+              </>
+            }
+          />
 
           {sectionItems.length === 0 && (
             <p className="py-2 text-muted-foreground text-sm">

@@ -8,15 +8,15 @@ import { GUIDE_SECTION } from "@/components/guide/sections";
 
 const meta = GUIDE_SECTION.concetto;
 
-const flow = `flowchart LR
-    P["POSIZIONE<br/>cosa conta e quanto pesa"] --> C["CANDIDATURA<br/>una per candidato × posizione"]
-    C --> E1["Prova: CV<br/>valutazione per criterio"]
-    C --> E2["Prova: Test<br/>punteggio per risposta"]
-    C --> E3["Prova: Colloqui<br/>kit, live, schede"]
-    E1 --> D["DECISIONE<br/>matrice criteri × fonti"]
+const flow = `flowchart TD
+    P["<b>Posizione</b><br/>cosa conta e quanto pesa"]:::entity --> C["<b>Candidatura</b><br/>una per candidato × posizione"]:::entity
+    C --> E1["<b>CV</b><br/>valutazione per criterio"]:::step
+    C --> E2["<b>Test</b><br/>punteggio per risposta"]:::step
+    C --> E3["<b>Colloqui</b><br/>kit, live, schede"]:::step
+    E1 --> D["<b>Decisione</b><br/>matrice criteri × fonti"]:::entity
     E2 --> D
     E3 --> D
-    D --> O["Esito<br/>Offerta · Assunto · Scartato"]`;
+    D --> O["<b>Esito</b><br/>Offerta · Assunto · Scartato"]:::outcome`;
 
 export function ConcettoSection() {
   return (

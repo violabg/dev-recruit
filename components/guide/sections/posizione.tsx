@@ -10,12 +10,11 @@ import { GUIDE_SECTION } from "@/components/guide/sections";
 const meta = GUIDE_SECTION.posizione;
 
 const flow = `flowchart LR
-    A["1. Dettagli<br/>titolo, competenze, JD"] --> B["2. Scheda di valutazione<br/>criteri, pesi, livelli attesi"]
-    B --> C["3. Quiz<br/>domande collegate ai criteri"]
-    B --> D["4. Guida colloquio<br/>modello del round"]
-    C --> E["Setup completo ✓"]
-    D --> E
-    E --> F["La posizione è pronta<br/>per ricevere candidature"]`;
+    A["<b>1. Dettagli</b><br/>titolo, competenze, JD"]:::step --> B["<b>2. Scheda di valutazione</b><br/>criteri, pesi, livelli attesi"]:::entity
+    B --> C["<b>3. Quiz</b><br/>domande collegate ai criteri"]:::step
+    B --> D["<b>4. Guida colloquio</b><br/>modello del round"]:::step
+    C --> E["<b>Setup completo ✓</b><br/>pronta per le candidature"]:::outcome
+    D --> E`;
 
 const criteria = (
   <ul className="mt-1 space-y-1 pl-4 list-disc marker:text-border">
@@ -64,6 +63,10 @@ export function PosizioneSection() {
                 <strong>ancore</strong> (&quot;come suona una risposta debole /
                 media / forte&quot;). L&apos;AI propone i criteri a partire da
                 competenze e livello; ogni criterio si conferma o si modifica.
+                Nel tab della posizione la scheda è in sola lettura: riepilogo
+                (criteri, indispensabili, con risposte attese), poi un blocco
+                per categoria con le risposte attese in rosso, ambra e verde;{" "}
+                <strong>Modifica scheda</strong> apre l&apos;editor.
                 {criteria}
               </>
             ),
@@ -117,7 +120,7 @@ export function PosizioneSection() {
           alt="Scheda di valutazione con criteri, pesi, livelli attesi e ancore"
           caption="Scheda di valutazione: criteri, pesi e ancore"
           width={1440}
-          height={2172}
+          height={1671}
         />
         <GuideFigure
           src="/guida/04-guide-colloquio.png"

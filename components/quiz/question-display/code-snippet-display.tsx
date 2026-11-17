@@ -1,3 +1,4 @@
+import { BlockLabel } from "@/components/detail-blocks";
 import { CodeHighlight } from "@/components/quiz/code-highlight";
 import { Badge } from "@/components/ui/badge";
 
@@ -15,9 +16,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
       {question.codeSnippet && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-heading text-sm">
-              Snippet di codice:
-            </h3>
+            <BlockLabel>Snippet di codice</BlockLabel>
             {question.language && (
               <Badge variant="secondary" className="text-xs">
                 {question.language}
@@ -33,9 +32,7 @@ export const CodeSnippetDisplay = ({ question }: CodeSnippetDisplayProps) => {
       {question.sampleSolution && (
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-heading text-sm">
-              Soluzione di esempio:
-            </h3>
+            <BlockLabel>Soluzione di esempio</BlockLabel>
             {question.language && (
               <Badge variant="secondary" className="text-xs">
                 {question.language}

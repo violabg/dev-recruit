@@ -1,12 +1,11 @@
+import { cn } from "cn";
+import PageHeader from "@/components/page-header";
 import { CandidateForm } from "@/components/candidates/candidate-form";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  } from "@/components/ui/card";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { getOpenPositionsForSelect } from "@/lib/data/positions";
 import { ArrowLeft } from "lucide-react";
@@ -74,26 +73,25 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
   );
 
   return (
-    <Card>
-      <CardHeader className="flex items-center gap-4">
-        <Link
-          href={
-            `/dashboard/candidates/${candidate.id}` as Route<`/dashboard/candidates/${string}`>
-          }
-          className={buttonVariants({
-            variant: "ghost",
-            size: "icon",
-          })}
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-        <div>
-          <CardTitle className="text-2xl">Modifica Candidato</CardTitle>
-          <CardDescription>
-            Aggiorna i dati per mantenere le informazioni sincronizzate.
-          </CardDescription>
-        </div>
-      </CardHeader>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        section="candidates"
+        title="Modifica candidato"
+        description={`${candidate.firstName} ${candidate.lastName}`}
+        actionBtns={
+          <Link
+            href={`/dashboard/candidates/${candidate.id}` as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Torna al candidato
+          </Link>
+        }
+      />
+      <Card>
       <CardContent>
         <CandidateForm
           mode="edit"
@@ -114,6 +112,7 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
           }}
         />
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

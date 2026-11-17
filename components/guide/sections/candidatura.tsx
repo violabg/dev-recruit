@@ -35,6 +35,10 @@ const stages = `stateDiagram-v2
     rejected --> [*]
     hired --> [*]
     withdrawn --> [*]
+    class applied, screening, assessment, interview step
+    class decision entity
+    class offer, hired outcome
+    class rejected, withdrawn danger
     note right of interview
         Spostabile a mano in ogni momento
         (avanti, indietro, Scartato, Ritirato)

@@ -40,17 +40,15 @@ export function ApplicationHeaderSkeleton() {
 /** Mirrors NextActionCard. */
 export function NextActionSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-muted-foreground text-sm">
+    <div className="flex flex-wrap justify-between items-center gap-3 bg-primary/5 px-4 py-3 border border-primary/30 rounded-xl">
+      <div className="flex flex-col gap-1">
+        <span className="font-semibold text-primary text-xs uppercase tracking-wide">
           Prossima azione
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <TextSkeleton lineClassName="h-7" className="w-48 h-5" />
-        <ButtonSkeleton size="sm" className="w-28" />
-      </CardContent>
-    </Card>
+        </span>
+        <TextSkeleton className="w-48" />
+      </div>
+      <ButtonSkeleton size="sm" className="w-28" />
+    </div>
   );
 }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { moveApplicationStageAction } from "@/lib/actions/applications";
 import type { ApplicationStage } from "@/lib/schemas";
 import { errorMessage, unwrap } from "@/lib/utils/action-result";
@@ -149,30 +148,28 @@ export function NextActionCard({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-muted-foreground text-sm">
-          Prossima azione
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <p className="font-display font-bold text-heading text-xl">
-          {action.label}
-        </p>
+    <div className="flex flex-col gap-3 bg-primary/5 px-4 py-3 border border-primary/30 rounded-xl">
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="font-semibold text-primary text-xs uppercase tracking-wide">
+            Prossima azione
+          </span>
+          <span className="font-semibold text-foreground">{action.label}</span>
+        </div>
         {renderAction()}
-        {action.missingResume && (
-          <div className="flex flex-wrap items-center gap-2 bg-warning/10 px-3 py-2 rounded-lg text-warning text-sm">
-            <AlertTriangle className="size-4 shrink-0" />
-            <span>CV mancante</span>
-            <Link
-              href={candidateEditHref as never}
-              className="font-medium underline underline-offset-2"
-            >
-              Carica il CV
-            </Link>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+      {action.missingResume && (
+        <div className="flex flex-wrap items-center gap-2 bg-warning/10 px-3 py-2 rounded-lg text-warning text-sm">
+          <AlertTriangle className="size-4 shrink-0" />
+          <span>CV mancante</span>
+          <Link
+            href={candidateEditHref as never}
+            className="font-medium underline underline-offset-2"
+          >
+            Carica il CV
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }

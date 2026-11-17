@@ -1,3 +1,5 @@
+import { InterviewSteps } from "@/components/interviews/interview-steps";
+import { NextStep } from "@/components/detail-blocks";
 import { InterviewerFeedbackForm } from "@/components/interviews/interviewer-feedback-form";
 import { SubmittedFeedbackList } from "@/components/interviews/submitted-feedback-list";
 import PageHeader from "@/components/page-header";
@@ -119,6 +121,23 @@ async function FeedbackContent({ params }: { params: FeedbackParams }) {
           </Link>
         }
       />
+
+      <InterviewSteps
+        applicationId={id}
+        interviewId={interview.id}
+        current="feedback"
+        status={interview.status}
+        feedbackSubmitted={viewerSubmitted}
+      />
+
+      {viewerSubmitted && (
+        <NextStep
+          title="Scheda inviata: passa alla decisione"
+          description="Confronta le schede di tutti i colloqui e registra l'esito."
+          href={`/dashboard/applications/${id}/decision`}
+          actionLabel="Apri decisione"
+        />
+      )}
 
       {viewerParticipant ? (
         <InterviewerFeedbackForm

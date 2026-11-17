@@ -1,6 +1,7 @@
 "use client";
 
 import { CodeHighlight } from "@/components/quiz/code-highlight";
+import { BlockLabel, Stat, StatGrid } from "@/components/detail-blocks";
 import { OverallEvaluationCard } from "@/components/recruiting/overall-evaluation-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -312,6 +313,8 @@ export function AssessmentResultsClient({
     });
   };
 
+  const multipleChoiceCount = quizQuestions.filter((q) => q.type === "multiple_choice").length;
+
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -323,69 +326,38 @@ export function AssessmentResultsClient({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="gap-4 grid md:grid-cols-3">
-            <div className="flex flex-col gap-2">
-              <div className="font-medium text-sm">Completamento</div>
-              <Progress
-                value={
-                  (getAnsweredQuestionsCount() / quizQuestions.length) * 100
-                }
-                className="h-2"
-              />
-              <div className="text-muted-foreground text-sm">
-                {getAnsweredQuestionsCount()} di {quizQuestions.length} domande
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <div className="font-medium text-sm">
-                Risposte corrette (scelta multipla)
-              </div>
-              <Progress
-                value={
-                  (getCorrectAnswersCount() /
-                    quizQuestions.filter((q) => q.type === "multiple_choice")
-                      .length) *
-                  100
-                }
-                className="h-2"
-              />
-              <div className="text-muted-foreground text-sm">
-                {getCorrectAnswersCount()} di{" "}
-                {
-                  quizQuestions.filter((q) => q.type === "multiple_choice")
-                    .length
-                }{" "}
-                domande
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <div className="font-medium text-sm">Punteggio complessivo</div>
-              <ProgressPrimitive.Root
-                value={overallScore || 0}
-                data-slot="progress"
-                className="flex flex-wrap gap-3 h-2"
-              >
-                <ProgressTrack
-                  className={cn(
-                    overallScore !== null &&
-                      (overallScore >= 70
-                        ? "bg-success"
-                        : overallScore >= 40
-                          ? "bg-warning"
-                          : "bg-destructive"),
-                  )}
-                >
-                  <ProgressIndicator />
-                </ProgressTrack>
-              </ProgressPrimitive.Root>
-
-              <div className="text-muted-foreground text-sm">
-                {overallScore !== null ? `${overallScore}%` : "N/A"}
-              </div>
-            </div>
-          </div>
+          <StatGrid>
+            <Stat
+              value={`${getAnsweredQuestionsCount()}/${quizQuestions.length}`}
+              label="domande con risposta"
+            />
+            <Stat
+              value={
+                multipleChoiceCount > 0
+                  ? `${getCorrectAnswersCount()}/${multipleChoiceCount}`
+                  : "—"
+              }
+              label="corrette a scelta multipla"
+            />
+            <Stat
+              value={overallScore !== null ? `${overallScore}%` : "—"}
+              label="punteggio complessivo"
+              tone={
+                overallScore === null
+                  ? undefined
+                  : overallScore >= 70
+                    ? "success"
+                    : overallScore >= 40
+                      ? "warning"
+                      : "destructive"
+              }
+            />
+            <Stat
+              value={overallEvaluation ? "Fatta" : "Da fare"}
+              label="valutazione AI"
+              tone={overallEvaluation ? "success" : "warning"}
+            />
+          </StatGrid>
 
           {!overallEvaluation && (
             <div className="flex flex-col gap-4">
@@ -557,15 +529,31 @@ export function AssessmentResultsClient({
 
                 return (
                   <Card key={dbId}>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">
-                          {index + 1}. {questionText}
-                        </CardTitle>
-                        {evaluation && (
-                          <div
+                    <CardHeader>
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <span className="mt-0.5 font-display font-bold text-muted-foreground text-sm tabular-nums">
+                            {index + 1}.
+                          </span>
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <BlockLabel>
+                              {type === "multiple_choice"
+                                ? "Risposta multipla"
+                                : type === "open_question"
+                                  ? "Domanda aperta"
+                                  : type === "behavioral_scenario"
+                                    ? "Scenario comportamentale"
+                                    : "Snippet di codice"}
+                            </BlockLabel>
+                            <CardTitle className="font-sans font-semibold text-foreground text-base leading-snug">
+                              {questionText}
+                            </CardTitle>
+                          </div>
+                        </div>
+                        {evaluation ? (
+                          <span
                             className={cn(
-                              "rounded-full px-2 py-1 text-xs font-medium",
+                              "px-2.5 py-1 rounded-full font-semibold text-sm tabular-nums shrink-0",
                               evaluation.score >= 7
                                 ? "bg-success/10 text-success"
                                 : evaluation.score >= 4
@@ -574,26 +562,19 @@ export function AssessmentResultsClient({
                             )}
                           >
                             {evaluation.score}/{evaluation.maxScore}
-                          </div>
-                        )}
+                          </span>
+                        ) : !isAnswered ? (
+                          <span className="bg-muted px-2.5 py-1 rounded-full text-muted-foreground text-xs shrink-0">
+                            Senza risposta
+                          </span>
+                        ) : null}
                       </div>
-                      <CardDescription>
-                        {type === "multiple_choice"
-                          ? "Risposta multipla"
-                          : type === "open_question"
-                            ? "Domanda aperta"
-                            : type === "behavioral_scenario"
-                              ? "Scenario comportamentale"
-                              : "Snippet di codice"}
-                      </CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-4">
                       {isAnswered ? (
                         <div className="flex flex-col gap-4">
                           <div className="flex flex-col gap-2">
-                            <div className="font-medium">
-                              Risposta del candidato:
-                            </div>
+                            <BlockLabel>Risposta del candidato</BlockLabel>
                             {type === "multiple_choice" &&
                               question.options &&
                               (() => {
@@ -654,9 +635,7 @@ export function AssessmentResultsClient({
                             question.correctAnswer <
                               question.options.length && (
                               <div className="flex flex-col gap-2">
-                                <div className="font-medium">
-                                  Risposta corretta:
-                                </div>
+                                <BlockLabel>Risposta corretta</BlockLabel>
                                 <div className="bg-success/10 p-3 border border-success rounded-md">
                                   {question.options[question.correctAnswer]}
                                 </div>
@@ -672,9 +651,7 @@ export function AssessmentResultsClient({
                             <div className="flex flex-col gap-2">
                               {evaluation.evaluation && (
                                 <>
-                                  <div className="font-medium">
-                                    Valutazione AI:
-                                  </div>
+                                  <BlockLabel>Valutazione AI</BlockLabel>
                                   <div className="p-3 border rounded-md whitespace-pre-wrap">
                                     {evaluation.evaluation}
                                   </div>

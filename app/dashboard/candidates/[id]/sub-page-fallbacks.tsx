@@ -12,32 +12,11 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const TITLE_CLASS =
-  "font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]";
-
-/** Back-link row placeholder (ghost sm button). */
-function BackRow() {
-  return (
-    <div className="flex items-center gap-2">
-      <ButtonSkeleton size="sm" className="w-36" />
-    </div>
-  );
-}
-
 /** Mirrors CandidateEvaluationsContent: back link, title, description, list. */
 export function CandidateEvaluationsSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <BackRow />
-      <div>
-        <TextSkeleton
-          lineClassName="h-10 lg:h-[2.875rem]"
-          className="w-80 max-w-full h-7"
-        />
-        <p className="mt-1 text-muted-foreground">
-          Valutazioni del curriculum per diverse posizioni
-        </p>
-      </div>
+      <PageHeaderSkeleton section="candidates" description />
       <Card>
         <CardHeader>
           <TextSkeleton lineClassName="h-7" className="w-56 h-5" />
@@ -56,11 +35,7 @@ export function CandidateEvaluationsSkeleton() {
 export function CandidateQuizSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <BackRow />
-      <div>
-        <h1 className={TITLE_CLASS}>Assegna quiz al candidato</h1>
-        <TextSkeleton lineClassName="h-6" className="w-96 max-w-full h-4" />
-      </div>
+      <PageHeaderSkeleton section="candidates" description />
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-5 border-b h-10">
           <span className="font-semibold text-[0.9375rem] text-heading">

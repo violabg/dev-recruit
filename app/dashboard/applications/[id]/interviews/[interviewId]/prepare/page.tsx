@@ -7,11 +7,12 @@ import {
 } from "@/components/interviews/interview-presentation";
 import { KitView } from "@/components/interviews/kit-view";
 import { LegalReminder } from "@/components/interviews/legal-reminder";
+import { Fact, FactStrip, NextStep } from "@/components/detail-blocks";
+import { InterviewSteps } from "@/components/interviews/interview-steps";
 import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -26,16 +27,13 @@ import {
   ArrowLeft,
   CalendarClock,
   Clock,
-  type LucideIcon,
-  NotebookPen,
   Pencil,
-  Radio,
   Users,
   Video,
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { type ReactNode, Suspense } from "react";
+import { Suspense } from "react";
 
 type PrepareParams = Promise<{ id: string; interviewId: string }>;
 type PrepareSearchParams = Promise<{ scheduled?: string }>;
@@ -79,28 +77,6 @@ function PrepareSkeleton() {
   );
 }
 
-function DetailFact({
-  icon: Icon,
-  label,
-  children,
-}: {
-  icon: LucideIcon;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-3 min-w-0">
-      <span className="flex justify-center items-center bg-primary/10 rounded-md size-8 shrink-0 text-primary">
-        <Icon className="size-4" aria-hidden />
-      </span>
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-muted-foreground text-xs">{label}</span>
-        <div className="font-medium text-sm">{children}</div>
-      </div>
-    </div>
-  );
-}
-
 async function PrepareContent({
   params,
   searchParams,
@@ -128,6 +104,36 @@ async function PrepareContent({
     buttonVariants({ variant: "outline", size: "sm" }),
     "inline-flex",
   );
+
+  const nextStep =
+    interview.status === "scheduled" && interview.kit?.status === "draft" ? (
+      <NextStep
+        title="Completa il kit e segnalo come pronto"
+        description="Rivedi domande e checklist nell'editor, poi premi Segna come pronto."
+        href={`${basePath}/prepare/edit`}
+        actionLabel="Modifica kit"
+      />
+    ) : interview.status === "scheduled" ? (
+      <NextStep
+        title="Al momento del colloquio apri la modalità live"
+        description="Lì avvii il colloquio, prendi note e segni le domande coperte."
+        href={`${basePath}/live`}
+        actionLabel="Apri live"
+      />
+    ) : interview.status === "in_progress" ? (
+      <NextStep
+        title="Il colloquio è in corso"
+        href={`${basePath}/live`}
+        actionLabel="Torna al live"
+      />
+    ) : interview.status === "completed" ? (
+      <NextStep
+        title="Compila e invia la tua scheda"
+        description="Voti per criterio, evidenze e raccomandazione finale."
+        href={`${basePath}/feedback`}
+        actionLabel="Apri scheda"
+      />
+    ) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -161,14 +167,6 @@ async function PrepareContent({
               <ArrowLeft className="size-4" />
               Candidatura
             </Link>
-            <Link href={`${basePath}/live` as never} className={linkClass}>
-              <Radio className="size-4" />
-              Live
-            </Link>
-            <Link href={`${basePath}/feedback` as never} className={linkClass}>
-              <NotebookPen className="size-4" />
-              Scheda
-            </Link>
             <InterviewCardActions
               interview={{
                 id: interview.id,
@@ -187,15 +185,23 @@ async function PrepareContent({
         }
       />
 
-      <Card size="sm">
-        <CardContent className="gap-4 grid sm:grid-cols-2 xl:grid-cols-4">
-          <DetailFact icon={CalendarClock} label="Quando">
+      <InterviewSteps
+        applicationId={id}
+        interviewId={interviewId}
+        current="prepare"
+        status={interview.status}
+      />
+
+      {nextStep}
+
+      <FactStrip>
+          <Fact icon={CalendarClock} label="Quando">
             {formatInterviewDateTime(interview.scheduledAt)}
-          </DetailFact>
-          <DetailFact icon={Clock} label="Durata">
+          </Fact>
+          <Fact icon={Clock} label="Durata">
             {interview.durationMinutes} min
-          </DetailFact>
-          <DetailFact icon={Users} label="Partecipanti">
+          </Fact>
+          <Fact icon={Users} label="Partecipanti">
             <ul className="flex flex-col">
               {interview.participants.map((participant) => (
                 <li key={participant.userId}>
@@ -206,8 +212,8 @@ async function PrepareContent({
                 </li>
               ))}
             </ul>
-          </DetailFact>
-          <DetailFact icon={Video} label="Link della call">
+          </Fact>
+          <Fact icon={Video} label="Link della call">
             {interview.meetingUrl ? (
               <a
                 href={interview.meetingUrl}
@@ -222,9 +228,8 @@ async function PrepareContent({
                 Non indicato
               </span>
             )}
-          </DetailFact>
-        </CardContent>
-      </Card>
+          </Fact>
+      </FactStrip>
 
       <InterviewInvitePanel
         defaultOpen={scheduled === "1"}

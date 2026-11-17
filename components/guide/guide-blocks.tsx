@@ -132,17 +132,25 @@ export function GuideSteps({
   steps: { title: string; body: ReactNode }[];
 }) {
   return (
-    <ol className="flex flex-col gap-4 max-w-[72ch]">
+    <ol className="flex flex-col max-w-[72ch]">
       {steps.map((step, index) => (
-        <li key={step.title} className="flex gap-3">
+        <li
+          key={step.title}
+          className="group relative flex gap-4 pb-6 last:pb-0"
+        >
+          {/* Connector to the next step */}
           <span
             aria-hidden
-            className="grid place-items-center bg-muted mt-0.5 rounded-full size-6 shrink-0 text-muted-foreground text-xs font-semibold tabular-nums ring-1 ring-border ring-inset"
+            className="group-last:hidden top-8 bottom-0 left-[0.8125rem] absolute bg-primary/25 w-px"
+          />
+          <span
+            aria-hidden
+            className="z-10 grid place-items-center bg-primary/10 rounded-full size-7 shrink-0 font-semibold text-primary text-xs tabular-nums ring-1 ring-primary/30 ring-inset"
           >
             {index + 1}
           </span>
-          <div className="min-w-0">
-            <p className="font-semibold text-[0.95rem] text-foreground">
+          <div className="flex flex-col gap-1 pt-0.5 min-w-0">
+            <p className="font-display font-bold text-heading text-base leading-snug">
               {step.title}
             </p>
             {/* A div, not a p: a step may contain a list */}

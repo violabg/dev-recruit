@@ -2,6 +2,9 @@ import {
   CRITERION_CATEGORY_LABEL,
   CRITERION_PRIORITY_PRESENTATION,
 } from "@/components/scorecard/criterion-presentation";
+import { ChapterHeader, Stat, StatGrid } from "@/components/detail-blocks";
+import { AnswerAnchors, hasAnchors } from "@/components/interviews/kit-blocks";
+import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,9 +67,15 @@ export async function ScorecardSummary({ params }: Props) {
     );
   }
 
+  const mustCount = criteria.filter((c) => c.priority === "must").length;
+  const groups = CATEGORY_ORDER.map((category) => ({
+    category,
+    group: criteria.filter((criterion) => criterion.category === category),
+  })).filter(({ group }) => group.length > 0);
+
   return (
     <>
-      <div className="flex justify-between">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
           Scheda di valutazione
         </h2>
@@ -79,54 +88,71 @@ export async function ScorecardSummary({ params }: Props) {
         </Link>
       </div>
 
-      {CATEGORY_ORDER.map((category) => {
-        const group = criteria.filter(
-          (criterion) => criterion.category === category,
-        );
-        if (group.length === 0) return null;
+      <Card size="sm">
+        <CardContent>
+          <StatGrid>
+            <Stat value={criteria.length} label="criteri" />
+            <Stat value={mustCount} label="indispensabili" />
+            <Stat
+              value={criteria.filter((c) => hasAnchors(c.anchors)).length}
+              label="con risposte attese"
+            />
+            <Stat
+value={groups.length}
+              label="categorie"
+            />
+          </StatGrid>
+        </CardContent>
+      </Card>
 
+      {groups.map(({ category, group }, groupIndex) => {
+        const number = groupIndex + 1;
         return (
-          <Card key={category}>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                {CRITERION_CATEGORY_LABEL[category]}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-3">
-                {group.map((criterion) => {
-                  const priority =
-                    CRITERION_PRIORITY_PRESENTATION[criterion.priority];
-                  return (
-                    <li
-                      key={criterion.id}
-                      className="flex flex-col gap-1 pb-3 border-b last:border-b-0"
-                    >
-                      <div className="flex flex-wrap justify-between items-center gap-2">
-                        <span className="font-medium">{criterion.name}</span>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge className={priority.className}>
-                            {priority.label}
-                          </Badge>
-                          <span className="text-muted-foreground text-xs">
-                            Peso {criterion.weight}/5
-                          </span>
-                          <span className="text-muted-foreground text-xs">
-                            Livello atteso {criterion.expectedLevel}/5
-                          </span>
-                        </div>
-                      </div>
-                      {criterion.description && (
-                        <p className="text-muted-foreground text-sm">
-                          {criterion.description}
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-          </Card>
+          <section key={category} className="flex flex-col gap-3">
+            <ChapterHeader
+              number={number}
+              title={CRITERION_CATEGORY_LABEL[category]}
+              meta={`${group.length} ${group.length === 1 ? "criterio" : "criteri"}`}
+            />
+            {group.map((criterion, index) => {
+              const priority =
+                CRITERION_PRIORITY_PRESENTATION[criterion.priority];
+              return (
+                <Card
+                  key={criterion.id}
+                  className={cn(
+                    criterion.priority === "must" && "ring-primary/40",
+                  )}
+                >
+                  <CardContent className="flex flex-col gap-4">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                      <span className="font-display font-bold text-muted-foreground text-sm tabular-nums">
+                        {number}.{index + 1}
+                      </span>
+                      <span className="font-semibold text-base">
+                        {criterion.name}
+                      </span>
+                      <Badge className={priority.className}>
+                        {priority.label}
+                      </Badge>
+                      <span className="ml-auto text-muted-foreground text-xs tabular-nums">
+                        Peso {criterion.weight}/5 · Livello atteso{" "}
+                        {criterion.expectedLevel}/5
+                      </span>
+                    </div>
+                    {criterion.description && (
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {criterion.description}
+                      </p>
+                    )}
+                    {hasAnchors(criterion.anchors) && (
+                      <AnswerAnchors anchors={criterion.anchors} />
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </section>
         );
       })}
     </>

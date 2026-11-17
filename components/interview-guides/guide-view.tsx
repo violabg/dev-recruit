@@ -1,4 +1,9 @@
 import {
+  ChapterHeader,
+  Stat,
+  StatGrid,
+} from "@/components/detail-blocks";
+import {
   AnswerAnchors,
   BlockLabel,
   FollowUpList,
@@ -11,7 +16,6 @@ import type { InterviewGuideDetail } from "@/lib/data/interview-guides";
 import type { CriterionPriority } from "@/lib/schemas";
 import { cn } from "cn";
 import { AlertTriangle, ChevronRight } from "lucide-react";
-import type { ReactNode } from "react";
 import { GUIDE_SECTION_KIND_LABEL } from "./guide-section-kind";
 
 export type GuideViewCriterion = {
@@ -22,30 +26,6 @@ export type GuideViewCriterion = {
 };
 
 const sectionAnchor = (sectionId: string) => `guida-sezione-${sectionId}`;
-
-function Stat({
-  value,
-  label,
-  tone,
-}: {
-  value: ReactNode;
-  label: string;
-  tone?: "warning";
-}) {
-  return (
-    <div className="flex flex-col">
-      <span
-        className={cn(
-          "font-display font-bold text-heading text-2xl tabular-nums leading-none",
-          tone === "warning" && "text-warning",
-        )}
-      >
-        {value}
-      </span>
-      <span className="mt-1 text-muted-foreground text-xs">{label}</span>
-    </div>
-  );
-}
 
 /**
  * Read-only interview guide: outline with minutes, scorecard criteria
@@ -100,7 +80,7 @@ export function GuideView({
             <CardTitle>Scaletta</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
-            <div className="gap-4 grid grid-cols-2 sm:grid-cols-4">
+            <StatGrid>
               <Stat value={`R${guide.round}`} label="round" />
               <Stat
                 value={plannedMinutes}
@@ -113,7 +93,7 @@ export function GuideView({
               />
               <Stat value={questions.length} label="domande" />
               <Stat value={requiredCount} label="obbligatorie" />
-            </div>
+            </StatGrid>
 
             {guide.sections.length === 0 ? (
               <p className="text-muted-foreground">Nessuna sezione.</p>
@@ -219,19 +199,17 @@ export function GuideView({
           id={sectionAnchor(section.id)}
           className="flex flex-col gap-3 scroll-mt-20"
         >
-          <header className="flex flex-wrap items-end gap-x-3 gap-y-1 pb-2 border-b-2 border-primary/30">
-            <span className="font-display font-bold text-primary text-sm tabular-nums">
-              {String(sectionIndex + 1).padStart(2, "0")}
-            </span>
-            <h2 className="font-display font-bold text-heading text-xl leading-tight tracking-[-0.02em]">
-              {section.title}
-            </h2>
-            <span className="ml-auto text-muted-foreground text-sm">
-              {GUIDE_SECTION_KIND_LABEL[section.kind]} · {section.minutes} min ·{" "}
+          <ChapterHeader
+            number={sectionIndex + 1}
+            title={section.title}
+            meta={
+              <>
+                {GUIDE_SECTION_KIND_LABEL[section.kind]} · {section.minutes} min ·{" "}
               {section.questions.length}{" "}
               {section.questions.length === 1 ? "domanda" : "domande"}
-            </span>
-          </header>
+              </>
+            }
+          />
 
           {section.questions.length === 0 && (
             <p className="py-2 text-muted-foreground text-sm">

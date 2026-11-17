@@ -27,6 +27,13 @@ export function QuizDetailActionsClient({
   return (
     <>
       <Link
+        href={`/dashboard/quizzes/${quizId}/invite`}
+        className={buttonVariants({ variant: "default", size: "sm" })}
+      >
+        <Send className="mr-1 size-4" />
+        Associa a candidati
+      </Link>
+      <Link
         href={`/dashboard/quizzes/${quizId}/edit`}
         className={buttonVariants({ variant: "outline", size: "sm" })}
       >
@@ -35,20 +42,13 @@ export function QuizDetailActionsClient({
       </Link>
 
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => setIsDuplicateDialogOpen(true)}
       >
         <Copy className="mr-1 size-4" />
         Duplica
       </Button>
-      <Link
-        href={`/dashboard/quizzes/${quizId}/invite`}
-        className={buttonVariants({ variant: "default", size: "sm" })}
-      >
-        <Send className="mr-1 size-4" />
-        Associa a candidati
-      </Link>
 
       <DeleteWithConfirm
         deleteAction={deleteQuizAction.bind(null, quizId)}

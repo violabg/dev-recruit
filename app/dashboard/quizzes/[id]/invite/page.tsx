@@ -1,3 +1,4 @@
+import PageHeader from "@/components/page-header";
 import { cn } from "cn";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -57,23 +58,23 @@ async function InviteCandidatesContent({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-2">
-        <Link
-          href={`/dashboard/quizzes/${quizId}`}
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-        >
-          <ArrowLeft className="mr-1 size-4" />
-          Torna al quiz
-        </Link>
-      </div>
-
-      <div>
-        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Assegna il quiz ai candidati</h1>
-        <p className="text-muted-foreground">
-          Assegna il quiz &quot;{quiz.title}&quot; per la posizione &quot;
-          {position?.title}&quot; ai candidati
-        </p>
-      </div>
+      <PageHeader
+        section="quizzes"
+        title="Associa a candidati"
+        description={`${quiz.title} · ${position?.title ?? "Senza posizione"}`}
+        actionBtns={
+          <Link
+            href={`/dashboard/quizzes/${quizId}` as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Torna al quiz
+          </Link>
+        }
+      />
 
       <Tabs defaultValue="candidates">
         <TabsList variant="line">

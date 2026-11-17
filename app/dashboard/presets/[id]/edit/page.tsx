@@ -1,12 +1,11 @@
+import { cn } from "cn";
+import PageHeader from "@/components/page-header";
 import { PresetForm } from "@/components/presets/preset-form";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  } from "@/components/ui/card";
 import { getPresetData } from "@/lib/data/presets";
 import { ArrowLeft } from "lucide-react";
 import { Route } from "next";
@@ -45,30 +44,29 @@ async function EditPresetContent({ params }: EditPresetPageProps) {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex items-center gap-4">
-        <Link
-          href={
-            `/dashboard/presets/${preset.id}` as Route<`/dashboard/presets/${string}`>
-          }
-          className={buttonVariants({
-            variant: "ghost",
-            size: "icon",
-          })}
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-        <div>
-          <CardTitle className="text-2xl">Modifica preset</CardTitle>
-          <CardDescription>
-            Aggiorna la configurazione di questo preset prima di riutilizzarlo
-            nei tuoi test.
-          </CardDescription>
-        </div>
-      </CardHeader>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        section="presets"
+        title="Modifica preset"
+        description={`${preset.name}`}
+        actionBtns={
+          <Link
+            href={`/dashboard/presets/${preset.id}` as never}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            Torna al preset
+          </Link>
+        }
+      />
+      <Card>
       <CardContent>
         <PresetForm preset={preset} />
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

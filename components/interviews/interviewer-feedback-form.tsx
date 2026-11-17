@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  BlockLabel,
+  ChapterHeader,
+  Stat,
+  StatGrid,
+} from "@/components/detail-blocks";
 import { CRITERION_PRIORITY_PRESENTATION } from "@/components/scorecard/criterion-presentation";
 import {
   AlertDialog,
@@ -13,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   InputWithTagField,
   SelectField,
@@ -31,11 +37,12 @@ import {
 } from "@/lib/schemas";
 import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import { formatInterviewDateTime } from "@/lib/utils/interview-calendar";
+import { cn } from "cn";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Save, Send } from "lucide-react";
+import { Check, Loader2, Save, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { HIRE_RECOMMENDATION_LABEL } from "./interview-presentation";
@@ -125,153 +132,210 @@ export function InterviewerFeedbackForm({
     });
   }
 
+  const scores = useWatch({ control, name: "scores" }) ?? [];
+  const recommendation = useWatch({ control, name: "hireRecommendation" });
+  const scoredCount = scores.filter((row) => row?.score != null).length;
+
   return (
     <form
       onSubmit={handleSubmit(saveDraft)}
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-8"
       noValidate
     >
-      {submitted && submittedAt && (
-        <div>
-          <Badge className="bg-success/10 text-success">
-            Inviata il {formatInterviewDateTime(submittedAt)}
-          </Badge>
-        </div>
-      )}
+      {/* Where the scorecard stands */}
+      <Card size="sm">
+        <CardContent className="flex flex-col gap-3">
+          <StatGrid>
+            <Stat
+              value={`${scoredCount}/${criteria.length}`}
+              label="criteri con voto"
+              tone={
+                criteria.length > 0 && scoredCount === criteria.length
+                  ? "success"
+                  : undefined
+              }
+            />
+            <Stat
+              value={criteria.length - scoredCount}
+              label="senza prove"
+            />
+            <Stat
+              value={
+                recommendation
+                  ? HIRE_RECOMMENDATION_LABEL[recommendation]
+                  : "—"
+              }
+              label="raccomandazione"
+            />
+            <Stat
+              value={submitted ? "Inviata" : "Bozza"}
+              label={
+                submitted && submittedAt
+                  ? formatInterviewDateTime(submittedAt)
+                  : "stato della scheda"
+              }
+              tone={submitted ? "success" : "warning"}
+            />
+          </StatGrid>
+        </CardContent>
+      </Card>
 
-      <fieldset disabled={disabled} className="flex flex-col gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Valutazione per criterio</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            {criteria.length === 0 && (
-              <p className="text-muted-foreground text-sm">
-                La scheda di valutazione della posizione non ha criteri.
-              </p>
-            )}
-            {criteria.map((criterion, index) => {
-              const priority =
-                CRITERION_PRIORITY_PRESENTATION[criterion.priority];
-              return (
-                <div
-                  key={criterion.id}
-                  className="flex flex-col gap-3 pb-5 last:pb-0 border-b last:border-b-0"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-sm">
+      <fieldset disabled={disabled} className="flex flex-col gap-8">
+        <section className="flex flex-col gap-3">
+          <ChapterHeader
+            number={1}
+            title="Valutazione per criterio"
+            meta="Voto 1–5 con le evidenze, oppure Senza prove"
+          />
+          {criteria.length === 0 && (
+            <p className="py-2 text-muted-foreground text-sm">
+              La scheda di valutazione della posizione non ha criteri.
+            </p>
+          )}
+          {criteria.map((criterion, index) => {
+            const priority = CRITERION_PRIORITY_PRESENTATION[criterion.priority];
+            const scored = scores[index]?.score != null;
+            return (
+              <Card
+                key={criterion.id}
+                className={cn(scored && "ring-success/40")}
+              >
+                <CardContent className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="font-display font-bold text-muted-foreground text-sm tabular-nums">
+                      1.{index + 1}
+                    </span>
+                    <span className="font-semibold text-base">
                       {criterion.name}
                       {criterion.archived ? " (archiviato)" : ""}
                     </span>
                     <Badge className={priority.className}>
                       {priority.label}
                     </Badge>
+                    {scored && (
+                      <Check
+                        className="ml-auto size-4 text-success"
+                        aria-label="Valutato"
+                      />
+                    )}
                   </div>
-                  <Controller
-                    control={control}
-                    name={`scores.${index}.score`}
-                    render={({ field }) => (
-                      <div
-                        className="flex flex-wrap gap-2"
-                        role="group"
-                        aria-label={`Voto per ${criterion.name}`}
-                      >
-                        {SCORES.map((score) => (
+                  <div className="flex flex-col gap-2">
+                    <BlockLabel>Voto</BlockLabel>
+                    <Controller
+                      control={control}
+                      name={`scores.${index}.score`}
+                      render={({ field }) => (
+                        <div
+                          className="flex flex-wrap gap-1.5"
+                          role="group"
+                          aria-label={`Voto per ${criterion.name}`}
+                        >
+                          {SCORES.map((score) => (
+                            <Button
+                              key={score}
+                              type="button"
+                              size="sm"
+                              className="w-9"
+                              variant={
+                                field.value === score ? "default" : "outline"
+                              }
+                              aria-pressed={field.value === score}
+                              disabled={disabled}
+                              onClick={() => field.onChange(score)}
+                            >
+                              {score}
+                            </Button>
+                          ))}
                           <Button
-                            key={score}
                             type="button"
                             size="sm"
-                            variant={field.value === score ? "default" : "outline"}
-                            aria-pressed={field.value === score}
+                            variant={
+                              field.value === null ? "secondary" : "outline"
+                            }
+                            aria-pressed={field.value === null}
                             disabled={disabled}
-                            onClick={() => field.onChange(score)}
+                            onClick={() => field.onChange(null)}
                           >
-                            {score}
+                            Senza prove
                           </Button>
-                        ))}
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={field.value === null ? "secondary" : "outline"}
-                          aria-pressed={field.value === null}
-                          disabled={disabled}
-                          onClick={() => field.onChange(null)}
-                        >
-                          Senza prove
-                        </Button>
-                      </div>
-                    )}
-                  />
+                        </div>
+                      )}
+                    />
+                  </div>
                   <TextareaField
                     control={control}
                     name={`scores.${index}.evidence`}
                     label="Evidenze"
                     className="min-h-16"
                   />
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Giudizio complessivo</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <SelectField
-              control={control}
-              name="hireRecommendation"
-              label="Raccomandazione finale"
-              placeholder="Seleziona una raccomandazione"
-              options={RECOMMENDATION_OPTIONS}
-              triggerProps={{ disabled }}
-            />
-            <TextareaField
-              control={control}
-              name="notes"
-              label="Note"
-              className="min-h-24"
-            />
-            <InputWithTagField
-              control={control}
-              name="redFlags"
-              label="Segnali d'allarme"
-              placeholder="Scrivi un segnale e premi Invio"
-            />
-            <InputWithTagField
-              control={control}
-              name="standoutMoments"
-              label="Momenti di rilievo"
-              placeholder="Scrivi un momento e premi Invio"
-            />
-          </CardContent>
-        </Card>
+        <section className="flex flex-col gap-3">
+          <ChapterHeader number={2} title="Giudizio complessivo" />
+          <Card>
+            <CardContent className="flex flex-col gap-4">
+              <SelectField
+                control={control}
+                name="hireRecommendation"
+                label="Raccomandazione finale"
+                placeholder="Seleziona una raccomandazione"
+                options={RECOMMENDATION_OPTIONS}
+                triggerProps={{ disabled }}
+              />
+              <TextareaField
+                control={control}
+                name="notes"
+                label="Note"
+                className="min-h-24"
+              />
+              <div className="gap-4 grid md:grid-cols-2">
+                <InputWithTagField
+                  control={control}
+                  name="redFlags"
+                  label="Segnali d'allarme"
+                  placeholder="Scrivi un segnale e premi Invio"
+                />
+                <InputWithTagField
+                  control={control}
+                  name="standoutMoments"
+                  label="Momenti di rilievo"
+                  placeholder="Scrivi un momento e premi Invio"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </fieldset>
 
       {!submitted && (
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" variant="outline" disabled={isPending}>
-            {isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Save className="size-4" />
-            )}
-            Salva bozza
-          </Button>
-          <Button
-            type="button"
-            disabled={isPending || !interviewCompleted}
-            onClick={() => setConfirmSubmit(true)}
-          >
-            <Send className="size-4" />
-            Invia scheda
-          </Button>
-          {!interviewCompleted && (
-            <span className="text-muted-foreground text-sm">
-              Disponibile a colloquio concluso
-            </span>
-          )}
+        <div className="bottom-4 z-10 sticky flex flex-wrap justify-between items-center gap-3 bg-card shadow-lg px-4 py-3 border rounded-xl">
+          <span className="text-muted-foreground text-sm">
+            {interviewCompleted
+              ? `${scoredCount}/${criteria.length} criteri con voto`
+              : "L'invio è disponibile a colloquio concluso"}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="submit" variant="outline" disabled={isPending}>
+              {isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
+              Salva bozza
+            </Button>
+            <Button
+              type="button"
+              disabled={isPending || !interviewCompleted}
+              onClick={() => setConfirmSubmit(true)}
+            >
+              <Send className="size-4" />
+              Invia scheda
+            </Button>
+          </div>
         </div>
       )}
 

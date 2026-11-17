@@ -1,3 +1,4 @@
+import { BlockLabel } from "@/components/detail-blocks";
 import { Badge } from "@/components/ui/badge";
 
 type OpenQuestionDisplayProps = {
@@ -10,20 +11,20 @@ type OpenQuestionDisplayProps = {
 export const OpenQuestionDisplay = ({ question }: OpenQuestionDisplayProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-bold text-heading text-sm">
-        Risposta di esempio:
-      </h3>
-      <p className="mt-1 text-muted-foreground text-sm">
-        {question.sampleAnswer}
-      </p>
+      {question.sampleAnswer && (
+        <>
+          <BlockLabel>Risposta di esempio</BlockLabel>
+          <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
+            {question.sampleAnswer}
+          </p>
+        </>
+      )}
       {question.keywords && question.keywords.length > 0 && (
         <div className="flex flex-col gap-2 mt-2">
-          <h3 className="font-bold text-heading text-sm">
-            Parole chiave:
-          </h3>
+          <BlockLabel>Parole chiave</BlockLabel>
           <div className="flex flex-wrap gap-1 mt-1">
             {question.keywords.map((keyword: string, kwIndex: number) => (
-              <Badge key={kwIndex} variant="secondary">
+              <Badge key={kwIndex} variant="outline">
                 {keyword}
               </Badge>
             ))}

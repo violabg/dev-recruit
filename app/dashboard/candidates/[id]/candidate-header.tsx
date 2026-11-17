@@ -71,21 +71,21 @@ export async function CandidateHeader({ params }: Props) {
         <>
           <Link
             href={`/dashboard/candidates/${candidate.id}/quiz`}
-            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "inline-flex")}
           >
             <Link2 className="mr-1 size-4" />
             Associa quiz
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/evaluations`}
-            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "inline-flex")}
           >
             <ClipboardCheck className="mr-1 size-4" />
             Valutazioni
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/edit`}
-            className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "inline-flex")}
           >
             <Edit className="mr-1 size-4" />
             Modifica
