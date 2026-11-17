@@ -94,45 +94,6 @@ export const evaluationNotesSchema = z.object({
   notes: z.string().max(10000, "Le note non possono superare 10000 caratteri"),
 });
 
-export const behavioralRubricSchema = z.object({
-  candidateId: baseSchemas.id,
-  positionId: baseSchemas.id,
-  communicationScore: z.number().int().min(1).max(5),
-  collaborationScore: z.number().int().min(1).max(5),
-  problemSolvingScore: z.number().int().min(1).max(5),
-  cultureFitScore: z.number().int().min(1).max(5),
-  leadershipScore: z.number().int().min(1).max(5).optional(),
-  strengthExamples: z.array(z.string().min(2)),
-  improvementAreas: z.array(z.string().min(2)),
-  overallComments: z.string().optional(),
-});
-
-export const hiringNotesSchema = z
-  .object({
-    evaluationId: baseSchemas.id,
-    interviewNotes: z.string().min(2).optional(),
-    redFlags: z.array(z.string().min(2)).optional(),
-    standoutMoments: z.array(z.string().min(2)).optional(),
-    hireRecommendation: z
-      .enum(["strong_yes", "yes", "maybe", "no", "strong_no"])
-      .optional(),
-    nextSteps: z.string().min(2).optional(),
-  })
-  .refine(
-    (data) =>
-      !!(
-        data.interviewNotes ||
-        (data.redFlags && data.redFlags.length > 0) ||
-        (data.standoutMoments && data.standoutMoments.length > 0) ||
-        data.hireRecommendation ||
-        data.nextSteps
-      ),
-    {
-      message: "Inserisci almeno un campo da aggiornare",
-      path: ["interviewNotes"],
-    },
-  );
-
 // ====================
 // TYPE EXPORTS
 // ====================

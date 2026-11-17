@@ -2,6 +2,13 @@
 title: "testing"
 tier: "PerContext"
 keywords: ["test","vitest","mock","setup"]
+intent: "When writing or changing tests (including interviews, kits, live notes, interviewer scorecards and the application decision)."
+editable: true
+---
+---
+title: "testing"
+tier: "PerContext"
+keywords: ["test","vitest","mock","setup"]
 intent: "When writing or changing tests (including interviews, kits, live notes and interviewer scorecards)."
 editable: true
 ---
@@ -45,11 +52,18 @@ The scorecard and guide test files added with the feature are `tests/lib/schemas
 
 The interview test files are `tests/lib/schemas/interview.test.ts`, `tests/lib/utils/interview-status.test.ts`, `tests/lib/utils/interview-calendar.test.ts`, `tests/lib/utils/interview-feedback.test.ts`, `tests/lib/utils/kit-proposal.test.ts`, `tests/lib/services/interviews.test.ts`, `tests/lib/services/interview-kits.test.ts`, `tests/lib/services/ai/kit-generation.test.ts`, `tests/lib/actions/interviews.test.ts`, `tests/lib/actions/interview-kits.test.ts`, `tests/lib/actions/interviewer-feedback.test.ts`, `tests/lib/data/interviews.test.ts`, `tests/lib/data/users.test.ts`, `tests/hooks/use-live-notes-autosave.test.ts` and `tests/components/interviews/interview-presentation.test.ts`. The layout is unchanged: every file mirrors its source module.
 
+The decision test files are `tests/lib/utils/decision-score.test.ts`, `tests/lib/services/application-decisions.test.ts`, `tests/lib/services/ai/decision-review.test.ts`, `tests/lib/actions/application-decisions.test.ts` and `tests/components/applications/decision-presentation.test.ts`; new cases were added to `tests/lib/data/applications.test.ts` (`getApplicationDecision`), `tests/lib/services/prompts.test.ts` ("decision review prompts"), `tests/lib/services/ai/models.test.ts` and `tests/lib/schemas/application.test.ts`. `tests/lib/utils/evaluation-score.test.ts` no longer exists.
+
 Special techniques of the interview tests:
 
 - The test of the kit context spies `redactBirthDate` and `sanitizeInput` to check their order.
 - The autosave hook is tested with `renderHook`, a short debounce and `waitFor`, without fake timers.
 - The presentation test asserts the label and tint maps, not the components that consume them.
+
+Special techniques of the decision tests:
+
+- The decision service is tested with a hand-built client (`application`, `scorecardCriterion`, `evaluation`, `assessment`, `interview`, `behavioralRubric`, plus `kitItemNote` and `interviewerFeedback` to verify that they are never called); for `recordApplicationDecision` the file-level `vi.mock("@/lib/prisma")` provides `$transaction: (fn) => fn(tx)` and `advanceApplicationStage` is mocked partially with `importOriginal` (or with the real implementation through `vi.importActual`, to verify the stage change).
+- `tests/lib/services/prompts.test.ts` mocks `@/lib/services/ai/sanitize` with a spy that calls the real implementation, to verify `sanitizeInput(rationale, 5000)`.
 
 ## Idioms
 

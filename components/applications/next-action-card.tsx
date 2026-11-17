@@ -109,7 +109,7 @@ export function NextActionCard({
       case "go_to_decision":
         return (
           <Link
-            href={`${applicationHref}?tab=decisione` as never}
+            href={`${applicationHref}/decision` as never}
             className={linkClass}
           >
             Vai alla decisione

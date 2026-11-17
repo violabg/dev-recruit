@@ -61,8 +61,16 @@ export function SelectField<T extends FieldValues>({
       disableFieldError={disableFieldError}
     >
       {({ field, fieldState }) => {
+        // Base UI renders the raw value unless the items map is provided:
+        // without it the trigger shows the option id instead of its label
+        const items = options?.map((option) => ({
+          value: option.value,
+          label: option.label,
+        }));
+
         return (
           <Select
+            items={items}
             value={field.value ?? EMPTY_SELECT_VALUE}
             onValueChange={(value) => {
               field.onChange(value);

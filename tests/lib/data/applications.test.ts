@@ -17,15 +17,20 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/services/application-decisions", () => ({
+  loadApplicationDecision: vi.fn(),
+}));
+
 import {
   getActionCenterData,
+  getApplicationDecision,
   getApplicationDetail,
-  getApplicationEvaluationSummary,
   getApplicationsByPosition,
   getFilteredApplications,
   getRecentApplicationIds,
 } from "@/lib/data/applications";
 import prisma from "@/lib/prisma";
+import { loadApplicationDecision } from "@/lib/services/application-decisions";
 import { cacheLife, cacheTag } from "next/cache";
 
 const db = prisma as any;
@@ -227,100 +232,38 @@ describe("getApplicationDetail", () => {
   });
 });
 
-describe("getApplicationEvaluationSummary", () => {
-  it("returns null for a missing application", async () => {
-    db.application.findUnique.mockResolvedValueOnce(null);
-
-    expect(await getApplicationEvaluationSummary("nope")).toBeNull();
-  });
-
-  it("reads the latest evaluation of this application and the rubric", async () => {
-    db.application.findUnique.mockResolvedValueOnce({
+describe("getApplicationDecision", () => {
+  it("delegates to the decision loader with the prisma client and tags every source", async () => {
+    const decision = {
       id: "app1",
       candidateId: "cand1",
       positionId: "pos1",
-    });
-    db.evaluation.findFirst.mockResolvedValueOnce({
-      id: "ev1",
-      assessmentId: "a1",
-      quizScore: 80,
-      fitScore: 8,
-      interviewNotes: "Ottimo",
-      redFlags: [],
-      standoutMoments: ["Chiaro"],
-      hireRecommendation: "yes",
-      nextSteps: null,
-      assessment: { quiz: { title: "React" } },
-    });
-    const rubric = {
-      communicationScore: 4,
-      collaborationScore: 4,
-      problemSolvingScore: 4,
-      cultureFitScore: 4,
-      leadershipScore: null,
-      strengthExamples: [],
-      improvementAreas: [],
-      overallComments: null,
-    };
-    db.behavioralRubric.findUnique.mockResolvedValueOnce(rubric);
+    } as any;
+    vi.mocked(loadApplicationDecision).mockResolvedValueOnce(decision);
 
-    const summary = await getApplicationEvaluationSummary("app1");
+    expect(await getApplicationDecision("app1")).toBe(decision);
 
+    expect(loadApplicationDecision).toHaveBeenCalledWith(prisma, "app1");
+    expect(cacheLife).toHaveBeenCalledWith("hours");
     expect(cacheTag).toHaveBeenCalledWith(
-      "evaluations",
-      "assessments",
       "candidates",
       "positions",
+      "assessments",
+      "evaluations",
       "quizzes",
+      "questions",
+      "scorecards",
+      "interviews",
       "behavioral-rubrics",
     );
-    expect(cacheTag).toHaveBeenCalledWith("behavioral-rubric-cand1-pos1");
-    expect(db.evaluation.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { assessment: { applicationId: "app1" } },
-        orderBy: { createdAt: "desc" },
-      }),
-    );
-    expect(db.behavioralRubric.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          candidateId_positionId: { candidateId: "cand1", positionId: "pos1" },
-        },
-      }),
-    );
-    expect(summary).toEqual({
-      applicationId: "app1",
-      candidateId: "cand1",
-      positionId: "pos1",
-      assessmentEvaluation: {
-        id: "ev1",
-        assessmentId: "a1",
-        quizTitle: "React",
-        quizScore: 80,
-        fitScore: 8,
-        interviewNotes: "Ottimo",
-        redFlags: [],
-        standoutMoments: ["Chiaro"],
-        hireRecommendation: "yes",
-        nextSteps: null,
-      },
-      rubric,
-    });
+    expect(cacheTag).toHaveBeenCalledWith("candidate-cand1", "positions-pos1");
   });
 
-  it("has no assessment evaluation when no test was evaluated", async () => {
-    db.application.findUnique.mockResolvedValueOnce({
-      id: "app1",
-      candidateId: "cand1",
-      positionId: "pos1",
-    });
-    db.evaluation.findFirst.mockResolvedValueOnce(null);
-    db.behavioralRubric.findUnique.mockResolvedValueOnce(null);
+  it("adds no entity tag for a missing application", async () => {
+    vi.mocked(loadApplicationDecision).mockResolvedValueOnce(null);
 
-    expect(await getApplicationEvaluationSummary("app1")).toMatchObject({
-      assessmentEvaluation: null,
-      rubric: null,
-    });
+    expect(await getApplicationDecision("nope")).toBeNull();
+    expect(cacheTag).toHaveBeenCalledTimes(1);
   });
 });
 

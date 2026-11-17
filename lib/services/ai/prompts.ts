@@ -5,7 +5,9 @@
  * Each question type has its own specialized prompt builder.
  */
 
+import type { DecisionOutcomeValue } from "../../schemas";
 import type { KeyedCriterion } from "../../utils/criterion-keys";
+import type { CriterionDecisionRow } from "../../utils/decision-score";
 import { DEFAULT_SOFT_CRITERIA } from "../../utils/scorecard-defaults";
 import type { KitGenerationContext } from "../interview-kits";
 import type { ActiveCriterion } from "../scorecards";
@@ -1099,4 +1101,82 @@ ${roundLines || "          (nessuno)"}
           11. "suggestedChecklist" items have category communicate or logistics.
           12. Never ask about age, marital status, family, children, religion, political opinions or health.
           13. Write every value in Italian.`;
+}
+
+// ====================
+// DECISION REVIEW PROMPTS
+// ====================
+
+export type DecisionReviewPromptInput = {
+  positionTitle: string;
+  outcome: DecisionOutcomeValue;
+  rationale?: string;
+  rows: { key: string; row: CriterionDecisionRow; interviewerCount: number }[];
+  globals: { cv: number | null; test: number | null };
+  overall: number | null;
+};
+
+const DECISION_OUTCOME_PROMPT_LABELS: Record<DecisionOutcomeValue, string> = {
+  offer: "Offerta",
+  hired: "Assunzione",
+  rejected: "Scarto",
+};
+
+/**
+ * System prompt of the devil's advocate on a hiring decision
+ */
+export function buildDecisionReviewSystemPrompt(): string {
+  return `
+          Sei l'avvocato del diavolo di una decisione di assunzione.
+          Il tuo compito è argomentare CONTRO la decisione proposta: elenca da 3 a 5 motivi per cui potrebbe essere sbagliata.
+
+          Rispondi SOLO con un oggetto JSON valido con questa forma:
+          {
+            "reasons": [
+              { "title": string, "explanation": string, "criterionKeys": string[] }
+            ]
+          }
+
+          Regole:
+          1. Da 3 a 5 motivi, ciascuno con un titolo breve e una spiegazione concreta.
+          2. In "criterionKeys" usa solo le chiavi dei criteri elencati (C1, C2, ...); lascia la lista vuota se il motivo non riguarda un criterio.
+          3. Basa gli argomenti solo sui dati forniti: criteri senza prove, voti discordanti tra intervistatori, criteri indispensabili sotto il livello atteso, punteggi globali.
+          4. Non argomentare e non menzionare mai età, famiglia, stato civile, figli, religione, opinioni politiche o salute.
+          5. I nomi dei campi JSON restano in inglese; OGNI valore deve essere scritto in italiano.`;
+}
+
+/**
+ * User prompt of the devil's advocate: per-criterion statistics only, never
+ * the candidate's identity, the CV text or the interviewers' names and notes
+ */
+export function buildDecisionReviewPrompt(
+  input: DecisionReviewPromptInput,
+): string {
+  const rationale = input.rationale
+    ? sanitizeInput(input.rationale, 5000)
+    : "nessuna motivazione";
+
+  const criteriaLines = input.rows
+    .map(({ key, row, interviewerCount }) => {
+      const priority =
+        row.criterion.priority === "must" ? "indispensabile" : "preferibile";
+      const flags = [
+        row.hasEvidence ? "" : " | senza prove",
+        row.disagreement ? " | voti discordanti" : "",
+        row.criterion.archived ? " | archiviato" : "",
+      ].join("");
+      return `- ${key}: ${sanitizeInput(row.criterion.name)} | priorità ${priority} | peso ${row.weight ?? "n/d"} | livello atteso ${row.criterion.expectedLevel} | CV ${row.cv ?? "—"} | Test ${row.test ?? "—"} | Colloqui ${row.interviewerMean ?? "—"} (${interviewerCount} intervistatori)${flags}`;
+    })
+    .join("\n");
+
+  return `
+          Posizione: ${sanitizeInput(input.positionTitle)}
+          Decisione proposta: ${DECISION_OUTCOME_PROMPT_LABELS[input.outcome]}
+          Motivazione: ${rationale}
+          Punteggio complessivo: ${input.overall ?? "non calcolabile"}/5
+
+          Criteri:
+${criteriaLines || "          (nessuno)"}
+
+          Punteggi globali (non inclusi nella media): CV ${input.globals.cv ?? "—"}, Test ${input.globals.test ?? "—"}`;
 }

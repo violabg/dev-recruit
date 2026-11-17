@@ -2,6 +2,13 @@
 title: "server actions"
 tier: "MustHave"
 keywords: ["server action","runAction","UserError","ActionResult","requireUser","form","react-hook-form"]
+intent: "Always: shape and error contract of every server action, public candidate-facing actions, scorecard, guide, interview, kit and interviewer-scorecard actions, the application decision actions, and how client forms call actions."
+editable: true
+---
+---
+title: "server actions"
+tier: "MustHave"
+keywords: ["server action","runAction","UserError","ActionResult","requireUser","form","react-hook-form"]
 intent: "Always: shape and error contract of every server action, public candidate-facing actions, scorecard, guide, interview, kit and interviewer-scorecard actions, and how client forms call actions."
 editable: true
 ---
@@ -83,6 +90,9 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
   - `deleteInterviewGuideAction`: "Guida non trovata".
   - `generateInterviewGuideAction`: "Posizione non trovata", "Crea prima la scheda di valutazione della posizione".
   - `recalculateAnswerEvaluationsAction`: "Valutazione non trovata", "Nessuna risposta valutata", "Una o più domande non hanno una risposta", all thrown by the recalculation service.
+- The two decision actions call `requireUser()` and apply no role or ownership check:
+  - `recordApplicationDecisionAction({ applicationId, outcome, rationale })` → `{ stage }`. The decider is always the user of the session. Errors: "Candidatura non trovata", "Candidatura chiusa: riaprila per registrare la decisione", "La motivazione deve avere almeno 10 caratteri", "La motivazione può avere al massimo 5000 caratteri", "Esito della decisione non valido". It calls `invalidateCandidateCache({ candidateId, positionId, applicationId })` and does not redirect: the client calls `router.refresh()`.
+  - `challengeDecisionAction({ applicationId, outcome, rationale?, specificModel? })` → `{ challenge: { reasons: { title, explanation, criterionIds }[] } }`. Errors: "Candidatura non trovata", "Crea prima la scheda di valutazione della posizione" (no criterion), and the AI errors through `describeAIError`. It computes the score with the saved weights only when `decidedAt` is set.
 - The interview actions follow the same rule and none of them checks a role or an owner:
   - `scheduleInterviewAction`: "Candidatura non trovata o chiusa" (also for `rejected`, `withdrawn` and `hired`), "Guida non trovata per questa posizione", "Uno o più partecipanti non sono utenti dell'app", plus the schema messages "Indica un solo conduttore", "Un partecipante è indicato più volte", "Data e ora non valide", "Durata minima 10 minuti", "Durata massima 480 minuti", "Link della call non valido". It creates the interview, its participants and its kit and advances the stage in one transaction, then redirects (see Redirecting actions).
   - `rescheduleInterviewAction`: "Colloquio non trovato", "Operazione non consentita nello stato attuale del colloquio", "Il partecipante ha già note o una scheda", "Uno o più partecipanti non sono utenti dell'app".
@@ -94,7 +104,7 @@ A failure never escapes an action as a throw: `runAction` turns anything thrown 
   - `setKitItemCoveredAction`: "Domanda non trovata", "Il colloquio non accetta più note".
   - `saveInterviewerFeedbackAction`: "Non partecipi a questo colloquio", "La scheda è già stata inviata", "Operazione non consentita nello stato attuale del colloquio", and the criteria error "Uno o più criteri selezionati non appartengono alla scheda della posizione".
   - `submitInterviewerFeedbackAction`: the same as the draft plus "Puoi inviare la scheda solo a colloquio concluso" and "Indica la raccomandazione finale".
-- The three generation actions (`generateScorecardCriteriaAction`, `generateInterviewGuideAction`, `generateInterviewKitAction`) are read-only: they return a proposal and never write or invalidate cache.
+- The three generation actions (`generateScorecardCriteriaAction`, `generateInterviewGuideAction`, `generateInterviewKitAction`) and `challengeDecisionAction` are read-only: they return a proposal and never write or invalidate cache.
 
 ## Inputs and reads
 

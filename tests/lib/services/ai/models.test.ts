@@ -16,6 +16,7 @@ describe("getOptimalModel", () => {
     "scorecard_generation",
     "guide_generation",
     "kit_generation",
+    "decision_review",
     "quiz_generation",
     "question_generation",
     "evaluation",

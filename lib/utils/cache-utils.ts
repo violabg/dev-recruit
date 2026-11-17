@@ -343,22 +343,6 @@ export function invalidateEvaluationCache(options?: {
   }
 }
 
-// ============================================================================
-// Behavioral Rubric Cache Invalidation
-// ============================================================================
-
-export function invalidateBehavioralRubricCache(options: {
-  candidateId: string;
-  positionId: string;
-}) {
-  updateTag(CacheTags.BEHAVIORAL_RUBRICS);
-  updateTag(
-    entityTag.behavioralRubric(options.candidateId, options.positionId),
-  );
-  revalidatePath(`/dashboard/candidates/${options.candidateId}`);
-  revalidatePath("/dashboard/applications");
-}
-
 /**
  * Invalidate evaluation cache from Route Handlers (uses revalidateTag instead of updateTag)
  * Use this in Route Handlers (app/api/*). For Server Actions, use invalidateEvaluationCache.

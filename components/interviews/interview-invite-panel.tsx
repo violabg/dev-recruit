@@ -13,6 +13,7 @@ import {
   type InterviewInviteData,
 } from "@/lib/utils/interview-calendar";
 import { CalendarArrowDown, ChevronDown, Copy } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 /**
@@ -24,6 +25,12 @@ export function InterviewInvitePanel({
   ...data
 }: InterviewInviteData & { defaultOpen?: boolean }) {
   const summary = buildInterviewSummary(data);
+
+  // The page resolves `?scheduled=1` after the invitation panel has rendered,
+  // so the default changes once. An uncontrolled Collapsible cannot do that:
+  // the panel follows the prop until the user toggles it, then keeps its state.
+  const [openState, setOpenState] = useState<boolean | null>(null);
+  const open = openState ?? defaultOpen;
 
   const copySummary = async () => {
     try {
@@ -49,7 +56,7 @@ export function InterviewInvitePanel({
   };
 
   return (
-    <Collapsible defaultOpen={defaultOpen}>
+    <Collapsible open={open} onOpenChange={setOpenState}>
       <Card size="sm">
         <CardHeader>
           <CollapsibleTrigger

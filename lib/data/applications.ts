@@ -11,6 +11,10 @@ import {
   type KitStatus,
   type PositionStatus,
 } from "@/lib/schemas";
+import {
+  loadApplicationDecision,
+  type ApplicationDecision,
+} from "@/lib/services/application-decisions";
 import { OPEN_STAGES } from "@/lib/utils/application-stage";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { getPositionSetup, type SetupPart } from "@/lib/utils/position-setup";
@@ -26,6 +30,8 @@ import { cacheLife, cacheTag } from "next/cache";
 
 /** Applications that can no longer receive a test or an evaluation step */
 const CLOSED_STAGES: ApplicationStage[] = ["rejected", "withdrawn"];
+
+export type { ApplicationDecision } from "@/lib/services/application-decisions";
 
 const ownerSelect = { select: { id: true, name: true } } as const;
 
@@ -111,34 +117,6 @@ export type ApplicationDetail = {
     participantIds: string[];
     submittedInterviewerIds: string[];
   }[];
-};
-
-export type ApplicationEvaluationSummary = {
-  applicationId: string;
-  candidateId: string;
-  positionId: string;
-  assessmentEvaluation: {
-    id: string;
-    assessmentId: string;
-    quizTitle: string;
-    quizScore: number | null;
-    fitScore: number | null;
-    interviewNotes: string | null;
-    redFlags: string[];
-    standoutMoments: string[];
-    hireRecommendation: string | null;
-    nextSteps: string | null;
-  } | null;
-  rubric: {
-    communicationScore: number;
-    collaborationScore: number;
-    problemSolvingScore: number;
-    cultureFitScore: number;
-    leadershipScore: number | null;
-    strengthExamples: string[];
-    improvementAreas: string[];
-    overallComments: string | null;
-  } | null;
 };
 
 export type ApplicationCard = {
@@ -448,95 +426,37 @@ export async function getApplicationDetail(
   };
 }
 
-/** Data of the Decisione tab: the evaluation dashboard of one application */
-export async function getApplicationEvaluationSummary(
+/**
+ * Decision model of one application: criteria x sources, submitted
+ * scorecards only (never live notes), legacy rubric and hiring notes.
+ */
+export async function getApplicationDecision(
   applicationId: string,
-): Promise<ApplicationEvaluationSummary | null> {
+): Promise<ApplicationDecision | null> {
   "use cache";
   cacheLife("hours");
   cacheTag(
-    CacheTags.EVALUATIONS,
-    CacheTags.ASSESSMENTS,
     CacheTags.CANDIDATES,
     CacheTags.POSITIONS,
+    CacheTags.ASSESSMENTS,
+    CacheTags.EVALUATIONS,
     CacheTags.QUIZZES,
+    CacheTags.QUESTIONS,
+    CacheTags.SCORECARDS,
+    CacheTags.INTERVIEWS,
     CacheTags.BEHAVIORAL_RUBRICS,
   );
 
-  const application = await prisma.application.findUnique({
-    where: { id: applicationId },
-    select: { id: true, candidateId: true, positionId: true },
-  });
+  const decision = await loadApplicationDecision(prisma, applicationId);
 
-  if (!application) {
-    return null;
+  if (decision) {
+    cacheTag(
+      entityTag.candidate(decision.candidateId),
+      entityTag.position(decision.positionId),
+    );
   }
 
-  cacheTag(
-    entityTag.behavioralRubric(
-      application.candidateId,
-      application.positionId,
-    ),
-  );
-
-  // The most recent evaluation among the tests of THIS application
-  const evaluation = await prisma.evaluation.findFirst({
-    where: { assessment: { applicationId: application.id } },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      assessmentId: true,
-      quizScore: true,
-      fitScore: true,
-      interviewNotes: true,
-      redFlags: true,
-      standoutMoments: true,
-      hireRecommendation: true,
-      nextSteps: true,
-      assessment: { select: { quiz: { select: { title: true } } } },
-    },
-  });
-
-  const rubric = await prisma.behavioralRubric.findUnique({
-    where: {
-      candidateId_positionId: {
-        candidateId: application.candidateId,
-        positionId: application.positionId,
-      },
-    },
-    select: {
-      communicationScore: true,
-      collaborationScore: true,
-      problemSolvingScore: true,
-      cultureFitScore: true,
-      leadershipScore: true,
-      strengthExamples: true,
-      improvementAreas: true,
-      overallComments: true,
-    },
-  });
-
-  return {
-    applicationId: application.id,
-    candidateId: application.candidateId,
-    positionId: application.positionId,
-    assessmentEvaluation:
-      evaluation && evaluation.assessmentId
-        ? {
-            id: evaluation.id,
-            assessmentId: evaluation.assessmentId,
-            quizTitle: evaluation.assessment?.quiz.title ?? "",
-            quizScore: evaluation.quizScore,
-            fitScore: evaluation.fitScore,
-            interviewNotes: evaluation.interviewNotes,
-            redFlags: evaluation.redFlags,
-            standoutMoments: evaluation.standoutMoments,
-            hireRecommendation: evaluation.hireRecommendation,
-            nextSteps: evaluation.nextSteps,
-          }
-        : null,
-    rubric,
-  };
+  return decision;
 }
 
 /** Every application of a position, for the kanban */

@@ -2,6 +2,13 @@
 title: "cache invalidation"
 tier: "PerContext"
 keywords: ["cache","use cache","cacheTag","invalidate","CacheTags","entityTag","data layer"]
+intent: "When adding or changing a cached read in the data layer or any mutation that must invalidate cache (including interviews, kits, interviewer scorecards and the application decision), or passing server data to client components."
+editable: true
+---
+---
+title: "cache invalidation"
+tier: "PerContext"
+keywords: ["cache","use cache","cacheTag","invalidate","CacheTags","entityTag","data layer"]
 intent: "When adding or changing a cached read in the data layer or any mutation that must invalidate cache (including interviews, kits and interviewer scorecards), or passing server data to client components."
 editable: true
 ---
@@ -13,7 +20,7 @@ Cache Components and Partial Prefetching are on. The framework itself is NOT res
 
 - `"use cache"` is used only in the data layer functions (one module per entity). Pages and server components call those functions; they never call Prisma.
 - Every cached read sets `cacheLife("hours")`, or `cacheLife("minutes")` for short-lived data. No other profile and no custom profiles.
-- Four reads are uncached on purpose: `getProfile` (depends on the session), `getAssessmentByToken` (live assessment state while the candidate answers), `getInterviewLiveSession` and `getInterviewFeedbackPage` (they depend on the session and must return the current live notes and scorecards). Follow the same choice for any session-dependent or live read.
+- Four reads are uncached on purpose: `getProfile` (depends on the session), `getAssessmentByToken` (live assessment state while the candidate answers), `getInterviewLiveSession` and `getInterviewFeedbackPage` (they depend on the session and must return the current live notes and scorecards). Follow the same choice for any session-dependent or live read. The Decision page and the "Decisione" tab read the session after `await connection()` (independence view), outside the cached read.
 - The live and scorecard pages call `await connection()` before reading the session.
 - The live mode calls `router.refresh()` every 15 seconds while the interview is in progress and the browser tab is visible.
 - `requireUser()` and `getCurrentUser()` read the session cookie, so the framework's rules for request APIs apply to them: never inside a `"use cache"` scope.
@@ -75,6 +82,7 @@ The reads that carry the new tags, with the dependency each one adds:
 - `getInterviewsByApplication` tags `interviews`, `candidates`, `positions` and `interview-guides`: the application's interviews with their participants, kits and guides.
 - `getInterviewForPreparation` adds `scorecards` and `entityTag.interview(interviewId)`: it targets one interview and reads its criteria.
 - `getAgendaInterviews` uses `cacheLife("minutes")` and tags `interviews`, `candidates` and `positions`: the agenda lists interviews across applications.
+- `getApplicationDecision(applicationId)` uses `cacheLife("hours")` and tags `candidates`, `positions`, `assessments`, `evaluations`, `quizzes`, `questions`, `scorecards`, `interviews` and `behavioral-rubrics`, then `entityTag.candidate` and `entityTag.position`. It returns submitted scorecards only and never the live notes, and it does not read the session. It replaces `getApplicationEvaluationSummary`, which no longer exists.
 
 ## Invalidating mutations
 
@@ -90,7 +98,6 @@ Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or 
 | `invalidateAssessmentCache({ assessmentId?, quizId?, deleted? })` | `assessments` | revalidates `/dashboard/assessments`, `/dashboard/assessments/{id}` and `/dashboard` (the home lists the tests to evaluate) |
 | `invalidateEvaluationCache({ evaluationId?, assessmentId?, candidateId? })` | `evaluations` | server actions only |
 | `invalidateEvaluationCacheInRouteHandler({ … })` | `evaluations` | same options; for route handlers |
-| `invalidateBehavioralRubricCache({ candidateId, positionId })` | `behavioral-rubrics` | both required; revalidates `/dashboard/candidates/{candidateId}` and `/dashboard/applications` |
 | `invalidatePresetCache(presetId?)` | `presets` | pass the id whenever there is one |
 | `invalidateReferenceDataCache(category?)` | `reference-data` | |
 | `invalidateProfileCache()` | profile paths | |
@@ -107,6 +114,7 @@ Who calls the new helpers:
 - `deleteInterviewGuideAction` calls `invalidateInterviewGuideCache({ guideId, positionId })` after the delete and before redirecting.
 - `deletePositionAction` calls neither: `invalidatePositionCache(id, { deleted: true })` expires `scorecards`, `interview-guides` and `interviews` through `CASCADE_ON_DELETE`.
 - Every interview, kit and scorecard action calls `invalidateInterviewCache`. When the application stage changes too (scheduling, submitting the last scorecard, cancellation, no-show) the action also calls `invalidateCandidateCache`. `moveApplicationStageAction` and `updateCandidateAction` call `invalidateInterviewCache` when the withdrawal cancelled interviews.
+- `recordApplicationDecisionAction` calls `invalidateCandidateCache({ candidateId, positionId, applicationId })`: it expires `candidates`, carried by `getApplicationDecision`, and revalidates the pipeline, the application, the candidate, the position and the home. No new tag. `challengeDecisionAction` invalidates nothing.
 
 ## Deletes and database cascades
 

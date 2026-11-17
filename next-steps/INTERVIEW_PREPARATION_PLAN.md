@@ -1,7 +1,7 @@
 # Preparazione al colloquio e flusso di selezione — Piano
 
-**Data:** 15 novembre 2026 · aggiornato il 16 novembre 2026
-**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · Fase 3 implementata (16 novembre 2026), knowledge da aggiornare (§8.1 bis) · prossima: Fase 4, da progettare
+**Data:** 15 novembre 2026 · aggiornato il 17 novembre 2026
+**Stato:** Fase 1 implementata e knowledge aggiornata (16 novembre 2026) · Fase 2 implementata (16 novembre 2026), knowledge da aggiornare · Fase 3 implementata (16 novembre 2026), knowledge da aggiornare (§8.1 bis) · Fase 4 implementata (17 novembre 2026), knowledge da aggiornare (§8.1 ter) · prossima: Fase 5, da progettare
 **Ambito:** Kit di preparazione al colloquio, colloquio live, decisione; revisione del flusso dashboard da step 1 a step finale
 
 > **Nomi nel documento.** Le sezioni 1–3 descrivono il punto di partenza (15 novembre) e usano i nomi di allora: `CandidatePosition`, `Interview` per il test, `/dashboard/interviews`. Dalla Fase 1 il codice usa `Application`, `Assessment`, `assessmentId`, `/dashboard/assessments`. Le entità della Fase 3 chiamate qui `LiveInterview` e `LiveInterviewParticipant` si chiameranno `Interview` e `InterviewParticipant` (§3.2). Il vocabolario aggiornato è in `CONTEXT.md`.
@@ -24,6 +24,8 @@
 **Dopo la Fase 1:** chiusi i gap 1, 3, 4, 7, 8, 9, 10. Il gap 2 è chiuso a metà: il punteggio complessivo ora riceve la candidatura (tab "Decisione" di `/dashboard/applications/[id]`, la pagina `evaluation-dashboard` non esiste più), ma i pesi sono ancora fissi (Fase 4). Restano aperti i gap 5 (Fase 2) e 6 (Fasi 2 e 4).
 
 **Dopo la Fase 2:** chiuso il gap 5 (i punteggi per risposta si salvano in `answerEvaluations` con la valutazione del test, e "Ricalcola dettaglio risposte" li ricostruisce per le valutazioni precedenti). Il gap 6 è chiuso in parte: ogni posizione ha la propria scheda di valutazione con criteri e pesi, e le 5 dimensioni della rubrica sono i criteri soft di default; la distinzione tra intervistatori e la rubrica in sola lettura restano alle Fasi 3 e 4.
+
+**Dopo la Fase 4:** chiusi i gap 2 e 6. Il punteggio complessivo della candidatura si calcola nella pagina Decisione (`/dashboard/applications/[id]/decision`) con i pesi della scheda di valutazione, solo sui criteri con prove e con ogni fonte su scala 1–5; i pesi fissi non esistono più. Le schede degli intervistatori distinguono ogni intervistatore nella matrice; rubrica comportamentale e note hiring del test sono storico in sola lettura.
 
 **Principio guida:** la **Candidatura** diventa il perno. CV, test, colloqui e decisione sono *prove* raccolte su una candidatura, e la pagina della candidatura indica sempre la **prossima azione**.
 
@@ -289,7 +291,7 @@ Precompilata con voti e note del live raggruppati per criterio · raccomandazion
 | **1. Candidatura come perno** ✅ *implementata il 16 novembre 2026* | Fasi su `CandidatePosition` e regole di transizione, modifica posizioni come diff, email unica e aggancio dal form pubblico, stato della posizione e blocco eliminazione, rimozione di `Candidate.status` e `isPrimary`, backfill (§3.4), pagina `/applications/[id]` con "Prossima azione", `applicationId` sul test, kanban nella posizione, home "Le mie azioni", rinomina UI "Colloqui" → "Test" | 1, 3, 4, 7, 8, 9, 10 |
 | **2. Scheda di valutazione e guide** ✅ *implementata il 16 novembre 2026* | Scorecard per posizione (proposta AI, archiviazione criteri), collegamento domande ↔ criteri, modelli di guida, salvataggio dettaglio per risposta | 5, 6 (in parte) |
 | **3. Kit e live** ✅ *implementata il 16 novembre 2026* | Pianificazione, kit personalizzato AI, pagina preparazione, modalità live, scheda intervistatore | cuore della richiesta |
-| **4. Decisione** | Pagina decisione con matrice, pesi dalla scheda, indipendenza intervistatori, avvocato del diavolo; rubrica ed evaluation-dashboard in sola lettura | 2, 6 |
+| **4. Decisione** ✅ *implementata il 17 novembre 2026* | Pagina decisione con matrice, pesi dalla scheda, indipendenza intervistatori, avvocato del diavolo; rubrica ed evaluation-dashboard in sola lettura | 2, 6 |
 | **5. Extra** | Registrazione/trascrizione con consenso + sintesi per criterio, guida di preparazione per il candidato, feedback dopo il rifiuto | — |
 
 La fase 1 non usa l'AI ma è il prerequisito: senza candidatura non c'è dove agganciare kit, colloqui e decisione.
@@ -357,7 +359,7 @@ Il design applica la knowledge come vincolo superiore al requisito: queste regol
 | 2 | Punteggio per risposta non salvato | Salvato in `answerEvaluations` | ✅ |
 | 3 | MAI filtri per utente | Eccezione limitata a note e schede degli intervistatori; il filtro "Solo le mie" (`ownerId`) esiste già e non limita l'accesso | da fare prima del design della Fase 3 |
 | 3 | La generazione AI non salva mai | Invariata: vale anche per scheda, guida e kit | — |
-| 4 | Formula della "Dashboard valutazione" con pesi fissi (oggi: "application evaluation summary", tab Decisione) | Formula della pagina Decisione | da fare prima del design della Fase 4 |
+| 4 | Formula della "Dashboard valutazione" con pesi fissi (oggi: "application evaluation summary", tab Decisione) | Formula della pagina Decisione | da fare dopo (delta Fase 4) |
 
 ### 7.3 Ancora da definire nel design di fase
 
@@ -430,6 +432,32 @@ Ancora aperto:
    Tempi di conservazione ed esportazioni dipendono dall'esito.
 4. Al rilascio: migrazioni in produzione seguendo `prisma/migrations/README.md`. `pnpm db:migrate:deploy` applica `20261118000000_interviews_kits` dopo quelle delle Fasi 1 e 2; poi `pnpm db:verify`.
 5. Configurare uno shadow database per `prisma migrate diff --from-migrations` (non possibile nemmeno nella Fase 3).
+
+### 8.1 ter Stato a fine Fase 4 (17 novembre 2026)
+
+- **Codice:** Fase 4 implementata sul branch `claude/dreamy-shannon-17omy9`, sopra le Fasi 1–3 (ultimo commit `d0def20`); le modifiche della Fase 4 non sono ancora committate. Validazione (operazione IM6): `pnpm lint` pulito, `pnpm test:run` 101 file / 1596 test, `pnpm build` 114/114 pagine.
+- **Cosa c'è:**
+  - pagina Decisione `/dashboard/applications/[id]/decision` con matrice criteri × fonti (CV, Test, Colloquio N con media e singoli intervistatori), celle senza prove evidenziate e badge "Disaccordo";
+  - punteggio complessivo con i pesi della scheda, solo sui criteri con prove, fonti su scala 1–5; CV e Test globali mostrati ma esclusi dalla media;
+  - avvisi sui criteri indispensabili senza prove o sotto il livello atteso, senza azzerare il punteggio;
+  - avvocato del diavolo AI (task `decision_review`), solo proposta;
+  - form della decisione (esito e motivazione) che salva esito, motivazione, utente, data e `decisionWeights` e fa avanzare la fase; rifiutato su candidature chiuse;
+  - vista di indipendenza: per chi deve ancora inviare la propria scheda, colonne del colloquio, valori, punteggio e avvisi partono chiusi ("Mostra");
+  - tab "Decisione" ridotta a un riepilogo con "Apri la decisione"; "Vai alla decisione" apre la pagina;
+  - rubrica comportamentale e note hiring del test in "Storico (sola lettura)"; rimossi form, action e helper di cache che le scrivevano, e la formula a pesi fissi.
+- **Database:** nessuna migrazione. I campi `decision`, `decisionRationale`, `decidedBy`, `decidedAt`, `decisionWeights` esistono dalla Fase 1.
+- **Design della Fase 4:** sessione `fase4_interview_prep_design`, job `phase4-design`.
+- **Accettazione:** `next-steps/FASE4_ACCEPTANCE.md` (O1–O27), con passi manuali M1–M13, limiti noti e punti aperti.
+- **Knowledge:** delta pronto in `next-steps/FASE4_KNOWLEDGE_DELTA.md` (nomina `CONTEXT.md`); `knowledge/` e `CONTEXT.md` non sono ancora aggiornati.
+- **Conflitti con la knowledge** (sezione 9 del delta):
+  - D1: la regola della formula a pesi fissi (§7.2, riga della Fase 4) non è stata aggiornata prima del design; il design l'ha sostituita e il delta riporta le righe superate.
+
+**Ancora da fare:**
+1. Passi manuali ☐ di `next-steps/FASE4_ACCEPTANCE.md` (M1–M13, M11 con due utenti) e quelli rimasti delle Fasi 1–3, in `pnpm dev`.
+2. Confermare D1, poi eseguire `knowledge-builder` con `next-steps/FASE4_KNOWLEDGE_DELTA.md` (dopo i delta delle Fasi 2 e 3, se non ancora applicati), nominando anche `CONTEXT.md`.
+3. Verifica legale (§7.3 punto 6), ora anche per l'avvocato del diavolo: ancora aperta. Misure adottate: solo statistiche per criterio nel prompt, nessun dato identificativo del candidato né nomi o testi liberi degli intervistatori, proposta non salvata, decisione sempre umana.
+4. Al rilascio: migrazioni in produzione invariate rispetto alla Fase 3 (nessuna migrazione nuova), seguendo `prisma/migrations/README.md`; poi `pnpm db:verify`.
+5. Correggere l'errore di tipo preesistente in `tests/lib/utils/application-timeline.test.ts` segnalato da `npx tsc --noEmit` (non blocca la build).
 
 ### 8.2 Avviare la Fase 3 in una nuova sessione
 

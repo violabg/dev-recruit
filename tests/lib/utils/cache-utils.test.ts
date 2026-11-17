@@ -8,7 +8,6 @@ import {
   CacheTags,
   entityTag,
   invalidateAssessmentCache,
-  invalidateBehavioralRubricCache,
   invalidateCandidateCache,
   invalidateCandidateCacheInRouteHandler,
   invalidateEvaluationCache,
@@ -251,26 +250,6 @@ describe("invalidateCandidateCacheInRouteHandler", () => {
       "/dashboard/applications/app-1",
     );
     expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard");
-  });
-});
-
-describe("invalidateBehavioralRubricCache", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("revalidates the applications and no evaluation dashboard path", () => {
-    invalidateBehavioralRubricCache({ candidateId: "cand-1", positionId: "pos-1" });
-
-    expect(mockedUpdateTag).toHaveBeenCalledWith(CacheTags.BEHAVIORAL_RUBRICS);
-    expect(mockedUpdateTag).toHaveBeenCalledWith(
-      "behavioral-rubric-cand-1-pos-1",
-    );
-    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/applications");
-    const paths = mockedRevalidatePath.mock.calls.map(([path]) => path);
-    expect(paths.some((path) => path.includes("evaluation-dashboard"))).toBe(
-      false,
-    );
   });
 });
 

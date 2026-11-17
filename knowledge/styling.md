@@ -2,6 +2,13 @@
 title: "styling"
 tier: "PerComponent"
 keywords: ["UI","styling","tokens","OKLCH","status colour","components","tailwind"]
+intent: "When building or changing UI components or pages (project tokens and reusable project components, including interview status, kit and scorecard presentation and the decision page presentation; generic shadcn rules come from the shadcn skill)."
+editable: true
+---
+---
+title: "styling"
+tier: "PerComponent"
+keywords: ["UI","styling","tokens","OKLCH","status colour","components","tailwind"]
 intent: "When building or changing UI components or pages (project tokens and reusable project components, including interview status, kit and scorecard presentation; generic shadcn rules come from the shadcn skill)."
 editable: true
 ---
@@ -60,7 +67,9 @@ All colours are OKLCH custom properties, each redefined for dark mode, exposed a
   - `KIT_STATUS_PRESENTATION`: "Kit in bozza" `bg-warning/10 text-warning`, "Kit pronto" `bg-success/10 text-success`.
   - `KIT_ITEM_ORIGIN_LABEL` and `getKitItemOriginLabel(origin, sourceRound)` ("Round N" for a previous-round question whose scorecard is known, otherwise "Round precedente"), `PARTICIPANT_ROLE_LABEL` ("Conduttore", "Osservatore"), `HIRE_RECOMMENDATION_LABEL` ("Assolutamente sì", "Sì", "Forse", "No", "Assolutamente no"), `MISSING_SOURCE_LABEL`, `LEGAL_REMINDER_TEXT`.
   - The origin badge of a kit question is neutral (`variant="outline"`), with no colour per origin. The criteria coverage shows "Nessuna prova" `bg-warning/10 text-warning` and "Con prove" `bg-success/10 text-success`. The section timer is `text-warning` under 2 minutes and `text-destructive` past the time.
+- The Decision page has one presentation module too: `decision-presentation.ts` of the decision components exports `DECISION_OUTCOME_LABEL` ("Offerta", "Assunto", "Scartato"), `DECISION_OUTCOME_OPTIONS` in the order `offer`, `hired`, `rejected`, `mustWarningText(warning)` ("{criterio}: nessuna prova" / "{criterio}: sotto il livello atteso ({valore} su {atteso})") and `scoreTintClass(value, expectedLevel)`: `bg-success/10 text-success` from `expectedLevel` up, `bg-warning/10 text-warning` up to one point below, `bg-destructive/10 text-destructive` lower, `bg-muted text-muted-foreground` with no value (same rule as the per-criterion CV score, on values with one decimal).
 - The per-criterion CV assessment compares the score with the expected level of the criterion, in this order: `success` when the score reaches or exceeds `expectedLevel`; `warning` when it is exactly one point below; `destructive` for anything lower; `bg-muted text-muted-foreground` with "Nessuna evidenza nel CV" when the score is `null`. The chip reads `{score}/5 · atteso {expectedLevel}` and adds " (archiviato)" for an archived criterion.
+- In the decision matrix a cell with no evidence is "Nessuna prova" in `bg-warning/10 text-warning`, the "Disaccordo" badge is `bg-warning/10 text-warning`, the priority comes from `CRITERION_PRIORITY_PRESENTATION` and the recommendation from `HIRE_RECOMMENDATION_LABEL` ("Nessuna raccomandazione" when absent). The first column is fixed and the table scrolls horizontally.
 - Score and feedback colours use `success` / `warning` / `destructive` / `primary` / `muted`, typically as a tint: `bg-<token>/10 text-<token>`.
 - Score thresholds in the UI: per-answer score (0–10) ≥ 7 success, ≥ 4 warning, else destructive; percentages ≥ 70 success, ≥ 40 warning, else destructive.
 - Unsaved changes are a `warning` tint: "Modifiche non salvate" with `bg-warning/10 px-2 py-1 rounded-md text-warning text-sm`, in the scorecard, the interview-guide and the kit editors. The scorecard editor adds "Criteri soft di default: non sono ancora salvati" with `bg-warning/10 px-3 py-2 rounded-md text-warning text-sm`, and the guide editor flags a minutes sum that does not match the duration with `bg-warning/10 text-warning` on "Somma sezioni: {minutes} min su {duration}". A generation dialog that will replace existing rows warns with the same `bg-warning/10 … text-warning text-sm` tint.
@@ -107,3 +116,4 @@ All UI text, including `aria-label` and screen-reader text, is Italian.
 - Writing a local criterion, guide-section, interview-status, kit-status or kit-origin label/colour map instead of the shared presentation modules.
 - Colouring a criterion score against a fixed threshold instead of the criterion's expected level.
 - Rendering the legal reminder from generated or stored text, or with an Alert component that does not exist in the project.
+- Writing a local decision outcome, warning or score-tint map instead of the decision presentation module, or colouring a decision score against a fixed threshold instead of the criterion's expected level.
