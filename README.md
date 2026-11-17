@@ -184,8 +184,6 @@ Open [http://localhost:3000](http://localhost:3000) to access the application.
 | `pnpm db:generate` | Generate Prisma client         |
 | `pnpm db:migrate`  | Create and apply a new migration (dev) |
 | `pnpm db:migrate:deploy` | Apply the versioned migrations |
-| `pnpm db:duplicates` | List candidates sharing the same normalised email |
-| `pnpm db:verify`   | Verify the Phase 1 migration on a real database |
 | `pnpm db:seed`     | Seed database with sample data |
 
 ## 🏗️ Architecture Overview

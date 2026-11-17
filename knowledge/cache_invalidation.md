@@ -23,8 +23,8 @@ Cache Components and Partial Prefetching are on. What `"use cache"`, `cacheLife`
 
 Always build tags with the helpers from the cache utils; never write tag strings by hand (no literals, no `:` separator).
 
-- Collection tags `CacheTags.*`: `QUIZZES`, `QUESTIONS`, `POSITIONS`, `CANDIDATES`, `ASSESSMENTS`, `EVALUATIONS`, `BEHAVIORAL_RUBRICS`, `PRESETS`, `REFERENCE_DATA`, `SCORECARDS`, `INTERVIEW_GUIDES`, `INTERVIEWS`.
-- Entity tags `entityTag.*`: `quiz`, `question`, `position`, `candidate`, `assessment`, `evaluation` + `evaluationAssessment` + `evaluationCandidate`, `behavioralRubric`, `preset`, `referenceCategory`, `scorecard`, `interviewGuide`, `interview`. Separator is always `-`; `entityTag.position` produces `positions-{id}` (plural on purpose).
+- Collection tags `CacheTags.*`: `QUIZZES`, `QUESTIONS`, `POSITIONS`, `CANDIDATES`, `ASSESSMENTS`, `EVALUATIONS`, `PRESETS`, `REFERENCE_DATA`, `SCORECARDS`, `INTERVIEW_GUIDES`, `INTERVIEWS`.
+- Entity tags `entityTag.*`: `quiz`, `question`, `position`, `candidate`, `assessment`, `evaluation` + `evaluationAssessment` + `evaluationCandidate`, `preset`, `referenceCategory`, `scorecard`, `interviewGuide`, `interview`. Separator is always `-`; `entityTag.position` produces `positions-{id}` (plural on purpose).
 - `entityTag.scorecard` takes a POSITION id, never a scorecard id (at most one scorecard per position, so the position keys both the scorecard and its criteria).
 - `entityTag.interviewGuide` takes the guide id, never the position id nor a section id.
 - No tag of their own: criteria (covered by `scorecards`), guide sections and questions (`interview-guides`), `QuizQuestion` links (`quizzes` + `questions`).
@@ -47,7 +47,7 @@ export async function getFilteredCandidates(params?: FetchCandidatesParams) {
 
 - `Application` is an entity, not a join table: stage and owner, no tag of its own. Its reads are covered by `candidates` plus the candidate and position entity tags; every write on an application calls `invalidateCandidateCache` with candidate, position(s) and application id(s).
 - Non-obvious dependencies: `getScorecardByPositionId` → `scorecards`, `positions`, `entityTag.scorecard(positionId)`; `getCriterionOptionsByPosition` → `scorecards` only (walks all positions, so no `positions` and no entity tag); `getPositionSetupStatus` → `positions`, `scorecards`, `quizzes`, `interview-guides`, `entityTag.position`; `getApplicationDetail` → candidate/position/assessment/evaluation/quiz collections plus `scorecards`, `interviews`; `getActionCenterData` → the same plus `interview-guides`; `getInterviewGuidesByPosition` → `interview-guides`, `positions`, `entityTag.position` (never a guide tag); `getInterviewGuideById` → `interview-guides`, `entityTag.interviewGuide`; `getInterviewsByApplication` → `interviews`, `candidates`, `positions`, `interview-guides`; `getInterviewForPreparation` → also `scorecards`, `entityTag.interview`; `getAgendaInterviews` → `cacheLife("minutes")`, `interviews`, `candidates`, `positions`.
-- `getApplicationDecision` → `cacheLife("hours")`, tags `candidates`, `positions`, `assessments`, `evaluations`, `quizzes`, `questions`, `scorecards`, `interviews`, `behavioral-rubrics`, plus `entityTag.candidate` and `entityTag.position`. Returns submitted scorecards only, never live notes, and does not read the session.
+- `getApplicationDecision` → `cacheLife("hours")`, tags `candidates`, `positions`, `assessments`, `evaluations`, `quizzes`, `questions`, `scorecards`, `interviews`, plus `entityTag.candidate` and `entityTag.position`. Returns submitted scorecards only, never live notes, and does not read the session.
 
 ## Invalidating mutations
 
@@ -83,9 +83,9 @@ A delete (including `deleteMany`) of a Position, Quiz, Candidate or Assessment M
 
 | Deleted | Also expires |
 |---|---|
-| position | quizzes, assessments, evaluations, candidates, behavioral-rubrics, scorecards, interview-guides, interviews |
+| position | quizzes, assessments, evaluations, candidates, scorecards, interview-guides, interviews |
 | quiz | assessments, evaluations |
-| candidate | assessments, evaluations, behavioral-rubrics, interviews |
+| candidate | assessments, evaluations, interviews |
 | assessment | evaluations |
 
 When an `onDelete: Cascade` relation is added or changed in the schema, update `CASCADE_ON_DELETE` in the same change.

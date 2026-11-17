@@ -16,7 +16,7 @@ export const DISAGREEMENT_GAP = 2;
 
 const round1 = (x: number): number => Math.round(x * 10) / 10;
 
-/** 1 + 4*value/max, clamped to [1,5], one decimal. value 0..max (D3) */
+/** 1 + 4*value/max, clamped to [1,5], one decimal. value 0..max */
 export function toFivePointScale(value: number, max: number): number {
   if (max <= 0) return 1;
   const scaled = 1 + (4 * value) / max;
@@ -30,7 +30,7 @@ export function mean(values: readonly number[]): number | null {
   return round1(sum / values.length);
 }
 
-/** true when at least 2 scores and max - min >= DISAGREEMENT_GAP (D7) */
+/** true when at least 2 scores and max - min >= DISAGREEMENT_GAP */
 export function isDisagreement(scores: readonly number[]): boolean {
   if (scores.length < 2) return false;
   return Math.max(...scores) - Math.min(...scores) >= DISAGREEMENT_GAP;
@@ -82,7 +82,7 @@ export type CriterionDecisionRow = {
   cv: number | null;
   test: number | null;
   interviewerMean: number | null;
-  /** Mean of the available among cv, test, interviewerMean (D6) */
+  /** Mean of the available among cv, test, interviewerMean */
   value: number | null;
   /** value !== null */
   hasEvidence: boolean;
@@ -90,14 +90,14 @@ export type CriterionDecisionRow = {
   disagreement: boolean;
   /** decisionWeights[id] when decided (null if absent), else criterion.weight */
   weight: number | null;
-  /** must only: no evidence, or value < expectedLevel (D8) */
+  /** must only: no evidence, or value < expectedLevel */
   warning: MustWarning | null;
 };
 
 export type DecisionScore = {
   /** Same order as the criteria input */
   rows: CriterionDecisionRow[];
-  /** sum(w*value)/sum(w) over rows with value and weight; null if none (O13) */
+  /** sum(w*value)/sum(w) over rows with value and weight; null if none */
   overall: number | null;
   warnings: MustWarning[];
   weightsSource: "decision" | "scorecard";
@@ -186,7 +186,7 @@ export function computeDecisionScore(params: {
   return { rows, overall, warnings, weightsSource };
 }
 
-/** criterionId -> weight of every criterion row (D10) */
+/** criterionId -> weight of every criterion row */
 export function buildDecisionWeights(
   criteria: readonly DecisionCriterion[],
 ): DecisionWeights {
@@ -194,9 +194,9 @@ export function buildDecisionWeights(
 }
 
 /**
- * Test per criterion (D5): mean of answerEvaluations scores (0-10) of answered
+ * Test per criterion: mean of answerEvaluations scores (0-10) of answered
  * linked questions, converted with toFivePointScale(v, 10). Ids not in
- * knownCriterionIds are ignored (O10). Empty map when answerEvaluations is null.
+ * knownCriterionIds are ignored. Empty map when answerEvaluations is null.
  */
 export function testScoresByCriterion(params: {
   knownCriterionIds: ReadonlySet<string>;

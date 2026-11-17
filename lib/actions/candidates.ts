@@ -497,7 +497,7 @@ export async function deleteCandidateAction(id: string) {
 
     await prisma.candidate.delete({ where: { id } });
 
-    // deleted: true expires assessments/evaluations/rubrics removed by cascade
+    // deleted: true expires assessments, evaluations and interviews removed by cascade
     invalidateCandidateCache({
       candidateId: id,
       positionIds: candidate.applications.map((a) => a.positionId),

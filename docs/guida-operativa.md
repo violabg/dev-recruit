@@ -1,6 +1,6 @@
 # DevRecruit — Guida operativa del POC
 
-**Cos'è questa guida.** Spiega come si usa l'applicazione, non come è fatta: cosa fa ogni pagina, dove si trovano le cose, quale è l'ordine dei passi e cosa si vede a ogni passaggio. È pensata per una demo con il responsabile e per ragionare insieme sulle aree da migliorare.
+**Cos'è questa guida.** Descrive l'applicazione così com'è oggi e spiega come si usa, non come è fatta: cosa fa ogni pagina, dove si trovano le cose, quale è l'ordine dei passi e cosa si vede a ogni passaggio. È pensata per una demo con il responsabile e per ragionare insieme sulle aree da migliorare.
 
 **A chi serve.** A chi presenta il POC (per seguire un percorso lineare), a chi lo prova (per non perdersi tra le pagine) e a chi lo sviluppa (per vedere il flusso dall'esterno, con gli attriti ancora presenti).
 
@@ -77,7 +77,7 @@ mindmap
 | **Test inviati** | Monitorare i test | Stato per candidato (in attesa, completato, valutato), valutazione AI |
 | **Preset** | Modelli di generazione | Parametri per la generazione delle domande |
 
-**Come si legge una pagina.** In alto a sinistra il titolo e il contesto (per esempio "Giulia Verdi · Verifica Fase 4 · Frontend"), sotto la **card "Prossima azione"** quando la pagina è una candidatura, poi i tab. Le briciole di pane (Panoramica / Candidature / Dettaglio) riportano sempre al livello superiore.
+**Come si legge una pagina.** In alto a sinistra il titolo e il contesto (per esempio il nome del candidato e la posizione), sotto la **card "Prossima azione"** quando la pagina è una candidatura, poi i tab. Le briciole di pane (Panoramica / Candidature / Dettaglio) riportano sempre al livello superiore.
 
 ---
 
@@ -131,7 +131,7 @@ flowchart LR
 **Due modi per creare una candidatura:**
 
 - **Form pubblico** (`/recruiting`): il candidato sceglie una posizione aperta, inserisce i dati e carica il CV. Se l'email esiste già, l'applicazione **aggancia la candidatura al candidato esistente** e aggiorna il CV; se è già candidato a quella posizione, non crea duplicati. La risposta mostrata è identica in tutti i casi.
-- **Da dashboard** (`Candidati → Nuovo candidato`): il recruiter inserisce i dati, carica il CV e sceglie una o più posizioni. Si crea una candidatura per ogni posizione.
+- **Da dashboard** (`Candidati → Nuovo Candidato`): il recruiter inserisce i dati, carica il CV e sceglie una o più posizioni. Si crea una candidatura per ogni posizione.
 
 La candidatura nasce in fase **Candidato**. Da lì in poi la fase avanza con le azioni (valutare il CV, inviare un test, pianificare un colloquio) e può sempre essere spostata a mano dal menu **Sposta fase**.
 
@@ -195,6 +195,8 @@ Regola pratica: **le azioni fanno avanzare la fase e non la fanno mai arretrare*
 | Colloquio pianificato, kit in bozza | **Prepara colloquio** |
 | Colloquio concluso, scheda mancante | **Compila scheda** |
 | Tutte le schede inviate | **Vai alla decisione** |
+| Nessuno dei casi sopra, candidatura aperta | **Passa a <fase successiva>** |
+| Candidatura Assunto, Scartato o Ritirato | **Candidatura chiusa** (riapribile se Scartato o Ritirato) |
 
 ### Tab Panoramica — la cronologia delle prove
 
@@ -211,13 +213,13 @@ Mostra il CV caricato, il **punteggio di fit 0–10**, punti di forza e aree di 
 I test inviati per quella candidatura con stato e link alla valutazione. Da qui si invia un nuovo test: si sceglie il quiz, si genera il link per il candidato e si segue lo stato.
 
 - Il candidato risponde su `/recruiting/[token]`, senza account.
-- La valutazione AI produce punteggio, punti di forza/debolezze e — se il quiz è collegato ai criteri — il **dettaglio per risposta**.
-- "Ricalcola dettaglio risposte" ricostruisce il dettaglio per i test valutati prima che esistesse.
+- La valutazione AI produce punteggio, punti di forza/debolezze e il **dettaglio per risposta** (punteggio 0–10, punti di forza, aree di miglioramento). Se il quiz è collegato ai criteri, il dettaglio diventa anche la prova del test per criterio nella Decisione.
+- Se una valutazione non ha il dettaglio per risposta, "Ricalcola dettaglio risposte" lo ricostruisce senza cambiare il punteggio salvato.
 
 ### Candidature e kanban
 
 - **Candidature** è la vista globale: ricerca, filtro per fase e posizione, "Solo le mie".
-- **Posizioni → tab Selezione** è il **kanban**: una colonna per fase, una card per candidatura, con i test inviati, il responsabile e "Sposta fase" direttamente sulla card.
+- **Posizioni → tab Selezione** è il **kanban**: una colonna per fase (Scartato e Ritirato insieme in "Chiuse"), una card per candidatura, con i test inviati, il responsabile e "Sposta fase" direttamente sulla card.
 
 ![Pipeline globale](guida-operativa-img/06-pipeline-candidature.png)
 
@@ -250,7 +252,7 @@ sequenceDiagram
 2. **Riepilogo e `.ics`.** L'app **non invia email**: mostra un riepilogo copiabile e un file `.ics` da condividere. Gli intervistatori vedono il colloquio in **Agenda colloqui** e in **Le mie azioni**.
 3. **Preparazione.** Briefing e ipotesi da verificare; domande del modello + domande personalizzate con badge di origine (CV, Test, Round precedente, Manuale) e il **perché**; si possono modificare, riordinare, aggiungere, rimuovere. C'è la checklist (cosa comunicare, logistica) e il **promemoria legale fisso** sulle domande vietate. "Segna come pronto" chiude la preparazione.
 4. **Modalità live.** A sinistra le sezioni con il **timer**. Al centro la domanda con approfondimenti e le tre ancore (debole/media/forte); nota rapida, voto 1–5, citazione, **Coperta** (condivisa). A destra la **copertura dei criteri**, con "Nessuna prova" finché non arriva evidenza e "Nessuna domanda" se il kit non copre un criterio. Note e voti si salvano da soli e restano in locale se cade la connessione.
-5. **Scheda intervistatore.** Precompilata con i propri voti e note; raccomandazione finale; invio **bloccante** (dopo non si modifica più). Finché non invii, le schede degli altri sono nascoste.
+5. **Scheda intervistatore.** Precompilata con i propri voti e note; raccomandazione finale; invio **bloccante** (dopo non si modifica più, nemmeno dall'autore). Note e voti non inviati degli altri non sono mai visibili; le schede già inviate sono in una sezione chiusa, con l'invito a leggerle dopo il proprio invio.
 
 ![Tab Colloqui](guida-operativa-img/08-tab-colloqui.png)
 
@@ -286,7 +288,6 @@ Cosa si vede:
 - **Criteri indispensabili da motivare**: un `must` senza prove o sotto il livello atteso **non azzera il punteggio**, ma deve essere affrontato nella motivazione (compare anche nel form "Da motivare").
 - **Avvocato del diavolo**: chiede all'AI 3–5 motivi per cui l'esito scelto potrebbe essere sbagliato. È una proposta: non si salva.
 - **Indipendenza**: chi è partecipante di un colloquio e non ha ancora inviato la propria scheda vede colonne, valori, punteggio e avvisi chiusi con "•••" e il pulsante **Mostra**.
-- **Storico (sola lettura)**: rubriche comportamentali e note hiring dei test precedenti, senza form di modifica.
 
 **Registrare la decisione** salva esito, motivazione, utente, data e pesi usati, e porta la candidatura alla fase dell'esito. Su una candidatura Assunto, Scartato o Ritirato il form è disattivato ("Candidatura chiusa: riaprila per registrare la decisione"). Su Offerta si può registrare una nuova decisione (per esempio Assunto): l'ultima sostituisce la precedente.
 
@@ -364,12 +365,12 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 |---|---|---|---|
 | 1 | **Nessuna email**: pianificazione e inviti passano da riepilogo copiabile e `.ics` | Alto in uso reale, accettabile in demo | Integrare invio email o calendario; conservare il riepilogo |
 | 2 | **Le decisioni non hanno storico**: una nuova decisione sovrascrive esito, motivazione, utente, data e pesi | Alto per audit e GDPR | Tabella `ApplicationDecision` con storico e "decisione corrente" |
-| 3 | **Indipendenza solo di vista**: le scheda inviate sono leggibili da tutti e "Mostra" apre subito | Medio/alto per la correttezza del giudizio | Regola esplicita + traccia di chi ha aperto cosa; valutare blocco reale |
+| 3 | **Indipendenza solo di vista**: le schede inviate sono leggibili da tutti e "Mostra" apre subito | Medio/alto per la correttezza del giudizio | Regola esplicita + traccia di chi ha aperto cosa; valutare blocco reale |
 | 4 | **Nessun promemoria** per colloqui imminenti o kit non pronti: solo la dashboard | Medio | Notifiche in-app, digest, integrazione calendario |
 | 5 | **Criterio archiviato non ripristinabile** dall'interfaccia | Basso/medio | Vista "Archiviati" con ripristino |
-| 6 | **Candidato duplicato** per email: la fusione è uno script manuale (`pnpm db:duplicates`) | Medio in import massivo | Procedura guidata di fusione in app |
+| 6 | **Stessa persona con due email**: l'email è unica, ma due indirizzi diversi creano due candidati e non esiste una fusione | Medio in import massivo | Procedura guidata di fusione in app |
 | 7 | **Nessun ruolo/permesso**: ogni utente autenticato può fare tutto | Alto se l'app esce dal POC | Ruoli recruiter/intervistatore/admin |
-| 8 | **Il candidato non ha una guida di preparazione né feedback dopo il rifiuto** (Fase 5 del piano) | Medio per l'esperienza | Completare la Fase 5 |
+| 8 | **Il candidato non ha una guida di preparazione né feedback dopo il rifiuto** | Medio per l'esperienza | Fase 5 (`next-steps/FASE5_PLAN.md`) |
 
 ### Attriti di interfaccia
 
@@ -389,8 +390,8 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 | 15 | **L'avvocato del diavolo non ha una soglia minima garantita** di motivi (il prompt ne chiede 3–5, il codice taglia a 5) | Basso | Validare il numero o mostrare un avviso |
 | 16 | **I divieti legali sono solo nel prompt** (età, famiglia, religione, salute…) | Alto in uso reale | Controlli automatici sul testo delle domande + revisione |
 | 17 | **Nessun registro delle chiamate AI** (modello, prompt, esito) per costi e audit | Medio/alto con l'AI Act | Log delle generazioni e delle conferme |
-| 18 | **Il dettaglio per risposta manca sui test valutati prima della Fase 2** finché non si ricalcola | Basso | Ricalcolo automatico in background |
-| 19 | **Dati identificativi nei prompt**: sono già esclusi da kit e decisione, ma la trascrizione audio (Fase 5) riaprirà il tema | Da valutare con la Fase 5 | Anonimizzazione e consenso |
+| 18 | **Il dettaglio per risposta può mancare** su una valutazione di test finché non si ricalcola a mano | Basso | Ricalcolo automatico in background |
+| 19 | **Dati identificativi nei prompt**: sono già esclusi da kit e decisione, ma la trascrizione dei colloqui (Fase 5) riaprirà il tema | Da valutare con la Fase 5 | Anonimizzazione e consenso |
 
 ### Cosa funziona già bene (da mostrare)
 
@@ -431,5 +432,7 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 | Capire cosa ha fatto un candidato | Candidatura → **Panoramica** (cronologia) |
 
 ---
+
+**Manutenzione.** Questa guida e la sua versione HTML (`docs/guida-operativa.html`) descrivono il comportamento attuale dell'applicazione e vanno aggiornate insieme, nello stesso commit, ogni volta che cambia qualcosa che descrivono: pagine, voci di menu, etichette, fasi, regole o limiti. Una schermata che non corrisponde più si rifà o si toglie.
 
 *Guida non collegata dal README, per scelta: è un documento di lavoro per la demo e per la revisione del POC.*

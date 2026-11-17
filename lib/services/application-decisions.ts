@@ -56,26 +56,6 @@ export type DecisionInterview = {
   scorecards: DecisionScorecard[];
 };
 
-export type LegacyRubric = {
-  communicationScore: number;
-  collaborationScore: number;
-  problemSolvingScore: number;
-  cultureFitScore: number;
-  leadershipScore: number | null;
-  strengthExamples: string[];
-  improvementAreas: string[];
-  overallComments: string | null;
-};
-
-export type LegacyHiringNotes = {
-  evaluationId: string;
-  interviewNotes: string | null;
-  redFlags: string[];
-  standoutMoments: string[];
-  hireRecommendation: string | null;
-  nextSteps: string | null;
-};
-
 export type ApplicationDecision = {
   id: string;
   stage: ApplicationStage;
@@ -111,7 +91,6 @@ export type ApplicationDecision = {
     answerDetailMissing: boolean;
   } | null;
   interviews: DecisionInterview[];
-  legacy: { rubric: LegacyRubric | null; hiringNotes: LegacyHiringNotes | null };
 };
 
 export type RecordDecisionResult = {
@@ -391,54 +370,6 @@ export async function loadApplicationDecision(
     interviewers: interviewerScores.get(criterion.id) ?? [],
   }));
 
-  // Legacy, read-only history
-  const rubric = await client.behavioralRubric.findUnique({
-    where: { candidateId_positionId: { candidateId, positionId } },
-    select: {
-      communicationScore: true,
-      collaborationScore: true,
-      problemSolvingScore: true,
-      cultureFitScore: true,
-      leadershipScore: true,
-      strengthExamples: true,
-      improvementAreas: true,
-      overallComments: true,
-    },
-  });
-
-  const hiringEvaluation = await client.evaluation.findFirst({
-    where: {
-      assessment: { applicationId },
-      OR: [
-        { interviewNotes: { not: null } },
-        { nextSteps: { not: null } },
-        { hireRecommendation: { not: null } },
-        { redFlags: { isEmpty: false } },
-        { standoutMoments: { isEmpty: false } },
-      ],
-    },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      interviewNotes: true,
-      redFlags: true,
-      standoutMoments: true,
-      hireRecommendation: true,
-      nextSteps: true,
-    },
-  });
-
-  const hiringNotes: LegacyHiringNotes | null = hiringEvaluation
-    ? {
-        evaluationId: hiringEvaluation.id,
-        interviewNotes: hiringEvaluation.interviewNotes,
-        redFlags: hiringEvaluation.redFlags,
-        standoutMoments: hiringEvaluation.standoutMoments,
-        hireRecommendation: hiringEvaluation.hireRecommendation,
-        nextSteps: hiringEvaluation.nextSteps,
-      }
-    : null;
-
   return {
     id: application.id,
     stage: application.stage,
@@ -452,7 +383,6 @@ export async function loadApplicationDecision(
     cv,
     test,
     interviews,
-    legacy: { rubric, hiringNotes },
   };
 }
 

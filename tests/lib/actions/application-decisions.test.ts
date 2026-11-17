@@ -74,7 +74,6 @@ const decision = (
   cv: null,
   test: null,
   interviews: [],
-  legacy: { rubric: null, hiringNotes: null },
   ...overrides,
 });
 

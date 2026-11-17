@@ -28,7 +28,7 @@ It clears mocks before each test and resets them after each test.
 
 - Re-arm a signed-in user in your own `beforeEach`: `vi.mocked(requireUser).mockResolvedValue({ id: "user-123" } as any)`.
 - Delegates present: `quiz`, `question`, `quizQuestion`, `position`, `candidate`, `application`, `assessment` (including `updateMany`), `evaluation`, `preset`, `user`.
-- Anything else needs a file-level `vi.mock("@/lib/prisma", …)` factory: `upsert` on any model, the `profile`, `behavioralRubric`, `referenceData`, `scorecard`, `scorecardCriterion`, `interviewGuide`, `guideSection`, `guideQuestion` delegates entirely, the interview models (`interview`, `interviewParticipant`, `interviewKit`, `kitSection`, `kitItem`, `kitItemNote`, `interviewerFeedback`, `criterionScore`) entirely, and the authentication models.
+- Anything else needs a file-level `vi.mock("@/lib/prisma", …)` factory: `upsert` on any model, the `profile`, `referenceData`, `scorecard`, `scorecardCriterion`, `interviewGuide`, `guideSection`, `guideQuestion` delegates entirely, the interview models (`interview`, `interviewParticipant`, `interviewKit`, `kitSection`, `kitItem`, `kitItemNote`, `interviewerFeedback`, `criterionScore`) entirely, and the authentication models.
 - Tests reaching `setApplicationStage` or `applicationHasEvidence` must provide an `interview` delegate with `count`, `findMany`, `updateMany`, even when not about interviews.
 - A hand-built `tx` for `criterionHasEvidence` needs `criterionScore.count`, `kitItem.count` and `interviewKit.findMany`, besides the CV-evaluation delegate.
 - The logger prints nothing in tests; mock it only to assert on it.
@@ -41,7 +41,7 @@ Scorecard, guide and interview models have no delegate. Pick the strategy that m
 - A service that reads criteria through the scorecard service mocks that service instead: `vi.mock("@/lib/services/scorecards", () => ({ getActiveCriteria: vi.fn() }))`.
 - A service receiving `tx` (`saveScorecard`, `syncInterviewGuide`, `syncQuizQuestions`, `createInterviewWithKit`, `syncInterviewParticipants`, `applyAllFeedbackCheck`, `syncKitItems`) gets a hand-built transaction of `vi.fn()` delegates; give it the delegates the save must NOT touch so the test can assert they were not called.
 - Interview action tests mock `@/lib/services/interviews` partially with `importOriginal`, keeping the real `loadInterview` and `assertInterviewStatus`, and mock the isolated services (`interview-kits`, `ai/kit-generation`).
-- The decision service test uses a hand-built client (`application`, `scorecardCriterion`, `evaluation`, `assessment`, `interview`, `behavioralRubric`, plus `kitItemNote` and `interviewerFeedback` to verify they are never called); for `recordApplicationDecision` the file-level mock provides `$transaction: (fn) => fn(tx)` and `advanceApplicationStage` is partially mocked with `importOriginal` or replaced by `vi.importActual` to verify the stage change.
+- The decision service test uses a hand-built client (`application`, `scorecardCriterion`, `evaluation`, `assessment`, `interview`, plus `kitItemNote` and `interviewerFeedback` to verify they are never called); for `recordApplicationDecision` the file-level mock provides `$transaction: (fn) => fn(tx)` and `advanceApplicationStage` is partially mocked with `importOriginal` or replaced by `vi.importActual` to verify the stage change.
 - Special techniques: spy `redactBirthDate` and `sanitizeInput` to check their order; test the autosave hook with `renderHook`, a short debounce and `waitFor`, without fake timers; assert presentation maps directly, not the components consuming them; spy on the real `sanitizeInput` to verify a call such as `sanitizeInput(rationale, 5000)`.
 
 ## Idioms
@@ -80,6 +80,6 @@ it("requires a signed-in user", async () => {
 - NEVER assert invalidation by mocking `next/cache` instead of the cache helper.
 - NEVER place tests next to source files instead of the mirrored `tests/` tree.
 - NEVER reach for a `mockUser`/`mockQuiz`/`mockCandidate`/`mockScorecard`/`mockInterview` factory: only question factories exist.
-- NEVER call `upsert` or a `profile`/`behavioralRubric`/`referenceData`/`scorecard`/`interviewGuide`/`interview`/`kitItem` model without a file-level Prisma mock.
+- NEVER call `upsert` or a `profile`/`referenceData`/`scorecard`/`interviewGuide`/`interview`/`kitItem` model without a file-level Prisma mock.
 - NEVER rebuild `$transaction` in a data-layer test, or provide Prisma delegates to a service test that should receive a hand-built `tx`.
 - NEVER omit the `interview` delegate from a test reaching `setApplicationStage` or `applicationHasEvidence`, or the `criterionScore`/`kitItem`/`interviewKit` delegates from a `criterionHasEvidence` test.

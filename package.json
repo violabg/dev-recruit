@@ -14,8 +14,6 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
-    "db:duplicates": "tsx prisma/list-duplicate-emails.ts",
-    "db:verify": "tsx prisma/verify-application-hub.ts",
     "db:seed": "tsx prisma/seed.ts",
     "prebuild": "npm run db:generate",
     "devAi": "pnpx @ai-sdk/devtools"

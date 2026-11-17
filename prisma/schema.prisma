@@ -34,8 +34,6 @@ model User {
   quizzes     Quiz[]       @relation("UserQuizzes")
   questions   Question[]   @relation("UserQuestions")
   evaluations Evaluation[] @relation("UserEvaluations")
-  assessmentEvaluations Evaluation[] @relation("UserEvaluationAssessments")
-  behavioralRubrics BehavioralRubric[] @relation("UserBehavioralRubrics")
   ownedApplications   Application[] @relation("UserOwnedApplications")
   decidedApplications Application[] @relation("UserDecidedApplications")
   scorecards          Scorecard[]      @relation("UserScorecards")
@@ -141,7 +139,6 @@ model Position {
   applications      Application[]
   quizzes           Quiz[]
   evaluations       Evaluation[]
-  behavioralRubrics BehavioralRubric[]
   scorecard         Scorecard?
   interviewGuides   InterviewGuide[]
 
@@ -281,7 +278,6 @@ model Candidate {
   creator           User?              @relation("UserCandidates", fields: [createdBy], references: [id], onDelete: Cascade)
   assessments       Assessment[]
   evaluations       Evaluation[]
-  behavioralRubrics BehavioralRubric[]
 
   @@map("candidates")
 }
@@ -635,20 +631,11 @@ model Evaluation {
   fitScore       Int?     // 0-10 scale (AI's candidate fit assessment)
   quizScore      Int?     // 0-100 percentage score from quiz answers (assessment evals only)
 
-  // Per-answer detail (assessment evals) and per-criterion assessment (CV evals); null on rows saved before Phase 2
+  // Per-answer detail (assessment evals) and per-criterion assessment (CV evals)
   answerEvaluations  Json?
   criteriaAssessment Json?
 
-  // Hiring manager notes and decision
-  interviewNotes    String?
-  redFlags          String[] @default([])
-  standoutMoments   String[] @default([])
-  hireRecommendation String?
-  nextSteps         String?
-  assessedBy        String?
-  assessedAt        DateTime?
-
-  // Manual notes field (legacy)
+  // Recruiter's manual notes ("Note manuali")
   notes String?
 
   // Metadata
@@ -661,40 +648,10 @@ model Evaluation {
   candidate  Candidate?  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   position   Position?   @relation(fields: [positionId], references: [id], onDelete: SetNull)
   creator    User        @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
-  assessor   User?       @relation("UserEvaluationAssessments", fields: [assessedBy], references: [id], onDelete: SetNull)
 
   @@index([candidateId])
   @@index([positionId])
   @@map("evaluations")
-}
-
-model BehavioralRubric {
-  id            String   @id @default(cuid())
-  candidateId   String
-  positionId    String
-
-  communicationScore  Int
-  collaborationScore  Int
-  problemSolvingScore Int
-  cultureFitScore     Int
-  leadershipScore     Int?
-
-  strengthExamples String[] @default([])
-  improvementAreas String[] @default([])
-  overallComments  String?
-
-  createdBy String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  position  Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  creator   User      @relation("UserBehavioralRubrics", fields: [createdBy], references: [id], onDelete: Cascade)
-
-  @@unique([candidateId, positionId])
-  @@index([candidateId])
-  @@index([positionId])
-  @@map("behavioral_rubrics")
 }
 
 model Preset {

@@ -1,8 +1,8 @@
 import type { ProposedCriterion } from "@/lib/schemas";
 
 /**
- * Default soft criteria of a scorecard: the 5 dimensions of the behavioral
- * rubric, with the names and descriptions of the rubric form.
+ * Default soft criteria of a scorecard: five soft dimensions with their
+ * names and descriptions.
  * Used by the scorecard editor (initial unsaved rows) and by the criteria
  * proposal prompt (so the AI does not propose duplicates).
  * No server imports: also used by a client component.

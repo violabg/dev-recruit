@@ -434,7 +434,7 @@ export async function getApplicationDetail(
 
 /**
  * Decision model of one application: criteria x sources, submitted
- * scorecards only (never live notes), legacy rubric and hiring notes.
+ * scorecards only (never live notes).
  */
 export async function getApplicationDecision(
   applicationId: string,
@@ -450,7 +450,6 @@ export async function getApplicationDecision(
     CacheTags.QUESTIONS,
     CacheTags.SCORECARDS,
     CacheTags.INTERVIEWS,
-    CacheTags.BEHAVIORAL_RUBRICS,
   );
 
   const decision = await loadApplicationDecision(prisma, applicationId);

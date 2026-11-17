@@ -11,7 +11,6 @@ vi.mock("@/lib/prisma", () => ({
     evaluation: { findFirst: vi.fn() },
     quiz: { findMany: vi.fn() },
     position: { findMany: vi.fn() },
-    behavioralRubric: { findUnique: vi.fn() },
     scorecardCriterion: { findMany: vi.fn() },
     interview: { findMany: vi.fn(async () => []) },
   },
@@ -254,7 +253,6 @@ describe("getApplicationDecision", () => {
       "questions",
       "scorecards",
       "interviews",
-      "behavioral-rubrics",
     );
     expect(cacheTag).toHaveBeenCalledWith("candidate-cand1", "positions-pos1");
   });

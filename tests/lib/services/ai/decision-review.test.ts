@@ -71,7 +71,6 @@ const decision: ApplicationDecision = {
   cv: { evaluationId: "ev-1", fitScore: 7, global: 3.8, perCriterion: true },
   test: null,
   interviews: [],
-  legacy: { rubric: null, hiringNotes: null },
 };
 
 const score = computeDecisionScore({

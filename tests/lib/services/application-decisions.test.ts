@@ -54,16 +54,13 @@ type ClientOverrides = {
   resumeEvaluation?: unknown;
   assessment?: unknown;
   interviews?: unknown[];
-  rubric?: unknown;
-  hiringEvaluation?: unknown;
 };
 
 /** Hand-built client: every read the loader may do, plus the ones it must not */
 function buildClient(overrides: ClientOverrides = {}) {
   const evaluationFindFirst = vi
     .fn()
-    .mockResolvedValueOnce(overrides.resumeEvaluation ?? null)
-    .mockResolvedValueOnce(overrides.hiringEvaluation ?? null);
+    .mockResolvedValueOnce(overrides.resumeEvaluation ?? null);
 
   return {
     application: {
@@ -83,9 +80,6 @@ function buildClient(overrides: ClientOverrides = {}) {
     },
     interview: {
       findMany: vi.fn().mockResolvedValue(overrides.interviews ?? []),
-    },
-    behavioralRubric: {
-      findUnique: vi.fn().mockResolvedValue(overrides.rubric ?? null),
     },
     kitItemNote: { findMany: vi.fn() },
     interviewerFeedback: { findMany: vi.fn() },
@@ -383,59 +377,6 @@ describe("loadApplicationDecision", () => {
       global: null,
       perCriterion: false,
       answerDetailMissing: true,
-    });
-  });
-
-  it("reads the legacy rubric and hiring notes as history", async () => {
-    const rubric = {
-      communicationScore: 4,
-      collaborationScore: 3,
-      problemSolvingScore: 5,
-      cultureFitScore: 4,
-      leadershipScore: null,
-      strengthExamples: ["Chiaro"],
-      improvementAreas: [],
-      overallComments: null,
-    };
-    const client = buildClient({
-      rubric,
-      hiringEvaluation: {
-        id: "ev-test",
-        interviewNotes: "Note",
-        redFlags: [],
-        standoutMoments: ["Brillante"],
-        hireRecommendation: "yes",
-        nextSteps: null,
-      },
-    });
-
-    const decision = await loadApplicationDecision(client as any, "app-1");
-
-    expect(client.behavioralRubric.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          candidateId_positionId: { candidateId: "cand-1", positionId: "pos-1" },
-        },
-      }),
-    );
-    expect(client.evaluation.findFirst).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          assessment: { applicationId: "app-1" },
-        }),
-        orderBy: { createdAt: "desc" },
-      }),
-    );
-    expect(decision?.legacy).toEqual({
-      rubric,
-      hiringNotes: {
-        evaluationId: "ev-test",
-        interviewNotes: "Note",
-        redFlags: [],
-        standoutMoments: ["Brillante"],
-        hireRecommendation: "yes",
-        nextSteps: null,
-      },
     });
   });
 });

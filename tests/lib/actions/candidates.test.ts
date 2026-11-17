@@ -569,7 +569,7 @@ describe("candidates actions", () => {
 
       await deleteCandidateAction("cand-123");
 
-      // deleted: true cascades to assessments/evaluations/rubrics
+      // deleted: true cascades to assessments, evaluations and interviews
       expect(invalidateCandidateCache).toHaveBeenCalledWith({
         candidateId: "cand-123",
         positionIds: ["pos-123"],

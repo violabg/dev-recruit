@@ -34,7 +34,6 @@ export const CacheTags = {
   CANDIDATES: "candidates",
   ASSESSMENTS: "assessments",
   EVALUATIONS: "evaluations",
-  BEHAVIORAL_RUBRICS: "behavioral-rubrics",
   PRESETS: "presets",
   REFERENCE_DATA: "reference-data",
   // Scorecards and their criteria (criteria have no tag of their own)
@@ -62,8 +61,6 @@ export const entityTag = {
     `evaluation-assessment-${assessmentId}`,
   evaluationCandidate: (candidateId: string) =>
     `evaluation-candidate-${candidateId}`,
-  behavioralRubric: (candidateId: string, positionId: string) =>
-    `behavioral-rubric-${candidateId}-${positionId}`,
   preset: (id: string) => `preset-${id}`,
   referenceCategory: (category: string) => `reference-data-${category}`,
   // A position has at most one scorecard: keyed by the position id
@@ -85,7 +82,6 @@ const CASCADE_ON_DELETE = {
     CacheTags.ASSESSMENTS,
     CacheTags.EVALUATIONS,
     CacheTags.CANDIDATES,
-    CacheTags.BEHAVIORAL_RUBRICS,
     CacheTags.SCORECARDS,
     CacheTags.INTERVIEW_GUIDES,
     CacheTags.INTERVIEWS,
@@ -94,7 +90,6 @@ const CASCADE_ON_DELETE = {
   candidate: [
     CacheTags.ASSESSMENTS,
     CacheTags.EVALUATIONS,
-    CacheTags.BEHAVIORAL_RUBRICS,
     CacheTags.INTERVIEWS,
   ],
   assessment: [CacheTags.EVALUATIONS],
@@ -217,7 +212,7 @@ export function invalidateCandidateCache(options?: {
   positionIds?: string[];
   applicationId?: string;
   applicationIds?: string[];
-  /** Candidate was deleted: also expire cascaded assessments/evaluations/rubrics */
+  /** Candidate was deleted: also expire cascaded assessments, evaluations and interviews */
   deleted?: boolean;
 }) {
   updateTag(CacheTags.CANDIDATES);

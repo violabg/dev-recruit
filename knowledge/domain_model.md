@@ -11,7 +11,7 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 
 ## Aggregates
 
-- `Position` owns one `Scorecard` (+ criteria), `InterviewGuide`s (+ sections, questions), `Quiz`es (+ question links), `BehavioralRubric`s.
+- `Position` owns one `Scorecard` (+ criteria), `InterviewGuide`s (+ sections, questions), `Quiz`es (+ question links).
 - `Application` = one `Candidate` for one `Position`. Owns `Assessment`s (each one `Evaluation`) and `Interview`s.
 - `Interview` = live conversation. Owns participants, one `InterviewKit` (its copy of the guide), interviewer scorecards.
 - `InterviewKit` is a snapshot: after the copy the guide is never read again.
@@ -137,13 +137,13 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 - Uniqueness is an application check for both: one per assessment; one per candidate + position, existing application only.
 - The quiz result is `Evaluation.quizScore`.
 - Scales: per-answer 0–10 in `answerEvaluations`; `quizScore` 0–100 percentage; per-criterion 1–5 or null (resume only); AI `fitScore` 0–100 ALWAYS stored as `Math.round(fitScore / 10)`, i.e. 0–10, for both kinds.
-- `answerEvaluations`: JSON keyed by Question id, `{ score, strengths, weaknesses }`, written with the assessment evaluation; optional on evaluations saved before it existed.
-- "Ricalcola dettaglio risposte": the client re-evaluates every answer, discards and counts the failures (never a 0 fallback), then `recalculateAnswerEvaluationsAction` rewrites `answerEvaluations` only: no AI call, no change to `quizScore`, `fitScore`, `criteriaAssessment`, narrative or hiring fields.
+- `answerEvaluations`: JSON keyed by Question id, `{ score, strengths, weaknesses }`, written with the assessment evaluation; may be null (no per-answer detail).
+- "Ricalcola dettaglio risposte": the client re-evaluates every answer, discards and counts the failures (never a 0 fallback), then `recalculateAnswerEvaluationsAction` rewrites `answerEvaluations` only: no AI call, no change to `quizScore`, `fitScore`, `criteriaAssessment` or narrative.
 - `criteriaAssessment` (resume only): JSON keyed by criterion id, `{ score: 1–5 | null, evidence }`; a null score means no evidence in the CV. The model answers `C1`, `C2`…; the save translates to ids, drops unknown and repeated keys, rounds and clamps to 1–5, keeps null. With at least one valid entry every skipped criterion is stored `{ score: null, evidence: "" }`; with no active criterion or no valid entry the field is null.
 - Reading: invalid JSON → null; entry of a deleted criterion skipped; entry of an archived criterion kept and presented as archived. Resolve through the scorecard, active and archived, ordered by `order`.
 - Assessment evaluations are reached through `assessment.candidateId`; filtering `Evaluation.candidateId` returns resume evaluations only.
-- `recommendation` is AI free text; `hireRecommendation` is the hiring enum (`strong_yes`, `yes`, `maybe`, `no`, `strong_no`).
-- `interviewNotes`, `redFlags`, `standoutMoments`, `hireRecommendation`, `nextSteps`, `assessedBy`/`assessedAt` are read-only history on test evaluations: no action writes them, and the Decision page shows the most recent evaluation with at least one of them ("Storico (sola lettura)"). Interview notes are the live notes, not these.
+- `recommendation` is AI free text; `hireRecommendation` is the interviewer scorecard's enum (`strong_yes`, `yes`, `maybe`, `no`, `strong_no`).
+- `notes` ("Note manuali") is the only field of an evaluation the recruiter writes by hand. Interview notes are the live notes (`KitItemNote`) and the interviewer scorecard.
 - The overall score is computed on read (`computeDecisionScore`), never stored.
 
 ## Decision
@@ -165,9 +165,8 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 - The devil's advocate is read-only: never saved, never invalidates cache.
 - Decision ≠ recommendation: `Application.decision` is the recruiter's outcome and moves the stage; `hireRecommendation` never moves it.
 
-## Behavioral rubrics and presets
+## Presets
 
-- `BehavioralRubric`: manual 1–5 scoring for a candidate + position, read-only history. No page or action creates, edits or deletes it; shown in "Storico (sola lettura)"; deleted by cascade with its position or candidate. Unrelated to `behavioral_scenario` questions; its five dimensions only share names with the default soft criteria.
 - `Preset`: no relations. The client spreads a preset's fields as generation options; the server never loads a preset by id while generating. `questionType` accepts all four types.
 - `seedDefaultPresetsAction` deletes ALL presets, user-created ones included, then recreates the defaults.
 
@@ -197,7 +196,7 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 - NEVER advance or reopen a closed application from an automatic rule.
 - NEVER produce a resume evaluation without an application or outside the transaction that advances the stage.
 - NEVER assign a quiz to a `rejected` or `withdrawn` application.
-- NEVER confuse `BehavioralRubric` with `behavioral_scenario`, or `Preset` with `ReferenceData`.
+- NEVER confuse `Preset` with `ReferenceData`.
 - NEVER filter by `createdBy`, call `requireUser()` in a candidate-facing action, hide submitted material behind the visibility exception, or leave a submitted scorecard editable.
 - NEVER use `prisma db push`, or write `QuizQuestion` from the scorecard save.
 - NEVER delete a criterion that has evidence instead of archiving it, or treat an archived criterion as editable, restorable or linkable.
@@ -210,4 +209,4 @@ Prisma semantics and migrations are in the official docs. Only the rules the sch
 - NEVER compute the overall score with fixed weights, or count the global CV/Test rows in it.
 - NEVER use current weights for a decided application or saved weights for an undecided one.
 - NEVER turn the collapsed Decision columns into a filtered read, or take `decidedBy` from the input.
-- NEVER reintroduce a write of the behavioral rubric or of the hiring fields of a test.
+- NEVER add hiring fields to a test evaluation: interviewer judgement lives in `InterviewerFeedback` and `CriterionScore`.

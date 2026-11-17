@@ -8,7 +8,6 @@ import {
   mustWarningText,
 } from "@/components/applications/decision/decision-presentation";
 import { DecisionWorkspace } from "@/components/applications/decision/decision-workspace";
-import { LegacyEvaluationHistory } from "@/components/applications/decision/legacy-evaluation-history";
 import PageHeader from "@/components/page-header";
 import {
   FieldSkeleton,
@@ -232,11 +231,6 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
           )}
         </Card>
       )}
-
-      <LegacyEvaluationHistory
-        rubric={decision.legacy.rubric}
-        hiringNotes={decision.legacy.hiringNotes}
-      />
     </div>
   );
 }

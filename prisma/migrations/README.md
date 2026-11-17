@@ -1,69 +1,30 @@
 # Migrazioni del database
 
-Lo schema cambia solo con migrazioni versionate di Prisma Migrate, salvate in questa cartella e committate insieme al codice che le richiede. `prisma db push` non si usa mai: su una tabella rinominata la elimina e la ricrea, perdendo le righe.
+Lo schema cambia solo con migrazioni versionate di Prisma Migrate, salvate in questa cartella e committate insieme al codice che le richiede. `prisma db push` non si usa mai.
 
-- `0_init` fotografa lo schema com'era prima della Fase 1. Non va mai eseguita su un database esistente: si segna soltanto come già applicata.
-- `20261115000000_application_hub` è la migrazione della Fase 1 (rinomine, backfill, verifiche e rimozioni).
-- `20261117000000_scorecard_guides` è la migrazione della Fase 2: nuove tabelle `scorecards`, `scorecard_criteria`, `interview_guides`, `guide_sections`, `guide_questions`; nuove colonne `quiz_questions.criterionIds`, `evaluations.answerEvaluations`, `evaluations.criteriaAssessment`. Nessun backfill: i dati esistenti restano invariati.
-- `20261118000000_interviews_kits` è la migrazione della Fase 3: nuove tabelle `interviews`, `interview_participants`, `interview_kits`, `kit_sections`, `kit_items`, `kit_item_notes`, `interviewer_feedback`, `criterion_scores` e i tipi `InterviewStatus`, `InterviewParticipantRole`, `KitStatus`, `KitItemOrigin`. Solo additiva, nessun backfill.
+- `0_init` è la baseline: crea lo schema completo da un database vuoto.
 
-## Riallineamento una tantum
-
-La procedura si esegue adesso sul ramo Neon `development` e si ripete, identica, sul database di produzione solo al momento del rilascio.
-
-### Precondizioni
-
-- `DATABASE_URL` in `.env.local` punta al ramo Neon `development`.
-- La produzione non si tocca fino al rilascio.
-- Un database di sviluppo non viene mai copiato sopra la produzione.
-- In sviluppo non si cancellano mai candidati che esistono anche in produzione: il bucket R2 dei CV è condiviso, quindi eliminarli cancellerebbe anche i CV di produzione.
-- Riferimenti per il rollback:
-  - ramo Neon `backup/pre-application-hub-2026-11-15`;
-  - tag git `backup/pre-application-hub`.
-
-### Passo 1 — Candidati duplicati
-
-```bash
-pnpm db:duplicates
-```
-
-Lo script elenca i candidati che hanno la stessa email normalizzata (minuscole, senza spazi ai bordi) e non modifica nulla. Unisci a mano ogni duplicato elencato, poi rilancia lo script. Ripeti finché stampa `Nessun candidato duplicato`.
-
-### Passo 2 — Baseline (una volta per database)
-
-La tabella `_prisma_migrations` contiene 3 righe di migrazioni i cui file non esistono più. Eliminale:
-
-```sql
-DELETE FROM "_prisma_migrations";
-```
-
-Poi segna la baseline come già applicata:
-
-```bash
-pnpm exec prisma migrate resolve --applied 0_init
-```
-
-### Passo 3 — Migrazione della Fase 1
-
-Annota il numero di righe delle tabelle `candidates`, `candidate_positions`, `interviews` ed `evaluations`, poi applica la migrazione `20261115000000_application_hub`:
+## Database nuovo
 
 ```bash
 pnpm db:migrate:deploy
+pnpm db:seed   # facoltativo: dati di esempio
 ```
 
-Lo stesso `pnpm db:migrate:deploy` applica anche la migrazione della Fase 2 `20261117000000_scorecard_guides`, che è solo additiva; se la Fase 1 è già stata applicata, rilancialo per applicare questa migrazione.
+## Nuova modifica dello schema
 
-Lo stesso `pnpm db:migrate:deploy` applica anche la migrazione della Fase 3 `20261118000000_interviews_kits`, dopo quelle della Fase 1 e della Fase 2; è solo additiva. Se le Fasi 1 e 2 sono già state applicate, rilancialo per applicare questa migrazione.
+1. Modifica `prisma/schema.prisma`.
+2. In sviluppo (`DATABASE_URL` sul ramo Neon `development`): `pnpm db:migrate` crea la migrazione e la applica.
+3. Committa la cartella della migrazione con il codice che la richiede.
+4. Al rilascio: `pnpm db:migrate:deploy` sul database di produzione.
 
-### Passo 4 — Verifica
+Rinominare una tabella o una colonna si fa con `ALTER TABLE … RENAME` nella migrazione; un backfill è SQL nella stessa migrazione, prima della rimozione delle colonne che legge.
+
+## Verifica
 
 ```bash
-pnpm db:verify
-pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
+pnpm exec prisma migrate status
+pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
 ```
 
-`pnpm db:verify` deve terminare senza errori e `prisma migrate diff` tra la cartella delle migrazioni e lo schema non deve riportare differenze.
-
-## Regola
-
-Ogni modifica dello schema è una migrazione versionata (`pnpm db:migrate` in sviluppo, `pnpm db:migrate:deploy` per applicarla). `prisma db push` non si usa mai.
+Il primo deve riportare "Database schema is up to date", il secondo nessuna differenza tra database e schema.

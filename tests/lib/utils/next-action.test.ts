@@ -226,7 +226,7 @@ describe("getNextAction fallback", () => {
   );
 });
 
-describe("getNextAction in Phase 1", () => {
+describe("getNextAction without interviews", () => {
   it("rows 5–7 never win when interviews and feedback are omitted", () => {
     const kinds = (
       ["applied", "screening", "assessment", "interview", "decision", "offer"] as const
