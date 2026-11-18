@@ -439,7 +439,8 @@
       "delegates": [
         "general-purpose",
         "explorer",
-        "code-implementor"
+        "code-implementor",
+        "documentation-reviewer"
       ],
       "file": "agents/orchestrator.agent.md",
       "tokens": [

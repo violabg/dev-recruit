@@ -12,7 +12,7 @@ The checks are facts about the artifact: references that resolve, realized oblig
   "coverage": { "obligationsTotal": 0, "obligationsRealized": 0 } }
 ```
 
-Findings that differ only in the element they name are one row, whose `element` lists them all (`O1, O2`) and whose `detail` says `<element>` in their place (Lab-authored: a design written in several calls otherwise answers one row for every item not realized yet). The same applies to the findings of `#capability:design-approve`.
+Findings that differ only in the element they name are one row, whose `element` lists them all (`O1, O2`) and whose `detail` says `<element>` in their place (Lab-authored: a design written in several calls otherwise answers one row for every item not realized yet). A captured detail names no element, so it stays as it is when rows merge. The same applies to the findings of `#capability:design-approve`.
 
 The section writes run no check: call `#capability:design-checks` after them. The design can be presented for approval only when `errors` is empty. Warnings never block approval. The answer is lined JSON, and a long one is served from a stored copy (`contracts/workflow-loop.md`, Stored responses).
 
@@ -21,10 +21,10 @@ The section writes run no check: call `#capability:design-checks` after them. Th
 | Rule | Reported when |
 | --- | --- |
 | `operation-reference-unknown` | an operation's `refObligations`, `refContracts`, `refApis`, `fileReferences` or `knowledgeReferences` names a row that does not exist |
-| `operation-source-without-ref` | an operation sets a `source` other than `Design` without a `sourceRef` |
+| `operation-without-source` | an operation sets a `source` other than `Design` without a `sourceRef`; detail `the operation comes from an external source but does not cite it: an external step with no source is an invention` (captured on 3.0.4 run 6) |
 | `operation-dependency-unknown` | `dependsOn` names an operation that does not exist |
 | `operation-dependency-order` | `dependsOn` names the operation itself or one scheduled after it |
-| `obligation-not-realized` | operations exist and no operation lists an obligation in `refObligations` |
+| `obligation-not-realized` | operations exist and no operation lists an obligation in `refObligations`; detail `no operation of the plan realizes this obligation of R` (captured on 3.0.4 run 6) |
 | `contract-not-realized` | operations exist and no operation lists a contract in `refContracts` |
 | `api-not-realized` | operations exist and no operation lists a public API in `refApis` |
 | `contract-file-undeclared` | the filesystem has rows and a contract is hosted in a `file` none of them declares |
@@ -36,7 +36,7 @@ The section writes run no check: call `#capability:design-checks` after them. Th
 | `testing-operations` | two `Testing` operations declare the same `testType`; reported on the second |
 | `operation-test-type-misplaced` | an operation of another kind declares a `testType` |
 
-`decision-not-realized`, `file-without-operation`, `file-reference-without-detail` and `operation-without-obligations` are captured slugs. The 3.0.3 captures state the realization of contracts and APIs and the declared contract file as `get_design_checks` rules without showing their slugs; those slugs, and the slugs of the other rules the instructions state, are Lab-authored.
+`decision-not-realized`, `file-without-operation`, `file-reference-without-detail` and `operation-without-obligations` are captured slugs. The 3.0.3 captures state the realization of contracts and APIs and the declared contract file as `get_design_checks` rules without showing their slugs; those slugs, and the slugs of the other rules the instructions state, are Lab-authored. Run 6 of 3.0.4 also shows `operation-without-source` and the detail of `obligation-not-realized`, so both are captured from it.
 
 A highlighted decision (`highlight: true`, or the 3.0.0 `blocking: true`) is exempt from `decision-not-realized`. Before any operation exists, the realization rules and `file-without-operation` do not apply; before any filesystem row exists, `contract-file-undeclared` does not apply (Lab-authored: the 3.0.3 steps write the contracts, then the filesystem, then the operations, and a check that fires on a section not written yet tells the author nothing).
 

@@ -336,8 +336,18 @@ function patchedInstructions(stored, row, id) {
   return { row: { ...rest, instructions: text } };
 }
 
-// One section write. The call is all or nothing: a rejected row, a table of another section or a wrong `order`
-// rejects the whole call, and nothing is applied. The tool runs no mechanical checks: design-checks does.
+// One section write. A rejected row, a table of another section or a wrong `order` rejects the whole call and
+// nothing is applied. The one exception is a `header` block of a section this command does not own (captured on
+// 3.0.4 run 6): it is reported in `rejected` and the rows of the same call still apply. The tool runs no
+// mechanical checks: design-checks does.
+const HEADER_OWNER = "design-contracts";
+
+// A member sent as null is absent (captured on 3.0.4 run 6): `"source": null` on a patch keeps the stored source.
+function dropNullMembers(row) {
+  if (!row || typeof row !== "object" || Array.isArray(row)) return row;
+  return Object.fromEntries(Object.entries(row).filter(([, value]) => value !== null));
+}
+
 export function sectionWrite(ctx, tool, args) {
   const section = SECTIONS[tool];
   if (arg(args, "edit") !== undefined) return editTool(ctx, tool, args);
@@ -349,13 +359,20 @@ export function sectionWrite(ctx, tool, args) {
   if (request.operation === "Read") return sectionRead(design, tool, request);
   const root = schema(ctx);
   const rejected = [];
+  const foreign = [];
   const reject = (path, message) => rejected.push({ path, message });
   const unmapped = (table) => `the JSON property '${table}' could not be mapped; the allowed properties are ${ownTables(tool).join(", ")}`;
 
   for (const key of Object.keys(request)) {
     if (!section.keys.includes(key)) reject(key, `the JSON property '${key}' could not be mapped; the allowed properties are ${section.keys.join(", ")}`);
   }
-  if (request.header !== undefined) for (const message of validate(root.$defs.header, request.header, root, "header")) reject("header", message);
+  if (request.header !== undefined) {
+    if (tool === HEADER_OWNER) for (const message of validate(root.$defs.header, request.header, root, "header")) reject("header", message);
+    // An empty block carries nothing, so it is no block (Lab-authored: the capture sent a filled header).
+    else if (request.header && (typeof request.header !== "object" || Array.isArray(request.header) || Object.values(request.header).some(Boolean))) {
+      foreign.push({ path: "header", message: `the section belongs to ${HEADER_OWNER}: call that tool for it` });
+    }
+  }
 
   // delete: { table: [cardinal ids] }
   const deletions = [];
@@ -387,8 +404,9 @@ export function sectionWrite(ctx, tool, args) {
         reject(`${mode}.${table}`, spec ? `rejected here — ${table} belong to ${spec.owner}` : unmapped(table));
         continue;
       }
-      (Array.isArray(rows) ? rows : []).forEach((row, index) => {
+      (Array.isArray(rows) ? rows : []).forEach((raw, index) => {
         const path = `${mode}.${table}[${index}]`;
+        let row = dropNullMembers(raw);
         const errors = validate(root.$defs[table === "apis" ? "api" : table.slice(0, -1)], row, root, path);
         if (errors.length) return reject(path, errors.join("; "));
         if (table === "operations") for (const problem of operationRowProblems(design, row)) reject(path, problem);
@@ -418,9 +436,9 @@ export function sectionWrite(ctx, tool, args) {
   }
 
   const applied = { added: [], patched: [], deleted: [] };
-  if (rejected.length) return { output: linedJson({ status: design.status, applied, rejected }), exitCode: 1 };
+  if (rejected.length) return { output: linedJson({ status: design.status, applied, rejected: [...rejected, ...foreign] }), exitCode: 1 };
 
-  if (request.header) for (const [key, value] of Object.entries(request.header)) if (value) design.path[key] = value;
+  if (request.header && tool === HEADER_OWNER) for (const [key, value] of Object.entries(request.header)) if (value) design.path[key] = value;
   for (const { table, id } of deletions) {
     const rows = TABLES[table].get(design);
     rows.splice(rows.findIndex((r) => r.id === id), 1);
@@ -453,6 +471,7 @@ export function sectionWrite(ctx, tool, args) {
 
   touch(ctx, design, "updated", `${tool}: +${applied.added.join(",") || "-"} ~${applied.patched.join(",") || "-"} x${applied.deleted.join(",") || "-"}${request.order ? " (reordered)" : ""}`);
   saveDesign(ctx, design);
+  if (foreign.length) return { output: linedJson({ status: design.status, applied, rejected: foreign }), exitCode: 1 };
   return linedJson({ status: design.status, applied, rejected });
 }
 

@@ -2,6 +2,17 @@
 
 Versions follow semantic versioning. The installer reads the first version heading as the kit version it records in the target's manifest.
 
+## 8.0.0
+
+Upstream 3.0.4 run 6. Re-install to apply the new rendered files, the served DESIGN steps and the runtime; the answers, the sessions and the designs are kept. A design check is renamed, so this is a major version: anything that matches `operation-source-without-ref` must match `operation-without-source`.
+
+- **Design check renamed.** The rule is `operation-without-source`, with the captured detail `the operation comes from an external source but does not cite it: an external step with no source is an invention`. The `obligation-not-realized` detail is the captured `no operation of the plan realizes this obligation of R`. The finding, its severity and the approval gate are unchanged.
+- **The orchestrator may start the documentation reviewer again.** Its contract names `explorer`, `code-implementor` and `documentation-reviewer`. On OpenCode, which enforces the list, the `DOCUMENTATION` review step can start that role again; the limitation reported in 7.0.0 is gone.
+- **A design write no longer loses its rows over a header.** A section write that carries a `header` block of another section reports it in `rejected` (`the section belongs to design-contracts: call that tool for it`) and still applies its rows, with exit code 1. A table of another section still rejects the whole call. The partial call is never kept as a draft: its rows must not be sent again.
+- **A `null` member is absent.** On a design write, `"source": null` on a patch leaves the stored source unchanged instead of refusing the call.
+- **`DESIGN` steps close themselves.** Steps 1 to 9 end by naming the next `workflow-step-next` call, and step 10 ends with `This is the final instruction`. The runtime still adds no trailer, and a halt still stops the chain.
+- **Wording fixes in `DESIGN` 3 to 10**, kept verbatim from upstream: the knowledge conflict is read in the design, an option no competent team would take, the halt protocol, and the restored fourth choice in the terminal debate.
+
 ## 7.0.2
 
 A patch: two wording changes in the rendered files. Re-installing keeps the answers and the sessions.

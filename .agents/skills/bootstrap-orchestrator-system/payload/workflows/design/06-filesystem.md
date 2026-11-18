@@ -43,7 +43,7 @@ Your responsibility is to complete the assigned review correctly, not to optimiz
 
 **Full reading** — Read every knowledge document in its entirety; every sentence and clause has equal weight, and surface reading is forbidden.
 
-**Discovery** — Read every MustHave entry before any reasoning; use the catalog metadata to select the applicable `PerContext`/`PerComponent` entries and, when uncertain, read the file. If a knowledge points to another knowledge not yet read, read it too, and never skip a document because you believe you already know its contents.
+**Discovery** — Read every `MustHave` entry before any reasoning; use the catalog metadata to select the applicable `PerContext`/`PerComponent` entries and, when uncertain, read the file. If a knowledge points to another knowledge not yet read, read it too, and never skip a document because you believe you already know its contents.
 
 **Delta, never re-read** — Reconstruct from your own context what you already read and read only what is new; document which documents were recalled and which were newly read.
 
@@ -65,7 +65,7 @@ Knowledge is a source of the design itself, not only material assigned to the op
 6. **Applicability to the design.** A prescription is applicable to the design when it constrains a choice the design produces — the contracts, the public APIs, the filesystem, the operations or the decisions. A prescription that constrains only how the code is written or verified stays with the implementor and does not bind a design section.
 7. **Consult before writing, section by section.** Before you compose or modify any section of the design, rebuild the knowledge already read in this job, re-read from the catalogue only the delta the section at hand makes relevant, and consult the applicable prescriptions before you write the section. No design section is written first and reconciled with the knowledge afterwards.
 8. **Every applicable prescription is applied.** When you write a design section, apply every prescription applicable to it, and make the section declare the prescriptions it is founded on by their `kid`. A design that realizes the requirement but leaves an applicable prescription unapplied is incomplete, and a design that contradicts an applicable prescription is rejected.
-9. **Knowledge before the workflow instruction.** When a prescription conflicts with an instruction of the workflow, record the conflict explicitly before you proceed — the prescription, the instruction and the choice that resolves it — and apply the prescription. The conflicting instruction is not applied, and the conflict and its resolution are named in the design so the developer and the verifier can read them. This precedence holds for every section, including the order of the operations when a prescription dictates a sequence.
+9. **Knowledge before the workflow instruction.** When a prescription conflicts with an instruction of the workflow, record the conflict explicitly before you proceed — the prescription, the instruction and the choice that resolves it — and apply the prescription. The conflicting instruction is not applied, and the conflict and its resolution are named in the design so the developer and the verifier can read it. This precedence holds for every section, including the order of the operations when a prescription dictates a sequence.
 10. **Failure.** If `#capability:design-knowledge-references` fails, retry the call once. If it still fails, record a blocker and halt: a prescription the design applies and did not register leaves the design incomplete.
 
     **The test context is collected with the same discipline as the production context.**
@@ -154,3 +154,5 @@ Never dismiss a prescription as out of scope because it does not concern the cod
 # Success Criteria
 
 The filesystem section is complete when every touched file is recorded with its path, status, module, reason, change and impact, every contract host file is declared, every applicable prescription is registered and honoured, the file references the filesystem needs are present, and the workflow has advanced to the operation definition.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

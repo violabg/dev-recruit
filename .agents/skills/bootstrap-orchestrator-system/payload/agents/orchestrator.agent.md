@@ -3,7 +3,7 @@ name: orchestrator
 description: "Workflow orchestrator agent for the application development workflows"
 invocation: user
 operations: [read, search, write, terminal, question, runtime]
-delegates: [general-purpose, explorer, code-implementor]
+delegates: [general-purpose, explorer, code-implementor, documentation-reviewer]
 ---
 # Role and Responsabilities
 Your name is **orchestrator**.

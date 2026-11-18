@@ -13,7 +13,7 @@ Lab-authored contract. The captured server (3.0.1) partitions the files of one e
 5. A file with no such directory forms `General`.
 6. Every file therefore belongs to exactly one cluster, and the sizes add up to the number of files.
 7. Answer one line per cluster, largest first, then by name: `- <cluster> (<file count>)`.
-8. With `matches` (captured on 3.0.4), the clusters that hold a match come first, each annotated `- <cluster> (<file count>) [match: <n>] <term>, <term>`: the seeds a caller already has point at the clusters to read. Lab-authored, the capture does not say what a match is: a term matches a cluster when a file of it carries the term in its workspace-relative path, ignoring case; `<n>` counts the matching terms, and the matched clusters keep the order of step 7 among themselves.
+8. With `matches` (captured on 3.0.4), the clusters that hold a match come first, each annotated `- <cluster> (<file count>) [match: <n>] <term>, <term>`: the seeds a caller already has point at the clusters to read. Lab-authored, the capture does not say what a match is: a term matches a cluster when a file of it carries the term in its workspace-relative path, ignoring case; `<n>` counts the matching terms, and the matched clusters keep the order of step 7 among themselves. Run 6 of the same version (a later commit) passed four matching terms and received the plain map, with no annotation and no reordering; the runtime keeps the matched-first answer of run 5 (maintainer decision, 2026-11-18), because the argument is still accepted and the hint is additive.
 
 The list is a snapshot of the working tree: it changes when files change.
 

@@ -162,16 +162,19 @@ function contextOf(ctx, caller) {
 }
 
 // A refused design write of some size is kept, and the refusal says how to correct it without sending it again.
+// A call that applied its rows and only reported a foreign `header` is not kept: resending it would add the rows a
+// second time. The caller sends the header of the owning command instead.
 function refusedWrite(ctx, token, args, caller, result) {
   // An edit is small by nature and is corrected by sending it again.
   if (!REQUEST_TOKENS.has(token) || result.exitCode !== 1 || arg(args, "edit") !== undefined) return result;
-  const id = keepRequest(ctx, token, args);
-  if (!id) return result;
-  const note = keptNote(token, id, ` ${jobFlags(args, caller)}`);
   let parsed = null;
   try {
     parsed = JSON.parse(result.output);
   } catch {}
+  if (parsed && typeof parsed === "object" && parsed.applied && Object.values(parsed.applied).some((ids) => Array.isArray(ids) && ids.length)) return result;
+  const id = keepRequest(ctx, token, args);
+  if (!id) return result;
+  const note = keptNote(token, id, ` ${jobFlags(args, caller)}`);
   const output = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? linedJson({ ...parsed, kept: note }) : `${result.output.trimEnd()}\n${note}`;
   return { output, exitCode: 1 };
 }
