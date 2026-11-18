@@ -94,7 +94,7 @@ export function SearchAndFilterApplications({
 
   return (
     <div className="@container flex-1">
-      <div className="flex @[800px]:flex-row flex-col gap-4">
+      <div className="flex @[700px]:flex-row flex-col gap-4">
         <div className="relative flex-1">
           {isPending ? (
             <Loader2 className="top-2.5 left-2.5 absolute size-4 animate-spin" />
@@ -156,7 +156,7 @@ export function SearchAndFilterApplications({
         {hasActiveFilters && (
           <Link
             href={pathname as "/dashboard/applications"}
-            className={buttonVariants({ variant: "outlineDestructive" })}
+            className={buttonVariants({ variant: "ghostDestructive" })}
           >
             <X className="mr-1 size-4" />
             Reset

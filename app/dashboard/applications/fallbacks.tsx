@@ -7,7 +7,13 @@ import {
 
 /** Mirrors SearchAndFilterApplications: search + stage, position. */
 export function ApplicationsFiltersSkeleton() {
-  return <FilterBarSkeleton selects={2} />;
+  return (
+    <FilterBarSkeleton
+      selects={2}
+      rowClassName="flex @[700px]:flex-row flex-col gap-4"
+      selectClassName="@[700px]:w-40 w-full"
+    />
+  );
 }
 
 /** Mirrors ApplicationsRuntimeSection: count line, table, pagination. */

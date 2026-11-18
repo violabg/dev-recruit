@@ -79,7 +79,7 @@ export function SearchPresets() {
       </div>
       {hasFilters && (
         <Button
-          variant="outlineDestructive"
+          variant="ghostDestructive"
           render={<Link href={pathname as "/dashboard/presets"} />}
           disabled={isPending}
           nativeButton={false}

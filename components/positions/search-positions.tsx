@@ -78,7 +78,7 @@ export function SearchPositions() {
       </div>
       {hasFilters && (
         <Button
-          variant="outlineDestructive"
+          variant="ghostDestructive"
           render={<Link href={pathname as "/dashboard/positions"} />}
           disabled={isPending}
           nativeButton={false}

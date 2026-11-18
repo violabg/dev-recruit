@@ -236,7 +236,7 @@ export const SearchAndFilterCandidates = ({
           <Link
             href={pathname as "/dashboard/candidates"}
             className={buttonVariants({
-              variant: "outlineDestructive",
+              variant: "ghostDestructive",
             })}
           >
             <X className="mr-1 size-4" />

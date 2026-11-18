@@ -14,7 +14,7 @@ export const StatsFallback = AssessmentPipelineSkeleton;
 
 /** Mirrors SearchAndFilterAssessments: search + wrapped [status, position, language]. */
 export const FiltersSkeleton = () => (
-  <div className="flex sm:flex-row flex-col gap-4">
+  <div className="flex @[800px]:flex-row flex-col gap-4">
     <Skeleton className="flex-1 rounded-lg h-9" />
     <div className="flex flex-wrap gap-4">
       <Skeleton className="rounded-lg w-[153px] h-9" />

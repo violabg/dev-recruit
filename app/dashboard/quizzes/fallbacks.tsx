@@ -6,11 +6,11 @@ import { ArrowUpDown } from "lucide-react";
 /** Mirrors SearchAndFilterQuizzes: search + [sort, level, position]. */
 export function FiltersSkeleton() {
   return (
-    <div className="flex sm:flex-row flex-col gap-4">
+    <div className="flex @[800px]:flex-row flex-col gap-4">
       <div className="relative flex-1">
         <Skeleton className="rounded-lg w-full h-9" />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Skeleton className="rounded-lg w-[142px] h-9" />
         <Skeleton className="rounded-lg w-[145px] h-9" />
         <Skeleton className="rounded-lg w-[183px] h-9" />

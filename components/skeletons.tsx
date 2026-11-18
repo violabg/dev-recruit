@@ -45,17 +45,20 @@ export function TextSkeleton({
 /**
  * Mirrors the search + select filter bars
  * (`@container` → `flex @[800px]:flex-row flex-col gap-4`).
+ * Pages with fewer selects pass a lower `rowClassName`/`selectClassName` threshold.
  */
 export function FilterBarSkeleton({
   selects,
   selectClassName = "@[800px]:w-40 w-full",
+  rowClassName = "flex @[800px]:flex-row flex-col gap-4",
 }: {
   selects: number;
   selectClassName?: string;
+  rowClassName?: string;
 }) {
   return (
     <div className="@container">
-      <div className="flex @[800px]:flex-row flex-col gap-4">
+      <div className={rowClassName}>
         <Skeleton className="flex-1 rounded-lg h-9" />
         {Array.from({ length: selects }, (_, i) => (
           <Skeleton key={i} className={cn("rounded-lg h-9", selectClassName)} />

@@ -36,6 +36,12 @@ const statusOptions = [
   { value: "cancelled", label: "Annullati" },
 ];
 
+const ALL_LANGUAGES = "all";
+const allLanguagesOption = {
+  value: ALL_LANGUAGES,
+  label: "Tutti i linguaggi",
+};
+
 type SearchAndFilterAssessmentsProps = {
   languageOptions?: ReactNode;
   positionItems?: { value: string; label: string }[];
@@ -90,7 +96,7 @@ export function SearchAndFilterAssessments({
       const params = new URLSearchParams(searchParams.toString());
 
       Object.entries(updates).forEach(([key, value]) => {
-        if (value && value !== "all" && value !== "Tutti i linguaggi") {
+        if (value && value !== "all") {
           params.set(key, value);
         } else {
           params.delete(key);
@@ -113,17 +119,17 @@ export function SearchAndFilterAssessments({
     setSearch("");
     setStatus("all");
     setPosition("all");
-    setLanguage("Tutti i linguaggi");
+    setLanguage(ALL_LANGUAGES);
   };
 
   const hasActiveFilters =
-    search ||
+    Boolean(search) ||
     status !== "all" ||
     position !== "all" ||
-    language !== "Tutti i linguaggi";
+    language !== ALL_LANGUAGES;
 
   return (
-    <div className="flex sm:flex-row flex-col gap-4">
+    <div className="flex @[800px]:flex-row flex-col gap-4">
       <div className="relative flex-1">
         {isPending ? (
           <Loader2 className="top-2.5 left-2.5 absolute size-4 animate-spin" />
@@ -192,8 +198,9 @@ export function SearchAndFilterAssessments({
         </Select>
         <Select
           value={language}
+          items={[allLanguagesOption]}
           onValueChange={(value) => {
-            const newLanguage = value || "Tutti i linguaggi";
+            const newLanguage = value || ALL_LANGUAGES;
             setLanguage(newLanguage);
             updateFilters({ search, status, position, language: newLanguage });
           }}
@@ -203,7 +210,9 @@ export function SearchAndFilterAssessments({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tutti i linguaggi</SelectItem>
+            <SelectItem value={ALL_LANGUAGES}>
+              {allLanguagesOption.label}
+            </SelectItem>
             {languageOptions}
           </SelectContent>
         </Select>
@@ -213,11 +222,11 @@ export function SearchAndFilterAssessments({
         <Link
           href={pathname as "/dashboard/assessments"}
           className={buttonVariants({
-            variant: "outlineDestructive",
+            variant: "ghostDestructive",
           })}
           onClick={clearAllFilters}
         >
-          <X className="mr-2 size-4" />
+          <X className="mr-1 size-4" />
           Reset
         </Link>
       )}

@@ -13,6 +13,7 @@ import {
   Briefcase,
   Loader2,
   Search as SearchIcon,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -126,7 +127,7 @@ export const SearchAndFilterQuizzes = ({
   const currentPosition = searchParams.get("positionId") || "all";
 
   return (
-    <div className="flex sm:flex-row flex-col gap-4">
+    <div className="flex @[800px]:flex-row flex-col gap-4">
       <div className="relative flex-1">
         {isPending ? (
           <Loader2 className="top-2.5 left-2.5 absolute size-4 animate-spin" />
@@ -147,7 +148,7 @@ export const SearchAndFilterQuizzes = ({
           disabled={isPending}
         />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Select
           name="sort"
           items={sortOptions}
@@ -223,12 +224,13 @@ export const SearchAndFilterQuizzes = ({
           currentFilter !== "Tutti i livelli" ||
           currentPosition !== "all") && (
           <Button
-            variant="outlineDestructive"
+            variant="ghostDestructive"
             render={<Link href="/dashboard/quizzes" />}
             disabled={isPending}
             nativeButton={false}
           >
-            Resetta
+            <X className="mr-1 size-4" />
+            Reset
           </Button>
         )}
       </div>

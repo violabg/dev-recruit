@@ -79,7 +79,7 @@ export function SearchUsers() {
       </div>
       {hasFilters && (
         <Button
-          variant="outlineDestructive"
+          variant="ghostDestructive"
           render={<Link href={pathname as "/dashboard/settings/users"} />}
           disabled={isPending}
           nativeButton={false}
