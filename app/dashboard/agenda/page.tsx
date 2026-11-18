@@ -1,9 +1,10 @@
 import { MineToggle } from "@/components/applications/mine-toggle";
 import { AgendaList } from "@/components/interviews/agenda-list";
+import { AgendaListSkeleton } from "@/components/interviews/agenda-list-skeleton";
 import PageHeader from "@/components/page-header";
-import { TableSkeleton } from "@/components/skeletons";
 import { getCurrentUser } from "@/lib/auth-server";
 import { getAgendaInterviews } from "@/lib/data/interviews";
+import { cacheLife } from "next/cache";
 import { Suspense } from "react";
 
 type AgendaSearchParams = Promise<{ mine?: string }>;
@@ -26,39 +27,41 @@ export default function AgendaPage({
         <MineToggle label="Solo i miei" />
       </Suspense>
 
-      <Suspense
-        fallback={
-          <TableSkeleton
-            columns={[
-              { header: "Ora", cell: "text" },
-              { header: "Colloquio", cell: "stacked" },
-              { header: "Stato", cell: "badge" },
-              { header: "", cell: "action", actionCount: 2 },
-            ]}
-          />
-        }
-      >
+      <Suspense fallback={<AgendaListSkeleton />}>
         <AgendaContent searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-/**
- * Request-time part of the Agenda: the cached read is the same for every
- * user; "Solo i miei" filters it in memory and never limits access.
- */
 async function AgendaContent({
   searchParams,
 }: {
   searchParams: AgendaSearchParams;
 }) {
   const { mine } = await searchParams;
+  const view = await getAgendaView(mine === "1");
+
+  return <AgendaList interviews={view.interviews} now={view.now} />;
+}
+
+/**
+ * Request-time part of the Agenda. The cached read is the same for every user;
+ * "Solo i miei" filters it in memory and never limits access.
+ *
+ * The session, the clock and the filter are read inside `use cache: private`,
+ * so the result is cached in the browser and included in the per-link prefetch:
+ * navigating to the agenda shows the list instead of the table skeleton.
+ */
+async function getAgendaView(mine: boolean) {
+  "use cache: private";
+  cacheLife("minutes");
+
   const user = await getCurrentUser();
   const rows = await getAgendaInterviews();
 
   const interviews =
-    mine === "1" && user
+    mine && user
       ? rows.filter(
           (row) =>
             row.ownerId === user.id ||
@@ -68,5 +71,5 @@ async function AgendaContent({
         )
       : rows;
 
-  return <AgendaList interviews={interviews} now={new Date()} />;
+  return { interviews, now: new Date() };
 }

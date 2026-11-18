@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { UserError } from "@/lib/services/user-error";
@@ -40,6 +41,21 @@ export async function getCurrentUser() {
     }
     return null;
   }
+}
+
+/**
+ * Viewer id used only to arrange the view: which ownership button to offer,
+ * whether a score is still hidden. The value is cached in the browser for the
+ * session, so the session-dependent part of a page can ship in the App Shell
+ * and in prefetches instead of streaming behind a fallback.
+ *
+ * Never use it to authorize: guards and server actions call getCurrentUser().
+ */
+export async function getViewerId() {
+  "use cache: private";
+  cacheLife("minutes");
+
+  return (await getCurrentUser())?.id ?? "";
 }
 
 /**

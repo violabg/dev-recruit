@@ -1,8 +1,7 @@
 import { DecisionSummaryCard } from "@/components/applications/decision/decision-summary-card";
-import { getCurrentUser } from "@/lib/auth-server";
+import { getViewerId } from "@/lib/auth-server";
 import { getApplicationDecision } from "@/lib/data/applications";
 import { computeDecisionScore } from "@/lib/utils/decision-score";
-import { connection } from "next/server";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -21,17 +20,17 @@ export async function DecisionTab({ params }: Props) {
     return null;
   }
 
-  // Session-dependent view arrangement: read per request
-  await connection();
-  const user = await getCurrentUser();
+  // Session-dependent view arrangement, cached for the session so the tab is
+  // part of the prefetched UI
+  const currentUserId = await getViewerId();
 
   // A participant who still has to submit a scorecard does not see the score
   const scoreHidden =
-    !!user &&
+    !!currentUserId &&
     decision.interviews.some(
       (interview) =>
-        interview.participantIds.includes(user.id) &&
-        !interview.submittedInterviewerIds.includes(user.id),
+        interview.participantIds.includes(currentUserId) &&
+        !interview.submittedInterviewerIds.includes(currentUserId),
     );
 
   const score = computeDecisionScore({

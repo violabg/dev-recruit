@@ -1,15 +1,15 @@
 import { ApplicationStageBadge } from "@/components/applications/application-stage-badge";
 import { MoveStageMenu } from "@/components/applications/move-stage-menu";
-import { OwnerControls } from "@/components/applications/owner-controls";
 import { StageStepper } from "@/components/applications/stage-stepper";
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/auth-server";
 import { getApplicationDetail } from "@/lib/data/applications";
 import { cn } from "cn";
 import Link from "next/link";
-import { connection } from "next/server";
+import { Suspense } from "react";
+import { ApplicationOwnerControls } from "./application-owner-controls";
+import { OwnerControlsSkeleton } from "./fallbacks";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -34,10 +34,6 @@ export async function ApplicationHeader({ params }: Props) {
     );
   }
 
-  // Outside the cached read: the session is read per request, after
-  // connection() so it never runs while the route is prerendered
-  await connection();
-  const currentUserId = (await getCurrentUser())?.id ?? "";
   const { candidate, position } = detail;
 
   return (
@@ -71,11 +67,12 @@ export async function ApplicationHeader({ params }: Props) {
         actionBtns={<MoveStageMenu applicationId={detail.id} stage={detail.stage} />}
       />
       <StageStepper stage={detail.stage} />
-      <OwnerControls
-        applicationId={detail.id}
-        owner={detail.owner}
-        currentUserId={currentUserId}
-      />
+      <Suspense fallback={<OwnerControlsSkeleton />}>
+        <ApplicationOwnerControls
+          applicationId={detail.id}
+          owner={detail.owner}
+        />
+      </Suspense>
     </div>
   );
 }

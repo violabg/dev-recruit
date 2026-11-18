@@ -1,6 +1,7 @@
 "use client";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
 import type { Section } from "@/components/dashboard/sections";
 import {
@@ -34,6 +35,13 @@ function PendingDot() {
 
 function NavItem({ item, isActive }: { item: Section; isActive: boolean }) {
   const Icon = item.icon;
+  // The App Shell of the route is prefetched by default. The per-link
+  // prefetch resolves its searchParams and includes the cached list, so it
+  // runs only after the pointer or the keyboard focus shows intent: one
+  // request for the item the user is about to open, not one per menu item.
+  const [intent, setIntent] = React.useState(false);
+  const showIntent = () => setIntent(true);
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -42,6 +50,10 @@ function NavItem({ item, isActive }: { item: Section; isActive: boolean }) {
         render={
           <Link
             href={item.href as never}
+            prefetch={intent ? true : undefined}
+            onMouseEnter={showIntent}
+            onFocus={showIntent}
+            onTouchStart={showIntent}
             aria-current={isActive ? "page" : undefined}
           />
         }

@@ -27,7 +27,10 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <SessionRefreshProvider />
       <AppSidebar />
-      <SidebarInset className="md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border overflow-clip">
+      {/* min-w-0: as a flex item the inset defaults to min-width:auto, so the
+          nowrap content of a wide table would push the whole page instead of
+          scrolling inside the table container. */}
+      <SidebarInset className="md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border overflow-clip min-w-0">
         <header className="top-0 z-30 sticky flex items-center gap-3 bg-background/85 supports-backdrop-filter:bg-background/70 backdrop-blur px-4 md:px-8 border-b h-12 shrink-0">
           <SidebarTrigger className="-ml-1.5 text-muted-foreground" />
           <div className="bg-border w-px h-4" aria-hidden />

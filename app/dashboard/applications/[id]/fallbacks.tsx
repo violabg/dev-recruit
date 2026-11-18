@@ -37,6 +37,16 @@ export function ApplicationHeaderSkeleton() {
   );
 }
 
+/** Mirrors OwnerControls in the application header. */
+export function OwnerControlsSkeleton() {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <TextSkeleton className="w-40" />
+      <ButtonSkeleton size="sm" className="w-32" />
+    </div>
+  );
+}
+
 /** Mirrors NextActionCard. */
 export function NextActionSkeleton() {
   return (
