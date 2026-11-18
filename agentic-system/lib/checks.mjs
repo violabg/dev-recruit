@@ -80,7 +80,7 @@ export function runChecks(design) {
       warnings.push({ rule: "operation-without-obligations", element: operation.id, detail: "the operation writes code but realizes no obligation of R" });
     }
     if (operation.source && operation.source !== "Design" && blank(operation.sourceRef)) {
-      errors.push({ rule: "operation-source-without-ref", element: operation.id, detail: `${operation.id} comes from ${operation.source} but cites no sourceRef` });
+      errors.push({ rule: "operation-without-source", element: operation.id, detail: "the operation comes from an external source but does not cite it: an external step with no source is an invention" });
     }
     for (const dependency of operation.dependsOn ?? []) {
       const position = operationIds.indexOf(dependency);
@@ -96,7 +96,7 @@ export function runChecks(design) {
   let obligationsRealized = 0;
   for (const obligation of design.obligations) {
     if (realizedObligations.has(obligation.id)) obligationsRealized += 1;
-    else if (operations.length) errors.push({ rule: "obligation-not-realized", element: obligation.id, detail: `no operation realizes ${obligation.id} (refObligations)` });
+    else if (operations.length) errors.push({ rule: "obligation-not-realized", element: obligation.id, detail: "no operation of the plan realizes this obligation of R" });
   }
 
   // Every contract and every public API is realized by at least one operation.

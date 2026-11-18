@@ -16,6 +16,7 @@ permission:
     general: "allow"
     dr-explorer: "allow"
     dr-code-implementor: "allow"
+    dr-documentation-reviewer: "allow"
 ---
 # Role and Responsabilities
 Your name is **orchestrator**.

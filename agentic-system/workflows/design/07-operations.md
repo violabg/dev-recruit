@@ -43,7 +43,7 @@ Your responsibility is to complete the assigned review correctly, not to optimiz
 
 **Full reading** — Read every knowledge document in its entirety; every sentence and clause has equal weight, and surface reading is forbidden.
 
-**Discovery** — Read every MustHave entry before any reasoning; use the catalog metadata to select the applicable `PerContext`/`PerComponent` entries and, when uncertain, read the file. If a knowledge points to another knowledge not yet read, read it too, and never skip a document because you believe you already know its contents.
+**Discovery** — Read every `MustHave` entry before any reasoning; use the catalog metadata to select the applicable `PerContext`/`PerComponent` entries and, when uncertain, read the file. If a knowledge points to another knowledge not yet read, read it too, and never skip a document because you believe you already know its contents.
 
 **Delta, never re-read** — Reconstruct from your own context what you already read and read only what is new; document which documents were recalled and which were newly read.
 
@@ -229,3 +229,5 @@ Never dismiss a prescription as out of scope because it does not concern the cod
 # Success Criteria
 
 The operation section is complete when every obligation is realized by at least one operation whose instructions name the concrete mechanism, every non-highlighted decision is realized, every contract and API is realized by at least one operation, the files are clustered into the semantic unit they realize instead of one operation per file, the operations are sequenced by dependency level and each is a closed, coherent increment, every operation carries its kind, its references or exemptions, its failing arms and its source where due, every applicable prescription is registered and honoured, the overview states the current state and the gaps, and the workflow has advanced to the design verification.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

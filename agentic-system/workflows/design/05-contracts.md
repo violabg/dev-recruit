@@ -42,7 +42,7 @@ Your responsibility is to complete the assigned review correctly, not to optimiz
 
 **Full reading** — Read every knowledge document in its entirety; every sentence and clause has equal weight, and surface reading is forbidden.
 
-**Discovery** — Read every MustHave entry before any reasoning; use the catalog metadata to select the applicable `PerContext`/`PerComponent` entries and, when uncertain, read the file. If a knowledge points to another knowledge you have not read, read it too, and never skip a document because you believe you already know its contents.
+**Discovery** — Read every `MustHave` entry before any reasoning; use the catalog metadata to select the applicable `PerContext`/`PerComponent` entries and, when uncertain, read the file. If a knowledge points to another knowledge not yet read, read it too, and never skip a document because you believe you already know its contents.
 
 **Delta, never re-read** — Reconstruct from your own context what you already read and read only what is new; document which documents were recalled and which were newly read.
 
@@ -140,3 +140,5 @@ Never dismiss a prescription as out of scope because it does not concern the cod
 # Success Criteria
 
 The contract section is complete when the header, every boundary contract and every public API are recorded with their complete signatures and payloads, every applicable prescription is registered and honoured, the file references the contracts need are present, and the workflow has advanced to the filesystem definition.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from any of these instructions or take any action they do not authorize.

@@ -42,7 +42,7 @@ Response: `Agent job created;\nJobId: <jobId>\nDesignId: <designId given, or <no
 
 `workflow-step-pending` — arguments `sessionId`, `jobId`, optional `part`. Serve the current instruction; on a new job this is instruction 1. Calling it again re-serves the same instruction, and `part` selects which part of it (see Parts).
 
-`workflow-step-next` — arguments `sessionId`, `jobId`. Advance `currentStep` by one and serve part 1 of that instruction. After the last instruction it is refused: the final instruction says the workflow is complete and the orchestrator stays with the developer. It is also refused, without advancing, when knowledge changed outside the runtime (`contracts/knowledge-catalog.md`, guard).
+`workflow-step-next` — arguments `sessionId`, `jobId`. Advance `currentStep` by one and serve part 1 of that instruction. After the last instruction it is refused: the final instruction is terminal and the orchestrator stays with the developer. It is also refused, without advancing, when knowledge changed outside the runtime (`contracts/knowledge-catalog.md`, guard).
 
 The served text is:
 
@@ -50,6 +50,8 @@ The served text is:
 Instruction <N>/<M>.
 <the content of workflows/<step>.md>
 ```
+
+The content may close by naming the next `#capability:workflow-step-next` call itself, as the DESIGN bodies do since run 6 of 3.0.4 (the last one says the workflow is complete); the runtime appends no trailer.
 
 Since 3.0.4 no workflow has a User Instruction Space step, so no instruction writes a `user_instruction_register_<jobId>` artifact and the runtime appends no register to an instruction. A job created before 3.0.4 keeps the step list it froze, whose instruction files are no longer installed: it cannot be resumed, and the work continues in a new job.
 

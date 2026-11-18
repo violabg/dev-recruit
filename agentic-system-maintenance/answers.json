@@ -371,7 +371,7 @@
       "id": "hybrid-agents",
       "answer": "beside the skill route, .opencode/agents and .github/agents keep the orchestrator, ask and knowledge-builder agents as repository-owned copies of the native-route render; the two plan skills keep a local customization that continues when the dr-orchestrator agent already runs instead of loading the role skill again",
       "source": "user",
-      "evidence": "requested 2026-11-14: a harness with an agent picker should still start the role natively. The kit renders one route per client, so these six agent files are not installer-managed: after a kit upgrade, render them again from a copy of answers.json with route=native for opencode and github-copilot-vscode (install.mjs show <path> --answers <that copy>) and compare with what is committed"
+      "evidence": "requested 2026-11-14: a harness with an agent picker should still start the role natively. The kit renders one route per client, so these six agent files are not installer-managed: after a kit upgrade, render them again from a copy of answers.json with route=native for opencode and github-copilot-vscode (install.mjs show <path> --answers <that copy>) and compare with what is committed. 2026-11-18, upgrade to 8.0.0: re-rendered; .opencode/agents/dr-orchestrator.md gained the dr-documentation-reviewer allow (the 8.0.0 fix), both dr-knowledge-builder copies gained the 7.0.2 Audience rules they still lacked, the other three matched"
     },
     {
       "id": "delegation",
