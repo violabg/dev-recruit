@@ -68,7 +68,9 @@ export function MappaSection() {
           candidato e la posizione), sotto la <strong>card Prossima azione</strong>{" "}
           quando la pagina è una candidatura, poi i tab. I{" "}
           <strong>breadcrumbs</strong> (Panoramica / Candidature / Dettaglio)
-          riportano sempre al livello superiore.
+          riportano sempre al livello superiore. Nelle pagine interne a una
+          sezione, la freccia a sinistra del titolo torna alla pagina
+          precedente (non visibile su schermi piccoli).
         </GuideText>
       </GuideSubsection>
     </GuideSection>

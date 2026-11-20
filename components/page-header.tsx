@@ -1,4 +1,6 @@
 import { SECTIONS, type SectionKey } from "@/components/dashboard/sections";
+import { PageBackButton } from "@/components/page-back-button";
+import { Suspense } from "react";
 import { cn } from "cn";
 
 type PageHeaderProps = {
@@ -36,7 +38,10 @@ const PageHeader = ({
 }: PageHeaderProps) => {
   return (
     <div className="flex lg:flex-row flex-col lg:justify-between lg:items-end gap-4 mb-8 pb-6 border-b">
-      <div className="flex gap-4 min-w-0">
+      <div className="relative flex gap-4 min-w-0">
+        <Suspense fallback={null}>
+          <PageBackButton />
+        </Suspense>
         <SectionRule section={section} />
         <div className="py-0.5 min-w-0">
           <h1 className={PAGE_TITLE_CLASS}>{title}</h1>
