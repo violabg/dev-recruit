@@ -147,7 +147,7 @@ export function CandidaturaSection() {
           alt="Pagina della candidatura con la linea delle fasi, la Prossima azione e la cronologia"
           caption="Candidatura: prossima azione e cronologia delle prove"
           width={1440}
-          height={1039}
+          height={1000}
         />
       </GuideSubsection>
 

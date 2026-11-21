@@ -120,7 +120,7 @@ export function PosizioneSection() {
           alt="Scheda di valutazione con criteri, pesi, livelli attesi e ancore"
           caption="Scheda di valutazione: criteri, pesi e ancore"
           width={1440}
-          height={1671}
+          height={1341}
         />
         <GuideFigure
           src="/guida/04-guide-colloquio.png"
@@ -141,7 +141,7 @@ export function PosizioneSection() {
           alt="Editor di una guida colloquio con sezioni, minuti e domande"
           caption="Editor di una guida colloquio: sezioni, minuti e domande"
           width={1440}
-          height={3070}
+          height={3074}
         />
       </div>
     </GuideSection>

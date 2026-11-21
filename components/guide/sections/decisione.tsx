@@ -85,7 +85,7 @@ export function DecisioneSection() {
         alt="Pagina Decisione con decisione registrata, riepilogo, matrice criteri per fonte e form"
         caption="Pagina Decisione: decisione registrata, riepilogo, matrice e form"
         width={1440}
-        height={1992}
+        height={1599}
       />
     </GuideSection>
   );

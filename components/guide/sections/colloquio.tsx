@@ -129,7 +129,7 @@ export function ColloquioSection() {
           alt="Tab Colloqui di una candidatura con i colloqui pianificati"
           caption="Tab Colloqui di una candidatura"
           width={1440}
-          height={1067}
+          height={1000}
         />
         <GuideFigure
           src="/guida/09-preparazione-colloquio.png"
@@ -143,14 +143,14 @@ export function ColloquioSection() {
           alt="Modalità live con scaletta e timer, domanda, risposte attese, note e copertura dei criteri"
           caption="Modalità live con la copertura dei criteri"
           width={1440}
-          height={1063}
+          height={1215}
         />
         <GuideFigure
           src="/guida/11-scheda-inviata.png"
           alt="Scheda intervistatore con le fasi del colloquio e le schede già inviate, in sola lettura"
           caption="Schede inviate: in sola lettura, non più modificabili"
           width={1440}
-          height={1500}
+          height={1198}
         />
       </div>
     </GuideSection>
