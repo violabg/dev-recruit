@@ -118,15 +118,35 @@ Source: package README and `dist/src/*.d.ts`; https://claude.com/docs/connectors
 
 ## 3 Widget (MCP Apps)
 
-Three read tools show an interactive widget in hosts that support MCP Apps (claude.ai, Claude desktop; VS Code behind `chat.mcp.apps.enabled`). Every tool still returns its full Italian text, so a host without widgets loses nothing.
+Three read tools and the draft tools show an interactive widget in hosts that support MCP Apps (claude.ai, Claude desktop; VS Code behind `chat.mcp.apps.enabled`). Every tool still returns its full Italian text, so a host without widgets loses nothing.
 
 | Tool | Widget | Resource |
 |---|---|---|
 | `action_center` | Le mie azioni: totale, riepilogo per coda, righe con "Apri" e "Dettagli" | `ui://dev-recruit/action-center.html` |
 | `get_position` | Posizione: stato, candidature per fase (stazioni), setup con "Completa", competenze, candidature | `ui://dev-recruit/position.html` |
 | `get_application` | Candidatura: fasi (stazioni), valutazioni indicative, decisione, colloqui | `ui://dev-recruit/application-flow.html` |
+| `create_position_draft`, `save_quiz_draft`, `propose_interview_slot` (and their confirmations) | Anteprima bozza: contenuto, nota su cosa fa la conferma, pulsante di conferma | `ui://dev-recruit/draft-preview.html` |
 
 - **Data.** The tool result carries a presentation-ready model in `structuredContent.widget` (`lib/mcp/widgets/types.ts`, built by `lib/mcp/widgets/build.ts` from the dashboard presentation maps and the MCP deep links). The widget never receives the CV text and keeps the hidden decision hidden.
 - **Bundle.** `mcp-apps/` (plain TypeScript, no framework) is built by `pnpm build:mcp-apps` into one self-contained HTML file and written as `lib/mcp/widgets/html.generated.ts` (committed; `pnpm build` regenerates it before `next build`). After changing `mcp-apps/` or `lib/mcp/widgets/types.ts`, run `pnpm build:mcp-apps` and commit the generated module.
-- **Registration.** `lib/mcp/widgets/resources.ts`: `ENABLED_WIDGETS` lists the shipped widgets; a tool whose `widget` is in the list gets `_meta.ui.resourceUri` (plus the legacy `ui/resourceUri` key). The draft and interview-prep widgets are not shipped yet, so their tools have no `_meta`.
-- **Security.** CSP empty (no external origin: no fetch, no external font or asset). Text is inserted as text nodes only, never as HTML. "Apri" opens the dashboard through the host (`ui/open-link`); "Dettagli" sends a follow-up request to the assistant (`ui/message`). The widget calls no tool and writes nothing.
+- **Registration.** `lib/mcp/widgets/resources.ts`: `ENABLED_WIDGETS` lists the shipped widgets; a tool whose `widget` is in the list gets `_meta.ui.resourceUri` (plus the legacy `ui/resourceUri` key). The interview-prep widget is not shipped yet, so `get_interview` has no widget. An app-only tool also gets `_meta.ui.visibility: ["app"]`.
+- **Security.** CSP empty (no external origin: no fetch, no external font or asset). Text is inserted as text nodes only, never as HTML. "Apri" opens the dashboard through the host (`ui/open-link`); "Dettagli" sends a follow-up request to the assistant (`ui/message`). The only tool calls a widget makes are the draft confirmations (section 4).
+
+## 4 Bozze e conferma
+
+The assistant prepares drafts; a person confirms them with the button of the draft-preview widget. The confirmation tools are app-only (`_meta.ui.visibility: ["app"]`): the host does not offer them to the model, so the model cannot confirm. Scopes and permissions are checked again on every call.
+
+| Tool | Scope | Visible to | What it writes |
+|---|---|---|---|
+| `create_position_draft` | `recruit:draft` | model | A position in `draft` status (`createPosition`) |
+| `save_quiz_draft` | `recruit:draft` | model | Nothing: validates the quiz (editor schema) and returns the preview |
+| `save_quiz` | `recruit:draft` | widget only | The quiz of the preview (`saveQuiz`, the editor save path); nobody is invited |
+| `get_scheduling_options` | `recruit:read` | model | Nothing: guides of the position, team members (id and name, no email), next round, pending proposals |
+| `propose_interview_slot` | `recruit:draft` | model | A pending `InterviewProposal` with the scheduling-form payload, validated like the form (open application, guide of the position, existing participants, one lead) |
+| `publish_draft` | `recruit:write` | widget only | `kind: "position"`: opens a draft position (`publishPositionDraft`). `kind: "proposal"`: schedules the proposal (`confirmInterviewProposal` → `scheduleInterview`: interview, kit in draft, stage move); the proposal is claimed first, so a double click schedules once. No email is sent |
+
+Known limits:
+
+- Pending proposals are visible through `get_scheduling_options` only; the dashboard does not list them yet.
+- In a client without MCP Apps a draft position is opened from the dashboard; a quiz preview cannot be saved and a proposal cannot be scheduled there.
+- The interview kit cannot be edited through MCP yet (`save_interview_kit_draft` is not shipped).

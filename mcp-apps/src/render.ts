@@ -7,6 +7,7 @@
 import type {
   ActionCenterWidget,
   ApplicationFlowWidget,
+  DraftPreviewWidget,
   PositionWidget,
   WidgetBadge,
   WidgetModel,
@@ -15,11 +16,21 @@ import type {
 } from "../../lib/mcp/widgets/types";
 import { h, type Child } from "./dom";
 
+/** Outcome of an app-only tool call, as the widget needs it */
+export interface ToolOutcome {
+  ok: boolean;
+  text: string;
+  /** Widget model of the result, when the tool returns one */
+  widget: unknown;
+}
+
 export interface WidgetActions {
   /** Open a dashboard page (through the host) */
   open(url: string): void;
   /** Send a follow-up request to the assistant */
   ask(text: string): void;
+  /** Call a tool of the server (app-only confirmations) through the host */
+  call(tool: string, args: Record<string, unknown>): Promise<ToolOutcome>;
 }
 
 /** Rows shown per list before the "open the rest in dev-recruit" button */
@@ -29,6 +40,7 @@ const KINDS = new Set<WidgetModel["kind"]>([
   "action-center",
   "position",
   "application-flow",
+  "draft-preview",
 ]);
 
 export function isWidgetModel(value: unknown): value is WidgetModel {
@@ -344,8 +356,94 @@ function applicationFlow(model: ApplicationFlowWidget, actions: WidgetActions) {
   );
 }
 
+function draftPreview(model: DraftPreviewWidget, actions: WidgetActions): HTMLElement {
+  const status = h("p", { class: "note", attrs: { role: "status", "aria-live": "polite" } });
+
+  const confirm =
+    model.confirm &&
+    h(
+      "button",
+      {
+        class: "btn btn-confirm",
+        attrs: { type: "button" },
+        on: {
+          click: async (event) => {
+            const button = event.currentTarget as HTMLButtonElement;
+            const { tool, arguments: args, label } = model.confirm!;
+            button.disabled = true;
+            button.textContent = "Conferma in corso…";
+            status.className = "note";
+            status.textContent = "";
+
+            const outcome = await actions
+              .call(tool, args)
+              .catch(() => ({ ok: false, text: "Si è verificato un errore. Riprova.", widget: null }));
+
+            if (outcome.ok && isWidgetModel(outcome.widget)) {
+              container.replaceWith(renderWidget(outcome.widget, actions));
+              return;
+            }
+            if (outcome.ok) {
+              button.remove();
+              status.className = "note is-success";
+              status.textContent = outcome.text;
+              return;
+            }
+            button.disabled = false;
+            button.textContent = label;
+            status.className = "note is-error";
+            status.textContent = outcome.text;
+          },
+        },
+      },
+      model.confirm.label,
+    );
+
+  const container = h(
+    "div",
+    { class: "widget" },
+    band(
+      model.eyebrow,
+      model.title,
+      badge(model.status),
+      model.facts.length > 0 &&
+        h(
+          "dl",
+          { class: "facts" },
+          ...model.facts.flatMap((fact) => [h("dt", null, fact.label), h("dd", null, fact.value)]),
+        ),
+    ),
+    h(
+      "main",
+      { class: "body" },
+      ...model.sections.map((part) =>
+        section(
+          part.title,
+          null,
+          h("ul", { class: "plain" }, ...part.items.map((item) => h("li", null, item))),
+        ),
+      ),
+    ),
+    h(
+      "footer",
+      { class: "confirm" },
+      h("p", { class: "note" }, model.note),
+      status,
+      h(
+        "div",
+        { class: "row-actions" },
+        model.url && openButton(actions, model.url, "Apri in dev-recruit"),
+        confirm,
+      ),
+    ),
+  );
+  return container;
+}
+
 export function renderWidget(model: WidgetModel, actions: WidgetActions): HTMLElement {
   switch (model.kind) {
+    case "draft-preview":
+      return draftPreview(model, actions);
     case "action-center":
       return actionCenter(model, actions);
     case "position":

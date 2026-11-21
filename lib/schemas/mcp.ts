@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { baseSchemas } from "./base";
+import { scheduleInterviewSchema } from "./interview";
+import { positionFormSchema } from "./position";
+import { quizEditorSchema } from "./quiz";
 
 // ====================
 // MCP TOOL INPUTS (read tools)
@@ -40,6 +43,33 @@ export const getInterviewInputSchema = z.object({
 });
 
 // ====================
+// MCP TOOL INPUTS (draft and write tools)
+// ====================
+
+/** Same fields as the dashboard form; the position is created as a draft */
+export const createPositionDraftInputSchema = positionFormSchema;
+
+/** A new quiz of a position: same fields as the quiz editor */
+export const quizDraftInputSchema = quizEditorSchema.extend({
+  positionId: baseSchemas.id,
+});
+
+export const getSchedulingOptionsInputSchema = z.object({
+  applicationId: baseSchemas.id,
+});
+
+/** Same fields as the scheduling form */
+export const proposeInterviewSlotInputSchema = scheduleInterviewSchema;
+
+/** The confirmed step of a draft: open a position, schedule a proposal */
+export const publishDraftInputSchema = z.object({
+  kind: z.enum(["position", "proposal"], {
+    error: "Tipo di bozza non valido",
+  }),
+  id: baseSchemas.id,
+});
+
+// ====================
 // MCP ADMIN ACTIONS
 // ====================
 
@@ -62,3 +92,5 @@ export type GetPositionInput = z.infer<typeof getPositionInputSchema>;
 export type GetApplicationInput = z.infer<typeof getApplicationInputSchema>;
 export type ListInterviewsInput = z.infer<typeof listInterviewsInputSchema>;
 export type GetInterviewInput = z.infer<typeof getInterviewInputSchema>;
+export type QuizDraftInput = z.infer<typeof quizDraftInputSchema>;
+export type PublishDraftInput = z.infer<typeof publishDraftInputSchema>;

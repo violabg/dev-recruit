@@ -3,16 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ActionCenterWidget,
   ApplicationFlowWidget,
+  DraftPreviewWidget,
   PositionWidget,
   WidgetRow,
 } from "@/lib/mcp/widgets/types";
 import { isWidgetModel, MAX_ROWS, renderWidget } from "@/mcp-apps/src/render";
 
-const actions = { open: vi.fn(), ask: vi.fn() };
+const actions = { open: vi.fn(), ask: vi.fn(), call: vi.fn() };
 
 beforeEach(() => {
   actions.open.mockClear();
   actions.ask.mockClear();
+  actions.call.mockReset();
 });
 
 const row = (title: string, extra: Partial<WidgetRow> = {}): WidgetRow => ({
@@ -42,7 +44,8 @@ const buttons = (element: HTMLElement, label: string) =>
 describe("isWidgetModel", () => {
   it("accepts the known kinds only", () => {
     expect(isWidgetModel({ kind: "position" })).toBe(true);
-    expect(isWidgetModel({ kind: "draft-preview" })).toBe(false);
+    expect(isWidgetModel({ kind: "draft-preview" })).toBe(true);
+    expect(isWidgetModel({ kind: "interview-prep" })).toBe(false);
     expect(isWidgetModel(null)).toBe(false);
     expect(isWidgetModel("position")).toBe(false);
   });
@@ -194,5 +197,77 @@ describe("application flow widget", () => {
   it("has no track for a closed application", () => {
     const element = renderWidget({ ...model, track: [] }, actions);
     expect(element.querySelector(".track")).toBeNull();
+  });
+});
+
+describe("draft preview widget", () => {
+  const draft: DraftPreviewWidget = {
+    kind: "draft-preview",
+    draft: "position",
+    eyebrow: "Bozza di posizione",
+    title: "Frontend",
+    status: { label: "Bozza", tone: "warning" },
+    facts: [{ label: "Livello", value: "Senior" }],
+    sections: [{ title: "Competenze", items: ["React"] }],
+    note: "La posizione è salvata in bozza.",
+    confirm: {
+      label: "Pubblica la posizione",
+      tool: "publish_draft",
+      arguments: { kind: "position", id: "pos-1" },
+    },
+    url: "https://app.example/p",
+  };
+
+  const confirmButton = (element: HTMLElement) =>
+    element.querySelector<HTMLButtonElement>(".btn-confirm")!;
+
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it("calls the confirmation tool and draws the confirmed widget it returns", async () => {
+    actions.call.mockResolvedValue({
+      ok: true,
+      text: "Posizione pubblicata",
+      widget: { ...draft, status: { label: "Aperta", tone: "done" }, confirm: null },
+    });
+    const host = document.createElement("div");
+    host.append(renderWidget(draft, actions));
+
+    confirmButton(host).click();
+    await flush();
+
+    expect(actions.call).toHaveBeenCalledWith("publish_draft", { kind: "position", id: "pos-1" });
+    expect(host.querySelector(".btn-confirm")).toBeNull();
+    expect(host.querySelector(".badge")?.textContent).toBe("Aperta");
+  });
+
+  it("shows the refusal and lets the person try again", async () => {
+    actions.call.mockResolvedValue({ ok: false, text: "La posizione non è una bozza", widget: null });
+    const host = document.createElement("div");
+    host.append(renderWidget(draft, actions));
+
+    confirmButton(host).click();
+    await flush();
+
+    expect(host.querySelector(".is-error")?.textContent).toBe("La posizione non è una bozza");
+    expect(confirmButton(host).disabled).toBe(false);
+    expect(confirmButton(host).textContent).toBe("Pubblica la posizione");
+  });
+
+  it("shows the result text when the confirmation returns no widget", async () => {
+    actions.call.mockResolvedValue({ ok: true, text: "Colloquio pianificato.", widget: undefined });
+    const host = document.createElement("div");
+    host.append(renderWidget(draft, actions));
+
+    confirmButton(host).click();
+    await flush();
+
+    expect(host.querySelector(".is-success")?.textContent).toBe("Colloquio pianificato.");
+    expect(host.querySelector(".btn-confirm")).toBeNull();
+  });
+
+  it("has no confirm button once confirmed", () => {
+    const element = renderWidget({ ...draft, confirm: null }, actions);
+    expect(element.querySelector(".btn-confirm")).toBeNull();
+    expect(buttons(element, "Apri in dev-recruit")).toHaveLength(1);
   });
 });

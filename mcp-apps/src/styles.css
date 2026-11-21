@@ -468,6 +468,41 @@ h2 {
   justify-self: start;
 }
 
+.plain {
+  display: grid;
+  gap: 4px;
+  white-space: pre-line;
+}
+
+.confirm {
+  padding: 0 16px 14px;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  text-align: right;
+}
+
+.btn-confirm {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.is-success {
+  color: var(--stage-done);
+  font-weight: 600;
+}
+
+.is-error {
+  color: var(--destructive);
+  font-weight: 600;
+}
+
 .foot {
   padding: 0 16px 14px;
   display: flex;

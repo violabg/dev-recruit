@@ -393,6 +393,21 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
     expect(byName.echo._meta).toBeUndefined();
   });
 
+  it("hides an app-only tool from the model with the MCP Apps visibility", async () => {
+    const confirmTool = defineTool({
+      ...echoTool,
+      name: "confirm",
+      widget: "draft-preview",
+      appOnly: true,
+    });
+    const { body } = await rpc([confirmTool], { jsonrpc: "2.0", id: 8, method: "tools/list" });
+
+    expect(body.result.tools[0]._meta).toEqual({
+      ui: { resourceUri: "ui://dev-recruit/draft-preview.html", visibility: ["app"] },
+      "ui/resourceUri": "ui://dev-recruit/draft-preview.html",
+    });
+  });
+
   it("lists the shipped widget resources", async () => {
     const { body } = await rpc([echoTool], { jsonrpc: "2.0", id: 6, method: "resources/list" });
 
@@ -400,6 +415,7 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
       "ui://dev-recruit/action-center.html",
       "ui://dev-recruit/position.html",
       "ui://dev-recruit/application-flow.html",
+      "ui://dev-recruit/draft-preview.html",
     ]);
   });
 

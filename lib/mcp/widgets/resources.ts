@@ -12,11 +12,12 @@ import {
 import type { WidgetId } from "../tools/types";
 import { WIDGET_HTML } from "./html.generated";
 
-/** Widgets that ship; the draft and prep widgets join in their phase */
+/** Widgets that ship; the interview-prep widget joins in its phase */
 export const ENABLED_WIDGETS: readonly WidgetId[] = [
   "action-center",
   "position",
   "application-flow",
+  "draft-preview",
 ];
 
 const WIDGET_TITLE: Record<WidgetId, string> = {
@@ -31,12 +32,25 @@ export const widgetUri = (id: WidgetId) => `ui://dev-recruit/${id}.html`;
 
 const UI_META = { csp: {}, prefersBorder: true };
 
-/** The `_meta` of a tool with a shipped widget, or undefined */
-export function widgetToolMeta(id: WidgetId | undefined) {
-  if (!id || !ENABLED_WIDGETS.includes(id)) return undefined;
-  const uri = widgetUri(id);
-  // Both keys: hosts on the legacy flat key still find the widget
-  return { ui: { resourceUri: uri }, "ui/resourceUri": uri };
+/**
+ * The `_meta` of a tool: its shipped widget, and for an app-only tool the
+ * visibility that hides it from the model. Undefined when neither applies.
+ */
+export function widgetToolMeta(
+  id: WidgetId | undefined,
+  options: { appOnly?: boolean } = {},
+) {
+  const shipped = id && ENABLED_WIDGETS.includes(id) ? widgetUri(id) : null;
+  if (!shipped && !options.appOnly) return undefined;
+
+  return {
+    ui: {
+      ...(shipped ? { resourceUri: shipped } : {}),
+      ...(options.appOnly ? { visibility: ["app"] } : {}),
+    },
+    // Legacy flat key: hosts on the older key still find the widget
+    ...(shipped ? { "ui/resourceUri": shipped } : {}),
+  };
 }
 
 type ResourceServer = Parameters<typeof registerAppResource>[0];

@@ -39,13 +39,13 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | `deleteInterviewGuideAction` | interview guide | dashboard-only | — | — |
 | `generateInterviewGuideAction` | interview guide (in-app AI) | dashboard-only | — | — |
 | `generateInterviewKitAction` | interview kit (in-app AI) | dashboard-only | — | — |
-| `saveInterviewKitAction` | interview kit | draft | `save_interview_kit_draft` (service `saveInterviewKit` with `requireDraftStatus`) | 4 |
-| `setInterviewKitStatusAction` | interview kit | write | `publish_draft` for a kit (status `ready`, service `setInterviewKitStatus`) | 4 |
+| `saveInterviewKitAction` | interview kit | draft | `save_interview_kit_draft` (service `saveInterviewKit` with `requireDraftStatus`), not shipped yet | 4 |
+| `setInterviewKitStatusAction` | interview kit | write | `publish_draft` for a kit (status `ready`, service `setInterviewKitStatus`), not shipped yet | 4 |
 | `saveKitItemNoteAction` | live notes | dashboard-only | — | — |
 | `setKitItemCoveredAction` | live notes | dashboard-only | — | — |
 | `saveInterviewerFeedbackAction` | interviewer scorecard | dashboard-only | — | — |
 | `submitInterviewerFeedbackAction` | interviewer scorecard (stage automation) | dashboard-only | — | — |
-| `scheduleInterviewAction` | interview | write | `publish_draft` for a slot proposal (service `scheduleInterview`) | 4 |
+| `scheduleInterviewAction` | interview | write | `publish_draft` with `kind: "proposal"` (service `confirmInterviewProposal` → `scheduleInterview`), widget only | 4 |
 | `rescheduleInterviewAction` | interview | dashboard-only | — | 6 |
 | `cancelInterviewAction` | interview | dashboard-only | — | — |
 | `markInterviewNoShowAction` | interview | dashboard-only | — | — |
@@ -66,7 +66,7 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | `generateNewQuizAction` | quiz (in-app AI) | dashboard-only | — | — |
 | `generateNewQuestionAction` | quiz (in-app AI) | dashboard-only | — | — |
 | `deleteQuizAction` | quiz | dashboard-only | — | — |
-| `upsertQuizAction` | quiz | draft | `save_quiz_draft`: preview, then the normal save (service `saveQuiz`; a quiz has no draft state) | 4 |
+| `upsertQuizAction` | quiz | draft | `save_quiz_draft` (preview, no write), then `save_quiz` from the widget (service `saveQuiz`; a quiz has no draft state) | 4 |
 | `duplicateQuizAction` | quiz | dashboard-only | — | 6 |
 | `createReferenceDataAction` | reference data | dashboard-only | — | — |
 | `updateReferenceDataAction` | reference data | dashboard-only | — | — |
@@ -92,8 +92,9 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 
 | Operation | Entity | Class | MCP tool | Phase |
 |---|---|---|---|---|
-| Interview slot proposal (`propose_interview_slot`) | interview proposal | draft | `propose_interview_slot` | 4 |
-| Position publish (service `publishPositionDraft`, `draft` → `open`) | position | write | `publish_draft` for a position | 4 |
+| Interview slot proposal (service `proposeInterviewSlot`) | interview proposal | draft | `propose_interview_slot` | 4 |
+| Scheduling options (guides, team members, next round, pending proposals) | interview proposal | read | `get_scheduling_options` | 4 |
+| Position publish (service `publishPositionDraft`, `draft` → `open`) | position | write | `publish_draft` with `kind: "position"`, widget only | 4 |
 
 ## Page reads (`app/dashboard/**/page.tsx` and public pages)
 

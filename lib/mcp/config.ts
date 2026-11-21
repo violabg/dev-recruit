@@ -22,8 +22,12 @@ export const MCP_SCOPES: readonly McpScope[] = [
   "recruit:write",
 ];
 
-/** Tool groups served by /api/mcp: read only until the draft tools ship */
-export const MCP_ENABLED_TOOL_GROUPS: readonly McpToolGroup[] = ["read"];
+/** Tool groups served by /api/mcp; each tool still needs its scope */
+export const MCP_ENABLED_TOOL_GROUPS: readonly McpToolGroup[] = [
+  "read",
+  "draft",
+  "write",
+];
 
 export const MCP_ACCESS_TOKEN_TTL_SECONDS = 900;
 export const MCP_REFRESH_TOKEN_TTL_SECONDS = 2_592_000;

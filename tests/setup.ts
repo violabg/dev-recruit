@@ -114,6 +114,13 @@ const mockPrisma = {
     findFirst: vi.fn(),
     update: vi.fn(),
   },
+  interviewProposal: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+  },
   $transaction: vi.fn((fn) => fn(mockPrisma)),
 };
 

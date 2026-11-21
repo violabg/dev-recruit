@@ -29,11 +29,17 @@ describe("enabledTools", () => {
     expect(enabledTools([], tools)).toEqual([]);
   });
 
-  it("serves only read tools in the current phase", () => {
-    expect(MCP_ENABLED_TOOL_GROUPS).toEqual(["read"]);
+  it("serves read, draft and write tools; read tools never write", () => {
+    expect(MCP_ENABLED_TOOL_GROUPS).toEqual(["read", "draft", "write"]);
     const served = enabledTools(MCP_ENABLED_TOOL_GROUPS);
     expect(served.length).toBe(ALL_TOOLS.length);
-    expect(served.every((tool) => tool.group === "read" && tool.readOnly)).toBe(true);
+    expect(served.filter((tool) => tool.group === "read").every((tool) => tool.readOnly)).toBe(true);
+  });
+
+  it("lets the model reach no write tool: every write is app-only", () => {
+    const writes = ALL_TOOLS.filter((tool) => tool.group === "write");
+    expect(writes.length).toBeGreaterThan(0);
+    expect(writes.every((tool) => tool.appOnly)).toBe(true);
   });
 
   it("gives every tool exactly one scope matching its group", () => {

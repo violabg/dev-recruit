@@ -21,6 +21,15 @@ const actions: WidgetActions = {
       .sendMessage({ role: "user", content: [{ type: "text", text }] })
       .catch(() => undefined);
   },
+  async call(tool, args) {
+    const result = await app.callServerTool({ name: tool, arguments: args });
+    const block = result.content?.find((item) => item.type === "text");
+    return {
+      ok: !result.isError,
+      text: block && "text" in block ? block.text : "",
+      widget: (result.structuredContent as { widget?: unknown } | undefined)?.widget,
+    };
+  },
 };
 
 function applyTheme(theme: unknown) {

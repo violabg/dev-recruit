@@ -94,9 +94,35 @@ export interface ApplicationFlowWidget {
   url: string;
 }
 
+/**
+ * Preview of a draft with its confirmation. The confirm button calls an
+ * app-only tool (hidden from the model), so only a person can confirm; the
+ * server checks scope and permissions again.
+ */
+export interface DraftPreviewWidget {
+  kind: "draft-preview";
+  draft: "position" | "quiz" | "proposal";
+  /** Eyebrow of the band: "Bozza di posizione", "Anteprima quiz", … */
+  eyebrow: string;
+  title: string;
+  status: WidgetBadge;
+  facts: { label: string; value: string }[];
+  sections: { title: string; items: string[] }[];
+  /** What the confirmation does, in one sentence */
+  note: string;
+  confirm: {
+    label: string;
+    tool: string;
+    arguments: Record<string, unknown>;
+  } | null;
+  /** Dashboard page of the draft, once it exists */
+  url: string | null;
+}
+
 export type WidgetModel =
   | ActionCenterWidget
   | PositionWidget
-  | ApplicationFlowWidget;
+  | ApplicationFlowWidget
+  | DraftPreviewWidget;
 
 export type WidgetKind = WidgetModel["kind"];

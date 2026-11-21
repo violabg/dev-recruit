@@ -193,7 +193,7 @@ export function createDevRecruitMcpHandler(
       registerWidgetResources(server);
 
       for (const tool of tools) {
-        const meta = widgetToolMeta(tool.widget);
+        const meta = widgetToolMeta(tool.widget, { appOnly: tool.appOnly });
         server.registerTool(
           tool.name,
           {

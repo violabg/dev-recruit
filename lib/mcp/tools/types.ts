@@ -41,6 +41,11 @@ export interface McpToolDefinition<S extends z.ZodTypeAny = z.ZodTypeAny> {
   group: McpToolGroup;
   inputSchema: S;
   widget?: WidgetId;
+  /**
+   * Callable only from a widget (MCP Apps visibility "app"), never by the
+   * model: the confirmations a person gives with a button.
+   */
+  appOnly?: boolean;
   readOnly: boolean;
   handler(actor: McpActor, input: z.infer<S>): Promise<McpToolResult>;
 }
