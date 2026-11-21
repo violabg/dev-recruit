@@ -51,3 +51,6 @@ lib/prisma/
 # agentic-system:start
 agentic-system-sessions/
 # agentic-system:end
+
+# MCP App build output (the served module is lib/mcp/widgets/html.generated.ts)
+/mcp-apps/dist

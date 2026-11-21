@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     // Generated files
     'coverage/**',
     'env.d.ts',
+    'lib/mcp/widgets/html.generated.ts',
+    'mcp-apps/dist/**',
     // Agentic system (runtime, records, sessions)
     'agentic-system/**',
     'agentic-system-maintenance/**',

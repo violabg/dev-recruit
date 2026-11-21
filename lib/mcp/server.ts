@@ -1,7 +1,7 @@
 /**
  * The dev-recruit MCP server: request guard (size, rate limits, bearer
- * actor), the mcp-handler with the enabled tools, the tool wrapper and the
- * protected-resource metadata. Stateless Streamable HTTP; no CORS header on
+ * actor), the mcp-handler with the enabled tools and their widget resources,
+ * the tool wrapper and the protected-resource metadata. Stateless Streamable HTTP; no CORS header on
  * /api/mcp (no browser caller).
  */
 
@@ -30,6 +30,7 @@ import {
 import { MCP_SERVER_INSTRUCTIONS } from "./instructions";
 import { checkRateLimit, clientIp } from "./rate-limit";
 import { enabledTools } from "./tools";
+import { registerWidgetResources, widgetToolMeta } from "./widgets/resources";
 import type {
   InvalidationRequest,
   McpToolDefinition,
@@ -189,7 +190,10 @@ export function createDevRecruitMcpHandler(
 ): (request: Request) => Promise<Response> {
   return createMcpHandler(
     (server) => {
+      registerWidgetResources(server);
+
       for (const tool of tools) {
+        const meta = widgetToolMeta(tool.widget);
         server.registerTool(
           tool.name,
           {
@@ -202,6 +206,7 @@ export function createDevRecruitMcpHandler(
               destructiveHint: false,
               openWorldHint: false,
             },
+            ...(meta ? { _meta: meta } : {}),
           },
           async (args: unknown) => runTool(tool, actor, args),
         );

@@ -371,4 +371,51 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
     expect(body.result.content).toEqual([{ type: "text", text: "fatto" }]);
     expect(body.result.isError).toBeFalsy();
   });
+
+  const widgetTool = defineTool({ ...echoTool, name: "center", widget: "action-center" });
+  const laterWidgetTool = defineTool({ ...echoTool, name: "prep", widget: "interview-prep" });
+
+  it("links a tool to its shipped widget, not to a widget of a later phase", async () => {
+    const { body } = await rpc([widgetTool, laterWidgetTool, echoTool], {
+      jsonrpc: "2.0",
+      id: 5,
+      method: "tools/list",
+    });
+
+    const byName = Object.fromEntries(
+      body.result.tools.map((tool: { name: string }) => [tool.name, tool]),
+    );
+    expect(byName.center._meta).toEqual({
+      ui: { resourceUri: "ui://dev-recruit/action-center.html" },
+      "ui/resourceUri": "ui://dev-recruit/action-center.html",
+    });
+    expect(byName.prep._meta).toBeUndefined();
+    expect(byName.echo._meta).toBeUndefined();
+  });
+
+  it("lists the shipped widget resources", async () => {
+    const { body } = await rpc([echoTool], { jsonrpc: "2.0", id: 6, method: "resources/list" });
+
+    expect(body.result.resources.map((resource: { uri: string }) => resource.uri)).toEqual([
+      "ui://dev-recruit/action-center.html",
+      "ui://dev-recruit/position.html",
+      "ui://dev-recruit/application-flow.html",
+    ]);
+  });
+
+  it("serves the self-contained widget bundle with an empty CSP", async () => {
+    const { body } = await rpc([echoTool], {
+      jsonrpc: "2.0",
+      id: 7,
+      method: "resources/read",
+      params: { uri: "ui://dev-recruit/position.html" },
+    });
+
+    const [content] = body.result.contents;
+    expect(content.mimeType).toBe("text/html;profile=mcp-app");
+    expect(content._meta.ui).toEqual({ csp: {}, prefersBorder: true });
+    expect(content.text).toMatch(/^<!doctype html>/i);
+    // Inlined: no external script or stylesheet
+    expect(content.text).not.toMatch(/<script[^>]+src=|<link[^>]+href=/i);
+  });
 });

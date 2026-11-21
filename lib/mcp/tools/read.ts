@@ -29,6 +29,11 @@ import {
   buildInterviewPrepView,
   buildInterviewRows,
 } from "../views";
+import {
+  buildActionCenterWidget,
+  buildApplicationFlowWidget,
+  buildPositionWidget,
+} from "../widgets/build";
 import { defineTool } from "./types";
 
 const POSITIONS_PAGE_SIZE = 20;
@@ -51,7 +56,11 @@ export const actionCenterTool = defineTool({
     const { data, staleApplications } = result;
     return {
       text: renderActionCenter(result),
-      structured: { ...data, staleApplications },
+      structured: {
+        ...data,
+        staleApplications,
+        widget: buildActionCenterWidget(result, input.mineOnly),
+      },
       auditSummary: `setup=${data.positionsWithIncompleteSetup.length} test=${data.assessmentsToEvaluate.length} kit=${data.interviewsWithoutKit.length} schede=${data.feedbackToFill.length} ferme=${staleApplications.length}`,
     };
   },
@@ -131,6 +140,7 @@ export const getPositionTool = defineTool({
           candidateName:
             `${application.candidate.firstName} ${application.candidate.lastName}`.trim(),
         })),
+        widget: buildPositionWidget(position, setup, applications),
       },
       auditSummary: `position=${position.id} applications=${applications.length}`,
     };
@@ -155,7 +165,10 @@ export const getApplicationTool = defineTool({
 
     return {
       text: renderApplication(view),
-      structured: { application: view },
+      structured: {
+        application: view,
+        widget: buildApplicationFlowWidget(view),
+      },
       auditSummary: `application=${view.id} cv=${input.includeCv ? (view.cvText ? "yes" : "unreadable") : "no"} hidden=${view.decision.hidden}`,
     };
   },

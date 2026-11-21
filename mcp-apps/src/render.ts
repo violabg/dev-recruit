@@ -1,0 +1,360 @@
+/**
+ * Rendering of the dev-recruit widgets from their models
+ * (lib/mcp/widgets/types.ts). Flow-track look: header band with the section
+ * stripe, stations on a line, rows on card surfaces.
+ */
+
+import type {
+  ActionCenterWidget,
+  ApplicationFlowWidget,
+  PositionWidget,
+  WidgetBadge,
+  WidgetModel,
+  WidgetRow,
+  WidgetStation,
+} from "../../lib/mcp/widgets/types";
+import { h, type Child } from "./dom";
+
+export interface WidgetActions {
+  /** Open a dashboard page (through the host) */
+  open(url: string): void;
+  /** Send a follow-up request to the assistant */
+  ask(text: string): void;
+}
+
+/** Rows shown per list before the "open the rest in dev-recruit" button */
+export const MAX_ROWS = 5;
+
+const KINDS = new Set<WidgetModel["kind"]>([
+  "action-center",
+  "position",
+  "application-flow",
+]);
+
+export function isWidgetModel(value: unknown): value is WidgetModel {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    KINDS.has((value as { kind?: unknown }).kind as WidgetModel["kind"])
+  );
+}
+
+// ====================
+// PIECES
+// ====================
+
+const badge = (value: WidgetBadge) =>
+  h("span", { class: `badge tone-${value.tone}` }, value.label);
+
+function openButton(actions: WidgetActions, url: string, label = "Apri") {
+  return h(
+    "button",
+    {
+      class: "btn btn-outline",
+      attrs: { type: "button" },
+      on: { click: () => actions.open(url) },
+    },
+    label,
+  );
+}
+
+function band(
+  eyebrow: string,
+  title: string,
+  aside: Child,
+  ...below: Child[]
+): HTMLElement {
+  return h(
+    "header",
+    { class: "band" },
+    h("p", { class: "eyebrow" }, `dev-recruit · ${eyebrow}`),
+    h("div", { class: "band-title" }, h("h1", null, title), aside),
+    ...below,
+  );
+}
+
+function stations(items: WidgetStation[], label: string): HTMLElement {
+  return h(
+    "ol",
+    { class: "track", attrs: { "aria-label": label } },
+    ...items.map((station) =>
+      h(
+        "li",
+        {
+          class: `station is-${station.state}`,
+          attrs: station.state === "current" ? { "aria-current": "step" } : {},
+        },
+        h("span", { class: "station-dot", attrs: { "aria-hidden": "true" } }),
+        h("span", { class: "station-label" }, station.label),
+        station.count !== undefined &&
+          h("span", { class: "station-count" }, station.count),
+      ),
+    ),
+  );
+}
+
+function row(item: WidgetRow, actions: WidgetActions): HTMLElement {
+  return h(
+    "li",
+    { class: "row" },
+    h(
+      "div",
+      { class: "row-main" },
+      h(
+        "p",
+        { class: "row-title" },
+        h("span", null, item.title),
+        item.badge && badge(item.badge),
+      ),
+      item.meta && h("p", { class: "row-meta" }, item.meta),
+    ),
+    h(
+      "div",
+      { class: "row-actions" },
+      item.ask &&
+        h(
+          "button",
+          {
+            class: "btn btn-ghost",
+            attrs: { type: "button", title: "Chiedi all'assistente" },
+            on: { click: () => actions.ask(item.ask!) },
+          },
+          "Dettagli",
+        ),
+      openButton(actions, item.url),
+    ),
+  );
+}
+
+function rows(
+  items: WidgetRow[],
+  actions: WidgetActions,
+  empty: string,
+  moreUrl: string,
+): HTMLElement {
+  if (!items.length) return h("p", { class: "empty" }, empty);
+  const hidden = items.length - MAX_ROWS;
+  return h(
+    "div",
+    null,
+    h("ul", { class: "rows" }, ...items.slice(0, MAX_ROWS).map((item) => row(item, actions))),
+    hidden > 0 &&
+      h(
+        "button",
+        {
+          class: "btn btn-link more",
+          attrs: { type: "button" },
+          on: { click: () => actions.open(moreUrl) },
+        },
+        `Altri ${hidden} in dev-recruit`,
+      ),
+  );
+}
+
+function section(title: string, count: number | null, ...children: Child[]) {
+  return h(
+    "section",
+    { class: "card" },
+    h(
+      "h2",
+      null,
+      title,
+      count !== null && h("span", { class: "count" }, count),
+    ),
+    ...children,
+  );
+}
+
+function footer(actions: WidgetActions, url: string, label: string) {
+  return h("footer", { class: "foot" }, openButton(actions, url, label));
+}
+
+// ====================
+// WIDGETS
+// ====================
+
+function actionCenter(model: ActionCenterWidget, actions: WidgetActions) {
+  const total = model.queues.reduce((sum, queue) => sum + queue.rows.length, 0);
+  const pending = model.queues.filter((queue) => queue.rows.length);
+  const clear = model.queues.filter((queue) => !queue.rows.length);
+
+  return h(
+    "div",
+    { class: "widget" },
+    band(
+      model.mineOnly ? "Solo le mie" : "Tutto il team",
+      model.title,
+      h("span", { class: "total" }, total === 1 ? "1 azione" : `${total} azioni`),
+      h(
+        "ul",
+        { class: "summary", attrs: { "aria-label": "Riepilogo" } },
+        ...model.queues.map((queue) =>
+          h(
+            "li",
+            { class: queue.rows.length ? "has-items" : "" },
+            h("span", { class: "summary-count" }, queue.rows.length),
+            h("span", null, queue.short),
+          ),
+        ),
+      ),
+    ),
+    h(
+      "main",
+      { class: "body" },
+      ...pending.map((queue) =>
+        section(queue.title, queue.rows.length, rows(queue.rows, actions, queue.empty, model.url)),
+      ),
+      !pending.length && h("p", { class: "card empty" }, "Nessuna azione in attesa."),
+      clear.length > 0 &&
+        h(
+          "p",
+          { class: "clear" },
+          `A posto: ${clear.map((queue) => queue.title.toLowerCase()).join(", ")}.`,
+        ),
+    ),
+    footer(actions, model.url, "Apri Le mie azioni"),
+  );
+}
+
+function position(model: PositionWidget, actions: WidgetActions) {
+  const chips = (title: string, values: string[]) =>
+    values.length > 0 &&
+    h(
+      "div",
+      { class: "chips-block" },
+      h("p", { class: "label" }, title),
+      h("ul", { class: "chips" }, ...values.map((value) => h("li", null, value))),
+    );
+
+  return h(
+    "div",
+    { class: "widget" },
+    band(
+      "Posizione",
+      model.title,
+      badge(model.status),
+      h(
+        "dl",
+        { class: "facts" },
+        ...model.facts.flatMap((fact) => [
+          h("dt", null, fact.label),
+          h("dd", null, fact.value),
+        ]),
+      ),
+    ),
+    h(
+      "main",
+      { class: "body" },
+      section(
+        "Candidature per fase",
+        null,
+        stations(model.pipeline, "Candidature per fase"),
+        model.closedCount > 0 &&
+          h("p", { class: "note" }, `Chiuse (scartate o ritirate): ${model.closedCount}`),
+      ),
+      model.setup &&
+        section(
+          model.setup.complete ? "Setup completo" : "Setup da completare",
+          null,
+          h(
+            "ul",
+            { class: "checklist" },
+            ...model.setup.steps.map((step) =>
+              h(
+                "li",
+                { class: step.done ? "is-done" : "is-todo" },
+                h("span", { class: "check", attrs: { "aria-hidden": "true" } }, step.done ? "✓" : ""),
+                h("span", null, step.label),
+                !step.done && openButton(actions, step.url, "Completa"),
+              ),
+            ),
+          ),
+        ),
+      (model.skills.length > 0 || model.softSkills.length > 0) &&
+        section(
+          "Competenze",
+          null,
+          chips("Tecniche", model.skills),
+          chips("Soft skill", model.softSkills),
+        ),
+      section(
+        "Candidature",
+        model.applications.length,
+        rows(model.applications, actions, "Nessuna candidatura", model.url),
+      ),
+    ),
+    footer(actions, model.url, "Apri la posizione"),
+  );
+}
+
+function applicationFlow(model: ApplicationFlowWidget, actions: WidgetActions) {
+  return h(
+    "div",
+    { class: "widget" },
+    band(
+      "Candidatura",
+      model.candidateName,
+      badge(model.stage),
+      h(
+        "p",
+        { class: "band-meta" },
+        `${model.positionTitle} · in fase dal ${model.stageSince} · responsabile ${model.owner}`,
+      ),
+      model.doNotContact &&
+        h("p", { class: "alert", attrs: { role: "note" } }, "Candidato da non contattare"),
+      model.track.length > 0 && stations(model.track, "Fasi della candidatura"),
+    ),
+    h(
+      "main",
+      { class: "body" },
+      section(
+        "Valutazioni",
+        null,
+        h("p", { class: "note" }, "Punteggi indicativi: la decisione è di una persona."),
+        model.evaluations.length
+          ? h(
+              "ul",
+              { class: "scores" },
+              ...model.evaluations.map((evaluation) =>
+                h(
+                  "li",
+                  null,
+                  h("span", { class: "label" }, evaluation.label),
+                  h("strong", null, evaluation.value),
+                  evaluation.note && h("span", { class: "row-meta" }, evaluation.note),
+                ),
+              ),
+            )
+          : h("p", { class: "empty" }, "Nessuna valutazione"),
+      ),
+      section(
+        "Decisione",
+        null,
+        h("p", null, model.decision.outcome),
+        h("p", { class: model.decision.hidden ? "note" : "" }, model.decision.score),
+        h("div", { class: "row-actions" }, openButton(actions, model.decision.url, "Apri la decisione")),
+      ),
+      section(
+        "Colloqui",
+        model.interviews.length,
+        rows(model.interviews, actions, "Nessun colloquio", model.url),
+      ),
+    ),
+    footer(actions, model.url, "Apri la candidatura"),
+  );
+}
+
+export function renderWidget(model: WidgetModel, actions: WidgetActions): HTMLElement {
+  switch (model.kind) {
+    case "action-center":
+      return actionCenter(model, actions);
+    case "position":
+      return position(model, actions);
+    case "application-flow":
+      return applicationFlow(model, actions);
+  }
+}
+
+export function renderMessage(text: string): HTMLElement {
+  return h("div", { class: "widget" }, h("p", { class: "card empty" }, text));
+}

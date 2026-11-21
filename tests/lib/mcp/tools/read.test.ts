@@ -17,6 +17,12 @@ vi.mock("@/lib/mcp/views", () => ({
   buildInterviewRows: vi.fn(),
 }));
 
+vi.mock("@/lib/mcp/widgets/build", () => ({
+  buildActionCenterWidget: vi.fn(() => ({ kind: "action-center" })),
+  buildPositionWidget: vi.fn(() => ({ kind: "position" })),
+  buildApplicationFlowWidget: vi.fn(() => ({ kind: "application-flow" })),
+}));
+
 vi.mock("@/lib/mcp/render", () => ({
   renderActionCenter: vi.fn(() => "testo azioni"),
   renderPositionList: vi.fn(() => "testo posizioni"),
@@ -99,7 +105,10 @@ describe("read tools", () => {
     expect(options.mineOnly).toBe(true);
     expect(options.now.getTime()).toBeGreaterThanOrEqual(before);
     expect(result.text).toBe("testo azioni");
-    expect(result.structured).toMatchObject({ staleApplications: [] });
+    expect(result.structured).toMatchObject({
+      staleApplications: [],
+      widget: { kind: "action-center" },
+    });
     expect(result.auditSummary).toContain("setup=0");
   });
 
@@ -138,6 +147,7 @@ describe("read tools", () => {
     expect(getPositionSetupStatus).toHaveBeenCalledWith("pos-1");
     expect(getApplicationsByPosition).toHaveBeenCalledWith("pos-1");
     expect(result.text).toBe("testo posizione");
+    expect(result.structured).toMatchObject({ widget: { kind: "position" } });
   });
 
   it("get_position refuses a missing position", async () => {
@@ -163,6 +173,7 @@ describe("read tools", () => {
     expect(buildApplicationView).toHaveBeenCalledWith(actor, "app-1", { includeCv: true });
     expect(result.text).toBe("testo candidatura");
     expect(result.auditSummary).toBe("application=app-1 cv=unreadable hidden=false");
+    expect(result.structured).toMatchObject({ widget: { kind: "application-flow" } });
   });
 
   it("get_application refuses a missing application", async () => {
