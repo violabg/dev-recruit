@@ -75,7 +75,6 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="candidates"
         title="Modifica candidato"
         description={`${candidate.firstName} ${candidate.lastName}`}
         actionBtns={

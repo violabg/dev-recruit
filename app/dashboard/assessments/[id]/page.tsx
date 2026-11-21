@@ -107,7 +107,6 @@ async function AssessmentDetailContent({
         timeLimit={quiz.timeLimit}
       />
       <PageHeader
-        section="assessments"
         title={`Test: ${quiz.title}`}
         info={
           <>

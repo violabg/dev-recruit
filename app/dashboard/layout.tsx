@@ -15,8 +15,10 @@ import type React from "react";
 import { Suspense, ViewTransition } from "react";
 
 /**
- * Shell: light rail (navy ink in dark mode) on the left; content sits on a rounded canvas sheet
- * (inset variant). The top bar shows the location as a slash path.
+ * Shell: navy rail on the left (both themes); on the right a white band (top
+ * bar + page header) above the grey canvas. The top bar shows the location as
+ * a slash path. `page-shell`/`page-frame` (globals.css) centre the content and
+ * let the page header band span the whole width.
  */
 export default async function DashboardLayout({
   children,
@@ -30,8 +32,8 @@ export default async function DashboardLayout({
       {/* min-w-0: as a flex item the inset defaults to min-width:auto, so the
           nowrap content of a wide table would push the whole page instead of
           scrolling inside the table container. */}
-      <SidebarInset className="md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border overflow-clip min-w-0">
-        <header className="top-0 z-30 sticky flex items-center gap-3 bg-background/85 supports-backdrop-filter:bg-background/70 backdrop-blur px-4 md:px-8 border-b h-12 shrink-0">
+      <SidebarInset className="page-shell overflow-clip min-w-0">
+        <header className="top-0 z-30 sticky flex items-center gap-3 bg-band/90 supports-backdrop-filter:bg-band/75 backdrop-blur px-4 md:px-8 border-b h-12 shrink-0">
           <SidebarTrigger className="-ml-1.5 text-muted-foreground" />
           <div className="bg-border w-px h-4" aria-hidden />
           <Suspense fallback={<Skeleton className="w-40 h-4" />}>
@@ -56,7 +58,7 @@ export default async function DashboardLayout({
         {/* React 19.3 View Transition: route navigations are Transitions, so the
             content area cross-fades between pages (header/sidebar stay put). */}
         <ViewTransition default="none" update="page-fade">
-          <div className="mx-auto px-4 md:px-8 pt-6 md:pt-8 pb-12 w-full max-w-[1400px] h-full">
+          <div className="page-frame pb-12 w-full h-full">
             {children}
           </div>
         </ViewTransition>

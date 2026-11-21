@@ -14,7 +14,6 @@ async function NewUserContent() {
   return (
     <div className="flex flex-col gap-6 w-full">
       <PageHeader
-        section="users"
         title="Nuovo utente"
         description="Crea un account e comunica a mano la password iniziale"
       />

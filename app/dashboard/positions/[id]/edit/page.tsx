@@ -24,7 +24,7 @@ type EditPositionPageProps = {
 function EditPositionSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="positions" description />
+      <PageHeaderSkeleton description />
       <Card>
         <CardContent>
           <PositionFormSkeleton />
@@ -65,7 +65,6 @@ async function EditPositionContent({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="positions"
         title="Modifica posizione"
         description={`${position.title}`}
         actionBtns={

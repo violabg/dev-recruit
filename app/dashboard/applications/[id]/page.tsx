@@ -10,10 +10,8 @@ import { DecisionTab } from "./decision-tab";
 import {
   ApplicationHeaderSkeleton,
   ApplicationTabSkeleton,
-  NextActionSkeleton,
 } from "./fallbacks";
 import { InterviewsTab } from "./interviews-tab";
-import { NextActionSection } from "./next-action-section";
 import { OverviewTab } from "./overview-tab";
 import { ResumeTab } from "./resume-tab";
 
@@ -46,13 +44,10 @@ export default function ApplicationPage({
   searchParams: ApplicationSearchParams;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col">
+      {/* Header band: stage track and next action included */}
       <Suspense fallback={<ApplicationHeaderSkeleton />}>
         <ApplicationHeader params={params} />
-      </Suspense>
-
-      <Suspense fallback={<NextActionSkeleton />}>
-        <NextActionSection params={params} />
       </Suspense>
 
       <Suspense fallback={<ApplicationTabSkeleton />}>

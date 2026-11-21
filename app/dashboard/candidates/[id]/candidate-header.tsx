@@ -42,7 +42,6 @@ export async function CandidateHeader({ params }: Props) {
 
   return (
     <PageHeader
-        section="candidates"
       title={fullName}
       info={
         <>

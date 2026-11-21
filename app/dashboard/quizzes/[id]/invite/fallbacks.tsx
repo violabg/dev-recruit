@@ -22,7 +22,7 @@ import { ArrowLeft } from "lucide-react";
 export function InviteCandidatesSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="quizzes" description />
+      <PageHeaderSkeleton description />
 
       <div className="flex flex-col gap-2">
         {/* Line TabsList (h-10, full width, bottom border) */}

@@ -44,7 +44,6 @@ async function UsersContent({
   return (
     <div className="flex flex-col gap-6 w-full">
       <PageHeader
-        section="users"
         title="Utenti"
         description="Gestisci chi accede all'applicazione"
         actionBtns={

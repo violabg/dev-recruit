@@ -41,7 +41,6 @@ export async function PositionHeader({ params }: Props) {
 
   return (
     <PageHeader
-        section="positions"
       title={position.title}
       info={
         <>

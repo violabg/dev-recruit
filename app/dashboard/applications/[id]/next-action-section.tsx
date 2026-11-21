@@ -1,4 +1,5 @@
 import { NextActionCard } from "@/components/applications/next-action-card";
+import { stagePointer } from "@/components/applications/stage-stepper";
 import { getApplicationDetail } from "@/lib/data/applications";
 import {
   allFeedbackSubmitted,
@@ -44,8 +45,8 @@ export async function NextActionSection({ params }: Props) {
   return (
     <NextActionCard
       applicationId={detail.id}
-      stage={detail.stage}
       action={getNextAction(facts)}
+      pointer={stagePointer(detail.stage)}
       candidateEditHref={`/dashboard/candidates/${detail.candidate.id}/edit`}
     />
   );

@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const UsersListSkeleton = () => (
   <div className="flex flex-col gap-6 w-full">
     <PageHeaderSkeleton
-      section="users"
       title="Utenti"
       description="Gestisci chi accede all'applicazione"
       actions={<ButtonSkeleton size="sm" className="w-32" />}
@@ -47,7 +46,6 @@ export const UsersListSkeleton = () => (
 export const CreateUserSkeleton = () => (
   <div className="flex flex-col gap-6 w-full">
     <PageHeaderSkeleton
-      section="users"
       title="Nuovo utente"
       description="Crea un account e comunica a mano la password iniziale"
     />
@@ -73,7 +71,6 @@ export const CreateUserSkeleton = () => (
 export const UserDetailSkeleton = () => (
   <div className="flex flex-col gap-6 w-full">
     <PageHeaderSkeleton
-      section="users"
       description
       info={<TextSkeleton className="w-64" />}
     />

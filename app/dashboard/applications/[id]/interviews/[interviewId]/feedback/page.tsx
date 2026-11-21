@@ -1,4 +1,9 @@
-import { InterviewSteps } from "@/components/interviews/interview-steps";
+import {
+  INTERVIEW_STEP_COUNT,
+  InterviewSteps,
+  interviewStepIndex,
+} from "@/components/interviews/interview-steps";
+import { stationPointer } from "@/components/flow";
 import { NextStep } from "@/components/detail-blocks";
 import { InterviewerFeedbackForm } from "@/components/interviews/interviewer-feedback-form";
 import { SubmittedFeedbackList } from "@/components/interviews/submitted-feedback-list";
@@ -39,7 +44,7 @@ export default function InterviewFeedbackPage({
 function FeedbackSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="applications" description />
+      <PageHeaderSkeleton description />
       <div className="flex flex-col gap-4">
         <FieldSkeleton label="Valutazione per criterio" />
         <FieldSkeleton label="Raccomandazione finale" />
@@ -105,7 +110,6 @@ async function FeedbackContent({ params }: { params: FeedbackParams }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="applications"
         title="Scheda intervistatore"
         description={`${candidateName} · ${interview.position.title} · Round ${interview.round}`}
         actionBtns={
@@ -120,24 +124,26 @@ async function FeedbackContent({ params }: { params: FeedbackParams }) {
             Candidatura
           </Link>
         }
-      />
-
-      <InterviewSteps
-        applicationId={id}
-        interviewId={interview.id}
-        current="feedback"
-        status={interview.status}
-        feedbackSubmitted={viewerSubmitted}
-      />
-
-      {viewerSubmitted && (
-        <NextStep
-          title="Scheda inviata: passa alla decisione"
-          description="Confronta le schede di tutti i colloqui e registra l'esito."
-          href={`/dashboard/applications/${id}/decision`}
-          actionLabel="Apri decisione"
-        />
-      )}
+      >
+        <div className="flex flex-col">
+          <InterviewSteps
+            applicationId={id}
+            interviewId={interview.id}
+            current="feedback"
+            status={interview.status}
+            feedbackSubmitted={viewerSubmitted}
+          />
+          {viewerSubmitted && (
+            <NextStep
+              pointer={stationPointer(interviewStepIndex("feedback"), INTERVIEW_STEP_COUNT)}
+              title="Scheda inviata: passa alla decisione"
+              description="Confronta le schede di tutti i colloqui e registra l'esito."
+              href={`/dashboard/applications/${id}/decision`}
+              actionLabel="Apri decisione"
+            />
+          )}
+        </div>
+      </PageHeader>
 
       {viewerParticipant ? (
         <InterviewerFeedbackForm

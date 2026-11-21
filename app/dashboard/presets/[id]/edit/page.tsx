@@ -46,7 +46,6 @@ async function EditPresetContent({ params }: EditPresetPageProps) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="presets"
         title="Modifica preset"
         description={`${preset.name}`}
         actionBtns={

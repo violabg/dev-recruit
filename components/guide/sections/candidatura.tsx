@@ -54,12 +54,18 @@ export function CandidaturaSection() {
 
       <GuideList>
         <li>
-          <strong>Intestazione:</strong> candidato, posizione, stepper delle
-          fasi, responsabile (&quot;Prendi in carico&quot; / &quot;Rilascia&quot;).
+          <strong>Intestazione:</strong> candidato, link alla posizione e alla
+          scheda candidato, responsabile (&quot;Prendi in carico&quot; /
+          &quot;Rilascia&quot;) e <strong>Sposta fase</strong>.
         </li>
         <li>
-          <strong>Card Prossima azione:</strong> calcolata dallo stato. È il
-          punto di partenza consigliato.
+          <strong>Linea delle fasi:</strong> le fasi superate sono verdi, la
+          fase attuale è blu con il giorno in cui è iniziata.
+        </li>
+        <li>
+          <strong>Prossima azione:</strong> sotto la fase attuale, calcolata
+          dallo stato, con il pulsante per farla. È il punto di partenza
+          consigliato.
         </li>
         <li>
           <strong>Tab:</strong> Panoramica · CV · Test · Colloqui · Decisione.
@@ -80,7 +86,7 @@ export function CandidaturaSection() {
         title="La Prossima azione dice cosa fare"
       >
         <GuideTable
-          head={["Situazione", "Card"]}
+          head={["Situazione", "Prossima azione"]}
           rows={[
             ["CV caricato ma non valutato", <strong key="a">Valuta CV</strong>],
             [
@@ -138,7 +144,7 @@ export function CandidaturaSection() {
         </GuideText>
         <GuideFigure
           src="/guida/07-candidatura-prossima-azione.png"
-          alt="Pagina della candidatura con la card Prossima azione e la cronologia"
+          alt="Pagina della candidatura con la linea delle fasi, la Prossima azione e la cronologia"
           caption="Candidatura: prossima azione e cronologia delle prove"
           width={1440}
           height={1039}

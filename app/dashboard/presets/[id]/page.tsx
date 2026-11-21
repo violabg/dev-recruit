@@ -134,7 +134,6 @@ async function PresetDetailContent({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="presets"
         title={preset.label}
         description={preset.description || "Nessuna descrizione fornita."}
         actionBtns={

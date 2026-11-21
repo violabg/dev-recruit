@@ -1,5 +1,6 @@
 "use client";
 
+import { NextActionCallout } from "@/components/flow";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { moveApplicationStageAction } from "@/lib/actions/applications";
 import type { ApplicationStage } from "@/lib/schemas";
@@ -10,19 +11,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { MoveStageMenu } from "./move-stage-menu";
 
-/** Card "Prossima azione": what to do next on this application. */
+/**
+ * "Prossima azione" of an application: what to do next, with its action,
+ * under the current stage of the track. Stage corrections stay in the
+ * header's "Sposta fase".
+ */
 export function NextActionCard({
   applicationId,
-  stage,
   action,
   candidateEditHref,
+  pointer,
 }: {
   applicationId: string;
-  stage: ApplicationStage;
   action: NextAction;
   candidateEditHref: string;
+  /** Notch position under the current stage (see stagePointer) */
+  pointer?: number;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -67,20 +72,16 @@ export function NextActionCard({
         );
       case "schedule_interview":
         return (
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
+          <Link
               href={`${applicationHref}/interviews/new` as never}
               className={linkClass}
             >
               Pianifica colloquio
             </Link>
-            <MoveStageMenu applicationId={applicationId} stage={stage} />
-          </div>
         );
       case "prepare_interview":
         return (
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
+          <Link
               href={
                 `${applicationHref}/interviews/${action.interviewId}/prepare` as never
               }
@@ -88,13 +89,10 @@ export function NextActionCard({
             >
               Prepara colloquio
             </Link>
-            <MoveStageMenu applicationId={applicationId} stage={stage} />
-          </div>
         );
       case "fill_feedback":
         return (
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
+          <Link
               href={
                 `${applicationHref}/interviews/${action.interviewId}/feedback` as never
               }
@@ -102,8 +100,6 @@ export function NextActionCard({
             >
               Compila scheda
             </Link>
-            <MoveStageMenu applicationId={applicationId} stage={stage} />
-          </div>
         );
       case "go_to_decision":
         return (
@@ -148,16 +144,11 @@ export function NextActionCard({
   };
 
   return (
-    <div className="flex flex-col gap-3 bg-primary/5 px-4 py-3 border border-primary/30 rounded-xl">
-      <div className="flex flex-wrap justify-between items-center gap-3">
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <span className="font-semibold text-primary text-xs uppercase tracking-wide">
-            Prossima azione
-          </span>
-          <span className="font-semibold text-foreground">{action.label}</span>
-        </div>
-        {renderAction()}
-      </div>
+    <NextActionCallout
+      title={action.label}
+      action={renderAction()}
+      pointer={pointer}
+    >
       {action.missingResume && (
         <div className="flex flex-wrap items-center gap-2 bg-warning/10 px-3 py-2 rounded-lg text-warning text-sm">
           <AlertTriangle className="size-4 shrink-0" />
@@ -170,6 +161,6 @@ export function NextActionCard({
           </Link>
         </div>
       )}
-    </div>
+    </NextActionCallout>
   );
 }

@@ -61,7 +61,7 @@ export default function DecisionPage({ params }: { params: DecisionParams }) {
 function DecisionSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="applications" description />
+      <PageHeaderSkeleton description />
       <TableSkeleton
         columns={[
           { header: "Criterio", cell: "textBadge" },
@@ -127,7 +127,6 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="applications"
         title="Decisione"
         description={`${candidateName} · ${decision.position.title}`}
         actionBtns={

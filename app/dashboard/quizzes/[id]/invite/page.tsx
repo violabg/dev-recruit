@@ -59,7 +59,6 @@ async function InviteCandidatesContent({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="quizzes"
         title="Associa a candidati"
         description={`${quiz.title} · ${position?.title ?? "Senza posizione"}`}
         actionBtns={

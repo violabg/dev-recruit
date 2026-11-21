@@ -20,7 +20,6 @@ export function PresetDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeaderSkeleton
-        section="presets"
         titleClassName="w-72"
         description
         actions={

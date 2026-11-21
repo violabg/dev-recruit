@@ -42,7 +42,6 @@ async function CandidateFormContent({ searchParams }: NewCandidatePageProps) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="candidates"
         title="Nuovo candidato"
         description="Inserisci i dati del candidato da aggiungere"
         actionBtns={

@@ -34,7 +34,6 @@ export default function NewQuizPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="quizzes"
         title="Nuovo quiz"
         description="Scegli una posizione e costruisci il quiz con le domande che preferisci, oppure avvia la generazione AI completa."
         actionBtns={

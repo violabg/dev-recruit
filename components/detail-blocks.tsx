@@ -1,3 +1,4 @@
+import { NextActionCallout } from "@/components/flow";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,10 +13,10 @@ import type { ReactNode } from "react";
  * "next step" callout. Server-safe: no hooks.
  */
 
-/** Small uppercase label that separates a block's name from its content. */
+/** Small label that separates a block's name from its content. */
 export function BlockLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+    <span className="font-semibold text-muted-foreground text-xs">
       {children}
     </span>
   );
@@ -119,8 +120,9 @@ export function ChapterHeader({
 }
 
 /**
- * The one thing to do next on a page, with its primary action. Shown at the
- * top of a detail page so the flow is never a guess.
+ * The one thing to do next on a page, with its primary action (the shared
+ * "Prossima azione" callout). `pointer` aims its notch at the current
+ * station of a track above it.
  */
 export function NextStep({
   title,
@@ -128,6 +130,7 @@ export function NextStep({
   href,
   actionLabel,
   action,
+  pointer,
 }: {
   title: string;
   description?: ReactNode;
@@ -135,19 +138,15 @@ export function NextStep({
   actionLabel?: string;
   /** Custom action (e.g. a form button) instead of a link */
   action?: ReactNode;
+  pointer?: number;
 }) {
   return (
-    <div className="flex flex-wrap justify-between items-center gap-3 bg-primary/5 px-4 py-3 border border-primary/30 rounded-xl">
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="font-semibold text-primary text-xs uppercase tracking-wide">
-          Prossima azione
-        </span>
-        <span className="font-semibold text-foreground">{title}</span>
-        {description && (
-          <span className="text-muted-foreground text-sm">{description}</span>
-        )}
-      </div>
-      {action ??
+    <NextActionCallout
+      title={title}
+      description={description}
+      pointer={pointer}
+      action={
+        action ??
         (href && actionLabel ? (
           <Link
             href={href as never}
@@ -156,8 +155,9 @@ export function NextStep({
             {actionLabel}
             <ArrowRight className="size-4" aria-hidden />
           </Link>
-        ) : null)}
-    </div>
+        ) : null)
+      }
+    />
   );
 }
 

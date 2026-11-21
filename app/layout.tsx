@@ -3,9 +3,9 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata, Viewport } from "next";
 import {
-  Bricolage_Grotesque,
   Geist_Mono,
   IBM_Plex_Sans,
+  Schibsted_Grotesk,
 } from "next/font/google";
 import type React from "react";
 import { Toaster } from "sonner";
@@ -18,11 +18,10 @@ const plexSans = IBM_Plex_Sans({
   axes: ["wdth"],
 });
 
-/** Display: titles and pipeline numbers (set condensed via font-stretch) */
-const bricolage = Bricolage_Grotesque({
+/** Display: titles, counts and station labels */
+const schibsted = Schibsted_Grotesk({
   subsets: ["latin"],
   variable: "--font-display",
-  axes: ["opsz", "wdth"],
 });
 
 const geistMono = Geist_Mono({
@@ -61,7 +60,7 @@ export default function RootLayout({
       lang="it"
       className={cn(
         plexSans.variable,
-        bricolage.variable,
+        schibsted.variable,
         geistMono.variable,
       )}
       suppressHydrationWarning

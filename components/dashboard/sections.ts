@@ -16,9 +16,10 @@ import {
  * Dashboard sections and their visual identity.
  *
  * Each section owns one hue (see `--section-*` tokens in app/globals.css).
- * The same hue tints the sidebar icon and the page-header icon tile, so the
- * colour alone tells the user which area they are in. Class strings are
- * written out in full so Tailwind can detect them.
+ * The same hue tints the sidebar icon and the header band (stripe and
+ * eyebrow, see SectionMark), so the colour alone tells the user which area
+ * they are in. Class strings are written out in full so Tailwind can detect
+ * them.
  */
 export type SectionKey =
   | "overview"
@@ -41,7 +42,7 @@ export type Section = {
   text: string;
   /** Soft tinted background for icon tiles */
   tile: string;
-  /** Solid fill for the page-title rule */
+  /** Solid fill for the header band stripe */
   rule: string;
   /**
    * Shown in the menu to administrators only. Presentation, not the guard:

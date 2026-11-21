@@ -21,7 +21,7 @@ export function MappaSection() {
             [
               <strong key="1">Le mie azioni</strong>,
               "La homepage operativa: cosa aspetta te",
-              "Test da valutare, candidature ferme da più di 7 giorni, posizioni con setup incompleto, colloqui senza kit pronto, schede da compilare",
+              "Posizioni con setup incompleto, test da valutare, colloqui senza kit pronto, schede da compilare; a parte, le candidature ferme da più di 7 giorni",
             ],
             [
               <strong key="2">Posizioni</strong>,
@@ -64,9 +64,16 @@ export function MappaSection() {
 
       <GuideSubsection id="mappa-pagina" title="Come si legge una pagina">
         <GuideText>
-          In alto a sinistra il titolo e il contesto (per esempio il nome del
-          candidato e la posizione), sotto la <strong>card Prossima azione</strong>{" "}
-          quando la pagina è una candidatura, poi i tab. I{" "}
+          In alto, nella fascia bianca, il colore della sezione: la riga
+          lungo il bordo superiore e, sopra il titolo, l&apos;icona della{" "}
+          <strong>sidebar</strong> con il nome del gruppo (nella pagina
+          principale) o della sezione (nelle pagine interne). Seguono il
+          titolo, il contesto (per esempio
+          il nome del candidato e la posizione) e i pulsanti. Nelle pagine con
+          un percorso (candidatura, colloquio) la fascia mostra anche la linea
+          delle fasi e, sotto la fase attuale, la{" "}
+          <strong>Prossima azione</strong>; sotto la fascia ci sono i tab e il
+          contenuto. I{" "}
           <strong>breadcrumbs</strong> (Panoramica / Candidature / Dettaglio)
           riportano sempre al livello superiore. Nelle pagine interne a una
           sezione, la freccia a sinistra del titolo torna alla pagina

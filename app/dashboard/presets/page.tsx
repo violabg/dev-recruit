@@ -114,7 +114,6 @@ export default async function PresetsPage({
   return (
     <div className="flex flex-col gap-6 w-full">
       <PageHeader
-        section="presets"
         title="Preset"
         description="Crea e gestisci preset per la generazione di domande per le tue
             posizioni"

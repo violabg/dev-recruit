@@ -11,8 +11,11 @@
  *   h-5, text-base → h-6, text-2xl → h-8, text-3xl → h-9) so the vertical
  *   rhythm matches.
  */
-import type { SectionKey } from "@/components/dashboard/sections";
-import { PAGE_TITLE_CLASS, SectionRule } from "@/components/page-header";
+import {
+  SectionMark,
+  SectionMarkPlaceholder,
+} from "@/components/dashboard/section-mark";
+import { PAGE_BAND_CLASS, PAGE_TITLE_CLASS } from "@/components/page-header";
 import { SelectItem } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "cn";
+import { Suspense } from "react";
 
 /** A text-line placeholder with the real line-height of its font size. */
 export function TextSkeleton({
@@ -192,7 +196,7 @@ export function PageHeaderSkeleton({
   description,
   info,
   actions,
-  section,
+  children,
 }: {
   /** Real title when it's static; otherwise a skeleton is shown */
   title?: string;
@@ -201,38 +205,65 @@ export function PageHeaderSkeleton({
   description?: boolean | string;
   info?: React.ReactNode;
   actions?: React.ReactNode;
-  section?: SectionKey;
+  /** Placeholder of the flow content under the title row */
+  children?: React.ReactNode;
 }) {
   return (
-    <div className="flex lg:flex-row flex-col lg:justify-between lg:items-end gap-4 mb-8 pb-6 border-b">
-      <div className="flex gap-4 min-w-0">
-        <SectionRule section={section} />
-        <div className="py-0.5 min-w-0">
+    <div className={PAGE_BAND_CLASS}>
+      <div className="flex lg:flex-row flex-col lg:justify-between lg:items-start gap-4">
+        <div className="min-w-0">
+          <Suspense fallback={<SectionMarkPlaceholder />}>
+            <SectionMark />
+          </Suspense>
           {title ? (
             <h1 className={PAGE_TITLE_CLASS}>{title}</h1>
           ) : (
             <TextSkeleton
-              lineClassName="h-10 lg:h-[2.875rem]"
+              lineClassName="h-9 lg:h-10"
               className={cn("h-7", titleClassName)}
             />
           )}
           {typeof description === "string" ? (
-            <p className="mt-2 max-w-prose text-muted-foreground text-base">
+            <p className="mt-1.5 max-w-prose text-muted-foreground text-base">
               {description}
             </p>
           ) : description ? (
-            <TextSkeleton lineClassName="mt-2 h-6" className="w-72 h-4" />
+            <TextSkeleton lineClassName="mt-1.5 h-6" className="w-72 h-4" />
           ) : null}
           {info && (
-            <div className="flex flex-wrap items-center gap-2 mt-3">{info}</div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2.5">
+              {info}
+            </div>
           )}
         </div>
+        {actions && (
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {actions}
+          </div>
+        )}
       </div>
-      {actions && (
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {actions}
+      {children}
+    </div>
+  );
+}
+
+/** Mirrors StationTrack: hollow nodes on the rail with label lines. */
+export function StationTrackSkeleton({ count }: { count: number }) {
+  return (
+    <div
+      aria-hidden
+      className="grid"
+      style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}
+    >
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="relative flex flex-col items-center">
+          {i < count - 1 && (
+            <span className="top-[9px] left-1/2 absolute bg-track-rail rounded-full w-full h-1" />
+          )}
+          <span className="z-10 bg-band border-4 border-track-rail rounded-full size-[22px]" />
+          <TextSkeleton lineClassName="mt-2 h-5 max-sm:hidden" className="w-16" />
         </div>
-      )}
+      ))}
     </div>
   );
 }

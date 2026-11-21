@@ -8,7 +8,12 @@ import {
 import { KitView } from "@/components/interviews/kit-view";
 import { LegalReminder } from "@/components/interviews/legal-reminder";
 import { Fact, FactStrip, NextStep } from "@/components/detail-blocks";
-import { InterviewSteps } from "@/components/interviews/interview-steps";
+import {
+  INTERVIEW_STEP_COUNT,
+  InterviewSteps,
+  interviewStepIndex,
+} from "@/components/interviews/interview-steps";
+import { stationPointer } from "@/components/flow";
 import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +69,7 @@ export default function PrepareInterviewPage({
 function PrepareSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="applications" description />
+      <PageHeaderSkeleton description />
       <div className="flex flex-col gap-4">
         <FieldSkeleton label="Dettagli colloquio" />
         <FieldSkeleton label="Scaletta" />
@@ -100,6 +105,8 @@ async function PrepareContent({
     ? KIT_STATUS_PRESENTATION[interview.kit.status]
     : null;
   const basePath = `/dashboard/applications/${id}/interviews/${interviewId}`;
+  // The next step's notch points at the Preparazione station
+  const stepPointer = stationPointer(interviewStepIndex("prepare"), INTERVIEW_STEP_COUNT);
   const linkClass = cn(
     buttonVariants({ variant: "outline", size: "sm" }),
     "inline-flex",
@@ -108,6 +115,7 @@ async function PrepareContent({
   const nextStep =
     interview.status === "scheduled" && interview.kit?.status === "draft" ? (
       <NextStep
+        pointer={stepPointer}
         title="Completa il kit e segnalo come pronto"
         description="Rivedi domande e checklist nell'editor, poi premi Segna come pronto."
         href={`${basePath}/prepare/edit`}
@@ -115,6 +123,7 @@ async function PrepareContent({
       />
     ) : interview.status === "scheduled" ? (
       <NextStep
+        pointer={stepPointer}
         title="Al momento del colloquio apri la modalità live"
         description="Lì avvii il colloquio, prendi note e segni le domande coperte."
         href={`${basePath}/live`}
@@ -122,12 +131,14 @@ async function PrepareContent({
       />
     ) : interview.status === "in_progress" ? (
       <NextStep
+        pointer={stepPointer}
         title="Il colloquio è in corso"
         href={`${basePath}/live`}
         actionLabel="Torna al live"
       />
     ) : interview.status === "completed" ? (
       <NextStep
+        pointer={stepPointer}
         title="Compila e invia la tua scheda"
         description="Voti per criterio, evidenze e raccomandazione finale."
         href={`${basePath}/feedback`}
@@ -138,7 +149,6 @@ async function PrepareContent({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="applications"
         title="Preparazione colloquio"
         description={`${candidateName} · ${interview.position.title} · Round ${interview.round}`}
         info={
@@ -183,16 +193,17 @@ async function PrepareContent({
             />
           </div>
         }
-      />
-
-      <InterviewSteps
-        applicationId={id}
-        interviewId={interviewId}
-        current="prepare"
-        status={interview.status}
-      />
-
-      {nextStep}
+      >
+        <div className="flex flex-col">
+          <InterviewSteps
+            applicationId={id}
+            interviewId={interviewId}
+            current="prepare"
+            status={interview.status}
+          />
+          {nextStep}
+        </div>
+      </PageHeader>
 
       <FactStrip>
           <Fact icon={CalendarClock} label="Quando">

@@ -15,7 +15,6 @@ export function AssessmentDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeaderSkeleton
-        section="assessments"
         titleClassName="w-96 max-w-full"
         info={
           <>
