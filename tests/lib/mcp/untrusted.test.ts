@@ -68,6 +68,21 @@ describe("loadCandidateCvText", () => {
     expect(extractTextFromPDF).toHaveBeenCalledWith("https://r2.example.com/cv.pdf");
   });
 
+  it("reads a CV stored as a bare R2 key through its public URL", async () => {
+    vi.stubEnv("R2_PUBLIC_URL", "https://cdn.example.com/");
+    vi.mocked(prisma.candidate.findUnique).mockResolvedValueOnce({
+      resumeUrl: "resumes/cv.pdf",
+    } as any);
+    vi.mocked(extractTextFromPDF).mockResolvedValue("React");
+
+    await loadCandidateCvText("cand-1");
+
+    expect(extractTextFromPDF).toHaveBeenCalledWith(
+      "https://cdn.example.com/resumes/cv.pdf",
+    );
+    vi.unstubAllEnvs();
+  });
+
   it("returns null without a CV, for an empty PDF and when extraction fails", async () => {
     vi.mocked(prisma.candidate.findUnique).mockResolvedValueOnce({ resumeUrl: null } as any);
     await expect(loadCandidateCvText("cand-1")).resolves.toBeNull();

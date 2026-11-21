@@ -8,6 +8,7 @@ import prisma from "@/lib/prisma";
 import { MAX_RESUME_CHARS } from "@/lib/services/ai/evaluation-prompts";
 import { redactBirthDate, sanitizeInput } from "@/lib/services/ai/sanitize";
 import { logger } from "@/lib/services/logger";
+import { resumePublicUrl } from "@/lib/services/r2-storage";
 import { extractTextFromPDF } from "@/lib/services/resume-evaluation";
 
 export type UntrustedKind = "cv" | "candidate_answer" | "candidate_note";
@@ -35,7 +36,8 @@ export async function loadCandidateCvText(
   if (!candidate?.resumeUrl) return null;
 
   try {
-    const raw = await extractTextFromPDF(candidate.resumeUrl);
+    // The stored value may be a bare R2 key (older records, imports)
+    const raw = await extractTextFromPDF(resumePublicUrl(candidate.resumeUrl));
     if (!raw.trim()) return null;
     // Birth date first: sanitizeInput rewrites the markers it relies on
     return sanitizeInput(redactBirthDate(raw), MAX_RESUME_CHARS);

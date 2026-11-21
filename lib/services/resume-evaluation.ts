@@ -60,7 +60,8 @@ export async function extractTextFromPDF(pdfUrl: string): Promise<string> {
 }
 
 /** Remove markdown code fences from a model response, if present */
-export function cleanJsonResponse(text: string): string {  let jsonText = text.trim();
+export function cleanJsonResponse(text: string): string {
+  let jsonText = text.trim();
   if (jsonText.startsWith("```json")) {
     jsonText = jsonText.slice(7);
   } else if (jsonText.startsWith("```")) {
