@@ -8,6 +8,11 @@ vi.mock("@/lib/services/assessment-evaluation", () => ({
 
 vi.mock("@/lib/utils/cache-utils", () => ({
   invalidateEvaluationCache: vi.fn(),
+  invalidateCandidateCache: vi.fn(),
+}));
+
+vi.mock("@/lib/data/applications", () => ({
+  getResumeEvaluation: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -15,19 +20,25 @@ vi.mock("next/navigation", () => ({
   unstable_rethrow: vi.fn(),
 }));
 
+import prisma from "@/lib/prisma";
 import {
   completeAssessmentEvaluationAction,
   evaluateAssessmentAnswerAction,
   recalculateAnswerEvaluationsAction,
+  syncResumeEvaluationAction,
 } from "@/lib/actions/evaluations";
 import { requireUser } from "@/lib/auth-server";
+import { getResumeEvaluation } from "@/lib/data/applications";
 import {
   completeAssessmentEvaluation,
   evaluateAssessmentAnswer,
   recalculateAnswerEvaluations,
 } from "@/lib/services/assessment-evaluation";
 import { UserError } from "@/lib/services/user-error";
-import { invalidateEvaluationCache } from "@/lib/utils/cache-utils";
+import {
+  invalidateCandidateCache,
+  invalidateEvaluationCache,
+} from "@/lib/utils/cache-utils";
 
 const EXPIRED = "Sessione scaduta. Accedi di nuovo per continuare.";
 
@@ -75,6 +86,66 @@ describe("evaluateAssessmentAnswerAction", () => {
 
     expect(result).toEqual({ success: false, error: "L'ID è obbligatorio" });
     expect(evaluateAssessmentAnswer).not.toHaveBeenCalled();
+  });
+});
+
+describe("syncResumeEvaluationAction", () => {
+  const evaluation = {
+    id: "e-1",
+    fitScore: 9,
+    evaluation: "Profilo senior",
+    strengths: ["React"],
+    weaknesses: [],
+    recommendation: "Colloquio tecnico",
+    createdAt: new Date("2026-11-21T13:00:00Z"),
+    criteriaAssessment: null,
+  };
+
+  it("returns the stored evaluation and expires the caches", async () => {
+    vi.mocked(getResumeEvaluation).mockResolvedValueOnce(evaluation);
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce({
+      id: "app-1",
+    } as any);
+
+    const result = await syncResumeEvaluationAction({
+      candidateId: "c-1",
+      positionId: "p-1",
+    });
+
+    expect(getResumeEvaluation).toHaveBeenCalledWith("c-1", "p-1");
+    expect(result).toEqual({ success: true, evaluation });
+    expect(invalidateEvaluationCache).toHaveBeenCalledWith({
+      candidateId: "c-1",
+    });
+    expect(invalidateCandidateCache).toHaveBeenCalledWith({
+      candidateId: "c-1",
+      positionId: "p-1",
+      applicationId: "app-1",
+    });
+  });
+
+  it("still succeeds while the evaluation is not stored yet", async () => {
+    vi.mocked(getResumeEvaluation).mockResolvedValueOnce(null);
+    vi.mocked(prisma.application.findUnique).mockResolvedValueOnce(null);
+
+    const result = await syncResumeEvaluationAction({
+      candidateId: "c-1",
+      positionId: "p-1",
+    });
+
+    expect(result).toEqual({ success: true, evaluation: null });
+  });
+
+  it("requires a session", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+
+    expect(
+      await syncResumeEvaluationAction({
+        candidateId: "c-1",
+        positionId: "p-1",
+      }),
+    ).toEqual({ success: false, error: EXPIRED });
+    expect(getResumeEvaluation).not.toHaveBeenCalled();
   });
 });
 

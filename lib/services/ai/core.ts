@@ -8,6 +8,7 @@
 import {
   aiQuizGenerationSchema,
   convertToStrictQuestions,
+  FlexibleQuestion,
   Question,
   questionSchemas,
   type QuestionType,
@@ -16,6 +17,7 @@ import {
   buildCriterionKeys,
   resolveCriterionKeys,
 } from "../../utils/criterion-keys";
+import { aiLogger } from "../logger";
 import { generateStructured } from "./generate";
 import { questionOutputSchema, quizOutputSchema } from "./question-output";
 import {
@@ -65,6 +67,24 @@ export function shuffleOptions<
   };
 }
 
+/**
+ * Rounds of quiz generation: the first request plus the top-ups of a short
+ * answer. The model may stop before the requested count (see `generateQuiz`).
+ */
+const MAX_QUIZ_ROUNDS = 3;
+
+/**
+ * Completion budget of one quiz generation: reasoning tokens plus the
+ * longest quiz (20 questions with code snippets).
+ */
+const QUIZ_MAX_OUTPUT_TOKENS = 16000;
+
+/** Completion budget of one question: reasoning plus the longest question. */
+const QUESTION_MAX_OUTPUT_TOKENS = 4000;
+
+/** Comparison key of a question text, to spot repeated questions. */
+const questionKey = (text: string) => text.trim().toLowerCase();
+
 export class AIQuizService {
   private config: AIGenerationConfig;
 
@@ -86,40 +106,84 @@ export class AIQuizService {
       params.includeBehavioralScenarios && "behavioral_scenario",
     ].filter((type): type is QuestionType => Boolean(type));
 
-    const output = await generateStructured({
-      task: "quiz_generation",
-      schema: aiQuizGenerationSchema,
-      outputSchema: quizOutputSchema(types, withCriteria),
-      system: buildQuizSystemPrompt(withCriteria),
-      prompt: buildQuizPrompt(params, keyed),
-      specificModel: params.specificModel,
-      temperature: 0.7,
-      config: this.config,
-    });
+    const questions: FlexibleQuestion[] = [];
+    const asked = new Set<string>();
 
-    if (!output.questions || !output.title) {
-      throw new AIGenerationError(
-        "Invalid response structure from AI model",
-        AIErrorCode.INVALID_RESPONSE,
-        { output },
+    // The model can answer with fewer questions than requested (it runs out
+    // of output tokens, or it stops early): ask again for the missing ones,
+    // listing what was already generated so the new questions cover
+    // different concepts.
+    for (let round = 0; round < MAX_QUIZ_ROUNDS; round++) {
+      const missing = params.questionCount - questions.length;
+      if (missing <= 0) break;
+
+      const request: GenerateQuizParams = {
+        ...params,
+        questionCount: missing,
+        previousQuestions: [
+          ...(params.previousQuestions ?? []),
+          ...questions.map((question) => ({ question: question.question })),
+        ],
+      };
+
+      const output = await generateStructured({
+        task: "quiz_generation",
+        schema: aiQuizGenerationSchema,
+        outputSchema: quizOutputSchema(types, withCriteria),
+        system: buildQuizSystemPrompt(withCriteria),
+        prompt: buildQuizPrompt(request, keyed),
+        specificModel: params.specificModel,
+        temperature: 0.7,
+        maxOutputTokens: QUIZ_MAX_OUTPUT_TOKENS,
+        config: this.config,
+      });
+
+      if (!output.questions || !output.title) {
+        throw new AIGenerationError(
+          "Invalid response structure from AI model",
+          AIErrorCode.INVALID_RESPONSE,
+          { output },
+        );
+      }
+
+      // Map the proposed keys back to criterion ids (unknown keys are
+      // dropped) and remove criterionKeys from the questions
+      const generated: FlexibleQuestion[] = output.questions.map(
+        ({ criterionKeys, ...question }) =>
+          shuffleOptions(
+            withCriteria
+              ? {
+                  ...question,
+                  criterionIds: resolveCriterionKeys(keyed, criterionKeys),
+                }
+              : question,
+          ),
       );
+
+      // Repeated questions do not bring the quiz closer to the count: a
+      // round that adds none is the last one.
+      const added = generated.filter(({ question }) => {
+        const key = questionKey(question);
+        if (asked.has(key)) return false;
+        asked.add(key);
+        return true;
+      });
+      if (added.length === 0) break;
+      questions.push(...added);
     }
 
-    // Map the proposed keys back to criterion ids (unknown keys are dropped)
-    // and remove criterionKeys from the questions
-    const questions = output.questions.map(
-      ({ criterionKeys, ...question }) =>
-        shuffleOptions(
-          withCriteria
-            ? {
-                ...question,
-                criterionIds: resolveCriterionKeys(keyed, criterionKeys),
-              }
-            : question,
-        ),
-    );
+    if (questions.length < params.questionCount) {
+      aiLogger.warn("Quiz generated with fewer questions than requested", {
+        requested: params.questionCount,
+        generated: questions.length,
+      });
+    }
 
-    return { questions: convertToStrictQuestions(questions) };
+    return {
+      questions: convertToStrictQuestions(
+        questions.slice(0, params.questionCount),
+      ),
+    };
   }
 
   async generateQuestion(params: GenerateQuestionParams): Promise<Question> {
@@ -133,6 +197,7 @@ export class AIQuizService {
       prompt: userPrompt,
       specificModel: params.specificModel,
       temperature: 0.7,
+      maxOutputTokens: QUESTION_MAX_OUTPUT_TOKENS,
       config: this.config,
     });
 

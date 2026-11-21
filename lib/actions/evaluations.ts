@@ -1,17 +1,23 @@
 "use server";
 
 import { requireUser } from "../auth-server";
+import { getResumeEvaluation } from "../data/applications";
+import prisma from "../prisma";
 import {
   assessmentEvaluationInputSchema,
   baseSchemas,
   recalculateAnswerEvaluationsSchema,
+  resumeEvaluationRequestSchema,
 } from "../schemas";
 import {
   completeAssessmentEvaluation,
   evaluateAssessmentAnswer,
   recalculateAnswerEvaluations,
 } from "../services/assessment-evaluation";
-import { invalidateEvaluationCache } from "../utils/cache-utils";
+import {
+  invalidateCandidateCache,
+  invalidateEvaluationCache,
+} from "../utils/cache-utils";
 import { runAction } from "./run-action";
 
 /**
@@ -56,6 +62,36 @@ export async function completeAssessmentEvaluationAction(input: unknown) {
     });
 
     return result;
+  });
+}
+
+/**
+ * Read back the CV evaluation that the stream route has just stored, and
+ * expire the caches that follow it (evaluation, candidate, application path).
+ * A Server Action, so the panel gets the stored evaluation in the same
+ * response instead of depending on the page cache being refreshed.
+ */
+export async function syncResumeEvaluationAction(input: unknown) {
+  return runAction("syncResumeEvaluationAction", async () => {
+    await requireUser();
+    const { candidateId, positionId } =
+      resumeEvaluationRequestSchema.parse(input);
+
+    const evaluation = await getResumeEvaluation(candidateId, positionId);
+
+    const application = await prisma.application.findUnique({
+      where: { candidateId_positionId: { candidateId, positionId } },
+      select: { id: true },
+    });
+
+    invalidateEvaluationCache({ candidateId });
+    invalidateCandidateCache({
+      candidateId,
+      positionId,
+      applicationId: application?.id,
+    });
+
+    return { evaluation };
   });
 }
 

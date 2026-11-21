@@ -30,6 +30,17 @@ type PositionFormProps = {
   contractTypes?: string[];
 };
 
+/** Italian message the route sent for a failed request, when it sent one. */
+async function generationError(response: Response): Promise<string> {
+  try {
+    const data = await response.json();
+    if (typeof data?.error === "string" && data.error) return data.error;
+  } catch {
+    // Body is not JSON: fall through to the status
+  }
+  return `La generazione non è riuscita (errore ${response.status}).`;
+}
+
 export function PositionForm({
   position,
   onCancel,
@@ -103,19 +114,23 @@ export function PositionForm({
   };
 
   async function handleGenerateDescription() {
+    // No field is required: the description can be written (or improved)
+    // before the position is complete, from whatever detail is on the form.
+    const title = getValues("title").trim();
+    const experienceLevel = getValues("experienceLevel");
+    const skills = getValues("skills");
+    const description = getValues("description")?.trim() ?? "";
+
     startDescriptionGeneration(async () => {
       try {
         const descriptionPayload: PositionDescriptionInput = {
-          title: getValues("title"),
-          experienceLevel: getValues("experienceLevel"),
-          skills: getValues("skills"),
+          title,
+          experienceLevel,
+          skills,
           softSkills: getValues("softSkills"),
           contractType: getValues("contractType"),
-          currentDescription: getValues("description"),
+          currentDescription: description,
         };
-
-        // Clear current description before streaming
-        setValue("description", "");
 
         const response = await fetch("/api/positions/generate-description", {
           method: "POST",
@@ -126,12 +141,16 @@ export function PositionForm({
         });
 
         if (!response.ok) {
-          throw new Error("Failed to generate description");
+          throw new Error(await generationError(response));
         }
 
         if (!response.body) {
-          throw new Error("No response body");
+          throw new Error("La risposta del servizio AI è vuota.");
         }
+
+        // The current text is replaced only once the stream is available: a
+        // failed request keeps what the user had written.
+        setValue("description", "");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();

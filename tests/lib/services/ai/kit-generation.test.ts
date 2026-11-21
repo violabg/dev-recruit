@@ -29,6 +29,7 @@ const context = (overrides: Partial<KitGenerationContext> = {}): KitGenerationCo
   // cap = floor(2 * 6 / 3) = 4
   templateQuestionCount: 6,
   keptAiItemCount: 0,
+  existingQuestions: ["Puoi presentarti?"],
   resumeText: "CV",
   resumeWeaknesses: [],
   resumeCriteriaGaps: [],

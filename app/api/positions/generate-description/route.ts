@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     const validated = positionDescriptionSchema.parse(body);
 
     const stream = await streamPositionDescription({
-      title: validated.title,
-      experienceLevel: validated.experienceLevel,
-      skills: validated.skills,
+      title: validated.title ?? "",
+      experienceLevel: validated.experienceLevel ?? "",
+      skills: validated.skills ?? [],
       softSkills: validated.softSkills,
       contractType: validated.contractType,
       currentDescription: validated.currentDescription,

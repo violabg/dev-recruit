@@ -20,6 +20,7 @@ import {
 } from "./ai/evaluation-prompts";
 import { advanceApplicationStage, type StageChangeResult } from "./applications";
 import { aiLogger } from "./logger";
+import { resumePublicUrl } from "./r2-storage";
 import { getActiveCriteria } from "./scorecards";
 
 /** A request that cannot be fulfilled; `status` is the HTTP status to return. */
@@ -59,8 +60,7 @@ export async function extractTextFromPDF(pdfUrl: string): Promise<string> {
 }
 
 /** Remove markdown code fences from a model response, if present */
-export function cleanJsonResponse(text: string): string {
-  let jsonText = text.trim();
+export function cleanJsonResponse(text: string): string {  let jsonText = text.trim();
   if (jsonText.startsWith("```json")) {
     jsonText = jsonText.slice(7);
   } else if (jsonText.startsWith("```")) {
@@ -70,6 +70,26 @@ export function cleanJsonResponse(text: string): string {
     jsonText = jsonText.slice(0, -3);
   }
   return jsonText.trim();
+}
+
+/**
+ * Text of the candidate's resume. The stored value is the public URL of the
+ * upload, but a bare R2 key is accepted too. A resume that cannot be read is
+ * a user-fixable condition, so it becomes a ResumeEvaluationError.
+ */
+async function readResumeText(
+  candidateId: string,
+  resumeUrl: string,
+): Promise<string> {
+  try {
+    return await extractTextFromPDF(resumePublicUrl(resumeUrl));
+  } catch (error) {
+    aiLogger.error("Failed to read the resume", { error, candidateId });
+    throw new ResumeEvaluationError(
+      "Il curriculum non è raggiungibile: carica di nuovo il PDF dalla scheda del candidato.",
+      400,
+    );
+  }
 }
 
 /**
@@ -137,7 +157,7 @@ export async function prepareResumeEvaluation(
     );
   }
 
-  const resumeText = await extractTextFromPDF(candidate.resumeUrl);
+  const resumeText = await readResumeText(candidate.id, candidate.resumeUrl);
 
   if (!resumeText || resumeText.trim().length < 50) {
     throw new ResumeEvaluationError(

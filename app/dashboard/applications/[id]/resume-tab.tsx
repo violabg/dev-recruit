@@ -1,5 +1,6 @@
 import { ResumeEvaluationPanel } from "@/components/applications/resume-evaluation-panel";
 import { getApplicationDetail } from "@/lib/data/applications";
+import { resumePublicUrl } from "@/lib/services/r2-storage";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -20,7 +21,11 @@ export async function ResumeTab({ params }: Props) {
       positionId={detail.position.id}
       positionTitle={detail.position.title}
       hasResume={!!detail.candidate.resumeUrl}
-      resumeUrl={detail.candidate.resumeUrl}
+      resumeUrl={
+        detail.candidate.resumeUrl
+          ? resumePublicUrl(detail.candidate.resumeUrl)
+          : null
+      }
       evaluation={detail.resumeEvaluation}
     />
   );

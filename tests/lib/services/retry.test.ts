@@ -42,6 +42,7 @@ describe("withRetry", () => {
     maxRetries: 3,
     retryDelay: 1, // Very short delay for fast tests
     timeout: 60000,
+    maxOutputTokens: 8000,
     fallbackModels: [],
   };
 

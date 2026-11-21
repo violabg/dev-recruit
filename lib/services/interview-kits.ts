@@ -32,6 +32,7 @@ import { redactBirthDate, sanitizeInput } from "./ai/sanitize";
 import type { DbClient } from "./applications";
 import { answerToText } from "./assessment-evaluation";
 import { assertInterviewStatus, loadInterview } from "./interviews";
+import { resumePublicUrl } from "./r2-storage";
 import { extractTextFromPDF } from "./resume-evaluation";
 import { type ActiveCriterion, getActiveCriteria } from "./scorecards";
 import { UserError } from "./user-error";
@@ -415,6 +416,9 @@ const WEAK_ANSWER_THRESHOLD = 7;
 const MAX_WEAK_ANSWERS = 6;
 /** Two scores of one criterion this far apart make it discordant */
 const DISCORDANT_SPREAD = 2;
+/** Questions quoted to the model so it does not repeat them */
+const MAX_EXISTING_QUESTIONS = 25;
+const MAX_EXISTING_QUESTION_CHARS = 300;
 
 export type KitGenerationContext = {
   interview: { id: string; round: number; durationMinutes: number };
@@ -435,6 +439,8 @@ export type KitGenerationContext = {
   templateQuestionCount: number;
   /** AI items with edited = true: regeneration keeps them */
   keptAiItemCount: number;
+  /** Questions that stay in the kit (template + edited AI), in order */
+  existingQuestions: string[];
   /** redactBirthDate, then sanitizeInput(MAX_RESUME_CHARS) */
   resumeText: string | null;
   /** Sanitized */
@@ -517,7 +523,10 @@ export async function buildKitGenerationContext(
             orderBy: { order: "asc" },
             select: { id: true, title: true, minutes: true, kind: true },
           },
-          items: { select: { origin: true, edited: true } },
+          items: {
+            orderBy: [{ section: { order: "asc" } }, { order: "asc" }],
+            select: { origin: true, edited: true, text: true },
+          },
         },
       },
     },
@@ -539,7 +548,9 @@ export async function buildKitGenerationContext(
   let resumeText: string | null = null;
   if (application.candidate.resumeUrl) {
     try {
-      const raw = await extractTextFromPDF(application.candidate.resumeUrl);
+      const raw = await extractTextFromPDF(
+        resumePublicUrl(application.candidate.resumeUrl),
+      );
       resumeText = raw.trim()
         ? sanitizeInput(redactBirthDate(raw), MAX_RESUME_CHARS)
         : null;
@@ -717,6 +728,14 @@ export async function buildKitGenerationContext(
     keptAiItemCount: kit.items.filter(
       (item) => isAiOrigin(item.origin) && item.edited,
     ).length,
+    // The questions the proposal must not repeat: template and edited AI
+    existingQuestions: kit.items
+      .filter(
+        (item) =>
+          item.origin === "template" || (isAiOrigin(item.origin) && item.edited),
+      )
+      .slice(0, MAX_EXISTING_QUESTIONS)
+      .map((item) => sanitizeInput(item.text, MAX_EXISTING_QUESTION_CHARS)),
     resumeText,
     resumeWeaknesses,
     resumeCriteriaGaps,
