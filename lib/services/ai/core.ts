@@ -10,12 +10,14 @@ import {
   convertToStrictQuestions,
   Question,
   questionSchemas,
+  type QuestionType,
 } from "../../schemas";
 import {
   buildCriterionKeys,
   resolveCriterionKeys,
 } from "../../utils/criterion-keys";
 import { generateStructured } from "./generate";
+import { questionOutputSchema, quizOutputSchema } from "./question-output";
 import {
   buildQuestionPrompts,
   buildQuizPrompt,
@@ -29,6 +31,39 @@ import {
   GenerateQuestionParams,
   GenerateQuizParams,
 } from "./types";
+
+/**
+ * Shuffle the options of a generated multiple choice question and move
+ * correctAnswer with them: models put the right option first far more often
+ * than chance. Other question types are returned unchanged.
+ */
+export function shuffleOptions<
+  T extends { type: string; options?: string[]; correctAnswer?: number },
+>(question: T, random: () => number = Math.random): T {
+  const { options, correctAnswer } = question;
+  if (
+    question.type !== "multiple_choice" ||
+    !options ||
+    options.length < 2 ||
+    correctAnswer === undefined ||
+    correctAnswer < 0 ||
+    correctAnswer >= options.length
+  ) {
+    return question;
+  }
+
+  const order = options.map((_, index) => index);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+
+  return {
+    ...question,
+    options: order.map((index) => options[index]),
+    correctAnswer: order.indexOf(correctAnswer),
+  };
+}
 
 export class AIQuizService {
   private config: AIGenerationConfig;
@@ -44,9 +79,17 @@ export class AIQuizService {
     const keyed = buildCriterionKeys(params.criteria ?? []);
     const withCriteria = keyed.length > 0;
 
+    const types = [
+      params.includeMultipleChoice && "multiple_choice",
+      params.includeOpenQuestions && "open_question",
+      params.includeCodeSnippets && "code_snippet",
+      params.includeBehavioralScenarios && "behavioral_scenario",
+    ].filter((type): type is QuestionType => Boolean(type));
+
     const output = await generateStructured({
       task: "quiz_generation",
       schema: aiQuizGenerationSchema,
+      outputSchema: quizOutputSchema(types, withCriteria),
       system: buildQuizSystemPrompt(withCriteria),
       prompt: buildQuizPrompt(params, keyed),
       specificModel: params.specificModel,
@@ -66,12 +109,14 @@ export class AIQuizService {
     // and remove criterionKeys from the questions
     const questions = output.questions.map(
       ({ criterionKeys, ...question }) =>
-        withCriteria
-          ? {
-              ...question,
-              criterionIds: resolveCriterionKeys(keyed, criterionKeys),
-            }
-          : question,
+        shuffleOptions(
+          withCriteria
+            ? {
+                ...question,
+                criterionIds: resolveCriterionKeys(keyed, criterionKeys),
+              }
+            : question,
+        ),
     );
 
     return { questions: convertToStrictQuestions(questions) };
@@ -83,6 +128,7 @@ export class AIQuizService {
     const output = await generateStructured({
       task: "question_generation",
       schema: questionSchemas.flexible,
+      outputSchema: questionOutputSchema([params.type]),
       system: systemPrompt,
       prompt: userPrompt,
       specificModel: params.specificModel,
@@ -98,7 +144,7 @@ export class AIQuizService {
       );
     }
 
-    return convertToStrictQuestions([output])[0];
+    return convertToStrictQuestions([shuffleOptions(output)])[0];
   }
 }
 

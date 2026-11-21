@@ -52,6 +52,8 @@ beforeEach(() => {
 - Actions: assert the returned result (`{ success: false, error }`, or `unwrap(result)` on success), never a thrown error. Assert the `invalidate*Cache` helper, not `updateTag`. Mock `next/navigation` when the action redirects.
 - Services: they throw; assert with `rejects.toThrow("…")` or `rejects.toMatchObject({ code })`. Services import nothing from `next/*`.
 - AI: mock `generateStructured` (or `aiQuizService`) in service and action tests; mock the `ai` SDK only when testing the AI layer. Assert call options with `toMatchObject` (`task`, `temperature`, `seed`). Pass `config: { retryDelay: 0 }` to skip backoff.
+- A test reaching `generateStructured` mocks `ai` keeping the real exports (strict mode uses the real `APICallError` and `jsonSchema`): `vi.mock("ai", async (importOriginal) => ({ ...(await importOriginal<typeof import("ai")>()), generateText: vi.fn() }))`. If it passes fake (non-Zod) schemas, also mock the strict-schema module: `strictOutputSchema: vi.fn((schema) => schema)`.
+- A new AI output schema (or output variant) is added to the strict-schema test list that checks its strict conversion.
 - Time: no fake timers. Time-dependent rules take a `now` argument (`assessmentState`, `acceptsAnswers`, `getRemainingSeconds`, `isApplicationStale`, `interview-calendar`); build dates relative to `Date.now()`.
 - Network: stub `fetch` with `vi.stubGlobal`; never call a real database, network or AI provider.
 

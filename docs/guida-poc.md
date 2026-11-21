@@ -6,7 +6,7 @@ Materiale di lavoro per chi presenta, verifica e sviluppa il POC. **Non è colle
 
 ## 1. Primo amministratore e deploy
 
-`pnpm user:make-admin <email>` promuove ad amministratore un account già esistente (email verificata, account attivo); non crea mai account. Serve a verificare le nuove registrazioni e a gestire gli utenti.
+`pnpm user:make-admin <email>` promuove ad amministratore un account già esistente: imposta ruolo `admin`, email verificata e account attivo (sbloccato se era bloccato); non crea mai account. Serve solo al primo amministratore: le altre registrazioni le verifica un amministratore dall'app, perché l'applicazione non invia email.
 
 In produzione la procedura, nell'ordine, è:
 
@@ -42,9 +42,9 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 | 9 | **Nessuna ricerca globale** tra candidati, posizioni e candidature | Medio con molti dati | Command palette (⌘K) |
 | 10 | **Matrice della decisione larga**: su mobile richiede scroll orizzontale | Basso | Vista compatta o espansione per criterio |
 | 11 | **La cronologia della candidatura non distingue i cambi di fase storici**: mostra solo la fase attuale | Basso/medio | Registrare gli eventi di fase |
-| 12 | **Copertura criteri senza un riepilogo aggregato**: i criteri senza domanda sono visibili ma non c'è un avviso prima del colloquio | Basso | Avviso in preparazione ("3 criteri senza domande") |
+| 12 | **Criteri senza domande non segnalati prima del colloquio**: l'avviso "N criteri senza domande" c'è nella guida di posizione, ma la preparazione del colloquio non lo mostra | Basso | Stesso avviso nella preparazione del colloquio ("3 criteri senza domande") |
 | 13 | **Tabella della pipeline senza azioni multiple** (es. assegnare un responsabile a più candidature) | Basso/medio | Selezione multipla e azioni in blocco |
-| 14 | **Stato della posizione "Chiusa" poco visibile** nelle liste | Basso | Filtro/etichetta più evidente |
+| 14 | **Stato della posizione "Chiusa" poco visibile** nelle liste: il filtro "Chiuse" c'è, ma l'etichetta nell'elenco è grigia e discreta | Basso | Etichetta più evidente |
 
 ### Attriti di contenuto e AI
 

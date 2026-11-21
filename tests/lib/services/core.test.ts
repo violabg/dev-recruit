@@ -7,7 +7,8 @@ import {
 
 // Mock external dependencies
 vi.mock("@ai-sdk/groq");
-vi.mock("ai", () => ({
+vi.mock("ai", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("ai")>()),
   generateText: vi.fn().mockResolvedValue({
     output: {
       title: "Mock Quiz",
@@ -31,6 +32,11 @@ vi.mock("ai", () => ({
   Output: {
     object: vi.fn((config) => config),
   },
+}));
+
+// The mocked schemas are not Zod schemas: skip the strict JSON schema
+vi.mock("../../../lib/services/ai/strict-schema", () => ({
+  strictOutputSchema: vi.fn((schema: unknown) => schema),
 }));
 
 vi.mock("@ai-sdk/devtools", () => ({

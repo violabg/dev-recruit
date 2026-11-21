@@ -1,8 +1,11 @@
 /**
  * AI Service Prompts
  *
- * Prompt builders for quiz and question generation.
- * Each question type has its own specialized prompt builder.
+ * Prompt builders of every generation call: questions, quizzes, position
+ * descriptions, scorecards, interview guides and kits, decision review.
+ * Question and quiz prompts share one set of rules (QUESTION_TYPE_RULES,
+ * TECH_CURRENCY_RULES, DIFFICULTY_SCALE) so both paths ask for the same
+ * quality.
  */
 
 import type { DecisionOutcomeValue } from "../../schemas";
@@ -12,6 +15,7 @@ import { DEFAULT_SOFT_CRITERIA } from "../../utils/scorecard-defaults";
 import type { KitGenerationContext } from "../interview-kits";
 import type { ActiveCriterion } from "../scorecards";
 import type { GenerateInterviewGuideParams } from "./guide-generation";
+import { bullets, prompt } from "./prompt-text";
 import { sanitizeInput } from "./sanitize";
 import type { GenerateScorecardCriteriaParams } from "./scorecard-generation";
 import type {
@@ -26,44 +30,207 @@ import type {
 } from "./types";
 
 // ====================
-// COMMON CONTEXT BUILDER
+// SHARED RULES
 // ====================
+// One source for the rules every question prompt (single question and whole
+// quiz) applies, so both paths ask for the same quality.
+
+const OUTPUT_LANGUAGE_RULE =
+  "JSON field names stay in English; every text value is written in Italian. Code, identifiers and established technical terms (hook, closure, race condition, deadlock, ...) keep their original form.";
+
+/** Keeps generated content on current versions and idioms */
+export const TECH_CURRENCY_RULES = prompt`
+  Technology currency (questions, options, code, sample answers):
+  - Target the current stable major version of every language, framework and library involved (the most recent one you know well) and its current idioms and recommended APIs.
+  - Never use deprecated or legacy APIs and patterns (for example React class components and legacy lifecycle methods, \`var\` in JavaScript, callback-style Node.js APIs where a promise API exists, CommonJS where ES modules are the norm, Python 2 idioms, Java without records, \`var\` or switch expressions where they are idiomatic, jQuery for DOM work) UNLESS the recruiter instructions or the required skills explicitly ask for a legacy stack or an older version: then use exactly that version.
+  - A question may be about a legacy topic (for example migrating away from a deprecated API) only when that skill is still relevant today.
+  - Never invent APIs, options, flags or version numbers: when unsure that a feature exists in the current stable version, use a well-established one.
+  - Test behaviour and reasoning, not release trivia: never write a version number in a question unless the skills or the instructions mention it.
+  - Current defaults to assume unless told otherwise: Next.js App Router with Server Components, Server Actions and route handlers (the pages router, getServerSideProps and getStaticProps are legacy); React function components with hooks, data loaded on the server or through a data-fetching library rather than fetch inside useEffect; Node.js ES modules with the built-in fetch; TypeScript in strict mode with no \`any\`; Python 3 with type hints; Java 17+ with records; .NET 8+.
+`;
+
+const DIFFICULTY_SCALE = prompt`
+  Difficulty scale (1-5):
+  1. basic concepts and everyday usage
+  2. common tasks with the standard APIs
+  3. realistic problems that need an understanding of how things work and of the typical pitfalls
+  4. non-trivial trade-offs, edge cases, performance, concurrency or security
+  5. expert depth: internals, architecture at scale, subtle bugs
+  Calibrate on the experience level too: junior = fundamentals used correctly, mid = autonomous work on real features, senior/lead = design decisions, trade-offs and risks.
+`;
+
+const QUESTION_TYPE_RULES = {
+  multiple_choice: prompt`
+    Multiple choice (\`type: "multiple_choice"\`):
+    - question: tests applied understanding (what this code/configuration does, which approach fits a concrete situation, what causes a given behaviour), never a definition or the expansion of an acronym. One paragraph; a short inline expression in backticks is allowed, longer code belongs to code_snippet questions.
+    - options: exactly 4 Italian strings, mutually exclusive, similar in length and style; exactly one is unambiguously correct; every distractor reflects a real misconception. Never "tutte le precedenti" or "nessuna delle precedenti".
+    - correctAnswer: zero-based index (0-3) of the correct option.
+    - explanation: why the correct option is right and why the most tempting distractor is wrong. Never refer to options by letter or position: they are shuffled.
+  `,
+  open_question: prompt`
+    Open question (\`type: "open_question"\`):
+    - question: asks to explain, compare, justify a decision or describe an approach, preferably starting from a concrete situation. It NEVER asks to write code ("Spiega...", "Confronta...", "Come affronteresti..." are fine; "Scrivi una funzione...", "Implementa..." are not).
+    - sampleAnswer: the key points a strong answer covers, compact, usable as grading reference.
+    - explanation: what to reward and the most common mistakes.
+    - Do not include codeSnippet or sampleSolution.
+  `,
+  code_snippet: prompt`
+    Code question (\`type: "code_snippet"\`):
+    - question: states precisely what to do (find and fix the bug, or improve the code) and the expected behaviour; it contains no code and never reveals where the problem is.
+    - codeSnippet: self-contained, realistic production-style code (imports included), idiomatic for the current version of the language. It contains NO comment that names or hints at the problem (never "// bug", "// errore", "// fix", "// TODO" or similar): the candidate must find it. The problem must be one that really happens with the current version, not only with old ones.
+    - sampleSolution: the complete corrected code (not a diff), correct and runnable, changing only what the task needs plus clearly justified improvements.
+    - language: lowercase identifier of the language of BOTH snippets (javascript, typescript, python, java, kotlin, csharp, php, go, rust, ruby, swift, sql, ...).
+    - explanation: what was wrong, why the fix works, which alternative fixes are also acceptable.
+  `,
+  behavioral_scenario: prompt`
+    Behavioral scenario (\`type: "behavioral_scenario"\`):
+    - question: a realistic situation of a software team (incident, code review, deadline, technical disagreement, onboarding, stakeholder pressure) and how the candidate would act; no code.
+    - sampleAnswer: the behaviours a strong answer shows (judgment, communication, collaboration, risk awareness).
+    - explanation: what to reward and which answers are red flags.
+  `,
+} as const;
+
+const COMMON_FIELD_RULES = prompt`
+  Every question also has:
+  - keywords: 3-6 short terms with the concepts the question verifies.
+  - Omit optional fields that do not apply; no extra fields.
+`;
+
+const QUALITY_RULES = prompt`
+  Quality bar:
+  - Practical and job-relevant: what a person in this role meets in real work.
+  - Unambiguous: one clear reading, no trick questions, no dependence on undocumented behaviour.
+  - Technically exact: if you are not certain an answer is correct, write a different question.
+`;
+
+/** Instructions of the recruiter: they win over the default rules */
+function recruiterInstructionsBlock(instructions: string | undefined): string {
+  const sanitized = instructions ? sanitizeInput(instructions) : "";
+  if (!sanitized) return "";
+  return prompt`
+    Recruiter instructions (follow them; they take precedence over the default rules, for example a requested older version or a specific topic, but never over the output format or the language):
+    ${sanitized}
+  `;
+}
+
+function previousQuestionsBlock(
+  previousQuestions: { question: string }[] | undefined,
+): string {
+  if (!previousQuestions || previousQuestions.length === 0) return "";
+  return prompt`
+    Avoid repeating these existing questions (do not paraphrase them either; cover different concepts):
+    ${bullets(previousQuestions.map((q) => sanitizeInput(q.question)))}
+  `;
+}
 
 /**
  * Builds common context shared across all question types
  */
 function buildCommonContext(params: BaseQuestionParams): string {
-  const sanitizedQuizTitle = sanitizeInput(params.quizTitle);
-  const sanitizedPositionTitle = sanitizeInput(params.positionTitle);
-  const sanitizedExperienceLevel = sanitizeInput(params.experienceLevel);
-  const sanitizedSkills = params.skills.map((value) => sanitizeInput(value)).join(", ");
-  const sanitizedInstructions = params.instructions
-    ? sanitizeInput(params.instructions)
-    : "";
+  return prompt`
+    Position: "${sanitizeInput(params.positionTitle)}" (quiz "${sanitizeInput(params.quizTitle)}")
+    - Experience level: ${sanitizeInput(params.experienceLevel)}
+    - Required skills: ${params.skills.map((value) => sanitizeInput(value)).join(", ")}
+    - Difficulty level: ${params.difficulty || 3}/5
 
-  return `
-          Position Details:
-          - Experience Level: ${sanitizedExperienceLevel}
-          - Required Skills: ${sanitizedSkills}
-          - Difficulty level: ${params.difficulty || 3}/5
-          ${
-            sanitizedInstructions
-              ? `- Special instructions: ${sanitizedInstructions}`
-              : ""
-          }
+    ${recruiterInstructionsBlock(params.instructions)}
 
-          Quiz Context: "${sanitizedQuizTitle}" for position "${sanitizedPositionTitle}"
+    ${previousQuestionsBlock(params.previousQuestions)}
+  `;
+}
 
-          ${
-            params.previousQuestions && params.previousQuestions.length > 0
-              ? `
-          Avoid repeating these existing questions:
-          ${params.previousQuestions
-            .map((q) => `- ${sanitizeInput(q.question)}`)
-            .join("\n")}
-          `
-              : ""
-          }`;
+function buildSingleQuestionSystemPrompt(
+  type: keyof typeof QUESTION_TYPE_RULES,
+  label: string,
+  example: string,
+): string {
+  return prompt`
+    You are a senior technical interviewer writing ${label} questions for developer assessments.
+
+    Answer ONLY with one valid JSON object for a single question (NOT an array). ${OUTPUT_LANGUAGE_RULE}
+
+    ${QUESTION_TYPE_RULES[type]}
+
+    ${COMMON_FIELD_RULES}
+
+    ${QUALITY_RULES}
+
+    ${TECH_CURRENCY_RULES}
+
+    ${DIFFICULTY_SCALE}
+
+    Example Structure:
+    ${example}
+  `;
+}
+
+const MULTIPLE_CHOICE_EXAMPLE = `{"type":"multiple_choice","question":"Devi caricare in parallelo i dati di tre servizi indipendenti e mostrare quelli disponibili anche se uno dei servizi fallisce. Quale approccio è il più adatto?","options":["Usare Promise.allSettled e gestire separatamente i risultati con status \\"rejected\\"","Usare Promise.all, che in caso di errore restituisce comunque i risultati riusciti","Usare Promise.race per ottenere la prima risposta e ignorare le altre","Eseguire le chiamate in sequenza con await dentro un ciclo for"],"correctAnswer":0,"keywords":["Promise.allSettled","concorrenza","gestione errori"],"explanation":"Promise.allSettled attende tutte le promise e riporta l'esito di ciascuna, quindi i dati riusciti restano utilizzabili. Promise.all invece viene rifiutata al primo errore e perde gli altri risultati."}`;
+
+const OPEN_QUESTION_EXAMPLE = `{"type":"open_question","question":"In un'applicazione React con molte pagine, lo stato del carrello viene letto da componenti molto distanti tra loro e i re-render sono diventati un problema. Come decideresti tra Context, una libreria di stato esterna e lo stato del server gestito da una libreria di data fetching? Motiva i trade-off.","keywords":["React","state management","re-render","server state"],"sampleAnswer":"Distingue stato del server (cache, invalidazione: libreria di data fetching) da stato client; spiega che Context ri-renderizza tutti i consumer al cambio di valore e va diviso o memoizzato; propone una libreria con selettori per stato client condiviso e frequente; valuta complessità, DevTools e dimensione del team.","explanation":"Premiare la separazione tra stato server e client e la comprensione del costo dei re-render; errore tipico: mettere tutto in un unico Context."}`;
+
+const CODE_SNIPPET_EXAMPLE = `{"type":"code_snippet","question":"La funzione dovrebbe restituire i dati dell'utente o lanciare un errore se la risposta HTTP non è positiva, ma restituisce sempre dati non validi. Individua e correggi il problema.","codeSnippet":"type User = { id: string; name: string };\\n\\nexport async function fetchUser(userId: string): Promise<User> {\\n  const response = fetch(\`/api/users/\${userId}\`);\\n  const user = await response.json();\\n  return user;\\n}","sampleSolution":"type User = { id: string; name: string };\\n\\nexport async function fetchUser(userId: string): Promise<User> {\\n  const response = await fetch(\`/api/users/\${userId}\`);\\n  if (!response.ok) {\\n    throw new Error(\`Richiesta fallita: \${response.status}\`);\\n  }\\n  return (await response.json()) as User;\\n}","language":"typescript","keywords":["async/await","fetch","gestione errori"],"explanation":"Manca await prima di fetch, quindi response è una Promise e json() non esiste su di essa; inoltre va controllato response.ok. È accettabile anche validare il payload con uno schema."}`;
+
+const BEHAVIORAL_EXAMPLE = `{"type":"behavioral_scenario","question":"Mancano due giorni al rilascio e un collega propone di saltare i test di integrazione per rispettare la scadenza. Come gestisci la situazione?","sampleAnswer":"Valuta il rischio concreto, propone alternative (ridurre lo scope, eseguire i test sui flussi critici, feature flag), comunica rischi e opzioni al team e al responsabile, cerca un accordo esplicito su priorità e responsabilità.","keywords":["gestione del rischio","comunicazione","qualità"],"explanation":"Premiare equilibrio tra urgenza e qualità e la trasparenza verso gli stakeholder; segnale negativo: accettare o rifiutare senza valutare l'impatto."}`;
+
+/** Detail lines of the optional generation settings */
+const DISTRACTOR_COMPLEXITY = {
+  simple: "distractors clearly wrong for someone who knows the topic",
+  moderate: "plausible distractors based on common misconceptions",
+  complex:
+    "distractors that differ from the correct answer by one subtle detail",
+} as const;
+
+const RESPONSE_LENGTH = {
+  short: "answerable in 3-5 sentences",
+  medium: "answerable in one or two paragraphs",
+  long: "needs a structured answer of several paragraphs",
+} as const;
+
+const CODE_COMPLEXITY = {
+  basic: "8-15 lines, a single function",
+  intermediate: "15-30 lines, a few cooperating functions",
+  advanced:
+    "25-45 lines, several interacting parts (async flow, state, types or concurrency)",
+} as const;
+
+const BUG_TYPE = {
+  syntax:
+    "a compile-time or syntax/type error that developers really make in this language",
+  logic: "a logic error (wrong condition, off-by-one, wrong state update, missed edge case)",
+  performance:
+    "a performance problem (needless work in a loop, N+1 queries, blocking call, missing memoization or index)",
+  security:
+    "a real vulnerability (injection, missing authorization check, XSS, unsafe deserialization, secret in code)",
+} as const;
+
+/** Language identifiers recognised in the skills, most specific first */
+const LANGUAGE_HINTS: [RegExp, string][] = [
+  [/typescript|\bts\b|angular|nestjs|deno/i, "typescript"],
+  [/javascript|\bjs\b|node|react|vue|svelte|next\.?js|express/i, "javascript"],
+  [/python|django|flask|fastapi|pandas/i, "python"],
+  [/kotlin/i, "kotlin"],
+  [/\bjava\b|spring|jakarta|quarkus/i, "java"],
+  [/c#|csharp|\.net|asp\.net|blazor/i, "csharp"],
+  [/php|laravel|symfony/i, "php"],
+  [/golang|^go$|\bgo\b/i, "go"],
+  [/rust/i, "rust"],
+  [/ruby|rails/i, "ruby"],
+  [/swift/i, "swift"],
+  [/dart|flutter/i, "dart"],
+  [/scala/i, "scala"],
+  [/c\+\+|cpp/i, "cpp"],
+  [/\bsql\b|postgres|mysql|sql server|oracle/i, "sql"],
+];
+
+/**
+ * Language of a code question from the skills, or undefined when none of
+ * them names a language (the model then picks the most relevant one).
+ */
+export function inferCodeLanguage(skills: string[]): string | undefined {
+  for (const [pattern, language] of LANGUAGE_HINTS) {
+    if (skills.some((skill) => pattern.test(skill))) return language;
+  }
+  return undefined;
 }
 
 // ====================
@@ -75,349 +242,115 @@ function buildCommonContext(params: BaseQuestionParams): string {
  */
 export const questionPromptBuilders = {
   multiple_choice: {
-    system: () => `
-          You are a technical recruitment expert specializing in creating multiple choice assessment questions.
+    system: () =>
+      buildSingleQuestionSystemPrompt(
+        "multiple_choice",
+        "multiple choice",
+        MULTIPLE_CHOICE_EXAMPLE,
+      ),
 
-          Generate a valid JSON object for a single multiple choice question (NOT an array) that adheres to these specifications:
+    user: (params: MultipleChoiceQuestionParams): string =>
+      prompt`
+        ${buildCommonContext(params)}
 
-          REQUIRED FIELDS:
-          - type: "multiple_choice"
-          - question: Italian text (clear, specific, and job-relevant)
-          - options: Array of exactly 4 Italian strings (each at least 3 characters)
-          - correctAnswer: Zero-based index number (0-3) of the correct option
-          - keywords: Array of relevant strings (optional)
-          - explanation: Italian text explaining the correct answer (optional)
+        Additional Requirements:
+        ${bullets([
+          params.focusAreas?.length &&
+            `Focus areas: ${params.focusAreas.map((value) => sanitizeInput(value)).join(", ")}`,
+          params.distractorComplexity &&
+            `Distractor complexity: ${params.distractorComplexity} (${DISTRACTOR_COMPLEXITY[params.distractorComplexity]})`,
+        ]) || "- none"}
 
-          QUALITY REQUIREMENTS:
-          - Question must test practical, job-relevant knowledge
-          - Options should be plausible but clearly distinguishable
-          - Avoid ambiguous or trick questions
-          - Include realistic distractors that test understanding
-          - Explanation should be educational and concise
-
-          Example Structure:
-          \`\`\`json
-          {
-            "type": "multiple_choice",
-            "question": "Cosa rappresenta il DOM in JavaScript?",
-            "options": [
-              "Document Object Model",
-              "Data Object Management", 
-              "Dynamic Object Mapping",
-              "Distributed Object Method"
-            ],
-            "correctAnswer": 0,
-            "keywords": ["DOM", "JavaScript", "web"],
-            "explanation": "Il DOM (Document Object Model) è una rappresentazione strutturata del documento HTML che permette a JavaScript di manipolare il contenuto e la struttura della pagina."
-          }
-          \`\`\``,
-
-    user: (params: MultipleChoiceQuestionParams): string => {
-      const context = buildCommonContext(params);
-      const requirements: string[] = [];
-
-      if (params.focusAreas?.length) {
-        requirements.push(
-          `Focus areas: ${params.focusAreas.map((value) => sanitizeInput(value)).join(", ")}`,
-        );
-      }
-      if (params.distractorComplexity) {
-        requirements.push(
-          `Distractor complexity: ${params.distractorComplexity}`,
-        );
-      }
-
-      return `${context}
-
-          Create a multiple choice question with the following requirements:
-          - Must be practical and job-relevant
-          - Should test real-world application of skills
-          - Appropriate for ${sanitizeInput(params.experienceLevel)} level
-          - Include 4 plausible options with clear distinctions
-
-          ${
-            requirements.length > 0
-              ? `Additional Requirements:\n${requirements
-                  .map((r) => `- ${r}`)
-                  .join("\n")}`
-              : ""
-          }
-
-          Generate exactly 1 multiple choice question following these specifications.`;
-    },
+        Generate exactly 1 multiple choice question.
+      `,
   },
 
   open_question: {
-    system: () => `
-          You are a technical recruitment expert specializing in creating open-ended assessment questions.
+    system: () =>
+      buildSingleQuestionSystemPrompt(
+        "open_question",
+        "open question",
+        OPEN_QUESTION_EXAMPLE,
+      ),
 
-          Generate a valid JSON object for a single open question (NOT an array) that adheres to these specifications:
+    user: (params: OpenQuestionParams): string =>
+      prompt`
+        ${buildCommonContext(params)}
 
-          REQUIRED FIELDS:
-          - type: "open_question"
-          - question: Italian text (clear, specific, and open-ended)
-          - keywords: Array of relevant strings for evaluation (optional)
-          - sampleAnswer: Italian text providing an example answer
-          - explanation: Italian text with evaluation guidance (optional)
+        Additional Requirements:
+        ${bullets([
+          "The question must NOT ask to write code: it asks to explain, compare or justify.",
+          params.expectedResponseLength &&
+            `Expected response length: ${params.expectedResponseLength} (${RESPONSE_LENGTH[params.expectedResponseLength]})`,
+          params.evaluationCriteria?.length &&
+            `Evaluation criteria: ${params.evaluationCriteria.map((value) => sanitizeInput(value)).join(", ")}`,
+        ])}
 
-          CRITICAL CONSTRAINT:
-          - DO NOT ask questions that require writing blocks of code
-          - Questions should focus on concepts, explanations, comparisons, architecture decisions, or problem-solving approaches
-          - If code is relevant, ask candidates to EXPLAIN or DESCRIBE rather than WRITE code
-          - Acceptable: "Spiega come funziona..." or "Descrivi l'approccio per..."
-          - NOT acceptable: "Scrivi una funzione che..." or "Implementa un algoritmo per..."
-
-          QUALITY REQUIREMENTS:
-          - Question should encourage detailed, thoughtful explanations
-          - Allow for multiple valid approaches or answers
-          - Test understanding of concepts, not just memorization
-          - Provide clear evaluation criteria in sampleAnswer
-          - Focus on reasoning, trade-offs, and architectural thinking
-
-          Example Structure:
-          \`\`\`json
-          {
-            "type": "open_question",
-            "question": "Spiega i principali vantaggi e svantaggi dell'utilizzo di Redux rispetto a Context API per la gestione dello stato in un'applicazione React. In quali scenari consiglieresti l'uno rispetto all'altro?",
-            "keywords": ["React", "state management", "Redux", "Context API", "architecture"],
-            "sampleAnswer": "Una risposta completa dovrebbe includere: scalabilità (Redux migliore per app complesse), debugging (Redux DevTools), boilerplate (Context API più semplice), performance (Context può causare re-render non necessari), middleware (Redux supporta middleware per side effects). Consigliare Redux per app grandi con stato complesso, Context API per stato semplice o localizzato.",
-            "explanation": "Valutare la comprensione dell'architettura React, capacità di analisi dei trade-off, e esperienza pratica con diverse soluzioni di state management."
-          }
-          \`\`\``,
-
-    user: (params: OpenQuestionParams): string => {
-      const context = buildCommonContext(params);
-      const requirements: string[] = [];
-
-      if (params.expectedResponseLength) {
-        requirements.push(
-          `Expected response length: ${params.expectedResponseLength}`,
-        );
-      }
-      if (params.evaluationCriteria?.length) {
-        requirements.push(
-          `Evaluation criteria: ${params.evaluationCriteria
-            .map((value) => sanitizeInput(value))
-            .join(", ")}`,
-        );
-      }
-
-      return `${context}
-
-          Create an open question with the following requirements:
-          - Must be practical and job-relevant
-          - Should encourage detailed, thoughtful responses
-          - Allow for multiple valid approaches
-          - Appropriate for ${sanitizeInput(params.experienceLevel)} level
-          - Test conceptual understanding and practical experience
-          
-          IMPORTANT CONSTRAINT:
-          - DO NOT create questions that ask to write blocks of code
-          - Focus on explanations, comparisons, trade-offs, or architectural decisions
-          - Ask candidates to EXPLAIN or DESCRIBE concepts, not to IMPLEMENT code
-
-          ${
-            requirements.length > 0
-              ? `Additional Requirements:\n${requirements
-                  .map((r) => `- ${r}`)
-                  .join("\n")}`
-              : ""
-          }
-
-          Generate exactly 1 open question following these specifications.`;
-    },
+        Generate exactly 1 open question.
+      `,
   },
 
   code_snippet: {
-    system: () => `
-          You are a technical recruitment expert specializing in creating code-based assessment questions.
-
-          Generate a valid JSON object for a single code snippet question (NOT an array) that adheres to these specifications:
-
-          REQUIRED FIELDS:
-          - type: "code_snippet"
-          - question: Italian text asking to analyze, improve, or fix code (NO CODE in question text)
-          - codeSnippet: Valid code string (may contain bugs, performance issues, or be suitable for improvement)
-          - sampleSolution: Valid code string with the improved/corrected version
-          - language: Programming language (e.g., "javascript", "python", "java") MUST be included
-          - keywords: Array of relevant technical concepts (optional)
-          - explanation: Italian text explaining the solution (optional)
-
-          CRITICAL REQUIREMENT:
-          - You MUST use the programming language specified in the user prompt
-          - The "language" field MUST match the language requested by the user
-          - Both codeSnippet and sampleSolution MUST be written in the specified language
-          - Do NOT default to JavaScript unless explicitly requested
-
-          QUALITY REQUIREMENTS:
-          - Code should be realistic and job-relevant
-          - If fixing bugs: bugs should be common mistakes developers make
-          - If improving code: focus on best practices, performance, or readability
-          - Solution should demonstrate professional coding standards
-          - Include proper error handling where appropriate
-          - Code complexity should match experience level
-
-          Example (JavaScript):
-          \`\`\`json
-          {
-            "type": "code_snippet",
-            "question": "Il seguente codice JavaScript presenta un bug che impedisce il corretto funzionamento asincrono. Identifica e correggi il problema.",
-            "codeSnippet": "async function fetchUserData(userId) {\\n  const response = fetch(\`/api/users/\${userId}\`);\\n  const userData = await response.json();\\n  return userData;\\n}",
-            "sampleSolution": "async function fetchUserData(userId) {\\n  const response = await fetch(\`/api/users/\${userId}\`);\\n  if (!response.ok) {\\n    throw new Error(\`HTTP error! status: \${response.status}\`);\\n  }\\n  const userData = await response.json();\\n  return userData;\\n}",
-            "language": "javascript",
-            "keywords": ["async/await", "fetch", "error handling", "Promise"],
-            "explanation": "Il bug principale era la mancanza di 'await' prima di fetch(). La soluzione include anche la gestione degli errori HTTP per robustezza."
-          }
-          \`\`\`
-
-          REMEMBER: Use the EXACT programming language specified in the user prompt!`,
+    system: () =>
+      buildSingleQuestionSystemPrompt(
+        "code_snippet",
+        "code snippet",
+        CODE_SNIPPET_EXAMPLE,
+      ),
 
     user: (params: CodeSnippetQuestionParams): string => {
-      const context = buildCommonContext(params);
+      const language = params.language
+        ? sanitizeInput(params.language)
+        : inferCodeLanguage(params.skills);
+      const bugType = params.bugType?.trim() ? params.bugType : undefined;
 
-      // Determine the programming language
-      let targetLanguage = params.language;
-      if (!targetLanguage) {
-        const skills = params.skills.map((s) => s.toLowerCase());
-        if (
-          skills.some(
-            (s) =>
-              s.includes("javascript") ||
-              s.includes("js") ||
-              s.includes("node"),
-          )
-        ) {
-          targetLanguage = "javascript";
-        } else if (
-          skills.some((s) => s.includes("typescript") || s.includes("ts"))
-        ) {
-          targetLanguage = "typescript";
-        } else if (skills.some((s) => s.includes("python"))) {
-          targetLanguage = "python";
-        } else if (skills.some((s) => s.includes("java"))) {
-          targetLanguage = "java";
-        } else if (
-          skills.some((s) => s.includes("c#") || s.includes("csharp"))
-        ) {
-          targetLanguage = "csharp";
-        } else if (skills.some((s) => s.includes("php"))) {
-          targetLanguage = "php";
-        } else {
-          targetLanguage = "javascript";
-        }
-      }
+      return prompt`
+        ${buildCommonContext(params)}
 
-      const requirements = [
-        `Programming language: ${sanitizeInput(targetLanguage)}`,
-      ];
-      const hasBugType = params.bugType && params.bugType.trim() !== "";
+        Additional Requirements:
+        ${bullets([
+          language
+            ? `Programming language: ${language}. Both codeSnippet and sampleSolution are written in ${language} and "language" is "${language}".`
+            : "Programming language: the one most relevant to the required skills; both snippets use it and \"language\" names it.",
+          bugType
+            ? `Question type: bug fixing. Bug type focus: ${bugType} (${BUG_TYPE[bugType]}).`
+            : "Question type: code improvement/analysis. The code works but has a clear, gradable problem of readability, robustness or performance; the solution fixes it.",
+          params.codeComplexity &&
+            `Code complexity: ${params.codeComplexity} (${CODE_COMPLEXITY[params.codeComplexity]})`,
+          params.includeComments !== undefined &&
+            (params.includeComments
+              ? "Include comments: yes, brief comments on intent that never point at the problem"
+              : "Include comments: no"),
+        ])}
 
-      let questionType: string;
-      let codeRequirements: string;
-
-      if (hasBugType) {
-        questionType = "bug fixing";
-        codeRequirements = `- Include intentional ${params.bugType} bugs that are common in practice
-          - Provide a corrected solution demonstrating best practices
-          - Focus on practical debugging skills`;
-        requirements.push(`Bug type focus: ${params.bugType}`);
-      } else {
-        questionType = "code improvement/analysis";
-        codeRequirements = `- Code should be functional but have room for improvement
-          - Focus on best practices, performance optimization, or code readability
-          - Provide an improved solution that demonstrates professional coding standards`;
-      }
-
-      if (params.codeComplexity) {
-        requirements.push(`Code complexity: ${params.codeComplexity}`);
-      }
-      if (params.includeComments !== undefined) {
-        requirements.push(
-          `Include comments: ${params.includeComments ? "yes" : "no"}`,
-        );
-      }
-      return `${context}
-
-          Create a code snippet question with the following requirements:
-          - Must contain realistic, job-relevant code in ${sanitizeInput(targetLanguage)}
-          - CRITICAL: Both codeSnippet and sampleSolution MUST be written in ${sanitizeInput(targetLanguage)}
-          - The "language" field MUST be set to "${sanitizeInput(targetLanguage)}"
-          ${codeRequirements}
-          - Appropriate complexity for ${sanitizeInput(params.experienceLevel)} level
-          - Question type: ${questionType}
-
-          Additional Requirements:
-          ${requirements.map((r) => `- ${r}`).join("\n")}
-
-          Generate exactly 1 code snippet question following these specifications.`;
+        Generate exactly 1 code snippet question.
+      `;
     },
   },
+
   behavioral_scenario: {
-    system: () => `
-          You are a technical recruitment expert specializing in behavioral and scenario-based assessment questions.
+    system: () =>
+      buildSingleQuestionSystemPrompt(
+        "behavioral_scenario",
+        "behavioral scenario",
+        BEHAVIORAL_EXAMPLE,
+      ),
 
-          Generate a valid JSON object for a single behavioral scenario question (NOT an array) that adheres to these specifications:
+    user: (params: BehavioralScenarioQuestionParams): string =>
+      prompt`
+        ${buildCommonContext(params)}
 
-          REQUIRED FIELDS:
-          - type: "behavioral_scenario"
-          - question: Italian text describing a realistic workplace scenario and asking how the candidate would respond
-          - sampleAnswer: Italian text providing an example of a strong, thoughtful response
-          - keywords: Array of relevant evaluation themes (optional)
-          - explanation: Italian text with evaluation guidance (optional)
+        Additional Requirements:
+        ${bullets([
+          "No code implementation required.",
+          params.expectedResponseLength &&
+            `Expected response length: ${params.expectedResponseLength} (${RESPONSE_LENGTH[params.expectedResponseLength]})`,
+          params.evaluationCriteria?.length &&
+            `Evaluation criteria: ${params.evaluationCriteria.map((value) => sanitizeInput(value)).join(", ")}`,
+        ])}
 
-          QUALITY REQUIREMENTS:
-          - Scenario must be realistic and role-relevant
-          - Focus on decision-making, trade-offs, communication, and collaboration
-          - Encourage structured reasoning, not trivia knowledge
-          - Avoid requiring code or implementation details
-          - Appropriate for the stated experience level
-
-          Example Structure:
-          \`\`\`json
-          {
-            "type": "behavioral_scenario",
-            "question": "Sei in una squadra con scadenze aggressive e un collega propone di saltare i test per consegnare prima. Come gestisci la situazione?",
-            "sampleAnswer": "Una risposta efficace dovrebbe bilanciare urgenza e qualità, proporre alternative (scope ridotto, test minimi critici), comunicare rischi al team e al PM, e cercare allineamento su priorità e impatto.",
-            "keywords": ["collaborazione", "gestione rischi", "comunicazione", "qualità"],
-            "explanation": "Valutare capacità di negoziazione, consapevolezza dei rischi, e orientamento alla qualità senza compromettere la consegna."
-          }
-          \`\`\``,
-
-    user: (params: BehavioralScenarioQuestionParams): string => {
-      const context = buildCommonContext(params);
-      const requirements: string[] = [];
-
-      if (params.expectedResponseLength) {
-        requirements.push(
-          `Expected response length: ${params.expectedResponseLength}`,
-        );
-      }
-      if (params.evaluationCriteria?.length) {
-        requirements.push(
-          `Evaluation criteria: ${params.evaluationCriteria
-            .map((value) => sanitizeInput(value))
-            .join(", ")}`,
-        );
-      }
-
-      return `${context}
-
-          Create a behavioral scenario question with the following requirements:
-          - Must be practical and role-relevant
-          - Focus on judgment, communication, and collaboration
-          - Appropriate for ${sanitizeInput(params.experienceLevel)} level
-          - No code implementation required
-
-          ${
-            requirements.length > 0
-              ? `Additional Requirements:\n${requirements
-                  .map((r) => `- ${r}`)
-                  .join("\n")}`
-              : ""
-          }
-
-          Generate exactly 1 behavioral scenario question following these specifications.`;
-    },
+        Generate exactly 1 behavioral scenario question.
+      `,
   },
 } as const;
 
@@ -465,9 +398,8 @@ export function buildQuestionPrompts(params: GenerateQuestionParams): {
  * Line added to the quiz system prompt only when the position has criteria
  */
 const QUIZ_CRITERION_KEYS_FIELD = `
-        Optional field of every question (only when criteria are provided in the request):
-          - criterionKeys: array of criterion keys (only when criteria are provided), e.g. ["C1", "C3"]
-`;
+Optional field of every question (only when criteria are provided in the request):
+- criterionKeys: array of criterion keys (only when criteria are provided), e.g. ["C1", "C3"]`;
 
 /**
  * Builds the system prompt for quiz generation.
@@ -475,92 +407,37 @@ const QUIZ_CRITERION_KEYS_FIELD = `
  * without it the prompt is unchanged.
  */
 export function buildQuizSystemPrompt(withCriteria = false): string {
-  const prompt = buildBaseQuizSystemPrompt();
-  return withCriteria ? `${prompt}${QUIZ_CRITERION_KEYS_FIELD}` : prompt;
+  const base = buildBaseQuizSystemPrompt();
+  return withCriteria ? `${base}\n${QUIZ_CRITERION_KEYS_FIELD}` : base;
 }
 
 function buildBaseQuizSystemPrompt(): string {
-  return `
-        You are a technical recruitment expert specializing in creating assessment quizzes. 
-        Generate valid JSON that contains a questions array with individual question objects that adheres to the following specifications:
-  
-        Schema Requirements:
-  
-        1. Output must be parseable JSON
-        2. Questions array must contain individual question objects
-        3. All property names must be explicit and in English
-        4. String values must use proper escape sequences
-        5. No trailing commas allowed
-  
-        Question Types and Required Fields:
-  
-        1. Multiple Choice Questions (\`type: "multiple_choice"\`)
-          - type: "multiple_choice"
-          - question: Italian text
-          - options: Array of exactly 4 Italian strings
-          - correctAnswer: Zero-based index number of the correct option
-          - keywords: Array of relevant strings (optional)
-          - explanation: Italian text (optional)
-  
-        2. Open Questions (\`type: "open_question"\`)
-          - type: "open_question"
-          - question: Italian text
-          - keywords: Array of relevant strings (optional)
-          - sampleAnswer: Italian text
-          - sampleSolution: if the question is about writing code, provide a valid code string as a sample solution
-          - codeSnippet: if the question is about writing code, provide a valid code string as a code snippet
-          - explanation: Italian text (optional)
-  
-        3. Code Questions (\`type: "code_snippet"\`)
-          - type: "code_snippet"
-          - question: Italian text, must be code related and ask to fix bugs, don't include code in the question text do it in the codeSnippet field
-          - codeSnippet: Valid code string, must be relevant to the question and contain a bug if the question is about fixing bugs,
-          - sampleSolution: Valid code string, must be the corrected version of the code snippet
-          - language: Programming language of the code snippet (e.g., "javascript", "python", "java") MUST be always included
+  return prompt`
+    You are a technical recruitment expert and senior technical interviewer specializing in creating assessment quizzes for developers.
 
-        4. Behavioral Scenario Questions (\`type: "behavioral_scenario"\`)
-          - type: "behavioral_scenario"
-          - question: Italian text describing a realistic workplace scenario
-          - sampleAnswer: Italian text with a strong example response
-          - keywords: Array of relevant evaluation themes (optional)
-          - explanation: Italian text with evaluation guidance (optional)
-  
-        Content Rules:
-  
-        - All questions and answers must be in Italian
-        - JSON structure and field names must be in English
-        - Question text must not contain unescaped newlines
-        - Omit optional fields if not applicable
-        - The "options" field must never be written as "options>" or any variant
-  
-        Example Structure:
+    Answer ONLY with one valid JSON object: { "title": string, "questions": [ ... ] }. ${OUTPUT_LANGUAGE_RULE}
 
-        \`\`\`json
-        {
-          "title": "Quiz per Sviluppatore Frontend Senior",
-          "questions": [
-            {
-              "type": "multiple_choice",
-              "question": "Cosa rappresenta il DOM in JavaScript?",
-              "options": [
-                "Document Object Model",
-                "Data Object Management",
-                "Dynamic Object Mapping",
-                "Distributed Object Method"
-              ],
-              "correctAnswer": 0,
-              "keywords": ["DOM", "JavaScript", "web"],
-              "explanation": "Il DOM (Document Object Model) è una rappresentazione strutturata del documento HTML che permette a JavaScript di manipolare il contenuto e la struttura della pagina."
-            }
-          ],
-          "time_limit": 60,
-          "difficulty": 3,
-          "instructions": "Rispondi alle domande nel tempo limite specificato"
-        }
-        \`\`\`
+    Question types and their fields:
 
-        Ensure your output matches this exact format for seamless integration.
-      `;
+    ${QUESTION_TYPE_RULES.multiple_choice}
+
+    ${QUESTION_TYPE_RULES.open_question}
+
+    ${QUESTION_TYPE_RULES.code_snippet}
+
+    ${QUESTION_TYPE_RULES.behavioral_scenario}
+
+    ${COMMON_FIELD_RULES}
+
+    ${QUALITY_RULES}
+
+    ${TECH_CURRENCY_RULES}
+
+    ${DIFFICULTY_SCALE}
+
+    Example Structure:
+    {"title":"Quiz per Sviluppatore Frontend Senior","questions":[${MULTIPLE_CHOICE_EXAMPLE},${CODE_SNIPPET_EXAMPLE}]}
+  `;
 }
 
 /** A scorecard criterion listed in the quiz prompt under its key (C1, C2, ...) */
@@ -576,25 +453,23 @@ export type QuizPromptCriterion = {
  * Block appended to the quiz prompt when the position has criteria
  */
 function buildQuizCriteriaBlock(keyedCriteria: QuizPromptCriterion[]): string {
-  const lines = keyedCriteria
-    .map((criterion) => {
-      const description = criterion.description
-        ? sanitizeInput(criterion.description)
-        : "";
-      return `- ${criterion.key} - ${sanitizeInput(criterion.name)} (${criterion.category}, ${criterion.priority})${
-        description ? `: ${description}` : ""
-      }`;
-    })
-    .join("\n");
+  const lines = keyedCriteria.map((criterion) => {
+    const description = criterion.description
+      ? sanitizeInput(criterion.description)
+      : "";
+    return `${criterion.key} - ${sanitizeInput(criterion.name)} (${criterion.category}, ${criterion.priority})${
+      description ? `: ${description}` : ""
+    }`;
+  });
 
-  return `
+  return prompt`
+    Evaluation criteria of this position:
+    ${bullets(lines)}
 
-                    Evaluation criteria of this position:
-${lines}
-
-                    Criteria rules:
-                    - Every question must list in "criterionKeys" the keys of the criteria it verifies (one to three keys, only keys from the list above).
-                    - The criteria with priority "must" should be covered by at least one question when the question count allows.`;
+    Criteria rules:
+    - Every question must list in "criterionKeys" the keys of the criteria it verifies (one to three keys, only keys from the list above).
+    - The criteria with priority "must" should be covered by at least one question when the question count allows.
+  `;
 }
 
 /**
@@ -606,82 +481,44 @@ export function buildQuizPrompt(
   params: GenerateQuizParams,
   keyedCriteria?: QuizPromptCriterion[],
 ): string {
-  const {
-    positionTitle,
-    experienceLevel,
-    skills,
-    description,
-    quizTitle,
-    questionCount,
-    difficulty,
-    includeMultipleChoice,
-    includeOpenQuestions,
-    includeCodeSnippets,
-    includeBehavioralScenarios,
-    instructions,
-    previousQuestions = [],
-  } = params;
+  const questionTypes = [
+    params.includeMultipleChoice && "multiple_choice",
+    params.includeOpenQuestions && "open_question",
+    params.includeCodeSnippets && "code_snippet",
+    params.includeBehavioralScenarios && "behavioral_scenario",
+  ].filter((type): type is string => Boolean(type));
 
-  // Sanitize all inputs
-  const sanitizedTitle = sanitizeInput(positionTitle);
-  const sanitizedDescription = description ? sanitizeInput(description) : "";
-  const sanitizedQuizTitle = sanitizeInput(quizTitle);
-  const sanitizedInstructions = instructions ? sanitizeInput(instructions) : "";
+  const quizPrompt = prompt`
+    Create a technical quiz for the position "${sanitizeInput(params.positionTitle)}" with ${params.questionCount} questions.
 
-  const questionTypes = [];
-  if (includeMultipleChoice) questionTypes.push("multiple_choice");
-  if (includeOpenQuestions) questionTypes.push("open_question");
-  if (includeCodeSnippets) questionTypes.push("code_snippet");
-  if (includeBehavioralScenarios) questionTypes.push("behavioral_scenario");
+    Position Details:
+    - Experience Level: ${sanitizeInput(params.experienceLevel)}
+    - Required Skills: ${params.skills.map((value) => sanitizeInput(value)).join(", ")}
+    ${params.description ? `- Description: ${sanitizeInput(params.description)}` : ""}
 
-  const prompt = `Create a technical quiz for the position "${sanitizedTitle}" with ${questionCount} questions.
+    Quiz Requirements:
+    - Title: ${sanitizeInput(params.quizTitle)}
+    - Number of questions: ${params.questionCount}
+    - Difficulty level: ${params.difficulty}/5 (individual questions may vary by one level around it)
+    - Question types to include: ${questionTypes.join(", ")}
 
-                    Position Details:
-                    - Experience Level: ${sanitizeInput(experienceLevel)}
-                    - Required Skills: ${skills.map((value) => sanitizeInput(value)).join(", ")}
-                    ${
-                      sanitizedDescription
-                        ? `- Description: ${sanitizedDescription}`
-                        : ""
-                    }
+    ${recruiterInstructionsBlock(params.instructions)}
 
-                    Quiz Requirements:
-                    - Title: ${sanitizedQuizTitle}
-                    - Number of questions: ${questionCount}
-                    - Difficulty level: ${difficulty}/5
-                    - Question types to include: ${questionTypes.join(", ")}
-                    ${
-                      sanitizedInstructions
-                        ? `- Special instructions: ${sanitizedInstructions}`
-                        : ""
-                    }
+    ${previousQuestionsBlock(params.previousQuestions)}
 
-                    ${
-                      previousQuestions.length > 0
-                        ? `
-                    Avoid repeating these existing questions:
-                    ${previousQuestions
-                      .map((q) => `- ${sanitizeInput(q.question)}`)
-                      .join("\n")}
-                    `
-                        : ""
-                    }
+    Composition:
+    - Use every listed question type at least once when the question count allows, and only the listed types.
+    - Spread the questions over the required skills, weighting the most central ones; no two questions test the same concept.
+    - Order the questions from easier to harder.
 
-                    Important Guidelines:
-                    1. Create practical, job-relevant questions
-                    2. Ensure questions test real-world application of skills
-                    3. For code questions, use realistic scenarios
-                    4. Make multiple choice options plausible but clearly distinguishable
-                    5. Provide clear, concise explanations for correct answers
-                    6. Vary question difficulty within the specified range
-
-                    Generate exactly ${questionCount} questions following these specifications.`;
+    Generate exactly ${params.questionCount} questions.
+  `;
 
   if (keyedCriteria && keyedCriteria.length > 0) {
-    return `${prompt}${buildQuizCriteriaBlock(keyedCriteria)}`;
+    return `${quizPrompt}\n\n${buildQuizCriteriaBlock(keyedCriteria)}`;
   }
 
-  return prompt;
+  return quizPrompt;
 }
 
 // ====================
@@ -709,29 +546,23 @@ export function buildPositionDescriptionPrompt(
     ? sanitizeInput(params.instructions)
     : "";
 
-  return `
-          Position:
-          - Title: ${sanitizedTitle}
-          - Experience level: ${sanitizeInput(params.experienceLevel)}
-          - Technical skills: ${sanitizedSkills}
-          - Soft skills: ${sanitizedSoftSkills}
-          - Contract type: ${sanitizedContract}
-          ${
-            sanitizedCurrentDescription
-              ? `\n- Current description: ${sanitizedCurrentDescription}`
-              : ""
-          }
-          ${
-            sanitizedInstructions
-              ? `\n- Additional instructions: ${sanitizedInstructions}`
-              : ""
-          }
+  return prompt`
+    You are a senior technical recruiter writing concise Italian job descriptions for a modern tech team.
+    Write a short summary (4-8 sentences) of the role: the team context, the main responsibilities, the required experience and the key technologies, named in their current form.
+    Do not invent salary, benefits, company name or location; do not use clichés ("ambiente giovane e dinamico") or discriminatory requirements (age, gender, nationality).
+    Write only the description text in Italian. Do not include JSON, markdown, or any formatting - just the plain description text.
 
-          You are a senior technical recruiter writing concise Italian job descriptions for a modern tech team.
-          Generate a short summary that highlights responsibilities, required experience.
-          Write only the description text in Italian (4-8 sentences). Do not include JSON, markdown, or any formatting - just the plain description text.
-          `;
+    Position:
+    - Title: ${sanitizedTitle}
+    - Experience level: ${sanitizeInput(params.experienceLevel)}
+    - Technical skills: ${sanitizedSkills}
+    - Soft skills: ${sanitizedSoftSkills}
+    - Contract type: ${sanitizedContract}
+    ${sanitizedCurrentDescription ? `- Current description (improve it, keep its facts): ${sanitizedCurrentDescription}` : ""}
+    ${sanitizedInstructions ? `- Additional instructions: ${sanitizedInstructions}` : ""}
+  `;
 }
+
 
 // ====================
 // SCORECARD PROMPTS
@@ -741,7 +572,7 @@ export function buildPositionDescriptionPrompt(
  * System prompt of the scorecard criteria proposal
  */
 export function buildScorecardSystemPrompt(): string {
-  return `
+  return prompt`
           You are a senior technical recruiter defining the evaluation scorecard of a job position.
 
           Answer ONLY with a valid JSON object: { "criteria": [ ... ] }.
@@ -802,7 +633,7 @@ export function buildScorecardPrompt(
     .map((value) => sanitizeInput(value))
     .filter(Boolean);
 
-  return `
+  return prompt`
           Position:
           - Title: ${sanitizedTitle}
           - Experience level: ${sanitizedLevel}
@@ -815,11 +646,12 @@ export function buildScorecardPrompt(
           2. Propose soft criteria (source "softSkill") from the listed soft skills.
           3. Use category "culture" only when a soft skill is about values or way of working; otherwise use "soft".
           4. Calibrate expectedLevel on the experience level: lower for junior positions, higher for senior positions.
-          5. Propose at most 12 criteria.
-          6. Write every value in Italian.
+          5. Propose at most 12 criteria; mark "must" only what is truly indispensable for the role.
+          6. Technical criteria refer to the current practice of each skill (for example "React moderno: hook, Server Components" rather than old patterns); the anchors describe observable evidence, not generic adjectives.
+          7. Write every value in Italian.
           ${
             excludedNames.length > 0
-              ? `7. Do not propose criteria named like these, they already exist: ${excludedNames.join(", ")}`
+              ? `8. Do not propose criteria named like these, they already exist: ${excludedNames.join(", ")}`
               : ""
           }`;
 }
@@ -832,7 +664,7 @@ export function buildScorecardPrompt(
  * System prompt of the interview guide generation
  */
 export function buildGuideSystemPrompt(): string {
-  return `
+  return prompt`
           You are an expert interviewer designing a structured interview guide for a job position.
 
           Answer ONLY with a valid JSON object with this shape:
@@ -887,7 +719,7 @@ export function buildGuidePrompt(
     })
     .join("\n");
 
-  return `
+  return prompt`
           Position:
           - Title: ${sanitizedPositionTitle}
           - Experience level: ${sanitizedLevel}
@@ -911,7 +743,8 @@ ${criteriaLines}
           6. The anchors describe how a weak, a medium and a strong answer sound.
           7. The intro, candidate_questions and closing sections may have questions with no criteria.
           8. Never ask about age, family, children, religion or health.
-          9. Write every value in Italian.`;
+          9. Technical questions reflect the current versions and practices of the position's technologies, start from real situations and are open (no yes/no questions).
+          10. Write every value in Italian.`;
 }
 
 // ====================
@@ -929,7 +762,7 @@ export type KitPromptKeys = {
  * System prompt of the personalized interview kit generation
  */
 export function buildKitSystemPrompt(): string {
-  return `
+  return prompt`
           You are an expert interviewer preparing a personalized interview kit for one candidate.
 
           Answer ONLY with a valid JSON object with this shape:
@@ -1057,7 +890,7 @@ export function buildKitPrompt(
     })
     .join("\n");
 
-  return `
+  return prompt`
           Position:
           - Title: ${sanitizedTitle}
           - Experience level: ${sanitizedLevel}
@@ -1076,16 +909,16 @@ ${criteriaLines}
           ${context.resumeText ?? "CV non disponibile"}
 
           Weaknesses from the CV evaluation:
-${weaknessLines || "          (nessuna)"}
+${weaknessLines || "(nessuna)"}
 
           Criteria without evidence or below the expected level in the CV:
-${gapLines || "          (nessuno)"}
+${gapLines || "(nessuno)"}
 
           Weak answers of the test (key Q<n>):
-${answerLines || "          (nessuna)"}
+${answerLines || "(nessuna)"}
 
           Previous interview rounds (scorecard keys F<n>):
-${roundLines || "          (nessuno)"}
+${roundLines || "(nessuno)"}
 
           Rules:
           1. Propose at most ${cap} personalized questions: together they take at most 30-40% of the interview time. They are added to the template questions, never replace them.
@@ -1100,7 +933,8 @@ ${roundLines || "          (nessuno)"}
           10. Each hypothesis has a "criterionKey" from the list, the hypothesis and how to verify it.
           11. "suggestedChecklist" items have category communicate or logistics.
           12. Never ask about age, marital status, family, children, religion, political opinions or health.
-          13. Write every value in Italian.`;
+          13. Ground every question in the given sources: never invent CV facts. Technical questions reflect the current practice of the position's technologies.
+          14. Write every value in Italian.`;
 }
 
 // ====================
@@ -1126,7 +960,7 @@ const DECISION_OUTCOME_PROMPT_LABELS: Record<DecisionOutcomeValue, string> = {
  * System prompt of the devil's advocate on a hiring decision
  */
 export function buildDecisionReviewSystemPrompt(): string {
-  return `
+  return prompt`
           Sei l'avvocato del diavolo di una decisione di assunzione.
           Il tuo compito è argomentare CONTRO la decisione proposta: elenca da 3 a 5 motivi per cui potrebbe essere sbagliata.
 
@@ -1169,14 +1003,14 @@ export function buildDecisionReviewPrompt(
     })
     .join("\n");
 
-  return `
+  return prompt`
           Posizione: ${sanitizeInput(input.positionTitle)}
           Decisione proposta: ${DECISION_OUTCOME_PROMPT_LABELS[input.outcome]}
           Motivazione: ${rationale}
           Punteggio complessivo: ${input.overall ?? "non calcolabile"}/5
 
           Criteri:
-${criteriaLines || "          (nessuno)"}
+${criteriaLines || "(nessuno)"}
 
           Punteggi globali (non inclusi nella media): CV ${input.globals.cv ?? "—"}, Test ${input.globals.test ?? "—"}`;
 }

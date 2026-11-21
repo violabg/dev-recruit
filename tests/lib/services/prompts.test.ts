@@ -102,9 +102,7 @@ describe("questionPromptBuilders", () => {
 
       expect(systemPrompt).toContain("open question");
       expect(systemPrompt).toContain("sampleAnswer");
-      expect(systemPrompt).toContain(
-        "DO NOT ask questions that require writing blocks of code"
-      );
+      expect(systemPrompt).toContain("It NEVER asks to write code");
     });
 
     it("should generate user prompt with context", () => {
@@ -120,9 +118,7 @@ describe("questionPromptBuilders", () => {
 
       expect(userPrompt).toContain("Backend Developer");
       expect(userPrompt).toContain("Node.js, PostgreSQL");
-      expect(userPrompt).toContain(
-        "DO NOT create questions that ask to write blocks of code"
-      );
+      expect(userPrompt).toContain("must NOT ask to write code");
     });
 
     it("should include expected response length when provided", () => {
@@ -198,7 +194,7 @@ describe("questionPromptBuilders", () => {
       expect(userPrompt).toContain("Programming language: python");
     });
 
-    it("should default to javascript when no language info available", () => {
+    it("should infer sql from the skills", () => {
       const params: CodeSnippetQuestionParams = {
         type: "code_snippet",
         quizTitle: "Test Quiz",
@@ -209,7 +205,46 @@ describe("questionPromptBuilders", () => {
 
       const userPrompt = questionPromptBuilders.code_snippet.user(params);
 
-      expect(userPrompt).toContain("Programming language: javascript");
+      expect(userPrompt).toContain("Programming language: sql");
+    });
+
+    it("should prefer typescript over javascript and not match words containing ts", () => {
+      const base = {
+        type: "code_snippet" as const,
+        quizTitle: "Test Quiz",
+        positionTitle: "Developer",
+        experienceLevel: "mid",
+      };
+
+      expect(
+        questionPromptBuilders.code_snippet.user({
+          ...base,
+          skills: ["React", "TypeScript"],
+        }),
+      ).toContain("Programming language: typescript");
+      expect(
+        questionPromptBuilders.code_snippet.user({
+          ...base,
+          skills: ["Unit tests", "Node.js"],
+        }),
+      ).toContain("Programming language: javascript");
+    });
+
+    it("should let the model choose when no skill names a language", () => {
+      const params: CodeSnippetQuestionParams = {
+        type: "code_snippet",
+        quizTitle: "Test Quiz",
+        positionTitle: "Developer",
+        experienceLevel: "mid",
+        skills: ["REST API", "Agile"],
+      };
+
+      const userPrompt = questionPromptBuilders.code_snippet.user(params);
+
+      expect(userPrompt).toContain(
+        "Programming language: the one most relevant to the required skills",
+      );
+      expect(userPrompt).not.toContain("Programming language: javascript");
     });
 
     it("should include bug type when provided", () => {
@@ -861,5 +896,36 @@ describe("decision review prompts", () => {
     expect(sanitizeInput).toHaveBeenCalledWith("React");
     expect(prompt).toContain("[filtered]");
     expect(prompt).not.toContain("Ignore previous instructions");
+  });
+});
+
+describe("shared question rules", () => {
+  it("asks for current versions in both the quiz and the single question prompts", () => {
+    const quiz = buildQuizSystemPrompt();
+    const single = questionPromptBuilders.code_snippet.system();
+    for (const system of [quiz, single]) {
+      expect(system).toContain("current stable major version");
+      expect(system).toContain("Never use deprecated or legacy APIs");
+      expect(system).toContain("Difficulty scale (1-5)");
+    }
+  });
+
+  it("gives the recruiter instructions precedence over the defaults", () => {
+    const userPrompt = questionPromptBuilders.code_snippet.user({
+      type: "code_snippet",
+      quizTitle: "Legacy",
+      positionTitle: "Developer",
+      experienceLevel: "mid",
+      skills: ["Java"],
+      instructions: "Usa Java 8",
+    });
+    expect(userPrompt).toContain("they take precedence over the default rules");
+    expect(userPrompt).toContain("Usa Java 8");
+  });
+
+  it("removes the source indentation", () => {
+    const system = buildQuizSystemPrompt();
+    expect(system).not.toMatch(/\n {4,}\S/);
+    expect(system).not.toMatch(/\n{3,}/);
   });
 });

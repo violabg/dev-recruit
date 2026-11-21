@@ -206,7 +206,8 @@ describe("completeAssessmentEvaluation", () => {
     });
 
     const { prompt } = vi.mocked(generateStructured).mock.calls[0][0];
-    expect(prompt).toContain("Mario Rossi");
+    // The candidate is never named in the overall evaluation prompt
+    expect(prompt).not.toContain("Mario Rossi");
     expect(prompt).toContain("answered 4 questions out of 5");
   });
 

@@ -35,6 +35,7 @@ editable: true
 - A strict `Question` is always unsaved; anything that must keep the database link uses `FlexibleQuestion` / `SavedQuestion`.
 - `convertToStrictQuestion(s)` fills missing fields, then parses strict (throws `ZodError` if still invalid). Defaults: `open_question`/`behavioral_scenario` `sampleAnswer` → `"Risposta di esempio da fornire"`; `code_snippet` `sampleSolution` → `"// Soluzione di esempio da fornire"`, `codeSnippet` → `"// Snippet di codice da fornire"`, `language` → `"javascript"`; `multiple_choice` has none.
 - The generated-quiz AI schema is a separate composition: `questionSchemas.flexible.and(z.object({ criterionKeys: z.array(z.string()).optional() }))`. The intersection inside `z.array` is mandatory (the flexible schema is refined and cannot be extended). `criterionKeys` exists only there; the service translates it into `criterionIds` and removes it before the editor.
+- AI question output has two schemas. The model receives `questionOutputSchema(types, withCriteria)` (quiz: `quizOutputSchema`): one variant per type with exactly that type's fields, all required, `type` as a one-value enum, no `dbId`/`isFavorite`/`criterionIds`, `criterionKeys` only with criteria. The output is validated by `flexible` (single question) or the generated-quiz schema above. Change a type's fields in both.
 - Type guards `isMultipleChoiceQuestion`, `isOpenQuestion`, `isCodeSnippetQuestion` check only `type` and do not validate fields. `behavioral_scenario` has none: compare `type === "behavioral_scenario"`.
 
 ## Mapping database ↔ form
@@ -50,7 +51,7 @@ editable: true
 
 ## Adding a question type
 
-Search the code for an existing type name to catch every per-type branch. The branches a naive change misses: Prisma `enum QuestionType` and its client, `baseSchemas.questionType`, the strict union and `questionSchemas`, the defaults in `convertToStrictQuestion`, `flexible` and its `superRefine` for new fields, a link `select` that includes `criterionIds`, the generation config and both prompt builders, `<X>QuestionParams` in the `GenerateQuestionParams` union with its prompt builder and `useAIGeneration` switch, `createEmptyQuestion`, `getQuestionTypeLabel`, the read-only quiz view, the answer input in `AssessmentQuestion` with `answerToText`, `buildAnswerEvaluationPrompt` with the results UI, and the tests.
+Search the code for an existing type name to catch every per-type branch. The branches a naive change misses: Prisma `enum QuestionType` and its client, `baseSchemas.questionType`, the strict union and `questionSchemas`, the defaults in `convertToStrictQuestion`, `flexible` and its `superRefine` for new fields, a link `select` that includes `criterionIds`, the generation config and both prompt builders, `<X>QuestionParams` in the `GenerateQuestionParams` union with its prompt builder and `useAIGeneration` switch, its variant in the AI question output variants and its entry in the shared per-type prompt rules, `createEmptyQuestion`, `getQuestionTypeLabel`, the read-only quiz view, the answer input in `AssessmentQuestion` with `answerToText`, `buildAnswerEvaluationPrompt` with the results UI, and the tests.
 
 ## Prohibitions
 

@@ -80,7 +80,6 @@ async function loadAssessment(assessmentId: string) {
     select: {
       id: true,
       answers: true,
-      candidate: { select: { firstName: true, lastName: true } },
       evaluation: { select: { id: true } },
       quiz: {
         select: {
@@ -206,15 +205,12 @@ export async function completeAssessmentEvaluation(params: {
 
   const results = evaluated.map(([, result]) => result);
   const quizScore = computeQuizScore(results);
-  const candidateName =
-    `${assessment.candidate.firstName} ${assessment.candidate.lastName}`.trim();
 
   const overall = await generateStructured({
     task: "overall_evaluation",
     schema: overallEvaluationSchema,
     system: OVERALL_EVALUATION_SYSTEM_PROMPT,
     prompt: buildOverallEvaluationPrompt({
-      candidateName,
       answeredCount: answeredIds.size,
       totalCount: questions.length,
       percentageScore: quizScore,

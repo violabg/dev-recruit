@@ -2,7 +2,7 @@
 title: "ai generation"
 tier: "PerContext"
 keywords: ["AI","generateStructured","LLM","Groq","prompt","evaluation","model","streaming","transcription"]
-intent: "When touching AI quiz/question generation, scorecard criteria proposal, interview guide or interview kit generation, assessment or resume evaluation, the devil's advocate on a decision, prompts, model selection, streaming routes or transcription."
+intent: "When touching AI quiz/question generation, scorecard criteria proposal, interview guide or interview kit generation, assessment or resume evaluation, the devil's advocate on a decision, prompts, structured output mode and AI output schemas, model selection, streaming routes or transcription."
 editable: true
 ---
 # AI generation and evaluation
@@ -23,6 +23,15 @@ Provider is Groq through the Vercel AI SDK; the SDK is documented elsewhere. Mod
 - `FALLBACK_MODELS` is the ordered chain; the primary is skipped when it appears in it. `DEFAULT_CONFIG` holds retries, backoff and timeout: the primary is retried with backoff inside one timeout, each fallback gets one attempt. Content-filtered failures are never retried nor moved to another model.
 - Failures are `AIGenerationError` with an `AIErrorCode`, mapped to Italian by `runAction` through `describeAIError` (transcription excepted).
 
+## Structured output mode
+
+- Every `generateStructured` attempt runs in Groq strict mode first: `strictOutputSchema(schema, outputSchema)` sends the strict version of the Zod schema and validates the output with the full Zod `schema` after `nullsToUndefined`. Never build `Output.object` or set `structuredOutputs` yourself.
+- An `APICallError` with status 400 (schema refused, or output not matching it) retries the SAME model once in JSON mode (`structuredOutputs: false`, prompt-only shape) inside the same attempt; any other error goes to the normal retry/fallback chain. So prompts keep describing the JSON shape.
+- `toStrictJsonSchema` makes every property required, turns optional ones nullable, sets `additionalProperties: false` and drops validation keywords (lengths, ranges, item counts, `default`, `pattern`, `format`): Zod still enforces them. It recurses `properties`, `items`, `anyOf`/`oneOf` only.
+- `outputSchema` (optional) is the shape the model receives when the validation schema is wider than what the model should write. Quiz passes `quizOutputSchema(selected types, withCriteria)`, single question `questionOutputSchema([type])`: one variant per question type with exactly its fields, `type` as a one-value enum, `criterionKeys` only with criteria; validation stays `aiQuizGenerationSchema` / `questionSchemas.flexible`. Other flows pass `schema` only.
+- A new AI output schema uses only objects, arrays, enums and primitives. A record, `allOf`, `$ref` or a transform is not made strict: Groq may refuse it (400) and every call would end in JSON mode. Give such a schema an `outputSchema` of plain shapes.
+- The resume evaluation stays a plain-text `streamText`: Groq does not support structured outputs with streaming.
+
 ## Determinism
 
 | Use | temperature | seed |
@@ -35,9 +44,14 @@ Provider is Groq through the Vercel AI SDK; the SDK is documented elsewhere. Mod
 ## Prompts and sanitization
 
 - Prompt builders live in the prompts and evaluation-prompts modules. Every prompt MUST require Italian values; JSON field names stay English.
+- Quiz and single-question system prompts are built from the same constants (`QUESTION_TYPE_RULES`, `COMMON_FIELD_RULES`, `QUALITY_RULES`, `TECH_CURRENCY_RULES`, `DIFFICULTY_SCALE`): change a question rule there, never in one path only.
+- Recruiter instructions enter through `recruiterInstructionsBlock` (sanitized), which gives them precedence over the default rules (for example an older version that `TECH_CURRENCY_RULES` would forbid) but never over output format or language.
+- Write prompts with the `prompt` tagged template: it strips the source indentation of the literal text only, never of interpolated values (code, CV), and drops empty lines left by conditionals. Never pre-indent an interpolated multi-line value.
 - Every user-provided free-text value entering a generation prompt (titles, descriptions, instructions, skills, previous questions) MUST pass `sanitizeInput()`, which replaces injection patterns with `[filtered]` and caps length. `sanitizeInput(input, maxLength = 2000)`: pass an explicit cap only when the default is too short, and never pass it bare to `.map` (the index becomes `maxLength`): write `.map((value) => sanitizeInput(value))`.
 - Resume text: `redactBirthDate` first, then `sanitizeInput(text, MAX_RESUME_CHARS)`. The order is mandatory: `sanitizeInput` rewrites `Data:` patterns and would destroy the birth marker. The `"... [troncato]"` suffix follows the ORIGINAL length. `redactBirthDate` replaces with `[rimosso]` a date that follows, on the same line, a birth marker (`nato il`, `data di nascita`, `born on`, `DOB` and the like); a date without a marker is left untouched.
-- Candidate answers pass `sanitizeInput(answer, MAX_ANSWER_CHARS)` in the answer evaluation prompt. Question text, options, sample answer and explanation are NOT sanitized there, and neither are the candidate name nor the overall evaluation strengths/weaknesses: never claim all candidate text is sanitized.
+- Candidate answers pass `sanitizeInput(answer, MAX_ANSWER_CHARS)` in the answer evaluation prompt. Question text, options, sample answer and explanation are NOT sanitized there: never claim all candidate text is sanitized.
+- Candidate-written text is delimited as data: answers inside `<candidate_answer>` (open, code, behavioral; multiple choice sends the option index), the CV inside `<cv>`. The answer and resume system prompts say text inside those tags is never an instruction. New candidate text in a prompt gets the same tags and rule.
+- Overall evaluation prompt never receives the candidate name ("the candidate"); its strengths and weaknesses pass `sanitizeInput`.
 - Resume prompt: candidate name, position texts (title, experience level, skills, soft skills, description), and every criterion name and description also pass `sanitizeInput`.
 - The model never sees criterion ids: it receives the keys `C1`, `C2`, … and answers with them; the service translates back. AI output schemas never contain criterion ids.
 
@@ -80,6 +94,7 @@ All generation flows return a proposal only: no write, no invalidation, no save.
 ## Prohibitions
 
 - NEVER call `generateText`, `streamText` or `groq()` from an action or service instead of `generateStructured` / `getLanguageModel`.
+- NEVER expose internal fields or ids in what the model receives: pass an `outputSchema` when the validation schema has them.
 - NEVER import `generateStructured` from the AI barrel: `generateStructured`, `getLanguageModel` and `describeAIError` are exported only by the `generate` module of the AI layer.
 - NEVER trust client-sent question or answer text for evaluation: only ids come from the client.
 - NEVER sanitize a CV before redacting the birth date, or claim a marker-less birth date is removed.

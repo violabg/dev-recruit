@@ -6,10 +6,16 @@
  *   1. the primary model, retried with exponential backoff;
  *   2. then each fallback model once.
  * Each attempt is bounded by the configured timeout.
+ *
+ * Output mode: strict structured outputs (the model is constrained to the
+ * JSON schema, see ./strict-schema). When the provider rejects the request
+ * (HTTP 400, e.g. a schema it does not support), the same model is asked
+ * once more in JSON mode, where the prompt alone describes the shape.
  */
 
 import { groq } from "@ai-sdk/groq";
 import {
+  APICallError,
   generateText,
   NoObjectGeneratedError,
   Output,
@@ -20,6 +26,7 @@ import { isDevelopment } from "../../utils";
 import { aiLogger } from "../logger";
 import { getOptimalModel, type LLMTaskType } from "./models";
 import { withRetry, withTimeout } from "./retry";
+import { strictOutputSchema } from "./strict-schema";
 import {
   AIErrorCode,
   AIGenerationConfig,
@@ -42,8 +49,14 @@ export async function getLanguageModel(modelId: string) {
 export type GenerateStructuredParams<TSchema extends z.ZodType> = {
   /** Selects the default model for the job */
   task: LLMTaskType;
-  /** Shape the model must return */
+  /** Validates the model output (with every check of the schema) */
   schema: TSchema;
+  /**
+   * Shape sent to the model in strict mode, when it must be narrower than
+   * `schema` (for example one variant per question type). Defaults to
+   * `schema`.
+   */
+  outputSchema?: z.ZodType;
   system: string;
   prompt: string;
   /** Overrides the task's default model (it still falls back on failure) */
@@ -54,33 +67,62 @@ export type GenerateStructuredParams<TSchema extends z.ZodType> = {
   config?: Partial<AIGenerationConfig>;
 };
 
+type OutputMode = "strict" | "json";
+
+async function requestOnce<TSchema extends z.ZodType>(
+  modelId: string,
+  params: GenerateStructuredParams<TSchema>,
+  mode: OutputMode,
+): Promise<z.infer<TSchema>> {
+  const { output } = await generateText({
+    model: await getLanguageModel(modelId),
+    prompt: params.prompt,
+    system: params.system,
+    output:
+      mode === "strict"
+        ? Output.object({
+            schema: strictOutputSchema(params.schema, params.outputSchema),
+          })
+        : Output.object({ schema: params.schema }),
+    temperature: params.temperature ?? 0.7,
+    ...(params.seed !== undefined && { seed: params.seed }),
+    providerOptions: {
+      groq:
+        mode === "strict"
+          ? { structuredOutputs: true, strictJsonSchema: true }
+          : { structuredOutputs: false },
+    },
+  });
+
+  if (!output) {
+    throw new AIGenerationError(
+      "Invalid response structure from AI model",
+      AIErrorCode.INVALID_RESPONSE,
+      { modelId },
+    );
+  }
+
+  return output as z.infer<TSchema>;
+}
+
 async function generateOnce<TSchema extends z.ZodType>(
   modelId: string,
   params: GenerateStructuredParams<TSchema>,
 ): Promise<z.infer<TSchema>> {
   try {
-    const { output } = await generateText({
-      model: await getLanguageModel(modelId),
-      prompt: params.prompt,
-      system: params.system,
-      output: Output.object({ schema: params.schema }),
-      temperature: params.temperature ?? 0.7,
-      ...(params.seed !== undefined && { seed: params.seed }),
-      providerOptions: {
-        // JSON mode: works with every model in the fallback chain
-        groq: { structuredOutputs: false },
-      },
-    });
-
-    if (!output) {
-      throw new AIGenerationError(
-        "Invalid response structure from AI model",
-        AIErrorCode.INVALID_RESPONSE,
-        { modelId },
-      );
+    try {
+      return await requestOnce(modelId, params, "strict");
+    } catch (error) {
+      if (!APICallError.isInstance(error) || error.statusCode !== 400) {
+        throw error;
+      }
+      aiLogger.warn("Strict structured output refused, retrying in JSON mode", {
+        task: params.task,
+        modelId,
+        error: error.message,
+      });
+      return await requestOnce(modelId, params, "json");
     }
-
-    return output as z.infer<TSchema>;
   } catch (error) {
     if (error instanceof NoObjectGeneratedError) {
       throw new AIGenerationError(
