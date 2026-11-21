@@ -1,5 +1,5 @@
 import { MineToggle } from "@/components/applications/mine-toggle";
-import { ActionCenter } from "@/components/dashboard/action-center";
+import { ActionCenter, ActionSummary } from "@/components/dashboard/action-center";
 import PageHeader from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth-server";
@@ -12,7 +12,7 @@ import { isTodayOrTomorrow } from "@/lib/utils/interview-calendar";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ActionCenterSkeleton } from "./fallbacks";
+import { ActionCenterSkeleton, ActionSummarySkeleton } from "./fallbacks";
 
 type DashboardSearchParams = Promise<{ mine?: string }>;
 
@@ -22,25 +22,29 @@ export default function DashboardPage({
   searchParams: DashboardSearchParams;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col">
       <PageHeader
-        section="overview"
         title="Le mie azioni"
-        description="Cosa aspetta una tua azione: test da valutare, candidature ferme, posizioni da completare."
+        description="Il lavoro che aspetta te, nell'ordine della selezione."
         actionBtns={
-          <Link
-            href="/dashboard/positions/new"
-            className={buttonVariants({ variant: "default" })}
-          >
-            <Plus className="mr-1 size-4" />
-            Nuova posizione
-          </Link>
+          <>
+            <Suspense>
+              <MineToggle />
+            </Suspense>
+            <Link
+              href="/dashboard/positions/new"
+              className={buttonVariants({ variant: "default", className: "ml-2" })}
+            >
+              <Plus className="mr-1 size-4" />
+              Nuova posizione
+            </Link>
+          </>
         }
-      />
-
-      <Suspense>
-        <MineToggle />
-      </Suspense>
+      >
+        <Suspense fallback={<ActionSummarySkeleton />}>
+          <MySummary searchParams={searchParams} />
+        </Suspense>
+      </PageHeader>
 
       <Suspense fallback={<ActionCenterSkeleton />}>
         <MyActions searchParams={searchParams} />
@@ -50,14 +54,10 @@ export default function DashboardPage({
 }
 
 /**
- * Request-time part of the home. The cached read is the same for every user;
+ * Request-time read of the home. The cached read is the same for every user;
  * "Solo le mie" filters it in memory, and the clock is read only here.
  */
-async function MyActions({
-  searchParams,
-}: {
-  searchParams: DashboardSearchParams;
-}) {
+async function loadMyActions(searchParams: DashboardSearchParams) {
   const params = await searchParams;
   const user = await getCurrentUser();
   const data = await getActionCenterData();
@@ -91,7 +91,17 @@ async function MyActions({
     isApplicationStale(application, now),
   );
 
-  return (
-    <ActionCenter data={filtered} staleApplications={staleApplications} />
-  );
+  return { data: filtered, staleApplications };
+}
+
+/** Queue counts in the header band. */
+async function MySummary({ searchParams }: { searchParams: DashboardSearchParams }) {
+  const { data, staleApplications } = await loadMyActions(searchParams);
+  return <ActionSummary data={data} staleApplications={staleApplications} />;
+}
+
+/** The queues, one stop each. */
+async function MyActions({ searchParams }: { searchParams: DashboardSearchParams }) {
+  const { data, staleApplications } = await loadMyActions(searchParams);
+  return <ActionCenter data={data} staleApplications={staleApplications} />;
 }

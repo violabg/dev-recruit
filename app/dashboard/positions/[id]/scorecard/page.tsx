@@ -44,7 +44,6 @@ async function ScorecardContent({ params }: ScorecardPageProps) {
   return (
     <>
       <PageHeader
-        section="positions"
         title="Scheda di valutazione"
         description={position.title}
         actionBtns={

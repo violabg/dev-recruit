@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function PositionHeaderSkeleton() {
   return (
     <PageHeaderSkeleton
-        section="positions"
       info={
         <>
           <BadgeSkeleton className="w-16" />
@@ -205,7 +204,6 @@ export function ScorecardEditorSkeleton() {
   return (
     <>
       <PageHeaderSkeleton
-        section="positions"
         title="Scheda di valutazione"
         description
         actions={<ButtonSkeleton size="sm" className="w-40" />}
@@ -244,7 +242,6 @@ export function GuideEditorSkeleton() {
   return (
     <>
       <PageHeaderSkeleton
-        section="positions"
         description
         actions={
           <>
@@ -312,7 +309,6 @@ export function GuideViewSkeleton() {
   return (
     <>
       <PageHeaderSkeleton
-        section="positions"
         description
         actions={
           <>

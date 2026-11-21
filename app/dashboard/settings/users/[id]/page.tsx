@@ -49,7 +49,6 @@ async function UserDetailContent({ params }: UserDetailPageProps) {
   return (
     <div className="flex flex-col gap-6 w-full">
       <PageHeader
-        section="users"
         title={user.name}
         description={user.email}
         info={

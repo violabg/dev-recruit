@@ -23,9 +23,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 /**
- * Sidebar: near-white in light mode, navy ink rail in dark mode. The `ink`
- * class (globals.css, dark only) re-tunes text and section hues for the navy; it's applied on each
- * slot so the mobile sheet gets it too.
+ * Sidebar: navy ink rail in both themes. The `ink` class (globals.css)
+ * re-tunes text and section hues for the navy; it's applied on each slot so
+ * the mobile sheet gets it too.
  */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Admin-only entries (Utenti) are hidden until the session says admin.
@@ -41,7 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   return (
-    <Sidebar variant="inset" collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="ink px-2 pt-3 pb-2">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -49,7 +49,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               size="lg"
               tooltip="DevRecruit AI"
               render={<Link href="/dashboard" />}
-              className="hover:bg-sidebar-accent/60"
+              className="hover:bg-sidebar-accent/70"
             >
               <div className="flex justify-center items-center bg-primary rounded-lg size-8 aspect-square text-primary-foreground">
                 <BrainCircuit className="size-5" />

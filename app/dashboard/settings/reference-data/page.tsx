@@ -30,7 +30,6 @@ export default async function ReferenceDataPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="settings"
         title="Dati di riferimento"
         description="Linguaggi, framework, strumenti e altri valori proposti nei moduli"
       />

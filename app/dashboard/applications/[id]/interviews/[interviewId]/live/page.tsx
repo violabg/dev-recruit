@@ -34,7 +34,7 @@ export default function InterviewLivePage({ params }: { params: LiveParams }) {
 function LiveSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="applications" description />
+      <PageHeaderSkeleton description />
       <div className="flex flex-col gap-4">
         <FieldSkeleton label="Domanda" />
         <FieldSkeleton label="Nota rapida" />
@@ -64,18 +64,19 @@ async function LiveContent({ params }: { params: LiveParams }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="applications"
         title="Colloquio live"
         description={`${candidateName} · ${session.position.title} · Round ${session.round}`}
-      />
-
-      <InterviewSteps
-        applicationId={id}
-        interviewId={interviewId}
-        current="live"
-        status={session.status}
-        feedbackSubmitted={session.viewerSubmitted}
-      />
+      >
+        <div className="flex flex-col">
+          <InterviewSteps
+            applicationId={id}
+            interviewId={interviewId}
+            current="live"
+            status={session.status}
+            feedbackSubmitted={session.viewerSubmitted}
+          />
+        </div>
+      </PageHeader>
 
       <LegalReminder />
 

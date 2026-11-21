@@ -56,6 +56,15 @@ export function GiornoPerGiornoSection() {
         ]}
       />
 
+      <GuideText>
+        In <strong>Le mie azioni</strong> le code seguono l&apos;ordine della
+        selezione: posizioni con setup incompleto, test da valutare, colloqui
+        senza kit pronto, schede da compilare. In alto i numeri di ogni coda
+        (un clic porta alla coda); sotto, una fermata per coda con le righe e
+        il pulsante dell&apos;azione. Una coda vuota è una riga verde; le
+        candidature ferme stanno a parte, in fondo, in ambra.
+      </GuideText>
+
       <GuideFigure
         src="/guida/01-le-mie-azioni.png"
         alt="Homepage Le mie azioni con le righe di lavoro in attesa"

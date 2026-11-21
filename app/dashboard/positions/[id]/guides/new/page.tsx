@@ -55,7 +55,6 @@ async function NewGuideContent({ params }: NewGuidePageProps) {
   return (
     <>
       <PageHeader
-        section="positions"
         title="Nuova guida colloquio"
         description={position.title}
         actionBtns={

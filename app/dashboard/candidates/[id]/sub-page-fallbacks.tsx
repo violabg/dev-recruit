@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function CandidateEvaluationsSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="candidates" description />
+      <PageHeaderSkeleton description />
       <Card>
         <CardHeader>
           <TextSkeleton lineClassName="h-7" className="w-56 h-5" />
@@ -35,7 +35,7 @@ export function CandidateEvaluationsSkeleton() {
 export function CandidateQuizSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="candidates" description />
+      <PageHeaderSkeleton description />
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-5 border-b h-10">
           <span className="font-semibold text-[0.9375rem] text-heading">

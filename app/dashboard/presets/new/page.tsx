@@ -13,7 +13,6 @@ export default function NewPresetPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="presets"
         title="Nuovo preset"
         description="Definisci un preset per la generazione di domande che può essere riutilizzato nelle tue posizioni."
         actionBtns={

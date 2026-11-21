@@ -35,7 +35,7 @@ export default function EditPreparePage({
 function EditPrepareSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="applications" description />
+      <PageHeaderSkeleton description />
       <div className="flex flex-col gap-4">
         <FieldSkeleton label="Briefing" />
         <FieldSkeleton label="Ipotesi da verificare" />
@@ -74,7 +74,6 @@ async function EditPrepareContent({ params }: { params: EditPrepareParams }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="applications"
         title="Modifica preparazione"
         description={`${candidateName} · ${interview.position.title} · Round ${interview.round}`}
         info={

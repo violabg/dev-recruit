@@ -64,7 +64,6 @@ async function CandidateQuizContent({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="candidates"
         title="Assegna quiz"
         description={`${candidate.name} · ${candidate.email}`}
         actionBtns={

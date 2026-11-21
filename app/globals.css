@@ -43,6 +43,11 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-heading: var(--heading);
+  --color-band: var(--band);
+  --color-primary-ink: var(--primary-ink);
+  --color-track-rail: var(--track-rail);
+  --color-track-done: var(--track-done);
+  --color-track-warn: var(--track-warn);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-stage-pending: var(--stage-pending);
@@ -78,7 +83,7 @@
 
 :root {
   /* Canvas + surfaces: cool blue-grey canvas, white panels */
-  --background: oklch(0.962 0.009 247);
+  --background: oklch(0.945 0.012 247);
   --foreground: oklch(0.23 0.035 258);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.23 0.035 258);
@@ -94,26 +99,34 @@
   --accent: oklch(0.95 0.02 240);
   --accent-foreground: oklch(0.25 0.05 255);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.89 0.014 250);
-  --input: oklch(0.87 0.016 250);
+  --border: oklch(0.865 0.016 250);
+  --input: oklch(0.84 0.018 250);
   --ring: oklch(0.536 0.16 238);
   /* Titles: deep ink blue */
   --heading: oklch(0.3 0.085 252);
+  /* Header band (top bar + page header) sits white above the grey canvas */
+  --band: oklch(1 0 0);
+  /* Brand blue used as text (links, current step): readable on every surface */
+  --primary-ink: oklch(0.5 0.15 238);
+  /* Flow tracks: rail, passed steps (brand green), stale warning */
+  --track-rail: oklch(0.89 0.017 250);
+  --track-done: oklch(0.8 0.085 159);
+  --track-warn: oklch(0.8 0.11 75);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
   --radius: 0.5rem;
-  /* Sidebar (light): near-white rail; the canvas sheet sits beside it */
-  --sidebar: oklch(0.993 0.003 247);
-  --sidebar-foreground: oklch(0.27 0.04 258);
+  /* Sidebar: navy rail in both themes, the contrast against the white band */
+  --sidebar: oklch(0.225 0.042 258);
+  --sidebar-foreground: oklch(0.88 0.02 250);
   --sidebar-primary: oklch(0.536 0.16 238);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.94 0.025 240);
-  --sidebar-accent-foreground: oklch(0.3 0.085 252);
-  --sidebar-border: oklch(0.9 0.012 250);
-  --sidebar-ring: oklch(0.536 0.16 238);
+  --sidebar-accent: oklch(0.3 0.045 258);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.3 0.04 258);
+  --sidebar-ring: oklch(0.74 0.12 238);
   /* Feedback: success sits on the brand-green hue; both read as text on light surfaces */
   --success: oklch(0.53 0.13 159);
   --warning: oklch(0.56 0.14 62);
@@ -162,7 +175,7 @@
 .dark {
   --background: oklch(0.185 0.028 257);
   --foreground: oklch(0.95 0.01 245);
-  --card: oklch(0.222 0.033 257);
+  --card: oklch(0.232 0.034 257);
   --card-foreground: oklch(0.95 0.01 245);
   --popover: oklch(0.235 0.035 257);
   --popover-foreground: oklch(0.95 0.01 245);
@@ -175,23 +188,28 @@
   --accent: oklch(0.285 0.045 252);
   --accent-foreground: oklch(0.97 0.01 245);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.315 0.035 257);
-  --input: oklch(0.34 0.035 257);
+  --border: oklch(0.335 0.036 257);
+  --input: oklch(0.37 0.036 257);
   --ring: oklch(0.62 0.15 238);
-  --heading: oklch(0.8 0.105 238);
+  --heading: oklch(0.96 0.01 245);
+  --band: oklch(0.235 0.036 257);
+  --primary-ink: oklch(0.76 0.11 238);
+  --track-rail: oklch(0.34 0.04 257);
+  --track-done: oklch(0.58 0.11 159);
+  --track-warn: oklch(0.66 0.11 70);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.15 0.032 258);
-  --sidebar-foreground: oklch(0.94 0.012 245);
+  --sidebar: oklch(0.16 0.03 258);
+  --sidebar-foreground: oklch(0.88 0.02 250);
   --sidebar-primary: oklch(0.536 0.16 238);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.22 0.04 257);
+  --sidebar-accent: oklch(0.24 0.04 257);
   --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(0.24 0.035 257);
-  --sidebar-ring: oklch(0.62 0.15 238);
+  --sidebar-border: oklch(0.25 0.035 257);
+  --sidebar-ring: oklch(0.74 0.12 238);
   --success: oklch(0.72 0.14 159);
   --warning: oklch(0.8 0.14 72);
   --stage-pending: oklch(0.8 0.14 72);
@@ -231,8 +249,8 @@
   --guide-ai-stroke: #a78bfa;
 }
 
-/* Ink rail scope (dark mode only): text + section hues tuned for the navy sidebar */
-.dark .ink {
+/* Ink rail scope (both themes): text + section hues tuned for the navy sidebar */
+.ink {
   --foreground: var(--sidebar-foreground);
   --muted-foreground: oklch(0.78 0.03 250);
   --section-positions: oklch(0.78 0.11 255);
@@ -254,11 +272,35 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Display face: Bricolage Grotesque, slightly condensed for titles */
-  .font-display,
-  .font-heading {
-    font-stretch: 88%;
-    font-optical-sizing: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * Page frame: the content column is centred at 1400px, and the page header
+ * band breaks out of it to span the whole content area. The gutter uses
+ * container units of .page-shell, so the frame and the band agree on it.
+ * ------------------------------------------------------------------------ */
+@layer components {
+  .page-shell {
+    container-type: inline-size;
+  }
+  .page-frame {
+    --page-gutter: max(1rem, calc((100cqi - 1400px) / 2));
+    padding-inline: var(--page-gutter);
+    padding-top: 1.5rem;
+  }
+  @media (width >= 48rem) {
+    .page-frame {
+      --page-gutter: max(2rem, calc((100cqi - 1400px) / 2));
+      padding-top: 2rem;
+    }
+  }
+  /* The band brings its own top padding */
+  .page-frame:has(.page-band) {
+    padding-top: 0;
+  }
+  .page-band {
+    margin-inline: calc(var(--page-gutter, 0px) * -1);
+    padding-inline: var(--page-gutter, 0px);
   }
 }
 

@@ -14,7 +14,6 @@ export default async function NewPositionPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="positions"
         title="Nuova posizione"
         description="Compila il modulo sottostante per creare una nuova posizione"
         actionBtns={

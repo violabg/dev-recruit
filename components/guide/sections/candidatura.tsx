@@ -54,12 +54,18 @@ export function CandidaturaSection() {
 
       <GuideList>
         <li>
-          <strong>Intestazione:</strong> candidato, posizione, stepper delle
-          fasi, responsabile (&quot;Prendi in carico&quot; / &quot;Rilascia&quot;).
+          <strong>Intestazione:</strong> candidato, link alla posizione e alla
+          scheda candidato, responsabile (&quot;Prendi in carico&quot; /
+          &quot;Rilascia&quot;) e <strong>Sposta fase</strong>.
         </li>
         <li>
-          <strong>Card Prossima azione:</strong> calcolata dallo stato. È il
-          punto di partenza consigliato.
+          <strong>Linea delle fasi:</strong> le fasi superate sono verdi, la
+          fase attuale è blu con il giorno in cui è iniziata.
+        </li>
+        <li>
+          <strong>Prossima azione:</strong> sotto la fase attuale, calcolata
+          dallo stato, con il pulsante per farla. È il punto di partenza
+          consigliato.
         </li>
         <li>
           <strong>Tab:</strong> Panoramica · CV · Test · Colloqui · Decisione.

@@ -25,7 +25,6 @@ export default async function AssessmentsPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="assessments"
         title="Test inviati"
         description="Gestisci tutti i test inviati ai candidati"
       />

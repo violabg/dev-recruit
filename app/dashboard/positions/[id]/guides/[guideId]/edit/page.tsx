@@ -70,7 +70,6 @@ async function GuideContent({ params }: GuidePageProps) {
   return (
     <>
       <PageHeader
-        section="positions"
         title="Modifica guida"
         description={`${guide.title} · ${position.title}`}
         actionBtns={

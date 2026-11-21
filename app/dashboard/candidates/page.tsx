@@ -29,7 +29,6 @@ export default async function CandidatesPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="candidates"
         title="Candidati"
         description="Gestisci i candidati per le tue posizioni aperte"
         actionBtns={

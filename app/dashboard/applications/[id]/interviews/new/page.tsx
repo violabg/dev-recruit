@@ -62,7 +62,7 @@ export default function NewInterviewPage({
 function NewInterviewSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeaderSkeleton section="applications" description />
+      <PageHeaderSkeleton description />
       <div className="flex flex-col gap-4 max-w-3xl">
         <FieldSkeleton label="Guida colloquio" />
         <FieldSkeleton label="Data e ora" />
@@ -100,7 +100,6 @@ async function NewInterviewContent({ params }: { params: NewInterviewParams }) {
   return (
     <>
       <PageHeader
-        section="applications"
         title="Pianifica colloquio"
         description={`${candidateName} · ${detail.position.title}`}
         actionBtns={

@@ -53,7 +53,6 @@ export default async function PositionsPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="positions"
         title="Posizioni"
         description="Gestisci le posizioni"
         actionBtns={

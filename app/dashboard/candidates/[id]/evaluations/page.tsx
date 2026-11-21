@@ -61,7 +61,6 @@ async function CandidateEvaluationsContent({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="candidates"
         title="Valutazioni CV"
         description={`${fullName} · valutazioni del curriculum per posizione`}
         actionBtns={

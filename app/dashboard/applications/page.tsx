@@ -23,7 +23,6 @@ export default async function ApplicationsPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="applications"
         title="Candidature"
         description="Tutte le candidature e la loro fase"
       />

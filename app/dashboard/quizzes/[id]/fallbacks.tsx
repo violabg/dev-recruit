@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function QuizHeaderSkeleton() {
   return (
     <PageHeaderSkeleton
-        section="quizzes"
       info={
         <>
           <BadgeSkeleton className="w-28" />

@@ -39,7 +39,6 @@ export default async function QuizzesPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        section="quizzes"
         title="Quiz"
         description="Gestisci i quiz per le tue posizioni aperte"
         actionBtns={<NewQuizButton />}

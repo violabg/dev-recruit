@@ -10,7 +10,7 @@ const SECTION_HREFS = Object.values(SECTIONS)
   .sort((a, b) => b.length - a.length);
 
 /**
- * Icon-only back button in the gutter left of the title rule. Hidden on a
+ * Icon-only back button in the gutter left of the page title. Hidden on a
  * section's main page and below md, where the page gutter is too narrow.
  * Goes back in the browser history; without history (page opened directly)
  * it opens the section's main page.
@@ -34,7 +34,7 @@ export function PageBackButton() {
         if (window.history.length > 1) router.back();
         else router.push(sectionHref as Route);
       }}
-      className="hidden md:inline-flex top-2 lg:top-2.5 -left-8 absolute justify-center items-center hover:bg-muted rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring size-7 text-muted-foreground hover:text-foreground transition-colors"
+      className="hidden md:inline-flex top-1.5 -left-8 absolute justify-center items-center hover:bg-muted rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring size-7 text-muted-foreground hover:text-foreground transition-colors"
     >
       <ArrowLeft className="size-4" />
     </button>

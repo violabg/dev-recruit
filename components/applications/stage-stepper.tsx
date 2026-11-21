@@ -1,59 +1,62 @@
+import { StationTrack, stationPointer, type Station } from "@/components/flow";
 import type { ApplicationStage } from "@/lib/schemas";
 import {
   isClosedStage,
   STAGE_ORDER,
   stageRank,
 } from "@/lib/utils/application-stage";
-import { cn } from "cn";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 import { APPLICATION_STAGE_PRESENTATION } from "./application-stage";
 import { ApplicationStageBadge } from "./application-stage-badge";
 
 /**
- * Read-only stepper of the open path. Steps before the current one are done,
- * the current one is marked with aria-current; for a closed application every
- * step is muted and the closed stage is shown beside the list.
+ * The open path of an application as a station track: passed stages green,
+ * the current one blue with the day it started (a date, not a clock reading:
+ * safe to cache). A closed application shows every station hollow and its
+ * closed stage beside the track.
  */
-export function StageStepper({ stage }: { stage: ApplicationStage }) {
+export function StageStepper({
+  stage,
+  stageChangedAt,
+}: {
+  stage: ApplicationStage;
+  /** When the current stage started: shown under it */
+  stageChangedAt?: Date;
+}) {
   const closed = isClosedStage(stage);
   const currentRank = stageRank(stage);
 
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      <ol
-        aria-label="Fasi della candidatura"
-        className="flex flex-wrap items-center gap-x-4 gap-y-2"
-      >
-        {STAGE_ORDER.map((step, index) => {
-          const presentation = APPLICATION_STAGE_PRESENTATION[step];
-          const isCurrent = !closed && index === currentRank;
-          const isDone = !closed && index < currentRank;
+  const stations: Station[] = STAGE_ORDER.map((step, index) => ({
+    key: step,
+    label: APPLICATION_STAGE_PRESENTATION[step].label,
+    state: closed
+      ? "todo"
+      : index < currentRank
+        ? "done"
+        : index === currentRank
+          ? "current"
+          : "todo",
+    hint:
+      !closed && index === currentRank && stageChangedAt
+        ? `dal ${format(stageChangedAt, "d MMM", { locale: it })}`
+        : undefined,
+  }));
 
-          return (
-            <li
-              key={step}
-              aria-current={isCurrent ? "step" : undefined}
-              className={cn(
-                "flex items-center gap-1.5 text-sm",
-                isCurrent
-                  ? "font-medium text-foreground"
-                  : isDone
-                    ? "text-foreground"
-                    : "text-muted-foreground",
-              )}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "rounded-full size-2 shrink-0",
-                  isDone || isCurrent ? presentation.dot : "bg-muted",
-                )}
-              />
-              {presentation.label}
-            </li>
-          );
-        })}
-      </ol>
-      {closed && <ApplicationStageBadge stage={stage} />}
+  return (
+    <div className="flex items-start gap-4">
+      <StationTrack
+        stations={stations}
+        label="Fasi della candidatura"
+        className="flex-1 min-w-0"
+      />
+      {closed && <ApplicationStageBadge stage={stage} className="shrink-0" />}
     </div>
   );
+}
+
+/** Notch position for the next action under the current stage, if open. */
+export function stagePointer(stage: ApplicationStage): number | undefined {
+  if (isClosedStage(stage)) return undefined;
+  return stationPointer(stageRank(stage), STAGE_ORDER.length);
 }
