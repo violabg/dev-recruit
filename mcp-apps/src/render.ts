@@ -8,6 +8,7 @@ import type {
   ActionCenterWidget,
   ApplicationFlowWidget,
   DraftPreviewWidget,
+  InterviewPrepWidget,
   PositionWidget,
   WidgetBadge,
   WidgetModel,
@@ -41,6 +42,7 @@ const KINDS = new Set<WidgetModel["kind"]>([
   "position",
   "application-flow",
   "draft-preview",
+  "interview-prep",
 ]);
 
 export function isWidgetModel(value: unknown): value is WidgetModel {
@@ -440,8 +442,194 @@ function draftPreview(model: DraftPreviewWidget, actions: WidgetActions): HTMLEl
   return container;
 }
 
+function interviewPrep(model: InterviewPrepWidget, actions: WidgetActions): HTMLElement {
+  const kitBadge = badge(model.kit);
+  const status = h("p", { class: "note", attrs: { role: "status", "aria-live": "polite" } });
+
+  const markReady =
+    model.markReady &&
+    h(
+      "button",
+      {
+        class: "btn btn-confirm",
+        attrs: { type: "button" },
+        on: {
+          click: async (event) => {
+            const button = event.currentTarget as HTMLButtonElement;
+            const { tool, arguments: args, label } = model.markReady!;
+            button.disabled = true;
+            button.textContent = "Conferma in corso…";
+            const outcome = await actions
+              .call(tool, args)
+              .catch(() => ({ ok: false, text: "Si è verificato un errore. Riprova.", widget: null }));
+            if (outcome.ok) {
+              button.remove();
+              improve?.remove();
+              kitBadge.className = "badge tone-done";
+              kitBadge.textContent = "Kit pronto";
+              status.className = "note is-success";
+              status.textContent = outcome.text;
+              return;
+            }
+            button.disabled = false;
+            button.textContent = label;
+            status.className = "note is-error";
+            status.textContent = outcome.text;
+          },
+        },
+      },
+      model.markReady.label,
+    );
+
+  const improve = !model.improve
+    ? null
+    : h(
+      "button",
+      {
+        class: "btn btn-outline",
+        attrs: { type: "button" },
+        on: { click: () => actions.ask(model.improve!) },
+      },
+      "Migliora con l'assistente",
+    );
+
+  const questionCount = model.outline.reduce((sum, part) => sum + part.questions, 0);
+
+  return h(
+    "div",
+    { class: "widget" },
+    band(
+      "Preparazione colloquio",
+      model.title,
+      h("span", { class: "badges" }, badge(model.status), kitBadge),
+      h(
+        "dl",
+        { class: "facts" },
+        ...model.facts.flatMap((fact) => [h("dt", null, fact.label), h("dd", null, fact.value)]),
+      ),
+    ),
+    h(
+      "main",
+      { class: "body" },
+      model.outline.length > 0 &&
+        section(
+          "Scaletta",
+          questionCount,
+          h(
+            "ol",
+            { class: "outline" },
+            ...model.outline.map((part) =>
+              h(
+                "li",
+                null,
+                h("span", null, part.title),
+                h(
+                  "span",
+                  { class: "row-meta" },
+                  `${part.questions} ${part.questions === 1 ? "domanda" : "domande"}${part.required ? `, ${part.required} obbligatori${part.required === 1 ? "a" : "e"}` : ""}`,
+                ),
+              ),
+            ),
+          ),
+        ),
+      model.briefing.length > 0 &&
+        section("Briefing", null, h("ul", { class: "plain bullets" }, ...model.briefing.map((point) => h("li", null, point)))),
+      model.hypotheses.length > 0 &&
+        section(
+          "Ipotesi da verificare",
+          model.hypotheses.length,
+          h(
+            "ul",
+            { class: "plain" },
+            ...model.hypotheses.map((hypothesis) =>
+              h(
+                "li",
+                null,
+                hypothesis.criterion && h("span", { class: "label" }, hypothesis.criterion),
+                h("p", null, hypothesis.hypothesis),
+                h("p", { class: "row-meta" }, `Come verificarla: ${hypothesis.howToVerify}`),
+              ),
+            ),
+          ),
+        ),
+      ...model.sections.map((part, index) =>
+        h(
+          "details",
+          { class: "card fold", attrs: index === 0 ? { open: "" } : {} },
+          h(
+            "summary",
+            null,
+            h("span", null, part.title),
+            h("span", { class: "count" }, part.items.length),
+          ),
+          part.items.length
+            ? h(
+                "ol",
+                { class: "questions" },
+                ...part.items.map((item) =>
+                  h(
+                    "li",
+                    null,
+                    h(
+                      "p",
+                      { class: "row-title" },
+                      h("span", null, item.text),
+                      item.required && h("span", { class: "badge tone-progress" }, "Obbligatoria"),
+                    ),
+                    item.followUps.length > 0 &&
+                      h("ul", { class: "follow-ups" }, ...item.followUps.map((followUp) => h("li", null, followUp))),
+                    item.criteria.length > 0 &&
+                      h("ul", { class: "chips" }, ...item.criteria.map((criterion) => h("li", null, criterion))),
+                  ),
+                ),
+              )
+            : h("p", { class: "empty" }, "Nessuna domanda"),
+        ),
+      ),
+      model.checklist.length > 0 &&
+        section(
+          "Checklist",
+          null,
+          ...model.checklist.map((group) =>
+            h(
+              "div",
+              { class: "chips-block" },
+              h("p", { class: "label" }, group.title),
+              h(
+                "ul",
+                { class: "checklist" },
+                ...group.items.map((row) =>
+                  h(
+                    "li",
+                    { class: row.done ? "is-done" : "is-todo" },
+                    h("span", { class: "check", attrs: { "aria-hidden": "true" } }, row.done ? "✓" : ""),
+                    h("span", null, row.text),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+    ),
+    h(
+      "footer",
+      { class: "confirm" },
+      status,
+      h(
+        "div",
+        { class: "row-actions" },
+        openButton(actions, model.url, "Apri la preparazione"),
+        improve,
+        markReady,
+      ),
+    ),
+  );
+}
+
 export function renderWidget(model: WidgetModel, actions: WidgetActions): HTMLElement {
   switch (model.kind) {
+    case "interview-prep":
+      return interviewPrep(model, actions);
     case "draft-preview":
       return draftPreview(model, actions);
     case "action-center":

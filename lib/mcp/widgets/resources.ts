@@ -12,12 +12,13 @@ import {
 import type { WidgetId } from "../tools/types";
 import { WIDGET_HTML } from "./html.generated";
 
-/** Widgets that ship; the interview-prep widget joins in its phase */
+/** Widgets that ship */
 export const ENABLED_WIDGETS: readonly WidgetId[] = [
   "action-center",
   "position",
   "application-flow",
   "draft-preview",
+  "interview-prep",
 ];
 
 const WIDGET_TITLE: Record<WidgetId, string> = {

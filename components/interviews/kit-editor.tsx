@@ -22,7 +22,6 @@ import {
   interviewKitEditorSchema,
   type InterviewKitEditorData,
   type InterviewKitProposal,
-  type KitChecklistCategory,
 } from "@/lib/schemas";
 import { errorMessage, unwrap } from "@/lib/utils/action-result";
 import { type KitFormValues, mergeKitProposal } from "@/lib/utils/kit-proposal";
@@ -49,6 +48,7 @@ import {
 import { toast } from "sonner";
 import type { z } from "zod";
 import {
+  CHECKLIST_GROUPS,
   getKitItemOriginLabel,
   KIT_STATUS_PRESENTATION,
   MISSING_SOURCE_LABEL,
@@ -67,11 +67,6 @@ type Kit = NonNullable<InterviewPreparation["kit"]>;
 type KitCriterion = InterviewPreparation["criteria"][number];
 
 const BRIEFING_POINTS = 5;
-
-const CHECKLIST_GROUPS: { category: KitChecklistCategory; title: string }[] = [
-  { category: "communicate", title: "Da comunicare" },
-  { category: "logistics", title: "Logistica" },
-];
 
 /** Form values of a stored kit */
 function toFormValues(kit: Kit): KitEditorFormValues {

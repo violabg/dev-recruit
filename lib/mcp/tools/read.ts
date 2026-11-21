@@ -34,6 +34,7 @@ import {
   buildApplicationFlowWidget,
   buildPositionWidget,
 } from "../widgets/build";
+import { buildInterviewPrepWidget } from "../widgets/interview-prep";
 import { defineTool } from "./types";
 
 const POSITIONS_PAGE_SIZE = 20;
@@ -214,7 +215,7 @@ export const getInterviewTool = defineTool({
 
     return {
       text: renderInterview(view),
-      structured: { interview: view },
+      structured: { interview: view, widget: buildInterviewPrepWidget(view) },
       auditSummary: `interview=${view.id} sections=${view.sections.length}`,
     };
   },

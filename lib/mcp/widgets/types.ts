@@ -119,7 +119,33 @@ export interface DraftPreviewWidget {
   url: string | null;
 }
 
+/**
+ * Preparation of an interview: no candidate identity, no CV (same rule as
+ * get_interview). Mark ready is an app-only confirmation.
+ */
+export interface InterviewPrepWidget {
+  kind: "interview-prep";
+  title: string;
+  status: WidgetBadge;
+  kit: WidgetBadge;
+  facts: { label: string; value: string }[];
+  /** Scaletta: one entry per section */
+  outline: { title: string; questions: number; required: number }[];
+  briefing: string[];
+  sections: {
+    title: string;
+    items: { text: string; followUps: string[]; criteria: string[]; required: boolean }[];
+  }[];
+  hypotheses: { criterion: string; hypothesis: string; howToVerify: string }[];
+  checklist: { title: string; items: { text: string; done: boolean }[] }[];
+  /** Follow-up request to improve the kit with the assistant, while editable */
+  improve: string | null;
+  markReady: { label: string; tool: string; arguments: Record<string, unknown> } | null;
+  url: string;
+}
+
 export type WidgetModel =
+  | InterviewPrepWidget
   | ActionCenterWidget
   | PositionWidget
   | ApplicationFlowWidget

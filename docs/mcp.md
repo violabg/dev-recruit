@@ -118,18 +118,19 @@ Source: package README and `dist/src/*.d.ts`; https://claude.com/docs/connectors
 
 ## 3 Widget (MCP Apps)
 
-Three read tools and the draft tools show an interactive widget in hosts that support MCP Apps (claude.ai, Claude desktop; VS Code behind `chat.mcp.apps.enabled`). Every tool still returns its full Italian text, so a host without widgets loses nothing.
+Four read tools and the draft tools show an interactive widget in hosts that support MCP Apps (claude.ai, Claude desktop; VS Code behind `chat.mcp.apps.enabled`). Every tool still returns its full Italian text, so a host without widgets loses nothing.
 
 | Tool | Widget | Resource |
 |---|---|---|
 | `action_center` | Le mie azioni: totale, riepilogo per coda, righe con "Apri" e "Dettagli" | `ui://dev-recruit/action-center.html` |
 | `get_position` | Posizione: stato, candidature per fase (stazioni), setup con "Completa", competenze, candidature | `ui://dev-recruit/position.html` |
 | `get_application` | Candidatura: fasi (stazioni), valutazioni indicative, decisione, colloqui | `ui://dev-recruit/application-flow.html` |
+| `get_interview` | Preparazione colloquio: scaletta, briefing, ipotesi, domande per sezione (richiudibili) con approfondimenti e criteri, checklist; "Migliora con l'assistente" e "Segna il kit come pronto" per un kit in bozza | `ui://dev-recruit/interview-prep.html` |
 | `create_position_draft`, `save_quiz_draft`, `propose_interview_slot`, `save_interview_kit_draft` (and their confirmations) | Anteprima bozza: contenuto, nota su cosa fa la conferma, pulsante di conferma | `ui://dev-recruit/draft-preview.html` |
 
 - **Data.** The tool result carries a presentation-ready model in `structuredContent.widget` (`lib/mcp/widgets/types.ts`, built by `lib/mcp/widgets/build.ts` from the dashboard presentation maps and the MCP deep links). The widget never receives the CV text and keeps the hidden decision hidden.
 - **Bundle.** `mcp-apps/` (plain TypeScript, no framework) is built by `pnpm build:mcp-apps` into one self-contained HTML file and written as `lib/mcp/widgets/html.generated.ts` (committed; `pnpm build` regenerates it before `next build`). After changing `mcp-apps/` or `lib/mcp/widgets/types.ts`, run `pnpm build:mcp-apps` and commit the generated module.
-- **Registration.** `lib/mcp/widgets/resources.ts`: `ENABLED_WIDGETS` lists the shipped widgets; a tool whose `widget` is in the list gets `_meta.ui.resourceUri` (plus the legacy `ui/resourceUri` key). The interview-prep widget is not shipped yet, so `get_interview` has no widget. An app-only tool also gets `_meta.ui.visibility: ["app"]`.
+- **Registration.** `lib/mcp/widgets/resources.ts`: `ENABLED_WIDGETS` lists the shipped widgets; a tool whose `widget` is in the list gets `_meta.ui.resourceUri` (plus the legacy `ui/resourceUri` key). An app-only tool also gets `_meta.ui.visibility: ["app"]`.
 - **Security.** CSP empty (no external origin: no fetch, no external font or asset). Text is inserted as text nodes only, never as HTML. "Apri" opens the dashboard through the host (`ui/open-link`); "Dettagli" sends a follow-up request to the assistant (`ui/message`). The only tool calls a widget makes are the draft confirmations (section 4).
 
 ## 4 Bozze e conferma

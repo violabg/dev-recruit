@@ -4,6 +4,7 @@ import type {
   ActionCenterWidget,
   ApplicationFlowWidget,
   DraftPreviewWidget,
+  InterviewPrepWidget,
   PositionWidget,
   WidgetRow,
 } from "@/lib/mcp/widgets/types";
@@ -45,7 +46,8 @@ describe("isWidgetModel", () => {
   it("accepts the known kinds only", () => {
     expect(isWidgetModel({ kind: "position" })).toBe(true);
     expect(isWidgetModel({ kind: "draft-preview" })).toBe(true);
-    expect(isWidgetModel({ kind: "interview-prep" })).toBe(false);
+    expect(isWidgetModel({ kind: "interview-prep" })).toBe(true);
+    expect(isWidgetModel({ kind: "unknown" })).toBe(false);
     expect(isWidgetModel(null)).toBe(false);
     expect(isWidgetModel("position")).toBe(false);
   });
@@ -269,5 +271,79 @@ describe("draft preview widget", () => {
     const element = renderWidget({ ...draft, confirm: null }, actions);
     expect(element.querySelector(".btn-confirm")).toBeNull();
     expect(buttons(element, "Apri in dev-recruit")).toHaveLength(1);
+  });
+});
+
+describe("interview prep widget", () => {
+  const prep: InterviewPrepWidget = {
+    kind: "interview-prep",
+    title: "Frontend · Round 1",
+    status: { label: "Pianificato", tone: "progress" },
+    kit: { label: "Kit in bozza", tone: "warning" },
+    facts: [{ label: "Quando", value: "25 nov 2026, 10:00" }],
+    outline: [
+      { title: "Tecnica", questions: 2, required: 1 },
+      { title: "Chiusura", questions: 0, required: 0 },
+    ],
+    briefing: ["Ruolo nel team prodotto"],
+    sections: [
+      {
+        title: "Tecnica",
+        items: [
+          { text: "Spiega il rendering", followUps: ["E lo streaming?"], criteria: ["React"], required: true },
+          { text: "Test end-to-end", followUps: [], criteria: [], required: false },
+        ],
+      },
+      { title: "Chiusura", items: [] },
+    ],
+    hypotheses: [{ criterion: "React", hypothesis: "Esperienza solida", howToVerify: "Chiedere un caso reale" }],
+    checklist: [{ title: "Logistica", items: [{ text: "Link della call", done: true }] }],
+    improve: "Aiutami a migliorare il kit (interviewId int-1).",
+    markReady: { label: "Segna il kit come pronto", tool: "publish_draft", arguments: { kind: "kit", id: "int-1" } },
+    url: "https://app.example/prep",
+  };
+
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it("shows outline, questions with follow-ups and criteria, hypotheses and checklist", () => {
+    const element = renderWidget(prep, actions);
+
+    expect(element.querySelector(".outline")?.textContent).toContain("2 domande, 1 obbligatoria");
+    const folds = element.querySelectorAll("details");
+    expect(folds).toHaveLength(2);
+    expect(folds[0].hasAttribute("open")).toBe(true);
+    expect(folds[1].hasAttribute("open")).toBe(false);
+    expect(element.querySelector(".follow-ups")?.textContent).toBe("E lo streaming?");
+    expect(element.textContent).toContain("Obbligatoria");
+    expect(element.textContent).toContain("Come verificarla: Chiedere un caso reale");
+    expect(element.querySelector(".checklist .is-done")?.textContent).toContain("Link della call");
+  });
+
+  it("asks the assistant to improve the kit", () => {
+    const element = renderWidget(prep, actions);
+    buttons(element, "Migliora con l'assistente")[0].click();
+    expect(actions.ask).toHaveBeenCalledWith(prep.improve);
+  });
+
+  it("marks the kit ready through the confirmation tool and updates the badge", async () => {
+    actions.call.mockResolvedValue({ ok: true, text: "Kit segnato come pronto.", widget: undefined });
+    const host = document.createElement("div");
+    host.append(renderWidget(prep, actions));
+
+    buttons(host, "Segna il kit come pronto")[0].click();
+    await flush();
+
+    expect(actions.call).toHaveBeenCalledWith("publish_draft", { kind: "kit", id: "int-1" });
+    expect(buttons(host, "Segna il kit come pronto")).toHaveLength(0);
+    expect(buttons(host, "Migliora con l'assistente")).toHaveLength(0);
+    expect([...host.querySelectorAll(".badge")].map((b) => b.textContent)).toContain("Kit pronto");
+    expect(host.querySelector(".is-success")?.textContent).toBe("Kit segnato come pronto.");
+  });
+
+  it("offers neither improve nor mark ready on a kit that cannot change", () => {
+    const element = renderWidget({ ...prep, improve: null, markReady: null }, actions);
+    expect(buttons(element, "Segna il kit come pronto")).toHaveLength(0);
+    expect(buttons(element, "Migliora con l'assistente")).toHaveLength(0);
+    expect(buttons(element, "Apri la preparazione")).toHaveLength(1);
   });
 });

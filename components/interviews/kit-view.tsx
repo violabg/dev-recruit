@@ -25,16 +25,12 @@ import {
 } from "./kit-blocks";
 import {
   getKitItemOriginLabel,
+  CHECKLIST_GROUPS,
   MISSING_SOURCE_LABEL,
 } from "./interview-presentation";
 
 type Kit = NonNullable<InterviewPreparation["kit"]>;
 type KitCriterion = InterviewPreparation["criteria"][number];
-
-const CHECKLIST_GROUPS = [
-  { category: "communicate", title: "Da comunicare" },
-  { category: "logistics", title: "Logistica" },
-] as const;
 
 const sectionAnchor = (sectionId: string) => `kit-sezione-${sectionId}`;
 

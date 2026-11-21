@@ -23,6 +23,10 @@ vi.mock("@/lib/mcp/widgets/build", () => ({
   buildApplicationFlowWidget: vi.fn(() => ({ kind: "application-flow" })),
 }));
 
+vi.mock("@/lib/mcp/widgets/interview-prep", () => ({
+  buildInterviewPrepWidget: vi.fn(() => ({ kind: "interview-prep" })),
+}));
+
 vi.mock("@/lib/mcp/render", () => ({
   renderActionCenter: vi.fn(() => "testo azioni"),
   renderPositionList: vi.fn(() => "testo posizioni"),

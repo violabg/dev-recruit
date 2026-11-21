@@ -12,7 +12,7 @@ Plugin per i recruiter: porta il lavoro di dev-recruit (posizioni, candidature, 
   - `schedule-interview`: propone un colloquio (guida, data, partecipanti);
   - `interview-prep`: aiuta a prepararsi a un colloquio partendo dal kit;
   - `interview-kit`: completa o migliora il kit in bozza di un colloquio.
-- **Riquadri interattivi** (dove il client li supporta: claude.ai, Claude desktop): "Le mie azioni", posizione, candidatura e l'anteprima delle bozze con il pulsante di conferma.
+- **Riquadri interattivi** (dove il client li supporta: claude.ai, Claude desktop): "Le mie azioni", posizione, candidatura, preparazione del colloquio e l'anteprima delle bozze con il pulsante di conferma.
 - **Connessione al server MCP di dev-recruit**: un server remoto via HTTPS, autorizzato con OAuth. Il plugin non contiene credenziali, hook o programmi: installarlo non esegue nulla sul tuo computer.
 
 ## Requisiti

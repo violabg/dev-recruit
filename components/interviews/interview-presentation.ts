@@ -3,6 +3,7 @@ import type {
   InterviewMissingSource,
   InterviewParticipantRole,
   InterviewStatus,
+  KitChecklistCategory,
   KitItemOrigin,
   KitStatus,
 } from "@/lib/schemas";
@@ -86,6 +87,12 @@ export function getKitItemOriginLabel(
   }
   return KIT_ITEM_ORIGIN_LABEL[origin];
 }
+
+/** Checklist groups of a kit, in display order */
+export const CHECKLIST_GROUPS: readonly { category: KitChecklistCategory; title: string }[] = [
+  { category: "communicate", title: "Da comunicare" },
+  { category: "logistics", title: "Logistica" },
+];
 
 export const PARTICIPANT_ROLE_LABEL: Record<InterviewParticipantRole, string> =
   {

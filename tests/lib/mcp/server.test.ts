@@ -373,10 +373,8 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
   });
 
   const widgetTool = defineTool({ ...echoTool, name: "center", widget: "action-center" });
-  const laterWidgetTool = defineTool({ ...echoTool, name: "prep", widget: "interview-prep" });
-
-  it("links a tool to its shipped widget, not to a widget of a later phase", async () => {
-    const { body } = await rpc([widgetTool, laterWidgetTool, echoTool], {
+  it("links a tool to its widget; a tool without widget has no _meta", async () => {
+    const { body } = await rpc([widgetTool, echoTool], {
       jsonrpc: "2.0",
       id: 5,
       method: "tools/list",
@@ -389,7 +387,6 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
       ui: { resourceUri: "ui://dev-recruit/action-center.html" },
       "ui/resourceUri": "ui://dev-recruit/action-center.html",
     });
-    expect(byName.prep._meta).toBeUndefined();
     expect(byName.echo._meta).toBeUndefined();
   });
 
@@ -416,6 +413,7 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
       "ui://dev-recruit/position.html",
       "ui://dev-recruit/application-flow.html",
       "ui://dev-recruit/draft-preview.html",
+      "ui://dev-recruit/interview-prep.html",
     ]);
   });
 
