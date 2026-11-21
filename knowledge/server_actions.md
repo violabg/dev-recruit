@@ -47,7 +47,8 @@ A failure never escapes as a throw: `runAction` turns anything thrown into `{ su
 ## Authentication and public actions
 
 - `requireUser()` throws `Error("UNAUTHENTICATED")`, never redirects; `getCurrentUser()` returns `null`.
-- The request proxy protects page visits only: every non-public action and every route handler MUST call `requireUser()` itself.
+- The request proxy protects page visits only: every non-public action and every route handler MUST call `requireUser()` itself, except the MCP endpoint and the OAuth endpoints.
+- MCP tools authenticate with the OAuth bearer token and check its scope, then call the same services as the actions with the token user. A tool never calls a server action (cookie session, `redirect()`, `updateTag`).
 - Exactly six actions are public on purpose and skip `requireUser()`:
 
 | Action | Credential |
@@ -93,4 +94,4 @@ Every expected failure is a `UserError`. The non-obvious ones:
 - NEVER `throw new Error("…")` for an expected failure (the user sees the generic text), and never an English `UserError` or Zod message.
 - NEVER return a hand-built `{ success, … }` object instead of `runAction`.
 - NEVER omit `requireUser()` because "the page is protected", or parse input or touch the database before it.
-- NEVER gate a stage, owner or status change, or any other selection-data action, on role or ownership.
+- NEVER gate a stage, owner or status change, or any other selection-data action, on role or ownership. An MCP scope check limits the token, it is not a role gate.

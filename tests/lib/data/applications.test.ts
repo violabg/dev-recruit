@@ -22,6 +22,7 @@ vi.mock("@/lib/services/application-decisions", () => ({
 
 import {
   getActionCenterData,
+  getActionCenterForUser,
   getApplicationDecision,
   getApplicationDetail,
   getApplicationsByPosition,
@@ -718,5 +719,148 @@ describe("getApplicationDetail interviews", () => {
       submittedAt: { not: null },
     });
     expect(JSON.stringify(select.interviews)).not.toContain("notes");
+  });
+});
+
+describe("getActionCenterForUser", () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const now = new Date();
+  const at = (offsetDays: number) => new Date(now.getTime() + offsetDays * DAY);
+  const people = (ownerId: string | null) => ({
+    ownerId,
+    candidate: { firstName: "Mario", lastName: "Rossi" },
+    position: { title: "Dev" },
+  });
+
+  beforeEach(() => {
+    db.assessment.findMany.mockResolvedValueOnce([
+      {
+        id: "a-mine",
+        completedAt: at(-1),
+        quiz: { title: "React" },
+        application: { id: "app-mine-stale", ...people("u1") },
+      },
+      {
+        id: "a-other",
+        completedAt: at(-1),
+        quiz: { title: "React" },
+        application: { id: "app-other-stale", ...people("u2") },
+      },
+    ]);
+    db.application.findMany.mockResolvedValueOnce([
+      { id: "app-mine-stale", stage: "screening", stageChangedAt: at(-10), ...people("u1") },
+      { id: "app-other-stale", stage: "screening", stageChangedAt: at(-10), ...people("u2") },
+      { id: "app-mine-fresh", stage: "screening", stageChangedAt: at(-1), ...people("u1") },
+    ]);
+    db.position.findMany.mockResolvedValueOnce([
+      {
+        id: "pos9",
+        title: "Ops",
+        status: "draft",
+        _count: { quizzes: 0, interviewGuides: 1 },
+        scorecard: { _count: { criteria: 2 } },
+      },
+    ]);
+    db.interview.findMany
+      .mockResolvedValueOnce([
+        {
+          id: "int-today-owner",
+          round: 1,
+          scheduledAt: now,
+          participants: [{ userId: "u2" }],
+          application: { id: "app-mine-stale", ...people("u1") },
+        },
+        {
+          id: "int-tomorrow-participant",
+          round: 1,
+          scheduledAt: at(1),
+          participants: [{ userId: "u1" }],
+          application: { id: "app-other-stale", ...people("u2") },
+        },
+        {
+          id: "int-today-other",
+          round: 1,
+          scheduledAt: now,
+          participants: [{ userId: "u3" }],
+          application: { id: "app-other-stale", ...people("u2") },
+        },
+        {
+          id: "int-later-mine",
+          round: 2,
+          scheduledAt: at(5),
+          participants: [{ userId: "u1" }],
+          application: { id: "app-mine-stale", ...people("u1") },
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: "int-done",
+          round: 1,
+          participants: [
+            { userId: "u1", user: { name: "Laura" } },
+            { userId: "u2", user: { name: "Piero" } },
+          ],
+          feedback: [],
+          application: { id: "app-other-stale", ...people("u2") },
+        },
+      ]);
+  });
+
+  const ids = <T,>(rows: T[], key: keyof T) => rows.map((row) => row[key]);
+
+  it("without mineOnly keeps every row, interviews only for today and tomorrow", async () => {
+    const { data, staleApplications } = await getActionCenterForUser("u1", {
+      mineOnly: false,
+      now,
+    });
+
+    expect(ids(data.assessmentsToEvaluate, "assessmentId")).toEqual(["a-mine", "a-other"]);
+    expect(ids(data.openApplications, "applicationId")).toEqual([
+      "app-mine-stale",
+      "app-other-stale",
+      "app-mine-fresh",
+    ]);
+    expect(ids(data.positionsWithIncompleteSetup, "positionId")).toEqual(["pos9"]);
+    expect(ids(data.interviewsWithoutKit, "interviewId")).toEqual([
+      "int-today-owner",
+      "int-tomorrow-participant",
+      "int-today-other",
+    ]);
+    expect(ids(data.feedbackToFill, "interviewerId")).toEqual(["u1", "u2"]);
+    expect(ids(staleApplications, "applicationId")).toEqual([
+      "app-mine-stale",
+      "app-other-stale",
+    ]);
+  });
+
+  it("with mineOnly filters by owner, participant and interviewer; positions stay", async () => {
+    const { data, staleApplications } = await getActionCenterForUser("u1", {
+      mineOnly: true,
+      now,
+    });
+
+    expect(ids(data.assessmentsToEvaluate, "assessmentId")).toEqual(["a-mine"]);
+    expect(ids(data.openApplications, "applicationId")).toEqual([
+      "app-mine-stale",
+      "app-mine-fresh",
+    ]);
+    expect(ids(data.positionsWithIncompleteSetup, "positionId")).toEqual(["pos9"]);
+    // Owner of the application or participant of the interview
+    expect(ids(data.interviewsWithoutKit, "interviewId")).toEqual([
+      "int-today-owner",
+      "int-tomorrow-participant",
+    ]);
+    expect(ids(data.feedbackToFill, "interviewerId")).toEqual(["u1"]);
+    // Stale = filtered open applications only
+    expect(ids(staleApplications, "applicationId")).toEqual(["app-mine-stale"]);
+  });
+
+  it("reads the given clock: tomorrow's interview drops out a day later", async () => {
+    const { data } = await getActionCenterForUser("u1", {
+      mineOnly: false,
+      now: at(2),
+    });
+
+    expect(ids(data.interviewsWithoutKit, "interviewId")).toEqual([]);
   });
 });

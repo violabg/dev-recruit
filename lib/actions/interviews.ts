@@ -6,34 +6,26 @@ import prisma from "../prisma";
 import {
   interviewIdSchema,
   rescheduleInterviewSchema,
-  scheduleInterviewSchema,
   type InterviewIdInput,
   type RescheduleInterviewInput,
   type ScheduleInterviewInput,
 } from "../schemas";
-import {
-  advanceApplicationStage,
-  type StageChangeResult,
-} from "../services/applications";
-import { loadGuideForSnapshot } from "../services/interview-kits";
+import { toActor } from "../services/actor";
+import { type StageChangeResult } from "../services/applications";
 import {
   applyAllFeedbackCheck,
   assertInterviewStatus,
   assertUsersExist,
-  createInterviewWithKit,
   loadInterview,
+  scheduleInterview,
   syncInterviewParticipants,
 } from "../services/interviews";
-import { getActiveCriteria } from "../services/scorecards";
 import {
   invalidateCandidateCache,
   invalidateInterviewCache,
 } from "../utils/cache-utils";
 import { INTERVIEW_TRANSITIONS } from "../utils/interview-status";
-import { runAction, UserError } from "./run-action";
-
-/** Stages from which no interview can be scheduled */
-const CLOSED_FOR_SCHEDULING = ["rejected", "withdrawn", "hired"] as const;
+import { runAction } from "./run-action";
 
 /** Refresh the application reads when an interview moved its stage */
 function invalidateStageChange(change: StageChangeResult | null) {
@@ -54,58 +46,17 @@ function invalidateStageChange(change: StageChangeResult | null) {
 export async function scheduleInterviewAction(input: ScheduleInterviewInput) {
   return runAction("scheduleInterviewAction", async () => {
     const user = await requireUser();
-    const payload = scheduleInterviewSchema.parse(input);
-
-    const application = await prisma.application.findUnique({
-      where: { id: payload.applicationId },
-      select: { id: true, stage: true, candidateId: true, positionId: true },
-    });
-
-    if (
-      !application ||
-      (CLOSED_FOR_SCHEDULING as readonly string[]).includes(application.stage)
-    ) {
-      throw new UserError("Candidatura non trovata o chiusa");
-    }
-
-    await assertUsersExist(
-      prisma,
-      payload.participants.map((participant) => participant.userId),
+    const { interviewId, applicationId, stage } = await scheduleInterview(
+      toActor(user),
+      input,
     );
 
-    const guide = await loadGuideForSnapshot(
-      prisma,
-      payload.guideId,
-      application.positionId,
-    );
-    const activeCriterionIds = new Set(
-      (await getActiveCriteria(application.positionId)).map(
-        (criterion) => criterion.id,
-      ),
-    );
-
-    const { interviewId, stage } = await prisma.$transaction(async (tx) => {
-      const created = await createInterviewWithKit(
-        tx,
-        payload,
-        guide,
-        user.id,
-        activeCriterionIds,
-      );
-      const change = await advanceApplicationStage(
-        tx,
-        application.id,
-        "interview_scheduled",
-      );
-      return { interviewId: created.interviewId, stage: change };
-    });
-
-    invalidateInterviewCache({ interviewId, applicationId: application.id });
+    invalidateInterviewCache({ interviewId, applicationId });
     invalidateStageChange(stage);
 
     redirect(
       // Typed routes: the preparation page is a nested dynamic route
-      `/dashboard/applications/${application.id}/interviews/${interviewId}/prepare?scheduled=1` as never,
+      `/dashboard/applications/${applicationId}/interviews/${interviewId}/prepare?scheduled=1` as never,
     );
   });
 }

@@ -17,6 +17,7 @@ editable: true
 ## Access: no ownership filtering, one admin-only area
 
 - Every signed-in user reads and edits all selection data, whatever their role: NEVER add `where: { createdBy }` or any per-user filter. `requireUser()` only checks that a session exists.
+- MCP tools follow the same rules: the user of the OAuth token is the signed-in user everywhere (author, owner "me", `decidedBy`, interviewer, visibility of unsubmitted material). OAuth scopes limit what one token may do, never a user or a role.
 - Only visibility exception, never ownership or permission: an interviewer's live notes and scorecard are visible to their author until submitted. Submission publishes and locks: a submitted scorecard, its criterion scores and its author's notes on that interview become read-only for everyone, author included; no action reopens.
 - Independence views are arrangements, never filtered reads: submitted scorecards are returned to everyone and the UI collapses them ("Schede già inviate (n)"), and the Decision columns, overall score and must-warning lists stay closed behind "Per un giudizio indipendente, invia prima la tua scheda" while the participant has not submitted. Outcome and rationale stay usable.
 - `User.role` is `user` or `admin`. The only role check guards user management (creating users, editing them, their role, email verification, password, ban and sessions): its pages and actions check `admin` on the server, after the session check. Hiding the menu entry is presentation, never the guard.
@@ -29,10 +30,12 @@ editable: true
 - The app sends no email of any kind, so sign-in cannot wait for a verification link: a new account cannot sign in until an administrator switches its email verification on from user management. A forgotten password is reset by an administrator.
 - At least one active administrator always exists: the last non-banned `admin` can neither lose the role nor be banned. An administrator never bans themself; nobody changes their own role or their own email verification.
 - Users are never deleted (they author positions, applications, decisions and scorecards): an administrator bans them instead. A ban carries a reason, ends the user's sessions, and unbanning restores access. Banned users are never offered as interview participants.
+- An MCP OAuth token is issued only to an account that can sign in (email verification on, not banned); a ban also ends its tokens.
 
 ## Quiz and questions: one write path
 
 - A quiz and its ordered questions are saved together, only by `upsertQuizAction` (with `quizId` updates, without it creates for `positionId`).
+- No quiz draft state: an MCP tool saves a normal quiz through the same path.
 - `syncQuizQuestions(tx, quizId, questions, userId)` is the only writer of `QuizQuestion` and MUST run in the quiz-save transaction; links are recreated in array order.
 - Existing `dbId` → question updated in place, any other question → created. Editing a `dbId` changes it in every quiz linking it; strip `dbId` to copy instead of share. A question dropped from the quiz is deleted only when not a favorite AND linked by no other quiz.
 - Favorites are linked by putting them in the editor with their `dbId`; no dedicated action.
@@ -43,6 +46,7 @@ editable: true
 ## AI generation never persists
 
 - Generation actions (quiz, single question, scorecard criteria, guide, kit, decision challenge) only return a proposal, shown as unsaved changes; nothing is stored until the user saves. The devil's advocate has no save at all.
+- Content Claude writes through an MCP tool is user input, not a generation action: it is saved through the same write path and shared schema as the dashboard save.
 
 ## Candidates and applications
 

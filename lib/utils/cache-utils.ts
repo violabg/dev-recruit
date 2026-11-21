@@ -44,6 +44,8 @@ export const CacheTags = {
   // submitted interviewer scorecards. Live notes and unsubmitted scorecards
   // are never cached.
   INTERVIEWS: "interviews",
+  // Interview slot proposals (not interviews until scheduled)
+  INTERVIEW_PROPOSALS: "interview-proposals",
   // Users (staff accounts): reads whose subject is users. Reads that only join a user's name never use it.
   USERS: "users",
 } as const;
@@ -87,12 +89,14 @@ const CASCADE_ON_DELETE = {
     CacheTags.SCORECARDS,
     CacheTags.INTERVIEW_GUIDES,
     CacheTags.INTERVIEWS,
+    CacheTags.INTERVIEW_PROPOSALS,
   ],
   quiz: [CacheTags.ASSESSMENTS, CacheTags.EVALUATIONS],
   candidate: [
     CacheTags.ASSESSMENTS,
     CacheTags.EVALUATIONS,
     CacheTags.INTERVIEWS,
+    CacheTags.INTERVIEW_PROPOSALS,
   ],
   assessment: [CacheTags.EVALUATIONS],
 } as const;
@@ -135,6 +139,30 @@ export function invalidateQuizCache(options?: {
   revalidatePath("/dashboard/quizzes");
 }
 
+/**
+ * Same tags and paths as invalidateQuizCache, from Route Handlers (MCP tools
+ * included): revalidateTag with { expire: 0 } instead of updateTag.
+ */
+export function invalidateQuizCacheInRouteHandler(options: {
+  quizId?: string;
+  positionId?: string;
+}) {
+  revalidateTag(CacheTags.QUIZZES, { expire: 0 });
+  revalidateTag(CacheTags.QUESTIONS, { expire: 0 });
+
+  if (options.quizId) {
+    revalidateTag(entityTag.quiz(options.quizId), { expire: 0 });
+    revalidatePath(`/dashboard/quizzes/${options.quizId}`);
+    revalidatePath(`/dashboard/quizzes/${options.quizId}/edit`);
+  }
+
+  if (options.positionId) {
+    revalidateTag(entityTag.position(options.positionId), { expire: 0 });
+  }
+
+  revalidatePath("/dashboard/quizzes");
+}
+
 // ============================================================================
 // Question Cache Invalidation
 // ============================================================================
@@ -155,6 +183,23 @@ export function invalidateQuestionCache(options?: {
   if (options?.quizId) {
     updateTag(CacheTags.QUIZZES);
     updateTag(entityTag.quiz(options.quizId));
+  }
+}
+
+/** Same tags as invalidateQuestionCache, from Route Handlers (MCP tools included). */
+export function invalidateQuestionCacheInRouteHandler(options: {
+  questionId?: string;
+  quizId?: string;
+}) {
+  revalidateTag(CacheTags.QUESTIONS, { expire: 0 });
+
+  if (options.questionId) {
+    revalidateTag(entityTag.question(options.questionId), { expire: 0 });
+  }
+
+  if (options.quizId) {
+    revalidateTag(CacheTags.QUIZZES, { expire: 0 });
+    revalidateTag(entityTag.quiz(options.quizId), { expire: 0 });
   }
 }
 
@@ -180,6 +225,22 @@ export function invalidatePositionCache(
 
   if (positionId) {
     updateTag(entityTag.position(positionId));
+    revalidatePath(`/dashboard/positions/${positionId}`);
+    revalidatePath(`/dashboard/positions/${positionId}/edit`);
+  }
+
+  revalidatePath("/dashboard/positions");
+}
+
+/**
+ * Same tags and paths as invalidatePositionCache (no deletion: MCP never
+ * deletes), from Route Handlers (MCP tools included).
+ */
+export function invalidatePositionCacheInRouteHandler(positionId?: string) {
+  revalidateTag(CacheTags.POSITIONS, { expire: 0 });
+
+  if (positionId) {
+    revalidateTag(entityTag.position(positionId), { expire: 0 });
     revalidatePath(`/dashboard/positions/${positionId}`);
     revalidatePath(`/dashboard/positions/${positionId}/edit`);
   }
@@ -450,6 +511,58 @@ export function invalidateInterviewCache(options: {
   revalidatePath(applicationPath);
   revalidatePath("/dashboard/agenda");
   revalidatePath("/dashboard");
+}
+
+/** Same tags and paths as invalidateInterviewCache, from Route Handlers (MCP tools included). */
+export function invalidateInterviewCacheInRouteHandler(options: {
+  interviewId?: string;
+  applicationId: string;
+}) {
+  revalidateTag(CacheTags.INTERVIEWS, { expire: 0 });
+
+  const applicationPath = `/dashboard/applications/${options.applicationId}`;
+
+  if (options.interviewId) {
+    revalidateTag(entityTag.interview(options.interviewId), { expire: 0 });
+    const interviewPath = `${applicationPath}/interviews/${options.interviewId}`;
+    revalidatePath(`${interviewPath}/prepare`);
+    revalidatePath(`${interviewPath}/prepare/edit`);
+    revalidatePath(`${interviewPath}/live`);
+    revalidatePath(`${interviewPath}/feedback`);
+  }
+
+  revalidatePath(applicationPath);
+  revalidatePath("/dashboard/agenda");
+  revalidatePath("/dashboard");
+}
+
+// ============================================================================
+// Interview Proposal Cache Invalidation
+// ============================================================================
+
+/** Interview slot proposals of an application changed. Server Actions only. */
+export function invalidateInterviewProposalCache(options: {
+  applicationId: string;
+}) {
+  updateTag(CacheTags.INTERVIEW_PROPOSALS);
+  revalidatePath(`/dashboard/applications/${options.applicationId}`);
+}
+
+/** Same as invalidateInterviewProposalCache, from Route Handlers (MCP tools included). */
+export function invalidateInterviewProposalCacheInRouteHandler(options: {
+  applicationId: string;
+}) {
+  revalidateTag(CacheTags.INTERVIEW_PROPOSALS, { expire: 0 });
+  revalidatePath(`/dashboard/applications/${options.applicationId}`);
+}
+
+// ============================================================================
+// MCP Admin Page
+// ============================================================================
+
+/** The MCP admin page reads uncached data: refresh its path after a change. */
+export function invalidateMcpAdminPage() {
+  revalidatePath("/dashboard/settings/mcp");
 }
 
 // ============================================================================

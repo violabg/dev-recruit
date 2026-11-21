@@ -15,8 +15,9 @@ import {
   loadApplicationDecision,
   type ApplicationDecision,
 } from "@/lib/services/application-decisions";
-import { OPEN_STAGES } from "@/lib/utils/application-stage";
+import { isApplicationStale, OPEN_STAGES } from "@/lib/utils/application-stage";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
+import { isTodayOrTomorrow } from "@/lib/utils/interview-calendar";
 import { getPositionSetup, type SetupPart } from "@/lib/utils/position-setup";
 import { cacheLife, cacheTag } from "next/cache";
 
@@ -24,8 +25,8 @@ import { cacheLife, cacheTag } from "next/cache";
  * Applications data layer. An application has no cache tag of its own: its
  * reads are tagged with the candidate and position collections (and the
  * collections they join), and every application write calls
- * invalidateCandidateCache. No function reads the session, filters by user
- * or reads the clock.
+ * invalidateCandidateCache. No function reads the session or the clock; only
+ * the uncached getActionCenterForUser filters by a given user and time.
  */
 
 /** Applications that can no longer receive a test or an evaluation step */
@@ -586,7 +587,7 @@ export async function getFilteredApplications(
 
 /**
  * Data of the home "Le mie azioni". Short-lived. Staleness and the "mine"
- * filter are decided by the page, outside the cache.
+ * filter are decided by getActionCenterForUser, outside the cache.
  */
 export async function getActionCenterData(): Promise<ActionCenterData> {
   "use cache";
@@ -774,6 +775,54 @@ export async function getActionCenterData(): Promise<ActionCenterData> {
         }));
     }),
   };
+}
+
+export interface ActionCenterForUser {
+  data: ActionCenterData;
+  staleApplications: ActionCenterData["openApplications"];
+}
+
+/**
+ * "Le mie azioni" of one user, shared by the dashboard home and MCP. Not
+ * cached: it filters the cached getActionCenterData in memory with the given
+ * user and clock. With mineOnly, applications and tests are the user's when
+ * they own the application, interviews when they own it or take part,
+ * scorecards when they are the interviewer; positions with an incomplete
+ * setup are never filtered. Interviews without a ready kit are kept for today
+ * and tomorrow only.
+ */
+export async function getActionCenterForUser(
+  userId: string,
+  options: { mineOnly: boolean; now: Date },
+): Promise<ActionCenterForUser> {
+  const { mineOnly, now } = options;
+  const data = await getActionCenterData();
+
+  const isMine = (row: { ownerId: string | null }) =>
+    !mineOnly || row.ownerId === userId;
+
+  const filtered: ActionCenterData = {
+    assessmentsToEvaluate: data.assessmentsToEvaluate.filter(isMine),
+    openApplications: data.openApplications.filter(isMine),
+    positionsWithIncompleteSetup: data.positionsWithIncompleteSetup,
+    interviewsWithoutKit: data.interviewsWithoutKit
+      .filter((row) => isTodayOrTomorrow(row.scheduledAt, now))
+      .filter(
+        (row) =>
+          !mineOnly ||
+          row.ownerId === userId ||
+          row.participantIds.includes(userId),
+      ),
+    feedbackToFill: data.feedbackToFill.filter(
+      (row) => !mineOnly || row.interviewerId === userId,
+    ),
+  };
+
+  const staleApplications = filtered.openApplications.filter((application) =>
+    isApplicationStale(application, now),
+  );
+
+  return { data: filtered, staleApplications };
 }
 
 /** Ids of the most recent applications, for generateStaticParams */

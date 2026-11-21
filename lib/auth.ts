@@ -1,7 +1,18 @@
+import { oauthProvider } from "@better-auth/oauth-provider";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { admin } from "better-auth/plugins";
+import { admin, jwt } from "better-auth/plugins";
 import { BANNED_USER_MESSAGE } from "@/lib/utils/auth-errors";
+import {
+  MCP_ACCESS_TOKEN_TTL_SECONDS,
+  MCP_REFRESH_TOKEN_TTL_SECONDS,
+  MCP_RESOURCE_URL,
+  MCP_SCOPES,
+} from "./mcp/config";
+import {
+  oauthRequestGuard,
+  validateAuthorizeRedirectUri,
+} from "./mcp/oauth-registration";
 import prisma from "./prisma";
 import { recordLastLogin } from "./services/users";
 
@@ -70,5 +81,45 @@ export const auth = betterAuth({
       },
     },
   },
-  plugins: [admin({ bannedUserMessage: BANNED_USER_MESSAGE })],
+  // OAuth guards: restricted client registration, account gate on authorize
+  // and consent (lib/mcp/oauth-registration.ts)
+  hooks: {
+    before: oauthRequestGuard,
+  },
+  plugins: [
+    admin({ bannedUserMessage: BANNED_USER_MESSAGE }),
+    // Signs the MCP access tokens. Session payloads are never signed into a
+    // header, and the session JWT keeps the default audience, never the MCP
+    // resource.
+    jwt({ disableSettingJwtHeader: true }),
+    // OAuth 2.1 authorization server of /api/mcp: public clients with PKCE
+    // (S256, enforced by the plugin for public clients), audience-bound
+    // short-lived access tokens, rotating refresh tokens (offline_access),
+    // restricted dynamic registration. Options: docs/mcp.md §1.2.
+    oauthProvider({
+      loginPage: "/auth/login",
+      consentPage: "/auth/consent",
+      scopes: [...MCP_SCOPES, "offline_access"],
+      grantTypes: ["authorization_code", "refresh_token"],
+      // Object form: an explicit scope list (Prisma list columns cannot be
+      // null, and the string form seeds allowedScopes as null)
+      resources: [
+        {
+          identifier: MCP_RESOURCE_URL,
+          name: "dev-recruit MCP",
+          accessTokenTtl: MCP_ACCESS_TOKEN_TTL_SECONDS,
+          allowedScopes: [...MCP_SCOPES, "offline_access"],
+        },
+      ],
+      enforcePerClientResources: true,
+      clientRegistrationDefaultResources: [MCP_RESOURCE_URL],
+      accessTokenExpiresIn: MCP_ACCESS_TOKEN_TTL_SECONDS,
+      refreshTokenExpiresIn: MCP_REFRESH_TOKEN_TTL_SECONDS,
+      refreshTokenReuseInterval: 0,
+      allowDynamicClientRegistration: true,
+      allowUnauthenticatedClientRegistration: true,
+      clientRegistrationDefaultApplicationType: "infer",
+      validateRedirectUri: validateAuthorizeRedirectUri,
+    }),
+  ],
 });

@@ -48,7 +48,7 @@ export async function getFilteredCandidates(params?: FetchCandidatesParams) {
 
 ## Invalidating mutations
 
-Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or `revalidatePath` directly: the helpers also refresh the dashboard paths. Server actions use the standard helper, route handlers the `…InRouteHandler` variant; the scorecard, guide and interview helpers are server-action only.
+Every mutation calls the matching helper, never `updateTag`, `revalidateTag` or `revalidatePath` directly: the helpers also refresh the dashboard paths. Server actions use the standard helper, route handlers (MCP tools included) the `…InRouteHandler` variant. Quiz, question, position, assessment, scorecard, guide and interview helpers have no variant: a route handler that needs one adds it first, same tags and paths, with `revalidateTag(tag, { expire: 0 })`.
 
 | Helper | Non-obvious tags and paths |
 |---|---|
@@ -79,7 +79,7 @@ NEVER fetch lists in a client component (`useEffect`, or an action on mount). Fe
 
 ## API routes
 
-Route handlers exist only for: the auth library catch-all, the email verification confirm, the resume evaluation stream and the position description stream. Everything else is a server action, and no route handler exists for scorecards, criteria, guides, interviews or kits: the per-criterion part of the resume evaluation travels in the existing stream.
+Route handlers exist only for: the auth library catch-all (OAuth endpoints included), the OAuth metadata routes, the MCP endpoint, the email verification confirm, the resume evaluation stream and the position description stream. Every dashboard write is a server action, and no other route handler exists for scorecards, criteria, guides, interviews or kits (MCP tools reach them through the MCP endpoint): the per-criterion part of the resume evaluation travels in the existing stream.
 
 ## Ids of deleted criteria on quiz links
 

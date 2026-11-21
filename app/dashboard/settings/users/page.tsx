@@ -7,7 +7,7 @@ import {
 import { UsersTable } from "@/components/users/users-table";
 import { requireAdminPage } from "@/lib/auth-server";
 import { getUsersActivity, getUsersPage } from "@/lib/data/users";
-import { Plus } from "lucide-react";
+import { PlugZap, Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { UsersListSkeleton } from "./fallbacks";
@@ -47,13 +47,22 @@ async function UsersContent({
         title="Utenti"
         description="Gestisci chi accede all'applicazione"
         actionBtns={
-          <Link
-            href="/dashboard/settings/users/new"
-            className={buttonVariants({ variant: "default", size: "sm" })}
-          >
-            <Plus className="mr-1 size-4" />
-            Nuovo utente
-          </Link>
+          <>
+            <Link
+              href="/dashboard/settings/mcp"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <PlugZap className="mr-1 size-4" />
+              Accesso MCP
+            </Link>
+            <Link
+              href="/dashboard/settings/users/new"
+              className={buttonVariants({ variant: "default", size: "sm", className: "ml-2" })}
+            >
+              <Plus className="mr-1 size-4" />
+              Nuovo utente
+            </Link>
+          </>
         }
       />
       <div className="flex flex-col gap-6">

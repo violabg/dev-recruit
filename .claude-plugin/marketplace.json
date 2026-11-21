@@ -1,0 +1,13 @@
+{
+  "name": "dev-recruit",
+  "owner": {
+    "name": "dev-recruit"
+  },
+  "plugins": [
+    {
+      "name": "dev-recruit",
+      "source": "./plugin/dev-recruit",
+      "description": "Plugin per i recruiter di dev-recruit"
+    }
+  ]
+}

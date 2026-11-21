@@ -61,6 +61,9 @@ export * from "./interview-guide";
 // Re-export interview schemas and types
 export * from "./interview";
 
+// Re-export MCP tool input schemas and types
+export * from "./mcp";
+
 // ====================
 // UTILITY EXPORTS
 // ====================

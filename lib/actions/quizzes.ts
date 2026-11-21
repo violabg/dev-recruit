@@ -9,21 +9,19 @@ import {
   generateQuestionParamsSchema,
   generateQuizSchema,
   questionSchemas,
-  saveQuizSchema,
   type DuplicateQuizInput,
   type FlexibleQuestion,
   type GenerateQuizInput,
   type SaveQuizInput,
 } from "../schemas";
+import { toActor } from "../services/actor";
 import { aiQuizService, GenerateQuestionParams } from "../services/ai-service";
 import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
 import { logger } from "../services/logger";
 import { invalidateQuizCache } from "../utils/cache-utils";
 import { syncQuizQuestions } from "../services/quiz-questions";
-import {
-  assertActiveCriteria,
-  getActiveCriteria,
-} from "../services/scorecards";
+import { saveQuiz } from "../services/quizzes";
+import { getActiveCriteria } from "../services/scorecards";
 import { mapQuizQuestionsToFlexible } from "../utils/question-utils";
 import { runAction, UserError } from "./run-action";
 
@@ -125,146 +123,18 @@ export async function deleteQuizAction(quizId: string) {
 }
 
 /**
- * Check the criteria linked to the questions of a quiz before it is saved.
- * Ids that are neither active nor archived criteria of the position belong to
- * deleted criteria: they are dropped. Every other id must be an active
- * criterion, unless it is already stored on a link of the same quiz (an
- * archived criterion stays where it was).
- */
-async function checkQuestionCriteria(
-  positionId: string,
-  quizId: string | undefined,
-  questions: FlexibleQuestion[],
-): Promise<FlexibleQuestion[]> {
-  const knownIds = new Set(
-    (
-      await prisma.scorecardCriterion.findMany({
-        where: { scorecard: { positionId } },
-        select: { id: true },
-      })
-    ).map((criterion) => criterion.id),
-  );
-
-  const cleaned = questions.map((question) =>
-    question.criterionIds
-      ? {
-          ...question,
-          criterionIds: question.criterionIds.filter((id) => knownIds.has(id)),
-        }
-      : question,
-  );
-
-  const requested = new Set(cleaned.flatMap((q) => q.criterionIds ?? []));
-  if (requested.size === 0) return cleaned;
-
-  const alreadyStored = new Set<string>();
-  if (quizId) {
-    const links = await prisma.quizQuestion.findMany({
-      where: { quizId },
-      select: { criterionIds: true },
-    });
-    for (const link of links) {
-      for (const id of link.criterionIds) alreadyStored.add(id);
-    }
-  }
-
-  await assertActiveCriteria(
-    positionId,
-    [...requested].filter((id) => !alreadyStored.has(id)),
-  );
-
-  return cleaned;
-}
-
-/**
- * Create or update a quiz together with its ordered question set.
- * With `quizId` it updates that quiz; without it, it creates one for
- * `positionId`. Always returns the quiz id.
+ * Create or update a quiz together with its ordered question set through
+ * saveQuiz. With `quizId` it updates that quiz; without it, it creates one
+ * for `positionId`. Always returns the quiz id.
  */
 export async function upsertQuizAction(input: SaveQuizInput) {
   return runAction("upsertQuizAction", async () => {
     const user = await requireUser();
+    const { quizId, positionId } = await saveQuiz(toActor(user), input);
 
-    const parsed = saveQuizSchema.safeParse(input);
-    if (!parsed.success) {
-      throw new UserError(
-        parsed.error.issues[0]?.message ?? "Dati del quiz non validi",
-      );
-    }
-    const { quizId, positionId, title, timeLimit } = parsed.data;
+    invalidateQuizCache({ quizId, positionId });
 
-    if (quizId) {
-      const quiz = await prisma.quiz.findUnique({
-        where: { id: quizId },
-        select: { positionId: true },
-      });
-
-      if (!quiz) {
-        throw new QuizSystemError(
-          "Quiz not found",
-          QuizErrorCode.QUIZ_NOT_FOUND,
-          { quizId },
-        );
-      }
-
-      const questions = await checkQuestionCriteria(
-        quiz.positionId,
-        quizId,
-        parsed.data.questions,
-      );
-
-      await prisma.$transaction(async (tx) => {
-        await tx.quiz.update({
-          where: { id: quizId },
-          data: { title, timeLimit },
-        });
-        await syncQuizQuestions(tx, quizId, questions, user.id);
-      });
-
-      invalidateQuizCache({
-        quizId,
-        positionId: quiz.positionId ?? undefined,
-      });
-
-      return { id: quizId };
-    }
-
-    const position = await prisma.position.findUnique({
-      where: { id: positionId },
-      select: { id: true },
-    });
-
-    if (!position) {
-      throw new QuizSystemError(
-        "Position not found or access denied",
-        QuizErrorCode.POSITION_NOT_FOUND,
-        { positionId },
-      );
-    }
-
-    const questions = await checkQuestionCriteria(
-      position.id,
-      undefined,
-      parsed.data.questions,
-    );
-
-    const quiz = await prisma.$transaction(async (tx) => {
-      const newQuiz = await tx.quiz.create({
-        data: {
-          title,
-          positionId: position.id,
-          timeLimit,
-          createdBy: user.id,
-        },
-        select: { id: true },
-      });
-      await syncQuizQuestions(tx, newQuiz.id, questions, user.id);
-      return newQuiz;
-    });
-
-    invalidateQuizCache({ quizId: quiz.id, positionId: position.id });
-
-    return { id: quiz.id };
+    return { id: quizId };
   });
 }
 

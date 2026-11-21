@@ -10,6 +10,8 @@ import {
   UpdatePositionStatusInput,
   updatePositionStatusSchema,
 } from "../schemas";
+import { toActor } from "../services/actor";
+import { createPosition } from "../services/positions";
 import { invalidatePositionCache } from "../utils/cache-utils";
 import type { ActionResult } from "../utils/action-result";
 import { runAction, UserError } from "./run-action";
@@ -17,26 +19,11 @@ import { runAction, UserError } from "./run-action";
 export async function createPositionAction(values: PositionFormData) {
   return runAction("createPositionAction", async () => {
     const user = await requireUser();
-    const payload = positionFormSchema.parse(values);
+    const { positionId } = await createPosition(toActor(user), values);
 
-    const position = await prisma.position.create({
-      data: {
-        title: payload.title,
-        description: payload.description?.trim() || null,
-        experienceLevel: payload.experienceLevel,
-        skills: payload.skills,
-        softSkills: payload.softSkills ?? [],
-        contractType: payload.contractType?.trim() || null,
-        // A new position is set up as a draft and opened from its page
-        status: "draft",
-        createdBy: user.id,
-      },
-      select: { id: true },
-    });
+    invalidatePositionCache(positionId);
 
-    invalidatePositionCache(position.id);
-
-    redirect(`/dashboard/positions/${position.id}`);
+    redirect(`/dashboard/positions/${positionId}`);
   });
 }
 

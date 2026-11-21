@@ -91,10 +91,16 @@ All generation flows return a proposal only: no write, no invalidation, no save.
 - Position description: POST to the generate-description route → `requireUser()` → `streamPositionDescription` (`simple_task`) → `toTextStreamResponse()`.
 - Transcription: public `transcribeAudioAction(formData)` with the assessment token and audio blob; refused above `MAX_AUDIO_BYTES` (provider limit) or when the assessment no longer `acceptsAnswers()`.
 
+## MCP tool results
+
+- Sent to an external model (Claude) chosen by the user: they may contain ids and what the dashboard shows.
+- Interview prep and decision review results follow the kit and devil's advocate rule: no candidate identity, no CV text, no interviewer names or free text.
+- Candidate-written text (answers, CV) is delimited as data, as in prompts.
+
 ## Prohibitions
 
 - NEVER call `generateText`, `streamText` or `groq()` from an action or service instead of `generateStructured` / `getLanguageModel`.
-- NEVER expose internal fields or ids in what the model receives: pass an `outputSchema` when the validation schema has them.
+- NEVER expose internal fields or ids in a prompt: pass an `outputSchema` when the validation schema has them. MCP tool results follow "MCP tool results".
 - NEVER import `generateStructured` from the AI barrel: `generateStructured`, `getLanguageModel` and `describeAIError` are exported only by the `generate` module of the AI layer.
 - NEVER trust client-sent question or answer text for evaluation: only ids come from the client.
 - NEVER sanitize a CV before redacting the birth date, or claim a marker-less birth date is removed.

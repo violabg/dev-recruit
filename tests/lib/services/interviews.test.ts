@@ -4,6 +4,22 @@ vi.mock("@/lib/services/applications", () => ({
   advanceApplicationStage: vi.fn(),
 }));
 
+// scheduleInterview reads through the client (guide snapshot included) and
+// writes through a hand-built transaction; active criteria come from the
+// mocked scorecard service
+vi.mock("@/lib/prisma", () => ({
+  default: {
+    user: { findUnique: vi.fn(), count: vi.fn() },
+    application: { findUnique: vi.fn() },
+    interviewGuide: { findUnique: vi.fn() },
+    interview: { create: vi.fn() },
+    $transaction: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/services/scorecards", () => ({ getActiveCriteria: vi.fn() }));
+
+import prisma from "@/lib/prisma";
 import { advanceApplicationStage } from "@/lib/services/applications";
 import { DEFAULT_KIT_CHECKLIST } from "@/lib/services/interview-kits";
 import {
@@ -13,8 +29,10 @@ import {
   createInterviewWithKit,
   loadInterview,
   requireParticipant,
+  scheduleInterview,
   syncInterviewParticipants,
 } from "@/lib/services/interviews";
+import { getActiveCriteria } from "@/lib/services/scorecards";
 
 /** Transaction client with every delegate the interview service may touch */
 function makeTx() {
@@ -430,5 +448,139 @@ describe("applyAllFeedbackCheck", () => {
     await expect(applyAllFeedbackCheck(tx as any, "app-1")).resolves.toBeNull();
 
     expect(advanceApplicationStage).not.toHaveBeenCalled();
+  });
+});
+
+describe("scheduleInterview", () => {
+  const db = prisma as any;
+  const actor = { userId: "user-123", role: "user" } as const;
+  const change = {
+    applicationId: "app-1",
+    candidateId: "cand-1",
+    positionId: "pos-1",
+    previousStage: "assessment",
+    stage: "interview",
+    changed: true,
+    cancelledAssessmentIds: [],
+    cancelledInterviewIds: [],
+  };
+
+  let tx: ReturnType<typeof makeTx>;
+
+  beforeEach(() => {
+    tx = makeTx();
+    db.user.findUnique.mockResolvedValue({ emailVerified: true, banned: false });
+    db.user.count.mockResolvedValue(2);
+    db.application.findUnique.mockResolvedValue({
+      id: "app-1",
+      stage: "assessment",
+      candidateId: "cand-1",
+      positionId: "pos-1",
+    });
+    // Stored guide row of the same position, read for the snapshot
+    db.interviewGuide.findUnique.mockResolvedValue(guide);
+    vi.mocked(getActiveCriteria).mockResolvedValue([{ id: "c-active" }] as any);
+    vi.mocked(advanceApplicationStage).mockResolvedValue(change as any);
+    db.$transaction.mockImplementation(async (fn: any) => fn(tx));
+  });
+
+  it("creates interview and kit and advances the stage in one transaction, authored by the actor", async () => {
+    const result = await scheduleInterview(actor, input);
+
+    expect(result).toEqual({
+      interviewId: "int-new",
+      applicationId: "app-1",
+      candidateId: "cand-1",
+      positionId: "pos-1",
+      stage: change,
+    });
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(tx.interview.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ applicationId: "app-1", createdBy: "user-123" }),
+      }),
+    );
+    expect(tx.interviewKit.create).toHaveBeenCalled();
+    expect(advanceApplicationStage).toHaveBeenCalledWith(
+      tx,
+      "app-1",
+      "interview_scheduled",
+    );
+    // Only active criteria reach the kit
+    const criterionIds = tx.kitItem.create.mock.calls.flatMap(
+      (call) => call[0].data.criterionIds,
+    );
+    expect(new Set(criterionIds)).toEqual(new Set(["c-active"]));
+    // Nothing is written outside the transaction
+    expect(db.interview.create).not.toHaveBeenCalled();
+    expect(db.interviewGuide.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "guide-1" } }),
+    );
+    expect(getActiveCriteria).toHaveBeenCalledWith("pos-1");
+  });
+
+  it.each([null, "rejected", "withdrawn", "hired"])(
+    "refuses a missing or closed application (%s)",
+    async (stage) => {
+      db.application.findUnique.mockResolvedValue(
+        stage === null
+          ? null
+          : { id: "app-1", stage, candidateId: "cand-1", positionId: "pos-1" },
+      );
+
+      await expect(scheduleInterview(actor, input)).rejects.toThrow(
+        "Candidatura non trovata o chiusa",
+      );
+      expect(db.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it("checks that every participant is a user of the app", async () => {
+    db.user.count.mockResolvedValue(1);
+
+    await expect(scheduleInterview(actor, input)).rejects.toThrow(
+      "Uno o più partecipanti non sono utenti dell'app",
+    );
+    expect(db.user.count).toHaveBeenCalledWith({
+      where: { id: { in: ["u1", "u2"] } },
+    });
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses a guide of another position", async () => {
+    db.interviewGuide.findUnique.mockResolvedValue({ ...guide, positionId: "pos-2" });
+
+    await expect(scheduleInterview(actor, input)).rejects.toThrow(
+      "Guida non trovata per questa posizione",
+    );
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses two leads with the schema message", async () => {
+    await expect(
+      scheduleInterview(actor, {
+        ...input,
+        participants: [
+          { userId: "u1", role: "lead" },
+          { userId: "u2", role: "lead" },
+        ],
+      }),
+    ).rejects.toThrow("Indica un solo conduttore");
+    expect(db.application.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("refuses a banned actor before reading the application", async () => {
+    db.user.findUnique.mockResolvedValue({ emailVerified: true, banned: true });
+
+    await expect(scheduleInterview(actor, input)).rejects.toThrow(
+      "Sessione scaduta. Accedi di nuovo per continuare.",
+    );
+    expect(db.application.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("propagates a transaction failure", async () => {
+    db.$transaction.mockRejectedValue(new Error("db down"));
+
+    await expect(scheduleInterview(actor, input)).rejects.toThrow("db down");
   });
 });

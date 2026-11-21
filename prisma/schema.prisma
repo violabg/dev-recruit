@@ -42,6 +42,15 @@ model User {
   createdInterviews       Interview[]            @relation("UserCreatedInterviews")
   interviewParticipations InterviewParticipant[] @relation("UserInterviewParticipations")
   interviewerFeedback     InterviewerFeedback[]  @relation("UserInterviewerFeedback")
+  oauthClients       OauthClient[]
+  oauthRefreshTokens OauthRefreshToken[]
+  oauthAccessTokens  OauthAccessToken[]
+  oauthConsents      OauthConsent[]
+  interviewProposals InterviewProposal[] @relation("InterviewProposalCreator")
+  scoreOverrides     ScoreOverride[]     @relation("ScoreOverrideCreator")
+
+  // MCP access switched off for this user by an administrator
+  mcpDisabled Boolean @default(false)
 
   isAnonymous Boolean?
 
@@ -63,6 +72,9 @@ model Session {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  oauthRefreshTokens OauthRefreshToken[]
+  oauthAccessTokens  OauthAccessToken[]
 
   @@unique([token])
   @@map("sessions")
@@ -101,6 +113,209 @@ model Verification {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+// Better Auth OAuth provider (@better-auth/oauth-provider) and jwt plugin
+// models: fields as the plugin schema of the pinned version requires
+
+model Jwks {
+  id String @id @default(cuid())
+
+  publicKey  String
+  privateKey String
+  createdAt  DateTime
+  expiresAt  DateTime?
+  alg        String?
+  crv        String?
+
+  @@map("jwks")
+}
+
+model OauthClient {
+  id String @id @default(cuid())
+
+  clientId                         String
+  clientSecret                     String?
+  clientDiscoveryId                String?
+  disabled                         Boolean?  @default(false)
+  skipConsent                      Boolean?
+  enableEndSession                 Boolean?
+  subjectType                      String?
+  scopes                           String[]
+  clientCredentialsScopes          String[]  @default([])
+  createdAt                        DateTime?
+  updatedAt                        DateTime?
+  name                             String?
+  uri                              String?
+  icon                             String?
+  contacts                         String[]
+  tos                              String?
+  policy                           String?
+  softwareId                       String?
+  softwareVersion                  String?
+  softwareStatement                String?
+  redirectUris                     String[]
+  postLogoutRedirectUris           String[]
+  backchannelLogoutUri             String?
+  backchannelLogoutSessionRequired Boolean?
+  tokenEndpointAuthMethod          String?
+  applicationType                  String?
+  jwks                             String?
+  jwksUri                          String?
+  grantTypes                       String[]
+  responseTypes                    String[]
+  requirePKCE                      Boolean?
+  dpopBoundAccessTokens            Boolean?  @default(false)
+  referenceId                      String?
+  metadata                         Json?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resources     OauthClientResource[]
+  refreshTokens OauthRefreshToken[]
+  accessTokens  OauthAccessToken[]
+  consents      OauthConsent[]
+
+  @@unique([clientId])
+  @@index([userId])
+  @@map("oauth_clients")
+}
+
+model OauthResource {
+  id String @id @default(cuid())
+
+  identifier                    String
+  name                          String
+  accessTokenTtl                Int?
+  refreshTokenTtl               Int?
+  signingAlgorithm              String?
+  signingKeyId                  String?
+  allowedScopes                 String[]
+  customClaims                  Json?
+  dpopBoundAccessTokensRequired Boolean?  @default(false)
+  disabled                      Boolean?  @default(false)
+  createdAt                     DateTime?
+  updatedAt                     DateTime?
+  policyVersion                 Int?      @default(1)
+  metadata                      Json?
+
+  clients OauthClientResource[]
+
+  @@unique([identifier])
+  @@map("oauth_resources")
+}
+
+model OauthClientResource {
+  id String @id @default(cuid())
+
+  clientId   String
+  client     OauthClient   @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  resourceId String
+  resource   OauthResource @relation(fields: [resourceId], references: [identifier], onDelete: Cascade)
+  metadata   Json?
+  createdAt  DateTime?
+
+  @@unique([clientId, resourceId])
+  @@index([clientId])
+  @@index([resourceId])
+  @@map("oauth_client_resources")
+}
+
+model OauthRefreshToken {
+  id String @id @default(cuid())
+
+  token                   String
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  expiresAt               DateTime
+  createdAt               DateTime
+  revoked                 DateTime?
+  rotatedAt               DateTime?
+  rotationReplayResponse  String?
+  rotationReplayExpiresAt DateTime?
+  authTime                DateTime?
+  confirmation            Json?
+  scopes                  String[]
+
+  clientId  String
+  client    OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId String?
+  session   Session?    @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessTokens OauthAccessToken[]
+
+  @@unique([token])
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+  @@map("oauth_refresh_tokens")
+}
+
+model OauthAccessToken {
+  id String @id @default(cuid())
+
+  token                   String
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  expiresAt               DateTime
+  createdAt               DateTime
+  revoked                 DateTime?
+  confirmation            Json?
+  scopes                  String[]
+
+  clientId     String
+  client       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId    String?
+  session      Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId       String?
+  user         User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshId    String?
+  refreshToken OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+  @@index([refreshId])
+  @@map("oauth_access_tokens")
+}
+
+model OauthConsent {
+  id String @id @default(cuid())
+
+  referenceId             String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  scopes                  String[]
+  createdAt               DateTime
+  updatedAt               DateTime
+
+  clientId String
+  client   OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId   String?
+  user     User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([userId])
+  @@map("oauth_consents")
+}
+
+// Single-use private_key_jwt assertion ids: the plugin always supplies the id
+// (a digest of the assertion), so it has no default
+model OauthClientAssertion {
+  id        String   @id
+  expiresAt DateTime
+
+  @@map("oauth_client_assertions")
 }
 
 // App-specific models
@@ -317,6 +532,7 @@ model Application {
   decider     User?        @relation("UserDecidedApplications", fields: [decidedBy], references: [id], onDelete: SetNull)
   assessments Assessment[]
   interviews  Interview[]
+  interviewProposals InterviewProposal[]
 
   @@unique([candidateId, positionId])
   @@index([candidateId])
@@ -639,6 +855,11 @@ model Evaluation {
   // Recruiter's manual notes ("Note manuali")
   notes String?
 
+  // Provenance of the AI scores: model and prompt that produced them
+  aiModel       String?
+  promptVersion String?
+  promptHash    String?
+
   // Metadata
   createdBy String
   createdAt DateTime @default(now())
@@ -650,9 +871,27 @@ model Evaluation {
   position   Position?   @relation(fields: [positionId], references: [id], onDelete: SetNull)
   creator    User        @relation("UserEvaluations", fields: [createdBy], references: [id], onDelete: Cascade)
 
+  scoreOverrides ScoreOverride[]
+
   @@index([candidateId])
   @@index([positionId])
   @@map("evaluations")
+}
+
+// A person's override of an AI score, always with its reason
+model ScoreOverride {
+  id           String     @id @default(cuid())
+  evaluationId String
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  field        String
+  value        Float
+  reason       String
+  createdBy    String
+  creator      User       @relation("ScoreOverrideCreator", fields: [createdBy], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@index([evaluationId])
+  @@map("score_overrides")
 }
 
 model Preset {
@@ -699,5 +938,69 @@ model ReferenceData {
   @@unique([category, label], map: "category_label")
   @@index([category, isActive, order])
   @@map("reference_data")
+}
+
+// MCP
+
+enum InterviewProposalStatus {
+  pending
+  scheduled
+  discarded
+}
+
+// An interview slot proposed through MCP: not an interview until scheduled
+model InterviewProposal {
+  id            String                  @id @default(cuid())
+  applicationId String
+  application   Application             @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  payload       Json
+  status        InterviewProposalStatus @default(pending)
+  createdBy     String
+  creator       User                    @relation("InterviewProposalCreator", fields: [createdBy], references: [id])
+  createdAt     DateTime                @default(now())
+  handledAt     DateTime?
+  handledBy     String?
+  interviewId   String?
+
+  @@index([applicationId, status])
+  @@map("interview_proposals")
+}
+
+// One row per MCP tool call
+model McpAuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  clientId  String?
+  scopes    String[]
+  tool      String
+  arguments Json
+  status    String
+  summary   String
+  channel   String   @default("mcp")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("mcp_audit_log")
+}
+
+// Fixed-window request counters (MCP and OAuth endpoints)
+model RateLimitBucket {
+  key         String
+  windowStart DateTime
+  count       Int      @default(0)
+
+  @@id([key, windowStart])
+  @@map("rate_limit_buckets")
+}
+
+// Application-wide switches (e.g. the MCP kill switch)
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
 }
 

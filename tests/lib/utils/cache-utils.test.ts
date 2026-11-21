@@ -13,13 +13,20 @@ import {
   invalidateEvaluationCache,
   invalidateEvaluationCacheInRouteHandler,
   invalidateInterviewCache,
+  invalidateInterviewCacheInRouteHandler,
   invalidateInterviewGuideCache,
+  invalidateInterviewProposalCache,
+  invalidateInterviewProposalCacheInRouteHandler,
+  invalidateMcpAdminPage,
   invalidatePositionCache,
+  invalidatePositionCacheInRouteHandler,
   invalidateScorecardCache,
   invalidatePresetCache,
   invalidateProfileCache,
   invalidateQuestionCache,
+  invalidateQuestionCacheInRouteHandler,
   invalidateQuizCache,
+  invalidateQuizCacheInRouteHandler,
   invalidateUserCache,
 } from "@/lib/utils/cache-utils";
 import { revalidatePath, revalidateTag, updateTag } from "next/cache";
@@ -543,5 +550,108 @@ describe("interview tags", () => {
     invalidatePositionCache("pos-1");
     invalidateCandidateCache({ candidateId: "cand-1" });
     expect(mockedUpdateTag).not.toHaveBeenCalledWith("interviews");
+  });
+});
+
+describe("route-handler variants (MCP tools)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  /** Tags and paths a server-action helper expires */
+  function serverActionEffect(run: () => void) {
+    vi.clearAllMocks();
+    run();
+    return {
+      tags: mockedUpdateTag.mock.calls.map(([tag]) => tag).sort(),
+      paths: mockedRevalidatePath.mock.calls.map(([path]) => path).sort(),
+    };
+  }
+
+  /** Tags and paths a route-handler variant expires, checking expire: 0 */
+  function routeHandlerEffect(run: () => void) {
+    vi.clearAllMocks();
+    run();
+    expect(mockedUpdateTag).not.toHaveBeenCalled();
+    for (const [, profile] of mockedRevalidateTag.mock.calls) {
+      expect(profile).toEqual({ expire: 0 });
+    }
+    return {
+      tags: mockedRevalidateTag.mock.calls.map(([tag]) => tag).sort(),
+      paths: mockedRevalidatePath.mock.calls.map(([path]) => path).sort(),
+    };
+  }
+
+  it.each([
+    [
+      "position",
+      () => invalidatePositionCache("pos-1"),
+      () => invalidatePositionCacheInRouteHandler("pos-1"),
+    ],
+    [
+      "position without id",
+      () => invalidatePositionCache(),
+      () => invalidatePositionCacheInRouteHandler(),
+    ],
+    [
+      "quiz",
+      () => invalidateQuizCache({ quizId: "q-1", positionId: "pos-1" }),
+      () => invalidateQuizCacheInRouteHandler({ quizId: "q-1", positionId: "pos-1" }),
+    ],
+    [
+      "question",
+      () => invalidateQuestionCache({ questionId: "qs-1", quizId: "q-1" }),
+      () => invalidateQuestionCacheInRouteHandler({ questionId: "qs-1", quizId: "q-1" }),
+    ],
+    [
+      "interview",
+      () => invalidateInterviewCache({ interviewId: "int-1", applicationId: "app-1" }),
+      () =>
+        invalidateInterviewCacheInRouteHandler({
+          interviewId: "int-1",
+          applicationId: "app-1",
+        }),
+    ],
+    [
+      "interview without id",
+      () => invalidateInterviewCache({ applicationId: "app-1" }),
+      () => invalidateInterviewCacheInRouteHandler({ applicationId: "app-1" }),
+    ],
+    [
+      "interview proposal",
+      () => invalidateInterviewProposalCache({ applicationId: "app-1" }),
+      () => invalidateInterviewProposalCacheInRouteHandler({ applicationId: "app-1" }),
+    ],
+  ])("%s: same tags and paths as the server-action helper", (_label, action, route) => {
+    const expected = serverActionEffect(action);
+    const actual = routeHandlerEffect(route);
+
+    expect(actual).toEqual(expected);
+    expect(actual.tags.length).toBeGreaterThan(0);
+  });
+
+  it("interview proposals: collection tag and the application page", () => {
+    invalidateInterviewProposalCache({ applicationId: "app-1" });
+
+    expect(CacheTags.INTERVIEW_PROPOSALS).toBe("interview-proposals");
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-proposals");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/applications/app-1");
+  });
+
+  it("deleting a position or a candidate also expires the interview proposals", () => {
+    invalidatePositionCache("pos-1", { deleted: true });
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-proposals");
+
+    vi.clearAllMocks();
+    invalidateCandidateCache({ candidateId: "cand-1", deleted: true });
+    expect(mockedUpdateTag).toHaveBeenCalledWith("interview-proposals");
+  });
+
+  it("invalidateMcpAdminPage refreshes the MCP admin page only", () => {
+    invalidateMcpAdminPage();
+
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/settings/mcp");
+    expect(mockedRevalidatePath).toHaveBeenCalledTimes(1);
+    expect(mockedUpdateTag).not.toHaveBeenCalled();
   });
 });

@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
   default: {
+    user: { findUnique: vi.fn() },
     interview: { findUnique: vi.fn(), findMany: vi.fn() },
+    interviewKit: { findUnique: vi.fn(), update: vi.fn() },
+    scorecardCriterion: { findMany: vi.fn() },
     evaluation: { findFirst: vi.fn() },
     assessment: { findFirst: vi.fn() },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -30,6 +34,8 @@ import {
   buildKitGenerationContext,
   cleanKitCriteria,
   loadGuideForSnapshot,
+  saveInterviewKit,
+  setInterviewKitStatus,
   syncKitItems,
 } from "@/lib/services/interview-kits";
 import { extractTextFromPDF } from "@/lib/services/resume-evaluation";
@@ -301,6 +307,205 @@ describe("cleanKitCriteria", () => {
     ).rejects.toThrow(
       "Uno o più criteri selezionati non appartengono alla scheda della posizione",
     );
+  });
+});
+
+// ====================
+// saveInterviewKit / setInterviewKitStatus
+// ====================
+
+const KIT_LOCKED = "Il kit si modifica solo prima del colloquio";
+const SESSION_EXPIRED = "Sessione scaduta. Accedi di nuovo per continuare.";
+const actor = { userId: "user-123", role: "user" } as const;
+
+const scheduledInterviewRow = (status: string) => ({
+  id: "int-1",
+  applicationId: "app-1",
+  status,
+  round: 1,
+  application: { candidateId: "cand-1", positionId: "pos-1" },
+});
+
+const kitInput = {
+  interviewId: "int-1",
+  briefing: ["Punto"],
+  hypotheses: [
+    { criterionId: "active", hypothesis: "Ipotesi", howToVerify: "Chiedi" },
+    { criterionId: "deleted", hypothesis: "Ipotesi", howToVerify: "Chiedi" },
+  ],
+  checklist: [
+    { id: "k1", category: "communicate" as const, text: "RAL e benefit", done: true },
+  ],
+  items: [row({ id: "t1", text: "Template", criterionIds: ["c1"] })] as any,
+  missingSources: ["cv" as const],
+};
+
+/** Kit-save transaction: syncKitItems delegates plus the kit update */
+function makeSaveTx() {
+  return { ...makeTx(), interviewKit: { update: vi.fn() } };
+}
+
+function armKitSave(status = "scheduled", kitStatus = "draft") {
+  db.user.findUnique.mockResolvedValue({ emailVerified: true, banned: false });
+  db.interview.findUnique.mockResolvedValue(scheduledInterviewRow(status));
+  db.interviewKit.findUnique.mockImplementation(async (args: any) =>
+    args.where.interviewId
+      ? { id: "kit-1", status: kitStatus }
+      : { hypotheses: [], items: [] },
+  );
+  db.scorecardCriterion.findMany.mockResolvedValue([
+    { id: "active", archivedAt: null },
+    { id: "c1", archivedAt: null },
+  ]);
+  const tx = makeSaveTx();
+  db.$transaction.mockImplementation(async (fn: any) => fn(tx));
+  return tx;
+}
+
+describe("saveInterviewKit", () => {
+  it("cleans the criteria, syncs the items and updates the kit in one transaction", async () => {
+    const tx = armKitSave();
+
+    const result = await saveInterviewKit(actor, kitInput);
+
+    expect(result).toEqual({
+      kitId: "kit-1",
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
+    // syncKitItems ran on the transaction
+    expect(tx.kitItem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { kitId: "kit-1" } }),
+    );
+    expect(tx.kitItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "t1" } }),
+    );
+    expect(tx.interviewKit.update).toHaveBeenCalledWith({
+      where: { id: "kit-1" },
+      data: {
+        briefing: ["Punto"],
+        // The hypothesis citing a deleted criterion is dropped
+        hypotheses: [kitInput.hypotheses[0]],
+        checklist: kitInput.checklist,
+        missingSources: ["cv"],
+      },
+    });
+    // The status is never changed by a save, and nothing is written outside the transaction
+    expect(tx.interviewKit.update.mock.calls[0][0].data).not.toHaveProperty("status");
+    expect(db.interviewKit.update).not.toHaveBeenCalled();
+    expect(tx.kitItemNote.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it.each(["in_progress", "completed", "cancelled", "no_show"])(
+    "is refused when the interview is %s",
+    async (status) => {
+      armKitSave(status);
+
+      await expect(saveInterviewKit(actor, kitInput)).rejects.toThrow(KIT_LOCKED);
+      expect(db.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it("saves a ready kit from the dashboard (no draft-only check)", async () => {
+    const tx = armKitSave("scheduled", "ready");
+
+    await expect(saveInterviewKit(actor, kitInput)).resolves.toMatchObject({
+      kitId: "kit-1",
+    });
+    expect(tx.interviewKit.update).toHaveBeenCalled();
+  });
+
+  it("with requireDraftStatus refuses a ready kit and saves nothing", async () => {
+    armKitSave("scheduled", "ready");
+
+    await expect(
+      saveInterviewKit(actor, kitInput, { requireDraftStatus: true }),
+    ).rejects.toThrow(
+      "Il kit è pronto: riportalo in bozza dalla dashboard per modificarlo",
+    );
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("with requireDraftStatus saves a draft kit", async () => {
+    const tx = armKitSave("scheduled", "draft");
+
+    await saveInterviewKit(actor, kitInput, { requireDraftStatus: true });
+
+    expect(tx.interviewKit.update).toHaveBeenCalled();
+  });
+
+  it("refuses a disabled actor before reading the interview", async () => {
+    armKitSave();
+    db.user.findUnique.mockResolvedValue({ emailVerified: true, banned: true });
+
+    await expect(saveInterviewKit(actor, kitInput)).rejects.toThrow(SESSION_EXPIRED);
+    expect(db.interview.findUnique).not.toHaveBeenCalled();
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses invalid input with the schema", async () => {
+    armKitSave();
+
+    await expect(
+      saveInterviewKit(actor, { ...kitInput, interviewId: "" } as any),
+    ).rejects.toThrow();
+    expect(db.interview.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("propagates a transaction failure", async () => {
+    armKitSave();
+    db.$transaction.mockRejectedValue(new Error("db down"));
+
+    await expect(saveInterviewKit(actor, kitInput)).rejects.toThrow("db down");
+  });
+});
+
+describe("setInterviewKitStatus", () => {
+  it("sets the status while scheduled and returns it with the ids", async () => {
+    armKitSave();
+
+    const result = await setInterviewKitStatus(actor, {
+      interviewId: "int-1",
+      status: "ready",
+    });
+
+    expect(result).toEqual({
+      status: "ready",
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
+    expect(db.interviewKit.update).toHaveBeenCalledWith({
+      where: { id: "kit-1" },
+      data: { status: "ready" },
+    });
+  });
+
+  it("is refused after the interview started", async () => {
+    armKitSave("completed");
+
+    await expect(
+      setInterviewKitStatus(actor, { interviewId: "int-1", status: "draft" }),
+    ).rejects.toThrow(KIT_LOCKED);
+    expect(db.interviewKit.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses a missing kit", async () => {
+    armKitSave();
+    db.interviewKit.findUnique.mockResolvedValue(null);
+
+    await expect(
+      setInterviewKitStatus(actor, { interviewId: "int-1", status: "ready" }),
+    ).rejects.toThrow("Colloquio non trovato");
+  });
+
+  it("refuses an unverified actor", async () => {
+    armKitSave();
+    db.user.findUnique.mockResolvedValue({ emailVerified: false, banned: false });
+
+    await expect(
+      setInterviewKitStatus(actor, { interviewId: "int-1", status: "ready" }),
+    ).rejects.toThrow(SESSION_EXPIRED);
+    expect(db.interviewKit.update).not.toHaveBeenCalled();
   });
 });
 

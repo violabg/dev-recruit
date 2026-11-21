@@ -19,6 +19,7 @@ import {
   type UserDataFormData,
   type UserRole,
 } from "@/lib/schemas/user";
+import { revokeAllMcpTokensForUser } from "@/lib/services/mcp-access";
 import {
   assertKeepsActiveAdmin,
   assertNotSelf,
@@ -234,6 +235,8 @@ export async function banUserAction(
         body: { userId: id, banReason: payload.reason },
       }),
     );
+    // A ban also ends every MCP token of the user
+    await revokeAllMcpTokensForUser(prisma, id);
 
     invalidateUserCache(id);
   });

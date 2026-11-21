@@ -3,12 +3,7 @@ import { ActionCenter, ActionSummary } from "@/components/dashboard/action-cente
 import PageHeader from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth-server";
-import {
-  getActionCenterData,
-  type ActionCenterData,
-} from "@/lib/data/applications";
-import { isApplicationStale } from "@/lib/utils/application-stage";
-import { isTodayOrTomorrow } from "@/lib/utils/interview-calendar";
+import { getActionCenterForUser } from "@/lib/data/applications";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -54,44 +49,17 @@ export default function DashboardPage({
 }
 
 /**
- * Request-time read of the home. The cached read is the same for every user;
- * "Solo le mie" filters it in memory, and the clock is read only here.
+ * Request-time read of the home: the shared action center of the session
+ * user, with "Solo le mie" from the URL. The clock is read only here.
  */
 async function loadMyActions(searchParams: DashboardSearchParams) {
   const params = await searchParams;
   const user = await getCurrentUser();
-  const data = await getActionCenterData();
 
-  const mineOnly = params.mine === "1" && user;
-  const isMine = (row: { ownerId: string | null }) =>
-    !mineOnly || row.ownerId === user.id;
-
-  const now = new Date();
-
-  // Positions with an incomplete setup have no application: never filtered.
-  // Interviews: owner or participant; scorecards: their interviewer
-  const filtered: ActionCenterData = {
-    assessmentsToEvaluate: data.assessmentsToEvaluate.filter(isMine),
-    openApplications: data.openApplications.filter(isMine),
-    positionsWithIncompleteSetup: data.positionsWithIncompleteSetup,
-    interviewsWithoutKit: data.interviewsWithoutKit
-      .filter((row) => isTodayOrTomorrow(row.scheduledAt, now))
-      .filter(
-        (row) =>
-          !mineOnly ||
-          row.ownerId === user.id ||
-          row.participantIds.includes(user.id),
-      ),
-    feedbackToFill: data.feedbackToFill.filter(
-      (row) => !mineOnly || row.interviewerId === user.id,
-    ),
-  };
-
-  const staleApplications = filtered.openApplications.filter((application) =>
-    isApplicationStale(application, now),
-  );
-
-  return { data: filtered, staleApplications };
+  return getActionCenterForUser(user?.id ?? "", {
+    mineOnly: params.mine === "1" && !!user,
+    now: new Date(),
+  });
 }
 
 /** Queue counts in the header band. */

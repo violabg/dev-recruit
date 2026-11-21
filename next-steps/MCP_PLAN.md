@@ -1,74 +1,110 @@
-# MCP plan: drive dev-recruit from AI subscription apps
+# Plan: dev-recruit plugin for Claude and VS Code Copilot
 
-Goal: recruiters run most dashboard work (positions, quizzes, kits, interviews, action center) from Claude Desktop / claude.ai, later VS Code Copilot, through a remote MCP server with visual widgets (MCP Apps). Model work runs on the user's subscription; the app stays system of record.
+Goal: an installable plugin that lets recruiters run most dashboard work (positions, quizzes, interview kits, interviews, action center) from Claude (desktop, claude.ai, Cowork) and VS Code Copilot. The plugin bundles custom instructions, skills and a remote MCP server with OAuth. Model work runs on the user's AI subscription; dev-recruit stays the system of record.
 
-## Principles
+Constraint: **the repository is public.** Everything in it (plugin, skills, MCP code, configs) is readable by anyone. Security must rely only on server-side controls, never on secrecy of code, URLs or client ids.
 
-- **Subscription vs API.** Consumer/Team subscriptions cannot power the app backend. Legit use: the person uses Claude, Claude calls our MCP server. In-app background work (automations) keeps using the API.
-- **Legal line.** AI prepares, summarises, challenges; a person decides. No AI scoring of CVs, answers or candidates (EU AI Act Annex III §4 high-risk, GDPR art. 22, L. 132/2025). Emotion recognition is prohibited. The rule goes in tool descriptions and plugin skills.
-- **Stays in the web app.** Everything candidates see (quiz taking, code editor, invites), automations (reminders, deadlines, notifications: cron + rules, no AI), dense/bulk views.
-- **Trust ladder.** Read-only → drafts → confirmed writes.
+## Decisions taken
 
-## Architecture
+- Keep both AI channels: in-app AI (dashboard) and MCP (subscription apps).
+- AI scoring of CV, answers and candidates stays for now (in-app). See "Scoring" for the obligations that come with it.
+- Remote MCP server inside the Next.js app. No local install, no stdio server.
+- Trust ladder: read-only → drafts → confirmed writes.
+- Stays web-only: everything candidates see (quiz taking, code editor, invites), automations (cron + rules), dense/bulk views.
 
-- Remote MCP server inside the Next.js app (`/api/mcp`, Streamable HTTP). No local install.
-- Tools call existing `lib/actions` / `lib/services`: same role and data checks as the dashboard.
-- MCP Apps widgets: `ui://` HTML resources rendered by the host in a sandboxed iframe. They can call tools back, update model context, open deep links to the dashboard. No access to app cookies; data comes only from tool results. Package: `@modelcontextprotocol/ext-apps`. Supported hosts: claude.ai, Claude Desktop, VS Code Copilot, M365 Copilot (behaviour varies; mobile unverified).
-- Every tool has a plain-text result usable without the widget.
+## Verified platform facts (2026-11)
 
-## Distribution
+- **Claude plugins**: `.claude-plugin/plugin.json` (only `name` required), `skills/<name>/SKILL.md`, `agents/*.md`, `hooks/hooks.json`, `.mcp.json`. Same format works in Claude Code, claude.ai chat, Claude desktop and Cowork. Skills and connectors work everywhere; agents only in Cowork and Claude Code; hooks run on the user's machine.
+- A remote `https://` MCP server in a plugin is offered as a connector on claude.ai and Cowork. HTTP servers use `"type": "http"` + `url`.
+- **Marketplace**: git repo with `.claude-plugin/marketplace.json` (`name`, `owner`, `plugins`). Can be private (users need read access; private GitHub needs the Claude GitHub App). Team/Enterprise owners choose visible sources and can mark a plugin "Installed by default" or "Required"; they can also add org-wide connectors. Claude Code managed settings: `extraKnownMarketplaces`, `enabledPlugins`, `strictKnownMarketplaces`.
+- **VS Code Copilot**: installs agent plugins (skills, MCP servers, custom agents, custom instructions, hooks) from a marketplace, git URL or folder. Claude-format compatibility claimed but not guaranteed per component → verify. Remote MCP: `"type": "http"`, `url`, optional `oauthClientId` (pre-registered client). Dynamic client registration not documented. Enterprise policies: `ChatEnabledPlugins`, `ChatExtraMarketplaces`, `ChatStrictMarketplaces`, `allowedMcpServers` / `deniedMcpServers`.
+- **MCP Apps** (interactive widgets, `@modelcontextprotocol/ext-apps`): supported in claude.ai and Claude desktop; experimental in VS Code (`chat.mcp.apps.enabled`). Sandboxed iframe, no app cookies, external origins only via declared CSP, can call tools back and open links.
 
-| Client | How |
-|---|---|
-| Claude Team/Enterprise | Org admin adds a custom connector once; members click Connect and sign in. Optional plugin bundling connector + skills. |
-| VS Code Copilot | Shared `mcp.json`; GitHub org Copilot policy allowlists MCP servers. |
-| M365 Copilot | Copilot Studio / agent setup. Later. |
+## Workstreams
 
-Disabling a dev-recruit user cuts access from every client.
+### A. Actions (tool-ready service layer)
+- Inventory dashboard operations; mark each *read* / *draft* / *write* / *dashboard-only*.
+- Make sure every operation exists as a service function that takes an explicit actor (user id + role) and does its own authorization, independent of the Next.js session. Server actions and MCP tools both call these.
+- New operations needed: `actionCenterForUser`, draft variants (`createPositionDraft`, `saveQuizDraft`, `saveInterviewKitDraft`, `proposeInterviewSlot`), `publishDraft` (confirmed write).
+- Same Zod schemas for both channels; one save path.
 
-## Security
+### B. MCP server + authorization
+- Route `/api/mcp` (Streamable HTTP) in the Next.js app.
+- **OAuth 2.1** per MCP authorization spec, dev-recruit as authorization server via Better Auth (verify the current OAuth-provider / MCP plugin):
+  - Authorization code + PKCE, public clients (no client secrets anywhere).
+  - Protected-resource metadata + authorization-server metadata endpoints.
+  - Tokens short-lived, audience-bound to `/api/mcp` (resource indicator), refresh with rotation, revocable.
+  - Redirect URI allowlist: Claude (claude.ai / desktop callback) and VS Code. Dynamic client registration either disabled or restricted to that allowlist; pre-registered client id for VS Code (`oauthClientId`).
+  - Scopes: `recruit:read`, `recruit:draft`, `recruit:write`.
+- Consent screen in dev-recruit showing client, scopes, user.
+- Every tool: resolve token → user → role → call service with actor. Never trust ids from the model without an ownership/permission check.
 
-1. **Authentication**: OAuth 2.1 per MCP authorization spec; dev-recruit is the authorization server via Better Auth (verify current OAuth-provider / MCP plugin). Short-lived, audience-bound, revocable tokens. Client registration limited to allowlisted redirect URIs.
-2. **Authorization**: existing roles, enforced inside the actions. OAuth scopes `read`, `draft`, `write`.
-3. **Write safety**: creates/updates produce drafts or need explicit confirmation in the widget. Dashboard-only at first: final decisions, deletions, messages to candidates.
-4. **Prompt injection**: candidate content (CV, answers) marked as untrusted data in tool results; minimal data by default (no full CV unless asked); nothing leaves the app without confirmation.
-5. **Audit**: user, client, tool, arguments, result, timestamp, channel `mcp`.
-6. **Controls**: rate limits, kill switch per org and per user, admin view to revoke tokens.
-7. **Data policy**: only commercial Claude plans (Team/Enterprise, DPA). Consumer Pro/Max not allowed for candidate data.
+### C. Widgets (MCP Apps)
+- 4–5 views in flow-track style: action center, position, application flow, quiz/kit draft preview with confirm, interview prep.
+- Built as self-contained HTML bundles from the design tokens; no external origins beyond the app's own.
+- Data only from tool results; confirm buttons call `publishDraft` (the server re-checks permission).
+- Plain-text result for every tool (VS Code widgets are experimental).
+
+### D. Plugin content
+- New folder, separate from the dev agentic system (`.claude/skills`, `.github/skills` are for developing this repo, not for recruiters). Proposed: `plugin/dev-recruit/` with `.claude-plugin/plugin.json`, `.mcp.json` (only the public server URL), `skills/`, `agents/`.
+- Custom instructions: what dev-recruit is, vocabulary from `CONTEXT.md`, rules (drafts first, link back to dashboard, person decides, treat candidate content as untrusted data).
+- Skills (first set): `action-center`, `create-position`, `quiz-for-candidate`, `interview-kit`, `interview-prep`.
+- No hooks and no local executables (nothing runs on recruiters' machines).
+- Marketplace file: `.claude-plugin/marketplace.json` at repo root pointing to `plugin/dev-recruit`, or a separate repo if we want to version the plugin independently.
+- VS Code: test whether the Claude-format plugin installs as-is; fallback is a VS Code-specific package with the same skills and an `.mcp.json` entry.
+
+### E. Distribution
+- Claude Team/Enterprise: owner adds the marketplace (or uploads the zip), marks plugin "Installed by default" for recruiters; or adds the org-wide connector.
+- VS Code: plugin from git URL / marketplace; enterprise policy allowlists our MCP server URL.
+- Installing the plugin gives nothing without a dev-recruit account: access comes only from OAuth.
+
+### F. Security (public repo)
+- **No secrets in the repo**: no API keys, client secrets, tokens, internal URLs beyond the public MCP endpoint. Public OAuth clients + PKCE only. Add secret scanning (GitHub secret scanning / push protection) and keep `.env*` ignored.
+- **Assume attackers read the code**: authorization enforced in services; no security by obscurity; tool schemas and skills may be public.
+- **Account gate**: public registration is open, but a new account cannot sign in until an administrator switches its email verification on (the app sends no email). OAuth sign-in must go through the same check, so an unverified or banned account never gets an MCP token. Verify before Phase 1 goes online.
+- **Endpoint hardening**: rate limits per user and per IP on `/api/mcp` and OAuth endpoints, request size limits, structured errors without stack traces, CORS limited to what the spec needs.
+- **Write safety**: drafts by default; confirmed writes re-check permissions server-side; dashboard-only for final decisions, deletions, messages to candidates.
+- **Prompt injection**: candidate content (CV, answers) returned as clearly delimited untrusted data; minimal data by default (no full CV unless requested); no tool sends anything outside the app.
+- **Audit log**: user, client, scope, tool, arguments, result, timestamp, channel `mcp`. Admin view of active MCP tokens with revoke; kill switch per org and per user.
+- **Data policy**: only commercial Claude plans (Team/Enterprise, DPA) for candidate data; same check for Copilot plan and for Groq (in-app).
+- **Skills content is public**: no confidential company process, no real candidate data in examples.
+
+## Scoring (kept)
+
+Kept in-app for now. To stay defensible:
+- A person always makes and records the decision; the score is shown as advisory.
+- Candidates are informed that AI is used in evaluation (privacy notice).
+- Log which model/prompt produced each score; allow human override with reason.
+- MCP exposes existing scores read-only in Phase 1–4. Whether Claude may produce new scores through MCP is an open decision.
 
 ## Phases
 
-### 0. Decisions (no code)
-- Company Claude plan; first client (Claude only, then VS Code).
-- Write down the legal line.
-- Inventory dashboard operations, mark each *read* / *draft* / *write* / *dashboard-only*.
-- Decide what to do with the existing in-app AI evaluation (answer, resume, overall evaluation in `lib/services/ai/`).
+0. **Decisions**: Claude plan, first client (Claude, then VS Code), operation inventory (A), account gate fix (F), Better Auth OAuth plugin check.
+1. **Read-only**: OAuth (B), audit log, tools `action_center`, `list_positions`, `get_position`, `get_application`, `list_interviews`; text results with deep links. Test with Claude desktop via manual connector.
+2. **Plugin skeleton**: plugin folder, instructions, `action-center` skill, marketplace file (D). Install in Claude desktop and VS Code; record what works where.
+3. **Widgets**: action center + position + application flow (C).
+4. **Drafts**: draft tools + preview/confirm widget; skills `create-position`, `quiz-for-candidate`, `interview-kit`, `interview-prep`.
+5. **Pilot**: 2–3 recruiters via org distribution (E); review audit log and feedback.
+6. **Broaden**: remaining operations, confirmed writes, VS Code polish, decide in-app AI fallback (Groq vs Haiku 5.5).
 
-### 1. Read-only foundation
-- MCP endpoint, Better Auth OAuth, audit log.
-- Tools: `action_center`, `list_positions`, `get_position`, `get_application`, `list_interviews`.
-- Text results with dashboard deep links. Test in Claude Desktop.
+## Knowledge updates needed (via knowledge-builder, before Phase 1)
 
-### 2. Widgets
-- 4–5 MCP Apps views in the flow-track style: action center, position, application flow, interview list.
-- Text fallback for hosts without widget support.
+Current knowledge statements this plan contradicts:
 
-### 3. Drafts
-- `create_position_draft`, `save_quiz_draft`, `save_interview_kit_draft`, `propose_interview_slot`.
-- Claude generates content on the subscription; the tool validates with existing Zod schemas and saves a draft.
-- Preview + confirm in widget.
-
-### 4. Plugin + pilot
-- Claude plugin: connector + skills (create position, quiz for candidate, interview prep) with the rules (no scoring, drafts first).
-- Pilot with 2–3 recruiters; review audit log and feedback.
-
-### 5. Broaden and slim down
-- Remaining operations; confirmed writes once drafts proved safe.
-- Retire in-app Groq generation now done by Claude; keep the API for background automations and as fallback for users without a subscription.
-- Add VS Code Copilot.
+1. `server_actions.md` / `domain_model.md`: every signed-in user reads and edits all selection data; never gate on role or ownership. → OAuth scopes limit the token, not the user; no role-based tool gating. Decide whether a per-user "MCP enabled" switch is allowed.
+2. `cache_invalidation.md`: route handlers exist only for auth, email verification, resume stream, position description. → add `/api/mcp` and the OAuth endpoints.
+3. `cache_invalidation.md`: scorecard, guide and interview cache helpers are server-action only. → MCP writes on those need route-handler variants, or tools must run in a context where the standard helpers work.
+4. `server_actions.md`: every non-public action and route handler calls `requireUser()` (session cookie). → define bearer-token authentication for MCP and how services receive the actor; tools never call redirecting actions (`scheduleInterviewAction`, `deleteInterviewGuideAction`).
+5. `ai_generation.md`: the model never receives internal ids; kit and devil's advocate never receive candidate identity or CV text. → MCP tool results go to an external model: define what they may contain (ids for follow-up calls, identity, CV) and keep the same non-identifying rule for prep flows.
+6. `ai_generation.md`: all generation flows return a proposal only, no write; candidate text sanitized and delimited. → MCP draft tools write; content generated by Claude must be validated and sanitized on save.
+7. `domain_model.md`: quizzes have no draft state (positions and kits do). → `save_quiz_draft` needs a new state or saves as a normal quiz.
+8. `domain_model.md`: all user-facing text is Italian. → widgets, skills and instructions in Italian (identifiers English).
 
 ## Open questions
 
-- Better Auth OAuth/MCP plugin maturity for MCP authorization (dynamic client registration, resource indicators).
-- MCP Apps rendering differences between Claude and Copilot; mobile support.
-- Sandboxed execution of candidate code against test cases (deterministic grading) as a separate track.
+- Better Auth OAuth/MCP plugin: PKCE, resource indicators, client allowlist, consent screen.
+- Claude callback URLs and DCR behaviour for custom connectors; VS Code DCR support.
+- Claude-format plugin compatibility in VS Code, per component.
+- Monorepo folder vs separate repo for the plugin/marketplace.
+- Claude producing scores via MCP: yes/no.
+- Sandboxed execution of candidate code (deterministic grading) as a separate track.

@@ -13,7 +13,7 @@ vi.mock("@/lib/services/interviews", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/services/interviews")>();
   return {
     ...actual,
-    createInterviewWithKit: vi.fn(),
+    scheduleInterview: vi.fn(),
     syncInterviewParticipants: vi.fn(),
     applyAllFeedbackCheck: vi.fn(),
   };
@@ -51,14 +51,11 @@ import {
 } from "@/lib/actions/interviews";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
-import { advanceApplicationStage } from "@/lib/services/applications";
-import { loadGuideForSnapshot } from "@/lib/services/interview-kits";
 import {
   applyAllFeedbackCheck,
-  createInterviewWithKit,
+  scheduleInterview,
   syncInterviewParticipants,
 } from "@/lib/services/interviews";
-import { getActiveCriteria } from "@/lib/services/scorecards";
 import { UserError } from "@/lib/services/user-error";
 import {
   invalidateCandidateCache,
@@ -85,8 +82,6 @@ const scheduleInput = {
   participants,
 };
 
-const guide = { id: "guide-1", positionId: "pos-1", sections: [] };
-
 const stageChange = (changed: boolean) => ({
   applicationId: "app-1",
   candidateId: "cand-1",
@@ -107,101 +102,65 @@ const interviewRow = (status: string) => ({
 });
 
 beforeEach(() => {
-  vi.mocked(requireUser).mockResolvedValue({ id: "user-123" } as any);
+  vi.mocked(requireUser).mockResolvedValue({ id: "user-123", role: "user" } as any);
   vi.mocked(prisma.$transaction).mockImplementation(((fn: any) => fn(tx)) as any);
   db.user.count.mockResolvedValue(2);
 });
 
+// The scheduling rules are tested on scheduleInterview in
+// tests/lib/services/interviews.test.ts
 describe("scheduleInterviewAction", () => {
+  const scheduled = (changed: boolean) => ({
+    interviewId: "int-new",
+    applicationId: "app-1",
+    candidateId: "cand-1",
+    positionId: "pos-1",
+    stage: stageChange(changed) as any,
+  });
+
   beforeEach(() => {
-    db.application.findUnique.mockResolvedValue({
-      id: "app-1",
-      stage: "assessment",
-      candidateId: "cand-1",
-      positionId: "pos-1",
-    });
-    vi.mocked(loadGuideForSnapshot).mockResolvedValue(guide as any);
-    vi.mocked(getActiveCriteria).mockResolvedValue([{ id: "c-active" }] as any);
-    vi.mocked(createInterviewWithKit).mockResolvedValue({
-      interviewId: "int-new",
-      kitId: "kit-new",
-    });
-    vi.mocked(advanceApplicationStage).mockResolvedValue(stageChange(true) as any);
+    vi.mocked(scheduleInterview).mockResolvedValue(scheduled(true));
   });
 
   it("requires a signed-in user", async () => {
     vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
-    expect(await scheduleInterviewAction(scheduleInput)).toMatchObject({
-      success: false,
-    });
-    expect(db.application.findUnique).not.toHaveBeenCalled();
-  });
-
-  it.each([null, "rejected", "withdrawn", "hired"])(
-    "refuses a missing or closed application (%s)",
-    async (stage) => {
-      db.application.findUnique.mockResolvedValue(
-        stage === null
-          ? null
-          : { id: "app-1", stage, candidateId: "cand-1", positionId: "pos-1" },
-      );
-
-      expect(await scheduleInterviewAction(scheduleInput)).toEqual({
-        success: false,
-        error: "Candidatura non trovata o chiusa",
-      });
-      expect(createInterviewWithKit).not.toHaveBeenCalled();
-      expect(invalidateInterviewCache).not.toHaveBeenCalled();
-    },
-  );
-
-  it("refuses a participant who is not a user of the app", async () => {
-    db.user.count.mockResolvedValue(1);
     expect(await scheduleInterviewAction(scheduleInput)).toEqual({
       success: false,
-      error: "Uno o più partecipanti non sono utenti dell'app",
+      error: "Sessione scaduta. Accedi di nuovo per continuare.",
     });
-    expect(createInterviewWithKit).not.toHaveBeenCalled();
+    expect(scheduleInterview).not.toHaveBeenCalled();
   });
 
-  it("refuses a guide of another position", async () => {
-    vi.mocked(loadGuideForSnapshot).mockRejectedValue(
-      new UserError("Guida non trovata per questa posizione"),
+  it("returns the service refusal and neither invalidates nor redirects", async () => {
+    vi.mocked(scheduleInterview).mockRejectedValue(
+      new UserError("Candidatura non trovata o chiusa"),
     );
+
     expect(await scheduleInterviewAction(scheduleInput)).toEqual({
       success: false,
-      error: "Guida non trovata per questa posizione",
+      error: "Candidatura non trovata o chiusa",
     });
-    expect(loadGuideForSnapshot).toHaveBeenCalledWith(prisma, "guide-1", "pos-1");
-    expect(createInterviewWithKit).not.toHaveBeenCalled();
+    expect(invalidateInterviewCache).not.toHaveBeenCalled();
+    expect(invalidateCandidateCache).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
   });
 
-  it("refuses two leads with the schema message", async () => {
-    expect(
-      await scheduleInterviewAction({
-        ...scheduleInput,
-        participants: [
-          { userId: "u1", role: "lead" },
-          { userId: "u2", role: "lead" },
-        ],
-      }),
-    ).toEqual({ success: false, error: "Indica un solo conduttore" });
+  it("returns the generic message when the transaction fails", async () => {
+    vi.mocked(scheduleInterview).mockRejectedValue(new Error("db down"));
+
+    expect(await scheduleInterviewAction(scheduleInput)).toEqual({
+      success: false,
+      error: "Si è verificato un errore. Riprova.",
+    });
+    expect(redirect).not.toHaveBeenCalled();
   });
 
-  it("creates the interview with its kit and advances the stage in the same transaction", async () => {
+  it("delegates with the session actor, invalidates interview and candidates, then redirects", async () => {
     await scheduleInterviewAction(scheduleInput);
 
-    expect(createInterviewWithKit).toHaveBeenCalledWith(
-      tx,
-      expect.objectContaining({ applicationId: "app-1", guideId: "guide-1" }),
-      guide,
-      "user-123",
-      new Set(["c-active"]),
-    );
-    expect(advanceApplicationStage).toHaveBeenCalledWith(
-      tx,
-      "app-1",
-      "interview_scheduled",
+    expect(scheduleInterview).toHaveBeenCalledWith(
+      { userId: "user-123", role: "user" },
+      scheduleInput,
     );
     expect(invalidateInterviewCache).toHaveBeenCalledWith({
       interviewId: "int-new",
@@ -222,13 +181,7 @@ describe("scheduleInterviewAction", () => {
   });
 
   it("does not refresh the candidates when the stage did not move", async () => {
-    vi.mocked(advanceApplicationStage).mockResolvedValue(stageChange(false) as any);
-    db.application.findUnique.mockResolvedValue({
-      id: "app-1",
-      stage: "decision",
-      candidateId: "cand-1",
-      positionId: "pos-1",
-    });
+    vi.mocked(scheduleInterview).mockResolvedValue(scheduled(false));
 
     await scheduleInterviewAction(scheduleInput);
 

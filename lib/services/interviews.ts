@@ -8,20 +8,27 @@
  */
 
 import type { InterviewGuideDetail } from "@/lib/data/interview-guides";
+import prisma from "@/lib/prisma";
 import type { Prisma } from "@/lib/prisma/client";
-import type {
-  InterviewParticipantRole,
-  InterviewStatus,
-  ScheduleInterviewInput,
+import {
+  scheduleInterviewSchema,
+  type InterviewParticipantRole,
+  type InterviewStatus,
+  type ScheduleInterviewInput,
 } from "@/lib/schemas";
 import { allFeedbackSubmitted } from "@/lib/utils/interview-status";
+import { assertActorEnabled, type Actor } from "./actor";
 import {
   advanceApplicationStage,
   type DbClient,
   type StageChangeResult,
 } from "./applications";
-import { DEFAULT_KIT_CHECKLIST } from "./interview-kits";
+import { DEFAULT_KIT_CHECKLIST, loadGuideForSnapshot } from "./interview-kits";
+import { getActiveCriteria } from "./scorecards";
 import { UserError } from "./user-error";
+
+/** Stages from which no interview can be scheduled */
+const CLOSED_FOR_SCHEDULING = ["rejected", "withdrawn", "hired"] as const;
 
 export type InterviewWithApplication = {
   id: string;
@@ -270,4 +277,75 @@ export async function applyAllFeedbackCheck(
   if (!allFeedbackSubmitted(facts)) return null;
 
   return advanceApplicationStage(tx, applicationId, "all_feedback_submitted");
+}
+
+/**
+ * Creates the interview, its participants and its kit (draft, snapshot of the
+ * guide, default checklist) and advances the stage with 'interview_scheduled'
+ * in one transaction, authored by the actor. No email is sent.
+ */
+export async function scheduleInterview(
+  actor: Actor,
+  input: ScheduleInterviewInput,
+): Promise<{
+  interviewId: string;
+  applicationId: string;
+  candidateId: string;
+  positionId: string;
+  stage: StageChangeResult | null;
+}> {
+  await assertActorEnabled(prisma, actor);
+  const payload = scheduleInterviewSchema.parse(input);
+
+  const application = await prisma.application.findUnique({
+    where: { id: payload.applicationId },
+    select: { id: true, stage: true, candidateId: true, positionId: true },
+  });
+
+  if (
+    !application ||
+    (CLOSED_FOR_SCHEDULING as readonly string[]).includes(application.stage)
+  ) {
+    throw new UserError("Candidatura non trovata o chiusa");
+  }
+
+  await assertUsersExist(
+    prisma,
+    payload.participants.map((participant) => participant.userId),
+  );
+
+  const guide = await loadGuideForSnapshot(
+    prisma,
+    payload.guideId,
+    application.positionId,
+  );
+  const activeCriterionIds = new Set(
+    (await getActiveCriteria(application.positionId)).map(
+      (criterion) => criterion.id,
+    ),
+  );
+
+  const { interviewId, stage } = await prisma.$transaction(async (tx) => {
+    const created = await createInterviewWithKit(
+      tx,
+      payload,
+      guide,
+      actor.userId,
+      activeCriterionIds,
+    );
+    const change = await advanceApplicationStage(
+      tx,
+      application.id,
+      "interview_scheduled",
+    );
+    return { interviewId: created.interviewId, stage: change };
+  });
+
+  return {
+    interviewId,
+    applicationId: application.id,
+    candidateId: application.candidateId,
+    positionId: application.positionId,
+    stage,
+  };
 }

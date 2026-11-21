@@ -14,8 +14,8 @@ vi.mock("@/lib/prisma", () => ({
 
 vi.mock("@/lib/services/interview-kits", () => ({
   buildKitGenerationContext: vi.fn(),
-  cleanKitCriteria: vi.fn(),
-  syncKitItems: vi.fn(),
+  saveInterviewKit: vi.fn(),
+  setInterviewKitStatus: vi.fn(),
 }));
 
 vi.mock("@/lib/services/ai/kit-generation", () => ({
@@ -38,8 +38,8 @@ import prisma from "@/lib/prisma";
 import { generateInterviewKit } from "@/lib/services/ai/kit-generation";
 import {
   buildKitGenerationContext,
-  cleanKitCriteria,
-  syncKitItems,
+  saveInterviewKit,
+  setInterviewKitStatus,
 } from "@/lib/services/interview-kits";
 import { UserError } from "@/lib/services/user-error";
 import { invalidateInterviewCache } from "@/lib/utils/cache-utils";
@@ -94,7 +94,7 @@ const writes = () => [
 ];
 
 beforeEach(() => {
-  vi.mocked(requireUser).mockResolvedValue({ id: "user-123" } as any);
+  vi.mocked(requireUser).mockResolvedValue({ id: "user-123", role: "user" } as any);
   vi.mocked(prisma.$transaction).mockImplementation(((fn: any) => fn(prisma)) as any);
   db.interviewKit.findUnique.mockResolvedValue({ id: "kit-1" });
 });
@@ -146,72 +146,79 @@ describe("generateInterviewKitAction", () => {
   });
 });
 
+// The save and status rules are tested on saveInterviewKit and
+// setInterviewKitStatus in tests/lib/services/interview-kits.test.ts
 describe("saveInterviewKitAction", () => {
-  it("cleans the criteria, syncs the items and updates the kit in one transaction", async () => {
-    db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
-    const cleaned = {
-      items: [{ sectionId: "s1", text: "Una domanda", criterionIds: [] }],
-      hypotheses: [],
-    };
-    vi.mocked(cleanKitCriteria).mockResolvedValue(cleaned as any);
+  it("delegates to saveInterviewKit with the session actor, invalidates and returns the kit id", async () => {
+    vi.mocked(saveInterviewKit).mockResolvedValue({
+      kitId: "kit-1",
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
 
     const result = await saveInterviewKitAction(kitInput);
 
     expect(result).toEqual({ success: true, kitId: "kit-1" });
-    expect(cleanKitCriteria).toHaveBeenCalledWith(
-      prisma,
-      "kit-1",
-      "pos-1",
-      expect.objectContaining({ hypotheses: kitInput.hypotheses }),
+    // The dashboard save never asks for the draft-only check
+    expect(saveInterviewKit).toHaveBeenCalledWith(
+      { userId: "user-123", role: "user" },
+      kitInput,
     );
-    expect(syncKitItems).toHaveBeenCalledWith(prisma, "kit-1", cleaned.items);
-    expect(db.interviewKit.update).toHaveBeenCalledWith({
-      where: { id: "kit-1" },
-      data: {
-        briefing: ["Punto"],
-        hypotheses: [],
-        checklist: kitInput.checklist,
-        missingSources: ["cv"],
-      },
-    });
-    // The status is never changed by a save
-    expect(db.interviewKit.update.mock.calls[0][0].data).not.toHaveProperty("status");
     expect(invalidateInterviewCache).toHaveBeenCalledWith({
       interviewId: "int-1",
       applicationId: "app-1",
     });
   });
 
-  it("is refused when the interview is not scheduled", async () => {
-    db.interview.findUnique.mockResolvedValue(interviewRow("in_progress"));
+  it("returns the service refusal and invalidates nothing", async () => {
+    vi.mocked(saveInterviewKit).mockRejectedValue(new UserError(LOCKED));
+
     expect(await saveInterviewKitAction(kitInput)).toEqual({
       success: false,
       error: LOCKED,
     });
-    expect(syncKitItems).not.toHaveBeenCalled();
     expect(invalidateInterviewCache).not.toHaveBeenCalled();
+  });
+
+  it("requires a signed-in user", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+
+    expect(await saveInterviewKitAction(kitInput)).toEqual({
+      success: false,
+      error: "Sessione scaduta. Accedi di nuovo per continuare.",
+    });
+    expect(saveInterviewKit).not.toHaveBeenCalled();
   });
 });
 
 describe("setInterviewKitStatusAction", () => {
-  it("marks the kit ready while scheduled", async () => {
-    db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
+  it("delegates to setInterviewKitStatus, invalidates and returns the status", async () => {
+    vi.mocked(setInterviewKitStatus).mockResolvedValue({
+      status: "ready",
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
 
     expect(
       await setInterviewKitStatusAction({ interviewId: "int-1", status: "ready" }),
     ).toEqual({ success: true, status: "ready" });
-    expect(db.interviewKit.update).toHaveBeenCalledWith({
-      where: { id: "kit-1" },
-      data: { status: "ready" },
+    expect(setInterviewKitStatus).toHaveBeenCalledWith(
+      { userId: "user-123", role: "user" },
+      { interviewId: "int-1", status: "ready" },
+    );
+    expect(invalidateInterviewCache).toHaveBeenCalledWith({
+      interviewId: "int-1",
+      applicationId: "app-1",
     });
-    expect(invalidateInterviewCache).toHaveBeenCalled();
   });
 
-  it("is refused after the interview started", async () => {
-    db.interview.findUnique.mockResolvedValue(interviewRow("completed"));
+  it("returns the service refusal and invalidates nothing", async () => {
+    vi.mocked(setInterviewKitStatus).mockRejectedValue(new UserError(LOCKED));
+
     expect(
       await setInterviewKitStatusAction({ interviewId: "int-1", status: "draft" }),
     ).toEqual({ success: false, error: LOCKED });
+    expect(invalidateInterviewCache).not.toHaveBeenCalled();
   });
 });
 

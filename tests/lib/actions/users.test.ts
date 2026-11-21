@@ -33,6 +33,10 @@ vi.mock("@/lib/utils/cache-utils", () => ({
   invalidateUserCache: vi.fn(),
 }));
 
+vi.mock("@/lib/services/mcp-access", () => ({
+  revokeAllMcpTokensForUser: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
   notFound: vi.fn(),
@@ -59,6 +63,7 @@ import {
 import { auth } from "@/lib/auth";
 import { requireAdmin } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
+import { revokeAllMcpTokensForUser } from "@/lib/services/mcp-access";
 import { UserError } from "@/lib/services/user-error";
 import { invalidateUserCache } from "@/lib/utils/cache-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -427,7 +432,18 @@ describe("banUserAction", () => {
     expect(invalidateUserCache).toHaveBeenCalledWith("u-2");
   });
 
-  it("surfaces a plugin error in Italian", async () => {
+  it("revokes every MCP token of the user after the ban", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(target());
+
+    await banUserAction("u-2", { reason: "abuso" });
+
+    expect(revokeAllMcpTokensForUser).toHaveBeenCalledWith(prisma, "u-2");
+    expect(
+      vi.mocked(auth.api.banUser).mock.invocationCallOrder[0],
+    ).toBeLessThan(vi.mocked(revokeAllMcpTokensForUser).mock.invocationCallOrder[0]);
+  });
+
+  it("surfaces a plugin error in Italian and revokes nothing", async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(target());
     vi.mocked(auth.api.banUser).mockRejectedValueOnce({
       body: { code: "YOU_CANNOT_BAN_YOURSELF" },
@@ -439,6 +455,7 @@ describe("banUserAction", () => {
       success: false,
       error: "Non puoi bloccare il tuo account",
     });
+    expect(revokeAllMcpTokensForUser).not.toHaveBeenCalled();
   });
 });
 

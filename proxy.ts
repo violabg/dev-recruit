@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "./lib/auth";
 
-/** Reached without a session: sign-in, the candidate's pages and the guide. */
-const PUBLIC_PREFIXES = ["/auth", "/recruiting", "/guida"];
+/**
+ * Reached without a session: sign-in, the candidate's pages, the guide and
+ * the OAuth metadata documents.
+ */
+const PUBLIC_PREFIXES = ["/auth", "/recruiting", "/guida", "/.well-known"];
 
 export async function proxy(request: NextRequest) {
   const session = await auth.api.getSession({

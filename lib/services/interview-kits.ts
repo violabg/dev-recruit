@@ -20,12 +20,18 @@ import {
   type InterviewMissingSource,
   type KitChecklistCategory,
   type KitItemInput,
+  type KitStatus,
   type SaveInterviewKitInput,
+  type SetInterviewKitStatusInput,
+  saveInterviewKitSchema,
+  setInterviewKitStatusSchema,
 } from "@/lib/schemas";
+import { assertActorEnabled, type Actor } from "./actor";
 import { MAX_ANSWER_CHARS, MAX_RESUME_CHARS } from "./ai/evaluation-prompts";
 import { redactBirthDate, sanitizeInput } from "./ai/sanitize";
 import type { DbClient } from "./applications";
 import { answerToText } from "./assessment-evaluation";
+import { assertInterviewStatus, loadInterview } from "./interviews";
 import { extractTextFromPDF } from "./resume-evaluation";
 import { type ActiveCriterion, getActiveCriteria } from "./scorecards";
 import { UserError } from "./user-error";
@@ -309,6 +315,95 @@ export async function cleanKitCriteria(
   hypotheses.forEach((hypothesis) => assertUsable(hypothesis.criterionId));
 
   return { items, hypotheses };
+}
+
+// ====================
+// KIT SAVE AND STATUS
+// ====================
+
+/** The kit changes only while the interview is scheduled */
+const KIT_EDITABLE = ["scheduled"] as const;
+const KIT_LOCKED_MESSAGE = "Il kit si modifica solo prima del colloquio";
+
+async function loadKit(interviewId: string) {
+  const kit = await prisma.interviewKit.findUnique({
+    where: { interviewId },
+    select: { id: true, status: true },
+  });
+  if (!kit) throw new UserError("Colloquio non trovato");
+  return kit;
+}
+
+/**
+ * Saves briefing, hypotheses, checklist, missing sources and the questions of
+ * the kit in one transaction, while the interview is scheduled. The kit
+ * status is unchanged. With `requireDraftStatus` a ready kit is refused.
+ */
+export async function saveInterviewKit(
+  actor: Actor,
+  input: SaveInterviewKitInput,
+  options?: { requireDraftStatus?: boolean },
+): Promise<{ kitId: string; interviewId: string; applicationId: string }> {
+  await assertActorEnabled(prisma, actor);
+  const payload = saveInterviewKitSchema.parse(input);
+
+  const interview = await loadInterview(prisma, payload.interviewId);
+  assertInterviewStatus(interview, KIT_EDITABLE, KIT_LOCKED_MESSAGE);
+  const kit = await loadKit(interview.id);
+
+  if (options?.requireDraftStatus && kit.status === "ready") {
+    throw new UserError(
+      "Il kit è pronto: riportalo in bozza dalla dashboard per modificarlo",
+    );
+  }
+
+  const cleaned = await cleanKitCriteria(prisma, kit.id, interview.positionId, {
+    items: payload.items,
+    hypotheses: payload.hypotheses,
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await syncKitItems(tx, kit.id, cleaned.items);
+    await tx.interviewKit.update({
+      where: { id: kit.id },
+      data: {
+        briefing: payload.briefing,
+        hypotheses: cleaned.hypotheses,
+        checklist: payload.checklist,
+        missingSources: payload.missingSources,
+      },
+    });
+  });
+
+  return {
+    kitId: kit.id,
+    interviewId: interview.id,
+    applicationId: interview.applicationId,
+  };
+}
+
+/** "Segna come pronto" / "Riporta in bozza" while the interview is scheduled. */
+export async function setInterviewKitStatus(
+  actor: Actor,
+  input: SetInterviewKitStatusInput,
+): Promise<{ status: KitStatus; interviewId: string; applicationId: string }> {
+  await assertActorEnabled(prisma, actor);
+  const { interviewId, status } = setInterviewKitStatusSchema.parse(input);
+
+  const interview = await loadInterview(prisma, interviewId);
+  assertInterviewStatus(interview, KIT_EDITABLE, KIT_LOCKED_MESSAGE);
+  const kit = await loadKit(interview.id);
+
+  await prisma.interviewKit.update({
+    where: { id: kit.id },
+    data: { status },
+  });
+
+  return {
+    status,
+    interviewId: interview.id,
+    applicationId: interview.applicationId,
+  };
 }
 
 // ====================

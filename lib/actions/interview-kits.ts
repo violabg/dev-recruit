@@ -4,9 +4,7 @@ import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import {
   generateInterviewKitSchema,
-  saveInterviewKitSchema,
   saveKitItemNoteSchema,
-  setInterviewKitStatusSchema,
   setKitItemCoveredSchema,
   type GenerateInterviewKitInput,
   type SaveInterviewKitInput,
@@ -14,11 +12,12 @@ import {
   type SetInterviewKitStatusInput,
   type SetKitItemCoveredInput,
 } from "../schemas";
+import { toActor } from "../services/actor";
 import { generateInterviewKit } from "../services/ai/kit-generation";
 import {
   buildKitGenerationContext,
-  cleanKitCriteria,
-  syncKitItems,
+  saveInterviewKit,
+  setInterviewKitStatus,
 } from "../services/interview-kits";
 import {
   assertInterviewStatus,
@@ -51,18 +50,9 @@ async function loadKitItem(kitItemId: string) {
   return { id: item.id, interview: item.kit.interview };
 }
 
-/** The kit changes only while the interview is scheduled */
+/** Generation runs only while the interview is scheduled */
 const KIT_EDITABLE = ["scheduled"] as const;
 const KIT_LOCKED_MESSAGE = "Il kit si modifica solo prima del colloquio";
-
-async function loadKit(interviewId: string) {
-  const kit = await prisma.interviewKit.findUnique({
-    where: { interviewId },
-    select: { id: true },
-  });
-  if (!kit) throw new UserError("Colloquio non trovato");
-  return kit;
-}
 
 /**
  * Ask the AI for a personalized kit from the CV, the test and the previous
@@ -93,37 +83,15 @@ export async function generateInterviewKitAction(
  */
 export async function saveInterviewKitAction(input: SaveInterviewKitInput) {
   return runAction("saveInterviewKitAction", async () => {
-    await requireUser();
-    const payload = saveInterviewKitSchema.parse(input);
+    const user = await requireUser();
+    const { kitId, interviewId, applicationId } = await saveInterviewKit(
+      toActor(user),
+      input,
+    );
 
-    const interview = await loadInterview(prisma, payload.interviewId);
-    assertInterviewStatus(interview, KIT_EDITABLE, KIT_LOCKED_MESSAGE);
-    const kit = await loadKit(interview.id);
+    invalidateInterviewCache({ interviewId, applicationId });
 
-    const cleaned = await cleanKitCriteria(prisma, kit.id, interview.positionId, {
-      items: payload.items,
-      hypotheses: payload.hypotheses,
-    });
-
-    await prisma.$transaction(async (tx) => {
-      await syncKitItems(tx, kit.id, cleaned.items);
-      await tx.interviewKit.update({
-        where: { id: kit.id },
-        data: {
-          briefing: payload.briefing,
-          hypotheses: cleaned.hypotheses,
-          checklist: payload.checklist,
-          missingSources: payload.missingSources,
-        },
-      });
-    });
-
-    invalidateInterviewCache({
-      interviewId: interview.id,
-      applicationId: interview.applicationId,
-    });
-
-    return { kitId: kit.id };
+    return { kitId };
   });
 }
 
@@ -132,22 +100,13 @@ export async function setInterviewKitStatusAction(
   input: SetInterviewKitStatusInput,
 ) {
   return runAction("setInterviewKitStatusAction", async () => {
-    await requireUser();
-    const { interviewId, status } = setInterviewKitStatusSchema.parse(input);
+    const user = await requireUser();
+    const { status, interviewId, applicationId } = await setInterviewKitStatus(
+      toActor(user),
+      input,
+    );
 
-    const interview = await loadInterview(prisma, interviewId);
-    assertInterviewStatus(interview, KIT_EDITABLE, KIT_LOCKED_MESSAGE);
-    const kit = await loadKit(interview.id);
-
-    await prisma.interviewKit.update({
-      where: { id: kit.id },
-      data: { status },
-    });
-
-    invalidateInterviewCache({
-      interviewId: interview.id,
-      applicationId: interview.applicationId,
-    });
+    invalidateInterviewCache({ interviewId, applicationId });
 
     return { status };
   });

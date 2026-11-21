@@ -27,6 +27,10 @@ vi.mock("next/navigation", () => ({
   unstable_rethrow: vi.fn(),
 }));
 
+vi.mock("@/lib/services/positions", () => ({
+  createPosition: vi.fn(),
+}));
+
 import {
   createPositionAction,
   deletePositionAction,
@@ -37,6 +41,8 @@ import {
 import { getPositionById } from "@/lib/data/positions";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
+import { createPosition } from "@/lib/services/positions";
+import { UserError } from "@/lib/services/user-error";
 import { invalidatePositionCache } from "@/lib/utils/cache-utils";
 import { redirect } from "next/navigation";
 
@@ -58,56 +64,79 @@ beforeEach(() => {
   vi.mocked(prisma.position.create).mockResolvedValue({ id: "pos-123" } as any);
   // No application: deleting is allowed
   vi.mocked(prisma.application.count).mockResolvedValue(0);
+  vi.mocked(createPosition).mockResolvedValue({ positionId: "pos-123" });
 });
 
 describe("createPositionAction", () => {
-  it("stores the position and redirects to it", async () => {
-    await createPositionAction(values);
+  it("delegates to createPosition with the session actor, invalidates and redirects", async () => {
+    vi.mocked(requireUser).mockResolvedValueOnce({
+      id: "user-123",
+      role: "user",
+    } as any);
 
-    expect(prisma.position.create).toHaveBeenCalledWith({
-      data: {
-        title: "Senior Developer",
-        description: "Sviluppo full stack",
-        experienceLevel: "senior",
-        skills: ["JavaScript", "React"],
-        softSkills: ["Comunicazione"],
-        contractType: "full-time",
-        status: "draft",
-        createdBy: "user-123",
-      },
-      select: { id: true },
-    });
+    const result = await createPositionAction(values);
+
+    expect(result).toEqual({ success: true });
+    expect(createPosition).toHaveBeenCalledWith(
+      { userId: "user-123", role: "user" },
+      values,
+    );
     expect(invalidatePositionCache).toHaveBeenCalledWith("pos-123");
     expect(redirect).toHaveBeenCalledWith("/dashboard/positions/pos-123");
   });
 
-  it("stores empty optional fields as null", async () => {
-    await createPositionAction({
-      ...values,
-      description: "",
-      contractType: "",
-      softSkills: undefined,
-    });
+  it("passes the admin role of the session user to the actor", async () => {
+    vi.mocked(requireUser).mockResolvedValueOnce({
+      id: "admin-1",
+      role: "admin",
+    } as any);
 
-    expect(prisma.position.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          description: null,
-          contractType: null,
-          softSkills: [],
-        }),
-      }),
+    await createPositionAction(values);
+
+    expect(createPosition).toHaveBeenCalledWith(
+      { userId: "admin-1", role: "admin" },
+      values,
     );
   });
 
-  it("returns the validation message for invalid input", async () => {
+  it("returns the service refusal and neither invalidates nor redirects", async () => {
+    vi.mocked(createPosition).mockRejectedValueOnce(
+      new UserError("Seleziona almeno una competenza."),
+    );
+
     const result = await createPositionAction({ ...values, skills: [] });
 
     expect(result).toEqual({
       success: false,
       error: "Seleziona almeno una competenza.",
     });
-    expect(prisma.position.create).not.toHaveBeenCalled();
+    expect(invalidatePositionCache).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("returns the expired-session message for a disabled actor", async () => {
+    vi.mocked(createPosition).mockRejectedValueOnce(
+      new UserError("Sessione scaduta. Accedi di nuovo per continuare."),
+    );
+
+    const result = await createPositionAction(values);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Sessione scaduta. Accedi di nuovo per continuare.",
+    });
+  });
+
+  it("returns the generic message when the write fails", async () => {
+    vi.mocked(createPosition).mockRejectedValueOnce(new Error("db down"));
+
+    const result = await createPositionAction(values);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Si è verificato un errore. Riprova.",
+    });
+    expect(invalidatePositionCache).not.toHaveBeenCalled();
   });
 
   it("requires a signed-in user", async () => {
@@ -116,7 +145,7 @@ describe("createPositionAction", () => {
     const result = await createPositionAction(values);
 
     expect(result).toMatchObject({ success: false });
-    expect(prisma.position.create).not.toHaveBeenCalled();
+    expect(createPosition).not.toHaveBeenCalled();
   });
 });
 
