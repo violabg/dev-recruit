@@ -101,7 +101,7 @@ export interface ApplicationFlowWidget {
  */
 export interface DraftPreviewWidget {
   kind: "draft-preview";
-  draft: "position" | "quiz" | "proposal";
+  draft: "position" | "quiz" | "proposal" | "kit";
   /** Eyebrow of the band: "Bozza di posizione", "Anteprima quiz", … */
   eyebrow: string;
   title: string;

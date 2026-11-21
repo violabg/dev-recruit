@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { baseSchemas } from "./base";
-import { scheduleInterviewSchema } from "./interview";
+import {
+  interviewKitEditorSchema,
+  kitChecklistItemSchema,
+  kitItemInputSchema,
+  scheduleInterviewSchema,
+} from "./interview";
 import { positionFormSchema } from "./position";
 import { quizEditorSchema } from "./quiz";
 
@@ -61,9 +66,58 @@ export const getSchedulingOptionsInputSchema = z.object({
 /** Same fields as the scheduling form */
 export const proposeInterviewSlotInputSchema = scheduleInterviewSchema;
 
-/** The confirmed step of a draft: open a position, schedule a proposal */
+export const getInterviewKitInputSchema = z.object({
+  interviewId: baseSchemas.id,
+});
+
+const kitItemText = kitItemInputSchema.shape.text;
+const kitItemFollowUps = kitItemInputSchema.shape.followUps.unwrap();
+const kitItemCriteria = kitItemInputSchema.shape.criterionIds.unwrap();
+
+/**
+ * Changes to an interview kit, one by one: questions not mentioned stay as
+ * they are. Field rules are the kit editor's.
+ */
+export const kitPatchInputSchema = z.object({
+  interviewId: baseSchemas.id,
+  briefing: interviewKitEditorSchema.shape.briefing.unwrap().optional(),
+  hypotheses: interviewKitEditorSchema.shape.hypotheses.unwrap().optional(),
+  addItems: z
+    .array(
+      z.object({
+        sectionId: z.string().min(1),
+        text: kitItemText,
+        followUps: kitItemFollowUps.optional(),
+        criterionIds: kitItemCriteria.optional(),
+        required: z.boolean().optional(),
+        rationale: z.string().max(1000).nullish(),
+      }),
+    )
+    .max(30, "Al massimo 30 domande nuove per volta")
+    .optional(),
+  updateItems: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        text: kitItemText.optional(),
+        followUps: kitItemFollowUps.optional(),
+        criterionIds: kitItemCriteria.optional(),
+        required: z.boolean().optional(),
+      }),
+    )
+    .max(80)
+    .optional(),
+  removeItemIds: z.array(z.string().min(1)).max(80).optional(),
+  addChecklist: z
+    .array(kitChecklistItemSchema.pick({ category: true, text: true }))
+    .max(30)
+    .optional(),
+  removeChecklistIds: z.array(z.string().min(1)).max(30).optional(),
+});
+
+/** The confirmed step of a draft: open a position, schedule a proposal, mark a kit ready */
 export const publishDraftInputSchema = z.object({
-  kind: z.enum(["position", "proposal"], {
+  kind: z.enum(["position", "proposal", "kit"], {
     error: "Tipo di bozza non valido",
   }),
   id: baseSchemas.id,
@@ -93,4 +147,5 @@ export type GetApplicationInput = z.infer<typeof getApplicationInputSchema>;
 export type ListInterviewsInput = z.infer<typeof listInterviewsInputSchema>;
 export type GetInterviewInput = z.infer<typeof getInterviewInputSchema>;
 export type QuizDraftInput = z.infer<typeof quizDraftInputSchema>;
+export type KitPatchInput = z.infer<typeof kitPatchInputSchema>;
 export type PublishDraftInput = z.infer<typeof publishDraftInputSchema>;

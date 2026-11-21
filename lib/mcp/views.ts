@@ -23,6 +23,7 @@ import type {
   KitStatus,
 } from "@/lib/schemas";
 import type { Actor } from "@/lib/services/actor";
+import type { StoredKit } from "@/lib/services/interview-kit-patch";
 import { computeDecisionScore } from "@/lib/utils/decision-score";
 import { links } from "./links";
 import { loadCandidateCvText, wrapUntrusted } from "./untrusted";
@@ -308,6 +309,120 @@ export async function buildInterviewPrepView(
       howToVerify: hypothesis.howToVerify,
     })),
     checklist: (kit?.checklist ?? []).map((row) => ({
+      category: row.category,
+      text: row.text,
+      done: row.done,
+    })),
+    url: links.interviewPrepare(interview.applicationId, interview.id),
+  };
+}
+
+export interface McpInterviewKitView {
+  interviewId: string;
+  applicationId: string;
+  positionTitle: string;
+  round: number;
+  scheduledAt: Date;
+  status: InterviewStatus;
+  kitStatus: KitStatus;
+  /** Interview scheduled and kit in draft: save_interview_kit_draft accepts it */
+  editable: boolean;
+  sections: {
+    id: string;
+    title: string;
+    kind: string;
+    minutes: number;
+    items: {
+      id: string;
+      text: string;
+      followUps: string[];
+      criterionIds: string[];
+      required: boolean;
+      origin: string;
+    }[];
+  }[];
+  /** Active criteria only: the ones a question or hypothesis may cite */
+  criteria: { id: string; name: string; priority: string }[];
+  briefing: string[];
+  hypotheses: { criterionId: string; criterion: string; hypothesis: string; howToVerify: string }[];
+  checklist: { id: string; category: string; text: string; done: boolean }[];
+  url: string;
+}
+
+/**
+ * The editable structure of an interview kit (ids of sections, questions,
+ * criteria and checklist entries) for save_interview_kit_draft. Same rule as
+ * the preparation view: no candidate identity, no CV, no notes. Null when
+ * the interview or its kit does not exist. With `stored` (the kit read fresh
+ * right after a save) its content replaces the cached one; titles, criteria
+ * and status come from the cached read, which a kit save does not change.
+ */
+export async function buildInterviewKitView(
+  _actor: Actor,
+  interviewId: string,
+  stored?: StoredKit,
+): Promise<McpInterviewKitView | null> {
+  const interview = await getInterviewForPreparation(interviewId);
+  if (!interview?.kit) return null;
+  const kit = stored
+    ? {
+        ...interview.kit,
+        briefing: stored.briefing,
+        hypotheses: stored.hypotheses,
+        checklist: stored.checklist,
+        items: stored.items,
+      }
+    : interview.kit;
+
+  const criterionName = new Map(
+    interview.criteria.map((criterion) => [criterion.id, criterion.name]),
+  );
+
+  return {
+    interviewId: interview.id,
+    applicationId: interview.applicationId,
+    positionTitle: interview.position.title,
+    round: interview.round,
+    scheduledAt: interview.scheduledAt,
+    status: interview.status,
+    kitStatus: kit.status,
+    editable: interview.status === "scheduled" && kit.status === "draft",
+    sections: [...kit.sections]
+      .sort((a, b) => a.order - b.order)
+      .map((section) => ({
+        id: section.id,
+        title: section.title,
+        kind: section.kind,
+        minutes: section.minutes,
+        items: kit.items
+          .filter((item) => item.sectionId === section.id)
+          .sort((a, b) => a.order - b.order)
+          .map((item) => ({
+            id: item.id,
+            text: item.text,
+            followUps: item.followUps,
+            criterionIds: item.criterionIds,
+            required: item.required,
+            origin: item.origin,
+          })),
+      })),
+    criteria: interview.criteria
+      .filter((criterion) => !criterion.archived)
+      .sort((a, b) => a.order - b.order)
+      .map((criterion) => ({
+        id: criterion.id,
+        name: criterion.name,
+        priority: criterion.priority,
+      })),
+    briefing: kit.briefing,
+    hypotheses: kit.hypotheses.map((hypothesis) => ({
+      criterionId: hypothesis.criterionId,
+      criterion: criterionName.get(hypothesis.criterionId) ?? "",
+      hypothesis: hypothesis.hypothesis,
+      howToVerify: hypothesis.howToVerify,
+    })),
+    checklist: kit.checklist.map((row) => ({
+      id: row.id,
       category: row.category,
       text: row.text,
       done: row.done,

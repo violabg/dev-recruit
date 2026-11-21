@@ -11,7 +11,9 @@
 import { getPositionById } from "@/lib/data/positions";
 import {
   createPositionDraftInputSchema,
+  getInterviewKitInputSchema,
   getSchedulingOptionsInputSchema,
+  kitPatchInputSchema,
   proposeInterviewSlotInputSchema,
   publishDraftInputSchema,
   quizDraftInputSchema,
@@ -22,6 +24,11 @@ import {
   proposeInterviewSlot,
 } from "@/lib/services/interview-proposals";
 import {
+  loadStoredKit,
+  patchInterviewKit,
+} from "@/lib/services/interview-kit-patch";
+import { setInterviewKitStatus } from "@/lib/services/interview-kits";
+import {
   createPosition,
   publishPositionDraft,
 } from "@/lib/services/positions";
@@ -30,7 +37,9 @@ import { UserError } from "@/lib/services/user-error";
 import { formatDateTime } from "../render";
 import { links } from "../links";
 import { buildSchedulingOptions, proposalContext } from "../scheduling";
+import { buildInterviewKitView } from "../views";
 import {
+  kitDraftWidget,
   positionDraftWidget,
   proposalWidget,
   quizPreviewWidget,
@@ -229,6 +238,99 @@ export const proposeInterviewSlotTool = defineTool({
 });
 
 // ====================
+// INTERVIEW KIT
+// ====================
+
+async function kitView(
+  actor: Parameters<typeof buildInterviewKitView>[0],
+  interviewId: string,
+  stored?: Parameters<typeof buildInterviewKitView>[2],
+) {
+  const view = await buildInterviewKitView(actor, interviewId, stored);
+  if (!view) throw new UserError("Colloquio non trovato");
+  return view;
+}
+
+export const getInterviewKitTool = defineTool({
+  name: "get_interview_kit",
+  title: "Kit colloquio modificabile",
+  description:
+    "La struttura modificabile del kit di un colloquio: sezioni e domande con i loro id, criteri attivi della scheda (id e nome), briefing, ipotesi, checklist con id. Serve prima di save_interview_kit_draft. Non contiene l'identità del candidato né il CV.",
+  scope: "recruit:read",
+  group: "read",
+  inputSchema: getInterviewKitInputSchema,
+  readOnly: true,
+  async handler(actor, input) {
+    const view = await kitView(actor, input.interviewId);
+    return {
+      text: lines(
+        `Kit: ${view.positionTitle} · Round ${view.round} · ${formatDateTime(view.scheduledAt)}`,
+        `Stato kit: ${view.kitStatus === "ready" ? "pronto" : "bozza"} · ${view.editable ? "modificabile" : "non modificabile (kit pronto o colloquio non pianificato)"}`,
+        "",
+        "Criteri attivi:",
+        ...(view.criteria.length
+          ? view.criteria.map((criterion) => `- ${criterion.name} · criterionId ${criterion.id}`)
+          : ["- Nessuno"]),
+        ...view.sections.flatMap((section) => [
+          "",
+          `Sezione ${section.title} (${section.minutes} min) · sectionId ${section.id}`,
+          ...(section.items.length
+            ? section.items.map(
+                (item) =>
+                  `- ${item.text}${item.required ? " (obbligatoria)" : ""} · id ${item.id}`,
+              )
+            : ["- Nessuna domanda"]),
+        ]),
+        "",
+        "Checklist:",
+        ...(view.checklist.length
+          ? view.checklist.map((row) => `- [${row.done ? "x" : " "}] ${row.text} · id ${row.id}`)
+          : ["- Vuota"]),
+        "",
+        `Apri in dev-recruit: ${view.url}`,
+      ),
+      structured: { kit: view },
+      auditSummary: `interview=${view.interviewId} sections=${view.sections.length} editable=${view.editable}`,
+    };
+  },
+});
+
+export const saveInterviewKitDraftTool = defineTool({
+  name: "save_interview_kit_draft",
+  title: "Modifica kit in bozza",
+  description:
+    "Modifica il kit in bozza di un colloquio pianificato, voce per voce: aggiungi domande a una sezione (addItems), modifica (updateItems) o rimuovi (removeItemIds) domande esistenti, sostituisci briefing o ipotesi, aggiungi o rimuovi voci della checklist. Le domande non indicate restano come sono. Usa gli id di get_interview_kit. Il kit resta in bozza: lo segna pronto una persona dal riquadro.",
+  scope: "recruit:draft",
+  group: "draft",
+  inputSchema: kitPatchInputSchema,
+  widget: "draft-preview",
+  readOnly: false,
+  async handler(actor, input) {
+    const { interviewId, applicationId } = await patchInterviewKit(actor, input);
+    const changes = {
+      added: input.addItems?.length ?? 0,
+      updated: input.updateItems?.length ?? 0,
+      removed: input.removeItemIds?.length ?? 0,
+    };
+    // The cache refresh runs after the tool: show the kit read fresh
+    const stored = (await loadStoredKit(interviewId)) ?? undefined;
+    const view = await kitView(actor, interviewId, stored);
+
+    return {
+      text: lines(
+        `Kit salvato in bozza: ${view.positionTitle} · Round ${view.round}`,
+        `Domande nuove ${changes.added}, modificate ${changes.updated}, rimosse ${changes.removed}.`,
+        "Il kit resta in bozza: per segnarlo pronto usa il pulsante nel riquadro o la pagina di preparazione.",
+        `Apri in dev-recruit: ${view.url}`,
+      ),
+      structured: { interviewId, widget: kitDraftWidget(view, changes) },
+      invalidate: [{ kind: "interview", interviewId, applicationId }],
+      auditSummary: `interview=${interviewId} added=${changes.added} updated=${changes.updated} removed=${changes.removed}`,
+    };
+  },
+});
+
+// ====================
 // CONFIRMED WRITE
 // ====================
 
@@ -236,7 +338,7 @@ export const publishDraftTool = defineTool({
   name: "publish_draft",
   title: "Conferma bozza",
   description:
-    "Conferma una bozza: apre una posizione in bozza o pianifica una proposta di colloquio. Solo dal pulsante del riquadro.",
+    "Conferma una bozza: apre una posizione in bozza, pianifica una proposta di colloquio o segna pronto un kit. Solo dal pulsante del riquadro.",
   scope: "recruit:write",
   group: "write",
   inputSchema: publishDraftInputSchema,
@@ -268,6 +370,19 @@ export const publishDraftTool = defineTool({
           : { positionId },
         invalidate: [{ kind: "position", positionId }],
         auditSummary: `position=${positionId} published`,
+      };
+    }
+
+    if (input.kind === "kit") {
+      const { interviewId, applicationId } = await setInterviewKitStatus(actor, {
+        interviewId: input.id,
+        status: "ready",
+      });
+      return {
+        text: `Kit segnato come pronto. Apri la preparazione: ${links.interviewPrepare(applicationId, interviewId)}`,
+        structured: { interviewId, applicationId },
+        invalidate: [{ kind: "interview", interviewId, applicationId }],
+        auditSummary: `interview=${interviewId} kit=ready`,
       };
     }
 
@@ -303,6 +418,8 @@ export const draftTools = [
   saveQuizTool,
   getSchedulingOptionsTool,
   proposeInterviewSlotTool,
+  getInterviewKitTool,
+  saveInterviewKitDraftTool,
 ];
 
 export const writeTools = [publishDraftTool];

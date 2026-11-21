@@ -10,6 +10,15 @@ vi.mock("@/lib/services/interview-proposals", () => ({
   proposeInterviewSlot: vi.fn(),
   confirmInterviewProposal: vi.fn(),
 }));
+vi.mock("@/lib/services/interview-kit-patch", () => ({
+  patchInterviewKit: vi.fn(),
+  loadStoredKit: vi.fn(),
+}));
+vi.mock("@/lib/services/interview-kits", () => ({ setInterviewKitStatus: vi.fn() }));
+vi.mock("@/lib/mcp/views", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/mcp/views")>()),
+  buildInterviewKitView: vi.fn(),
+}));
 vi.mock("@/lib/mcp/scheduling", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/mcp/scheduling")>()),
   buildSchedulingOptions: vi.fn(),
@@ -19,10 +28,15 @@ import { getPositionById } from "@/lib/data/positions";
 import type { McpActor } from "@/lib/mcp/auth";
 import { APP_URL } from "@/lib/mcp/config";
 import { buildSchedulingOptions } from "@/lib/mcp/scheduling";
+import { buildInterviewKitView } from "@/lib/mcp/views";
+import { loadStoredKit, patchInterviewKit } from "@/lib/services/interview-kit-patch";
+import { setInterviewKitStatus } from "@/lib/services/interview-kits";
 import {
   createPositionDraftTool,
   draftTools,
+  getInterviewKitTool,
   getSchedulingOptionsTool,
+  saveInterviewKitDraftTool,
   proposeInterviewSlotTool,
   publishDraftTool,
   saveQuizDraftTool,
@@ -116,6 +130,8 @@ describe("draft and write tools", () => {
       ["save_quiz", "recruit:draft"],
       ["get_scheduling_options", "recruit:read"],
       ["propose_interview_slot", "recruit:draft"],
+      ["get_interview_kit", "recruit:read"],
+      ["save_interview_kit_draft", "recruit:draft"],
     ]);
     expect(writeTools.map((tool) => [tool.name, tool.scope, tool.group])).toEqual([
       ["publish_draft", "recruit:write", "write"],
@@ -237,5 +253,102 @@ describe("publish_draft", () => {
       { kind: "candidate", candidateId: "c1", positionId: "pos-1", applicationId: "app-1" },
     ]);
     expect(result.text).toContain("Nessuna email");
+  });
+});
+
+describe("kit tools", () => {
+  const view = {
+    interviewId: "int-1",
+    applicationId: "app-1",
+    positionTitle: "Frontend",
+    round: 1,
+    scheduledAt: new Date("2026-11-25T09:00:00Z"),
+    status: "scheduled",
+    kitStatus: "draft",
+    editable: true,
+    sections: [
+      {
+        id: "s1",
+        title: "Tecnica",
+        kind: "technical",
+        minutes: 20,
+        items: [
+          {
+            id: "i1",
+            text: "Spiega il rendering di React",
+            followUps: ["E con i Server Components?"],
+            criterionIds: ["k1"],
+            required: true,
+            origin: "template",
+          },
+        ],
+      },
+    ],
+    criteria: [{ id: "k1", name: "React", priority: "must" }],
+    briefing: [],
+    hypotheses: [],
+    checklist: [{ id: "c1", category: "logistics", text: "Link della call", done: false }],
+    url: `${APP_URL}/dashboard/applications/app-1/interviews/int-1/prepare`,
+  } as any;
+
+  beforeEach(() => {
+    vi.mocked(buildInterviewKitView).mockResolvedValue(view);
+  });
+
+  it("get_interview_kit lists the ids the patch needs, without candidate identity", async () => {
+    const result = await getInterviewKitTool.handler(actor, { interviewId: "int-1" });
+
+    expect(result.text).toContain("sectionId s1");
+    expect(result.text).toContain("id i1");
+    expect(result.text).toContain("React · criterionId k1");
+    expect(result.text).toContain("id c1");
+    expect(result.text).not.toContain("Ada");
+  });
+
+  it("save_interview_kit_draft saves the patch and shows the kit read fresh", async () => {
+    vi.mocked(patchInterviewKit).mockResolvedValue({
+      kitId: "kit-1",
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
+    const stored = { briefing: [], hypotheses: [], checklist: [], missingSources: [], sections: [], items: [] };
+    vi.mocked(loadStoredKit).mockResolvedValue(stored as any);
+    const patch = {
+      interviewId: "int-1",
+      addItems: [{ sectionId: "s1", text: "Come gestisci lo stato globale?" }],
+      removeItemIds: ["i9"],
+    };
+
+    const result = await saveInterviewKitDraftTool.handler(actor, patch);
+
+    expect(patchInterviewKit).toHaveBeenCalledWith(actor, patch);
+    expect(buildInterviewKitView).toHaveBeenCalledWith(actor, "int-1", stored);
+    expect(result.invalidate).toEqual([{ kind: "interview", interviewId: "int-1", applicationId: "app-1" }]);
+    expect(result.structured?.widget).toMatchObject({
+      draft: "kit",
+      status: { label: "Bozza" },
+      confirm: { tool: "publish_draft", arguments: { kind: "kit", id: "int-1" } },
+      facts: expect.arrayContaining([
+        { label: "Modifiche salvate", value: "1 domanda nuova, 1 rimossa" },
+      ]),
+    });
+    const sections = (result.structured?.widget as any).sections;
+    expect(sections[0].items[0]).toBe(
+      "★ Spiega il rendering di React\n  ↳ E con i Server Components?\n  criteri: React",
+    );
+  });
+
+  it("publish_draft marks a kit ready", async () => {
+    vi.mocked(setInterviewKitStatus).mockResolvedValue({
+      status: "ready",
+      interviewId: "int-1",
+      applicationId: "app-1",
+    });
+
+    const result = await publishDraftTool.handler(actor, { kind: "kit", id: "int-1" });
+
+    expect(setInterviewKitStatus).toHaveBeenCalledWith(actor, { interviewId: "int-1", status: "ready" });
+    expect(result.invalidate).toEqual([{ kind: "interview", interviewId: "int-1", applicationId: "app-1" }]);
+    expect(result.text).toContain("pronto");
   });
 });

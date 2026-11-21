@@ -114,6 +114,9 @@ const mockPrisma = {
     findFirst: vi.fn(),
     update: vi.fn(),
   },
+  interviewKit: {
+    findUnique: vi.fn(),
+  },
   interviewProposal: {
     findUnique: vi.fn(),
     findMany: vi.fn(),

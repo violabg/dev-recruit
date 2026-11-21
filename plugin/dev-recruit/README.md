@@ -10,7 +10,8 @@ Plugin per i recruiter: porta il lavoro di dev-recruit (posizioni, candidature, 
   - `create-position`: prepara una nuova posizione in bozza;
   - `quiz-for-candidate`: prepara un quiz per una posizione e lo mostra in anteprima;
   - `schedule-interview`: propone un colloquio (guida, data, partecipanti);
-  - `interview-prep`: aiuta a prepararsi a un colloquio partendo dal kit.
+  - `interview-prep`: aiuta a prepararsi a un colloquio partendo dal kit;
+  - `interview-kit`: completa o migliora il kit in bozza di un colloquio.
 - **Riquadri interattivi** (dove il client li supporta: claude.ai, Claude desktop): "Le mie azioni", posizione, candidatura e l'anteprima delle bozze con il pulsante di conferma.
 - **Connessione al server MCP di dev-recruit**: un server remoto via HTTPS, autorizzato con OAuth. Il plugin non contiene credenziali, hook o programmi: installarlo non esegue nulla sul tuo computer.
 
@@ -37,8 +38,8 @@ Permessi:
 | Permesso | Cosa consente |
 |---|---|
 | `recruit:read` | Leggere i dati della selezione |
-| `recruit:draft` | Preparare bozze: posizione in bozza, anteprima e salvataggio di un quiz, proposta di colloquio |
-| `recruit:write` | Confermare una bozza: pubblicare una posizione, pianificare un colloquio proposto |
+| `recruit:draft` | Preparare bozze: posizione in bozza, anteprima e salvataggio di un quiz, proposta di colloquio, modifiche al kit in bozza |
+| `recruit:write` | Confermare una bozza: pubblicare una posizione, pianificare un colloquio proposto, segnare pronto un kit |
 
 Un amministratore può revocare il collegamento in qualsiasi momento dalla pagina "Accesso MCP" della dashboard; il client dovrà autorizzarsi di nuovo.
 
@@ -55,6 +56,7 @@ In sola lettura:
 | `list_interviews` | I colloqui pianificati e in corso, o quelli di una candidatura |
 | `get_interview` | La preparazione di un colloquio, senza identità del candidato né CV |
 | `get_scheduling_options` | Cosa serve per proporre un colloquio: guide della posizione, persone del team, prossimo round, proposte in attesa |
+| `get_interview_kit` | La struttura modificabile del kit di un colloquio (sezioni, domande, criteri, checklist), senza identità del candidato né CV |
 
 Bozze (l'assistente le prepara, una persona le conferma):
 
@@ -63,8 +65,9 @@ Bozze (l'assistente le prepara, una persona le conferma):
 | `create_position_draft` | Crea una posizione in bozza, non visibile ai candidati | "Pubblica la posizione" nel riquadro, o dalla pagina della posizione |
 | `save_quiz_draft` | Mostra l'anteprima di un quiz, senza salvarlo | "Salva il quiz" nel riquadro; nessun candidato viene invitato |
 | `propose_interview_slot` | Salva una proposta di colloquio, senza pianificarlo | "Pianifica il colloquio" nel riquadro; crea il colloquio e il kit in bozza, nessuna email |
+| `save_interview_kit_draft` | Modifica il kit in bozza voce per voce (domande, briefing, ipotesi, checklist); le domande non indicate restano | "Segna il kit come pronto" nel riquadro, o dalla pagina di preparazione |
 
-I pulsanti di conferma chiamano strumenti che l'assistente non può usare: solo una persona può confermare. Nei client senza riquadri (per esempio VS Code senza le MCP Apps) una posizione in bozza si pubblica dalla dashboard; il salvataggio del quiz e la pianificazione delle proposte richiedono il riquadro.
+I pulsanti di conferma chiamano strumenti che l'assistente non può usare: solo una persona può confermare. Nei client senza riquadri (per esempio VS Code senza le MCP Apps) una posizione in bozza si pubblica e un kit si segna pronto dalla dashboard; il salvataggio del quiz e la pianificazione delle proposte richiedono il riquadro.
 
 ## Cosa resta solo nella dashboard
 

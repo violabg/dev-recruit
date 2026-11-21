@@ -125,7 +125,7 @@ Three read tools and the draft tools show an interactive widget in hosts that su
 | `action_center` | Le mie azioni: totale, riepilogo per coda, righe con "Apri" e "Dettagli" | `ui://dev-recruit/action-center.html` |
 | `get_position` | Posizione: stato, candidature per fase (stazioni), setup con "Completa", competenze, candidature | `ui://dev-recruit/position.html` |
 | `get_application` | Candidatura: fasi (stazioni), valutazioni indicative, decisione, colloqui | `ui://dev-recruit/application-flow.html` |
-| `create_position_draft`, `save_quiz_draft`, `propose_interview_slot` (and their confirmations) | Anteprima bozza: contenuto, nota su cosa fa la conferma, pulsante di conferma | `ui://dev-recruit/draft-preview.html` |
+| `create_position_draft`, `save_quiz_draft`, `propose_interview_slot`, `save_interview_kit_draft` (and their confirmations) | Anteprima bozza: contenuto, nota su cosa fa la conferma, pulsante di conferma | `ui://dev-recruit/draft-preview.html` |
 
 - **Data.** The tool result carries a presentation-ready model in `structuredContent.widget` (`lib/mcp/widgets/types.ts`, built by `lib/mcp/widgets/build.ts` from the dashboard presentation maps and the MCP deep links). The widget never receives the CV text and keeps the hidden decision hidden.
 - **Bundle.** `mcp-apps/` (plain TypeScript, no framework) is built by `pnpm build:mcp-apps` into one self-contained HTML file and written as `lib/mcp/widgets/html.generated.ts` (committed; `pnpm build` regenerates it before `next build`). After changing `mcp-apps/` or `lib/mcp/widgets/types.ts`, run `pnpm build:mcp-apps` and commit the generated module.
@@ -143,10 +143,11 @@ The assistant prepares drafts; a person confirms them with the button of the dra
 | `save_quiz` | `recruit:draft` | widget only | The quiz of the preview (`saveQuiz`, the editor save path); nobody is invited |
 | `get_scheduling_options` | `recruit:read` | model | Nothing: guides of the position, team members (id and name, no email), next round, pending proposals |
 | `propose_interview_slot` | `recruit:draft` | model | A pending `InterviewProposal` with the scheduling-form payload, validated like the form (open application, guide of the position, existing participants, one lead) |
-| `publish_draft` | `recruit:write` | widget only | `kind: "position"`: opens a draft position (`publishPositionDraft`). `kind: "proposal"`: schedules the proposal (`confirmInterviewProposal` → `scheduleInterview`: interview, kit in draft, stage move); the proposal is claimed first, so a double click schedules once. No email is sent |
+| `get_interview_kit` | `recruit:read` | model | Nothing: the editable kit structure (section, question, active criterion and checklist ids), without candidate identity or CV |
+| `save_interview_kit_draft` | `recruit:draft` | model | The kit, through a patch (`patchInterviewKit`): add questions to a section, edit or remove questions by id, replace briefing or hypotheses, add or remove checklist entries. Questions the patch does not name are kept; an id outside the kit is refused. The patch is applied to the kit read fresh and saved with `saveInterviewKit` (`requireDraftStatus`: a ready kit is refused; interview must be scheduled). New questions are `manual`, so the in-app regeneration keeps them. The kit stays draft |
+| `publish_draft` | `recruit:write` | widget only | `kind: "kit"`: marks the kit ready (`setInterviewKitStatus`). `kind: "position"`: opens a draft position (`publishPositionDraft`). `kind: "proposal"`: schedules the proposal (`confirmInterviewProposal` → `scheduleInterview`: interview, kit in draft, stage move); the proposal is claimed first, so a double click schedules once. No email is sent |
 
 Known limits:
 
 - Pending proposals are visible through `get_scheduling_options` only; the dashboard does not list them yet.
-- In a client without MCP Apps a draft position is opened from the dashboard; a quiz preview cannot be saved and a proposal cannot be scheduled there.
-- The interview kit cannot be edited through MCP yet (`save_interview_kit_draft` is not shipped).
+- In a client without MCP Apps a draft position is opened and a kit is marked ready from the dashboard; a quiz preview cannot be saved and a proposal cannot be scheduled there.

@@ -39,8 +39,8 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | `deleteInterviewGuideAction` | interview guide | dashboard-only | — | — |
 | `generateInterviewGuideAction` | interview guide (in-app AI) | dashboard-only | — | — |
 | `generateInterviewKitAction` | interview kit (in-app AI) | dashboard-only | — | — |
-| `saveInterviewKitAction` | interview kit | draft | `save_interview_kit_draft` (service `saveInterviewKit` with `requireDraftStatus`), not shipped yet | 4 |
-| `setInterviewKitStatusAction` | interview kit | write | `publish_draft` for a kit (status `ready`, service `setInterviewKitStatus`), not shipped yet | 4 |
+| `saveInterviewKitAction` | interview kit | draft | `save_interview_kit_draft` (patch: service `patchInterviewKit` → `saveInterviewKit` with `requireDraftStatus`) | 4 |
+| `setInterviewKitStatusAction` | interview kit | write | `publish_draft` with `kind: "kit"` (status `ready`, service `setInterviewKitStatus`), widget only | 4 |
 | `saveKitItemNoteAction` | live notes | dashboard-only | — | — |
 | `setKitItemCoveredAction` | live notes | dashboard-only | — | — |
 | `saveInterviewerFeedbackAction` | interviewer scorecard | dashboard-only | — | — |
@@ -113,6 +113,7 @@ Pages that only host the form of an action (`new`, `edit`, `invite`, `prepare/ed
 | Decision (`/dashboard/applications/[id]/decision`) | decision | dashboard-only | — | — |
 | Agenda (`/dashboard/agenda`) | interview | read | `list_interviews` | 1 |
 | Interview preparation (`/dashboard/applications/[id]/interviews/[interviewId]/prepare`) | interview, kit | read | `get_interview` (non-identifying) | 3 |
+| Kit editor structure (`…/prepare/edit`) | kit | read | `get_interview_kit` (non-identifying) | 4 |
 | Live interview (`…/interviews/[interviewId]/live`) | live notes | dashboard-only | — | — |
 | Interviewer scorecard (`…/interviews/[interviewId]/feedback`) | interviewer scorecard | dashboard-only | — | — |
 | Candidates list (`/dashboard/candidates`) | candidate | read | — | 6 |
