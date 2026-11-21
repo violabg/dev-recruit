@@ -1,6 +1,6 @@
 /**
- * MCP App resources: the widget bundle served under one ui:// URI per
- * enabled widget, and the tool metadata that links a tool to its widget.
+ * MCP App resources: the widget bundles (DOM and React) served under one
+ * ui:// URI per enabled widget, and the tool metadata that links a tool to its widget.
  * The bundle allows no external origin (empty CSP): it reads only the tool
  * result it is given, and links open through the host.
  */
@@ -11,6 +11,7 @@ import {
 } from "@modelcontextprotocol/ext-apps/server";
 import type { WidgetId } from "../tools/types";
 import { WIDGET_HTML } from "./html.generated";
+import { REACT_WIDGET_HTML } from "./react-html.generated";
 
 /** Widgets that ship */
 export const ENABLED_WIDGETS: readonly WidgetId[] = [
@@ -19,7 +20,14 @@ export const ENABLED_WIDGETS: readonly WidgetId[] = [
   "application-flow",
   "draft-preview",
   "interview-prep",
+  "position-form",
 ];
+
+/** Widgets drawn by the React bundle (mcp-apps/react); the others by the DOM bundle */
+const REACT_WIDGETS: readonly WidgetId[] = ["position-form"];
+
+const widgetHtml = (id: WidgetId) =>
+  REACT_WIDGETS.includes(id) ? REACT_WIDGET_HTML : WIDGET_HTML;
 
 const WIDGET_TITLE: Record<WidgetId, string> = {
   "action-center": "Le mie azioni",
@@ -27,6 +35,7 @@ const WIDGET_TITLE: Record<WidgetId, string> = {
   "application-flow": "Candidatura",
   "draft-preview": "Anteprima bozza",
   "interview-prep": "Preparazione colloquio",
+  "position-form": "Nuova posizione",
 };
 
 export const widgetUri = (id: WidgetId) => `ui://dev-recruit/${id}.html`;
@@ -74,7 +83,7 @@ export function registerWidgetResources(server: ResourceServer): void {
           {
             uri,
             mimeType: RESOURCE_MIME_TYPE,
-            text: WIDGET_HTML,
+            text: widgetHtml(id),
             _meta: { ui: UI_META },
           },
         ],

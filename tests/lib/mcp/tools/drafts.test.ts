@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/data/positions", () => ({ getPositionById: vi.fn() }));
+vi.mock("@/lib/data/reference-data", () => ({ getPositionFieldOptions: vi.fn() }));
 vi.mock("@/lib/services/positions", () => ({
   createPosition: vi.fn(),
   publishPositionDraft: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock("@/lib/mcp/scheduling", async (importOriginal) => ({
 }));
 
 import { getPositionById } from "@/lib/data/positions";
+import { getPositionFieldOptions } from "@/lib/data/reference-data";
 import type { McpActor } from "@/lib/mcp/auth";
 import { APP_URL } from "@/lib/mcp/config";
 import { buildSchedulingOptions } from "@/lib/mcp/scheduling";
@@ -34,6 +36,7 @@ import { setInterviewKitStatus } from "@/lib/services/interview-kits";
 import {
   createPositionDraftTool,
   draftTools,
+  openPositionFormTool,
   getInterviewKitTool,
   getSchedulingOptionsTool,
   saveInterviewKitDraftTool,
@@ -125,6 +128,7 @@ beforeEach(() => {
 describe("draft and write tools", () => {
   it("draft tools need recruit:draft (scheduling options only read), the write tool recruit:write", () => {
     expect(draftTools.map((tool) => [tool.name, tool.scope])).toEqual([
+      ["open_position_form", "recruit:draft"],
       ["create_position_draft", "recruit:draft"],
       ["save_quiz_draft", "recruit:draft"],
       ["save_quiz", "recruit:draft"],
@@ -158,6 +162,32 @@ describe("create_position_draft", () => {
       draft: "position",
       confirm: { tool: "publish_draft", arguments: { kind: "position", id: "pos-1" } },
     });
+  });
+});
+
+describe("open_position_form", () => {
+  it("opens the prefilled form and creates nothing", async () => {
+    vi.mocked(getPositionFieldOptions).mockResolvedValue({
+      allSkills: [{ label: "React", value: "React", category: "Framework" }],
+      allSoftSkills: [],
+      experienceLevels: ["Senior"],
+      contractTypes: [],
+    });
+
+    const result = await openPositionFormTool.handler(actor, {
+      title: " Frontend ",
+      skills: ["React", "Remix"],
+    });
+
+    expect(createPosition).not.toHaveBeenCalled();
+    expect(result.invalidate).toBeUndefined();
+    expect(result.text).toContain(`${APP_URL}/dashboard/positions/new`);
+    expect(result.structured?.widget).toMatchObject({
+      kind: "position-form",
+      prefill: { title: "Frontend", skills: ["React", "Remix"], experienceLevel: "" },
+      tools: { save: "create_position_draft", publish: "publish_draft" },
+    });
+    expect(result.auditSummary).toBe("position_form prefilled=2");
   });
 });
 

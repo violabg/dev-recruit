@@ -1,6 +1,5 @@
 import { PositionFormSkeleton } from "./position-form-skeleton";
-import { referenceCategoryLabels } from "@/lib/constants/reference-categories";
-import { getReferenceDataByCategory } from "@/lib/data/reference-data";
+import { getPositionFieldOptions } from "@/lib/data/reference-data";
 import { Position } from "@/lib/prisma/client";
 import { Suspense } from "react";
 import { PositionForm } from "./position-form";
@@ -19,68 +18,8 @@ export async function PositionFormWithData({
   position,
   onCancel,
 }: PositionFormWithDataProps) {
-  const [
-    programmingLanguages,
-    frameworks,
-    databases,
-    tools,
-    softSkillsData,
-    experienceLevelsData,
-    contractTypesData,
-  ] = await Promise.all([
-    getReferenceDataByCategory("programmingLanguage"),
-    getReferenceDataByCategory("framework"),
-    getReferenceDataByCategory("database"),
-    getReferenceDataByCategory("tool"),
-    getReferenceDataByCategory("soft_skill"),
-    getReferenceDataByCategory("experience_level"),
-    getReferenceDataByCategory("contract_type"),
-  ]);
-
-  // Combine all skills for the MultiSelect component
-  const allSkillsFormatted = [
-    ...programmingLanguages.map((skill) => ({
-      label: skill.label,
-      value: skill.label,
-      category: referenceCategoryLabels.programmingLanguage,
-    })),
-    ...frameworks.map((skill) => ({
-      label: skill.label,
-      value: skill.label,
-      category: referenceCategoryLabels.framework,
-    })),
-    ...databases.map((skill) => ({
-      label: skill.label,
-      value: skill.label,
-      category: referenceCategoryLabels.database,
-    })),
-    ...tools.map((skill) => ({
-      label: skill.label,
-      value: skill.label,
-      category: referenceCategoryLabels.tool,
-    })),
-  ];
-
-  const allSoftSkillsFormatted = softSkillsData.map((item) => ({
-    label: item.label,
-    value: item.label,
-  }));
-
-  const experienceLevelsFormatted = experienceLevelsData.map(
-    (item) => item.label
-  );
-  const contractTypesFormatted = contractTypesData.map((item) => item.label);
-
-  return (
-    <PositionForm
-      position={position}
-      onCancel={onCancel}
-      allSkills={allSkillsFormatted}
-      allSoftSkills={allSoftSkillsFormatted}
-      experienceLevels={experienceLevelsFormatted}
-      contractTypes={contractTypesFormatted}
-    />
-  );
+  const options = await getPositionFieldOptions();
+  return <PositionForm position={position} onCancel={onCancel} {...options} />;
 }
 
 /**

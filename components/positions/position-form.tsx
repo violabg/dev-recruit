@@ -1,7 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SelectItem } from "@/components/ui/select";
 import { createPositionAction, updatePositionAction } from "@/lib/actions/positions";
 import { Position } from "@/lib/prisma/client";
 import {
@@ -16,19 +15,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { InputField } from "../ui/rhf-inputs/input-field";
-import { MultiSelectField } from "../ui/rhf-inputs/multi-select-field";
-import { SelectField } from "../ui/rhf-inputs/select-field";
-import { TextareaField } from "../ui/rhf-inputs/textarea-field";
+import {
+  PositionContractField,
+  PositionDescriptionField,
+  PositionLevelField,
+  PositionSkillsFields,
+  PositionTitleField,
+  type PositionFieldOptions,
+} from "./position-fields";
 
 type PositionFormProps = {
   position?: Position;
   onCancel?: () => void;
-  allSkills?: { label: string; value: string; category: string }[];
-  allSoftSkills?: { label: string; value: string }[];
-  experienceLevels?: string[];
-  contractTypes?: string[];
-};
+} & Partial<PositionFieldOptions>;
 
 /** Italian message the route sent for a failed request, when it sent one. */
 async function generationError(response: Response): Promise<string> {
@@ -192,50 +191,13 @@ export function PositionForm({
             </CardHeader>
             <CardContent className="gap-6 grid grid-cols-1 md:grid-cols-2">
               <div className="md:col-span-2">
-                <InputField<PositionFormData>
-                  name="title"
-                  control={control}
-                  label="Titolo della posizione"
-                  required
-                  placeholder="es. Sviluppatore Frontend React"
-                  description="Inserisci un titolo chiaro e descrittivo"
-                />
+                <PositionTitleField control={control} />
               </div>
-
-              <SelectField<PositionFormData>
+              <PositionContractField control={control} contractTypes={contractTypes} />
+              <PositionLevelField
                 control={control}
-                name="contractType"
-                label="Tipo di contratto"
-                description="Indica il tipo di contratto previsto"
-                placeholder="Seleziona un contratto"
-                triggerProps={{
-                  className: "w-full",
-                }}
-              >
-                {contractTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectField>
-
-              <SelectField<PositionFormData>
-                control={control}
-                name="experienceLevel"
-                label="Livello di esperienza"
-                required
-                description="Indica il livello di esperienza richiesto"
-                placeholder="Seleziona un livello"
-                triggerProps={{
-                  className: "w-full",
-                }}
-              >
-                {experienceLevels.map((level) => (
-                  <SelectItem key={level} value={level}>
-                    {level}
-                  </SelectItem>
-                ))}
-              </SelectField>
+                experienceLevels={experienceLevels}
+              />
             </CardContent>
           </Card>
 
@@ -250,12 +212,8 @@ export function PositionForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="z-10 relative flex flex-col gap-4 pt-4">
-              <TextareaField<PositionFormData>
+              <PositionDescriptionField
                 control={control}
-                name="description"
-                label="Job Description"
-                description="Descrivi dettagliatamente la posizione. L'IA può aiutarti."
-                placeholder="Descrivi la posizione, le responsabilità e i requisiti..."
                 className="bg-background/50 backdrop-blur-sm min-h-48"
               />
               <div className="flex justify-end">
@@ -293,25 +251,10 @@ export function PositionForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
-              <MultiSelectField<PositionFormData>
+              <PositionSkillsFields
                 control={control}
-                name="skills"
-                label="Tech Stack"
-                required
-                description="Competenze tecniche richieste"
-                options={allSkills}
-                placeholder="Seleziona tech..."
-                grouped
-                showClear
-              />
-              <MultiSelectField<PositionFormData>
-                control={control}
-                name="softSkills"
-                label="Soft Skills"
-                description="Competenze traversali"
-                options={allSoftSkills}
-                placeholder="Seleziona soft skills..."
-                showClear
+                allSkills={allSkills}
+                allSoftSkills={allSoftSkills}
               />
 
               <div className="flex flex-col gap-3 pt-6 border-t">

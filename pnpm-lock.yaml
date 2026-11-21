@@ -128,9 +128,18 @@ importers:
       '@ai-sdk/devtools':
         specifier: ^1.0.73
         version: 1.0.73(zod@4.6.7)
+      '@fontsource-variable/ibm-plex-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource-variable/schibsted-grotesk':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@tailwindcss/postcss':
         specifier: ^4.3.5
         version: 4.3.5
+      '@tailwindcss/vite':
+        specifier: ^4.3.5
+        version: 4.3.5(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
       '@testing-library/jest-dom':
         specifier: ^7.0.1
         version: 7.0.1(@testing-library/dom@10.4.2)(vitest@5.1.0)
@@ -855,6 +864,12 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fontsource-variable/ibm-plex-sans@5.3.0':
+    resolution: {integrity: sha512-agG8tXFEo0hD9+J7npa4vbbWult52eMLVaQ6WQRlhs/iCAojrMAoejru85W9HTVXHfyUj96KM7gp/KGAS87XaQ==}
+
+  '@fontsource-variable/schibsted-grotesk@5.3.0':
+    resolution: {integrity: sha512-ndS6H/KICWANchlHF3q4UdZD+xrZ3Ji0rUobIuXlgvDUzDfqZDsVuXPXZb636nJZMHE9zZ9Fmwgqazm8hMB50Q==}
 
   '@hono/node-server@1.19.19':
     resolution: {integrity: sha512-Fy9R7PACOzHU9LDpfnuzVyuVYevKQRcEG2mZhmfc+DRdmayEd3RVfa2XOt2IgGcPNgA77Yk63KBszepcMFK5Ng==}
@@ -1699,6 +1714,11 @@ packages:
 
   '@tailwindcss/postcss@4.3.5':
     resolution: {integrity: sha512-FAV37Tlx9wBiT/hkfgVD0Q6CWsP2oUX3lf28nrfjW8+ksILjnpuFulUqWDfNR4/ZiEHHDRBX8DUTzD1Rys687A==}
+
+  '@tailwindcss/vite@4.3.5':
+    resolution: {integrity: sha512-BCNiY0a1ZjdOHVqw7kyb7U72BwfMF3dfUuN+tQsLWky/J5JOI/r7abibglXfygrZhVO/3u3V+E25kkKTeMkXaQ==}
+    peerDependencies:
+      vite: ^5.2.0 || ^6 || ^7 || ^8
 
   '@testing-library/dom@10.4.2':
     resolution: {integrity: sha512-yzr2S9HyAIdhz2/6qHgbs665Q7PKVcDF05vsOlHPxG1mo36gKVesdYVeDLnXgfjJ03CrKRk08knc6+E/9m8v2Q==}
@@ -6076,6 +6096,10 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@fontsource-variable/ibm-plex-sans@5.3.0': {}
+
+  '@fontsource-variable/schibsted-grotesk@5.3.0': {}
+
   '@hono/node-server@1.19.19(hono@4.13.18)':
     dependencies:
       hono: 4.13.18
@@ -6756,6 +6780,13 @@ snapshots:
       '@tailwindcss/oxide': 4.3.5
       postcss: 8.5.32
       tailwindcss: 4.3.5
+
+  '@tailwindcss/vite@4.3.5(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))':
+    dependencies:
+      '@tailwindcss/node': 4.3.5
+      '@tailwindcss/oxide': 4.3.5
+      tailwindcss: 4.3.5
+      vite: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
 
   '@testing-library/dom@10.4.2':
     dependencies:

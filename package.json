@@ -16,7 +16,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "user:make-admin": "tsx prisma/make-admin.ts",
-    "build:mcp-apps": "vite build --config vite.mcp-apps.config.ts",
+    "build:mcp-apps": "vite build --config vite.mcp-apps.config.ts && vite build --config vite.mcp-apps.config.ts --mode react",
     "mcp:register-clients": "tsx prisma/register-mcp-clients.ts",
     "prebuild": "npm run db:generate",
     "devAi": "pnpx @ai-sdk/devtools"
@@ -63,7 +63,10 @@
   },
   "devDependencies": {
     "@ai-sdk/devtools": "^1.0.73",
+    "@fontsource-variable/ibm-plex-sans": "^5.3.0",
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
     "@tailwindcss/postcss": "^4.3.5",
+    "@tailwindcss/vite": "^4.3.5",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^26.6.6",

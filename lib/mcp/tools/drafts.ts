@@ -9,11 +9,13 @@
  */
 
 import { getPositionById } from "@/lib/data/positions";
+import { getPositionFieldOptions } from "@/lib/data/reference-data";
 import {
   createPositionDraftInputSchema,
   getInterviewKitInputSchema,
   getSchedulingOptionsInputSchema,
   kitPatchInputSchema,
+  openPositionFormInputSchema,
   proposeInterviewSlotInputSchema,
   publishDraftInputSchema,
   quizDraftInputSchema,
@@ -44,6 +46,7 @@ import {
   proposalWidget,
   quizPreviewWidget,
 } from "../widgets/drafts";
+import { positionFormWidget } from "../widgets/position-form";
 import type { InvalidationRequest } from "./types";
 import { defineTool } from "./types";
 
@@ -82,6 +85,33 @@ export const createPositionDraftTool = defineTool({
       },
       invalidate: [{ kind: "position", positionId }],
       auditSummary: `position=${positionId} created=draft`,
+    };
+  },
+});
+
+export const openPositionFormTool = defineTool({
+  name: "open_position_form",
+  title: "Apri il modulo della posizione",
+  description:
+    "Apre nel riquadro il modulo di una nuova posizione, precompilato con quello che sai già (titolo, livello, competenze, soft skill, contratto, descrizione; tutti facoltativi). La persona completa i campi e salva la bozza dal riquadro. Non crea nulla: usalo nei client con i riquadri al posto di create_position_draft.",
+  scope: "recruit:draft",
+  group: "draft",
+  inputSchema: openPositionFormInputSchema,
+  widget: "position-form",
+  readOnly: true,
+  async handler(_actor, input) {
+    const widget = positionFormWidget(await getPositionFieldOptions(), input);
+    const filled = Object.values(widget.prefill).filter((value) =>
+      Array.isArray(value) ? value.length > 0 : value !== "",
+    ).length;
+    return {
+      text: lines(
+        "Modulo della nuova posizione aperto nel riquadro: la persona completa i campi e preme \"Salva bozza\".",
+        "Non è stato creato nulla. Se il riquadro non è disponibile, raccogli i campi in chat e usa create_position_draft.",
+        `Oppure crea la posizione dalla dashboard: ${widget.url}`,
+      ),
+      structured: { widget },
+      auditSummary: `position_form prefilled=${filled}`,
     };
   },
 });
@@ -413,6 +443,7 @@ export const publishDraftTool = defineTool({
 });
 
 export const draftTools = [
+  openPositionFormTool,
   createPositionDraftTool,
   saveQuizDraftTool,
   saveQuizTool,

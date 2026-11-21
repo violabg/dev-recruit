@@ -1,6 +1,10 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
-import { ReferenceCategory } from "../constants/reference-categories";
+import type { PositionFieldOptions } from "@/components/positions/position-fields";
+import {
+  ReferenceCategory,
+  referenceCategoryLabels,
+} from "../constants/reference-categories";
 import prisma from "../prisma";
 import { CacheTags, entityTag } from "../utils/cache-utils";
 
@@ -23,3 +27,50 @@ export const getReferenceDataByCategory = cache(
     });
   }
 );
+
+/**
+ * Reference data the position form chooses from (skills grouped by category,
+ * soft skills, experience levels, contract types): shared by the dashboard
+ * form and the MCP position form widget.
+ */
+export async function getPositionFieldOptions(): Promise<PositionFieldOptions> {
+  const [
+    programmingLanguages,
+    frameworks,
+    databases,
+    tools,
+    softSkills,
+    experienceLevels,
+    contractTypes,
+  ] = await Promise.all([
+    getReferenceDataByCategory("programmingLanguage"),
+    getReferenceDataByCategory("framework"),
+    getReferenceDataByCategory("database"),
+    getReferenceDataByCategory("tool"),
+    getReferenceDataByCategory("soft_skill"),
+    getReferenceDataByCategory("experience_level"),
+    getReferenceDataByCategory("contract_type"),
+  ]);
+
+  const skillsOf = (
+    items: { label: string }[],
+    category: keyof typeof referenceCategoryLabels,
+  ) =>
+    items.map((item) => ({
+      label: item.label,
+      value: item.label,
+      category: referenceCategoryLabels[category],
+    }));
+
+  return {
+    allSkills: [
+      ...skillsOf(programmingLanguages, "programmingLanguage"),
+      ...skillsOf(frameworks, "framework"),
+      ...skillsOf(databases, "database"),
+      ...skillsOf(tools, "tool"),
+    ],
+    allSoftSkills: softSkills.map((item) => ({ label: item.label, value: item.label })),
+    experienceLevels: experienceLevels.map((item) => item.label),
+    contractTypes: contractTypes.map((item) => item.label),
+  };
+}

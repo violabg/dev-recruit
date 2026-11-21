@@ -1,0 +1,49 @@
+/*
+ * React widget styles: Tailwind with the dashboard theme (app/theme.css), so
+ * the components of components/ui look as in the app. Sources are limited
+ * to the files the bundle draws. Fonts are inlined (latin subset): the
+ * sandbox allows no external origin.
+ */
+
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "../../../app/theme.css";
+
+@source "./";
+@source "../../../components/ui/{button,combobox,field,input,input-group,label,multi-select,select,separator,textarea}.tsx";
+@source "../../../components/ui/rhf-inputs";
+@source "../../../components/positions/position-fields.tsx";
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 700;
+  src: url("../../../node_modules/@fontsource-variable/ibm-plex-sans/files/ibm-plex-sans-latin-wght-normal.woff2")
+    format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 900;
+  src: url("../../../node_modules/@fontsource-variable/schibsted-grotesk/files/schibsted-grotesk-latin-wght-normal.woff2")
+    format("woff2-variations");
+}
+
+:root {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Schibsted Grotesk", var(--font-sans);
+}
+
+/* The widget sits in the host's conversation: no canvas of its own */
+html,
+body {
+  background: transparent;
+}
+
+body {
+  @apply font-sans text-foreground antialiased;
+}
