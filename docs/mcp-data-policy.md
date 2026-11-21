@@ -2,13 +2,15 @@
 
 Which external services may receive candidate data, and what the MCP server sends by default. Related documents: [MCP server](mcp.md), [operation inventory](mcp-operations.md).
 
+**Current status: proof of concept with fake data.** dev-recruit holds only invented candidates, so no Data Processing Addendum (DPA) is needed and any Claude or Copilot plan may connect. The rules below apply before the first real candidate data, if the proof of concept passes its evaluation.
+
 ## Checks per service
 
 | Service | Rule | Check result |
 |---|---|---|
-| Claude (MCP client) | Candidate data may flow through MCP only to a commercial Claude plan, Team or Enterprise, covered by a Data Processing Addendum (DPA). Consumer plans (Free, Pro, Max) must not connect to dev-recruit | **Non confermato**: the developer has not confirmed the plan or the DPA. Until confirmed, the MCP server is used only with test data and the Phase 5 pilot does not start |
-| GitHub Copilot in VS Code (MCP client) | Same rule: only a business plan, Copilot Business or Copilot Enterprise, under the organisation's data protection terms | **Non confermato**: the developer has not confirmed the Copilot plan. VS Code stays limited to test data until confirmed |
-| Groq (in-app AI) | The app uses Groq free-plan models only (knowledge rule: models in `LLM_MODELS`, free plan). Candidate CVs and answers reach Groq through in-app generation and scoring | **Open risk**: no DPA with Groq is recorded for the free plan. No model change is made here; the decision (DPA, paid plan or another provider) is the developer's, with `knowledge-builder` for the knowledge rule |
+| Claude (MCP client) | With real candidate data, candidate data may flow through MCP only to a commercial Claude plan, Team or Enterprise, covered by a DPA; consumer plans (Free, Pro, Max) must not connect | **Not required for the proof of concept** (fake data only). To do before real data: choose the plan and sign the DPA |
+| GitHub Copilot in VS Code (MCP client) | With real candidate data, only a business plan, Copilot Business or Copilot Enterprise, under the organisation's data protection terms | **Not required for the proof of concept** (fake data only). To do before real data: confirm the Copilot plan |
+| Groq (in-app AI) | The app uses Groq free-plan models only (knowledge rule: models in `LLM_MODELS`, free plan). Candidate CVs and answers reach Groq through in-app generation and scoring | **Not required for the proof of concept** (fake data only). Open before real data: no DPA with Groq is recorded for the free plan; the decision (DPA, paid plan or another provider) is the developer's, with `knowledge-builder` for the knowledge rule |
 
 ## Minimal data by default
 

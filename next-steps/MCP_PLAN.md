@@ -66,7 +66,7 @@ Constraint: **the repository is public.** Everything in it (plugin, skills, MCP 
 - **Write safety**: drafts by default; confirmed writes re-check permissions server-side; dashboard-only for final decisions, deletions, messages to candidates.
 - **Prompt injection**: candidate content (CV, answers) returned as clearly delimited untrusted data; minimal data by default (no full CV unless requested); no tool sends anything outside the app.
 - **Audit log**: user, client, scope, tool, arguments, result, timestamp, channel `mcp`. Admin view of active MCP tokens with revoke; kill switch per org and per user.
-- **Data policy**: only commercial Claude plans (Team/Enterprise, DPA) for candidate data; same check for Copilot plan and for Groq (in-app).
+- **Data policy**: proof of concept with fake data, no DPA needed. Before real candidate data (only if the POC passes evaluation): commercial Claude plans (Team/Enterprise, DPA); same check for Copilot plan and for Groq (in-app).
 - **Skills content is public**: no confidential company process, no real candidate data in examples.
 
 ## Scoring (kept)
@@ -84,7 +84,7 @@ Kept in-app for now. To stay defensible:
 2. **Plugin skeleton**: plugin folder, instructions, `action-center` skill, marketplace file (D). Install in Claude desktop and VS Code; record what works where.
 3. **Widgets**: action center + position + application flow (C). Built (docs/mcp.md section 3), interview prep included; to verify in claude.ai and Claude desktop.
 4. **Drafts**: draft tools + preview/confirm widget; skills `create-position`, `quiz-for-candidate`, `interview-kit`, `interview-prep`. Built (docs/mcp.md section 4): position draft and publish, quiz preview and save, interview slot proposal and scheduling, kit draft by patch and kit ready, skills `create-position`, `quiz-for-candidate`, `schedule-interview`, `interview-prep`, `interview-kit`; pending proposals in the Colloqui tab (Pianifica, Scarta).
-5. **Pilot**: 2–3 recruiters via org distribution (E); review audit log and feedback.
+5. **Pilot**: 2–3 recruiters via org distribution (E), on fake data (no DPA needed for the POC); review audit log and feedback.
 6. **Broaden**: remaining operations, confirmed writes, VS Code polish, decide in-app AI fallback (Groq vs Haiku 5.5).
 
 ## Knowledge updates needed (via knowledge-builder, before Phase 1)

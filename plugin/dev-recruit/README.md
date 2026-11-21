@@ -18,7 +18,7 @@ Plugin per i recruiter: porta il lavoro di dev-recruit (posizioni, candidature, 
 ## Requisiti
 
 - Un account dev-recruit abilitato da un amministratore (verifica dell'email attivata, account non bloccato, accesso MCP attivo).
-- Per lavorare con dati di candidati reali: un piano Claude Team o Enterprise con accordo sul trattamento dei dati (DPA). Con altri piani usa solo dati di prova.
+- dev-recruit è una proof of concept con dati di fantasia: va bene qualsiasi piano Claude. Prima di usare dati di candidati reali servirà un piano Claude Team o Enterprise con accordo sul trattamento dei dati (DPA).
 
 Senza un account e senza aver completato l'autorizzazione, il plugin non dà accesso a nessun dato.
 
