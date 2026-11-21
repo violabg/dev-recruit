@@ -152,3 +152,36 @@ export type WidgetModel =
   | DraftPreviewWidget;
 
 export type WidgetKind = WidgetModel["kind"];
+
+// ====================
+// REACT WIDGETS (mcp-apps/react)
+// ====================
+
+/**
+ * Form of a new position, prefilled with what the assistant knows. A person
+ * completes it and saves the draft from the widget (create_position_draft),
+ * then may publish it (publish_draft, app-only). Same fields and validation
+ * as the dashboard form.
+ */
+export interface PositionFormWidget {
+  kind: "position-form";
+  prefill: {
+    title: string;
+    description: string;
+    experienceLevel: string;
+    skills: string[];
+    softSkills: string[];
+    contractType: string;
+  };
+  options: {
+    allSkills: { label: string; value: string; category: string }[];
+    allSoftSkills: { label: string; value: string }[];
+    experienceLevels: string[];
+    contractTypes: string[];
+  };
+  tools: { save: string; publish: string };
+  /** Dashboard page of a new position */
+  url: string;
+}
+
+export type ReactWidgetModel = PositionFormWidget;

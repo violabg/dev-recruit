@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { REACT_WIDGET_HTML } from "@/lib/mcp/widgets/react-html.generated";
 import { z } from "zod";
 
 vi.mock("@/lib/auth", () => ({ auth: { api: {} } }));
@@ -414,6 +415,7 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
       "ui://dev-recruit/application-flow.html",
       "ui://dev-recruit/draft-preview.html",
       "ui://dev-recruit/interview-prep.html",
+      "ui://dev-recruit/position-form.html",
     ]);
   });
 
@@ -431,5 +433,20 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
     expect(content.text).toMatch(/^<!doctype html>/i);
     // Inlined: no external script or stylesheet
     expect(content.text).not.toMatch(/<script[^>]+src=|<link[^>]+href=/i);
+  });
+
+  it("serves the React bundle for the position form, self-contained too", async () => {
+    const { body } = await rpc([echoTool], {
+      jsonrpc: "2.0",
+      id: 8,
+      method: "resources/read",
+      params: { uri: "ui://dev-recruit/position-form.html" },
+    });
+
+    const [content] = body.result.contents;
+    expect(content._meta.ui).toEqual({ csp: {}, prefersBorder: true });
+    expect(content.text).toMatch(/^<!doctype html>/i);
+    expect(content.text).not.toMatch(/<script[^>]+src=|<link[^>]+href=|url\(["']?https?:/i);
+    expect(content.text).toBe(REACT_WIDGET_HTML);
   });
 });

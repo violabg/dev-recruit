@@ -6,6 +6,7 @@ const url = (path: string) => `${APP_URL}${path}`;
 
 export const links = {
   actionCenter: () => url("/dashboard"),
+  newPosition: () => url("/dashboard/positions/new"),
   position: (positionId: string) => url(`/dashboard/positions/${positionId}`),
   positionQuiz: (positionId: string) =>
     url(`/dashboard/positions/${positionId}?tab=quiz`),

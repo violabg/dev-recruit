@@ -12,7 +12,7 @@ Plugin per i recruiter: porta il lavoro di dev-recruit (posizioni, candidature, 
   - `schedule-interview`: propone un colloquio (guida, data, partecipanti);
   - `interview-prep`: aiuta a prepararsi a un colloquio partendo dal kit;
   - `interview-kit`: completa o migliora il kit in bozza di un colloquio.
-- **Riquadri interattivi** (dove il client li supporta: claude.ai, Claude desktop): "Le mie azioni", posizione, candidatura, preparazione del colloquio e l'anteprima delle bozze con il pulsante di conferma.
+- **Riquadri interattivi** (dove il client li supporta: claude.ai, Claude desktop): "Le mie azioni", posizione, candidatura, preparazione del colloquio, il modulo della nuova posizione (gli stessi campi della dashboard) e l'anteprima delle bozze con il pulsante di conferma.
 - **Connessione al server MCP di dev-recruit**: un server remoto via HTTPS, autorizzato con OAuth. Il plugin non contiene credenziali, hook o programmi: installarlo non esegue nulla sul tuo computer.
 
 ## Requisiti
@@ -62,6 +62,7 @@ Bozze (l'assistente le prepara, una persona le conferma):
 
 | Strumento | Cosa fa | Conferma |
 |---|---|---|
+| `open_position_form` | Apre il modulo di una nuova posizione nel riquadro, precompilato dall'assistente: completi i campi e premi "Salva bozza" | "Salva bozza" e poi "Pubblica la posizione" nel riquadro |
 | `create_position_draft` | Crea una posizione in bozza, non visibile ai candidati | "Pubblica la posizione" nel riquadro, o dalla pagina della posizione |
 | `save_quiz_draft` | Mostra l'anteprima di un quiz, senza salvarlo | "Salva il quiz" nel riquadro; nessun candidato viene invitato |
 | `propose_interview_slot` | Salva una proposta di colloquio, senza pianificarlo | "Pianifica il colloquio" nel riquadro, o "Pianifica" sulla proposta nel tab Colloqui della candidatura; crea il colloquio e il kit in bozza, nessuna email |

@@ -54,6 +54,20 @@ export const getInterviewInputSchema = z.object({
 /** Same fields as the dashboard form; the position is created as a draft */
 export const createPositionDraftInputSchema = positionFormSchema;
 
+/**
+ * What the assistant already knows of a new position, to prefill the form
+ * widget: every field optional, nothing validated beyond its type (the form
+ * validates on save).
+ */
+export const openPositionFormInputSchema = z.object({
+  title: z.string().max(200, "Titolo di al massimo 200 caratteri").optional(),
+  description: z.string().max(10000, "Descrizione troppo lunga").optional(),
+  experienceLevel: z.string().max(100).optional(),
+  skills: z.array(z.string().max(100)).max(50).optional(),
+  softSkills: z.array(z.string().max(100)).max(50).optional(),
+  contractType: z.string().max(100).optional(),
+});
+
 /** A new quiz of a position: same fields as the quiz editor */
 export const quizDraftInputSchema = quizEditorSchema.extend({
   positionId: baseSchemas.id,
@@ -148,4 +162,5 @@ export type ListInterviewsInput = z.infer<typeof listInterviewsInputSchema>;
 export type GetInterviewInput = z.infer<typeof getInterviewInputSchema>;
 export type QuizDraftInput = z.infer<typeof quizDraftInputSchema>;
 export type KitPatchInput = z.infer<typeof kitPatchInputSchema>;
+export type OpenPositionFormInput = z.infer<typeof openPositionFormInputSchema>;
 export type PublishDraftInput = z.infer<typeof publishDraftInputSchema>;
