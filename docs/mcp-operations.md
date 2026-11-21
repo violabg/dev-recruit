@@ -45,6 +45,8 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | `setKitItemCoveredAction` | live notes | dashboard-only | — | — |
 | `saveInterviewerFeedbackAction` | interviewer scorecard | dashboard-only | — | — |
 | `submitInterviewerFeedbackAction` | interviewer scorecard (stage automation) | dashboard-only | — | — |
+| `scheduleInterviewProposalAction` | interview proposal (Pianifica in the Colloqui tab) | dashboard-only | — (same service as `publish_draft` with `kind: "proposal"`) | — |
+| `discardInterviewProposalAction` | interview proposal (Scarta) | dashboard-only | — | — |
 | `scheduleInterviewAction` | interview | write | `publish_draft` with `kind: "proposal"` (service `confirmInterviewProposal` → `scheduleInterview`), widget only | 4 |
 | `rescheduleInterviewAction` | interview | dashboard-only | — | 6 |
 | `cancelInterviewAction` | interview | dashboard-only | — | — |

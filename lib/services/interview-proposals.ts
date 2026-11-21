@@ -143,3 +143,25 @@ export async function confirmInterviewProposal(
     throw error;
   }
 }
+
+/** "Scarta": closes a pending proposal without scheduling anything. */
+export async function discardInterviewProposal(
+  actor: Actor,
+  proposalId: string,
+): Promise<{ applicationId: string }> {
+  await assertActorEnabled(prisma, actor);
+
+  const proposal = await prisma.interviewProposal.findUnique({
+    where: { id: proposalId },
+    select: { applicationId: true, status: true },
+  });
+  if (!proposal || proposal.status !== "pending") throw new UserError(NOT_FOUND);
+
+  const discarded = await prisma.interviewProposal.updateMany({
+    where: { id: proposalId, status: "pending" },
+    data: { status: "discarded", handledAt: new Date(), handledBy: actor.userId },
+  });
+  if (discarded.count === 0) throw new UserError(NOT_FOUND);
+
+  return { applicationId: proposal.applicationId };
+}

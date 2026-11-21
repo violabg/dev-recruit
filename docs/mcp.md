@@ -149,5 +149,5 @@ The assistant prepares drafts; a person confirms them with the button of the dra
 
 Known limits:
 
-- Pending proposals are visible through `get_scheduling_options` only; the dashboard does not list them yet.
-- In a client without MCP Apps a draft position is opened and a kit is marked ready from the dashboard; a quiz preview cannot be saved and a proposal cannot be scheduled there.
+- Pending proposals are listed at the top of the application's Colloqui tab ("Proposte da confermare"), with **Pianifica** (`scheduleInterviewProposalAction`, same `confirmInterviewProposal`) and **Scarta** (`discardInterviewProposalAction`, status `discarded`).
+- In a client without MCP Apps positions, proposals and kits are confirmed from the dashboard; only a quiz preview cannot be saved there.

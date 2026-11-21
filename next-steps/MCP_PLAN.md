@@ -83,7 +83,7 @@ Kept in-app for now. To stay defensible:
 1. **Read-only**: OAuth (B), audit log, tools `action_center`, `list_positions`, `get_position`, `get_application`, `list_interviews`; text results with deep links. Test with Claude desktop via manual connector.
 2. **Plugin skeleton**: plugin folder, instructions, `action-center` skill, marketplace file (D). Install in Claude desktop and VS Code; record what works where.
 3. **Widgets**: action center + position + application flow (C). Built (docs/mcp.md section 3); to verify in claude.ai and Claude desktop.
-4. **Drafts**: draft tools + preview/confirm widget; skills `create-position`, `quiz-for-candidate`, `interview-kit`, `interview-prep`. Built (docs/mcp.md section 4): position draft and publish, quiz preview and save, interview slot proposal and scheduling, kit draft by patch and kit ready, skills `create-position`, `quiz-for-candidate`, `schedule-interview`, `interview-prep`, `interview-kit`. Open: pending proposals in the dashboard.
+4. **Drafts**: draft tools + preview/confirm widget; skills `create-position`, `quiz-for-candidate`, `interview-kit`, `interview-prep`. Built (docs/mcp.md section 4): position draft and publish, quiz preview and save, interview slot proposal and scheduling, kit draft by patch and kit ready, skills `create-position`, `quiz-for-candidate`, `schedule-interview`, `interview-prep`, `interview-kit`; pending proposals in the Colloqui tab (Pianifica, Scarta).
 5. **Pilot**: 2–3 recruiters via org distribution (E); review audit log and feedback.
 6. **Broaden**: remaining operations, confirmed writes, VS Code polish, decide in-app AI fallback (Groq vs Haiku 5.5).
 

@@ -128,6 +128,10 @@ export type RescheduleInterviewInput = z.infer<
 export const interviewIdSchema = z.object({ interviewId: baseSchemas.id });
 export type InterviewIdInput = z.infer<typeof interviewIdSchema>;
 
+/** Input of the pending-proposal actions (Pianifica, Scarta) */
+export const proposalIdSchema = z.object({ proposalId: baseSchemas.id });
+export type ProposalIdInput = z.infer<typeof proposalIdSchema>;
+
 // ====================
 // KIT EDITOR
 // ====================

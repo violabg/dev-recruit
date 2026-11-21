@@ -53,6 +53,22 @@ export function ColloquioSection() {
             ),
           },
           {
+            title: "Proposte da confermare",
+            body: (
+              <>
+                Un colloquio preparato con l&apos;assistente (Claude con il
+                plugin dev-recruit) arriva come <strong>proposta</strong>: in
+                cima al tab Colloqui, con badge <strong>Proposta</strong>,
+                round, guida, data, partecipanti e chi l&apos;ha proposta.
+                Finché nessuno la conferma non è pianificato nulla.{" "}
+                <strong>Pianifica</strong> crea il colloquio come la
+                pianificazione (kit in bozza, fase Colloquio) e apre la
+                preparazione; <strong>Scarta</strong> la chiude senza
+                pianificare. Su una candidatura chiusa resta solo Scarta.
+              </>
+            ),
+          },
+          {
             title: "Riepilogo e .ics",
             body: (
               <>

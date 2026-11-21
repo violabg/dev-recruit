@@ -64,10 +64,10 @@ Bozze (l'assistente le prepara, una persona le conferma):
 |---|---|---|
 | `create_position_draft` | Crea una posizione in bozza, non visibile ai candidati | "Pubblica la posizione" nel riquadro, o dalla pagina della posizione |
 | `save_quiz_draft` | Mostra l'anteprima di un quiz, senza salvarlo | "Salva il quiz" nel riquadro; nessun candidato viene invitato |
-| `propose_interview_slot` | Salva una proposta di colloquio, senza pianificarlo | "Pianifica il colloquio" nel riquadro; crea il colloquio e il kit in bozza, nessuna email |
+| `propose_interview_slot` | Salva una proposta di colloquio, senza pianificarlo | "Pianifica il colloquio" nel riquadro, o "Pianifica" sulla proposta nel tab Colloqui della candidatura; crea il colloquio e il kit in bozza, nessuna email |
 | `save_interview_kit_draft` | Modifica il kit in bozza voce per voce (domande, briefing, ipotesi, checklist); le domande non indicate restano | "Segna il kit come pronto" nel riquadro, o dalla pagina di preparazione |
 
-I pulsanti di conferma chiamano strumenti che l'assistente non può usare: solo una persona può confermare. Nei client senza riquadri (per esempio VS Code senza le MCP Apps) una posizione in bozza si pubblica e un kit si segna pronto dalla dashboard; il salvataggio del quiz e la pianificazione delle proposte richiedono il riquadro.
+I pulsanti di conferma chiamano strumenti che l'assistente non può usare: solo una persona può confermare. Nei client senza riquadri (per esempio VS Code senza le MCP Apps) posizioni, proposte di colloquio e kit si confermano dalla dashboard; solo il salvataggio del quiz richiede il riquadro.
 
 ## Cosa resta solo nella dashboard
 

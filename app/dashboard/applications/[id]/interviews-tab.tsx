@@ -1,4 +1,5 @@
 import { InterviewCard } from "@/components/interviews/interview-card";
+import { InterviewProposalCard } from "@/components/interviews/interview-proposal-card";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
@@ -8,6 +9,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { getApplicationDetail } from "@/lib/data/applications";
+import { getPendingInterviewProposals } from "@/lib/data/interview-proposals";
 import { getInterviewsByApplication } from "@/lib/data/interviews";
 import { getUserOptions } from "@/lib/data/users";
 import type { ApplicationStage } from "@/lib/schemas";
@@ -26,13 +28,17 @@ const NO_SCHEDULING_STAGES: readonly ApplicationStage[] = [
   "hired",
 ];
 
-/** Tab Colloqui: the interviews of the application, newest round first. */
+/**
+ * Tab Colloqui: the pending proposals prepared with the assistant, then the
+ * interviews of the application, newest round first.
+ */
 export async function InterviewsTab({ params }: Props) {
   const { id } = await params;
-  const [detail, interviews, users] = await Promise.all([
+  const [detail, interviews, users, proposals] = await Promise.all([
     getApplicationDetail(id),
     getInterviewsByApplication(id),
     getUserOptions(),
+    getPendingInterviewProposals(id),
   ]);
 
   if (!detail) {
@@ -57,7 +63,20 @@ export async function InterviewsTab({ params }: Props) {
         </div>
       )}
 
-      {interviews.length === 0 ? (
+      {proposals.length > 0 && (
+        <section aria-label="Proposte da confermare" className="flex flex-col gap-3">
+          <h3 className="font-medium text-sm">Proposte da confermare</h3>
+          {proposals.map((proposal) => (
+            <InterviewProposalCard
+              key={proposal.id}
+              proposal={proposal}
+              canSchedule={canSchedule}
+            />
+          ))}
+        </section>
+      )}
+
+      {interviews.length === 0 && proposals.length === 0 ? (
         <Empty className="border h-[220px]">
           <EmptyHeader>
             <EmptyMedia variant="icon">

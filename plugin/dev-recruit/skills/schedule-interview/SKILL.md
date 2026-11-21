@@ -11,6 +11,6 @@ Usa questa skill quando l'utente vuole fissare o organizzare un colloquio con un
 4. Concorda con l'utente: guida, round (di solito quello proposto), data e ora, durata in minuti, link della call (facoltativo), partecipanti. Serve esattamente un conduttore (`lead`); gli altri sono osservatori (`observer`).
 5. Scrivi `scheduledAt` in formato ISO con il fuso, per esempio `2026-11-25T10:00:00+01:00`, e ripeti all'utente data e ora in italiano prima di procedere.
 6. Chiama `propose_interview_slot`. Lo strumento salva solo una proposta: non pianifica nulla e non invia email.
-7. Spiega che il colloquio si pianifica con il pulsante "Pianifica il colloquio" nel riquadro, che crea anche il kit in bozza.
+7. Spiega che il colloquio si pianifica con il pulsante "Pianifica il colloquio" nel riquadro, oppure con "Pianifica" sulla proposta nel tab Colloqui della candidatura; la pianificazione crea anche il kit in bozza.
 
 Non dire che il colloquio è pianificato finché il riquadro non lo conferma. Non promettere inviti o email: dev-recruit non ne invia.

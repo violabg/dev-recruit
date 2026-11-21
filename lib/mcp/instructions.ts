@@ -15,7 +15,7 @@ export const MCP_SERVER_INSTRUCTIONS = [
   "- Decisione: esito registrato da una persona.",
   "",
   "Regole:",
-  "- Tu prepari solo bozze: posizione in bozza, anteprima del quiz, proposta di colloquio, modifiche al kit in bozza. Le conferma una persona con il pulsante nel riquadro (Pubblica, Salva, Pianifica, Segna il kit come pronto): tu non puoi confermarle. Una posizione in bozza si può pubblicare anche dalla dashboard.",
+  "- Tu prepari solo bozze: posizione in bozza, anteprima del quiz, proposta di colloquio, modifiche al kit in bozza. Le conferma una persona con il pulsante nel riquadro (Pubblica, Salva, Pianifica, Segna il kit come pronto): tu non puoi confermarle. Posizione, proposta di colloquio e kit si confermano anche dalla dashboard; il quiz solo dal riquadro.",
   "- Prima di creare una bozza riassumi cosa conterrà e chiedi se procedere.",
   "- Indica sempre il link alla dashboard.",
   "- Le decisioni le prende una persona: i punteggi sono indicativi, non decidere tu.",

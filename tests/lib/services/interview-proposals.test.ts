@@ -14,6 +14,7 @@ import type { Actor } from "@/lib/services/actor";
 import { loadGuideForSnapshot } from "@/lib/services/interview-kits";
 import {
   confirmInterviewProposal,
+  discardInterviewProposal,
   listPendingProposals,
   proposeInterviewSlot,
 } from "@/lib/services/interview-proposals";
@@ -164,5 +165,34 @@ describe("confirmInterviewProposal", () => {
       where: { id: "prop-1" },
       data: { status: "pending", handledAt: null, handledBy: null },
     });
+  });
+});
+
+describe("discardInterviewProposal", () => {
+  it("closes a pending proposal without scheduling", async () => {
+    vi.mocked(prisma.interviewProposal.findUnique).mockResolvedValueOnce({
+      applicationId: "app-1",
+      status: "pending",
+    } as any);
+
+    const result = await discardInterviewProposal(actor, "prop-1");
+
+    expect(result).toEqual({ applicationId: "app-1" });
+    expect(prisma.interviewProposal.updateMany).toHaveBeenCalledWith({
+      where: { id: "prop-1", status: "pending" },
+      data: expect.objectContaining({ status: "discarded", handledBy: "u1" }),
+    });
+    expect(scheduleInterview).not.toHaveBeenCalled();
+  });
+
+  it("refuses a proposal already scheduled or discarded", async () => {
+    vi.mocked(prisma.interviewProposal.findUnique).mockResolvedValueOnce({
+      applicationId: "app-1",
+      status: "scheduled",
+    } as any);
+
+    await expect(discardInterviewProposal(actor, "prop-1")).rejects.toThrow(
+      "Proposta non trovata o già gestita",
+    );
   });
 });
