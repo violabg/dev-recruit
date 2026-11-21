@@ -21,7 +21,7 @@ export function MappaSection() {
             [
               <strong key="1">Le mie azioni</strong>,
               "La homepage operativa: cosa aspetta te",
-              "Test da valutare, candidature ferme da più di 7 giorni, posizioni con setup incompleto, colloqui senza kit pronto, schede da compilare",
+              "Posizioni con setup incompleto, test da valutare, colloqui senza kit pronto, schede da compilare; a parte, le candidature ferme da più di 7 giorni",
             ],
             [
               <strong key="2">Posizioni</strong>,

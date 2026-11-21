@@ -86,7 +86,7 @@ export function CandidaturaSection() {
         title="La Prossima azione dice cosa fare"
       >
         <GuideTable
-          head={["Situazione", "Card"]}
+          head={["Situazione", "Prossima azione"]}
           rows={[
             ["CV caricato ma non valutato", <strong key="a">Valuta CV</strong>],
             [
@@ -144,7 +144,7 @@ export function CandidaturaSection() {
         </GuideText>
         <GuideFigure
           src="/guida/07-candidatura-prossima-azione.png"
-          alt="Pagina della candidatura con la card Prossima azione e la cronologia"
+          alt="Pagina della candidatura con la linea delle fasi, la Prossima azione e la cronologia"
           caption="Candidatura: prossima azione e cronologia delle prove"
           width={1440}
           height={1039}
