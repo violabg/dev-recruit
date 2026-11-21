@@ -20,7 +20,11 @@ import {
   generateStructured,
 } from "@/lib/services/ai/generate";
 import { FALLBACK_MODELS, LLM_MODELS } from "@/lib/services/ai/models";
-import { AIErrorCode, AIGenerationError } from "@/lib/services/ai/types";
+import {
+  AIErrorCode,
+  AIGenerationError,
+  DEFAULT_CONFIG,
+} from "@/lib/services/ai/types";
 import { APICallError, generateText } from "ai";
 
 const schema = z.object({ value: z.string() });
@@ -135,6 +139,30 @@ describe("generateStructured", () => {
     });
   });
 
+  it("passes the output budget through", async () => {
+    vi.mocked(generateText).mockResolvedValue({
+      output: { value: "ok" },
+    } as any);
+
+    await generateStructured({ ...base, maxOutputTokens: 16000 });
+
+    expect(vi.mocked(generateText).mock.calls[0][0]).toMatchObject({
+      maxOutputTokens: 16000,
+    });
+  });
+
+  it("uses the configured output budget by default", async () => {
+    vi.mocked(generateText).mockResolvedValue({
+      output: { value: "ok" },
+    } as any);
+
+    await generateStructured(base);
+
+    expect(vi.mocked(generateText).mock.calls[0][0]).toMatchObject({
+      maxOutputTokens: DEFAULT_CONFIG.maxOutputTokens,
+    });
+  });
+
   it("asks for strict structured outputs with the strict schema", async () => {
     vi.mocked(generateText).mockResolvedValue({
       output: { value: "ok" },
@@ -174,6 +202,59 @@ describe("generateStructured", () => {
       groq: { structuredOutputs: false },
     });
     expect(calls[1].output.schema).toBe(schema);
+  });
+
+  it("retries strict mode once when the generated JSON is invalid", async () => {
+    const invalidJson = () =>
+      new APICallError({
+        message: "Failed to generate JSON. Please adjust your prompt.",
+        url: "https://api.groq.com",
+        requestBodyValues: {},
+        statusCode: 400,
+        responseBody: JSON.stringify({
+          error: { code: "json_validate_failed" },
+        }),
+      });
+
+    vi.mocked(generateText)
+      .mockRejectedValueOnce(invalidJson())
+      .mockResolvedValue({ output: { value: "ok" } } as any);
+
+    await expect(generateStructured(base)).resolves.toEqual({ value: "ok" });
+
+    const modes = vi
+      .mocked(generateText)
+      .mock.calls.map(
+        (c) => (c[0] as any).providerOptions.groq.structuredOutputs,
+      );
+    expect(modes).toEqual([true, true]);
+  });
+
+  it("falls back to JSON mode when the strict retry fails too", async () => {
+    const invalidJson = () =>
+      new APICallError({
+        message: "Failed to generate JSON. Please adjust your prompt.",
+        url: "https://api.groq.com",
+        requestBodyValues: {},
+        statusCode: 400,
+        responseBody: JSON.stringify({
+          error: { code: "json_validate_failed" },
+        }),
+      });
+
+    vi.mocked(generateText)
+      .mockRejectedValueOnce(invalidJson())
+      .mockRejectedValueOnce(invalidJson())
+      .mockResolvedValue({ output: { value: "json" } } as any);
+
+    await expect(generateStructured(base)).resolves.toEqual({ value: "json" });
+
+    const modes = vi
+      .mocked(generateText)
+      .mock.calls.map(
+        (c) => (c[0] as any).providerOptions.groq.structuredOutputs,
+      );
+    expect(modes).toEqual([true, true, false]);
   });
 
   it("does not switch to JSON mode for other provider errors", async () => {

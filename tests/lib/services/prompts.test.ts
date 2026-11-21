@@ -505,6 +505,19 @@ describe("buildPositionDescriptionPrompt", () => {
     expect(prompt).toContain("Not specified");
     expect(prompt).toContain("Developer");
   });
+
+  it("should work when only a starting description is given", () => {
+    const prompt = buildPositionDescriptionPrompt({
+      title: "",
+      experienceLevel: "",
+      skills: [],
+      currentDescription: "Testo di partenza",
+    });
+
+    expect(prompt).toContain("Not specified");
+    expect(prompt).toContain("Testo di partenza");
+    expect(prompt).toContain('when one is "Not specified", do not invent it');
+  });
 });
 
 describe("buildQuizPrompt with scorecard criteria", () => {
@@ -704,6 +717,7 @@ describe("kit prompts", () => {
     ],
     templateQuestionCount: 6,
     keptAiItemCount: 0,
+    existingQuestions: ["Puoi presentarti e raccontare il tuo percorso?"],
     resumeText: "Esperienza in React dal 2020",
     resumeWeaknesses: ["Poca esperienza di test"],
     resumeCriteriaGaps: [
@@ -754,6 +768,10 @@ describe("kit prompts", () => {
     expect(prompt).toContain("Schede F1 — C1: voti discordanti (2, 5)");
     expect(prompt).toContain("at most 4 personalized questions");
     expect(prompt).toContain("30-40% of the interview time");
+    expect(prompt).toContain("never repeat or paraphrase");
+    expect(prompt).toContain(
+      "Questions already in the kit (template and kept ones):\n- Puoi presentarti e raccontare il tuo percorso?",
+    );
     expect(prompt).toContain("Write every value in Italian");
     expect(prompt).toContain('"sectionKind" is one of: technical, closing');
     expect(prompt).not.toContain("crit-db-id-react");
@@ -853,6 +871,10 @@ describe("decision review prompts", () => {
     expect(system).toContain("in italiano");
     expect(system).toContain("CONTRO la decisione");
     expect(system).toContain("età, famiglia, stato civile, figli, religione");
+    // The user reads the explanation: criterion names, never internal keys
+    expect(system).toContain(
+      "Riferisciti ai criteri con il loro nome, mai con la chiave",
+    );
   });
 
   it("lists the criteria by key with their statistics and flags", () => {

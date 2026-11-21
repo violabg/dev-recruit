@@ -191,15 +191,25 @@ describe("positionDescriptionSchema", () => {
       const result = positionDescriptionSchema.safeParse(validData);
       expect(result.success).toBe(true);
     });
+
+    it("should accept a request without title, level and skills", () => {
+      const validData = {
+        title: "",
+        experienceLevel: "",
+        skills: [],
+        currentDescription: "Testo di partenza",
+      };
+
+      const result = positionDescriptionSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
   });
 
   describe("invalid inputs", () => {
-    it("should reject empty experience level", () => {
+    it("should reject a description longer than 2000 characters", () => {
       const invalidData = {
         title: "Developer",
-        experienceLevel: "",
-        skills: ["React"],
-        currentDescription: "Description",
+        currentDescription: "x".repeat(2001),
       };
 
       const result = positionDescriptionSchema.safeParse(invalidData);

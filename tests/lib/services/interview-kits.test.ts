@@ -333,12 +333,12 @@ const interviewRow = (resumeUrl: string | null = "https://r2/cv.pdf") => ({
   kit: {
     sections: [{ id: "s1", title: "Tecnica", minutes: 30, kind: "technical" }],
     items: [
-      { origin: "template", edited: false },
-      { origin: "template", edited: true },
-      { origin: "template", edited: false },
-      { origin: "cv", edited: true },
-      { origin: "quiz_answer", edited: false },
-      { origin: "manual", edited: false },
+      { origin: "template", edited: false, text: "Presentati" },
+      { origin: "template", edited: true, text: "Progetto complesso?" },
+      { origin: "template", edited: false, text: "Accessibilità" },
+      { origin: "cv", edited: true, text: "Ruolo da PM" },
+      { origin: "quiz_answer", edited: false, text: "Concorrenza" },
+      { origin: "manual", edited: false, text: "Domanda manuale" },
     ],
   },
 });
@@ -422,6 +422,12 @@ describe("buildKitGenerationContext", () => {
     expect(context.interview).toEqual({ id: "int-1", round: 2, durationMinutes: 60 });
     expect(context.templateQuestionCount).toBe(3);
     expect(context.keptAiItemCount).toBe(1);
+    expect(context.existingQuestions).toEqual([
+      "Presentati",
+      "Progetto complesso?",
+      "Accessibilità",
+      "Ruolo da PM",
+    ]);
     expect(context.sections).toEqual([
       { id: "s1", title: "Tecnica", minutes: 30, kind: "technical" },
     ]);

@@ -264,6 +264,41 @@ async function resolveCriteriaAssessment(
   });
 }
 
+/**
+ * Resume evaluation of a candidate for a position, in the shape the CV tab
+ * shows. Uncached: the page read wraps it in its own cache entry, and the
+ * panel reads it right after the evaluation stream has stored it.
+ */
+export async function getResumeEvaluation(
+  candidateId: string,
+  positionId: string,
+): Promise<ApplicationDetail["resumeEvaluation"]> {
+  const stored = await prisma.evaluation.findFirst({
+    where: { candidateId, positionId, assessmentId: null },
+    select: {
+      id: true,
+      fitScore: true,
+      evaluation: true,
+      strengths: true,
+      weaknesses: true,
+      recommendation: true,
+      createdAt: true,
+      criteriaAssessment: true,
+    },
+  });
+
+  if (!stored) return null;
+
+  const { criteriaAssessment: rawAssessment, ...evaluation } = stored;
+  return {
+    ...evaluation,
+    criteriaAssessment: await resolveCriteriaAssessment(
+      positionId,
+      rawAssessment,
+    ),
+  };
+}
+
 /** Everything the application page shows */
 export async function getApplicationDetail(
   id: string,
@@ -361,36 +396,10 @@ export async function getApplicationDetail(
 
   // The resume evaluation of an application: same candidate and position,
   // no assessment
-  const storedResumeEvaluation = await prisma.evaluation.findFirst({
-    where: {
-      candidateId: application.candidateId,
-      positionId: application.positionId,
-      assessmentId: null,
-    },
-    select: {
-      id: true,
-      fitScore: true,
-      evaluation: true,
-      strengths: true,
-      weaknesses: true,
-      recommendation: true,
-      createdAt: true,
-      criteriaAssessment: true,
-    },
-  });
-
-  let resumeEvaluation: ApplicationDetail["resumeEvaluation"] = null;
-  if (storedResumeEvaluation) {
-    const { criteriaAssessment: rawAssessment, ...evaluation } =
-      storedResumeEvaluation;
-    resumeEvaluation = {
-      ...evaluation,
-      criteriaAssessment: await resolveCriteriaAssessment(
-        application.positionId,
-        rawAssessment,
-      ),
-    };
-  }
+  const resumeEvaluation = await getResumeEvaluation(
+    application.candidateId,
+    application.positionId,
+  );
 
   // Quizzes of the position not yet sent to this candidate, newest first
   const sentQuizzes = await prisma.assessment.findMany({

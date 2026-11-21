@@ -33,6 +33,12 @@ export interface AIGenerationConfig {
   maxRetries: number;
   retryDelay: number;
   timeout: number;
+  /**
+   * Completion budget of one attempt when the caller sets none. Without an
+   * explicit budget the provider default applies (3072 tokens on Groq), and
+   * reasoning tokens can use it up before the answer is written.
+   */
+  maxOutputTokens: number;
   fallbackModels: string[];
 }
 
@@ -41,6 +47,7 @@ export const DEFAULT_CONFIG: AIGenerationConfig = {
   maxRetries: 3,
   retryDelay: 1000, // 1 second base delay
   timeout: 60000, // 60 seconds
+  maxOutputTokens: 8000,
   fallbackModels: [...FALLBACK_MODELS],
 };
 

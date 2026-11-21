@@ -531,8 +531,13 @@ export function buildQuizPrompt(
 export function buildPositionDescriptionPrompt(
   params: GeneratePositionDescriptionParams,
 ): string {
-  const sanitizedTitle = sanitizeInput(params.title);
-  const sanitizedSkills = params.skills.map((value) => sanitizeInput(value)).join(", ");
+  const sanitizedTitle = params.title ? sanitizeInput(params.title) : "Not specified";
+  const sanitizedExperience = params.experienceLevel
+    ? sanitizeInput(params.experienceLevel)
+    : "Not specified";
+  const sanitizedSkills = params.skills.length
+    ? params.skills.map((value) => sanitizeInput(value)).join(", ")
+    : "Not specified";
   const sanitizedSoftSkills = params.softSkills
     ? params.softSkills.map((value) => sanitizeInput(value)).join(", ")
     : "Not specified";
@@ -550,11 +555,12 @@ export function buildPositionDescriptionPrompt(
     You are a senior technical recruiter writing concise Italian job descriptions for a modern tech team.
     Write a short summary (4-8 sentences) of the role: the team context, the main responsibilities, the required experience and the key technologies, named in their current form.
     Do not invent salary, benefits, company name or location; do not use clichés ("ambiente giovane e dinamico") or discriminatory requirements (age, gender, nationality).
+    Use only the details given below: when one is "Not specified", do not invent it and keep that part general.
     Write only the description text in Italian. Do not include JSON, markdown, or any formatting - just the plain description text.
 
     Position:
     - Title: ${sanitizedTitle}
-    - Experience level: ${sanitizeInput(params.experienceLevel)}
+    - Experience level: ${sanitizedExperience}
     - Technical skills: ${sanitizedSkills}
     - Soft skills: ${sanitizedSoftSkills}
     - Contract type: ${sanitizedContract}
@@ -790,7 +796,7 @@ export function buildKitSystemPrompt(): string {
           }
 
           Field names stay in English; EVERY value (briefing, hypotheses, questions, follow-ups, rationales, anchors, checklist) MUST be written in Italian.
-          The personalized questions ADD to the questions of the interview template: they never replace them.
+          The personalized questions ADD to the questions of the interview template: they never replace them, never repeat them and never paraphrase them.
           Never ask about age, marital status, family, children, religion, political opinions or health.
           Always refer to the person as "il candidato": you are never given a name.`;
 }
@@ -829,6 +835,9 @@ export function buildKitPrompt(
     )
     .join("\n");
   const kinds = [...new Set(context.sections.map((section) => section.kind))];
+  const existingLines = context.existingQuestions
+    .map((question) => `- ${question}`)
+    .join("\n");
 
   const criteriaLines = keys.criteria
     .map((criterion) => {
@@ -902,10 +911,13 @@ export function buildKitPrompt(
           Sections of the interview (from the template):
 ${sectionLines}
 
+          Questions already in the kit (template and kept ones):
+${existingLines || "(nessuna)"}
+
           Evaluation criteria of this position:
 ${criteriaLines}
 
-          CV of il candidato:
+          CV del candidato:
           ${context.resumeText ?? "CV non disponibile"}
 
           Weaknesses from the CV evaluation:
@@ -921,7 +933,7 @@ ${answerLines || "(nessuna)"}
 ${roundLines || "(nessuno)"}
 
           Rules:
-          1. Propose at most ${cap} personalized questions: together they take at most 30-40% of the interview time. They are added to the template questions, never replace them.
+          1. Propose at most ${cap} personalized questions: together they take at most 30-40% of the interview time. They are added to the template questions, never replace them, and never repeat or paraphrase a question already in the kit: cover different ground.
           2. Each question has two or three follow-ups.
           3. "criterionKeys" uses only keys from the criteria list above.
           4. "origin" is one of cv, resume_gap, quiz_answer, previous_round, and "rationale" explains why the question is asked (for example: "nel test ha sbagliato la domanda Q4 sulla concorrenza").
@@ -931,7 +943,7 @@ ${roundLines || "(nessuno)"}
           8. "sectionKind" is one of: ${kinds.join(", ")}.
           9. "briefing" has exactly 5 short points about il candidato.
           10. Each hypothesis has a "criterionKey" from the list, the hypothesis and how to verify it.
-          11. "suggestedChecklist" items have category communicate or logistics.
+          11. "suggestedChecklist" items are practical reminders for the interviewer: what to communicate to the candidate (RAL e benefit, modalità di lavoro, prossimi passi) or logistics (link, partecipanti, aula). Never interview techniques, evaluation criteria or timing advice.
           12. Never ask about age, marital status, family, children, religion, political opinions or health.
           13. Ground every question in the given sources: never invent CV facts. Technical questions reflect the current practice of the position's technologies.
           14. Write every value in Italian.`;
@@ -976,7 +988,8 @@ export function buildDecisionReviewSystemPrompt(): string {
           2. In "criterionKeys" usa solo le chiavi dei criteri elencati (C1, C2, ...); lascia la lista vuota se il motivo non riguarda un criterio.
           3. Basa gli argomenti solo sui dati forniti: criteri senza prove, voti discordanti tra intervistatori, criteri indispensabili sotto il livello atteso, punteggi globali.
           4. Non argomentare e non menzionare mai età, famiglia, stato civile, figli, religione, opinioni politiche o salute.
-          5. I nomi dei campi JSON restano in inglese; OGNI valore deve essere scritto in italiano.`;
+          5. Riferisciti ai criteri con il loro nome, mai con la chiave (C1, C2, …) o con un id interno.
+          6. I nomi dei campi JSON restano in inglese; OGNI valore deve essere scritto in italiano.`;
 }
 
 /**

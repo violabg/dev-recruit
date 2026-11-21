@@ -4,8 +4,10 @@ import StreamingEvaluationCard from "@/app/dashboard/candidates/[id]/evaluations
 import { parsePartialEvaluation } from "@/app/dashboard/candidates/[id]/evaluations/streaming-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { syncResumeEvaluationAction } from "@/lib/actions/evaluations";
 import type { ApplicationDetail } from "@/lib/data/applications";
 import type { OverallEvaluation } from "@/lib/schemas";
+import { unwrap } from "@/lib/utils/action-result";
 import { cn } from "cn";
 import {
   AlertTriangle,
@@ -38,7 +40,7 @@ export function ResumeEvaluationPanel({
   positionTitle,
   hasResume,
   resumeUrl,
-  evaluation,
+  evaluation: initialEvaluation,
 }: {
   candidateId: string;
   positionId: string;
@@ -49,6 +51,9 @@ export function ResumeEvaluationPanel({
 }) {
   const router = useRouter();
   const [isStreaming, setIsStreaming] = useState(false);
+  // The evaluation the stream route has stored: shown as soon as it comes
+  // back from syncResumeEvaluationAction, without waiting for the page cache.
+  const [evaluation, setEvaluation] = useState(initialEvaluation);
   const [streamingEvaluation, setStreamingEvaluation] =
     useState<Partial<OverallEvaluation> | null>(null);
 
@@ -87,6 +92,12 @@ export function ResumeEvaluationPanel({
         setStreamingEvaluation(parsePartialEvaluation(fullText));
       }
 
+      // The route stored the evaluation on the server: read it back (the
+      // action also expires the caches) instead of trusting the page cache
+      const { evaluation: stored } = unwrap(
+        await syncResumeEvaluationAction({ candidateId, positionId }),
+      );
+      setEvaluation(stored);
       toast.success("Valutazione generata con successo");
       router.refresh();
     } catch (error) {

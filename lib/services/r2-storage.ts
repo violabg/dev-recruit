@@ -63,8 +63,25 @@ export function extractKeyFromResumeUrl(url: string): string | null {
     }
     return key;
   } catch {
-    return null;
+    // Not a URL: the value is already the key (older records, imports)
+    const key = url.replace(/^\/+/, "");
+    return key || null;
   }
+}
+
+/**
+ * Public URL of a resume. Uploads store the full public URL; a bare R2 key
+ * (older records, imported data) is turned into one here.
+ */
+export function resumePublicUrl(value: string): string {
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const base = (
+    process.env.R2_PUBLIC_URL ||
+    `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.dev`
+  ).replace(/\/+$/, "");
+
+  return `${base}/${value.replace(/^\/+/, "")}`;
 }
 
 /**

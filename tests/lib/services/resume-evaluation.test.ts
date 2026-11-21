@@ -173,6 +173,21 @@ describe("prepareResumeEvaluation", () => {
     expect(error.status).toBe(status);
   });
 
+  it("resolves a bare R2 key before reading the resume", async () => {
+    vi.stubEnv("R2_PUBLIC_URL", "https://files.example");
+    vi.mocked(prisma.candidate.findUnique).mockResolvedValue({
+      ...candidate,
+      resumeUrl: "resumes/cand1/cv.pdf",
+    } as any);
+
+    await prepareResumeEvaluation("cand1", "pos1");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://files.example/resumes/cand1/cv.pdf",
+    );
+    vi.unstubAllEnvs();
+  });
+
   it("without criteria asks nothing more and returns an empty key map", async () => {
     const prepared = await prepareResumeEvaluation("cand1", "pos1");
 
@@ -231,9 +246,13 @@ describe("prepareResumeEvaluation", () => {
       vi.fn(async () => ({ ok: false, statusText: "Not Found" })),
     );
 
-    await expect(prepareResumeEvaluation("cand1", "pos1")).rejects.toThrow(
-      "Impossibile leggere il curriculum",
+    const error = await prepareResumeEvaluation("cand1", "pos1").catch(
+      (e) => e,
     );
+
+    expect(error).toBeInstanceOf(ResumeEvaluationError);
+    expect(error.status).toBe(400);
+    expect(error.message).toContain("non è raggiungibile");
   });
 });
 

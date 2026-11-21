@@ -18,10 +18,16 @@ export const positionFormSchema = z.object({
   contractType: z.string().optional(),
 });
 
+// Generation of a position description: every detail is optional, so the
+// description can be written (or improved) before the position is complete.
 export const positionDescriptionSchema = z.object({
-  title: baseSchemas.title,
-  experienceLevel: z.string().min(1, "Il livello di esperienza è richiesto."),
-  skills: baseSchemas.skills,
+  title: z
+    .string()
+    .trim()
+    .max(200, "Il titolo non può superare 200 caratteri")
+    .optional(),
+  experienceLevel: z.string().optional(),
+  skills: z.array(z.string()).optional(),
   softSkills: z.array(z.string()).optional(),
   contractType: z.string().optional(),
   currentDescription: baseSchemas.description,

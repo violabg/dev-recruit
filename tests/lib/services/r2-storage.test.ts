@@ -9,6 +9,11 @@
 import { validateResumeFile } from "@/lib/services/r2-storage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  extractKeyFromResumeUrl,
+  resumePublicUrl,
+} from "@/lib/services/r2-storage";
+
 // Mock AWS SDK
 vi.mock("@aws-sdk/client-s3", () => ({
   S3Client: vi.fn().mockImplementation(() => ({
@@ -194,10 +199,55 @@ describe("r2-storage", () => {
     });
   });
 
+  describe("resumePublicUrl", () => {
+    it("keeps a value that is already a URL", () => {
+      expect(resumePublicUrl("https://files.example/resumes/cv.pdf")).toBe(
+        "https://files.example/resumes/cv.pdf",
+      );
+    });
+
+    it("turns a bare key into the public URL", () => {
+      vi.stubEnv("R2_PUBLIC_URL", "https://files.example");
+      expect(resumePublicUrl("resumes/cand1/cv.pdf")).toBe(
+        "https://files.example/resumes/cand1/cv.pdf",
+      );
+      vi.unstubAllEnvs();
+    });
+
+    it("uses the r2.dev URL when no public base is set", () => {
+      vi.stubEnv("R2_PUBLIC_URL", "");
+      vi.stubEnv("R2_BUCKET_NAME", "bucket");
+      vi.stubEnv("R2_ACCOUNT_ID", "account");
+      expect(resumePublicUrl("/resumes/cv.pdf")).toBe(
+        "https://bucket.account.r2.dev/resumes/cv.pdf",
+      );
+      vi.unstubAllEnvs();
+    });
+  });
+
+  describe("extractKeyFromResumeUrl", () => {
+    it("extracts the key from a public URL", () => {
+      expect(
+        extractKeyFromResumeUrl("https://files.example/resumes/cand1/cv.pdf"),
+      ).toBe("resumes/cand1/cv.pdf");
+    });
+
+    it("returns a bare key unchanged", () => {
+      expect(extractKeyFromResumeUrl("resumes/verifica-marco.pdf")).toBe(
+        "resumes/verifica-marco.pdf",
+      );
+    });
+  });
+
   describe("module exports", () => {
     it("should export validateResumeFile function", async () => {
       const { validateResumeFile } = await import("@/lib/services/r2-storage");
       expect(typeof validateResumeFile).toBe("function");
+    });
+
+    it("should export resumePublicUrl function", async () => {
+      const { resumePublicUrl } = await import("@/lib/services/r2-storage");
+      expect(typeof resumePublicUrl).toBe("function");
     });
 
     it("should export uploadResumeToR2 function", async () => {

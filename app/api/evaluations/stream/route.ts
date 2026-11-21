@@ -44,6 +44,9 @@ export async function POST(request: Request) {
       system: prepared.system,
       temperature: 0,
       seed: 42,
+      // Reasoning plus the evaluation JSON: the provider default budget cuts
+      // the answer short and the parse would fail after a full stream.
+      maxOutputTokens: 8000,
     });
 
     // Stream the text response directly

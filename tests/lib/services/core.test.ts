@@ -572,20 +572,119 @@ describe("AIQuizService.generateQuiz with scorecard criteria", () => {
 
   it("without criteria returns the questions as before, with no criterionIds", async () => {
     const { generateText } = await import("ai");
-    vi.mocked(generateText).mockResolvedValueOnce({
-      output: {
-        title: "Quiz",
-        questions: [{ type: "open_question", question: "Spiega gli hook" }],
-      },
-    } as any);
+    vi.mocked(generateText)
+      .mockResolvedValueOnce({
+        output: {
+          title: "Quiz",
+          questions: [{ type: "open_question", question: "Spiega gli hook" }],
+        },
+      } as any)
+      .mockResolvedValueOnce({
+        output: {
+          title: "Quiz",
+          questions: [
+            { type: "open_question", question: "Descrivi il virtual DOM" },
+          ],
+        },
+      } as any);
     const prompts = await import("../../../lib/services/ai/prompts");
 
     const result = await new AIQuizService().generateQuiz(baseParams);
 
     expect(result.questions).toEqual([
       { type: "open_question", question: "Spiega gli hook" },
+      { type: "open_question", question: "Descrivi il virtual DOM" },
     ]);
+    for (const question of result.questions) {
+      expect(question).not.toHaveProperty("criterionIds");
+    }
     expect(prompts.buildQuizSystemPrompt).toHaveBeenCalledWith(false);
-    expect(prompts.buildQuizPrompt).toHaveBeenCalledWith(baseParams, []);
+    expect(prompts.buildQuizPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ questionCount: 2, previousQuestions: [] }),
+      [],
+    );
+  });
+
+  it("asks for the missing questions when the answer is short", async () => {
+    const { generateText } = await import("ai");
+    vi.mocked(generateText)
+      .mockResolvedValueOnce({
+        output: {
+          title: "Quiz",
+          questions: [{ type: "open_question", question: "Spiega gli hook" }],
+        },
+      } as any)
+      .mockResolvedValueOnce({
+        output: {
+          title: "Quiz",
+          questions: [
+            { type: "open_question", question: "Descrivi il virtual DOM" },
+          ],
+        },
+      } as any);
+    const prompts = await import("../../../lib/services/ai/prompts");
+
+    await new AIQuizService().generateQuiz(baseParams);
+
+    expect(generateText).toHaveBeenCalledTimes(2);
+    // The top-up asks only for the missing question and lists the already
+    // generated one, so the new questions cover different concepts
+    expect(prompts.buildQuizPrompt).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        questionCount: 1,
+        previousQuestions: [{ question: "Spiega gli hook" }],
+      }),
+      [],
+    );
+  });
+
+  it("stops when a round adds no new question", async () => {
+    const { generateText } = await import("ai");
+    vi.mocked(generateText)
+      .mockResolvedValueOnce({
+        output: {
+          title: "Quiz",
+          questions: [{ type: "open_question", question: "Spiega gli hook" }],
+        },
+      } as any)
+      .mockResolvedValue({
+        output: {
+          title: "Quiz",
+          questions: [{ type: "open_question", question: " spiega gli Hook " }],
+        },
+      } as any);
+
+    const result = await new AIQuizService().generateQuiz({
+      ...baseParams,
+      questionCount: 3,
+    });
+
+    expect(generateText).toHaveBeenCalledTimes(2);
+    expect(result.questions).toHaveLength(1);
+  });
+
+  it("never returns more questions than requested", async () => {
+    const { generateText } = await import("ai");
+    vi.mocked(generateText).mockResolvedValueOnce({
+      output: {
+        title: "Quiz",
+        questions: [
+          { type: "open_question", question: "Domanda uno" },
+          { type: "open_question", question: "Domanda due" },
+          { type: "open_question", question: "Domanda tre" },
+        ],
+      },
+    } as any);
+
+    const result = await new AIQuizService().generateQuiz({
+      ...baseParams,
+      questionCount: 2,
+    });
+
+    expect(generateText).toHaveBeenCalledTimes(1);
+    expect(result.questions).toEqual([
+      { type: "open_question", question: "Domanda uno" },
+      { type: "open_question", question: "Domanda due" },
+    ]);
   });
 });
