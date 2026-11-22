@@ -184,4 +184,60 @@ export interface PositionFormWidget {
   url: string;
 }
 
-export type ReactWidgetModel = PositionFormWidget;
+/**
+ * Generation parameters of a quiz for a position, the dashboard's fields
+ * without the model choice (the assistant writes the questions). The widget
+ * sends them to the assistant, which shows the preview (save_quiz_draft);
+ * a person saves it from there.
+ */
+export interface QuizFormWidget {
+  kind: "quiz-form";
+  position: { id: string; title: string; experienceLevel: string; skills: string[] };
+  prefill: {
+    quizTitle: string;
+    instructions: string;
+    questionCount: number;
+    difficulty: number;
+    includeMultipleChoice: boolean;
+    includeOpenQuestions: boolean;
+    includeCodeSnippets: boolean;
+    includeBehavioralScenarios: boolean;
+    enableTimeLimit: boolean;
+    timeLimit: number;
+  };
+  /** Tool the assistant calls with the questions */
+  previewTool: string;
+  /** Quiz tab of the position */
+  url: string;
+}
+
+/**
+ * Scheduling form of an interview, the dashboard's fields prefilled with
+ * what the assistant proposed. "Pianifica colloquio" saves the proposal
+ * (propose_interview_slot) and confirms it (publish_draft, app-only). No
+ * email is sent.
+ */
+export interface ScheduleFormWidget {
+  kind: "schedule-form";
+  application: { id: string; candidateName: string; positionTitle: string };
+  prefill: {
+    guideId: string;
+    round: number;
+    /** ISO with offset, or "" when not proposed */
+    scheduledAt: string;
+    durationMinutes: number;
+    meetingUrl: string;
+    participants: { userId: string; role: "lead" | "observer" }[];
+  };
+  guides: { id: string; title: string; round: number; durationMinutes: number }[];
+  teamMembers: { id: string; name: string }[];
+  /** Pending proposals of the application, already formatted */
+  pending: string[];
+  tools: { propose: string; confirm: string };
+  /** Scheduling page of the dashboard */
+  url: string;
+  /** Position page, where the interview guides are created */
+  guidesUrl: string;
+}
+
+export type ReactWidgetModel = PositionFormWidget | QuizFormWidget | ScheduleFormWidget;

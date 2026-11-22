@@ -21,10 +21,12 @@ export const ENABLED_WIDGETS: readonly WidgetId[] = [
   "draft-preview",
   "interview-prep",
   "position-form",
+  "quiz-form",
+  "schedule-form",
 ];
 
 /** Widgets drawn by the React bundle (mcp-apps/react); the others by the DOM bundle */
-const REACT_WIDGETS: readonly WidgetId[] = ["position-form"];
+const REACT_WIDGETS: readonly WidgetId[] = ["position-form", "quiz-form", "schedule-form"];
 
 const widgetHtml = (id: WidgetId) =>
   REACT_WIDGETS.includes(id) ? REACT_WIDGET_HTML : WIDGET_HTML;
@@ -36,6 +38,8 @@ const WIDGET_TITLE: Record<WidgetId, string> = {
   "draft-preview": "Anteprima bozza",
   "interview-prep": "Preparazione colloquio",
   "position-form": "Nuova posizione",
+  "quiz-form": "Nuovo quiz",
+  "schedule-form": "Nuovo colloquio",
 };
 
 export const widgetUri = (id: WidgetId) => `ui://dev-recruit/${id}.html`;

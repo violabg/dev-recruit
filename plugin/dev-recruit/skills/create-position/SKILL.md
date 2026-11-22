@@ -23,7 +23,7 @@ Se il riquadro non è disponibile (per esempio VS Code senza MCP Apps):
 2. Scrivi tu la descrizione se l'utente ti dà solo appunti, con le stesse regole.
 3. Riassumi la bozza in poche righe e chiedi se procedere.
 4. Chiama `create_position_draft`. La posizione nasce in bozza: non è visibile ai candidati.
-5. Spiega che la pubblica una persona dalla pagina della posizione, e che prima conviene completare scheda di valutazione, quiz e guida colloquio. Indica il link restituito dallo strumento.
+5. Spiega che la pubblica una persona con "Pubblica" nella pagina della posizione, e che prima conviene completare scheda di valutazione, quiz e guida colloquio. Indica il link restituito dallo strumento.
 
 Non pubblicare tu la posizione e non dire che è aperta finché lo strumento non lo conferma.
 

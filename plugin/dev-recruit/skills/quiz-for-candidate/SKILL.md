@@ -6,7 +6,7 @@ description: Prepara un quiz tecnico per una posizione di dev-recruit e lo mostr
 Usa questa skill quando l'utente vuole creare un quiz o un test tecnico per una posizione.
 
 1. Individua la posizione: chiama `list_positions` o `get_position` e conferma con l'utente quale usare.
-2. Leggi competenze e livello della posizione con `get_position` e chiedi all'utente quante domande, di che tipo e con che tempo limite (minuti).
+2. Dove ci sono i riquadri, chiama `open_quiz_form` con `positionId` e i parametri che sai già (titolo, istruzioni, numero di domande, difficoltà da 1 a 5, tipi di domande, `timeLimit` in minuti o `null` senza limite): la persona li controlla e preme "Genera con l'assistente". Ti arriva la richiesta con i parametri scelti: prosegui dal punto 3. Senza riquadri, leggi competenze e livello della posizione con `get_position` e chiedi all'utente quante domande, di che tipo e con che tempo limite (minuti).
 3. Scrivi le domande. Tipi e campi obbligatori:
    - `multiple_choice`: `question`, `options` (almeno 4, ognuna di almeno 3 caratteri), `correctAnswer` (indice da 0 a 3), `explanation` facoltativa;
    - `open_question`: `question`, `sampleAnswer`, `keywords` facoltative;

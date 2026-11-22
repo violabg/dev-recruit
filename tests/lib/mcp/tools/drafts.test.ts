@@ -37,6 +37,8 @@ import {
   createPositionDraftTool,
   draftTools,
   openPositionFormTool,
+  openQuizFormTool,
+  openScheduleFormTool,
   getInterviewKitTool,
   getSchedulingOptionsTool,
   saveInterviewKitDraftTool,
@@ -130,9 +132,11 @@ describe("draft and write tools", () => {
     expect(draftTools.map((tool) => [tool.name, tool.scope])).toEqual([
       ["open_position_form", "recruit:draft"],
       ["create_position_draft", "recruit:draft"],
+      ["open_quiz_form", "recruit:draft"],
       ["save_quiz_draft", "recruit:draft"],
       ["save_quiz", "recruit:draft"],
       ["get_scheduling_options", "recruit:read"],
+      ["open_schedule_form", "recruit:draft"],
       ["propose_interview_slot", "recruit:draft"],
       ["get_interview_kit", "recruit:read"],
       ["save_interview_kit_draft", "recruit:draft"],
@@ -188,6 +192,57 @@ describe("open_position_form", () => {
       tools: { save: "create_position_draft", publish: "publish_draft" },
     });
     expect(result.auditSummary).toBe("position_form prefilled=2");
+  });
+});
+
+describe("open_quiz_form", () => {
+  it("opens the generation parameters of the position and saves nothing", async () => {
+    const result = await openQuizFormTool.handler(actor, {
+      positionId: "pos-1",
+      questionCount: 5,
+      timeLimit: null,
+    });
+
+    expect(saveQuiz).not.toHaveBeenCalled();
+    expect(openQuizFormTool.readOnly).toBe(true);
+    expect(result.invalidate).toBeUndefined();
+    expect(result.text).toContain(`${APP_URL}/dashboard/positions/pos-1?tab=quiz`);
+    expect(result.structured?.widget).toMatchObject({
+      kind: "quiz-form",
+      position: { id: "pos-1", title: "Frontend", skills: ["React"] },
+      prefill: { quizTitle: "Quiz per Frontend (Senior)", questionCount: 5, enableTimeLimit: false },
+      previewTool: "save_quiz_draft",
+    });
+  });
+
+  it("refuses a position that does not exist", async () => {
+    vi.mocked(getPositionById).mockResolvedValueOnce(null);
+    await expect(
+      openQuizFormTool.handler(actor, { positionId: "missing" }),
+    ).rejects.toThrow("Posizione non trovata");
+  });
+});
+
+describe("open_schedule_form", () => {
+  it("opens the scheduling form with the person as lead and creates nothing", async () => {
+    const result = await openScheduleFormTool.handler(actor, { applicationId: "app-1" });
+
+    expect(proposeInterviewSlot).not.toHaveBeenCalled();
+    expect(openScheduleFormTool.readOnly).toBe(true);
+    expect(result.text).toContain(`${APP_URL}/dashboard/applications/app-1/interviews/new`);
+    expect(result.structured?.widget).toMatchObject({
+      kind: "schedule-form",
+      application: { id: "app-1", candidateName: "Ada Lovelace" },
+      prefill: { guideId: "guide-1", round: 2, participants: [{ userId: "u1", role: "lead" }] },
+      tools: { propose: "propose_interview_slot", confirm: "publish_draft" },
+    });
+  });
+
+  it("refuses an application that does not exist", async () => {
+    vi.mocked(buildSchedulingOptions).mockResolvedValueOnce(null);
+    await expect(
+      openScheduleFormTool.handler(actor, { applicationId: "missing" }),
+    ).rejects.toThrow("Candidatura non trovata");
   });
 });
 
@@ -283,6 +338,9 @@ describe("publish_draft", () => {
       { kind: "candidate", candidateId: "c1", positionId: "pos-1", applicationId: "app-1" },
     ]);
     expect(result.text).toContain("Nessuna email");
+    expect(result.structured?.url).toBe(
+      `${APP_URL}/dashboard/applications/app-1/interviews/int-1/prepare`,
+    );
   });
 });
 

@@ -89,7 +89,7 @@ function PresetGenerationButtonsContent({
           <CardDescription>
             <CollapsibleTrigger
               render={
-                <Button variant="outline">
+                <Button variant="outline" className="h-auto whitespace-normal">
                   Genera domande automaticamente utilizzando preset predefiniti
                   <ChevronsUpDown />
                   <span className="sr-only">Espandi</span>
@@ -100,7 +100,7 @@ function PresetGenerationButtonsContent({
         </CardHeader>
         <CollapsibleContent>
           <CardContent>
-            <div className="gap-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <div className="gap-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 min-w-0">
               {presets.length === 0 ? (
                 <p className="col-span-full text-muted-foreground text-sm">
                   Nessun preset disponibile al momento.
@@ -112,20 +112,23 @@ function PresetGenerationButtonsContent({
                     <Button
                       key={preset.id}
                       variant="outline"
-                      className="flex flex-col items-start hover:bg-accent p-4 h-auto text-left"
+                      className="flex flex-col items-start hover:bg-accent p-4 w-full h-auto min-w-0 whitespace-normal text-left"
                       onClick={() => handlePresetClick(preset)}
                       disabled={loading}
                     >
-                      <div className="flex items-center gap-2 mb-2 w-full">
-                        <IconComponent className="size-4 text-primary" />
-                        <span className="font-medium text-sm">
+                      <div className="flex items-center gap-2 mb-2 w-full min-w-0">
+                        <IconComponent className="size-4 shrink-0 text-primary" />
+                        <span className="min-w-0 font-medium text-sm break-words">
                           {preset.label}
                         </span>
-                        <Badge variant="secondary" className="ml-auto text-xs">
+                        <Badge
+                          variant="secondary"
+                          className="ml-auto shrink-0 text-xs whitespace-nowrap"
+                        >
                           Livello {preset.difficulty}
                         </Badge>
                       </div>
-                      <p className="mb-2 text-muted-foreground text-xs">
+                      <p className="mb-2 text-muted-foreground text-xs break-words">
                         {preset.description}
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -133,7 +136,7 @@ function PresetGenerationButtonsContent({
                           <Badge
                             key={tag}
                             variant="outline"
-                            className="px-1 py-0 text-xs"
+                            className="px-1 py-0 text-xs whitespace-nowrap"
                           >
                             {tag}
                           </Badge>

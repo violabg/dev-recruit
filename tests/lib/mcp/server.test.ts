@@ -416,6 +416,8 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
       "ui://dev-recruit/draft-preview.html",
       "ui://dev-recruit/interview-prep.html",
       "ui://dev-recruit/position-form.html",
+      "ui://dev-recruit/quiz-form.html",
+      "ui://dev-recruit/schedule-form.html",
     ]);
   });
 
@@ -435,12 +437,14 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
     expect(content.text).not.toMatch(/<script[^>]+src=|<link[^>]+href=/i);
   });
 
-  it("serves the React bundle for the position form, self-contained too", async () => {
+  it.each(["position-form", "quiz-form", "schedule-form"])(
+    "serves the React bundle for %s, self-contained too",
+    async (id) => {
     const { body } = await rpc([echoTool], {
       jsonrpc: "2.0",
       id: 8,
       method: "resources/read",
-      params: { uri: "ui://dev-recruit/position-form.html" },
+      params: { uri: `ui://dev-recruit/${id}.html` },
     });
 
     const [content] = body.result.contents;
@@ -448,5 +452,6 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
     expect(content.text).toMatch(/^<!doctype html>/i);
     expect(content.text).not.toMatch(/<script[^>]+src=|<link[^>]+href=|url\(["']?https?:/i);
     expect(content.text).toBe(REACT_WIDGET_HTML);
-  });
+    },
+  );
 });

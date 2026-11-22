@@ -5,6 +5,7 @@ import {
   KIT_STATUS_PRESENTATION,
   PARTICIPANT_ROLE_LABEL,
 } from "@/components/interviews/interview-presentation";
+import { KitReadyButton } from "@/components/interviews/kit-ready-button";
 import { KitView } from "@/components/interviews/kit-view";
 import { LegalReminder } from "@/components/interviews/legal-reminder";
 import { Fact, FactStrip, NextStep } from "@/components/detail-blocks";
@@ -112,12 +113,16 @@ async function PrepareContent({
     "inline-flex",
   );
 
+  // A draft kit of a scheduled interview is confirmed from the header
+  const kitDraft =
+    interview.status === "scheduled" && interview.kit?.status === "draft";
+
   const nextStep =
-    interview.status === "scheduled" && interview.kit?.status === "draft" ? (
+    kitDraft ? (
       <NextStep
         pointer={stepPointer}
         title="Completa il kit e segnalo come pronto"
-        description="Rivedi domande e checklist nell'editor, poi premi Segna come pronto."
+        description="Rivedi domande e checklist (Modifica kit), poi premi Segna come pronto in alto."
         href={`${basePath}/prepare/edit`}
         actionLabel="Modifica kit"
       />
@@ -161,10 +166,14 @@ async function PrepareContent({
         }
         actionBtns={
           <div className="flex flex-wrap items-center gap-2">
+            {kitDraft && <KitReadyButton interviewId={interviewId} />}
             {interview.kit && interview.status === "scheduled" && (
               <Link
                 href={`${basePath}/prepare/edit` as never}
-                className={cn(buttonVariants({ size: "sm" }), "inline-flex")}
+                className={cn(
+                  buttonVariants({ variant: kitDraft ? "outline" : "default", size: "sm" }),
+                  "inline-flex",
+                )}
               >
                 <Pencil className="size-4" />
                 Modifica kit

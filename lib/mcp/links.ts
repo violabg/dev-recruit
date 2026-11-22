@@ -15,6 +15,8 @@ export const links = {
     url(`/dashboard/applications/${applicationId}`),
   applicationDecision: (applicationId: string) =>
     url(`/dashboard/applications/${applicationId}/decision`),
+  newInterview: (applicationId: string) =>
+    url(`/dashboard/applications/${applicationId}/interviews/new`),
   interviewPrepare: (applicationId: string, interviewId: string) =>
     url(
       `/dashboard/applications/${applicationId}/interviews/${interviewId}/prepare`,

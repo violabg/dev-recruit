@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { baseSchemas } from "./base";
 import {
+  INTERVIEW_PARTICIPANT_ROLE_VALUES,
   interviewKitEditorSchema,
   kitChecklistItemSchema,
   kitItemInputSchema,
@@ -68,6 +69,25 @@ export const openPositionFormInputSchema = z.object({
   contractType: z.string().max(100).optional(),
 });
 
+/**
+ * Generation parameters of a quiz the assistant already knows, to prefill
+ * the quiz form widget: every one optional. The widget sends them back to
+ * the assistant, which writes the questions and shows the preview.
+ */
+export const openQuizFormInputSchema = z.object({
+  positionId: baseSchemas.id,
+  quizTitle: z.string().max(200, "Titolo di al massimo 200 caratteri").optional(),
+  instructions: baseSchemas.instructions,
+  questionCount: z.int().min(3).max(20).optional(),
+  difficulty: baseSchemas.difficulty.optional(),
+  includeMultipleChoice: z.boolean().optional(),
+  includeOpenQuestions: z.boolean().optional(),
+  includeCodeSnippets: z.boolean().optional(),
+  includeBehavioralScenarios: z.boolean().optional(),
+  /** Minutes; null for no limit */
+  timeLimit: z.int().min(5).max(120).nullable().optional(),
+});
+
 /** A new quiz of a position: same fields as the quiz editor */
 export const quizDraftInputSchema = quizEditorSchema.extend({
   positionId: baseSchemas.id,
@@ -75,6 +95,31 @@ export const quizDraftInputSchema = quizEditorSchema.extend({
 
 export const getSchedulingOptionsInputSchema = z.object({
   applicationId: baseSchemas.id,
+});
+
+/**
+ * What the assistant already knows of an interview to schedule, to prefill
+ * the scheduling form widget: every field optional, checked on save by the
+ * scheduling schema.
+ */
+export const openScheduleFormInputSchema = z.object({
+  applicationId: baseSchemas.id,
+  guideId: z.string().max(100).optional(),
+  round: z.int().min(1).max(10).optional(),
+  scheduledAt: z.iso
+    .datetime({ offset: true, message: "Data e ora non valide" })
+    .optional(),
+  durationMinutes: z.int().min(10).max(480).optional(),
+  meetingUrl: z.string().max(500).optional(),
+  participants: z
+    .array(
+      z.object({
+        userId: z.string().max(100),
+        role: z.enum(INTERVIEW_PARTICIPANT_ROLE_VALUES),
+      }),
+    )
+    .max(10)
+    .optional(),
 });
 
 /** Same fields as the scheduling form */
@@ -163,4 +208,6 @@ export type GetInterviewInput = z.infer<typeof getInterviewInputSchema>;
 export type QuizDraftInput = z.infer<typeof quizDraftInputSchema>;
 export type KitPatchInput = z.infer<typeof kitPatchInputSchema>;
 export type OpenPositionFormInput = z.infer<typeof openPositionFormInputSchema>;
+export type OpenQuizFormInput = z.infer<typeof openQuizFormInputSchema>;
+export type OpenScheduleFormInput = z.infer<typeof openScheduleFormInputSchema>;
 export type PublishDraftInput = z.infer<typeof publishDraftInputSchema>;
