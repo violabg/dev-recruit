@@ -91,8 +91,14 @@ export const useAIGeneration = ({
     type: QuestionType,
     options: GenerationOptions,
   ): GenerateQuestionParams => {
+    // The title is only required to save a quiz: generation must work on a new
+    // quiz too, so fall back to the standard position-based title.
+    const quizTitle =
+      form.getValues("title")?.trim() ||
+      `Quiz per ${position.title} (${position.experienceLevel})`;
+
     const baseConfig = {
-      quizTitle: form.getValues("title"),
+      quizTitle,
       positionTitle: position.title,
       experienceLevel: position.experienceLevel,
       skills: position.skills,
@@ -106,20 +112,20 @@ export const useAIGeneration = ({
     switch (type) {
       case "multiple_choice":
         params = createMultipleChoiceParams(baseConfig, {
-          focusAreas: options.focusAreas,
+          focusAreas: options.focusAreas ?? undefined,
           distractorComplexity: options.distractorComplexity || "moderate",
         });
         break;
       case "open_question":
         params = createOpenQuestionParams(baseConfig, {
           expectedResponseLength: options.expectedResponseLength || "medium",
-          evaluationCriteria: options.evaluationCriteria,
+          evaluationCriteria: options.evaluationCriteria ?? undefined,
         });
         break;
       case "code_snippet":
         params = createCodeSnippetParams(baseConfig, {
           language: options.language || inferLanguageFromSkills(),
-          bugType: options.bugType,
+          bugType: options.bugType ?? undefined,
           codeComplexity: options.codeComplexity || "intermediate",
           includeComments: options.includeComments ?? true,
         });

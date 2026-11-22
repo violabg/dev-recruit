@@ -66,7 +66,7 @@ export const NewQuizCreationPage = ({
 
     return {
       id: `new-${selectedPosition.id}`,
-      title: "",
+      title: `Quiz per ${selectedPosition.title} (${selectedPosition.experienceLevel})`,
       positionId: selectedPosition.id,
       questions: [],
       timeLimit: null,

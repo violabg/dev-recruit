@@ -101,7 +101,7 @@ export const QuestionsHeader = ({
             Comprimi tutto
           </Button>
 
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap gap-2 ml-auto">
             {questionTypes.map((type) => {
               return type.value !== "all" ? (
                 <Button
