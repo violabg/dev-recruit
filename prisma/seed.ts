@@ -35,6 +35,7 @@ async function seedPresets() {
 
 // Reference data imports from static arrays
 import {
+  aiSkills,
   contractTypes,
   databases,
   experienceLevels,
@@ -51,6 +52,7 @@ async function seedReferenceData() {
     { category: "framework", items: frameworks },
     { category: "database", items: databases },
     { category: "tool", items: tools },
+    { category: "ai_skill", items: aiSkills },
     { category: "soft_skill", items: softSkills },
     { category: "contract_type", items: contractTypes },
     { category: "experience_level", items: experienceLevels },

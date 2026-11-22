@@ -150,4 +150,73 @@ export const DEFAULT_PRESETS: PresetSeedData[] = [
     tags: ["Best Practices", "Clean Code"],
     difficulty: 3,
   },
+
+  // AI Presets
+  {
+    name: "llm-fundamentals",
+    label: "Fondamenti di LLM",
+    description: "Token, contesto, temperatura, embeddings e limiti dei modelli",
+    icon: "Brain",
+    questionType: "multiple_choice",
+    focusAreas: ["Tokenization", "Context window", "Temperature", "Embeddings"],
+    distractorComplexity: "moderate",
+    instructions:
+      "Verifica la comprensione pratica di come funziona un LLM, senza domande sulle versioni dei modelli",
+    tags: ["AI", "LLM", "Fundamentals"],
+    difficulty: 3,
+  },
+  {
+    name: "rag-evaluation",
+    label: "RAG e valutazione",
+    description: "Retrieval, chunking, grounding e misura della qualità",
+    icon: "Layers",
+    questionType: "open_question",
+    expectedResponseLength: "long",
+    evaluationCriteria: [
+      "retrieval quality",
+      "chunking strategy",
+      "grounding",
+      "evaluation metrics",
+    ],
+    instructions:
+      "Chiedi di progettare o diagnosticare una pipeline RAG, motivando le scelte e i compromessi",
+    tags: ["AI", "RAG", "Evaluation"],
+    difficulty: 4,
+  },
+  {
+    name: "ai-system-design",
+    label: "AI system design",
+    description: "Architettura, latenza, costi e affidabilità di un sistema AI",
+    icon: "Settings",
+    questionType: "open_question",
+    expectedResponseLength: "long",
+    evaluationCriteria: [
+      "architecture",
+      "latency and cost",
+      "failure handling",
+      "trade-offs",
+    ],
+    instructions:
+      "Proponi un caso realistico di sistema AI in produzione e valuta il ragionamento architetturale",
+    tags: ["AI", "Architecture", "System Design"],
+    difficulty: 5,
+  },
+  {
+    name: "ai-safety-guardrails",
+    label: "Sicurezza e guardrail AI",
+    description: "Prompt injection, fuga di dati, jailbreak e permessi degli strumenti",
+    icon: "Shield",
+    questionType: "multiple_choice",
+    focusAreas: [
+      "Prompt injection",
+      "Data leakage",
+      "Jailbreak",
+      "Tool permissions",
+    ],
+    distractorComplexity: "complex",
+    instructions:
+      "Metti alla prova la capacità di riconoscere rischi reali di un'applicazione LLM",
+    tags: ["AI", "Safety", "Security"],
+    difficulty: 4,
+  },
 ];

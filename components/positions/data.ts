@@ -33,6 +33,16 @@ export const frameworks = [
   "React Native",
   "Flutter",
   "Svelte",
+  "PyTorch",
+  "TensorFlow",
+  "scikit-learn",
+  "Hugging Face Transformers",
+  "LangChain",
+  "LangGraph",
+  "LlamaIndex",
+  "Vercel AI SDK",
+  "OpenAI Agents SDK",
+  "FastAPI",
 ];
 
 export const databases = [
@@ -46,6 +56,9 @@ export const databases = [
   "Cassandra",
   "Firebase",
   "Neon",
+  "pgvector",
+  "Pinecone",
+  "Qdrant",
 ];
 
 export const tools = [
@@ -59,6 +72,38 @@ export const tools = [
   "Jira",
   "Figma",
   "Webpack",
+  "OpenAI",
+  "Anthropic",
+  "Azure OpenAI",
+  "AWS Bedrock",
+  "Google Vertex AI",
+  "Ollama",
+  "vLLM",
+  "MLflow",
+  "LangSmith",
+];
+
+export const aiSkills = [
+  "RAG",
+  "Prompt engineering",
+  "Fine-tuning",
+  "LoRA / QLoRA",
+  "Embeddings",
+  "Vector search",
+  "Function calling",
+  "Agent design",
+  "LLM evaluation",
+  "Guardrails",
+  "Multimodal AI",
+  "Model quantization",
+  "Model distillation",
+  "MLOps",
+  "LLMOps",
+  "AI safety",
+  "NLP",
+  "Computer vision",
+  "Speech-to-text / text-to-speech",
+  "Recommender systems",
 ];
 
 export const softSkills = [
