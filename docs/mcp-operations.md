@@ -35,6 +35,7 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | `evaluateAssessmentAnswerAction` | evaluation (in-app AI scoring) | dashboard-only | — | — |
 | `completeAssessmentEvaluationAction` | evaluation (in-app AI scoring) | dashboard-only | — | — |
 | `recalculateAnswerEvaluationsAction` | evaluation (in-app AI scoring) | dashboard-only | — | — |
+| `syncResumeEvaluationAction` | evaluation (resume, read back after the stream) | dashboard-only | — | — |
 | `upsertInterviewGuideAction` | interview guide | dashboard-only | — | 6 |
 | `deleteInterviewGuideAction` | interview guide | dashboard-only | — | — |
 | `generateInterviewGuideAction` | interview guide (in-app AI) | dashboard-only | — | — |
@@ -87,6 +88,9 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | `unbanUserAction` | user management | dashboard-only | — | — |
 | `revokeUserSessionAction` | user management | dashboard-only | — | — |
 | `revokeUserSessionsAction` | user management | dashboard-only | — | — |
+| `setMcpEnabledAction` | MCP access (global switch) | dashboard-only | — | — |
+| `setUserMcpDisabledAction` | MCP access (per-user switch, revokes their tokens) | dashboard-only | — | — |
+| `revokeMcpTokenAction` | MCP access (token grant) | dashboard-only | — | — |
 
 `runAction` (`lib/actions/run-action.ts`) is the shared action shell, not an operation.
 
@@ -97,6 +101,7 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | Interview slot proposal (service `proposeInterviewSlot`) | interview proposal | draft | `propose_interview_slot` | 4 |
 | Scheduling options (guides, team members, next round, pending proposals) | interview proposal | read | `get_scheduling_options` | 4 |
 | Position publish (service `publishPositionDraft`, `draft` → `open`) | position | write | `publish_draft` with `kind: "position"`, widget only | 4 |
+| Position form (options from `getPositionFieldOptions`) | position | draft (nothing written: the form prefilled) | `open_position_form` | 4 |
 
 ## Page reads (`app/dashboard/**/page.tsx` and public pages)
 
@@ -129,6 +134,7 @@ Pages that only host the form of an action (`new`, `edit`, `invite`, `prepare/ed
 | Presets (`/dashboard/presets`, `/dashboard/presets/[id]`) | preset | dashboard-only | — | — |
 | Reference data (`/dashboard/settings/reference-data`) | reference data | dashboard-only | — | — |
 | Users (`/dashboard/settings/users`, `/dashboard/settings/users/[id]`) | user management | dashboard-only | — | — |
+| MCP access (`/dashboard/settings/mcp`) | MCP access (tokens, switches, audit) | dashboard-only | — | — |
 | Profile (`/dashboard/profile`) | profile (own account) | dashboard-only | — | — |
 | Public apply form (`/recruiting`) and assessment (`/recruiting/[token]`) | candidate-facing | dashboard-only | — | — |
 | Sign-in, sign-up and auth pages (`/auth/*`) | account | dashboard-only | — | — |

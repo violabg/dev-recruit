@@ -2,7 +2,7 @@
 title: "server actions"
 tier: "MustHave"
 keywords: ["server action","runAction","UserError","ActionResult","requireUser","form","react-hook-form"]
-intent: "Always: shape and error contract of every server action, public candidate-facing actions, the admin-only check of user-management actions, scorecard, guide, interview, kit and interviewer-scorecard actions, the application decision actions, and how client forms call actions."
+intent: "Always: shape and error contract of every server action, public candidate-facing actions, the admin-only check of user- and MCP-management actions, scorecard, guide, interview, kit and interviewer-scorecard actions, the application decision actions, and how client forms call actions."
 editable: true
 ---
 # Server actions and forms
@@ -58,7 +58,7 @@ A failure never escapes as a throw: `runAction` turns anything thrown into `{ su
 | `applyAsCandidateAction(formData)` | none (public application, `createdBy: null`, no owner) |
 | `fetchPositionDataAction(positionId)` | none; returns `position: null` for a missing and for a non-`open` position |
 
-- Every other action calls `requireUser()` and applies no ownership check. The only role check: user-management actions also require the `admin` role, on the server right after the session and before parsing input (a non-admin gets a `UserError`). `moveApplicationStageAction` accepts any stage to any stage (reopening included); `setApplicationOwnerAction` takes `owner: "me" | "none"`.
+- Every other action calls `requireUser()` and applies no ownership check. The only role check: user-management and MCP-management actions (`setMcpEnabledAction`, `setUserMcpDisabledAction`, `revokeMcpTokenAction`) also require the `admin` role, on the server right after the session and before parsing input (a non-admin gets a `UserError`). `moveApplicationStageAction` accepts any stage to any stage (reopening included); `setApplicationOwnerAction` takes `owner: "me" | "none"`.
 
 ## Expected failures by action
 

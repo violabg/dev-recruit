@@ -52,7 +52,7 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 |---|---|---|---|
 | 15 | **L'avvocato del diavolo non ha una soglia minima garantita** di motivi (il prompt ne chiede 3–5, il codice taglia a 5) | Basso | Validare il numero o mostrare un avviso |
 | 16 | **I divieti legali sono solo nel prompt** (età, famiglia, religione, salute…) | Alto in uso reale | Controlli automatici sul testo delle domande + revisione |
-| 17 | **Nessun registro delle chiamate AI** (modello, prompt, esito) per costi e audit | Medio/alto con l'AI Act | Log delle generazioni e delle conferme |
+| 17 | **Nessun registro delle generazioni AI in-app** (modello, prompt, esito) per costi e audit; le chiamate MCP sono invece nel registro MCP | Medio/alto con l'AI Act | Log delle generazioni in-app e delle conferme |
 | 18 | **Il dettaglio per risposta può mancare** su una valutazione di test finché non si ricalcola a mano | Basso | Ricalcolo automatico in background |
 | 19 | **Dati identificativi nei prompt**: sono già esclusi da kit e decisione, ma la trascrizione dei colloqui (Fase 5) riaprirà il tema | Da valutare con la Fase 5 | Anonimizzazione e consenso |
 
@@ -63,6 +63,7 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 - La **"Prossima azione"** riduce la domanda "e adesso?" a un pulsante.
 - La **matrice criteri × fonti** rende visibile il motivo di una decisione, non solo il voto.
 - Le **proposte AI con conferma umana** sono coerenti in tutto il prodotto.
+- Le **proposte dell'assistente** (Claude, Copilot) restano in attesa finché una persona le conferma: i colloqui in "Proposte da confermare", le posizioni come Bozza; ogni chiamata è nel registro MCP.
 - La **scheda inviata blocca la modifica** e conserva l'indipendenza degli intervistatori.
 - Il **kanban per posizione** e la pipeline globale coprono due modi di lavorare (per ruolo e per persona).
 
@@ -75,10 +76,11 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 3. **Candidatura di Giulia** — prossima azione, tab, cronologia delle prove (1 min).
 4. **Test** — invio e valutazione AI con dettaglio per risposta (1 min).
 5. **Colloqui** — pianificazione, kit, modalità live con copertura criteri (2 min).
-6. **Scheda intervistatore** — invio bloccante e indipendenza (1 min).
-7. **Decisione** — matrice, avvisi sui criteri indispensabili, avvocato del diavolo, registrazione (2–3 min).
-8. **Kanban e agenda** — il colpo d'occhio operativo (1 min).
-9. **Aree di miglioramento** — le 3 priorità che proponi (1–2 min).
+6. **Proposta dell'assistente** (se mostri anche l'assistente) — Claude propone un colloquio; in "Proposte da confermare" **Pianifica** lo crea come la pianificazione (30 s).
+7. **Scheda intervistatore** — invio bloccante e indipendenza (1 min).
+8. **Decisione** — matrice, avvisi sui criteri indispensabili, avvocato del diavolo, registrazione (2–3 min).
+9. **Kanban e agenda** — il colpo d'occhio operativo (1 min).
+10. **Aree di miglioramento** — le 3 priorità che proponi (1–2 min).
 
 ---
 

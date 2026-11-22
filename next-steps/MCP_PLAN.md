@@ -40,8 +40,8 @@ Constraint: **the repository is public.** Everything in it (plugin, skills, MCP 
 - Every tool: resolve token → user → role → call service with actor. Never trust ids from the model without an ownership/permission check.
 
 ### C. Widgets (MCP Apps)
-- 4–5 views in flow-track style: action center, position, application flow, quiz/kit draft preview with confirm, interview prep.
-- Built as self-contained HTML bundles from the design tokens; no external origins beyond the app's own.
+- 6 views in flow-track style: action center, position, application flow, interview prep, position form, quiz/kit draft preview with confirm.
+- Built as self-contained HTML bundles from the design tokens; no external origins beyond the app's own: plain TypeScript for the read widgets and the draft preview, React with the dashboard components for the position form.
 - Data only from tool results; confirm buttons call `publishDraft` (the server re-checks permission).
 - Plain-text result for every tool (VS Code widgets are experimental).
 
@@ -83,7 +83,7 @@ Kept in-app for now. To stay defensible:
 1. **Read-only**: OAuth (B), audit log, tools `action_center`, `list_positions`, `get_position`, `get_application`, `list_interviews`; text results with deep links. Test with Claude desktop via manual connector.
 2. **Plugin skeleton**: plugin folder, instructions, `action-center` skill, marketplace file (D). Install in Claude desktop and VS Code; record what works where.
 3. **Widgets**: action center + position + application flow (C). Built (docs/mcp.md section 3), interview prep included; to verify in claude.ai and Claude desktop.
-4. **Drafts**: draft tools + preview/confirm widget; skills `create-position`, `quiz-for-candidate`, `interview-kit`, `interview-prep`. Built (docs/mcp.md section 4): position draft and publish, quiz preview and save, interview slot proposal and scheduling, kit draft by patch and kit ready, skills `create-position`, `quiz-for-candidate`, `schedule-interview`, `interview-prep`, `interview-kit`; pending proposals in the Colloqui tab (Pianifica, Scarta).
+4. **Drafts**: draft tools + preview/confirm widget; skills `create-position`, `quiz-for-candidate`, `interview-kit`, `interview-prep`. Built (docs/mcp.md sections 3–4): position form widget (`open_position_form`, second React bundle) and position draft and publish, quiz preview and save, interview slot proposal and scheduling, kit draft by patch and kit ready, skills `create-position`, `quiz-for-candidate`, `schedule-interview`, `interview-prep`, `interview-kit`; pending proposals in the Colloqui tab (Pianifica, Scarta).
 5. **Pilot**: 2–3 recruiters via org distribution (E), on fake data (no DPA needed for the POC); review audit log and feedback.
 6. **Broaden**: remaining operations, confirmed writes, VS Code polish, decide in-app AI fallback (Groq vs Haiku 5.5).
 

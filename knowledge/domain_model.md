@@ -2,7 +2,7 @@
 title: "domain model"
 tier: "MustHave"
 keywords: ["domain model","entities","quiz","question","candidate","application","stage","assessment","position status","evaluation","preset","migration","business rules"]
-intent: "Always: entities, relations, cascades and business rules (quiz save path, scorecard and interview guide, interviews with kits, live notes and interviewer scorecards, applications and their stage, the decision of an application with its matrix and score, assessment lifecycle, evaluation kinds and scores, access with no per-user filtering except unsubmitted interviewer material, user management for administrators only, accounts with no email, environments and the shared resume bucket, Italian)."
+intent: "Always: entities, relations, cascades and business rules (quiz save path, scorecard and interview guide, interviews with kits, live notes and interviewer scorecards, applications and their stage, the decision of an application with its matrix and score, assessment lifecycle, evaluation kinds and scores, access with no per-user filtering except unsubmitted interviewer material, user and MCP management for administrators only, accounts with no email, sessions and MCP tokens, environments and the shared resume bucket, Italian)."
 editable: true
 ---
 # Domain model and business rules
@@ -17,20 +17,25 @@ editable: true
 ## Access: no ownership filtering, one admin-only area
 
 - Every signed-in user reads and edits all selection data, whatever their role: NEVER add `where: { createdBy }` or any per-user filter. `requireUser()` only checks that a session exists.
+- `getViewerId()` only arranges the view (which ownership button to offer, whether a score is still hidden): browser-cached for the session, never a guard. Authorization always reads `getCurrentUser()` / `requireUser()`.
 - MCP tools follow the same rules: the user of the OAuth token is the signed-in user everywhere (author, owner "me", `decidedBy`, interviewer, visibility of unsubmitted material). OAuth scopes limit what one token may do, never a user or a role.
 - Only visibility exception, never ownership or permission: an interviewer's live notes and scorecard are visible to their author until submitted. Submission publishes and locks: a submitted scorecard, its criterion scores and its author's notes on that interview become read-only for everyone, author included; no action reopens.
 - Independence views are arrangements, never filtered reads: submitted scorecards are returned to everyone and the UI collapses them ("Schede già inviate (n)"), and the Decision columns, overall score and must-warning lists stay closed behind "Per un giudizio indipendente, invia prima la tua scheda" while the participant has not submitted. Outcome and rationale stay usable.
-- `User.role` is `user` or `admin`. The only role check guards user management (creating users, editing them, their role, email verification, password, ban and sessions): its pages and actions check `admin` on the server, after the session check. Hiding the menu entry is presentation, never the guard.
+- `User.role` is `user` or `admin`. The only role check guards user management (creating users, editing them, their role, email verification, password, ban and sessions) and MCP management (global switch, per-user switch, token revocation): actions check `admin` with `requireAdmin` (non-admin → `UserError`), pages with `requireAdminPage` (non-admin → not-found), both after the session check. Hiding the menu entry is presentation, never the guard.
 - `Application.ownerId` = recruiter in charge, for the optional "Solo le mie" flag only: dashboard-created application → session user, candidate edit → editor, public application → null; "Prendi in carico" sets, "Rilascia" clears. The Agenda "Solo i miei" and the home "Solo le mie" filters are view filters on the same field.
 - Candidates are not users: public routes only.
 
 ## Users and accounts
 
-- Users are staff accounts. Public registration stays open; administrators can also create users.
+- Users are staff accounts. Public registration stays open; administrators can also create users. The first administrator is set by `pnpm user:make-admin <email>`: it promotes an existing account (role `admin`, email verified, unbanned) and never creates users.
 - The app sends no email of any kind, so sign-in cannot wait for a verification link: a new account cannot sign in until an administrator switches its email verification on from user management. A forgotten password is reset by an administrator.
+- The auth router keeps only sign-up, sign-in, sign-out, session read, profile update, password change and email verification; its user-management and password-reset / verification-email endpoints answer 404, and user management calls the admin plugin on the server from its actions.
+- Session: expires after 7 days, refreshed once older than 1 day, hard stop 30 days from creation. Creating a session records `lastLoginAt` (a failure never blocks the sign-in); the dashboard shell re-checks the session every 5 minutes and sends a signed-out tab to the login page.
 - At least one active administrator always exists: the last non-banned `admin` can neither lose the role nor be banned. An administrator never bans themself; nobody changes their own role or their own email verification.
-- Users are never deleted (they author positions, applications, decisions and scorecards): an administrator bans them instead. A ban carries a reason, ends the user's sessions, and unbanning restores access. Banned users are never offered as interview participants.
-- An MCP OAuth token is issued only to an account that can sign in (email verification on, not banned); a ban also ends its tokens.
+- Resetting a password and toggling email verification leave the user's sessions open: ending sessions is the separate, explicit command.
+- Users are never deleted (they author positions, applications, decisions and scorecards): an administrator bans them instead. A ban is permanent (no expiry), carries a reason, ends the user's sessions, and unbanning restores access. Banned users are never offered as interview participants.
+- An MCP OAuth token is issued only to an account that can sign in (email verification on, not banned) and works only while the consent of its grant exists, for the MCP resource audience only; a ban revokes it. Access tokens last 15 minutes, refresh tokens 30 days and rotate; registration admits public clients with allowlisted redirect URIs only.
+- A deployment switch (`AppSetting` `mcp.enabled`, on by default) and a per-user `mcpDisabled` refuse every MCP call (`access_disabled`); switching a user off also revokes their tokens.
 
 ## Quiz and questions: one write path
 

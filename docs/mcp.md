@@ -162,3 +162,11 @@ Known limits:
 
 - Pending proposals are listed at the top of the application's Colloqui tab ("Proposte da confermare"), with **Pianifica** (`scheduleInterviewProposalAction`, same `confirmInterviewProposal`) and **Scarta** (`discardInterviewProposalAction`, status `discarded`).
 - In a client without MCP Apps positions, proposals and kits are confirmed from the dashboard; only a quiz preview cannot be saved there.
+
+## 5 Amministrazione
+
+Administrators only: `/dashboard/settings/mcp` ("Accesso MCP"), reached from Settings → Users (`requireAdminPage` answers not-found to everyone else). Three tabs:
+
+- **Token attivi.** The active grants: refresh tokens not revoked or expired, plus opaque access tokens without a listed refresh token (`getActiveMcpTokens`). Columns: user (name and email), client, scopes, issued, expires; **Revoca** deletes the whole grant (access and refresh tokens, consent) and the client must authorize again (`revokeMcpTokenAction` → `revokeMcpToken`).
+- **Interruttori.** The global switch in `AppSetting` `mcp.enabled` (on by default; `setMcpEnabledAction` → `setMcpEnabledGlobally`) and the per-user `User.mcpDisabled` (`setUserMcpDisabledAction` → `setUserMcpDisabled`). Switching a user off also revokes every token of that user. With MCP off, for one user or for everyone, `requireMcpActor` refuses each call with `access_disabled` (403); the list shows active, verified, non-banned users.
+- **Registro.** The audit log (`McpAuditLog`): one row per tool call, allowed, failed and denied, newest first, 50 per page (`getMcpAudit`); the URL accepts `user` and `tool` filters and `page`. Columns: date, user, client, tool, outcome, summary. Candidate free text (CV, answers, notes, evidence, briefing…) is omitted from the arguments and the arguments are capped at 4 KB (`redactAuditArguments`, `lib/mcp/audit.ts`); a failed audit write never changes the tool answer.

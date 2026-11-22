@@ -41,13 +41,21 @@ export function AiSection() {
             "Conferma e salva il kit",
           ],
           ["Decisione", "Avvocato del diavolo", "Sceglie l'esito e scrive la motivazione"],
+          [
+            "Assistente (Claude, fuori dall'app)",
+            "Bozza di posizione, anteprima del quiz, bozza del kit, proposta di colloquio",
+            "Conferma nel riquadro dell'assistente o dalla dashboard (il quiz solo nel riquadro)",
+          ],
         ]}
       />
 
       <GuideCallout title="Regola costante">
-        La generazione AI <strong>non salva mai da sola</strong>. Tutto passa da
-        una conferma umana. Le proposte non confermate non compaiono nelle altre
-        pagine.
+        La generazione AI <strong>non salva mai da sola</strong>. Nell&apos;app
+        ogni proposta passa da una conferma umana e le proposte non confermate
+        non compaiono nelle altre pagine. L&apos;assistente esterno (Claude con
+        il plugin dev-recruit) può preparare bozze e proposte: restano in attesa
+        finché una persona non le conferma, come le proposte di colloquio in
+        &quot;Proposte da confermare&quot;, nel tab Colloqui.
       </GuideCallout>
     </GuideSection>
   );
