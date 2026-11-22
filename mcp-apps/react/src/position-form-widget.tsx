@@ -23,8 +23,9 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { DoneLine, ErrorLine, WidgetHeader } from "./chrome";
 import type { McpAppActions } from "./use-mcp-app";
 
 type Saved = { positionId: string; title: string; url: string | null };
@@ -55,32 +56,6 @@ export function describeRequest(values: PositionFormData): string {
     values.description?.trim() ? `, migliorando questa bozza: ${values.description.trim()}` : "",
     ". Poi riapri il modulo della posizione con gli stessi campi e la descrizione.",
   ].join("");
-}
-
-function Header({ title, children }: { title: string; children?: ReactNode }) {
-  return (
-    <header className="flex items-start gap-3 bg-band px-5 pt-4 pb-3 border-b border-l-4 border-l-section-positions">
-      <Briefcase aria-hidden className="mt-1 size-5 text-section-positions shrink-0" />
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-          Nuova posizione · dev-recruit
-        </p>
-        <h1 className="font-display font-semibold text-heading text-lg truncate">{title}</h1>
-        {children}
-      </div>
-    </header>
-  );
-}
-
-function ErrorLine({ children }: { children: ReactNode }) {
-  return (
-    <p
-      role="alert"
-      className="bg-destructive/10 px-3 py-2 rounded-md text-destructive text-sm"
-    >
-      {children}
-    </p>
-  );
 }
 
 export function PositionFormWidgetView({
@@ -152,21 +127,16 @@ export function PositionFormWidgetView({
     const published = phase.step === "published";
     return (
       <article className="bg-card border rounded-xl overflow-hidden text-card-foreground">
-        <Header title={saved.title} />
+        <WidgetHeader icon={Briefcase} section="positions" eyebrow="Nuova posizione" title={saved.title} />
         <div className="flex flex-col gap-4 p-5">
-          <div className="flex items-start gap-3">
-            <CircleCheck aria-hidden className="mt-0.5 size-5 text-success shrink-0" />
-            <div className="flex flex-col gap-1">
-              <p className="font-medium">
-                {published ? "Posizione pubblicata" : "Bozza salvata"}
-              </p>
-              <p className="text-muted-foreground text-sm">
-                {published
-                  ? "La posizione è aperta. Dalla dashboard completa scheda di valutazione, quiz e guida colloquio."
-                  : "La posizione è in bozza e non è visibile ai candidati. Pubblicala qui o dalla pagina della posizione."}
-              </p>
-            </div>
-          </div>
+          <DoneLine
+            icon={CircleCheck}
+            title={published ? "Posizione pubblicata" : "Bozza salvata"}
+          >
+            {published
+              ? "La posizione è aperta. Dalla dashboard completa scheda di valutazione, quiz e guida colloquio."
+              : "La posizione è in bozza e non è visibile ai candidati. Pubblicala qui o con \"Pubblica\" nella pagina della posizione."}
+          </DoneLine>
           {phase.step === "saved" && phase.error && <ErrorLine>{phase.error}</ErrorLine>}
           <div className="flex flex-wrap justify-end gap-2">
             {saved.url && (
@@ -195,12 +165,17 @@ export function PositionFormWidgetView({
       noValidate
       className="bg-card border rounded-xl overflow-hidden text-card-foreground"
     >
-      <Header title={title?.trim() || "Nuova posizione"}>
+      <WidgetHeader
+        icon={Briefcase}
+        section="positions"
+        eyebrow="Nuova posizione"
+        title={title?.trim() || "Nuova posizione"}
+      >
         <p className="text-muted-foreground text-sm">
           Controlla i campi proposti dall&apos;assistente e salva la bozza: non è visibile ai
           candidati finché non la pubblichi.
         </p>
-      </Header>
+      </WidgetHeader>
 
       <div className="flex flex-col gap-5 p-5">
         <PositionTitleField control={control} />

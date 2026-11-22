@@ -8,7 +8,9 @@ export type WidgetId =
   | "application-flow"
   | "draft-preview"
   | "interview-prep"
-  | "position-form";
+  | "position-form"
+  | "quiz-form"
+  | "schedule-form";
 
 /** A cache refresh the MCP wrapper applies with the route-handler helpers */
 export type InvalidationRequest =

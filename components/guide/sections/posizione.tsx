@@ -103,7 +103,9 @@ export function PosizioneSection() {
       <GuideText>
         <strong>In alto resta una checklist</strong>: Dettagli ✓ · Scheda ✓ ·
         Quiz ✓ · Guida ✓. Una posizione può essere Bozza, Aperta o Chiusa: solo
-        le aperte compaiono nel form pubblico. L&apos;eliminazione è permessa
+        le aperte compaiono nel form pubblico. Una bozza (anche quella
+        preparata dall&apos;assistente) si apre con <strong>Pubblica</strong>{" "}
+        in alto; poi lo stesso pulsante diventa Chiudi o Riapri. L&apos;eliminazione è permessa
         solo se non ci sono candidature.
       </GuideText>
 

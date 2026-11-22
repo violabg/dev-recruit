@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { updatePositionStatusAction } from "@/lib/actions/positions";
 import type { PositionStatus } from "@/lib/schemas";
 import { errorMessage, unwrap } from "@/lib/utils/action-result";
-import { Loader2 } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -14,12 +14,15 @@ const NEXT_STATUS: Record<
   PositionStatus,
   { target: PositionStatus; label: string; success: string }
 > = {
-  draft: { target: "open", label: "Apri", success: "Posizione aperta" },
+  draft: { target: "open", label: "Pubblica", success: "Posizione pubblicata" },
   open: { target: "closed", label: "Chiudi", success: "Posizione chiusa" },
   closed: { target: "open", label: "Riapri", success: "Posizione riaperta" },
 };
 
-/** Opens, closes or reopens a position from its header. */
+/**
+ * Publishes, closes or reopens a position from its header. A draft gets the
+ * primary button: publishing is its next step.
+ */
 export function PositionStatusActions({
   positionId,
   status,
@@ -51,12 +54,16 @@ export function PositionStatusActions({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant={status === "draft" ? "default" : "outline"}
       size="sm"
       onClick={handleClick}
       disabled={isPending}
     >
-      {isPending && <Loader2 className="mr-1 size-4 animate-spin" />}
+      {isPending ? (
+        <Loader2 className="mr-1 size-4 animate-spin" />
+      ) : (
+        status === "draft" && <Send className="mr-1 size-4" />
+      )}
       {next.label}
     </Button>
   );

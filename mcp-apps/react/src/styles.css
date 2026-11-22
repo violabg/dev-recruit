@@ -11,9 +11,11 @@
 @import "../../../app/theme.css";
 
 @source "./";
-@source "../../../components/ui/{button,combobox,field,input,input-group,label,multi-select,select,separator,textarea}.tsx";
+@source "../../../components/ui/{button,combobox,field,input,input-group,label,multi-select,select,separator,slider,switch,textarea}.tsx";
 @source "../../../components/ui/rhf-inputs";
 @source "../../../components/positions/position-fields.tsx";
+@source "../../../components/quiz/quiz-generation-fields.tsx";
+@source "../../../components/interviews/interview-when-fields.tsx";
 
 @font-face {
   font-family: "IBM Plex Sans";

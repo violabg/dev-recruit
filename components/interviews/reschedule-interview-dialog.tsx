@@ -26,7 +26,7 @@ import {
   InterviewWhenFields,
   toDateTimeLocalValue,
   withLocalScheduledAt,
-} from "./schedule-interview-form";
+} from "./interview-when-fields";
 
 export type RescheduleInterviewDefaults = {
   id: string;

@@ -16,6 +16,8 @@ import {
   getSchedulingOptionsInputSchema,
   kitPatchInputSchema,
   openPositionFormInputSchema,
+  openQuizFormInputSchema,
+  openScheduleFormInputSchema,
   proposeInterviewSlotInputSchema,
   publishDraftInputSchema,
   quizDraftInputSchema,
@@ -47,6 +49,8 @@ import {
   quizPreviewWidget,
 } from "../widgets/drafts";
 import { positionFormWidget } from "../widgets/position-form";
+import { quizFormWidget } from "../widgets/quiz-form";
+import { scheduleFormWidget } from "../widgets/schedule-form";
 import type { InvalidationRequest } from "./types";
 import { defineTool } from "./types";
 
@@ -76,7 +80,7 @@ export const createPositionDraftTool = defineTool({
         `Bozza di posizione creata: ${input.title}`,
         `Livello: ${input.experienceLevel} · Competenze: ${input.skills.join(", ")}`,
         "Prossimi passi dalla dashboard: scheda di valutazione, quiz e guida colloquio.",
-        "Per pubblicarla usa il pulsante nel riquadro o la pagina della posizione.",
+        "Per pubblicarla usa il pulsante nel riquadro, o \"Pubblica\" nella pagina della posizione.",
         `Apri in dev-recruit: ${links.position(positionId)}`,
       ),
       structured: {
@@ -125,6 +129,40 @@ async function positionTitle(positionId: string): Promise<string> {
   if (!position) throw new UserError("Posizione non trovata");
   return position.title;
 }
+
+export const openQuizFormTool = defineTool({
+  name: "open_quiz_form",
+  title: "Apri il modulo del quiz",
+  description:
+    "Apre nel riquadro i parametri di generazione di un quiz per una posizione (titolo, istruzioni, numero di domande, difficoltà, tipi di domande, limite di tempo; tutti facoltativi oltre a positionId), precompilati con quello che sai. La persona li controlla e preme \"Genera con l'assistente\": ti arriva la richiesta con i parametri, scrivi le domande e mostra l'anteprima con save_quiz_draft. Non crea nulla.",
+  scope: "recruit:draft",
+  group: "draft",
+  inputSchema: openQuizFormInputSchema,
+  widget: "quiz-form",
+  readOnly: true,
+  async handler(_actor, input) {
+    const position = await getPositionById(input.positionId);
+    if (!position) throw new UserError("Posizione non trovata");
+    const widget = quizFormWidget(
+      {
+        id: position.id,
+        title: position.title,
+        experienceLevel: position.experienceLevel,
+        skills: position.skills,
+      },
+      input,
+    );
+    return {
+      text: lines(
+        `Parametri del quiz per ${position.title} aperti nel riquadro: la persona li controlla e preme "Genera con l'assistente".`,
+        "Non è stato creato nulla. Se il riquadro non è disponibile, concorda i parametri in chat e mostra l'anteprima con save_quiz_draft.",
+        `Quiz della posizione: ${widget.url}`,
+      ),
+      structured: { widget },
+      auditSummary: `position=${position.id} quiz_form`,
+    };
+  },
+});
 
 export const saveQuizDraftTool = defineTool({
   name: "save_quiz_draft",
@@ -230,6 +268,34 @@ export const getSchedulingOptionsTool = defineTool({
         })),
       },
       auditSummary: `application=${options.application.id} guides=${options.guides.length} pending=${options.pendingProposals.length}`,
+    };
+  },
+});
+
+export const openScheduleFormTool = defineTool({
+  name: "open_schedule_form",
+  title: "Apri il modulo del colloquio",
+  description:
+    "Apre nel riquadro il modulo per pianificare un colloquio di una candidatura (guida, round, data e ora con fuso, durata, link della call, partecipanti; tutti facoltativi oltre ad applicationId), precompilato con quello che sai. La persona completa i campi e preme \"Pianifica colloquio\" nel riquadro. Non crea nulla e non invia email: usalo nei client con i riquadri al posto di propose_interview_slot.",
+  scope: "recruit:draft",
+  group: "draft",
+  inputSchema: openScheduleFormInputSchema,
+  widget: "schedule-form",
+  readOnly: true,
+  async handler(actor, input) {
+    const options = await buildSchedulingOptions(input.applicationId);
+    if (!options) throw new UserError("Candidatura non trovata");
+    const widget = scheduleFormWidget(options, input, actor.userId);
+    return {
+      text: lines(
+        `Modulo del colloquio di ${options.application.candidateName} · ${options.application.positionTitle} aperto nel riquadro: la persona completa i campi e preme "Pianifica colloquio".`,
+        options.guides.length === 0 &&
+          `La posizione non ha guide colloquio: vanno create dalla dashboard prima di pianificare (${widget.guidesUrl}).`,
+        "Non è stato creato nulla. Se il riquadro non è disponibile, usa get_scheduling_options e propose_interview_slot.",
+        `Oppure pianifica dalla dashboard: ${widget.url}`,
+      ),
+      structured: { widget },
+      auditSummary: `application=${options.application.id} schedule_form guides=${options.guides.length}`,
     };
   },
 });
@@ -410,7 +476,11 @@ export const publishDraftTool = defineTool({
       });
       return {
         text: `Kit segnato come pronto. Apri la preparazione: ${links.interviewPrepare(applicationId, interviewId)}`,
-        structured: { interviewId, applicationId },
+        structured: {
+          interviewId,
+          applicationId,
+          url: links.interviewPrepare(applicationId, interviewId),
+        },
         invalidate: [{ kind: "interview", interviewId, applicationId }],
         auditSummary: `interview=${interviewId} kit=ready`,
       };
@@ -435,7 +505,11 @@ export const publishDraftTool = defineTool({
 
     return {
       text: `Colloquio pianificato. Nessuna email è stata inviata. Apri la preparazione: ${links.interviewPrepare(applicationId, interviewId)}`,
-      structured: { interviewId, applicationId },
+      structured: {
+        interviewId,
+        applicationId,
+        url: links.interviewPrepare(applicationId, interviewId),
+      },
       invalidate,
       auditSummary: `proposal=${input.id} interview=${interviewId} scheduled`,
     };
@@ -445,9 +519,11 @@ export const publishDraftTool = defineTool({
 export const draftTools = [
   openPositionFormTool,
   createPositionDraftTool,
+  openQuizFormTool,
   saveQuizDraftTool,
   saveQuizTool,
   getSchedulingOptionsTool,
+  openScheduleFormTool,
   proposeInterviewSlotTool,
   getInterviewKitTool,
   saveInterviewKitDraftTool,

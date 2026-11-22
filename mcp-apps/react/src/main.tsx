@@ -9,10 +9,12 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Message } from "./message";
 import { PositionFormWidgetView } from "./position-form-widget";
+import { QuizFormWidgetView } from "./quiz-form-widget";
+import { ScheduleFormWidgetView } from "./schedule-form-widget";
 import { useMcpApp } from "./use-mcp-app";
 import "./styles.css";
 
-const KINDS = new Set<ReactWidgetModel["kind"]>(["position-form"]);
+const KINDS = new Set<ReactWidgetModel["kind"]>(["position-form", "quiz-form", "schedule-form"]);
 
 function isReactWidget(value: unknown): value is ReactWidgetModel {
   return (
@@ -32,6 +34,10 @@ function Widget() {
   switch (state.widget.kind) {
     case "position-form":
       return <PositionFormWidgetView model={state.widget} actions={actions} />;
+    case "quiz-form":
+      return <QuizFormWidgetView model={state.widget} actions={actions} />;
+    case "schedule-form":
+      return <ScheduleFormWidgetView model={state.widget} actions={actions} />;
   }
 }
 

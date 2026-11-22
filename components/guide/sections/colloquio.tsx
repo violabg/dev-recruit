@@ -93,8 +93,9 @@ export function ColloquioSection() {
                 (cosa comunicare, logistica).{" "}
                 <strong>Modifica kit</strong> apre l&apos;editor, dove si
                 modificano, riordinano, aggiungono o rimuovono domande,
-                ipotesi e voci. &quot;Segna come pronto&quot; chiude la
-                preparazione. C&apos;è il promemoria legale fisso sulle domande
+                ipotesi e voci. Con il kit in bozza (anche quello preparato
+                dall&apos;assistente) <strong>Segna come pronto</strong> è in
+                alto nella pagina e nell&apos;editor, e chiude la preparazione. C&apos;è il promemoria legale fisso sulle domande
                 vietate.
               </>
             ),

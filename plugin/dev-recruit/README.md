@@ -63,7 +63,9 @@ Bozze (l'assistente le prepara, una persona le conferma):
 | Strumento | Cosa fa | Conferma |
 |---|---|---|
 | `open_position_form` | Apre il modulo di una nuova posizione nel riquadro, precompilato dall'assistente: completi i campi e premi "Salva bozza" | "Salva bozza" e poi "Pubblica la posizione" nel riquadro |
-| `create_position_draft` | Crea una posizione in bozza, non visibile ai candidati | "Pubblica la posizione" nel riquadro, o dalla pagina della posizione |
+| `open_quiz_form` | Apre nel riquadro i parametri di un quiz (numero di domande, difficoltà, tipi, tempo, istruzioni), precompilati dall'assistente: premi "Genera con l'assistente" | L'assistente scrive le domande e mostra l'anteprima: "Salva il quiz" nel riquadro |
+| `open_schedule_form` | Apre il modulo di pianificazione di un colloquio (guida, data, durata, partecipanti), precompilato dall'assistente | "Pianifica colloquio" nel riquadro; nessuna email |
+| `create_position_draft` | Crea una posizione in bozza, non visibile ai candidati | "Pubblica la posizione" nel riquadro, o "Pubblica" nella pagina della posizione |
 | `save_quiz_draft` | Mostra l'anteprima di un quiz, senza salvarlo | "Salva il quiz" nel riquadro; nessun candidato viene invitato |
 | `propose_interview_slot` | Salva una proposta di colloquio, senza pianificarlo | "Pianifica il colloquio" nel riquadro, o "Pianifica" sulla proposta nel tab Colloqui della candidatura; crea il colloquio e il kit in bozza, nessuna email |
 | `save_interview_kit_draft` | Modifica il kit in bozza voce per voce (domande, briefing, ipotesi, checklist); le domande non indicate restano | "Segna il kit come pronto" nel riquadro, o dalla pagina di preparazione |

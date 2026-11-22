@@ -61,6 +61,25 @@ export const quizGenerationFormSchema = quizGenerationConfigSchema.extend({
   timeLimit: z.number().min(5).max(120),
 });
 
+/** Starting values of the generation form of a position (no model choice) */
+export function quizGenerationDefaults(position: {
+  title: string;
+  experienceLevel: string;
+}): Omit<QuizGenerationFormData, "specificModel" | "previousQuestions"> {
+  return {
+    quizTitle: `Quiz per ${position.title} (${position.experienceLevel})`,
+    instructions: "",
+    questionCount: 10,
+    includeMultipleChoice: true,
+    includeOpenQuestions: true,
+    includeCodeSnippets: true,
+    includeBehavioralScenarios: false,
+    difficulty: 3,
+    timeLimit: 30,
+    enableTimeLimit: true,
+  };
+}
+
 // Input of generateNewQuizAction
 export const generateQuizSchema = quizGenerationConfigSchema.extend({
   positionId: baseSchemas.id,
