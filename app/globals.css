@@ -15,20 +15,22 @@
   }
   .page-frame {
     --page-gutter: max(1rem, calc((100cqi - 1400px) / 2));
+    --page-frame-padding-top: 1.5rem;
     padding-inline: var(--page-gutter);
-    padding-top: 1.5rem;
+    padding-top: var(--page-frame-padding-top);
   }
   @media (width >= 48rem) {
     .page-frame {
       --page-gutter: max(2rem, calc((100cqi - 1400px) / 2));
-      padding-top: 2rem;
+      --page-frame-padding-top: 2rem;
     }
   }
-  /* The band brings its own top padding */
-  .page-frame:has(.page-band) {
-    padding-top: 0;
-  }
+  /* The band brings its own top padding: it cancels the frame's one instead of
+     relying on :has(.page-band). React keeps the previous page hidden inside
+     the frame after a navigation, so a hidden band would still match :has and
+     strip the top padding from the page that is showing. */
   .page-band {
+    margin-top: calc(var(--page-frame-padding-top, 0px) * -1);
     margin-inline: calc(var(--page-gutter, 0px) * -1);
     padding-inline: var(--page-gutter, 0px);
   }

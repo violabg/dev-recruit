@@ -10,7 +10,7 @@ const handlers = toNextJsHandler(auth);
 type AuthHandler = (request: Request) => Promise<Response>;
 
 /**
- * OAuth endpoints of the provider plugin (docs/mcp.md §1.2): size and rate
+ * OAuth endpoints of the provider plugin (docs/mcp.md): size and rate
  * limited here. No CORS header is added: OAuth clients call them from their
  * own servers or native apps. Every other auth path passes through untouched.
  */

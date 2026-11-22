@@ -1,7 +1,9 @@
 import {
   GuideCallout,
   GuideSection,
+  GuideSubsection,
   GuideTable,
+  GuideText,
 } from "@/components/guide/guide-blocks";
 import { GUIDE_SECTION } from "@/components/guide/sections";
 
@@ -57,6 +59,61 @@ export function AiSection() {
         finché una persona non le conferma, come le proposte di colloquio in
         &quot;Proposte da confermare&quot;, nel tab Colloqui.
       </GuideCallout>
+
+      <GuideSubsection id="ai-assistente-esterno" title="L'assistente esterno">
+        <GuideText>
+          Oltre all&apos;AI dentro l&apos;app, un assistente esterno — Claude con
+          il plugin dev-recruit, oppure VS Code Copilot — può leggere gli stessi
+          dati e preparare bozze da fuori. È un canale facoltativo: l&apos;app
+          resta il posto dove si conferma, si salva e si decide.
+        </GuideText>
+
+        <GuideTable
+          head={["Cosa può fare", "Cosa prepara", "Cosa confermi tu"]}
+          rows={[
+            [
+              "Leggere",
+              "Le mie azioni, posizioni, candidature, colloqui, preparazione e kit",
+              "Niente: la lettura non modifica nulla",
+            ],
+            [
+              "Posizione",
+              "Una bozza o il modulo precompilato con i campi della posizione",
+              "Pubblica la posizione, dal riquadro o dalla pagina",
+            ],
+            [
+              "Quiz",
+              "I parametri di generazione e l'anteprima delle domande",
+              "Salva il quiz dal riquadro; nessun candidato viene invitato",
+            ],
+            [
+              "Colloquio",
+              "Una proposta con guida, round, data, durata e partecipanti",
+              'Pianifica, dal riquadro o da "Pianifica" nella proposta del tab Colloqui',
+            ],
+            [
+              "Kit",
+              "Modifiche a domande, briefing, ipotesi e checklist",
+              "Segna il kit come pronto, dal riquadro o dalla preparazione",
+            ],
+          ]}
+        />
+
+        <GuideText>
+          La preparazione del colloquio che l&apos;assistente legge non contiene
+          l&apos;identità del candidato né il CV. Una proposta di colloquio non
+          invia email: crea il colloquio e il kit in bozza solo dopo la tua
+          conferma. Nei client senza riquadri, posizione, proposta e kit si
+          confermano dalla pagina; il quiz si salva solo dal riquadro.
+        </GuideText>
+
+        <GuideCallout title="Cosa resta nella dashboard">
+          Decisioni finali, eliminazioni, messaggi e inviti ai candidati,
+          assegnazione dei test, kanban e azioni massive si fanno solo
+          nell&apos;app. L&apos;assistente non può confermare le proprie bozze
+          da solo: il pulsante lo premi tu.
+        </GuideCallout>
+      </GuideSubsection>
     </GuideSection>
   );
 }

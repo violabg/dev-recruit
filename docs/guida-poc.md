@@ -18,7 +18,26 @@ Gli altri amministratori si nominano dall'app, in Impostazioni → Utenti.
 
 ---
 
-## 2. Aree di miglioramento (osservate durante la verifica)
+## 2. Perché l'assistente passa dagli MCP
+
+L'applicazione ha due canali AI, con costi e capacità diversi:
+
+- **Dentro l'app** (Groq, modelli del piano gratuito): genera descrizioni, criteri, quiz, valutazioni e kit. Costa poco ed è adatto ai compiti brevi e strutturati, ma i modelli gratuiti sono meno capaci: su richieste lunghe e articolate, come leggere più CV, incrociare criteri e storico e scrivere una bozza coerente, sbagliano o si fermano prima.
+- **Fuori dall'app** (assistente collegato via MCP: Claude, VS Code): il ragionamento lo fa il modello incluso nell'abbonamento che il recruiter ha già. Non si paga una chiamata API a consumo per ogni token, nei limiti dell'abbonamento, e si usa una capacità già acquistata.
+
+Questa è la ragione principale degli MCP: **spostare il lavoro pesante sull'abbonamento invece che sulle API**, e tenere le API per ciò che serve davvero. La scala dei costi, dal più economico al più capace:
+
+1. **modelli Groq gratuiti**, dentro l'app: compiti brevi e ripetitivi, costo quasi nullo;
+2. **modelli piccoli di Claude via API**: quando serve più qualità dell'app ma non un abbonamento, il costo per chiamata resta contenuto;
+3. **abbonamento Claude dell'utente via MCP**: lavoro lungo e interattivo, senza costi API aggiuntivi.
+
+L'MCP non sostituisce quindi l'AI dell'app: le due strade convivono. L'app resta il canale per le generazioni automatiche; l'assistente esterno è il canale per il lavoro di ragionamento. Se un recruiter non ha un abbonamento adatto, un modello Claude piccolo via API è l'alternativa ragionevole per i casi in cui la qualità dei modelli gratuiti non basta.
+
+Con dati reali il canale esterno richiede un piano aziendale con accordo sul trattamento dei dati: la verifica è nella sezione "Dati e privacy" di [mcp.md](mcp.md).
+
+---
+
+## 3. Aree di miglioramento (osservate durante la verifica)
 
 Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il POC. Le voci sono emerse usando l'applicazione, non leggendo il codice.
 
@@ -58,7 +77,7 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 
 ---
 
-## 3. Cosa funziona già bene (da mostrare)
+## 4. Cosa funziona già bene (da mostrare)
 
 - La **"Prossima azione"** riduce la domanda "e adesso?" a un pulsante.
 - La **matrice criteri × fonti** rende visibile il motivo di una decisione, non solo il voto.
@@ -69,7 +88,7 @@ Questa sezione è deliberatamente schietta: serve a decidere cosa fare dopo il P
 
 ---
 
-## 4. Percorso consigliato per la demo (10–12 minuti)
+## 5. Percorso consigliato per la demo (10–12 minuti)
 
 1. **Le mie azioni** — "ecco cosa aspetta il recruiter" (30 s).
 2. **Posizione** — checklist di setup, scheda (criteri e pesi), guida (30–60 s).

@@ -33,7 +33,7 @@ export const MCP_ACCESS_TOKEN_TTL_SECONDS = 900;
 export const MCP_REFRESH_TOKEN_TTL_SECONDS = 2_592_000;
 
 /**
- * Redirect URIs of the supported clients (docs/mcp.md §1): the Claude hosted
+ * Redirect URIs of the supported clients (docs/mcp.md): the Claude hosted
  * apps callback, then VS Code (loopback on any port, and the vscode.dev
  * redirect).
  */

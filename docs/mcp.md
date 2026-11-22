@@ -1,190 +1,201 @@
-# dev-recruit MCP server
+# Assistente esterno (MCP)
 
-Operator reference for the dev-recruit MCP server (`/api/mcp`) and the OAuth 2.1 authorization server that issues its tokens. Related documents: [operation inventory](mcp-operations.md), [data policy](mcp-data-policy.md).
+dev-recruit espone un server MCP su `/api/mcp`: un assistente (Claude su claude.ai, Claude desktop o Cowork, e VS Code Copilot) legge i dati della selezione e prepara bozze, mentre il ragionamento lo fa il modello del client. dev-recruit resta il sistema di record: ogni scrittura passa dai servizi della dashboard e ogni bozza la conferma una persona.
 
-## 1 Verifica Fase 0
+Questo documento descrive cosa si può fare oggi, come si collega un client e come si amministra l'accesso. Il plugin pronto per l'installazione è in `plugin/dev-recruit`; la sua presentazione per chi lo usa è in `plugin/dev-recruit/README.md`.
 
-Checked on 2026-11-21 against the published npm packages (downloaded with `npm pack` into a scratch folder outside the repository, nothing installed in the repo) and the official documentation pages cited below.
+## 1. Cosa si può fare
 
-### 1.1 Pinned versions
+### Lettura
 
-| Package | Pinned version | Latest on npm at check time | Notes |
-|---|---|---|---|
-| `@better-auth/oauth-provider` | `1.7.22` | `1.7.27` (`1.8.0-beta.11` beta) | Same version as the installed `better-auth` |
-| `better-auth` (installed) | `1.7.22` | — | `package.json` `"better-auth": "^1.7.22"` |
-| `mcp-handler` | `2.4.0` | `2.4.0` | Requires MCP SDK v2 (see 1.5) |
-| `@modelcontextprotocol/server` | `2.4.0` | `2.4.0` | MCP SDK v2 server package, peer of `mcp-handler` 2.x and `ext-apps` 2.x |
-| `@modelcontextprotocol/sdk` | not used | `1.32.2` | SDK v1: pairs only with `mcp-handler` 1.x |
-| `@modelcontextprotocol/ext-apps` | `2.0.4` | `2.0.4` | Peer `@modelcontextprotocol/server` ^2.0.0 |
+L'assistente vede gli stessi dati della dashboard, con gli stessi limiti: le valutazioni sono indicative, la decisione nascosta resta nascosta finché un intervistatore non invia la propria scheda, e un record inesistente dà un messaggio di errore senza esporre altri dati.
 
-Commands run: `pnpm view @better-auth/oauth-provider versions --json`, `pnpm view mcp-handler version`, `pnpm view @modelcontextprotocol/sdk version`, `pnpm view @modelcontextprotocol/ext-apps version`, `pnpm view <pkg>@<version> peerDependencies`.
+- **Le mie azioni**: posizioni con setup incompleto, test da valutare, colloqui senza kit pronto, schede da compilare, candidature ferme da più di 7 giorni. Per impostazione predefinita solo il lavoro dell'utente.
+- **Posizioni**: elenco filtrabile per titolo e stato (20 per pagina), dettaglio con setup mancante e candidature per fase.
+- **Candidature**: dettaglio con fase, valutazioni, decisione e colloqui. Il testo del CV arriva solo se lo si chiede esplicitamente.
+- **Colloqui**: elenco per agenda o per candidatura, filtrabile per data e per partecipazione; preparazione del colloquio con briefing, sezioni, domande, criteri, ipotesi e checklist.
+- **Pianificazione**: guide della posizione, persone del team, prossimo round e proposte in attesa.
+- **Kit modificabile**: sezioni, domande, criteri e checklist con i loro id, per preparare una modifica.
 
-### 1.2 `@better-auth/oauth-provider` 1.7.22
+### Bozze, proposte e conferma
 
-Source: package type definitions (`dist/oauth-*.d.mts`, `dist/index.d.mts`) and code (`dist/authorize-*.mjs`, `dist/resource-challenge-*.mjs`); documentation https://www.better-auth.com/docs/plugins/oauth-provider.
+L'assistente non pubblica, non pianifica e non salva da solo: prepara una bozza, che una persona conferma con il pulsante del riquadro. Nei client senza riquadri, posizione, proposta di colloquio e kit si confermano dalla dashboard.
 
-**Compatibility with better-auth 1.7.22.** Peer dependencies of 1.7.22: `better-auth ^1.7.22`, `@better-auth/core ^1.7.22`, `better-call 1.4.5` (exact), `@better-auth/utils ^0.4.2 || ^0.5.0`, `@better-fetch/fetch 1.3.3` (exact). Installed in the repo: `better-auth 1.7.22`, `@better-auth/core 1.7.22`, `better-call 1.4.5`, `@better-auth/utils 0.5.1`, `@better-fetch/fetch 1.3.3`. All satisfied. `better-auth` 1.7.22 ships no OAuth provider of its own (`dist/plugins` has `jwt`, `generic-oauth`, `oauth-proxy`, `oauth-popup`, no `oauth-provider`/`mcp`), so the separate package is required.
+- **Posizione**: modulo precompilato nel riquadro (`open_position_form`), oppure bozza creata in chat (`create_position_draft`); si pubblica dal riquadro o dalla pagina della posizione.
+- **Quiz**: parametri di generazione nel riquadro (`open_quiz_form`), domande scritte dall'assistente e mostrate in anteprima (`save_quiz_draft`); il salvataggio (`save_quiz`) avviene solo dal riquadro e non invita nessun candidato.
+- **Colloquio**: modulo di pianificazione precompilato (`open_schedule_form`), oppure proposta in attesa (`propose_interview_slot`); la conferma crea colloquio e kit in bozza e non invia email. La proposta resta anche nel tab Colloqui della candidatura, con **Pianifica** e **Scarta**.
+- **Kit**: modifica voce per voce (`save_interview_kit_draft`); le domande non indicate restano, il kit resta in bozza e si segna pronto con `publish_draft` dal riquadro o dalla pagina di preparazione.
 
-**JWT plugin.** Required: access tokens bound to a resource are JWTs signed through the Better Auth `jwt` plugin (`better-auth/plugins`). Only `disableJwtPlugin: true` removes it, and then access tokens are always opaque. The JWT plugin adds `GET /api/auth/jwks` (option `jwks.jwksPath`, default `/jwks`) and `GET /api/auth/token` (a session JWT, unrelated to `/oauth2/token`).
+### Cosa resta solo nella dashboard
 
-**Options that implement each promise of the authorization server contract.**
+Decisioni finali, eliminazioni, messaggi e inviti ai candidati, assegnazione dei test, gestione utenti, preset, dati di riferimento, automazioni, kanban e azioni massive, generazione AI dell'app, cambi di fase e di responsabile. Nessuno strumento invia email, inviti o messaggi.
 
-| Promise | Plugin behaviour and option name |
+## 2. Come si collega un client
+
+### Requisiti
+
+- Un account dev-recruit **abilitato da un amministratore**: email verificata, account non bloccato, accesso MCP attivo per l'utente e a livello globale.
+- Un client che supporti un server MCP remoto via HTTPS e OAuth: claude.ai, Claude desktop, Cowork o VS Code Copilot.
+- Per i dati dei candidati reali, un piano aziendale con accordo sul trattamento dei dati: vedi §7.
+
+Senza account e senza autorizzazione il plugin non dà accesso a nessun dato: installarlo non esegue nulla sul computer e non contiene credenziali.
+
+### Claude (claude.ai, desktop, Cowork)
+
+- L'amministratore dell'organizzazione aggiunge il marketplace del repository (`.claude-plugin/marketplace.json`) oppure carica il plugin come archivio di `plugin/dev-recruit`; può renderlo installato per tutti i recruiter.
+- In alternativa si aggiunge un connettore personalizzato con l'indirizzo del server MCP: è il valore `url` di `plugin/dev-recruit/.mcp.json` (oggi `https://dev-recruit-rho.vercel.app/api/mcp`).
+
+### VS Code Copilot
+
+- Si installa il plugin dall'URL git del repository o dal marketplace dell'organizzazione.
+- L'amministratore può limitare i server MCP consentiti all'indirizzo di dev-recruit.
+- Se VS Code non usa la registrazione dinamica, si usa il client pubblico pre-registrato `dev-recruit-vscode`, creato da `pnpm mcp:register-clients`; nell'editor il server si configura con `oauthClientId` uguale a quell'id.
+- I riquadri richiedono l'opzione `chat.mcp.apps.enabled`; senza riquadri restano il testo e la conferma dalla dashboard (tranne il salvataggio del quiz).
+
+### Primo collegamento
+
+1. Alla prima chiamata a uno strumento, il client apre la pagina di accesso di dev-recruit.
+2. Si accede con il proprio account dev-recruit.
+3. Nella schermata di consenso si controllano client, permessi e account, poi si sceglie **Consenti** o **Rifiuta**.
+4. Se l'account non è abilitato, la pagina dice "Account non abilitato: chiedi a un amministratore di attivarlo." e non mostra i pulsanti.
+
+Permessi richiesti:
+
+| Permesso | Cosa consente |
 |---|---|
-| PKCE required, S256 only | Built in. `code_challenge_method` accepts only `S256` (metadata `code_challenge_methods_supported: ["S256"]`); a public client (`token_endpoint_auth_method: "none"`) always requires PKCE (`isPKCERequired`: "pkce is required for public clients"). No option needed. `clientRegistrationRequirePKCE` (default `true`) covers confidential DCR clients |
-| Public clients only (`token_endpoint_auth_method: none`) | The plugin also accepts confidential clients, so the restriction is ours: the registration hook (row "registration hook" below) refuses any `token_endpoint_auth_method` other than `none`, and the pre-registered VS Code client is created with `none` |
-| Scopes list | `scopes` (default `["openid","profile","email","offline_access"]`). DCR capability set: `clientRegistrationDefaultScopes` (default = `scopes`) and `clientRegistrationAllowedScopes`. Advertised list: `advertisedMetadata.scopes_supported`. A refresh token is issued only when `offline_access` is granted, so `scopes` must contain `offline_access` next to `recruit:read`, `recruit:draft`, `recruit:write` |
-| Valid audiences / resource indicator (RFC 8707) | `resources` (string or `{ identifier, accessTokenTtl, allowedScopes, … }`; seeded into the `oauthResource` table, `resourceSeedMode` default `"insertOnly"`). `enforcePerClientResources` (default `true`) requires each client to be linked to the resource; `clientRegistrationDefaultResources` links every DCR client to the listed identifiers. The access token `aud` is the requested `resource` |
-| Access token TTL 900 s | `accessTokenExpiresIn: 900` (default 3600), or per resource `accessTokenTtl: 900`. `scopeExpirations` can shorten per scope |
-| Refresh TTL 30 days with rotation | `refreshTokenExpiresIn` (default `2592000` = 30 days). Rotation is built in: every refresh revokes the used token (`revoked`/`rotatedAt`) and returns a new one; reuse of a rotated token invalidates the whole token family (`invalidateRefreshFamily`). `refreshTokenReuseInterval` (default `0`) keeps any reuse a replay |
-| Revocation endpoint | `POST /api/auth/oauth2/revoke` (RFC 7009), rate limit `rateLimit.revoke` |
-| Dynamic client registration toggle | `allowDynamicClientRegistration` (default `false`) enables `POST /api/auth/oauth2/register`; `allowUnauthenticatedClientRegistration` (default `false`) accepts it without a session (needed for Claude, which registers before any user signs in). `clientRegistrationDefaultApplicationType` (`"web"`, `"native"`, `"infer"`) |
-| Registration hook | The plugin has no dedicated registration callback. The hook is the Better Auth core `hooks.before` middleware (`createAuthMiddleware` from `better-auth/api`) matching `ctx.path === "/oauth2/register"`: it reads `ctx.body.redirect_uris` and `ctx.body.token_endpoint_auth_method` and throws `APIError("BAD_REQUEST")` unless every redirect URI is on the allowlist and the method is `none`. `validateRedirectUri(redirectUri, registeredUris, defaultResult)` additionally re-checks the allowlist at `/oauth2/authorize`. `rateLimit.register` (default 5 per 60 s) |
-| Consent page path | `consentPage` (required option), e.g. `"/auth/consent"`; the page receives `client_id`, `scope`, `code` and completes with `POST /api/auth/oauth2/consent` (`accept: true`) |
-| Login page path | `loginPage` (required option): `"/auth/login"` (existing page `app/auth/login`) |
-| OAuth rate limits | `rateLimit.{token, authorize, introspect, revoke, register, userinfo, rotateClientKeys}` (`{ window, max }` or `false`) |
+| `recruit:read` | Leggere i dati della selezione |
+| `recruit:draft` | Preparare bozze: posizione in bozza, anteprima e salvataggio di un quiz, proposta di colloquio, modifiche al kit in bozza |
+| `recruit:write` | Confermare una bozza: pubblicare una posizione, pianificare un colloquio proposto, segnare pronto un kit |
 
-No promise is unmet: no Gap.
+Un amministratore può revocare il collegamento dalla pagina "Accesso MCP": il client dovrà autorizzarsi di nuovo. Un account bloccato o disattivato perde l'accesso alla chiamata successiva.
 
-**Endpoints** (served by the existing catch-all `app/api/auth/[...all]`, base path `/api/auth`):
+## 3. Strumenti
 
-| Endpoint | Path |
+### Sola lettura (`recruit:read`)
+
+| Strumento | Cosa restituisce |
 |---|---|
-| Authorize | `GET /api/auth/oauth2/authorize` |
-| Token | `POST /api/auth/oauth2/token` |
-| Register (DCR) | `POST /api/auth/oauth2/register` |
-| Revoke | `POST /api/auth/oauth2/revoke` |
-| Consent | `POST /api/auth/oauth2/consent` |
-| Introspect | `POST /api/auth/oauth2/introspect` |
-| UserInfo | `GET /api/auth/oauth2/userinfo` |
-| JWKS (jwt plugin) | `GET /api/auth/jwks` |
-| AS metadata (plugin copy) | `GET /api/auth/.well-known/oauth-authorization-server` |
+| `action_center` | "Le mie azioni", con solo il lavoro dell'utente per impostazione predefinita |
+| `list_positions` | Posizioni filtrabili per titolo e stato, 20 per pagina |
+| `get_position` | Una posizione: descrizione, competenze, setup mancante, candidature per fase |
+| `get_application` | Una candidatura: fase, valutazioni indicative, decisione, colloqui; CV solo con `includeCv: true` |
+| `list_interviews` | Colloqui pianificati e in corso, per agenda o per candidatura |
+| `get_interview` | Preparazione di un colloquio, senza identità del candidato né CV |
+| `get_scheduling_options` | Guide, persone del team, prossimo round e proposte in attesa |
+| `get_interview_kit` | Struttura modificabile del kit, con gli id da usare nella modifica |
+| `get_workflow` | I passi di una procedura; non legge dati della selezione |
 
-**RFC 8414 metadata.** The issuer is the JWT plugin `jwt.issuer` or else the Better Auth base URL including the base path, i.e. `<APP_URL>/api/auth`. With path insertion the metadata document lives at `<APP_URL>/.well-known/oauth-authorization-server/api/auth`, outside the auth catch-all: the plugin exports `oauthProviderAuthServerMetadata(auth, { headers? })`, which returns a `(request) => Response` handler for that route (and `oauthProviderOpenIdConfigMetadata` for `/.well-known/openid-configuration`). The resource-server helper `oauthProviderResourceClient` (`@better-auth/oauth-provider/resource-client`) offers `verifyAccessTokenRequest`, `verifyBearerToken` and `getProtectedResourceMetadata`.
+### Bozze (`recruit:draft`)
 
-**Prisma models.** From the plugin schema: `oauthClient`, `oauthRefreshToken`, `oauthAccessToken`, `oauthConsent`, `oauthResource`, `oauthClientResource`, `oauthClientAssertion`; from the jwt plugin: `jwks`. The design lists only `oauthClient`, `oauthAccessToken`, `oauthRefreshToken`, `oauthConsent`, `jwks`: `oauthResource`, `oauthClientResource` and `oauthClientAssertion` are also required. `npx @better-auth/cli generate` needs the plugin installed and configured in `lib/auth.ts`, so it was not run here: the database operation runs it and checks these names.
-
-### 1.3 Claude custom connector
-
-Source: https://claude.com/docs/connectors/building/authentication.
-
-- **Callback URL.** The hosted apps (claude.ai on the web, Desktop, mobile, Cowork) use exactly `https://claude.ai/api/mcp/auth_callback`. The page documents no `https://claude.com/api/mcp/auth_callback` callback: the allowlist starts with the claude.ai value only, and a claude.com callback is added only if the client verification observes it. Claude Code is a native client with an RFC 8252 loopback redirect on an ephemeral port (`http://localhost/callback`, `http://127.0.0.1/callback` declared in its CIMD) and is out of scope for the first client.
-- **Registration.** Supported by default: `oauth_dcr` (RFC 7591) and `oauth_cimd`. Claude selects CIMD only when the AS metadata advertises both `"client_id_metadata_document_supported": true` and `"none"` in `token_endpoint_auth_methods_supported`; otherwise it uses DCR. Our AS does not advertise CIMD, so Claude registers through restricted DCR as a public client. A client id entered in the developer portal or at connection time (`oauth_anthropic_creds`, `custom_connection`) is the alternative.
-- **PKCE and scopes.** Claude always sends `code_challenge_method=S256`. It requests the `scope` of the `WWW-Authenticate` 401 challenge, else the protected-resource metadata `scopes_supported`, and appends `offline_access` when the AS metadata lists it.
-- **Resource.** The protected-resource metadata `resource` must equal the URL the user enters, path included (`<APP_URL>/api/mcp`); Claude uses only the first entry of `authorization_servers`. The 401 must carry `WWW-Authenticate` with `resource_metadata`.
-- **Tokens.** Claude refreshes on a 401 and up to five minutes before expiry; an invalid refresh token must answer `invalid_grant`; refresh tokens of public clients must rotate, with the new token in the same response. Discovery, registration and token endpoints must answer within 10 s, refresh within 30 s.
-
-### 1.4 VS Code
-
-Sources: https://code.visualstudio.com/api/extension-guides/ai/mcp, https://code.visualstudio.com/docs/copilot/reference/mcp-configuration.
-
-- **DCR.** Supported for OAuth identity providers, as is a pre-registered client id.
-- **Pre-registered client id.** Editor `mcp.json`: `"oauth": { "clientId": "<id>" }` on an `http` server; portable Copilot configuration: the flat field `oauthClientId`.
-- **Redirect URIs.** `http://127.0.0.1:33418` and `https://vscode.dev/redirect` must be in the client's allowed redirect URLs.
-
-### 1.5 `mcp-handler` 2.4.0
-
-Source: package README and `dist/index.d.mts` (https://www.npmjs.com/package/mcp-handler).
-
-- **SDK.** 2.x is built on MCP SDK v2 and needs `@modelcontextprotocol/server ^2.0.0` and `zod ^4.2.0` (repo: `zod 4.6.7`). `@modelcontextprotocol/sdk` 1.x works only with `mcp-handler` 1.x. Decision D9 names `@modelcontextprotocol/sdk`: with the pinned `mcp-handler` 2.4.0 and `ext-apps` 2.0.4 the dependency is `@modelcontextprotocol/server` 2.4.0 instead.
-- **Endpoint `/api/mcp`.** The handler does not read the pathname: the route file `app/api/mcp/route.ts` defines the endpoint. The 1.x options `basePath`, `streamableHttpEndpoint`, `sseEndpoint`, `sseMessageEndpoint`, `disableSse`, `redisUrl`, `maxDuration`, `sessionIdGenerator` no longer exist.
-- **SSE and Redis.** HTTP+SSE (2024-11-05) is removed and Redis is not used. Serving is stateless: the 2026-07-28 protocol natively, 2025-era Streamable HTTP through the SDK legacy fallback; GET/DELETE session operations answer `405`.
-- **API.** `createMcpHandler(initializeServer, options)` returns `(request: Request) => Promise<Response>`. `options` = SDK `ServerOptions` (including `instructions?: string`, returned in the initialize result) plus `serverInfo`, `verboseLogs`, `onEvent`, `maxSubscriptions`, `telemetry`. Tools: `server.registerTool(name, { title, description, inputSchema: z.object(...), _meta }, cb)`; resources: `server.registerResource(...)` (variadic `tool`/`resource` removed). Auth info in callbacks: `ctx.http?.authInfo`.
-- **Auth helpers.** `withMcpAuth(handler, verifyToken, { required, requiredScopes, resourceMetadataPath, resourceUrl })` answers 401/403 with RFC 9728 `WWW-Authenticate`; `protectedResourceHandler({ authServerUrls, resourceUrl })` and `generateProtectedResourceMetadata(...)` serve the protected-resource metadata; `metadataCorsOptionsRequestHandler()` answers CORS preflight.
-- **Spec note.** The 2026-07-28 MCP specification deprecates DCR in favour of CIMD (`client_id_metadata_document_supported` in the AS metadata). Better Auth offers it through the separate `@better-auth/cimd` plugin, outside decision D8.
-
-### 1.6 `@modelcontextprotocol/ext-apps` 2.0.4
-
-Source: package README and `dist/src/*.d.ts`; https://claude.com/docs/connectors/building/mcp-apps/getting-started, https://code.visualstudio.com/blogs/2026/01/26/mcp-apps-support.
-
-- **Peers.** `@modelcontextprotocol/server ^2.0.0` (optional), `@modelcontextprotocol/client`, `@modelcontextprotocol/core ^2.0.0`, `zod ^4.2.0`; React optional. Entry points: `.`, `./server`, `./app-bridge`, `./react`, `./app-with-deps`.
-- **Resource MIME type.** `RESOURCE_MIME_TYPE = "text/html;profile=mcp-app"`.
-- **Tool link.** `_meta.ui.resourceUri: "ui://…"` on the tool; `registerAppTool(server, name, config, cb)` writes it. The legacy flat key `RESOURCE_URI_META_KEY = "ui/resourceUri"` is deprecated.
-- **Resource.** `registerAppResource(server, name, uri, config, readCallback)` defaults the MIME type; the read result carries `_meta.ui` (`McpUiResourceMeta`).
-- **CSP fields** (`_meta.ui.csp`, `McpUiResourceCsp`): `connectDomains` (connect-src), `resourceDomains` (img/script/style/font/media-src), `frameDomains` (frame-src), `baseUriDomains`. Empty or omitted means no external origin.
-- **App bridge** (`App` class): `connect()`, `ontoolresult` (tool result notification), `ontoolinput`, `ontoolinputpartial`, `callServerTool(params)`, `openLink(params)`, `sendMessage(params)`, `updateModelContext(params)`.
-
-## 2 Decisioni Fase 0
-
-| Item | Outcome |
+| Strumento | Cosa fa |
 |---|---|
-| Claude plan (Team or Enterprise, with DPA) | **Not required for the proof of concept**: dev-recruit holds fake data only, so any Claude plan may connect and the Phase 5 pilot can run on it. A Team or Enterprise plan with DPA is required before real candidate data, if the proof of concept passes its evaluation ([data policy](mcp-data-policy.md)) |
-| First client | Claude desktop and claude.ai (custom connector, restricted DCR, callback `https://claude.ai/api/mcp/auth_callback`), then VS Code (pre-registered public client, redirects `http://127.0.0.1:33418` and `https://vscode.dev/redirect`) |
-| Account gate | Sign-in itself stays blocked until an administrator switches the account's email verification on: `lib/auth.ts` sets `emailAndPassword.requireEmailVerification: true`, and the app sends no email. A banned account cannot open a session (admin plugin). On top of that, the `hooks.before` guard in `lib/auth.ts` (`oauthRequestGuard`, `lib/mcp/oauth-registration.ts`) refuses `/oauth2/authorize` and `/oauth2/consent` with `access_denied` for a session whose user is unverified or banned, and the consent page `/auth/consent` shows "Account non abilitato: chiedi a un amministratore di attivarlo." without buttons. Tests: `tests/lib/mcp/oauth-registration.test.ts`, `tests/app/api/auth/route.test.ts` |
-| Better Auth OAuth plugin | `@better-auth/oauth-provider` 1.7.22 with the `jwt` plugin meets every promise (section 1.2); no Gap |
-| MCP server library | `mcp-handler` 2.4.0 with `@modelcontextprotocol/server` 2.4.0 (section 1.5) |
-| Operation inventory | [mcp-operations.md](mcp-operations.md) |
-| Data policy | [mcp-data-policy.md](mcp-data-policy.md) |
+| `open_position_form` | Apre il modulo della nuova posizione nel riquadro; non crea nulla |
+| `create_position_draft` | Crea una posizione in bozza |
+| `open_quiz_form` | Apre i parametri del quiz nel riquadro; non crea nulla |
+| `save_quiz_draft` | Mostra l'anteprima del quiz; non salva e non invita nessuno |
+| `save_quiz` | Salva il quiz dell'anteprima; solo dal pulsante del riquadro |
+| `open_schedule_form` | Apre il modulo di pianificazione nel riquadro; non crea nulla |
+| `propose_interview_slot` | Salva una proposta di colloquio in attesa; non pianifica e non invia email |
+| `save_interview_kit_draft` | Modifica il kit in bozza; il kit resta in bozza |
 
-## 3 Widget (MCP Apps)
+### Conferma (`recruit:write`)
 
-Four read tools and the draft tools show an interactive widget in hosts that support MCP Apps (claude.ai, Claude desktop; VS Code behind `chat.mcp.apps.enabled`). Every tool still returns its full Italian text, so a host without widgets loses nothing.
-
-| Tool | Widget | Resource |
-|---|---|---|
-| `action_center` | Le mie azioni: totale, riepilogo per coda, righe con "Apri" e "Dettagli" | `ui://dev-recruit/action-center.html` |
-| `get_position` | Posizione: stato, candidature per fase (stazioni), setup con "Completa", competenze, candidature | `ui://dev-recruit/position.html` |
-| `get_application` | Candidatura: fasi (stazioni), valutazioni indicative, decisione, colloqui | `ui://dev-recruit/application-flow.html` |
-| `get_interview` | Preparazione colloquio: scaletta, briefing, ipotesi, domande per sezione (richiudibili) con approfondimenti e criteri, checklist; "Migliora con l'assistente" e "Segna il kit come pronto" per un kit in bozza | `ui://dev-recruit/interview-prep.html` |
-| `open_position_form` | Nuova posizione: modulo con i campi della dashboard (titolo, livello, contratto, competenze, soft skill, descrizione) precompilati dall'assistente; "Salva bozza" (`create_position_draft`), poi "Pubblica la posizione" (`publish_draft`); "Scrivi con l'assistente" chiede la descrizione | `ui://dev-recruit/position-form.html` |
-| `open_quiz_form` | Nuovo quiz: i parametri di generazione della dashboard (titolo, istruzioni, numero di domande, difficoltà, tipi di domande, limite di tempo), senza la scelta del modello; "Genera con l'assistente" manda i parametri all'assistente (`ui/message`), che scrive le domande e mostra l'anteprima (`save_quiz_draft`) | `ui://dev-recruit/quiz-form.html` |
-| `open_schedule_form` | Nuovo colloquio: i campi della pianificazione della dashboard (guida, round, data e ora, durata, link della call, partecipanti) precompilati dall'assistente, con le proposte già in attesa; "Pianifica colloquio" salva la proposta (`propose_interview_slot`) e la conferma (`publish_draft`) | `ui://dev-recruit/schedule-form.html` |
-| `create_position_draft`, `save_quiz_draft`, `propose_interview_slot`, `save_interview_kit_draft` (and their confirmations) | Anteprima bozza: contenuto, nota su cosa fa la conferma, pulsante di conferma | `ui://dev-recruit/draft-preview.html` |
-
-- **Data.** The tool result carries a presentation-ready model in `structuredContent.widget` (`lib/mcp/widgets/types.ts`, built by `lib/mcp/widgets/build.ts` from the dashboard presentation maps and the MCP deep links). The widget never receives the CV text and keeps the hidden decision hidden.
-- **Bundles.** Two self-contained HTML files (scripts, styles and fonts inlined), built by `pnpm build:mcp-apps` (`vite.mcp-apps.config.ts`) and committed as generated modules; `pnpm build` regenerates them before `next build`:
-  - `mcp-apps/` (plain TypeScript, no framework) → `lib/mcp/widgets/html.generated.ts`: the read widgets and the draft preview;
-  - `mcp-apps/react/` (React, Tailwind with the dashboard theme `app/theme.css`, the components of `components/ui` and the shared field groups `components/positions/position-fields.tsx`, `components/quiz/quiz-generation-fields.tsx`, `components/interviews/interview-when-fields.tsx`) → `lib/mcp/widgets/react-html.generated.ts`: the position, quiz and scheduling forms. The model selector of the dashboard is left out: the host's model writes the content. Fonts (IBM Plex Sans, Schibsted Grotesk, latin subset) are inlined. `REACT_WIDGETS` in `resources.ts` names the widgets this bundle serves.
-
-  After changing `mcp-apps/`, a shared component it draws, `app/theme.css` or `lib/mcp/widgets/types.ts`, run `pnpm build:mcp-apps` and commit the generated modules. A component the React bundle draws imports nothing from Next.js.
-- **Registration.** `lib/mcp/widgets/resources.ts`: `ENABLED_WIDGETS` lists the shipped widgets; a tool whose `widget` is in the list gets `_meta.ui.resourceUri` (plus the legacy `ui/resourceUri` key). An app-only tool also gets `_meta.ui.visibility: ["app"]`.
-- **Security.** CSP empty (no external origin: no fetch, no external font or asset). Text is inserted as text nodes only, never as HTML. "Apri" opens the dashboard through the host (`ui/open-link`); "Dettagli" sends a follow-up request to the assistant (`ui/message`). The only tool calls a widget makes are the draft confirmations, the save of the position form and the proposal plus confirmation of the scheduling form (section 4); the forms also tell the assistant what was saved (`ui/update-model-context`). The quiz form calls no tool: it sends its parameters to the assistant.
-
-## 4 Procedure di lavoro
-
-The steps of each task live on the server, in `lib/mcp/workflows/` (one file per workflow: name, title, description, when to use it, Italian steps). The server serves them in two ways:
-
-- **MCP prompts** (`prompts/list`, `prompts/get`), picked by the user: a slash command in Claude Code (`/mcp__dev-recruit__<name>`) and VS Code (`/mcp.dev-recruit.<name>`), the connector menu in claude.ai and Claude desktop. One optional argument, `richiesta` (what the user wants); the prompt returns the steps followed by the request as a user message.
-- **`get_workflow`** (`recruit:read`, read-only, reads no selection data), called by the model: the server instructions tell it to call `get_workflow` before a task, so a client without prompts gets the same steps.
-
-| Workflow | Task |
+| Strumento | Cosa fa |
 |---|---|
-| `action-center` | Le mie azioni: queues in order, next actions |
-| `create-position` | New position: form widget, or draft from chat |
-| `quiz-for-candidate` | Quiz of a position: form widget, questions, preview |
-| `schedule-interview` | Interview proposal: form widget, or options and proposal |
-| `interview-kit` | Changes to a draft kit |
-| `interview-prep` | Summary to prepare an interview |
+| `publish_draft` | Conferma una bozza: pubblica una posizione, pianifica una proposta di colloquio o segna pronto un kit. Solo dal pulsante del riquadro |
 
-The plugin's skills are trigger skills only, generated by `pnpm build:plugin-skills` (`scripts/build-plugin-skills.ts`): each has the workflow's name and description, so Claude picks it from the request, and its body calls `get_workflow`. Changing the steps needs a deploy only; changing a name, description or when-to-use line also needs the script and a plugin release. Tests check that every tool a workflow names exists and is callable by the model, and that the plugin skills match the workflows.
+I due strumenti di conferma (`save_quiz`, `publish_draft`) sono nascosti al modello: li può chiamare solo il riquadro. Permessi e regole sono comunque ricontrollati sul server a ogni chiamata.
 
-## 5 Bozze e conferma
+## 4. Procedure guidate
 
-The assistant prepares drafts; a person confirms them with the button of the draft-preview widget. The confirmation tools are app-only (`_meta.ui.visibility: ["app"]`): the host does not offer them to the model, so the model cannot confirm. Scopes and permissions are checked again on every call.
+Le procedure vivono sul server, in `lib/mcp/workflows/`: nome, titolo, quando usarle e passi in italiano. Il client le offre in due modi:
 
-| Tool | Scope | Visible to | What it writes |
-|---|---|---|---|
-| `open_position_form` | `recruit:draft` | model | Nothing: the position form widget, prefilled with what the assistant knows (every field optional) and the dashboard's reference options; a prefilled value missing from them is added |
-| `open_quiz_form` | `recruit:draft` | model | Nothing: the quiz form widget, with the dashboard's generation defaults of the position overridden by what the assistant knows (`timeLimit: null` turns the limit off) |
-| `open_schedule_form` | `recruit:draft` | model | Nothing: the scheduling form widget, prefilled as the dashboard form (guide of the next round, the person as lead) and overridden by what the assistant proposed; an unknown guide or participant is dropped |
-| `create_position_draft` | `recruit:draft` | model, and the "Salva bozza" button of the position form | A position in `draft` status (`createPosition`) |
-| `save_quiz_draft` | `recruit:draft` | model | Nothing: validates the quiz (editor schema) and returns the preview |
-| `save_quiz` | `recruit:draft` | widget only | The quiz of the preview (`saveQuiz`, the editor save path); nobody is invited |
-| `get_scheduling_options` | `recruit:read` | model | Nothing: guides of the position, team members (id and name, no email), next round, pending proposals |
-| `propose_interview_slot` | `recruit:draft` | model, and the "Pianifica colloquio" button of the scheduling form | A pending `InterviewProposal` with the scheduling-form payload, validated like the form (open application, guide of the position, existing participants, one lead) |
-| `get_interview_kit` | `recruit:read` | model | Nothing: the editable kit structure (section, question, active criterion and checklist ids), without candidate identity or CV |
-| `save_interview_kit_draft` | `recruit:draft` | model | The kit, through a patch (`patchInterviewKit`): add questions to a section, edit or remove questions by id, replace briefing or hypotheses, add or remove checklist entries. Questions the patch does not name are kept; an id outside the kit is refused. The patch is applied to the kit read fresh and saved with `saveInterviewKit` (`requireDraftStatus`: a ready kit is refused; interview must be scheduled). New questions are `manual`, so the in-app regeneration keeps them. The kit stays draft |
-| `publish_draft` | `recruit:write` | widget only | `kind: "kit"`: marks the kit ready (`setInterviewKitStatus`). `kind: "position"`: opens a draft position (`publishPositionDraft`). `kind: "proposal"`: schedules the proposal (`confirmInterviewProposal` → `scheduleInterview`: interview, kit in draft, stage move); the proposal is claimed first, so a double click schedules once. No email is sent |
+- come **prompt MCP**, scelti dal menu del connettore o dai comandi del client, con un argomento facoltativo `richiesta`;
+- tramite `get_workflow`, che il modello chiama prima di un'attività.
 
-Known limits:
+Il plugin contiene una skill per procedura (`plugin/dev-recruit/skills/<nome>/SKILL.md`): riconosce la richiesta e chiede i passi al server. Le skill si rigenerano con `pnpm build:plugin-skills` quando cambiano nome, descrizione o riga "quando".
 
-- Pending proposals are listed at the top of the application's Colloqui tab ("Proposte da confermare"), with **Pianifica** (`scheduleInterviewProposalAction`, same `confirmInterviewProposal`) and **Scarta** (`discardInterviewProposalAction`, status `discarded`).
-- In a client without MCP Apps positions, proposals and kits are confirmed from the dashboard; only a quiz preview cannot be saved there.
+| Procedura | Quando si usa |
+|---|---|
+| `action-center` | Cosa aspetta oggi, qual è il prossimo passo |
+| `create-position` | Preparare una nuova posizione |
+| `quiz-for-candidate` | Creare un quiz tecnico per una posizione |
+| `schedule-interview` | Fissare o organizzare un colloquio |
+| `interview-kit` | Preparare, completare o migliorare il kit |
+| `interview-prep` | Prepararsi a condurre o seguire un colloquio |
 
-## 6 Amministrazione
+## 5. Riquadri
 
-Administrators only: `/dashboard/settings/mcp` ("Accesso MCP"), reached from Settings → Users (`requireAdminPage` answers not-found to everyone else). Three tabs:
+Otto riquadri (MCP Apps) mostrano i dati in forma interattiva dove il client li supporta. Ogni strumento restituisce comunque il testo completo, quindi un client senza riquadri non perde nulla.
 
-- **Token attivi.** The active grants: refresh tokens not revoked or expired, plus opaque access tokens without a listed refresh token (`getActiveMcpTokens`). Columns: user (name and email), client, scopes, issued, expires; **Revoca** deletes the whole grant (access and refresh tokens, consent) and the client must authorize again (`revokeMcpTokenAction` → `revokeMcpToken`).
-- **Interruttori.** The global switch in `AppSetting` `mcp.enabled` (on by default; `setMcpEnabledAction` → `setMcpEnabledGlobally`) and the per-user `User.mcpDisabled` (`setUserMcpDisabledAction` → `setUserMcpDisabled`). Switching a user off also revokes every token of that user. With MCP off, for one user or for everyone, `requireMcpActor` refuses each call with `access_disabled` (403); the list shows active, verified, non-banned users.
-- **Registro.** The audit log (`McpAuditLog`): one row per tool call, allowed, failed and denied, newest first, 50 per page (`getMcpAudit`); the URL accepts `user` and `tool` filters and `page`. Columns: date, user, client, tool, outcome, summary. Candidate free text (CV, answers, notes, evidence, briefing…) is omitted from the arguments and the arguments are capped at 4 KB (`redactAuditArguments`, `lib/mcp/audit.ts`); a failed audit write never changes the tool answer.
+| Strumento | Riquadro |
+|---|---|
+| `action_center` | Le mie azioni: totale, riepilogo per coda, righe con "Apri" e "Dettagli" |
+| `get_position` | Posizione: stato, candidature per fase, setup con "Completa", competenze |
+| `get_application` | Candidatura: fasi, valutazioni, decisione, colloqui |
+| `get_interview` | Preparazione: scaletta, briefing, ipotesi, domande con approfondimenti, checklist |
+| `open_position_form` | Nuova posizione: gli stessi campi della dashboard, precompilati |
+| `open_quiz_form` | Nuovo quiz: i parametri di generazione della dashboard, senza scelta del modello |
+| `open_schedule_form` | Nuovo colloquio: gli stessi campi della pianificazione, precompilati |
+| `create_position_draft`, `save_quiz_draft`, `save_quiz`, `propose_interview_slot`, `save_interview_kit_draft`, `publish_draft` | Anteprima bozza: contenuto, cosa fa la conferma, pulsante di conferma |
+
+I riquadri non hanno origini esterne (CSP vuota), inseriscono il testo solo come testo e non ricevono mai il CV. "Apri" apre la dashboard tramite il client; "Dettagli" manda una richiesta di follow-up all'assistente. I moduli raccontano all'assistente cosa è stato salvato.
+
+I bundle sono generati da `mcp-apps/` con `pnpm build:mcp-apps` e scritti in `lib/mcp/widgets/*.generated.ts`; `pnpm build` li rigenera prima della build di Next.js. Dopo una modifica a `mcp-apps/`, a un componente condiviso che usano o a `app/theme.css`, si rigenerano e si committano.
+
+## 6. Amministrazione
+
+Solo amministratori: **Impostazioni → Utenti → Accesso MCP**, pagina `/dashboard/settings/mcp` (chi non è amministratore riceve la pagina non trovata). Tre tab:
+
+- **Token attivi**: le concessioni attive, con utente, client, permessi, data di rilascio e scadenza; **Revoca** elimina l'intera concessione (access e refresh token, consenso) e il client deve autorizzarsi di nuovo.
+- **Interruttori**: l'interruttore globale "MCP attivo per tutti" (acceso per impostazione predefinita) e quello per utente "MCP disattivato". Spegnere un utente revoca anche i suoi token. Con MCP spento, ogni chiamata riceve `access_disabled` (403). Un account bloccato perde l'accesso e i token vengono revocati.
+- **Registro**: una riga per ogni chiamata, riuscita, fallita o negata, dalla più recente, 50 per pagina. Data, utente, client, strumento, esito e riepilogo. L'indirizzo accetta i parametri `user`, `tool` e `page` per filtrare e sfogliare. Il testo libero dei candidati non finisce nel registro e gli argomenti sono limitati a 4 KB.
+
+Limiti del server:
+
+| Limite | Valore |
+|---|---|
+| Chiamate per utente | 60 al minuto |
+| Chiamate per IP | 120 al minuto |
+| Endpoint OAuth per IP e per utente | 20 al minuto |
+| Corpo di una richiesta MCP | 256 KB |
+| Corpo di una richiesta OAuth | 16 KB |
+| Durata massima di una richiesta | 60 secondi |
+| Access token | 15 minuti, JWT legato a `/api/mcp` |
+| Refresh token | 30 giorni, con rotazione |
+
+L'endpoint è Streamable HTTP senza stato: solo `POST`; `GET` e `DELETE` rispondono `405`. Non usa cookie di sessione: ogni richiesta porta il token OAuth.
+
+## 7. Dati e privacy
+
+- **Minimo necessario**: nessun CV completo se non lo si chiede; preparazione e kit del colloquio senza identità del candidato né CV; i riquadri non ricevono mai il CV.
+- **Testo dei candidati**: CV, risposte e note arrivano delimitati (`<cv>`, `<candidate_answer>`, `<candidate_note>`) e marcati come dati non attendibili, mai come istruzioni.
+- **Nessun invio**: nessuno strumento manda email, inviti o messaggi ai candidati. Non chiama nemmeno la generazione AI dell'app: il modello è quello del client.
+- **Decisione nascosta**: finché un intervistatore non invia la scheda, punteggio e matrice della decisione restano nascosti anche all'assistente.
+- **Chi può collegarsi**: solo il personale con un account dev-recruit abilitato. I candidati non sono utenti e non si collegano. I permessi OAuth limitano il token, non l'utente o il ruolo.
+- **Dati finti nel POC**: oggi il prodotto contiene solo candidati inventati, quindi va bene qualsiasi piano Claude. Prima dei dati reali servono un piano Claude Team o Enterprise con accordo sul trattamento dei dati (DPA) e, per VS Code, Copilot Business o Enterprise con i termini dell'organizzazione. La generazione AI dentro l'app usa modelli Groq del piano gratuito ed è un canale separato: la scelta del fornitore per i dati reali è del committente.
+- **Registro**: gli argomenti delle chiamate sono ripuliti dal testo libero dei candidati (`cv`, `answer`, `notes`, `text`, `briefing`, `hypotheses`, …) prima di essere salvati; un errore di scrittura del registro non cambia la risposta dello strumento.
+
+## 8. Ambiente e pubblicazione
+
+- **URL**: `NEXT_PUBLIC_APP_URL` determina endpoint MCP, issuer OAuth e link nelle risposte. Dopo averlo cambiato si riavvia l'app; lato applicazione non serve altro, mentre il plugin ha il proprio indirizzo nel file qui sotto.
+- **Database**: le migrazioni creano le tabelle OAuth e il registro; in produzione si applicano con `pnpm db:migrate:deploy`.
+- **Client VS Code**: `pnpm mcp:register-clients` crea o aggiorna il client pubblico `dev-recruit-vscode` e la risorsa MCP. È idempotente e va eseguito una volta per ambiente; `DATABASE_URL` decide il database.
+- **Plugin**: l'indirizzo del server sta in `plugin/dev-recruit/.mcp.json`. Se cambia l'host, si aggiorna quel file; il plugin non contiene segreti.
+- **Metadata**: il server pubblica `/.well-known/oauth-protected-resource` (e la variante `/api/mcp`), `/.well-known/oauth-authorization-server` (e la variante `/api/auth`) e le chiavi su `/api/auth/jwks`. Sono documenti pubblici, leggibili senza sessione.
+- **Redirect ammessi**: callback di Claude (`https://claude.ai/api/mcp/auth_callback`), loopback `http://127.0.0.1` su qualsiasi porta e `https://vscode.dev/redirect`. La registrazione dinamica è attiva ma rifiuta ogni altro indirizzo e i client riservati.
+- **Verifica prima di pubblicare**: migrazioni applicate, client registrato, metadata raggiungibili, plugin installato e prima connessione completata; una chiamata di prova compare nel registro.
+- **Build**: `pnpm build:mcp-apps` dopo una modifica ai riquadri, `pnpm build:plugin-skills` dopo una modifica a nome, descrizione o "quando" di una procedura; `pnpm lint && pnpm test:run && pnpm build` valida il resto.
+
+## 9. Problemi comuni
+
+| Sintomo | Causa e rimedio |
+|---|---|
+| La pagina di consenso dice "Account non abilitato" | Email non verificata o account bloccato: un amministratore lo abilita da Utenti |
+| `401 invalid_token` | Token scaduto o revocato: il client deve autorizzarsi di nuovo |
+| `403 access_disabled` | MCP spento per tutti o per l'utente, oppure account bloccato: controllare **Interruttori** |
+| `403 insufficient_scope` | Il token non ha il permesso richiesto: rifare l'autorizzazione completa |
+| `429 rate_limited` | Troppe richieste: attendere e riprovare |
+| `413 request_too_large` | Richiesta oltre il limite di corpo |
+| Manca il riquadro | Il client non supporta MCP Apps: usare il testo e confermare dalla dashboard; il quiz si salva solo dal riquadro |
+| La proposta non compare | È in attesa nel tab Colloqui della candidatura, finché qualcuno non la conferma o la scarta |

@@ -95,7 +95,7 @@ export const auth = betterAuth({
     // OAuth 2.1 authorization server of /api/mcp: public clients with PKCE
     // (S256, enforced by the plugin for public clients), audience-bound
     // short-lived access tokens, rotating refresh tokens (offline_access),
-    // restricted dynamic registration. Options: docs/mcp.md §1.2.
+    // restricted dynamic registration. Connection flow: docs/mcp.md.
     oauthProvider({
       loginPage: "/auth/login",
       consentPage: "/auth/consent",
