@@ -2,10 +2,12 @@ import type { McpToolGroup } from "../config";
 import { draftTools, writeTools } from "./drafts";
 import { readTools } from "./read";
 import type { McpToolDefinition } from "./types";
+import { getWorkflowTool } from "./workflows";
 
 /** Every MCP tool */
 export const ALL_TOOLS: readonly McpToolDefinition[] = [
   ...readTools,
+  getWorkflowTool,
   ...draftTools,
   ...writeTools,
 ];

@@ -6,7 +6,7 @@
  */
 
 import { createMcpHandler } from "mcp-handler";
-import { ZodError, type z } from "zod";
+import { z, ZodError } from "zod";
 import packageJson from "@/package.json";
 import { logger } from "@/lib/services/logger";
 import { UserError } from "@/lib/services/user-error";
@@ -31,6 +31,7 @@ import { MCP_SERVER_INSTRUCTIONS } from "./instructions";
 import { checkRateLimit, clientIp } from "./rate-limit";
 import { enabledTools } from "./tools";
 import { registerWidgetResources, widgetToolMeta } from "./widgets/resources";
+import { renderWorkflow, WORKFLOWS } from "./workflows";
 import type {
   InvalidationRequest,
   McpToolDefinition,
@@ -183,6 +184,27 @@ function advertisedSchema(schema: z.ZodTypeAny) {
   } as unknown as typeof schema;
 }
 
+// ====================
+// PROMPTS
+// ====================
+
+const workflowPromptArgs = z.object({
+  richiesta: z
+    .string()
+    .max(2000)
+    .optional()
+    .describe("Cosa vuoi fare, con i dettagli che conosci (facoltativo)"),
+});
+
+/** The user message of a workflow prompt: the steps, then the request if given */
+export function workflowPromptText(
+  workflow: (typeof WORKFLOWS)[number],
+  request?: string,
+): string {
+  const steps = `Segui questa procedura di dev-recruit.\n\n${renderWorkflow(workflow)}`;
+  return request?.trim() ? `${steps}\n\nRichiesta: ${request.trim()}` : steps;
+}
+
 /** The MCP handler of one request, with the actor of that request. */
 export function createDevRecruitMcpHandler(
   actor: McpActor,
@@ -191,6 +213,26 @@ export function createDevRecruitMcpHandler(
   return createMcpHandler(
     (server) => {
       registerWidgetResources(server);
+
+      for (const workflow of WORKFLOWS) {
+        server.registerPrompt(
+          workflow.name,
+          {
+            title: workflow.title,
+            description: workflow.description,
+            argsSchema: workflowPromptArgs,
+          },
+          ({ richiesta }) => ({
+            description: workflow.description,
+            messages: [
+              {
+                role: "user" as const,
+                content: { type: "text" as const, text: workflowPromptText(workflow, richiesta) },
+              },
+            ],
+          }),
+        );
+      }
 
       for (const tool of tools) {
         const meta = widgetToolMeta(tool.widget, { appOnly: tool.appOnly });

@@ -48,6 +48,7 @@ import {
   runTool,
 } from "@/lib/mcp/server";
 import { defineTool } from "@/lib/mcp/tools/types";
+import { WORKFLOWS } from "@/lib/mcp/workflows";
 import { logger } from "@/lib/services/logger";
 import { UserError } from "@/lib/services/user-error";
 import {
@@ -344,6 +345,44 @@ describe("createDevRecruitMcpHandler (Streamable HTTP)", () => {
         required: ["positionId"],
       },
     });
+  });
+
+  it("lists one prompt per workflow, with an optional request argument", async () => {
+    const { body } = await rpc([echoTool], { jsonrpc: "2.0", id: 10, method: "prompts/list" });
+
+    expect(body.result.prompts.map((prompt: { name: string }) => prompt.name)).toEqual(
+      WORKFLOWS.map((workflow) => workflow.name),
+    );
+    expect(body.result.prompts[0]).toMatchObject({
+      title: "Le mie azioni",
+      arguments: [{ name: "richiesta", required: false }],
+    });
+  });
+
+  it("returns the workflow steps and the request as a user message", async () => {
+    const { body } = await rpc([echoTool], {
+      jsonrpc: "2.0",
+      id: 11,
+      method: "prompts/get",
+      params: { name: "quiz-for-candidate", arguments: { richiesta: "Quiz per Frontend" } },
+    });
+
+    const [message] = body.result.messages;
+    expect(message.role).toBe("user");
+    expect(message.content.text).toContain("save_quiz_draft");
+    expect(message.content.text).toMatch(/Richiesta: Quiz per Frontend$/);
+  });
+
+  it("advertises the field descriptions of the input schema", async () => {
+    const described = defineTool({
+      ...echoTool,
+      inputSchema: z.object({ positionId: z.string().describe("Id della posizione") }),
+    });
+    const { body } = await rpc([described], { jsonrpc: "2.0", id: 9, method: "tools/list" });
+
+    expect(body.result.tools[0].inputSchema.properties.positionId.description).toBe(
+      "Id della posizione",
+    );
   });
 
   it("routes tools/call through the wrapper: Italian error for invalid input, audited", async () => {

@@ -102,6 +102,7 @@ Phase of an MCP tool: 1 read tools, 3 `get_interview`, 4 drafts and publish. Pha
 | Scheduling options (guides, team members, next round, pending proposals) | interview proposal | read | `get_scheduling_options` | 4 |
 | Position publish (service `publishPositionDraft`, `draft` → `open`) | position | write | `publish_draft` with `kind: "position"`, widget only | 4 |
 | Position form (options from `getPositionFieldOptions`) | position | draft (nothing written: the form prefilled) | `open_position_form` | 4 |
+| Workflow steps (`lib/mcp/workflows`, no selection data) | — | read | `get_workflow` | — |
 
 ## Page reads (`app/dashboard/**/page.tsx` and public pages)
 

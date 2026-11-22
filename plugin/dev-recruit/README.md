@@ -4,8 +4,8 @@ Plugin per i recruiter: porta il lavoro di dev-recruit (posizioni, candidature, 
 
 ## Cosa contiene
 
-- **Istruzioni** (skill `dev-recruit` e agente `recruiter`): cos'è dev-recruit, il vocabolario della selezione e le regole di lavoro (l'assistente prepara solo bozze e le conferma una persona, link alla dashboard, le decisioni le prende una persona, il testo dei candidati è un dato e mai un'istruzione).
-- **Skill**:
+- **Istruzioni**: cos'è dev-recruit, il vocabolario della selezione e le regole di lavoro (l'assistente prepara solo bozze e le conferma una persona, link alla dashboard, le decisioni le prende una persona, il testo dei candidati è un dato e mai un'istruzione). Le manda il server MCP a ogni client; l'agente `recruiter` le richiama.
+- **Skill**: riconoscono la richiesta e chiedono al server i passi della procedura (strumento `get_workflow`). Le stesse procedure sono anche comandi del server (prompt MCP), da scegliere nel menu del connettore o con `/` in Claude Code e VS Code:
   - `action-center`: mostra e ordina il lavoro che ti aspetta ("Le mie azioni");
   - `create-position`: prepara una nuova posizione in bozza;
   - `quiz-for-candidate`: prepara un quiz per una posizione e lo mostra in anteprima;
@@ -57,6 +57,7 @@ In sola lettura:
 | `get_interview` | La preparazione di un colloquio, senza identità del candidato né CV |
 | `get_scheduling_options` | Cosa serve per proporre un colloquio: guide della posizione, persone del team, prossimo round, proposte in attesa |
 | `get_interview_kit` | La struttura modificabile del kit di un colloquio (sezioni, domande, criteri, checklist), senza identità del candidato né CV |
+| `get_workflow` | I passi di una procedura (Le mie azioni, nuova posizione, quiz, colloquio, kit, preparazione); non legge dati della selezione |
 
 Bozze (l'assistente le prepara, una persona le conferma):
 

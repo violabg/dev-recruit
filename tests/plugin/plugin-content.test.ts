@@ -64,7 +64,7 @@ describe("dev-recruit plugin", () => {
 
   it("gives every skill a name and a description in its frontmatter", () => {
     const skills = readdirSync(join(PLUGIN, "skills"));
-    expect(skills).toEqual(expect.arrayContaining(["dev-recruit", "action-center"]));
+    expect(skills).toEqual(expect.arrayContaining(["action-center", "quiz-for-candidate"]));
 
     for (const skill of skills) {
       const { meta } = parseMarkdown(join(PLUGIN, "skills", skill, "SKILL.md"));
@@ -73,16 +73,23 @@ describe("dev-recruit plugin", () => {
     }
   });
 
-  it("carries the server instructions verbatim in the agent and the dev-recruit skill", () => {
+  it("has a recruiter agent that defers to the server instructions without copying them", () => {
     const agent = parseMarkdown(join(PLUGIN, "agents", "recruiter.md"));
-    const skill = parseMarkdown(join(PLUGIN, "skills", "dev-recruit", "SKILL.md"));
 
     expect(agent.meta).toMatchObject({
       name: "recruiter",
       description: "Assistente per il lavoro di selezione in dev-recruit",
     });
-    expect(agent.body.trim()).toBe(MCP_SERVER_INSTRUCTIONS);
-    expect(skill.body.trim()).toBe(MCP_SERVER_INSTRUCTIONS);
+    expect(agent.body).toMatch(/istruzioni/);
+  });
+
+  it("does not repeat the server instructions: every MCP client already receives them", () => {
+    const rules = MCP_SERVER_INSTRUCTIONS.split("\n").filter((line) => line.startsWith("- "));
+
+    for (const file of walk(PLUGIN).filter((path) => path.endsWith(".md"))) {
+      const text = readFileSync(file, "utf8");
+      for (const rule of rules) expect(text).not.toContain(rule);
+    }
   });
 
   it("is listed by the repository marketplace", () => {
