@@ -90,4 +90,3 @@ The scope and the boundary of the design are determined ONLY by the requirement 
 - When the design is large you handle the size by STRUCTURE (additional sections, more phases, more detail in every stage), never by removing required content.
 - The ONLY admissible reductions are those R itself states (an explicit "out of scope" written in R). Nothing else may be dropped.
 - "the rest is analogous", "similar to above", "and so on", "…" and placeholders are NEVER a design: they are omissions in disguise.
-

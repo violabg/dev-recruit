@@ -2,6 +2,15 @@
 
 Versions follow semantic versioning. The installer reads the first version heading as the kit version it records in the target's manifest.
 
+## 9.0.0
+
+Upstream 3.2.1. Re-install to apply the new rendered files. Major because the DOCUMENTATION exploration step no longer allows the single `bash`/`grep`/`glob` escape hatch: a directive is grounded from the cluster listings and the reads they return.
+
+- **Every `FAST_IMPLEMENTATION` and `DOCUMENTATION` step closes itself.** Steps 1 to 3 of FAST and 1 to 6 of DOCUMENTATION now end by naming the next `workflow-step-next` call, as the DESIGN steps already did; each workflow's last step says it is final. The runtime still adds no trailer, and a halt still stops the chain.
+- **`DOCUMENTATION` 3/7 narrows exploration.** The single `bash`/`grep`/`glob` invocation is gone: the evidence comes from a cluster listing and the `read` of a path it returned, and a directive that cannot be grounded from those is recorded as ungrounded.
+- **Verbatim wording fixes**, from upstream: the knowledge conflict read in the design, the unapplied registered prescription, a recorded ungrounded directive, an option no competent team would take, the bracketed ellipsis, and the closing line's `they do not authorize`.
+- **The verification view keeps its Lab layout.** The first `get_design_verification` capture (3.2.1) is abridged and nests decisions and hosted contracts under each obligation; the contract now records the deliberate divergence. The command, its arguments and its output are unchanged.
+
 ## 8.0.0
 
 Upstream 3.0.4 run 6. Re-install to apply the new rendered files, the served DESIGN steps and the runtime; the answers, the sessions and the designs are kept. A design check is renamed, so this is a major version: anything that matches `operation-source-without-ref` must match `operation-without-source`.

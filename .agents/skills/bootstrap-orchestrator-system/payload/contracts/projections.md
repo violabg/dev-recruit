@@ -66,7 +66,9 @@ Lab-authored: a call with no selection and no `part`, on a design too long for o
 - <question> → <chosen answer> | realized in: "<operation name>", ... | source: ... | highlight: true|false
 ```
 
-Under each obligation, every operation that lists it in `refObligations` contributes its instructions. What an operation shares across obligations — failure arms, contracts, public APIs, files — and the chosen answers of the decisions realized in those operations are printed once, joined by the operation name. An operation's contracts are those it lists in `refContracts`, and, for a design written before 3.0.3, those hosted in its files (Lab-authored: upstream has no capture of the shape).
+The `get_design_verification` capture of build 3.2.1.0 arrived after this view was authored, and it is abridged: it quotes O1 in full and states that the same three blocks repeat under the other obligations. It lays the design out as one flat list of obligations with the decisions and the hosted contracts nested under each, under the heading `# DESIGN VERIFICATION VIEW — <design name>`, and reduces the knowledge grounding to bare ids. The Lab keeps its own layout — obligations, then operations, contracts, files and decisions as peer sections, so one operation realizing fifteen obligations is printed once — and keeps the grounding line that tells the verifier to read the documents. Recorded as a deliberate divergence, not a missing behaviour (maintainer, 2026-11-24).
+
+Under each obligation, every operation that lists it in `refObligations` contributes its instructions. What an operation shares across obligations — failure arms, contracts, public APIs, files — and the chosen answers of the decisions realized in those operations are printed once, joined by the operation name. An operation's contracts are those it lists in `refContracts`, and, for a design written before 3.0.3, those hosted in its files (Lab-authored; the 3.2.1 capture nests a hosted contract under the file rather than under the operation).
 
 The verifier's conformance comparison reads every section and every operation, so the view presents all of them whether or not they address an obligation: every operation in plan order with its attributes, every contract, public API and file, and every decision with its source and highlight. A sequencing or representation prescription can only be judged against these.
 
@@ -74,7 +76,7 @@ The verifier's conformance comparison reads every section and every operation, s
 
 Only obligation labels (`O#`) are kept. Operation, decision, contract and file ids are left out, so the verifier judges the content presented and never reconstructs the mapping.
 
-`# Knowledge references in no operation` (Lab-authored; `get_design_verification` has no capture) lists the knowledge references the design registered that no operation names in `knowledgeReferences` or, on a `Knowledge` operation, in `sourceRef`. It states the fact and asks nothing: the verifier reads those documents whole, and only this section says which prescriptions the author registered and then used nowhere.
+`# Knowledge references in no operation` (Lab-authored; the capture has no such section) lists the knowledge references the design registered that no operation names in `knowledgeReferences` or, on a `Knowledge` operation, in `sourceRef`. It states the fact and asks nothing: the verifier reads those documents whole, and only this section says which prescriptions the author registered and then used nowhere.
 
 What each `mechanisms` list does not carry is said once, after the knowledge grounding, rather than under every obligation.
 

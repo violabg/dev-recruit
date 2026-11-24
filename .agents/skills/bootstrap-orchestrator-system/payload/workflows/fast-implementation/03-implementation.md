@@ -93,7 +93,7 @@ Before the step is completed, the registered knowledge references are verified a
 2. **Verify the application.** For every reference, inspect the production code or the tests it governs — according to its scope — and verify that the prescription is applied exactly as it is stated. Treat a similar-enough application, a partial application and an intentionally skipped prescription as a violation.
 3. **Fix every violation.** Correct the code until every registered prescription is applied exactly, then rebuild and rerun the tests.
 4. **Repeat until clean.** Re-read the references and re-verify after every fix, until a full pass finds no unapplied or contradicted prescription.
-5. **Report or block.** Record every verified reference and every compliance fix in memory. When a prescription cannot be applied, record a blocker and halt: the work is not complete while a registered reference is unapplied or contradicted.
+5. **Report or block.** Record every verified reference and every compliance fix in memory. When a prescription cannot be applied, record a blocker and halt: the work is not complete while a registered prescription is unapplied or contradicted.
 
 9. **Handle the failure arms.** Report a fact that R does not allow to deduce as a blocker, record it in memory and halt without marking the step completed; when a change would exceed the perimeter of R, keep the code within that perimeter and report the deviation; when a knowledge prescription contradicts the prompt, record a blocker and do not modify the required behaviour.
 
@@ -112,3 +112,5 @@ Before the step is completed, the registered knowledge references are verified a
 # Success Criteria
 
 The step is complete when the production code and its unit tests realize exactly R, every applicable knowledge prescription is registered as a knowledge reference and applied, the knowledge compliance gate passed with every violation fixed, the build and the tests pass, the modified files and any blocker were recorded and logged, and the workflow advanced to the wrap-up step.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

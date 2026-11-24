@@ -31,3 +31,5 @@ You are executing the documentation review: an adversarial pass over the produce
 **Output**
 
 The reviewed markdown guide and the reviewer's report. The reviewer's report is structured as: `changed` (the sections it edited), `unfixable` (the sections it could not fix, each with a reason), and `verdict` (`ok` or `needs-work`).
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

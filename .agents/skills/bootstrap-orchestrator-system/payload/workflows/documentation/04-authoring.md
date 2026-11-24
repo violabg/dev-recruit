@@ -23,3 +23,5 @@ You are executing the documentation authoring: fill the template, replacing ever
 **Output**
 
 The filled markdown document.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

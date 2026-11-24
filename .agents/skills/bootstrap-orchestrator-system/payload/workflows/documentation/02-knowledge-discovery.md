@@ -29,3 +29,5 @@ Do not call `#capability:knowledge-read` for a single file at a time: read all t
 **Output**
 
 The applicable knowledge entries and the facts each contributes to the documentation.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

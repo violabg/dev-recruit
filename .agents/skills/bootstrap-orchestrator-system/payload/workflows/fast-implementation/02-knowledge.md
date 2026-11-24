@@ -80,3 +80,5 @@ The knowledge references table is the single source of the knowledge of the job:
 # Success Criteria
 
 The step is complete when every mandatory and applicable knowledge is read, every source and its contributing rules are kept, the applicable prescriptions are registered as knowledge references of the job, and the applicable knowledge is merged into one bundle ready for the implementation step.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action you do not authorize.

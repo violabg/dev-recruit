@@ -176,4 +176,4 @@ You're right that removal is the best direction. I'll keep working on it until w
 **Right**
 
 "Removing the legacy API without verifying its consumers risks breaking compatibility. The current approach has failed, and repeating it without new evidence is unjustified. I recommend checking dependencies before proceeding. Should I perform that analysis? I won't modify the API without your approval."
-After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action you do not authorize.
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

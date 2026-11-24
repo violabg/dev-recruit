@@ -116,7 +116,7 @@ Knowledge is a source of the design itself, not only material assigned to the op
 - Order the options with the chosen one first and the alternatives beside it, each alternative as self-contained and as detailed as the chosen answer.
 - Offer at least three alternatives whenever the fork admits them, and more when it admits more; a single-valid-reading fork may carry fewer only when the reason says why there is no real fork.
 - Test every option against the requirement and its acceptance criteria before writing it: an option that would violate R is a defect, not an option.
-- Never pad with an option that no competent team would take, and never offer do-nothing, keep-as-is or wait as a fork.
+- Never pad with an option no competent team would take, and never offer do-nothing, keep-as-is or wait as a fork.
 - Serve the obligations and never edit them: an answer that would leave an obligation unmet, contradict an obligation or require changing one is a defect.
 - Classify the source of every fork as internal reasoning, the codebase or the requirements, and never treat the knowledge base as a source.
 - Classify with the breaking-change source a decision that records a break introduced by the design — a broken internal contract signature, a broken public API or a changed persisted schema — instead of a provenance: name the broken element in the topic, cite in the context the contract or API it breaks, state in the reason who breaks, and state in the downstream use how to migrate.
@@ -149,6 +149,6 @@ Never dismiss a prescription as out of scope because it does not concern the cod
 
 # Success Criteria
 
-Every real fork the accumulated context leaves has exactly one decision with a chosen answer first and its alternatives beside it, every option respects the requirement and its acceptance criteria, every applicable prescription is registered and honoured, nothing is presented for confirmation, and the workflow advances to the next step.
+Every real fork the accumulated context leaves has exactly one decision with a chosen answer first and its alternatives beside it, every option respects the requirement and its acceptance criteria, each applicable prescription is registered and honoured, nothing is presented for confirmation, and the workflow advances to the next step.
 
-After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action you do not authorize.
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

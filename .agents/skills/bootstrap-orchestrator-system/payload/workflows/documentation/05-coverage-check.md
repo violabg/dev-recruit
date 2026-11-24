@@ -25,3 +25,5 @@ You are executing the documentation light coverage check: confirm the output has
 **Output**
 
 The coverage result and the actions taken.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

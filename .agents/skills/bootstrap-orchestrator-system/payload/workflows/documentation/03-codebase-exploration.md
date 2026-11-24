@@ -58,7 +58,7 @@ After Pass F, produce the outputs the including instruction defines (Pass G).
 
 2. **Document, do not design.** Do not design and do not propose changes; you document what exists.
 
-3. **Stop when grounded.** Stop as soon as every directive has its evidence. If a directive cannot be grounded in the code, record it as ungrounded and explained in the final document.
+3. **Stop when grounded.** Stop as soon as every directive has its evidence. If a directive cannot be grounded in the code, record it and explain why in the final document.
 
 ---
 
@@ -67,10 +67,11 @@ After Pass F, produce the outputs the including instruction defines (Pass G).
 - Ground every fact in a `file:line` you actually saw; never emit file references in the document unless the user explicitly asks for them (see the authoring rules).
 - The content comes from the `read` tool on a path returned by a cluster listing, and the line numbers come from that read.
 - A directive that cannot be grounded is marked ungrounded and explained in the final document.
-- The single `bash`/`grep`/`glob` invocation exists for a directive that cannot be satisfied from the cluster listings alone. A no-match means the directive is ungrounded (not a reason to search more).
 
 ---
 
 **Output**
 
 The evidence mapped to each placeholder directive.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

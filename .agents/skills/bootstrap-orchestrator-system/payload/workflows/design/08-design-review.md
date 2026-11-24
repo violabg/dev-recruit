@@ -75,7 +75,7 @@ Knowledge is a source of the design itself, not only material assigned to the op
 6. **Applicability to the design.** A prescription is applicable to the design when it constrains a choice the design produces — the contracts, the public APIs, the filesystem, the operations or the decisions. A prescription that constrains only how the code is written or verified stays with the implementor and does not bind a design section.
 7. **Consult before writing, section by section.** Before you compose or modify any section of the design, rebuild the knowledge already read in this job, re-read from the catalogue only the delta the section at hand makes relevant, and consult the applicable prescriptions before you write the section. No design section is written first and reconciled with the knowledge afterwards.
 8. **Every applicable prescription is applied.** When you write a design section, apply every prescription applicable to it, and make the section declare the prescriptions it is founded on by their `kid`. A design that realizes the requirement but leaves an applicable prescription unapplied is incomplete, and a design that contradicts an applicable prescription is rejected.
-9. **Knowledge before the workflow instruction.** When a prescription conflicts with an instruction of the workflow, record the conflict explicitly before you proceed — the prescription, the instruction and the choice that resolves it — and apply the prescription. The conflicting instruction is not applied, and the conflict and its resolution are named in the design so the developer and the verifier can read it. This precedence holds for every section, including the order of the operations when a prescription dictates a sequence.
+9. **Knowledge before the workflow instruction.** When a prescription conflicts with an instruction of the workflow, record the conflict explicitly before you proceed — the prescription, the instruction and the choice that resolves it — and apply the prescription. The conflicting instruction is not applied, and the conflict and its resolution are named in the design so the developer and the verifier can read them. This precedence holds for every section, including the order of the operations when a prescription dictates a sequence.
 10. **Failure.** If `#capability:design-knowledge-references` fails, retry the call once. If it still fails, record a blocker and halt: a prescription the design applies and did not register leaves the design incomplete.
 
     **The test context is collected with the same discipline as the production context.**
@@ -104,7 +104,7 @@ Knowledge is a source of the design itself, not only material assigned to the op
     Does every obligation have at least one operation that realizes it?
     Does every operation that realizes an obligation have instructions that name the concrete mechanism?
     Does every non-highlighted decision have at least one operation that realizes it?
-    [... and so on for every obligation and decision].
+    [... and so on for every obligation and decision.]
     **Critical**: ignore or weaken an obligation for efficiency or shortcut is a critical defect; For example, if an obligation requires a refund to be issued for an unpaid order, you cannot skip the refund for efficiency, even if the codebase already has a mechanism that handles refunds for paid orders. **Principle is: If an obligation says "X", no other way than "X" can be accepted and justified**.
 
     **Viewpoint 3 — Internal coherence of the design.** Do the sections agree with each other? Contracts, filesystem, operations and decisions must line up on names, paths, signatures, payloads, statuses, order and dependencies, and no two parts may assert incompatible things; a file the design touches but no operation declares, or the reverse, is a defect.
@@ -112,7 +112,7 @@ Knowledge is a source of the design itself, not only material assigned to the op
     Do the contracts, filesystem, operations and decisions line up on names, paths, signatures, payloads, statuses, order and dependencies?
     Do any two parts assert incompatible things?
     Does any file the design touches have no operation that declares it, or vice versa?
-    [... and so on for every section of the design].
+    [... and so on for every section of the design.]
     **Critical**: a defect that makes the design incoherent is a critical defect; For example, if a contract declares an endpoint that no operation implements, or an operation implements an endpoint that no contract declares, the design is incoherent. **Principle is: Every part of the design must agree with every other part**.
 
     **Viewpoint 4 — Completeness for delegation to an external agent.** Could a subagent starting from an empty context execute every operation from the design alone? It must find every file, signature, payload, error path, reference or exemption, order and dependency, with no missing context and no instruction that defers to something the implementor cannot see.
@@ -120,7 +120,7 @@ Knowledge is a source of the design itself, not only material assigned to the op
     Could a subagent starting from an empty context execute every operation from the design alone?
     Does every operation have instructions that name every file, signature, payload, error path, reference or exemption, order and dependency it needs?
     Does any instruction defer to something the implementor cannot see?
-    [... and so on for every operation in the design].
+    [... and so on for every operation in the design.]
     **Critical**: a defect that makes the design incomplete for delegation is a critical defect; For example, if an operation's instructions refer to a file that is not declared in the design, or if an operation's instructions defer to a decision that is not realized by any operation, the design is incomplete for delegation. **Principle is: Every operation must be executable by a subagent starting from an empty context**.
 
     For every viewpoint, name the defect you can find; A viewpoint you cannot attack is a viewpoint you have not examined.
@@ -211,4 +211,4 @@ You're right that removal is the best direction. I'll keep working on it until w
 **Right**
 
 "Removing the legacy API without verifying its consumers risks breaking compatibility. The current approach has failed, and repeating it without new evidence is unjustified. I recommend checking dependencies before proceeding. Should I perform that analysis? I won't modify the API without your approval."
-After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action you do not authorize.
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.

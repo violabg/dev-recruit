@@ -87,3 +87,5 @@ Never ask the developer which intent to choose.
 # Success Criteria
 
 Intake is complete when the requirement is triaged, every image, screenshot and Figma artifact from the request and any retrieved work item is analyzed and persisted as a named session artifact with its origin and purpose recorded in memory, every unreachable artifact is reported or carried in the agent memory, and the workflow advanced only when no stop point remained.
+
+After completing ALL the provided instructions, call the tool `#capability:workflow-step-next` again to receive the next instruction. Do not deviate from these instructions or take any action they do not authorize.
