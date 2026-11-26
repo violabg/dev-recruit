@@ -83,7 +83,7 @@ Route handlers exist only for: the auth library catch-all (OAuth endpoints inclu
 
 ## Ids of deleted criteria on quiz links
 
-The scorecard save never writes `QuizQuestion`, so the id of a deleted criterion can survive on an existing link until that quiz is saved again, and `duplicateQuizAction` can copy it to a same-position duplicate. The authoritative cleanup is server-side: every quiz save drops unknown ids before the transaction.
+The scorecard save never writes `QuizQuestion`, so the id of a deleted criterion can survive on an existing link until that quiz is saved again, and a copy to the same position carries it. The authoritative cleanup is server-side: every quiz save drops unknown ids before the transaction.
 
 - Every reader MUST resolve criterion ids through the scorecard (active and archived alike) and ignore unknown ids: quiz view, quiz form, CV per-criterion assessment, interview kit, interviewer scorecard.
 - The guide editor is the exception: it keeps an unresolvable id in the form, labelled archived, and the guide save accepts it because that guide already stores it.

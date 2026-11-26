@@ -16,6 +16,10 @@ export function FaqSection() {
           ["Cambiare i pesi dei criteri", "Posizione → Scheda di valutazione"],
           ["Creare o modificare il quiz di una posizione", "Posizione → tab Quiz"],
           [
+            "Riusare un quiz di un'altra posizione",
+            "Posizione → tab Quiz → Aggiungi quiz esistenti",
+          ],
+          [
             "Preparare le domande di un colloquio",
             "Candidatura → Colloqui → Prepara",
           ],

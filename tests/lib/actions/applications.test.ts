@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/prisma", () => ({
-  default: {
+vi.mock("@/lib/prisma", () => {
+  const prismaMock: Record<string, unknown> = {
     application: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -14,7 +14,18 @@ vi.mock("@/lib/prisma", () => ({
       findMany: vi.fn(async () => []),
       updateMany: vi.fn(async () => ({ count: 0 })),
     },
-  },
+  };
+  // The transaction callback receives the same mock
+  prismaMock.$transaction = vi.fn((fn: (tx: unknown) => unknown) =>
+    fn(prismaMock),
+  );
+  return { default: prismaMock };
+});
+
+// Only the association service is stubbed: setApplicationStage stays real
+vi.mock("@/lib/services/applications", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/services/applications")>()),
+  addCandidatesToPosition: vi.fn(),
 }));
 
 vi.mock("@/lib/utils/cache-utils", () => ({
@@ -24,11 +35,14 @@ vi.mock("@/lib/utils/cache-utils", () => ({
 }));
 
 import {
+  addCandidatesToPositionAction,
   moveApplicationStageAction,
   setApplicationOwnerAction,
 } from "@/lib/actions/applications";
+import { UserError } from "@/lib/actions/run-action";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
+import { addCandidatesToPosition } from "@/lib/services/applications";
 import {
   invalidateAssessmentCache,
   invalidateCandidateCache,
@@ -264,6 +278,122 @@ describe("setApplicationOwnerAction", () => {
     expect(
       await setApplicationOwnerAction({ applicationId: "nope", owner: "me" }),
     ).toEqual({ success: false, error: "Candidatura non trovata" });
+    expect(invalidateCandidateCache).not.toHaveBeenCalled();
+  });
+});
+
+describe("addCandidatesToPositionAction", () => {
+  const serviceResult = (overrides: Record<string, unknown> = {}) => ({
+    positionId: "pos1",
+    createdCandidateIds: [],
+    reopenedCandidateIds: [],
+    unchangedCandidateIds: [],
+    touchedApplicationIds: [],
+    ...overrides,
+  });
+
+  it("requires a signed-in user and calls nothing", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+
+    const result = await addCandidatesToPositionAction({
+      positionId: "pos1",
+      candidateIds: ["cand1"],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Sessione scaduta. Accedi di nuovo per continuare.",
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(addCandidatesToPosition).not.toHaveBeenCalled();
+  });
+
+  it("refuses an empty selection", async () => {
+    const result = await addCandidatesToPositionAction({
+      positionId: "pos1",
+      candidateIds: [],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Seleziona almeno un candidato.",
+    });
+    expect(addCandidatesToPosition).not.toHaveBeenCalled();
+  });
+
+  it("associates in one transaction, owned by the user, and refreshes each touched candidate", async () => {
+    vi.mocked(addCandidatesToPosition).mockResolvedValueOnce(
+      serviceResult({
+        createdCandidateIds: ["c-new"],
+        reopenedCandidateIds: ["c-reopen"],
+        unchangedCandidateIds: ["c-same"],
+        touchedApplicationIds: ["app-new", "app-w"],
+      }) as any,
+    );
+
+    const result = await addCandidatesToPositionAction({
+      positionId: "pos1",
+      candidateIds: ["c-new", "c-reopen", "c-same"],
+    });
+
+    expect(result).toEqual({
+      success: true,
+      createdCount: 1,
+      reopenedCount: 1,
+      unchangedCount: 1,
+    });
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(addCandidatesToPosition).toHaveBeenCalledWith(prisma, {
+      positionId: "pos1",
+      candidateIds: ["c-new", "c-reopen", "c-same"],
+      ownerId: "user-123",
+    });
+    expect(invalidateCandidateCache).toHaveBeenCalledTimes(2);
+    expect(invalidateCandidateCache).toHaveBeenCalledWith({
+      candidateId: "c-new",
+      positionId: "pos1",
+      applicationIds: ["app-new", "app-w"],
+    });
+    expect(invalidateCandidateCache).toHaveBeenCalledWith({
+      candidateId: "c-reopen",
+      positionId: "pos1",
+      applicationIds: ["app-new", "app-w"],
+    });
+  });
+
+  it("refreshes nothing when every candidate was already in selection", async () => {
+    vi.mocked(addCandidatesToPosition).mockResolvedValueOnce(
+      serviceResult({ unchangedCandidateIds: ["c1", "c2"] }) as any,
+    );
+
+    const result = await addCandidatesToPositionAction({
+      positionId: "pos1",
+      candidateIds: ["c1", "c2"],
+    });
+
+    expect(result).toEqual({
+      success: true,
+      createdCount: 0,
+      reopenedCount: 0,
+      unchangedCount: 2,
+    });
+    expect(invalidateCandidateCache).not.toHaveBeenCalled();
+  });
+
+  it("returns the service refusal as an Italian error", async () => {
+    vi.mocked(addCandidatesToPosition).mockRejectedValueOnce(
+      new UserError("Puoi associare candidati solo a una posizione aperta"),
+    );
+
+    const result = await addCandidatesToPositionAction({
+      positionId: "pos1",
+      candidateIds: ["cand1"],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Puoi associare candidati solo a una posizione aperta",
+    });
     expect(invalidateCandidateCache).not.toHaveBeenCalled();
   });
 });

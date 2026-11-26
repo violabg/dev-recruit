@@ -3,12 +3,17 @@
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import {
+  addCandidatesToPositionSchema,
   applicationOwnerSchema,
   moveApplicationStageSchema,
+  type AddCandidatesToPositionInput,
   type ApplicationOwnerInput,
   type MoveApplicationStageInput,
 } from "../schemas";
-import { setApplicationStage } from "../services/applications";
+import {
+  addCandidatesToPosition,
+  setApplicationStage,
+} from "../services/applications";
 import {
   invalidateAssessmentCache,
   invalidateCandidateCache,
@@ -82,5 +87,42 @@ export async function setApplicationOwnerAction(input: ApplicationOwnerInput) {
     });
 
     return { ownerId };
+  });
+}
+
+/** Associate existing candidates with an open position. Any signed-in user may do it. */
+export async function addCandidatesToPositionAction(
+  input: AddCandidatesToPositionInput,
+) {
+  return runAction("addCandidatesToPositionAction", async () => {
+    const user = await requireUser();
+    const { positionId, candidateIds } =
+      addCandidatesToPositionSchema.parse(input);
+
+    const result = await prisma.$transaction((tx) =>
+      addCandidatesToPosition(tx, {
+        positionId,
+        candidateIds,
+        ownerId: user.id,
+      }),
+    );
+
+    // Nothing created or reopened: no write, nothing to refresh
+    for (const candidateId of [
+      ...result.createdCandidateIds,
+      ...result.reopenedCandidateIds,
+    ]) {
+      invalidateCandidateCache({
+        candidateId,
+        positionId,
+        applicationIds: result.touchedApplicationIds,
+      });
+    }
+
+    return {
+      createdCount: result.createdCandidateIds.length,
+      reopenedCount: result.reopenedCandidateIds.length,
+      unchangedCount: result.unchangedCandidateIds.length,
+    };
   });
 }

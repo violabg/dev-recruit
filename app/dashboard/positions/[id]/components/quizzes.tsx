@@ -1,6 +1,8 @@
+import { AddExistingQuizzesDialog } from "@/components/positions/add-existing-quizzes-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getQuizzesForPosition } from "@/lib/data/quizzes";
+import { getQuizPickerOptions, getQuizzesForPosition } from "@/lib/data/quizzes";
+import { cn } from "cn";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -11,18 +13,32 @@ type Props = {
 export default async function Quizzes({ params }: Props) {
   const { id } = await params;
   const quizzes = await getQuizzesForPosition(id);
+  // Not awaited: the dialog resolves it with use()
+  const quizzesPromise = getQuizPickerOptions().catch(() => []);
+  const positionQuizTitles = quizzes.map((quiz) => quiz.title);
+
+  const renderActions = (className?: string) => (
+    <div className={cn("flex flex-wrap gap-2", className)}>
+      <Link
+        href={`/dashboard/positions/${id}/quiz/new`}
+        className={buttonVariants({ variant: "default", size: "sm" })}
+      >
+        <Plus className="mr-1 size-4" />
+        Nuovo quiz
+      </Link>
+      <AddExistingQuizzesDialog
+        positionId={id}
+        quizzesPromise={quizzesPromise}
+        positionQuizTitles={positionQuizTitles}
+      />
+    </div>
+  );
 
   return (
     <>
       <div className="flex justify-between">
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">Quiz</h2>
-        <Link
-          href={`/dashboard/positions/${id}/quiz/new`}
-          className={buttonVariants({ variant: "default", size: "sm" })}
-        >
-          <Plus className="mr-1 size-4" />
-          New Quiz
-        </Link>
+        {renderActions()}
       </div>
 
       {quizzes.length > 0 ? (
@@ -74,15 +90,9 @@ export default async function Quizzes({ params }: Props) {
         <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
           <div className="text-center">
             <p className="text-muted-foreground text-sm">
-              Nessun quiz creato per questa posizione
+              Nessun quiz per questa posizione
             </p>
-            <Link
-              href={`/dashboard/positions/${id}/quiz/new`}
-              className={buttonVariants({ variant: "default", size: "sm" })}
-            >
-              <Plus className="mr-1 size-4" />
-              New Quiz
-            </Link>
+            {renderActions("mt-2 justify-center")}
           </div>
         </div>
       )}

@@ -15,17 +15,19 @@ const flow = `flowchart LR
     end
     subgraph Interno["Lato recruiter"]
         N["<b>Nuovo candidato</b><br/>/dashboard/candidates/new"]:::step
+        P["<b>Dalla posizione</b><br/>tab Selezione"]:::step
         AP["<b>Candidatura creata</b><br/>fase: Candidato"]:::entity
     end
     F --> AP
     N --> AP
+    P --> AP
     AP --> LIST["<b>Visibile ovunque</b><br/>Candidature, pipeline e kanban della posizione"]:::outcome`;
 
 export function ArrivoSection() {
   return (
     <GuideSection meta={meta}>
       <GuideText>
-        <strong>Due modi per creare una candidatura:</strong>
+        <strong>Tre modi per creare una candidatura:</strong>
       </GuideText>
 
       <GuideDiagram chart={flow} title="Come arriva una candidatura" />
@@ -43,6 +45,17 @@ export function ArrivoSection() {
           <strong>Da dashboard</strong> (Candidati → Nuovo Candidato): il
           recruiter inserisce i dati, carica il CV e sceglie una o più posizioni.
           Si crea una candidatura per ogni posizione.
+        </li>
+        <li>
+          <strong>Dalla posizione</strong> (Posizioni → la posizione → tab
+          Selezione, solo se la posizione è aperta):{" "}
+          <strong>Aggiungi Candidato</strong> apre il form del nuovo candidato
+          con la posizione già scelta; <strong>Associa candidati</strong> apre
+          un dropdown dei candidati già presenti, con ricerca e filtri (altra
+          posizione, fase, nascondi non contattabili) per trovare i più adatti.
+          Se il candidato si era ritirato da quella posizione, la candidatura si
+          riapre; chi è già in selezione non si può aggiungere di nuovo; ogni
+          candidato può avere al massimo 10 posizioni.
         </li>
       </GuideList>
 

@@ -1,4 +1,5 @@
 import {
+  addCandidatesToPositionSchema,
   aiDecisionChallengeSchema,
   APPLICATION_STAGE_VALUES,
   challengeDecisionSchema,
@@ -62,6 +63,64 @@ describe("moveApplicationStageSchema", () => {
     expect(result.error?.issues[0].message).toBe(
       "Fase della candidatura non valida",
     );
+  });
+});
+
+describe("addCandidatesToPositionSchema", () => {
+  it("accepts a position id and candidate ids", () => {
+    expect(
+      addCandidatesToPositionSchema.parse({
+        positionId: "pos1",
+        candidateIds: ["cand1", "cand2"],
+      }),
+    ).toEqual({ positionId: "pos1", candidateIds: ["cand1", "cand2"] });
+  });
+
+  it("accepts 50 candidates", () => {
+    const candidateIds = Array.from({ length: 50 }, (_, i) => `cand${i}`);
+    expect(
+      addCandidatesToPositionSchema.safeParse({ positionId: "pos1", candidateIds })
+        .success,
+    ).toBe(true);
+  });
+
+  it("refuses an empty selection with the Italian message", () => {
+    const result = addCandidatesToPositionSchema.safeParse({
+      positionId: "pos1",
+      candidateIds: [],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Seleziona almeno un candidato.");
+  });
+
+  it("refuses more than 50 candidates with the Italian message", () => {
+    const candidateIds = Array.from({ length: 51 }, (_, i) => `cand${i}`);
+    const result = addCandidatesToPositionSchema.safeParse({
+      positionId: "pos1",
+      candidateIds,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe(
+      "Massimo 50 candidati per volta.",
+    );
+  });
+
+  it("refuses an invalid candidate id", () => {
+    expect(
+      addCandidatesToPositionSchema.safeParse({
+        positionId: "pos1",
+        candidateIds: [""],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("refuses an invalid position id", () => {
+    expect(
+      addCandidatesToPositionSchema.safeParse({
+        positionId: "",
+        candidateIds: ["cand1"],
+      }).success,
+    ).toBe(false);
   });
 });
 

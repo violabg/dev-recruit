@@ -117,6 +117,18 @@ export const duplicateQuizSchema = duplicateQuizFormSchema.extend({
   quizId: baseSchemas.id,
 });
 
+// Input of addExistingQuizzesToPositionAction: copies of existing quizzes
+// added to a position. Duplicate ids are removed, first occurrence kept.
+export const MAX_QUIZZES_PER_ADD = 20;
+export const addExistingQuizzesSchema = z.object({
+  positionId: baseSchemas.id,
+  quizIds: z
+    .array(baseSchemas.id)
+    .min(1, "Seleziona almeno un quiz")
+    .max(MAX_QUIZZES_PER_ADD, "Puoi aggiungere al massimo 20 quiz alla volta")
+    .transform((ids) => [...new Set(ids)]),
+});
+
 // NOTE: Entity types are defined in lib/data/quizzes.ts.
 // This file contains ONLY validation schemas, not entity definitions.
 
@@ -126,3 +138,4 @@ export type QuizEditorData = z.infer<typeof quizEditorSchema>;
 export type SaveQuizInput = z.infer<typeof saveQuizSchema>;
 export type DuplicateQuizFormData = z.infer<typeof duplicateQuizFormSchema>;
 export type DuplicateQuizInput = z.infer<typeof duplicateQuizSchema>;
+export type AddExistingQuizzesInput = z.input<typeof addExistingQuizzesSchema>;

@@ -1,4 +1,5 @@
 import {
+  addExistingQuizzesToPositionAction,
   deleteQuizAction,
   duplicateQuizAction,
   generateNewQuestionAction,
@@ -10,7 +11,10 @@ import prisma from "@/lib/prisma";
 import { unwrap } from "@/lib/utils/action-result";
 import { invalidateQuizCache } from "@/lib/utils/cache-utils";
 import { aiQuizService } from "@/lib/services/ai-service";
-import { saveQuiz } from "@/lib/services/quizzes";
+import {
+  addExistingQuizzesToPosition,
+  saveQuiz,
+} from "@/lib/services/quizzes";
 import { UserError } from "@/lib/services/user-error";
 import { mockOpenQuestion } from "@/tests/mocks";
 
@@ -57,8 +61,11 @@ vi.mock("@/lib/services/ai-service", () => ({
     generateQuestion: vi.fn(),
   },
 }));
-vi.mock("@/lib/services/quizzes", () => ({
+vi.mock("@/lib/services/quizzes", async (importOriginal) => ({
+  // copyQuizToPosition stays real: the duplicate tests assert its writes
+  ...(await importOriginal<typeof import("@/lib/services/quizzes")>()),
   saveQuiz: vi.fn(),
+  addExistingQuizzesToPosition: vi.fn(),
 }));
 vi.mock("@/lib/utils/cache-utils", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/utils/cache-utils")>()),
@@ -705,5 +712,156 @@ describe("quizzes actions: criteria links", () => {
     expect(prisma.quizQuestion.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ criterionIds: [] }),
     });
+  });
+});
+
+describe("addExistingQuizzesToPositionAction", () => {
+  const txClient = { marker: "tx" };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requireUser).mockResolvedValue({ id: "user-123" } as any);
+    vi.mocked(prisma.$transaction).mockImplementation((async (
+      callback: (tx: unknown) => unknown,
+    ) => callback(txClient)) as any);
+    vi.mocked(addExistingQuizzesToPosition).mockResolvedValue({
+      createdQuizIds: ["copy-1", "copy-2"],
+    });
+  });
+
+  it("copies the quizzes in one transaction and invalidates each new quiz with the position", async () => {
+    const result = await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: ["quiz-a", "quiz-b"],
+    });
+
+    expect(unwrap(result)).toEqual({
+      success: true,
+      count: 2,
+      quizIds: ["copy-1", "copy-2"],
+    });
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(addExistingQuizzesToPosition).toHaveBeenCalledWith(txClient, {
+      positionId: "pos-1",
+      quizIds: ["quiz-a", "quiz-b"],
+      userId: "user-123",
+    });
+    expect(invalidateQuizCache).toHaveBeenCalledTimes(2);
+    expect(invalidateQuizCache).toHaveBeenCalledWith({
+      quizId: "copy-1",
+      positionId: "pos-1",
+    });
+    expect(invalidateQuizCache).toHaveBeenCalledWith({
+      quizId: "copy-2",
+      positionId: "pos-1",
+    });
+  });
+
+  it("accepts a single quiz", async () => {
+    vi.mocked(addExistingQuizzesToPosition).mockResolvedValueOnce({
+      createdQuizIds: ["copy-1"],
+    });
+
+    const result = await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: ["quiz-a"],
+    });
+
+    expect(unwrap(result)).toEqual({
+      success: true,
+      count: 1,
+      quizIds: ["copy-1"],
+    });
+    expect(invalidateQuizCache).toHaveBeenCalledTimes(1);
+  });
+
+  it("removes duplicated ids before copying, keeping the first-occurrence order", async () => {
+    await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: ["quiz-b", "quiz-a", "quiz-b"],
+    });
+
+    expect(addExistingQuizzesToPosition).toHaveBeenCalledWith(txClient, {
+      positionId: "pos-1",
+      quizIds: ["quiz-b", "quiz-a"],
+      userId: "user-123",
+    });
+  });
+
+  it("returns the expired-session message before parsing or touching the database", async () => {
+    vi.mocked(requireUser).mockRejectedValueOnce(new Error("UNAUTHENTICATED"));
+
+    const result = await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: [],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Sessione scaduta. Accedi di nuovo per continuare.",
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(addExistingQuizzesToPosition).not.toHaveBeenCalled();
+    expect(invalidateQuizCache).not.toHaveBeenCalled();
+  });
+
+  it("refuses an empty selection", async () => {
+    const result = await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: [],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Seleziona almeno un quiz",
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses more than 20 quizzes", async () => {
+    const result = await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: Array.from({ length: 21 }, (_, i) => `quiz-${i}`),
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Puoi aggiungere al massimo 20 quiz alla volta",
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("returns the service refusal verbatim and invalidates nothing", async () => {
+    vi.mocked(addExistingQuizzesToPosition).mockRejectedValueOnce(
+      new UserError("Uno o più quiz non esistono più"),
+    );
+
+    const result = await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: ["quiz-a"],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Uno o più quiz non esistono più",
+    });
+    expect(invalidateQuizCache).not.toHaveBeenCalled();
+  });
+
+  it("returns the generic error on an unexpected failure", async () => {
+    vi.mocked(addExistingQuizzesToPosition).mockRejectedValueOnce(
+      new Error("db down"),
+    );
+
+    const result = await addExistingQuizzesToPositionAction({
+      positionId: "pos-1",
+      quizIds: ["quiz-a"],
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Si è verificato un errore. Riprova.",
+    });
+    expect(invalidateQuizCache).not.toHaveBeenCalled();
   });
 });

@@ -220,6 +220,71 @@ export const getCandidatesCount = async () => {
 };
 
 /**
+ * One candidate as offered by the association picker on the position page.
+ * `applications` holds every application, withdrawn included, with the
+ * position title.
+ */
+export type CandidatePickerOption = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  doNotContact: boolean;
+  createdAt: Date;
+  applications: {
+    positionId: string;
+    positionTitle: string;
+    stage: ApplicationStage;
+  }[];
+};
+
+/**
+ * Every candidate with its applications, for the existing-candidate picker.
+ * Every signed-in user sees every candidate: no per-user filter.
+ */
+export async function getCandidatePickerOptions(): Promise<
+  CandidatePickerOption[]
+> {
+  "use cache";
+  cacheLife("hours");
+  // Reads candidates + applications (covered by candidates) + position titles
+  cacheTag(CacheTags.CANDIDATES, CacheTags.POSITIONS);
+
+  const rows = await prisma.candidate.findMany({
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      doNotContact: true,
+      createdAt: true,
+      applications: {
+        select: {
+          positionId: true,
+          stage: true,
+          position: { select: { title: true } },
+        },
+      },
+    },
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+  });
+
+  return rows.map((r) => ({
+    id: r.id,
+    firstName: r.firstName,
+    lastName: r.lastName,
+    email: r.email,
+    doNotContact: r.doNotContact,
+    createdAt: r.createdAt,
+    applications: r.applications.map((a) => ({
+      positionId: a.positionId,
+      positionTitle: a.position.title,
+      stage: a.stage,
+    })),
+  }));
+}
+
+/**
  * Returns last N candidates for generateStaticParams.
  * Used to pre-render most recent candidate detail pages at build time.
  */

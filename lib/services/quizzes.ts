@@ -8,15 +8,31 @@
  */
 
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@/lib/prisma/client";
 import {
   saveQuizSchema,
   type FlexibleQuestion,
   type SaveQuizInput,
 } from "@/lib/schemas";
+import { mapQuizQuestionsToFlexible } from "@/lib/utils/question-utils";
 import { assertActorEnabled, type Actor } from "./actor";
 import { syncQuizQuestions } from "./quiz-questions";
 import { assertActiveCriteria } from "./scorecards";
 import { UserError } from "./user-error";
+
+/**
+ * A quiz loaded to be copied: its questions ordered by `order` ascending,
+ * each link carrying its criterionIds.
+ */
+export type QuizCopySource = {
+  id: string;
+  positionId: string;
+  title: string;
+  timeLimit: number | null;
+  quizQuestions: Array<
+    Prisma.QuizQuestionGetPayload<{ include: { question: true } }>
+  >;
+};
 
 /**
  * Check the criteria linked to the questions of a quiz before it is saved.
@@ -146,4 +162,106 @@ export async function saveQuiz(
   });
 
   return { quizId: quiz.id, positionId: position.id, created: true };
+}
+
+/**
+ * Create on `positionId` a copy of a quiz with fresh copies of its questions,
+ * in the same order. Runs inside the caller's transaction.
+ */
+export async function copyQuizToPosition(
+  tx: Prisma.TransactionClient,
+  params: {
+    source: QuizCopySource;
+    positionId: string;
+    title: string;
+    userId: string;
+  },
+): Promise<{ id: string }> {
+  // Copies carry no dbId, so every question is created fresh for the new
+  // quiz. Favorite status stays with the original. The criteria belong to
+  // the scorecard of the position: kept only when the copy stays on it.
+  const samePosition = params.positionId === params.source.positionId;
+  const copies: FlexibleQuestion[] = mapQuizQuestionsToFlexible(
+    params.source.quizQuestions,
+  ).map(
+    ({
+      dbId: _dbId,
+      isFavorite: _isFavorite,
+      criterionIds,
+      ...question
+    }) => (samePosition ? { ...question, criterionIds } : question),
+  );
+
+  const quiz = await tx.quiz.create({
+    data: {
+      title: params.title,
+      positionId: params.positionId,
+      timeLimit: params.source.timeLimit,
+      createdBy: params.userId,
+    },
+    select: { id: true },
+  });
+  await syncQuizQuestions(tx, quiz.id, copies, params.userId);
+
+  return { id: quiz.id };
+}
+
+/**
+ * Add to a position copies of existing quizzes of other positions, in the
+ * given order, each keeping its title and time limit. Runs inside the
+ * caller's transaction, so a refusal or a failure writes nothing.
+ */
+export async function addExistingQuizzesToPosition(
+  tx: Prisma.TransactionClient,
+  params: { positionId: string; quizIds: string[]; userId: string },
+): Promise<{ createdQuizIds: string[] }> {
+  const position = await tx.position.findUnique({
+    where: { id: params.positionId },
+    select: { id: true },
+  });
+
+  if (!position) {
+    throw new UserError("Posizione non trovata");
+  }
+
+  const sources = await tx.quiz.findMany({
+    where: { id: { in: params.quizIds } },
+    select: {
+      id: true,
+      positionId: true,
+      title: true,
+      timeLimit: true,
+      quizQuestions: {
+        include: { question: true },
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+
+  if (sources.length !== params.quizIds.length) {
+    throw new UserError("Uno o più quiz non esistono più");
+  }
+
+  if (sources.some((source) => source.positionId === params.positionId)) {
+    throw new UserError("Uno o più quiz appartengono già a questa posizione");
+  }
+
+  const sourcesById = new Map(sources.map((source) => [source.id, source]));
+  const createdQuizIds: string[] = [];
+
+  for (const quizId of params.quizIds) {
+    const source = sourcesById.get(quizId);
+    if (!source) {
+      throw new UserError("Uno o più quiz non esistono più");
+    }
+    const { id } = await copyQuizToPosition(tx, {
+      source,
+      positionId: params.positionId,
+      title: source.title,
+      userId: params.userId,
+    });
+    createdQuizIds.push(id);
+  }
+
+  return { createdQuizIds };
 }

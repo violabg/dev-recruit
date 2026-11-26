@@ -1,4 +1,18 @@
+import { describe, expect, it, vi } from "vitest";
+
+// Read delegates only: cached reads open no transaction
+vi.mock("@/lib/prisma", () => ({
+  default: {
+    candidate: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      count: vi.fn(),
+    },
+  },
+}));
+
 import {
+  getCandidatePickerOptions,
   getCandidatesByPosition,
   getCandidatesCount,
   getCandidateWithDetails,
@@ -6,8 +20,8 @@ import {
   getRecentCandidateIds,
 } from "@/lib/data/candidates";
 import prisma from "@/lib/prisma";
-import { cacheTag } from "next/cache";
-import { describe, expect, it } from "vitest";
+import { CacheTags } from "@/lib/utils/cache-utils";
+import { cacheLife, cacheTag } from "next/cache";
 
 describe("candidates data layer", () => {
   it("getFilteredCandidates returns paginated data and applies filters", async () => {
@@ -110,5 +124,81 @@ describe("candidates data layer", () => {
       where: { applications: { some: { positionId: "p1" } } },
       orderBy: { createdAt: "desc" },
     });
+  });
+});
+
+describe("getCandidatePickerOptions", () => {
+  it("maps every candidate with every application and its position title", async () => {
+    const createdAt = new Date("2026-02-01T00:00:00Z");
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([
+      {
+        id: "c1",
+        firstName: "Mario",
+        lastName: "Rossi",
+        email: "mario@example.com",
+        doNotContact: true,
+        createdAt,
+        applications: [
+          { positionId: "p1", stage: "interview", position: { title: "Frontend" } },
+          { positionId: "p2", stage: "withdrawn", position: { title: "Backend" } },
+        ],
+      },
+    ]);
+
+    const result = await getCandidatePickerOptions();
+
+    expect(result).toEqual([
+      {
+        id: "c1",
+        firstName: "Mario",
+        lastName: "Rossi",
+        email: "mario@example.com",
+        doNotContact: true,
+        createdAt,
+        applications: [
+          { positionId: "p1", positionTitle: "Frontend", stage: "interview" },
+          { positionId: "p2", positionTitle: "Backend", stage: "withdrawn" },
+        ],
+      },
+    ]);
+  });
+
+  it("selects only the listed fields, orders by name and filters no user", async () => {
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([]);
+
+    expect(await getCandidatePickerOptions()).toEqual([]);
+
+    const args = (prisma.candidate.findMany as any).mock.calls[0][0];
+    expect(args).toEqual({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        doNotContact: true,
+        createdAt: true,
+        applications: {
+          select: {
+            positionId: true,
+            stage: true,
+            position: { select: { title: true } },
+          },
+        },
+      },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    });
+    expect(args).not.toHaveProperty("where");
+  });
+
+  it("is cached for hours and tagged with candidates and positions", async () => {
+    (prisma.candidate.findMany as any).mockResolvedValueOnce([]);
+
+    await getCandidatePickerOptions();
+
+    expect(cacheLife).toHaveBeenCalledWith("hours");
+    expect(cacheTag).toHaveBeenCalledWith(
+      CacheTags.CANDIDATES,
+      CacheTags.POSITIONS,
+    );
   });
 });

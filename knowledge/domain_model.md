@@ -22,7 +22,7 @@ editable: true
 - Only visibility exception, never ownership or permission: an interviewer's live notes and scorecard are visible to their author until submitted. Submission publishes and locks: a submitted scorecard, its criterion scores and its author's notes on that interview become read-only for everyone, author included; no action reopens.
 - Independence views are arrangements, never filtered reads: submitted scorecards are returned to everyone and the UI collapses them ("Schede già inviate (n)"), and the Decision columns, overall score and must-warning lists stay closed behind "Per un giudizio indipendente, invia prima la tua scheda" while the participant has not submitted. Outcome and rationale stay usable.
 - `User.role` is `user` or `admin`. The only role check guards user management (creating users, editing them, their role, email verification, password, ban and sessions) and MCP management (global switch, per-user switch, token revocation): actions check `admin` with `requireAdmin` (non-admin → `UserError`), pages with `requireAdminPage` (non-admin → not-found), both after the session check. Hiding the menu entry is presentation, never the guard.
-- `Application.ownerId` = recruiter in charge, for the optional "Solo le mie" flag only: dashboard-created application → session user, candidate edit → editor, public application → null; "Prendi in carico" sets, "Rilascia" clears. The Agenda "Solo i miei" and the home "Solo le mie" filters are view filters on the same field.
+- `Application.ownerId` = recruiter in charge, for the optional "Solo le mie" flag only: application created from the dashboard → session user (association from the position page also on reopen), candidate edit → editor, public application → null; "Prendi in carico" sets, "Rilascia" clears. The Agenda "Solo i miei" and the home "Solo le mie" filters are view filters on the same field.
 - Candidates are not users: public routes only.
 
 ## Users and accounts
@@ -37,16 +37,16 @@ editable: true
 - An MCP OAuth token is issued only to an account that can sign in (email verification on, not banned) and works only while the consent of its grant exists, for the MCP resource audience only; a ban revokes it. Access tokens last 15 minutes, refresh tokens 30 days and rotate; registration admits public clients with allowlisted redirect URIs only.
 - A deployment switch (`AppSetting` `mcp.enabled`, on by default) and a per-user `mcpDisabled` refuse every MCP call (`access_disabled`); switching a user off also revokes their tokens.
 
-## Quiz and questions: one write path
+## Quiz and questions: two write paths
 
-- A quiz and its ordered questions are saved together, only by `upsertQuizAction` (with `quizId` updates, without it creates for `positionId`).
-- No quiz draft state: an MCP tool saves a normal quiz through the same path.
-- `syncQuizQuestions(tx, quizId, questions, userId)` is the only writer of `QuizQuestion` and MUST run in the quiz-save transaction; links are recreated in array order.
+- A quiz is written only by the service `saveQuiz` (create and edit, dashboard and MCP alike) or `copyQuizToPosition` (every copy). A new feature reuses one of them; NEVER write `Quiz` or `QuizQuestion` elsewhere.
+- No quiz draft state.
+- `syncQuizQuestions(tx, quizId, questions, userId)` is the only writer of `QuizQuestion` and MUST run in the transaction that writes the quiz; links are recreated in array order.
 - Existing `dbId` → question updated in place, any other question → created. Editing a `dbId` changes it in every quiz linking it; strip `dbId` to copy instead of share. A question dropped from the quiz is deleted only when not a favorite AND linked by no other quiz.
 - Favorites are linked by putting them in the editor with their `dbId`; no dedicated action.
 - `criterionIds` belong to the link, never to `Question`: the same question may verify different criteria in another quiz, and only `syncQuizQuestions` writes them.
-- Before the transaction `upsertQuizAction` drops every id that is not a criterion of the position scorecard (active or archived); every remaining id MUST be active unless the same quiz already cites it. Scope = whole quiz, not the single question.
-- `duplicateQuizAction` checks no criteria: keeps `criterionIds` only on the same position, always drops `dbId` and `isFavorite`.
+- Before the transaction `saveQuiz` drops every id that is not a criterion of the position scorecard (active or archived); every remaining id MUST be active unless the same quiz already cites it. Scope = whole quiz, not the single question.
+- A copy checks no criteria: keeps `criterionIds` only on the same position, always drops `dbId` and `isFavorite`, keeps `timeLimit`.
 
 ## AI generation never persists
 
@@ -55,13 +55,10 @@ editable: true
 
 ## Candidates and applications
 
-- A candidate has 1–10 positions; every id MUST exist.
+- A candidate has 1–10 applications not `withdrawn`; every position id MUST exist.
 - No candidate state: no `Candidate.status`, badge, `isPrimary` or primary ordering. A candidate's situation is the stage of their furthest application. Only candidate flag: `doNotContact` (+ note), unrelated to any stage.
-- An update sending `positionIds` is a diff, never a replace-all:
-  - new id → `Application` in `applied`;
-  - unchanged id → untouched, with everything recorded;
-  - withdrawn id selected again → the same application reopens at `applied`, history kept; if not selected it stays withdrawn;
-  - removed id → `withdrawn`, history kept, deleted only when it holds no evidence; its non-completed assessments and its `scheduled` interviews become `cancelled`; `in_progress` and `completed` interviews are never touched.
+- Adding a candidate to a position, whatever the path: no application → created in `applied`; `withdrawn` → the same application reopens at `applied`, history kept; any other stage → untouched, with everything recorded. Other applications of the candidate are never touched.
+- An update sending `positionIds` is a diff, never a replace-all: selected ids follow the rule above; a withdrawn id not selected stays withdrawn; a removed id → `withdrawn`, history kept, deleted only when it holds no evidence; its non-completed assessments and its `scheduled` interviews become `cancelled`; `in_progress` and `completed` interviews are never touched.
 - Stages: `applied`, `screening`, `assessment`, `interview`, `decision`, `offer`, `hired`, `rejected`, `withdrawn`. Stage lives on the application; `stageChangedAt` updates with it.
 - Automation only advances, never backwards, never on a closed application: resume evaluation saved → `screening`; assessment created → `assessment`; interview scheduled → `interview` (same transaction as the interview and its kit); every scorecard submitted → `decision`. The manual move goes from any stage to any stage and reopens closed applications.
 - Closed (`hired`, `rejected`, `withdrawn`) never changes automatically. The next-action card shows "Candidatura chiusa" and offers reopening only for `rejected` and `withdrawn`.
@@ -74,7 +71,7 @@ editable: true
 
 ## Position lifecycle
 
-- `Position.status`: `draft`, `open`, `closed`. Only `open` appears in the public form, accepts public applications and feeds the dashboard selectors; `closed` keeps its applications and everything on them.
+- `Position.status`: `draft`, `open`, `closed`. Only `open` appears in the public form, accepts public applications and candidate associations, and feeds the dashboard selectors; `closed` keeps its applications and everything on them.
 - A position with at least one application cannot be deleted; close it instead.
 - Incomplete setup when lacking at least one of: scorecard with ≥1 active criterion, quiz, guide. `getPositionSetup` is the single rule (`missing` ordered scorecard → quiz → guide; all-archived criteria count as missing); the position checklist (every status) and "Le mie azioni" (`draft` and `open` only) both use it.
 

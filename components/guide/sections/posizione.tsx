@@ -77,7 +77,17 @@ export function PosizioneSection() {
               <>
                 Il test della posizione. Si possono creare domande o generarle
                 con AI; ogni domanda può essere <strong>collegata ai criteri</strong>{" "}
-                della scheda: così il test produrrà prove per criterio.
+                della scheda: così il test produrrà prove per criterio.{" "}
+                <strong>Nuovo quiz</strong> crea un quiz da zero;{" "}
+                <strong>Aggiungi quiz esistenti</strong> apre un dropdown dei
+                quiz già presenti in altre posizioni, con ricerca per titolo e
+                filtri (posizione, livello, tipi di domanda): ogni quiz scelto
+                viene aggiunto come <strong>copia indipendente</strong>, con le
+                stesse domande e lo stesso limite di tempo, e le modifiche alla
+                copia non toccano l&apos;originale. I collegamenti ai criteri non
+                vengono copiati: si ricollegano ai criteri di questa scheda
+                nell&apos;editor del quiz. Disponibile in ogni stato della
+                posizione.
               </>
             ),
           },

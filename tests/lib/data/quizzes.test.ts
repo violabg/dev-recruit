@@ -1,12 +1,15 @@
 import {
   getQuizById,
   getQuizData,
+  getQuizPickerOptions,
   getQuizzes,
   getQuizzesForPosition,
   getRecentQuizIds,
   mapQuizFromPrisma,
 } from "@/lib/data/quizzes";
 import prisma from "@/lib/prisma";
+import { CacheTags } from "@/lib/utils/cache-utils";
+import { cacheLife, cacheTag } from "next/cache";
 import { describe, expect, it } from "vitest";
 
 describe("quizzes data layer", () => {
@@ -76,5 +79,137 @@ describe("quizzes data layer", () => {
   it("getRecentQuizIds returns recent quiz IDs", async () => {
     (prisma.quiz.findMany as any).mockResolvedValueOnce([{ id: "rq1" }]);
     expect(await getRecentQuizIds(1)).toEqual(["rq1"]);
+  });
+});
+
+describe("getQuizPickerOptions", () => {
+  const createdAt = new Date("2026-02-01T00:00:00Z");
+  const typeLink = (type: string) => ({ question: { type } });
+
+  it("maps every quiz to a light option with count and distinct types in enum order", async () => {
+    (prisma.quiz.findMany as any).mockResolvedValueOnce([
+      {
+        id: "q1",
+        title: "Quiz React",
+        timeLimit: 30,
+        createdAt,
+        position: {
+          id: "p1",
+          title: "Frontend",
+          experienceLevel: "senior",
+          status: "closed",
+        },
+        quizQuestions: [
+          typeLink("code_snippet"),
+          typeLink("multiple_choice"),
+          typeLink("code_snippet"),
+        ],
+      },
+      {
+        id: "q2",
+        title: "Vuoto",
+        timeLimit: null,
+        createdAt,
+        position: {
+          id: "p2",
+          title: "Backend",
+          experienceLevel: "junior",
+          status: "draft",
+        },
+        quizQuestions: [],
+      },
+    ]);
+
+    expect(await getQuizPickerOptions()).toEqual([
+      {
+        id: "q1",
+        title: "Quiz React",
+        timeLimit: 30,
+        createdAt,
+        questionCount: 3,
+        questionTypes: ["multiple_choice", "code_snippet"],
+        position: {
+          id: "p1",
+          title: "Frontend",
+          experienceLevel: "senior",
+          status: "closed",
+        },
+      },
+      {
+        id: "q2",
+        title: "Vuoto",
+        timeLimit: null,
+        createdAt,
+        questionCount: 0,
+        questionTypes: [],
+        position: {
+          id: "p2",
+          title: "Backend",
+          experienceLevel: "junior",
+          status: "draft",
+        },
+      },
+    ]);
+  });
+
+  it("orders all four types by the enum", async () => {
+    (prisma.quiz.findMany as any).mockResolvedValueOnce([
+      {
+        id: "q1",
+        title: "Misto",
+        timeLimit: null,
+        createdAt,
+        position: { id: "p1", title: "P", experienceLevel: "mid", status: "open" },
+        quizQuestions: [
+          typeLink("behavioral_scenario"),
+          typeLink("code_snippet"),
+          typeLink("open_question"),
+          typeLink("multiple_choice"),
+        ],
+      },
+    ]);
+
+    const [option] = await getQuizPickerOptions();
+    expect(option.questionTypes).toEqual([
+      "multiple_choice",
+      "open_question",
+      "code_snippet",
+      "behavioral_scenario",
+    ]);
+  });
+
+  it("reads every quiz, newest first, with no filter by author or position", async () => {
+    (prisma.quiz.findMany as any).mockResolvedValueOnce([]);
+
+    await getQuizPickerOptions();
+
+    const args = (prisma.quiz.findMany as any).mock.calls[0][0];
+    expect(args).not.toHaveProperty("where");
+    expect(args).toEqual({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        timeLimit: true,
+        createdAt: true,
+        position: {
+          select: { id: true, title: true, experienceLevel: true, status: true },
+        },
+        quizQuestions: { select: { question: { select: { type: true } } } },
+      },
+    });
+  });
+
+  it("is cached for hours and tagged with quizzes, questions and positions", async () => {
+    (prisma.quiz.findMany as any).mockResolvedValueOnce([]);
+
+    await getQuizPickerOptions();
+
+    expect(cacheLife).toHaveBeenCalledWith("hours");
+    expect(cacheTag).toHaveBeenCalledWith(
+      CacheTags.QUIZZES,
+      CacheTags.QUESTIONS,
+      CacheTags.POSITIONS,
+    );
   });
 });

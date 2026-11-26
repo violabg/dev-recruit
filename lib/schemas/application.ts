@@ -43,6 +43,18 @@ export const applicationOwnerSchema = z.object({
 
 export type ApplicationOwnerInput = z.infer<typeof applicationOwnerSchema>;
 
+export const addCandidatesToPositionSchema = z.object({
+  positionId: baseSchemas.id,
+  candidateIds: z
+    .array(baseSchemas.id)
+    .min(1, { error: "Seleziona almeno un candidato." })
+    .max(50, { error: "Massimo 50 candidati per volta." }),
+});
+
+export type AddCandidatesToPositionInput = z.infer<
+  typeof addCandidatesToPositionSchema
+>;
+
 // ====================
 // DECISION SCHEMAS
 // ====================

@@ -4,13 +4,14 @@ import { z } from "zod";
 import { requireUser } from "../auth-server";
 import prisma from "../prisma";
 import {
+  addExistingQuizzesSchema,
   baseSchemas,
   duplicateQuizSchema,
   generateQuestionParamsSchema,
   generateQuizSchema,
   questionSchemas,
+  type AddExistingQuizzesInput,
   type DuplicateQuizInput,
-  type FlexibleQuestion,
   type GenerateQuizInput,
   type SaveQuizInput,
 } from "../schemas";
@@ -19,10 +20,12 @@ import { aiQuizService, GenerateQuestionParams } from "../services/ai-service";
 import { QuizErrorCode, QuizSystemError } from "../services/error-handler";
 import { logger } from "../services/logger";
 import { invalidateQuizCache } from "../utils/cache-utils";
-import { syncQuizQuestions } from "../services/quiz-questions";
-import { saveQuiz } from "../services/quizzes";
+import {
+  addExistingQuizzesToPosition,
+  copyQuizToPosition,
+  saveQuiz,
+} from "../services/quizzes";
 import { getActiveCriteria } from "../services/scorecards";
-import { mapQuizQuestionsToFlexible } from "../utils/question-utils";
 import { runAction, UserError } from "./run-action";
 
 /**
@@ -187,37 +190,40 @@ export async function duplicateQuizAction(input: DuplicateQuizInput) {
       );
     }
 
-    // Copies carry no dbId, so every question is created fresh for the new
-    // quiz. Favorite status stays with the original. The criteria belong to
-    // the scorecard of the position: kept only when the copy stays on it.
-    const samePosition = newPositionId === originalQuiz.positionId;
-    const copies: FlexibleQuestion[] = mapQuizQuestionsToFlexible(
-      originalQuiz.quizQuestions,
-    ).map(
-      ({
-        dbId: _dbId,
-        isFavorite: _isFavorite,
-        criterionIds,
-        ...question
-      }) => (samePosition ? { ...question, criterionIds } : question),
+    const newQuiz = await prisma.$transaction((tx) =>
+      copyQuizToPosition(tx, {
+        source: { id: quizId, ...originalQuiz },
+        positionId: newPositionId,
+        title: newTitle,
+        userId: user.id,
+      }),
     );
-
-    const newQuiz = await prisma.$transaction(async (tx) => {
-      const quiz = await tx.quiz.create({
-        data: {
-          title: newTitle,
-          positionId: newPositionId,
-          timeLimit: originalQuiz.timeLimit,
-          createdBy: user.id,
-        },
-        select: { id: true },
-      });
-      await syncQuizQuestions(tx, quiz.id, copies, user.id);
-      return quiz;
-    });
 
     invalidateQuizCache({ quizId: newQuiz.id, positionId: newPositionId });
 
     return { id: newQuiz.id };
+  });
+}
+
+/**
+ * Add to a position copies of one or more existing quizzes of other
+ * positions, all or nothing.
+ */
+export async function addExistingQuizzesToPositionAction(
+  input: AddExistingQuizzesInput,
+) {
+  return runAction("addExistingQuizzesToPositionAction", async () => {
+    const user = await requireUser();
+    const { positionId, quizIds } = addExistingQuizzesSchema.parse(input);
+
+    const { createdQuizIds } = await prisma.$transaction((tx) =>
+      addExistingQuizzesToPosition(tx, { positionId, quizIds, userId: user.id }),
+    );
+
+    for (const quizId of createdQuizIds) {
+      invalidateQuizCache({ quizId, positionId });
+    }
+
+    return { count: createdQuizIds.length, quizIds: createdQuizIds };
   });
 }

@@ -1,7 +1,8 @@
 /**
  * Applications
  *
- * Stage writes, the evidence check and the diff of a candidate's positions.
+ * Stage writes, the evidence check, the diff of a candidate's positions and
+ * the association of existing candidates with a position.
  * Domain logic only: no Next.js import and no cache call. It throws UserError
  * for expected failures; the callers invalidate the cache.
  */
@@ -13,6 +14,7 @@ import {
   type DecisionOutcome,
   type StageEvent,
 } from "@/lib/utils/application-stage";
+import { MAX_CANDIDATE_POSITIONS } from "@/lib/utils/candidate-picker";
 import { UserError } from "./user-error";
 
 export type DbClient = PrismaClient | Prisma.TransactionClient;
@@ -275,6 +277,108 @@ export async function syncCandidateApplications(
     } else {
       await tx.application.delete({ where: { id: application.id } });
       result.deletedPositionIds.push(application.positionId);
+    }
+  }
+
+  return result;
+}
+
+export type AddCandidatesToPositionResult = {
+  positionId: string;
+  createdCandidateIds: string[];
+  reopenedCandidateIds: string[];
+  unchangedCandidateIds: string[];
+  /** Ids of the applications created or reopened */
+  touchedApplicationIds: string[];
+};
+
+/**
+ * Associate existing candidates with an open position: no application →
+ * created in applied; withdrawn → reopened at applied; any other stage →
+ * unchanged. Created and reopened applications get `ownerId`. Never touches
+ * the candidates' other applications. Must run inside a transaction: a
+ * refusal changes nothing.
+ */
+export async function addCandidatesToPosition(
+  tx: Prisma.TransactionClient,
+  input: { positionId: string; candidateIds: string[]; ownerId: string },
+): Promise<AddCandidatesToPositionResult> {
+  const ids = [...new Set(input.candidateIds)];
+
+  const position = await tx.position.findUnique({
+    where: { id: input.positionId },
+    select: { id: true, status: true },
+  });
+
+  if (!position || position.status !== "open") {
+    throw new UserError("Puoi associare candidati solo a una posizione aperta");
+  }
+
+  const candidates = await tx.candidate.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      applications: { select: { id: true, positionId: true, stage: true } },
+    },
+  });
+
+  if (candidates.length !== ids.length) {
+    throw new UserError("Uno o più candidati selezionati non esistono");
+  }
+
+  const byId = new Map(candidates.map((c) => [c.id, c]));
+
+  const result: AddCandidatesToPositionResult = {
+    positionId: input.positionId,
+    createdCandidateIds: [],
+    reopenedCandidateIds: [],
+    unchangedCandidateIds: [],
+    touchedApplicationIds: [],
+  };
+
+  for (const id of ids) {
+    const candidate = byId.get(id)!;
+    const current = candidate.applications.find(
+      (a) => a.positionId === input.positionId,
+    );
+
+    // Already in selection: left untouched with everything recorded
+    if (current && current.stage !== "withdrawn") {
+      result.unchangedCandidateIds.push(id);
+      continue;
+    }
+
+    const active = candidate.applications.filter(
+      (a) => a.stage !== "withdrawn",
+    ).length;
+    if (active >= MAX_CANDIDATE_POSITIONS) {
+      throw new UserError(
+        `${candidate.firstName} ${candidate.lastName} ha già 10 posizioni (massimo 10).`,
+      );
+    }
+
+    if (!current) {
+      const created = await tx.application.create({
+        data: {
+          candidateId: id,
+          positionId: input.positionId,
+          ownerId: input.ownerId,
+        },
+        select: { id: true },
+      });
+      result.createdCandidateIds.push(id);
+      result.touchedApplicationIds.push(created.id);
+    } else {
+      // Withdrawn: the same application reopens, history kept
+      await setApplicationStage(tx, current.id, "applied");
+      await tx.application.update({
+        where: { id: current.id },
+        data: { ownerId: input.ownerId },
+      });
+      result.reopenedCandidateIds.push(id);
+      result.touchedApplicationIds.push(current.id);
     }
   }
 

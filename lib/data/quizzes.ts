@@ -1,6 +1,10 @@
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@/lib/prisma/client";
+import {
+  Prisma,
+  type PositionStatus,
+  type QuestionType,
+} from "@/lib/prisma/client";
 import { FlexibleQuestion, SavedQuestion } from "@/lib/schemas";
 import { CacheTags, entityTag } from "@/lib/utils/cache-utils";
 import { mapQuizQuestionsToFlexible } from "@/lib/utils/question-utils";
@@ -347,6 +351,65 @@ export const getQuizzesForPosition = async (
     questions: mapQuizQuestionsToFlexible(quiz.quizQuestions),
   }));
 };
+
+/**
+ * Light option of the existing-quiz picker of a position.
+ */
+export type QuizPickerOption = {
+  id: string;
+  title: string;
+  timeLimit: number | null;
+  createdAt: Date;
+  questionCount: number;
+  /** distinct types of the quiz questions, in QuestionType enum order */
+  questionTypes: QuestionType[];
+  position: {
+    id: string;
+    title: string;
+    experienceLevel: string;
+    status: PositionStatus;
+  };
+};
+
+const QUESTION_TYPE_ORDER: QuestionType[] = [
+  "multiple_choice",
+  "open_question",
+  "code_snippet",
+  "behavioral_scenario",
+];
+
+/**
+ * Every quiz of every author and every position status, as light options for
+ * the picker that adds existing quizzes to a position.
+ */
+export async function getQuizPickerOptions(): Promise<QuizPickerOption[]> {
+  "use cache";
+  cacheLife("hours");
+  // Joins positions and the linked questions' type
+  cacheTag(CacheTags.QUIZZES, CacheTags.QUESTIONS, CacheTags.POSITIONS);
+
+  const quizzes = await prisma.quiz.findMany({
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      timeLimit: true,
+      createdAt: true,
+      position: {
+        select: { id: true, title: true, experienceLevel: true, status: true },
+      },
+      quizQuestions: { select: { question: { select: { type: true } } } },
+    },
+  });
+
+  return quizzes.map(({ quizQuestions, ...quiz }) => ({
+    ...quiz,
+    questionCount: quizQuestions.length,
+    questionTypes: QUESTION_TYPE_ORDER.filter((type) =>
+      quizQuestions.some((qq) => qq.question.type === type),
+    ),
+  }));
+}
 
 /**
  * Returns last N quiz IDs for generateStaticParams.

@@ -29,6 +29,7 @@ vi.mock("@/lib/prisma", () => ({
 
 import prisma from "@/lib/prisma";
 import {
+  addCandidatesToPosition,
   advanceApplicationStage,
   applicationHasEvidence,
   setApplicationStage,
@@ -465,5 +466,305 @@ describe("syncCandidateApplications", () => {
       cancelledInterviewIds: [],
       touchedApplicationIds: [],
     });
+  });
+});
+
+describe("addCandidatesToPosition", () => {
+  type TxApplication = { id: string; positionId: string; stage: string };
+
+  // Hand-built transaction client: every delegate the service and
+  // setApplicationStage can reach, plus the ones that must never be written
+  const makeTx = () => ({
+    position: { findUnique: vi.fn() },
+    candidate: { findMany: vi.fn() },
+    application: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(async () => ({})),
+      delete: vi.fn(),
+    },
+    assessment: {
+      findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
+    interview: {
+      count: vi.fn(async () => 0),
+      findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
+  });
+
+  let tx: ReturnType<typeof makeTx>;
+
+  const input = (candidateIds: string[]) => ({
+    positionId: "pos1",
+    candidateIds,
+    ownerId: "user-123",
+  });
+
+  const candidate = (
+    id: string,
+    applications: TxApplication[] = [],
+    firstName = "Mario",
+    lastName = "Rossi",
+  ) => ({ id, firstName, lastName, applications });
+
+  const activeElsewhere = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({
+      id: `app-other-${i}`,
+      positionId: `other-${i}`,
+      stage: "screening",
+    }));
+
+  const openPosition = () =>
+    tx.position.findUnique.mockResolvedValueOnce({ id: "pos1", status: "open" });
+
+  const expectNothingWritten = () => {
+    expect(tx.application.create).not.toHaveBeenCalled();
+    expect(tx.application.update).not.toHaveBeenCalled();
+    expect(tx.application.delete).not.toHaveBeenCalled();
+    expect(tx.assessment.updateMany).not.toHaveBeenCalled();
+    expect(tx.interview.updateMany).not.toHaveBeenCalled();
+  };
+
+  const run = (ids: string[]) =>
+    addCandidatesToPosition(tx as any, input(ids));
+
+  beforeEach(() => {
+    tx = makeTx();
+  });
+
+  it("refuses a draft position and writes nothing", async () => {
+    tx.position.findUnique.mockResolvedValueOnce({ id: "pos1", status: "draft" });
+
+    await expect(run(["cand1"])).rejects.toThrow(
+      "Puoi associare candidati solo a una posizione aperta",
+    );
+    expect(tx.position.findUnique).toHaveBeenCalledWith({
+      where: { id: "pos1" },
+      select: { id: true, status: true },
+    });
+    expect(tx.candidate.findMany).not.toHaveBeenCalled();
+    expectNothingWritten();
+  });
+
+  it("refuses a closed position and writes nothing", async () => {
+    tx.position.findUnique.mockResolvedValueOnce({ id: "pos1", status: "closed" });
+
+    await expect(run(["cand1"])).rejects.toThrow(
+      "Puoi associare candidati solo a una posizione aperta",
+    );
+    expectNothingWritten();
+  });
+
+  it("refuses a missing position with the same message", async () => {
+    tx.position.findUnique.mockResolvedValueOnce(null);
+
+    await expect(run(["cand1"])).rejects.toThrow(
+      "Puoi associare candidati solo a una posizione aperta",
+    );
+    expect(tx.candidate.findMany).not.toHaveBeenCalled();
+    expectNothingWritten();
+  });
+
+  it("refuses an unknown candidate and writes nothing", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([candidate("cand1")]);
+
+    await expect(run(["cand1", "missing"])).rejects.toThrow(
+      "Uno o più candidati selezionati non esistono",
+    );
+    expectNothingWritten();
+  });
+
+  it("creates an application in the default stage owned by the user", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([candidate("cand1")]);
+    tx.application.create.mockResolvedValueOnce({ id: "app-new" });
+
+    const result = await run(["cand1"]);
+
+    expect(tx.candidate.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ["cand1"] } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        applications: { select: { id: true, positionId: true, stage: true } },
+      },
+    });
+    expect(tx.application.create).toHaveBeenCalledWith({
+      data: { candidateId: "cand1", positionId: "pos1", ownerId: "user-123" },
+      select: { id: true },
+    });
+    expect(tx.application.update).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      positionId: "pos1",
+      createdCandidateIds: ["cand1"],
+      reopenedCandidateIds: [],
+      unchangedCandidateIds: [],
+      touchedApplicationIds: ["app-new"],
+    });
+  });
+
+  it("reopens a withdrawn application at applied and gives it to the user", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([
+      candidate("cand1", [
+        { id: "app-w", positionId: "pos1", stage: "withdrawn" },
+      ]),
+    ]);
+    tx.application.findUnique.mockResolvedValueOnce({
+      id: "app-w",
+      candidateId: "cand1",
+      positionId: "pos1",
+      stage: "withdrawn",
+    });
+
+    const result = await run(["cand1"]);
+
+    expect(tx.application.create).not.toHaveBeenCalled();
+    expect(tx.application.update).toHaveBeenCalledWith({
+      where: { id: "app-w" },
+      data: { stage: "applied", stageChangedAt: expect.any(Date) },
+    });
+    expect(tx.application.update).toHaveBeenCalledWith({
+      where: { id: "app-w" },
+      data: { ownerId: "user-123" },
+    });
+    // Reopening cancels nothing
+    expect(tx.assessment.updateMany).not.toHaveBeenCalled();
+    expect(tx.interview.updateMany).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      positionId: "pos1",
+      createdCandidateIds: [],
+      reopenedCandidateIds: ["cand1"],
+      unchangedCandidateIds: [],
+      touchedApplicationIds: ["app-w"],
+    });
+  });
+
+  it("leaves a candidate already in selection untouched", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([
+      candidate("cand1", [
+        { id: "app-s", positionId: "pos1", stage: "screening" },
+      ]),
+    ]);
+
+    const result = await run(["cand1"]);
+
+    expectNothingWritten();
+    expect(tx.application.findUnique).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      positionId: "pos1",
+      createdCandidateIds: [],
+      reopenedCandidateIds: [],
+      unchangedCandidateIds: ["cand1"],
+      touchedApplicationIds: [],
+    });
+  });
+
+  it("refuses a candidate with 10 active positions, naming them", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([
+      candidate("cand1", activeElsewhere(10), "Giulia", "Verdi"),
+    ]);
+
+    await expect(run(["cand1"])).rejects.toThrow(
+      "Giulia Verdi ha già 10 posizioni (massimo 10).",
+    );
+    expectNothingWritten();
+  });
+
+  it("refuses reopening for a candidate with 10 active positions", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([
+      candidate(
+        "cand1",
+        [
+          ...activeElsewhere(10),
+          { id: "app-w", positionId: "pos1", stage: "withdrawn" },
+        ],
+        "Giulia",
+        "Verdi",
+      ),
+    ]);
+
+    await expect(run(["cand1"])).rejects.toThrow(
+      "Giulia Verdi ha già 10 posizioni (massimo 10).",
+    );
+    expectNothingWritten();
+  });
+
+  it("does not count withdrawn applications toward the limit", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([
+      candidate("cand1", [
+        ...activeElsewhere(9),
+        { id: "w1", positionId: "x1", stage: "withdrawn" },
+        { id: "w2", positionId: "x2", stage: "withdrawn" },
+        { id: "w3", positionId: "x3", stage: "withdrawn" },
+      ]),
+    ]);
+    tx.application.create.mockResolvedValueOnce({ id: "app-new" });
+
+    const result = await run(["cand1"]);
+
+    expect(result.createdCandidateIds).toEqual(["cand1"]);
+  });
+
+  it("creates one application for duplicated ids", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([candidate("cand1")]);
+    tx.application.create.mockResolvedValueOnce({ id: "app-new" });
+
+    const result = await run(["cand1", "cand1"]);
+
+    expect(tx.candidate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: { in: ["cand1"] } } }),
+    );
+    expect(tx.application.create).toHaveBeenCalledTimes(1);
+    expect(result.createdCandidateIds).toEqual(["cand1"]);
+  });
+
+  it("handles a mixed batch in input order and never writes other positions", async () => {
+    openPosition();
+    tx.candidate.findMany.mockResolvedValueOnce([
+      candidate("c-unchanged", [
+        { id: "app-u", positionId: "pos1", stage: "interview" },
+      ]),
+      candidate("c-new", [
+        { id: "app-elsewhere", positionId: "pos2", stage: "screening" },
+      ]),
+      candidate("c-reopen", [
+        { id: "app-w", positionId: "pos1", stage: "withdrawn" },
+        { id: "app-elsewhere-2", positionId: "pos3", stage: "withdrawn" },
+      ]),
+    ]);
+    tx.application.create.mockResolvedValueOnce({ id: "app-new" });
+    tx.application.findUnique.mockResolvedValueOnce({
+      id: "app-w",
+      candidateId: "c-reopen",
+      positionId: "pos1",
+      stage: "withdrawn",
+    });
+
+    const result = await run(["c-new", "c-reopen", "c-unchanged"]);
+
+    expect(result).toEqual({
+      positionId: "pos1",
+      createdCandidateIds: ["c-new"],
+      reopenedCandidateIds: ["c-reopen"],
+      unchangedCandidateIds: ["c-unchanged"],
+      touchedApplicationIds: ["app-new", "app-w"],
+    });
+    const updatedIds = tx.application.update.mock.calls.map(
+      (call: any[]) => call[0].where.id,
+    );
+    expect(updatedIds.every((id: string) => id === "app-w")).toBe(true);
+    expect(tx.application.findMany).not.toHaveBeenCalled();
+    expect(tx.application.delete).not.toHaveBeenCalled();
   });
 });
