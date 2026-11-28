@@ -139,7 +139,7 @@ export default function GuidaPage() {
             utenti sono fittizi.
           </p>
           <Link href="/" className="font-medium text-foreground hover:underline">
-            Torna all&apos;applicazione
+            Vai all&apos;applicazione
           </Link>
         </div>
       </footer>

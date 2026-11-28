@@ -1,10 +1,13 @@
 import { SelectOptionsSkeleton } from "@/components/skeletons";
+import PageHeader from "@/components/page-header";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { EditQuizForm } from "@/components/quiz/edit-quiz-form";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getAllPresets } from "@/lib/data/presets";
 import { getFavoriteQuestions } from "@/lib/data/questions";
 import { getQuizData } from "@/lib/data/quizzes";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EditQuizSkeleton } from "./fallbacks";
@@ -73,17 +76,27 @@ async function EditQuizContent({
   };
 
   return (
-    <EditQuizForm
-      quiz={quizForEditor}
-      position={position}
-      criteria={criteria}
-      presetsPromise={presetsPromise}
-      favoriteQuestionsPromise={favoriteQuestionsPromise}
-      languageOptions={
-        <Suspense key="languages" fallback={<SelectOptionsSkeleton />}>
-          <ProgrammingLanguageSelectItems />
-        </Suspense>
-      }
-    />
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Modifica test"
+        breadcrumbs={sectionTrail(
+          SECTIONS.quizzes,
+          { label: quiz.title, href: `/dashboard/quizzes/${quiz.id}` },
+          { label: "Modifica" },
+        )}
+      />
+      <EditQuizForm
+        quiz={quizForEditor}
+        position={position}
+        criteria={criteria}
+        presetsPromise={presetsPromise}
+        favoriteQuestionsPromise={favoriteQuestionsPromise}
+        languageOptions={
+          <Suspense key="languages" fallback={<SelectOptionsSkeleton />}>
+            <ProgrammingLanguageSelectItems />
+          </Suspense>
+        }
+      />
+    </div>
   );
 }

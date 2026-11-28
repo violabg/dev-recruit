@@ -48,7 +48,7 @@ export async function upsertInterviewGuideAction(
           },
         },
       });
-      if (!guide) throw new UserError("Guida non trovata");
+      if (!guide) throw new UserError("Traccia non trovata");
 
       positionId = guide.positionId;
       for (const section of guide.sections) {
@@ -100,13 +100,13 @@ export async function deleteInterviewGuideAction(guideId: string) {
       where: { id },
       select: { positionId: true },
     });
-    if (!guide) throw new UserError("Guida non trovata");
+    if (!guide) throw new UserError("Traccia non trovata");
 
     await prisma.interviewGuide.delete({ where: { id } });
 
     invalidateInterviewGuideCache({ guideId: id, positionId: guide.positionId });
 
-    redirect(`/dashboard/positions/${guide.positionId}?tab=guide`);
+    redirect(`/dashboard/positions/${guide.positionId}?tab=criteri`);
   });
 }
 
@@ -138,7 +138,7 @@ export async function generateInterviewGuideAction(
     const criteria = await getActiveCriteria(positionId);
     if (criteria.length === 0) {
       throw new UserError(
-        "Crea prima la scheda di valutazione della posizione",
+        "Aggiungi prima i criteri della posizione",
       );
     }
 

@@ -9,8 +9,9 @@ import { deleteInterviewGuideAction } from "@/lib/actions/interview-guides";
 import { getInterviewGuideById } from "@/lib/data/interview-guides";
 import { getPositionById } from "@/lib/data/positions";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
+import { positionTrail } from "@/lib/utils/breadcrumbs";
 import { cn } from "cn";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -74,6 +75,7 @@ async function GuideContent({ params }: GuidePageProps) {
       <PageHeader
         title={guide.title}
         description={`${position.title} · Round ${guide.round} · ${guide.durationMinutes} min`}
+        breadcrumbs={positionTrail(position, { label: guide.title })}
         actionBtns={
           <>
             <Link
@@ -81,22 +83,12 @@ async function GuideContent({ params }: GuidePageProps) {
               className={cn(buttonVariants({ size: "sm" }), "inline-flex")}
             >
               <Pencil className="mr-1 size-4" />
-              Modifica guida
-            </Link>
-            <Link
-              href={`/dashboard/positions/${id}?tab=guide`}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "inline-flex",
-              )}
-            >
-              <ArrowLeft className="mr-1 size-4" />
-              Torna alla posizione
+              Modifica traccia
             </Link>
             <DeleteWithConfirm
               deleteAction={deleteInterviewGuideAction.bind(null, guide.id)}
-              description="Questa azione non può essere annullata. La guida, le sue sezioni e le sue domande verranno eliminate."
-              errorMessage="Errore durante l'eliminazione della guida"
+              description="Questa azione non può essere annullata. La traccia, le sue sezioni e le sue domande verranno eliminate."
+              errorMessage="Errore durante l'eliminazione della traccia"
             />
           </>
         }

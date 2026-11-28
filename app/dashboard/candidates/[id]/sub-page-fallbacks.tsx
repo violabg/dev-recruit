@@ -31,7 +31,7 @@ export function CandidateEvaluationsSkeleton() {
   );
 }
 
-/** Mirrors CandidateQuizContent: back link, static title, line tabs, card. */
+/** Mirrors CandidateQuizContent: static title, line tabs, card. */
 export function CandidateQuizSkeleton() {
   return (
     <div className="flex flex-col gap-6">
@@ -39,7 +39,7 @@ export function CandidateQuizSkeleton() {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-5 border-b h-10">
           <span className="font-semibold text-[0.9375rem] text-heading">
-            Assegna quiz
+            Assegna test
           </span>
           <span className="text-[0.9375rem] text-muted-foreground">
             Test esistenti
@@ -48,9 +48,9 @@ export function CandidateQuizSkeleton() {
         <div className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Assegna quiz al candidato</CardTitle>
+              <CardTitle>Assegna test al candidato</CardTitle>
               <CardDescription>
-                Seleziona i quiz e crea i link del test per questo candidato
+                Seleziona i test e crea i link del test per questo candidato
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">

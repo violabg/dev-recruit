@@ -53,11 +53,11 @@ const USER_FRIENDLY_MESSAGES: Record<QuizErrorCode, string> = {
   [QuizErrorCode.INVALID_INPUT]:
     "I dati inseriti non sono validi. Controlla e riprova.",
   [QuizErrorCode.INVALID_QUIZ_PARAMS]:
-    "I parametri del quiz non sono corretti. Verifica le impostazioni.",
+    "I parametri del test non sono corretti. Verifica le impostazioni.",
   [QuizErrorCode.UNAUTHORIZED]:
     "Non hai i permessi per eseguire questa operazione.",
   [QuizErrorCode.POSITION_NOT_FOUND]: "Posizione non trovata o accesso negato.",
-  [QuizErrorCode.QUIZ_NOT_FOUND]: "Quiz non trovato o accesso negato.",
+  [QuizErrorCode.QUIZ_NOT_FOUND]: "Test non trovato o accesso negato.",
   [QuizErrorCode.QUESTION_NOT_FOUND]: "Domanda non trovata o accesso negato.",
   [QuizErrorCode.AI_GENERATION_FAILED]:
     "Generazione AI fallita. Riprova tra qualche minuto.",

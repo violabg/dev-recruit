@@ -12,10 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
 
 /**
- * Mirrors InviteCandidatesContent: back link, title + description (quiz and
+ * Mirrors InviteCandidatesContent: title + description (quiz and
  * position names are the only dynamic text), tabs, and the default
  * "Assign to candidates" card with the CandidateSelectionForm.
  */
@@ -32,9 +31,9 @@ export function InviteCandidatesSkeleton() {
         <div className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Assegna il quiz ai candidati</CardTitle>
+              <CardTitle>Assegna il test ai candidati</CardTitle>
               <CardDescription>
-                Seleziona i candidati e crea i link del test per questo quiz
+                Seleziona i candidati e crea i link per questo test
               </CardDescription>
             </CardHeader>
             <CardContent>

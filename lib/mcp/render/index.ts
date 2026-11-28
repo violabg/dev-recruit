@@ -38,7 +38,7 @@ import type {
 } from "../views";
 
 export const HIDDEN_DECISION_TEXT =
-  "Punteggio e decisione nascosti finché non invii la tua scheda";
+  "Punteggio e decisione nascosti finché non invii il tuo feedback";
 
 const dateTimeFormat = new Intl.DateTimeFormat("it-IT", {
   timeZone: "Europe/Rome",
@@ -53,7 +53,7 @@ export function formatDateTime(date: Date | string): string {
 const openLink = (url: string) => `Apri in dev-recruit: ${url}`;
 
 const kitLabel = (status: KitStatus | null) =>
-  status ? KIT_STATUS_PRESENTATION[status].label : "Nessun kit";
+  status ? KIT_STATUS_PRESENTATION[status].label : "Nessuna preparazione";
 
 const outcomeLabel = (outcome: string) =>
   DECISION_OUTCOME_LABEL[outcome as DecisionOutcomeValue] ?? outcome;
@@ -95,7 +95,7 @@ export function renderActionCenter(result: ActionCenterForUser): string {
         (row) =>
           `- ${row.candidateName} · ${row.positionTitle} · Round ${row.round}, ${formatDateTime(row.scheduledAt)} · ${links.interviewPrepare(row.applicationId, row.interviewId)}`,
       ),
-      "Kit pronti per oggi e domani",
+      "Preparazioni pronte per oggi e domani",
     ),
     ...block(
       QUEUE_TITLES.scorecards,
@@ -158,9 +158,9 @@ export function renderPosition(
     "",
     setup
       ? setup.complete
-        ? "Setup completo"
-        : `Setup da completare: manca ${setup.missing.map((part) => SETUP_STEP_LABEL[part]).join(", ")}`
-      : "Setup non disponibile",
+        ? "Criteri e domande completi"
+        : `Da completare: manca ${setup.missing.map((part) => SETUP_STEP_LABEL[part]).join(", ")}`
+      : "Stato non disponibile",
     "",
     `Candidature: ${applications.length}`,
     ...[...stageCounts.entries()].map(([label, count]) => `- ${label}: ${count}`),
@@ -225,7 +225,7 @@ export function renderInterview(view: McpInterviewPrepView): string {
     `Quando: ${formatDateTime(view.scheduledAt)} · ${view.durationMinutes} minuti`,
     `Stato: ${getInterviewStatusPresentation(view.status).label} · ${kitLabel(view.kitStatus)}`,
     `Partecipanti: ${view.participantRoles.map((role) => PARTICIPANT_ROLE_LABEL[role]).join(", ") || "nessuno"}`,
-    ...(view.guideTitle ? [`Guida: ${view.guideTitle}`] : []),
+    ...(view.guideTitle ? [`Traccia: ${view.guideTitle}`] : []),
   ];
 
   if (view.briefing.length) {

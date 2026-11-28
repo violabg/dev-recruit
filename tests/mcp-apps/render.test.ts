@@ -32,7 +32,7 @@ const center = (rows: WidgetRow[]): ActionCenterWidget => ({
   queues: [
     { key: "setup", title: "Posizioni con setup incompleto", short: "Posizioni", empty: "Tutte pronte", rows: [] },
     { key: "tests", title: "Test da valutare", short: "Test", empty: "Nessuno", rows },
-    { key: "kits", title: "Colloqui senza kit pronto", short: "Kit", empty: "", rows: [] },
+    { key: "kits", title: "Colloqui senza preparazione pronta", short: "Preparazioni", empty: "", rows: [] },
     { key: "scorecards", title: "Schede da compilare", short: "Schede", empty: "", rows: [] },
     { key: "stale", title: "Candidature ferme", short: "Ferme", empty: "", rows: [] },
   ],
@@ -115,7 +115,7 @@ describe("position widget", () => {
       complete: false,
       steps: [
         { label: "Dettagli", done: true, url: "https://app.example/p?tab=dettagli" },
-        { label: "Quiz", done: false, url: "https://app.example/p?tab=quiz" },
+        { label: "Test", done: false, url: "https://app.example/p?tab=criteri" },
       ],
     },
     pipeline: [
@@ -144,7 +144,7 @@ describe("position widget", () => {
     const complete = buttons(element, "Completa");
     expect(complete).toHaveLength(1);
     complete[0].click();
-    expect(actions.open).toHaveBeenCalledWith("https://app.example/p?tab=quiz");
+    expect(actions.open).toHaveBeenCalledWith("https://app.example/p?tab=criteri");
     expect([...element.querySelectorAll(".chips li")].map((chip) => chip.textContent)).toEqual([
       "React",
       "TypeScript",
@@ -169,7 +169,7 @@ describe("application flow widget", () => {
     evaluations: [{ label: "CV", value: "8/10", note: "Procedere" }],
     decision: {
       outcome: "Nessun esito registrato",
-      score: "Punteggio e decisione nascosti finché non invii la tua scheda",
+      score: "Punteggio e decisione nascosti finché non invii il tuo feedback",
       hidden: true,
       url: "https://app.example/a/decision",
     },
@@ -279,7 +279,7 @@ describe("interview prep widget", () => {
     kind: "interview-prep",
     title: "Frontend · Round 1",
     status: { label: "Pianificato", tone: "progress" },
-    kit: { label: "Kit in bozza", tone: "warning" },
+    kit: { label: "Preparazione in bozza", tone: "warning" },
     facts: [{ label: "Quando", value: "25 nov 2026, 10:00" }],
     outline: [
       { title: "Tecnica", questions: 2, required: 1 },
@@ -299,7 +299,7 @@ describe("interview prep widget", () => {
     hypotheses: [{ criterion: "React", hypothesis: "Esperienza solida", howToVerify: "Chiedere un caso reale" }],
     checklist: [{ title: "Logistica", items: [{ text: "Link della call", done: true }] }],
     improve: "Aiutami a migliorare il kit (interviewId int-1).",
-    markReady: { label: "Segna il kit come pronto", tool: "publish_draft", arguments: { kind: "kit", id: "int-1" } },
+    markReady: { label: "Segna come pronta", tool: "publish_draft", arguments: { kind: "kit", id: "int-1" } },
     url: "https://app.example/prep",
   };
 
@@ -326,23 +326,23 @@ describe("interview prep widget", () => {
   });
 
   it("marks the kit ready through the confirmation tool and updates the badge", async () => {
-    actions.call.mockResolvedValue({ ok: true, text: "Kit segnato come pronto.", widget: undefined });
+    actions.call.mockResolvedValue({ ok: true, text: "Preparazione segnata come pronta.", widget: undefined });
     const host = document.createElement("div");
     host.append(renderWidget(prep, actions));
 
-    buttons(host, "Segna il kit come pronto")[0].click();
+    buttons(host, "Segna come pronta")[0].click();
     await flush();
 
     expect(actions.call).toHaveBeenCalledWith("publish_draft", { kind: "kit", id: "int-1" });
-    expect(buttons(host, "Segna il kit come pronto")).toHaveLength(0);
+    expect(buttons(host, "Segna come pronta")).toHaveLength(0);
     expect(buttons(host, "Migliora con l'assistente")).toHaveLength(0);
-    expect([...host.querySelectorAll(".badge")].map((b) => b.textContent)).toContain("Kit pronto");
-    expect(host.querySelector(".is-success")?.textContent).toBe("Kit segnato come pronto.");
+    expect([...host.querySelectorAll(".badge")].map((b) => b.textContent)).toContain("Preparazione pronta");
+    expect(host.querySelector(".is-success")?.textContent).toBe("Preparazione segnata come pronta.");
   });
 
   it("offers neither improve nor mark ready on a kit that cannot change", () => {
     const element = renderWidget({ ...prep, improve: null, markReady: null }, actions);
-    expect(buttons(element, "Segna il kit come pronto")).toHaveLength(0);
+    expect(buttons(element, "Segna come pronta")).toHaveLength(0);
     expect(buttons(element, "Migliora con l'assistente")).toHaveLength(0);
     expect(buttons(element, "Apri la preparazione")).toHaveLength(1);
   });

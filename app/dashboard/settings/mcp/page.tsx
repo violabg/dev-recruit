@@ -10,6 +10,8 @@ import {
   getMcpAccessState,
   getMcpAudit,
 } from "@/lib/data/mcp-admin";
+import { SECTIONS } from "@/components/dashboard/sections";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
@@ -95,7 +97,11 @@ async function McpContent({ searchParams }: { searchParams: McpSearchParams }) {
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <PageHeader title={TITLE} description={DESCRIPTION} />
+      <PageHeader
+        title={TITLE}
+        description={DESCRIPTION}
+        breadcrumbs={sectionTrail(SECTIONS.settings, { label: "MCP" })}
+      />
 
       <Tabs defaultValue={tab} className="flex flex-col gap-6">
         <TabsList variant="line">

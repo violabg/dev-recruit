@@ -9,7 +9,7 @@ describe("quizFormWidget", () => {
     const widget = quizFormWidget(position, { positionId: "pos-1" });
 
     expect(widget.prefill).toEqual({
-      quizTitle: "Quiz per Frontend (Senior)",
+      quizTitle: "Test per Frontend (Senior)",
       instructions: "",
       questionCount: 10,
       difficulty: 3,

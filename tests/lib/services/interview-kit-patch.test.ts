@@ -122,17 +122,17 @@ describe("applyKitPatch", () => {
 
   it("refuses ids that are not in the kit, so nothing is edited or deleted by mistake", () => {
     expect(() => applyKitPatch(kit, { interviewId: "int-1", removeItemIds: ["x"] })).toThrow(
-      "non appartengono a questo kit",
+      "non appartengono a questa preparazione",
     );
     expect(() =>
       applyKitPatch(kit, { interviewId: "int-1", updateItems: [{ id: "x", text: "abc" }] }),
-    ).toThrow("non appartengono a questo kit");
+    ).toThrow("non appartengono a questa preparazione");
     expect(() =>
       applyKitPatch(kit, { interviewId: "int-1", removeChecklistIds: ["x"] }),
-    ).toThrow("non appartengono a questo kit");
+    ).toThrow("non appartengono a questa preparazione");
     expect(() =>
       applyKitPatch(kit, { interviewId: "int-1", addItems: [{ sectionId: "x", text: "abc" }] }),
-    ).toThrow("Sezione del kit non valida");
+    ).toThrow("Sezione della preparazione non valida");
   });
 
   it("refuses a question edited and removed at once", () => {

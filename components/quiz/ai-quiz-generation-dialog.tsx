@@ -141,7 +141,7 @@ export const AIQuizGenerationDialog = ({
                       </span>
                       <span>
                         Le domande generate compaiono nell&apos;editor: rivedile
-                        e salva il quiz solo quando sei soddisfatto
+                        e salva il test solo quando sei soddisfatto
                       </span>
                     </li>
                   </ul>

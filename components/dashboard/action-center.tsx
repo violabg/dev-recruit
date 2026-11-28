@@ -18,23 +18,23 @@ type StaleApplications = ActionCenterData["openApplications"];
 
 /**
  * The home queues in the order of the selection: position setup, tests,
- * interview kits, scorecards; stale applications sit apart after the flow.
- * Titles are shared by the summary, the stops and the skeleton.
+ * interview preparation, feedback; stale applications sit apart after the
+ * flow. Titles are shared by the summary, the stops and the skeleton.
  */
 export const QUEUE_TITLES = {
-  setup: "Posizioni con setup incompleto",
+  setup: "Posizioni da preparare",
   tests: "Test da valutare",
-  kits: "Colloqui senza kit pronto",
-  scorecards: "Schede da compilare",
+  kits: "Colloqui senza preparazione pronta",
+  scorecards: "Feedback da inviare",
   stale: `Candidature ferme da più di ${STALE_APPLICATION_DAYS} giorni`,
 } as const;
 
 /** Short labels of the summary in the header band. */
 const SUMMARY_LABELS: Record<keyof typeof QUEUE_TITLES, string> = {
-  setup: "Posizioni da completare",
+  setup: "Posizioni da preparare",
   tests: "Test da valutare",
-  kits: "Kit colloquio",
-  scorecards: "Schede da compilare",
+  kits: "Preparazioni",
+  scorecards: "Feedback da inviare",
   stale: "Candidature ferme",
 };
 
@@ -98,6 +98,8 @@ export function ActionCenter({
   const counts = queueCounts(data, staleApplications);
   const tone = (key: keyof typeof QUEUE_TITLES) =>
     counts[key] === 0 ? "clear" : key === "stale" ? "warn" : "active";
+  // The page's single primary: the first row of the first non-empty queue
+  const firstKey = QUEUE_KEYS.find((key) => counts[key] > 0);
 
   return (
     <StationLine>
@@ -109,7 +111,7 @@ export function ActionCenter({
         clearText="Tutte pronte"
       >
         <QueueList>
-          {data.positionsWithIncompleteSetup.map((item) => (
+          {data.positionsWithIncompleteSetup.map((item, index) => (
             <QueueRow
               key={item.positionId}
               href={`/dashboard/positions/${item.positionId}?tab=${SETUP_STEP_TAB[item.missing[0]]}`}
@@ -117,7 +119,8 @@ export function ActionCenter({
               detail={`Manca: ${item.missing
                 .map((part) => SETUP_STEP_LABEL[part])
                 .join(", ")}`}
-              verb="Completa"
+              verb="Prepara"
+              primary={firstKey === "setup" && index === 0}
             />
           ))}
         </QueueList>
@@ -131,7 +134,7 @@ export function ActionCenter({
         clearText="Nessuno"
       >
         <QueueList>
-          {data.assessmentsToEvaluate.map((item) => (
+          {data.assessmentsToEvaluate.map((item, index) => (
             <QueueRow
               key={item.assessmentId}
               href={`/dashboard/assessments/${item.assessmentId}`}
@@ -139,6 +142,7 @@ export function ActionCenter({
               context={item.positionTitle}
               detail={item.quizTitle}
               verb="Valuta"
+              primary={firstKey === "tests" && index === 0}
             />
           ))}
         </QueueList>
@@ -149,10 +153,10 @@ export function ActionCenter({
         title={QUEUE_TITLES.kits}
         count={counts.kits}
         tone={tone("kits")}
-        clearText="Kit pronti per oggi e domani"
+        clearText="Preparazioni pronte per oggi e domani"
       >
         <QueueList>
-          {data.interviewsWithoutKit.map((item) => (
+          {data.interviewsWithoutKit.map((item, index) => (
             <QueueRow
               key={item.interviewId}
               href={`/dashboard/applications/${item.applicationId}/interviews/${item.interviewId}/prepare`}
@@ -160,6 +164,7 @@ export function ActionCenter({
               context={item.positionTitle}
               detail={`Round ${item.round}, ${formatInterviewDateTime(item.scheduledAt)}`}
               verb="Prepara"
+              primary={firstKey === "kits" && index === 0}
             />
           ))}
         </QueueList>
@@ -170,17 +175,18 @@ export function ActionCenter({
         title={QUEUE_TITLES.scorecards}
         count={counts.scorecards}
         tone={tone("scorecards")}
-        clearText="Tutte compilate"
+        clearText="Tutti inviati"
       >
         <QueueList>
-          {data.feedbackToFill.map((item) => (
+          {data.feedbackToFill.map((item, index) => (
             <QueueRow
               key={`${item.interviewId}-${item.interviewerId}`}
               href={`/dashboard/applications/${item.applicationId}/interviews/${item.interviewId}/feedback`}
               title={item.candidateName}
               context={item.positionTitle}
               detail={`Round ${item.round}, ${item.interviewerName}`}
-              verb="Compila scheda"
+              verb="Scrivi il feedback"
+              primary={firstKey === "scorecards" && index === 0}
             />
           ))}
         </QueueList>
@@ -196,7 +202,7 @@ export function ActionCenter({
         clearText="Nessuna"
       >
         <QueueList>
-          {staleApplications.map((item) => (
+          {staleApplications.map((item, index) => (
             <QueueRow
               key={item.applicationId}
               href={`/dashboard/applications/${item.applicationId}`}
@@ -209,6 +215,7 @@ export function ActionCenter({
                 </span>
               }
               verb="Apri"
+              primary={firstKey === "stale" && index === 0}
             />
           ))}
         </QueueList>

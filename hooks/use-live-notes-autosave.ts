@@ -24,7 +24,7 @@ type Drafts = Record<string, LiveNoteDraft>;
 const noopSubscribe = () => () => {};
 
 /** Refusal that makes a draft useless: the author's scorecard is submitted */
-const SUBMITTED_MESSAGE = "La scheda è già stata inviata";
+const SUBMITTED_MESSAGE = "Il feedback è già stato inviato";
 
 function readRaw(key: string): string | null {
   try {

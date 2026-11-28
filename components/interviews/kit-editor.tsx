@@ -122,7 +122,8 @@ type KitEditorProps = {
 
 /**
  * Preparation editor of an interview kit: briefing, hypotheses, questions by
- * section, checklist. Everything is saved together by "Salva kit"; an AI
+ * section, checklist. Everything is saved together by "Salva la preparazione";
+ * an AI
  * proposal is merged as unsaved changes.
  */
 export function KitEditor({
@@ -180,7 +181,7 @@ export function KitEditor({
     startSaving(async () => {
       try {
         unwrap(await saveInterviewKitAction({ ...data, interviewId }));
-        toast.success("Kit salvato");
+        toast.success("Preparazione salvata");
         router.refresh();
       } catch (error) {
         toast.error(errorMessage(error));
@@ -192,7 +193,9 @@ export function KitEditor({
     startStatusChange(async () => {
       try {
         unwrap(await setInterviewKitStatusAction({ interviewId, status: next }));
-        toast.success(next === "ready" ? "Kit pronto" : "Kit riportato in bozza");
+        toast.success(
+          next === "ready" ? "Preparazione pronta" : "Preparazione riportata in bozza",
+        );
         router.refresh();
       } catch (error) {
         toast.error(errorMessage(error));
@@ -303,7 +306,7 @@ export function KitEditor({
                 ) : (
                   <Save className="size-4" />
                 )}
-                Salva kit
+                Salva la preparazione
               </Button>
               {kit.status === "draft" ? (
                 <Button
@@ -314,7 +317,7 @@ export function KitEditor({
                   onClick={() => changeStatus("ready")}
                 >
                   <CheckCircle2 className="size-4" />
-                  Segna come pronto
+                  Segna come pronta
                 </Button>
               ) : (
                 <Button
@@ -334,12 +337,12 @@ export function KitEditor({
 
         {!editable && (
           <p className="bg-muted px-3 py-2 rounded-md text-muted-foreground text-sm">
-            Il kit si modifica solo prima del colloquio
+            La preparazione si modifica solo prima del colloquio
           </p>
         )}
         {editable && isDirty && (
           <p className="text-muted-foreground text-xs">
-            Salva prima le modifiche per cambiare lo stato del kit.
+            Salva prima le modifiche per cambiare lo stato della preparazione.
           </p>
         )}
 

@@ -48,8 +48,8 @@ export function QuizFormWidgetView({
     <WidgetHeader
       icon={ListChecks}
       section="quizzes"
-      eyebrow={`Nuovo quiz · ${model.position.title}`}
-      title={quizTitle?.trim() || "Nuovo quiz"}
+      eyebrow={`Nuovo test · ${model.position.title}`}
+      title={quizTitle?.trim() || "Nuovo test"}
     >
       {!sent && (
         <p className="text-muted-foreground text-sm">
@@ -66,7 +66,7 @@ export function QuizFormWidgetView({
         {header}
         <div className="flex flex-col gap-4 p-5">
           <DoneLine icon={MessageSquareText} title="Richiesta inviata all'assistente">
-            L&apos;assistente scrive le domande e mostra l&apos;anteprima del quiz qui sotto: lo
+            L&apos;assistente scrive le domande e mostra l&apos;anteprima del test qui sotto: lo
             salvi dal riquadro dell&apos;anteprima. Nessun candidato viene invitato.
           </DoneLine>
           <div className="flex flex-wrap justify-end gap-2">

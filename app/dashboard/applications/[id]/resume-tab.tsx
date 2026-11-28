@@ -4,10 +4,12 @@ import { resumePublicUrl } from "@/lib/services/r2-storage";
 
 type Props = {
   params: Promise<{ id: string }>;
+  /** The CV stop holds the next action: its button is the single primary */
+  primaryAction?: boolean;
 };
 
-/** Tab CV: the resume evaluation of this application. */
-export async function ResumeTab({ params }: Props) {
+/** CV stop body: the resume evaluation of this application. */
+export async function ResumeStopBody({ params, primaryAction = false }: Props) {
   const { id } = await params;
   const detail = await getApplicationDetail(id);
 
@@ -27,6 +29,7 @@ export async function ResumeTab({ params }: Props) {
           : null
       }
       evaluation={detail.resumeEvaluation}
+      primaryAction={primaryAction}
     />
   );
 }

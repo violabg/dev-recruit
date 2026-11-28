@@ -144,7 +144,7 @@ export const getSchedulingOptionsInputSchema = z.object({
 });
 
 const SCHEDULE_HINTS = {
-  guideId: "Una delle guide della posizione (get_scheduling_options).",
+  guideId: "Una delle tracce della posizione (get_scheduling_options).",
   scheduledAt:
     "ISO con il fuso, per esempio 2026-11-25T10:00:00+01:00. Ripeti all'utente data e ora in italiano.",
   participants:
@@ -196,7 +196,7 @@ export const getInterviewKitInputSchema = z.object({
 const KIT_ID_HINT = "Id restituiti da get_interview_kit.";
 const KIT_QUESTION_HINT =
   "Domanda aperta, pertinente al ruolo e ai criteri, senza riferimenti a età, genere, provenienza, salute, famiglia o altri dati personali non pertinenti.";
-const KIT_CRITERIA_HINT = "Solo criteri attivi del kit (get_interview_kit).";
+const KIT_CRITERIA_HINT = "Solo criteri attivi della preparazione (get_interview_kit).";
 
 const kitItemText = kitItemInputSchema.shape.text;
 const kitItemFollowUps = kitItemInputSchema.shape.followUps.unwrap();
@@ -216,7 +216,7 @@ export const kitPatchInputSchema = z.object({
     .unwrap()
     .optional()
     .describe(
-      "Sostituisce le ipotesi da verificare: ognuna legata a un criterio attivo del kit, con come verificarla.",
+      "Sostituisce le ipotesi da verificare: ognuna legata a un criterio attivo della preparazione, con come verificarla.",
     ),
   addItems: z
     .array(

@@ -138,7 +138,7 @@ describe("saveInterviewerFeedbackAction", () => {
     });
     expect(await saveInterviewerFeedbackAction(input())).toEqual({
       success: false,
-      error: "La scheda è già stata inviata",
+      error: "Il feedback è già stato inviato",
     });
     expect(db.interviewerFeedback.upsert).not.toHaveBeenCalled();
     expect(db.criterionScore.deleteMany).not.toHaveBeenCalled();
@@ -151,7 +151,7 @@ describe("saveInterviewerFeedbackAction", () => {
       ),
     ).toEqual({
       success: false,
-      error: "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+      error: "Uno o più criteri non appartengono a questa posizione",
     });
     expect(db.interviewerFeedback.upsert).not.toHaveBeenCalled();
   });
@@ -219,7 +219,7 @@ describe("submitInterviewerFeedbackAction", () => {
       db.interview.findUnique.mockResolvedValue(interviewRow(status));
       expect(await submitInterviewerFeedbackAction(input())).toEqual({
         success: false,
-        error: "Puoi inviare la scheda solo a colloquio concluso",
+        error: "Puoi inviare il feedback solo a colloquio concluso",
       });
       expect(db.interviewerFeedback.upsert).not.toHaveBeenCalled();
     },
@@ -240,7 +240,7 @@ describe("submitInterviewerFeedbackAction", () => {
     });
     expect(await submitInterviewerFeedbackAction(input())).toEqual({
       success: false,
-      error: "La scheda è già stata inviata",
+      error: "Il feedback è già stato inviato",
     });
     expect(db.interviewerFeedback.update).not.toHaveBeenCalled();
     expect(applyAllFeedbackCheck).not.toHaveBeenCalled();

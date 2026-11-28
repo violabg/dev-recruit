@@ -1,6 +1,5 @@
 import {
   GuideDiagram,
-  GuideFigure,
   GuideList,
   GuideSection,
   GuideSubsection,
@@ -25,7 +24,7 @@ const stages = `stateDiagram-v2
     applied --> screening: CV valutato
     screening --> assessment: Test inviato
     assessment --> interview: Colloquio pianificato
-    interview --> decision: tutte le schede inviate
+    interview --> decision: tutti i feedback inviati
     decision --> offer: Esito Offerta
     decision --> hired: Esito Assunto
     decision --> rejected: Esito Scartato
@@ -49,26 +48,24 @@ export function CandidaturaSection() {
     <GuideSection meta={meta}>
       <GuideText>
         <strong>Dove:</strong> Candidature → clic sulla persona (oppure dal
-        kanban della posizione). La pagina ha sempre la stessa struttura:
+        kanban della posizione o da Le mie azioni). La pagina ha sempre la stessa
+        struttura:
       </GuideText>
 
       <GuideList>
         <li>
-          <strong>Intestazione:</strong> candidato, link alla posizione e alla
-          scheda candidato, responsabile (&quot;Prendi in carico&quot; /
-          &quot;Rilascia&quot;) e <strong>Sposta fase</strong>.
+          <strong>Intestazione:</strong> nome del candidato, una riga di
+          contesto (posizione, data, fase e responsabile) e le azioni{" "}
+          <strong>Profilo candidato</strong>, <strong>Sposta di fase</strong> e{" "}
+          <strong>Prendi in carico</strong> / <strong>Rilascia</strong>.
         </li>
         <li>
-          <strong>Linea delle fasi:</strong> le fasi superate sono verdi, la
-          fase attuale è blu con il giorno in cui è iniziata.
+          <strong>Storia verticale:</strong> una fermata CV, una per ogni test
+          inviato, una per ogni colloquio e una Decisione.
         </li>
         <li>
-          <strong>Prossima azione:</strong> sotto la fase attuale, calcolata
-          dallo stato, con il pulsante per farla. È il punto di partenza
-          consigliato.
-        </li>
-        <li>
-          <strong>Tab:</strong> Panoramica · CV · Test · Colloqui · Decisione.
+          <strong>Colonna laterale:</strong> Contatti (email, CV, &quot;Non
+          ricontattare&quot;) e Altre candidature della stessa persona.
         </li>
       </GuideList>
 
@@ -77,13 +74,13 @@ export function CandidaturaSection() {
         <GuideText>
           Regola pratica: <strong>le azioni fanno avanzare la fase e non la fanno
           mai arretrare</strong>; il recruiter può comunque correggere a mano da{" "}
-          <strong>Sposta fase</strong>.
+          <strong>Sposta di fase</strong>.
         </GuideText>
       </GuideSubsection>
 
       <GuideSubsection
         id="prossima-azione"
-        title="La Prossima azione dice cosa fare"
+        title="La fermata corrente dice cosa fare"
       >
         <GuideTable
           head={["Situazione", "Prossima azione"]}
@@ -92,7 +89,7 @@ export function CandidaturaSection() {
             [
               "Fase Test senza test inviato",
               <span key="b">
-                <strong>Invia test</strong> (quiz della posizione preselezionato)
+                <strong>Invia test</strong> (test della posizione preselezionato)
               </span>,
             ],
             [
@@ -104,15 +101,15 @@ export function CandidaturaSection() {
               <strong key="d">Pianifica colloquio</strong>,
             ],
             [
-              "Colloquio pianificato, kit in bozza",
+              "Colloquio pianificato, preparazione in bozza",
               <strong key="e">Prepara colloquio</strong>,
             ],
             [
-              "Colloquio concluso, scheda mancante",
-              <strong key="f">Compila scheda</strong>,
+              "Colloquio concluso, feedback mancante",
+              <strong key="f">Scrivi il feedback</strong>,
             ],
             [
-              "Tutte le schede inviate",
+              "Tutti i feedback inviati",
               <strong key="g">Vai alla decisione</strong>,
             ],
             [
@@ -134,51 +131,56 @@ export function CandidaturaSection() {
 
       <GuideSubsection
         id="panoramica"
-        title="Tab Panoramica · la cronologia delle prove"
+        title="La storia della candidatura"
       >
         <GuideText>
-          Elenca in ordine di tempo ciò che è successo: candidatura ricevuta, CV
-          valutato, test inviato/iniziato/completato/valutato, colloqui
-          pianificati/iniziati/conclusi, fase attuale. Ogni voce con link porta
-          alla prova.
+          Ogni fermata mostra lo stato della sua prova:
         </GuideText>
-        <GuideFigure
-          src="/guida/07-candidatura-prossima-azione.png"
-          alt="Pagina della candidatura con la linea delle fasi, la Prossima azione e la cronologia"
-          caption="Candidatura: prossima azione e cronologia delle prove"
-          width={1440}
-          height={1000}
-        />
+        <GuideList>
+          <li>
+            <strong>Conclusa:</strong> una riga con il titolo, l&apos;esito e il
+            pulsante <strong>Apri</strong>, che mostra il contenuto (valutazione
+            del CV, risultati del test, feedback del colloquio, decisione).
+          </li>
+          <li>
+            <strong>Corrente:</strong> aperta, con i dettagli e l&apos;unico
+            pulsante blu della pagina: la prossima azione.
+          </li>
+          <li>
+            <strong>Futura:</strong> tratteggiata, con la condizione che la
+            sblocca (per esempio &quot;Si apre quando tutti i feedback dei
+            colloqui sono inviati&quot;).
+          </li>
+        </GuideList>
       </GuideSubsection>
 
-      <GuideSubsection id="cv" title="Tab CV">
+      <GuideSubsection id="cv" title="La fermata CV">
         <GuideText>
           Mostra il CV caricato, il <strong>punteggio di fit 0–10</strong>, punti
           di forza e aree di miglioramento, e la{" "}
-          <strong>valutazione per criterio</strong> della scheda (1–5 con
-          evidenza). La stessa persona mantiene le valutazioni delle altre
-          candidature.
+          <strong>valutazione per criterio</strong> (1–5 con evidenza). La stessa
+          persona mantiene le valutazioni delle altre candidature.
         </GuideText>
       </GuideSubsection>
 
-      <GuideSubsection id="test" title="Tab Test">
+      <GuideSubsection id="test" title="Le fermate Test">
         <GuideText>
-          I test inviati per quella candidatura con stato e link alla
-          valutazione. Da qui si invia un nuovo test: si sceglie il quiz, si
+          Una fermata per ogni test inviato, con stato e link alla valutazione.
+          Nella fermata corrente di un test da inviare si sceglie il test, si
           genera il link per il candidato e si segue lo stato.
         </GuideText>
         <GuideList>
           <li>Il candidato risponde su /recruiting/[token], senza account.</li>
           <li>
             La valutazione AI produce punteggio, punti di forza e debolezze e il{" "}
-            <strong>dettaglio per risposta</strong> (punteggio 0–10, punti di
-            forza, aree di miglioramento). Se il quiz è collegato ai criteri, il
-            dettaglio diventa anche la prova del test per criterio nella
+            <strong>analisi per risposta</strong> (punteggio 0–10, punti di
+            forza, aree di miglioramento). Se il test è collegato ai criteri,
+            l&apos;analisi diventa anche la prova del test per criterio nella
             Decisione.
           </li>
           <li>
-            Se una valutazione non ha il dettaglio per risposta, &quot;Ricalcola
-            dettaglio risposte&quot; lo ricostruisce senza cambiare il punteggio
+            Se una valutazione non ha l&apos;analisi per risposta, &quot;Ricalcola
+            le risposte&quot; la ricostruisce senza cambiare il punteggio
             salvato.
           </li>
         </GuideList>
@@ -191,29 +193,14 @@ export function CandidaturaSection() {
             fase e posizione, &quot;Solo le mie&quot;.
           </li>
           <li>
-            <strong>Posizioni → tab Selezione</strong> è il{" "}
+            <strong>Posizioni → tab Candidati</strong> è il{" "}
             <strong>kanban</strong>: una colonna per fase (Scartato e Ritirato
             insieme in &quot;Chiuse&quot;), una card per candidatura, con i test
             inviati, il responsabile e &quot;Sposta fase&quot; direttamente
-            sulla card.
+            sulla card. Le card che aspettano un&apos;azione tua sono
+            evidenziate.
           </li>
         </GuideList>
-        <div className="flex flex-col gap-6">
-          <GuideFigure
-            src="/guida/06-pipeline-candidature.png"
-            alt="Tabella globale delle candidature con ricerca e filtri"
-            caption="Pipeline globale delle candidature"
-            width={1440}
-            height={1000}
-          />
-          <GuideFigure
-            src="/guida/05-kanban-selezione.png"
-            alt="Kanban della posizione con una colonna per fase"
-            caption="Kanban della posizione: una colonna per fase"
-            width={1656}
-            height={1000}
-          />
-        </div>
       </GuideSubsection>
     </GuideSection>
   );

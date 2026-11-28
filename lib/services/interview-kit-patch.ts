@@ -97,10 +97,10 @@ export function applyKitPatch(
     unknownIds([...removed, ...updates.keys()], itemIds).length ||
     unknownIds(patch.removeChecklistIds ?? [], checklistIds).length
   ) {
-    throw new UserError("Una o più voci non appartengono a questo kit: rileggi il kit");
+    throw new UserError("Una o più voci non appartengono a questa preparazione: rileggila");
   }
   if (unknownIds((patch.addItems ?? []).map((item) => item.sectionId), sectionIds).length) {
-    throw new UserError("Sezione del kit non valida");
+    throw new UserError("Sezione della preparazione non valida");
   }
   if ([...updates.keys()].some((id) => removed.has(id))) {
     throw new UserError("Una domanda non può essere modificata e rimossa insieme");

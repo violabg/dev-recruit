@@ -19,24 +19,12 @@ import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { getInterviewForPreparation } from "@/lib/data/interviews";
 import { getUserOptions } from "@/lib/data/users";
 import { formatInterviewDateTime } from "@/lib/utils/interview-calendar";
+import { interviewTrail } from "@/lib/utils/breadcrumbs";
 import { cn } from "cn";
-import {
-  ArrowLeft,
-  CalendarClock,
-  Clock,
-  Pencil,
-  Users,
-  Video,
-} from "lucide-react";
+import { CalendarClock, Clock, Pencil, Users, Video } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -108,10 +96,6 @@ async function PrepareContent({
   const basePath = `/dashboard/applications/${id}/interviews/${interviewId}`;
   // The next step's notch points at the Preparazione station
   const stepPointer = stationPointer(interviewStepIndex("prepare"), INTERVIEW_STEP_COUNT);
-  const linkClass = cn(
-    buttonVariants({ variant: "outline", size: "sm" }),
-    "inline-flex",
-  );
 
   // A draft kit of a scheduled interview is confirmed from the header
   const kitDraft =
@@ -121,10 +105,10 @@ async function PrepareContent({
     kitDraft ? (
       <NextStep
         pointer={stepPointer}
-        title="Completa il kit e segnalo come pronto"
-        description="Rivedi domande e checklist (Modifica kit), poi premi Segna come pronto in alto."
+        title="Completa la preparazione e segnala come pronta"
+        description="Rivedi domande e checklist (Modifica la preparazione), poi premi Segna come pronta in alto."
         href={`${basePath}/prepare/edit`}
-        actionLabel="Modifica kit"
+        actionLabel="Modifica la preparazione"
       />
     ) : interview.status === "scheduled" ? (
       <NextStep
@@ -139,28 +123,35 @@ async function PrepareContent({
         pointer={stepPointer}
         title="Il colloquio è in corso"
         href={`${basePath}/live`}
-        actionLabel="Torna al live"
+        actionLabel="Riprendi il live"
       />
     ) : interview.status === "completed" ? (
       <NextStep
         pointer={stepPointer}
-        title="Compila e invia la tua scheda"
+        title="Scrivi e invia il tuo feedback"
         description="Voti per criterio, evidenze e raccomandazione finale."
         href={`${basePath}/feedback`}
-        actionLabel="Apri scheda"
+        actionLabel="Scrivi il feedback"
       />
     ) : null;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Preparazione colloquio"
+        title="Preparazione del colloquio"
         description={`${candidateName} · ${interview.position.title} · Round ${interview.round}`}
+        breadcrumbs={interviewTrail(
+          { id, candidateName, position: interview.position },
+          interview,
+          "Preparazione",
+        )}
         info={
           <div className="flex flex-wrap items-center gap-2">
             <Badge className={status.badge}>{status.label}</Badge>
             {kitStatus && (
-              <Badge className={kitStatus.badge}>{kitStatus.label}</Badge>
+              <span className="text-muted-foreground text-sm">
+                {kitStatus.label}
+              </span>
             )}
           </div>
         }
@@ -171,21 +162,14 @@ async function PrepareContent({
               <Link
                 href={`${basePath}/prepare/edit` as never}
                 className={cn(
-                  buttonVariants({ variant: kitDraft ? "outline" : "default", size: "sm" }),
+                  buttonVariants({ variant: "outline", size: "sm" }),
                   "inline-flex",
                 )}
               >
                 <Pencil className="size-4" />
-                Modifica kit
+                Modifica la preparazione
               </Link>
             )}
-            <Link
-              href={`/dashboard/applications/${id}?tab=colloqui` as never}
-              className={linkClass}
-            >
-              <ArrowLeft className="size-4" />
-              Candidatura
-            </Link>
             <InterviewCardActions
               interview={{
                 id: interview.id,
@@ -273,14 +257,10 @@ async function PrepareContent({
       {interview.kit ? (
         <KitView kit={interview.kit} criteria={interview.criteria} />
       ) : (
-        <Empty className="border h-[200px]">
-          <EmptyHeader>
-            <EmptyTitle>Kit non disponibile</EmptyTitle>
-            <EmptyDescription>
-              Questo colloquio non ha un kit di preparazione.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <p className="text-muted-foreground text-sm">
+          Preparazione non disponibile. Questo colloquio non ha una
+          preparazione.
+        </p>
       )}
     </div>
   );

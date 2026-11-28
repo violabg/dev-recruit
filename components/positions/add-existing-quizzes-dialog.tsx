@@ -100,14 +100,14 @@ export function AddExistingQuizzesDialog({
         render={<Button type="button" variant="outline" size="sm" />}
       >
         <CopyPlus className="mr-1 size-4" />
-        Aggiungi quiz esistenti
+        Aggiungi test esistenti
       </DialogTrigger>
       <DialogContent className="flex flex-col sm:max-w-2xl max-h-[85vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Aggiungi quiz esistenti</DialogTitle>
+          <DialogTitle>Aggiungi test esistenti</DialogTitle>
           <DialogDescription>
-            Scegli i quiz già presenti da copiare in questa posizione: ogni
-            quiz viene aggiunto come copia indipendente.
+            Scegli i test già presenti da copiare in questa posizione: ogni
+            test viene aggiunto come copia indipendente.
           </DialogDescription>
         </DialogHeader>
 
@@ -331,14 +331,14 @@ function AddExistingQuizzesContent({
             id={ids.questionTypesHint}
             className="text-muted-foreground text-xs"
           >
-            Mostra i quiz che contengono tutti i tipi scelti
+            Mostra i test che contengono tutti i tipi scelti
           </p>
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
         <p className="text-muted-foreground text-sm" aria-live="polite">
-          {visible.length} quiz
+          {visible.length} test
         </p>
         <Combobox<string, true>
           items={visibleIds}
@@ -361,12 +361,12 @@ function AddExistingQuizzesContent({
               ))}
             </ComboboxValue>
             <ComboboxChipsInput
-              placeholder="Seleziona quiz..."
-              aria-label="Seleziona quiz"
+              placeholder="Seleziona test..."
+              aria-label="Seleziona test"
             />
           </ComboboxChips>
           <ComboboxContent anchor={anchor}>
-            <ComboboxEmpty>Nessun quiz trovato</ComboboxEmpty>
+            <ComboboxEmpty>Nessun test trovato</ComboboxEmpty>
             <ComboboxList>
               {(id: string) => {
                 const option = byId.get(id);
@@ -384,7 +384,7 @@ function AddExistingQuizzesContent({
         </Combobox>
         {selected.length === MAX_QUIZZES_PER_ADD && (
           <p className="text-muted-foreground text-xs">
-            Massimo 20 quiz alla volta
+            Massimo 20 test alla volta
           </p>
         )}
       </div>

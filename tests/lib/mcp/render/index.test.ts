@@ -85,7 +85,7 @@ describe("renderActionCenter", () => {
     });
 
     for (const title of Object.values(QUEUE_TITLES)) expect(text).toContain(title);
-    expect(text).toContain(`Ops (${getPositionStatusPresentation("draft").label}): manca Quiz, Guida colloquio`);
+    expect(text).toContain(`Ops (${getPositionStatusPresentation("draft").label}): manca Test, Traccia del colloquio`);
     expect(text).toContain("- Nessuno");
     expect(lastLine(text)).toBe(`Apri in dev-recruit: ${APP_URL}/dashboard`);
   });
@@ -124,7 +124,7 @@ describe("renderPositionList and renderPosition", () => {
       [{ stage: "screening" }, { stage: "screening" }] as any,
     );
 
-    expect(text).toContain("Setup da completare: manca Scheda di valutazione");
+    expect(text).toContain("Da completare: manca Criteri");
     expect(text).toContain(`- ${getApplicationStagePresentation("screening").label}: 2`);
     expect(lastLine(text)).toBe(`Apri in dev-recruit: ${links.position("pos-1")}`);
   });

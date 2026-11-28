@@ -127,7 +127,7 @@ export function getNextAction(facts: ApplicationFacts): NextAction {
   if (toFill) {
     return {
       kind: "fill_feedback",
-      label: "Compila scheda",
+      label: "Scrivi il feedback",
       interviewId: toFill.id,
       missingResume,
     };

@@ -32,10 +32,10 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
           {/* QuizSettings */}
           <Card>
             <CardHeader>
-              <CardTitle>Impostazioni Quiz</CardTitle>
+              <CardTitle>Impostazioni del test</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <FieldSkeleton label="Titolo del Quiz" />
+              <FieldSkeleton label="Titolo del test" />
               <FieldSkeleton label="Limite di Tempo (minuti)" />
               <div className="pt-2">
                 <ButtonSkeleton size="sm" className="w-52" />
@@ -53,7 +53,7 @@ export function EditQuizFormSkeleton({ questions = 3 }: { questions?: number }) 
                   <div>
                     <CardTitle>Domande ({questions})</CardTitle>
                     <CardDescription>
-                      Gestisci e genera domande del quiz utilizzando l&apos;AI
+                      Gestisci e genera domande del test utilizzando l&apos;AI
                     </CardDescription>
                   </div>
                   <Skeleton className="rounded-lg w-45 h-9" />

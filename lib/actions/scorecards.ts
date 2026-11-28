@@ -8,7 +8,11 @@ import {
   type SaveScorecardInput,
 } from "../schemas";
 import { generateScorecardCriteria } from "../services/ai/scorecard-generation";
-import { getActiveCriteria, saveScorecard } from "../services/scorecards";
+import {
+  FOREIGN_CRITERIA_MESSAGE,
+  getActiveCriteria,
+  saveScorecard,
+} from "../services/scorecards";
 import {
   invalidateInterviewGuideCache,
   invalidateScorecardCache,
@@ -35,7 +39,7 @@ export async function saveScorecardAction(input: SaveScorecardInput) {
       (await getActiveCriteria(positionId)).map((criterion) => criterion.id),
     );
     if (criteria.some((row) => row.id && !activeIds.has(row.id))) {
-      throw new UserError("Uno o più criteri non appartengono a questa scheda");
+      throw new UserError(FOREIGN_CRITERIA_MESSAGE);
     }
 
     const result = await prisma.$transaction((tx) =>

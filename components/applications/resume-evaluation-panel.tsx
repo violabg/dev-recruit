@@ -41,6 +41,7 @@ export function ResumeEvaluationPanel({
   hasResume,
   resumeUrl,
   evaluation: initialEvaluation,
+  primaryAction = false,
 }: {
   candidateId: string;
   positionId: string;
@@ -48,6 +49,8 @@ export function ResumeEvaluationPanel({
   hasResume: boolean;
   resumeUrl: string | null;
   evaluation: ApplicationDetail["resumeEvaluation"];
+  /** The panel holds the page's next step: its button is the primary one */
+  primaryAction?: boolean;
 }) {
   const router = useRouter();
   const [isStreaming, setIsStreaming] = useState(false);
@@ -208,6 +211,7 @@ export function ResumeEvaluationPanel({
             </p>
             <Button
               type="button"
+              variant={primaryAction ? "default" : "outline"}
               size="sm"
               disabled={!hasResume || isStreaming}
               onClick={generateEvaluation}

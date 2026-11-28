@@ -1,10 +1,11 @@
 import PageHeader from "@/components/page-header";
 import { cn } from "cn";
 import { buttonVariants } from "@/components/ui/button";
+import { SECTIONS } from "@/components/dashboard/sections";
 
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { getEvaluationsByCandidateId } from "@/lib/data/evaluations";
-import { ArrowLeft } from "lucide-react";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import Link from "next/link";
 import { CandidateEvaluationsView } from "./evaluations-view";
 import { Suspense } from "react";
@@ -43,9 +44,9 @@ async function CandidateEvaluationsContent({
         <p className="font-medium text-lg">Candidato non trovato</p>
         <Link
           href="/dashboard/candidates"
-          className={cn("mt-4", buttonVariants({ variant: "default" }))}
+          className={cn("mt-4", buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Torna ai candidati
+          Vai ai candidati
         </Link>
       </div>
     );
@@ -63,18 +64,11 @@ async function CandidateEvaluationsContent({
       <PageHeader
         title="Valutazioni CV"
         description={`${fullName} · valutazioni del curriculum per posizione`}
-        actionBtns={
-          <Link
-            href={`/dashboard/candidates/${id}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Torna al candidato
-          </Link>
-        }
+        breadcrumbs={sectionTrail(
+          SECTIONS.candidates,
+          { label: fullName, href: `/dashboard/candidates/${candidate.id}` },
+          { label: "Valutazioni CV" },
+        )}
       />
 
       <CandidateEvaluationsView

@@ -23,7 +23,7 @@ export default function Page() {
                 href="/auth/login"
                 className="underline underline-offset-4 text-sm"
               >
-                Torna al login
+                Vai al login
               </Link>
             </CardContent>
           </Card>

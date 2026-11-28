@@ -71,6 +71,9 @@ export type ApplicationDetail = {
   stageChangedAt: Date;
   createdAt: Date;
   owner: ApplicationOwner;
+  /** Recorded decision facts, when the decision has been recorded */
+  decision: string | null;
+  decidedAt: Date | null;
   candidate: {
     id: string;
     firstName: string;
@@ -80,6 +83,13 @@ export type ApplicationDetail = {
     doNotContact: boolean;
     doNotContactNote: string | null;
   };
+  /** The candidate's other applications, newest stage change first */
+  otherApplications: {
+    id: string;
+    stage: ApplicationStage;
+    stageChangedAt: Date;
+    position: { id: string; title: string };
+  }[];
   position: {
     id: string;
     title: string;
@@ -323,6 +333,8 @@ export async function getApplicationDetail(
       stage: true,
       stageChangedAt: true,
       createdAt: true,
+      decision: true,
+      decidedAt: true,
       candidateId: true,
       positionId: true,
       owner: ownerSelect,
@@ -335,6 +347,16 @@ export async function getApplicationDetail(
           resumeUrl: true,
           doNotContact: true,
           doNotContactNote: true,
+          applications: {
+            where: { id: { not: id } },
+            orderBy: { stageChangedAt: "desc" },
+            select: {
+              id: true,
+              stage: true,
+              stageChangedAt: true,
+              position: { select: { id: true, title: true } },
+            },
+          },
         },
       },
       position: {
@@ -417,13 +439,19 @@ export async function getApplicationDetail(
     orderBy: { createdAt: "desc" },
   });
 
+  const { applications: otherApplications, ...candidate } =
+    application.candidate;
+
   return {
     id: application.id,
     stage: application.stage,
     stageChangedAt: application.stageChangedAt,
     createdAt: application.createdAt,
     owner: application.owner,
-    candidate: application.candidate,
+    decision: application.decision,
+    decidedAt: application.decidedAt,
+    candidate,
+    otherApplications,
     position: application.position,
     assessments: application.assessments,
     resumeEvaluation,

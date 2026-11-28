@@ -37,7 +37,7 @@ export type QuestionGenerationOptions = z.infer<
 // assignable to `GenerateQuestionParams` of lib/services/ai/types.ts.
 
 const generateQuestionBaseSchema = z.object({
-  quizTitle: z.string().min(1, "Il titolo del quiz è obbligatorio"),
+  quizTitle: z.string().min(1, "Il titolo del test è obbligatorio"),
   positionTitle: z.string().min(1, "Il titolo della posizione è obbligatorio"),
   experienceLevel: z
     .string()

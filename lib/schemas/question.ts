@@ -204,6 +204,6 @@ export const convertToStrictQuestions = (
  * Input for removing a question from a quiz
  */
 export const removeQuestionFromQuizSchema = z.object({
-  quizId: z.string().min(1, "Il quiz è obbligatorio"),
+  quizId: z.string().min(1, "Il test è obbligatorio"),
   questionId: z.string().min(1, "La domanda è obbligatoria"),
 });

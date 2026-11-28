@@ -167,7 +167,7 @@ export function DecisionMatrix({
                   }
                   className="text-muted-foreground text-center"
                 >
-                  La posizione non ha una scheda di valutazione
+                  La posizione non ha criteri
                 </TableCell>
               </TableRow>
             )}
@@ -290,7 +290,7 @@ export function DecisionMatrix({
           )}
           {decision.test && !decision.test.perCriterion && (
             <p>
-              Punteggio globale Test:{" "}
+              Punteggio globale Test inviato:{" "}
               {decision.test.global !== null
                 ? `${decision.test.global}/5`
                 : "—"}{" "}
@@ -301,8 +301,8 @@ export function DecisionMatrix({
           )}
           {decision.test?.answerDetailMissing && (
             <p className="text-muted-foreground">
-              Dettaglio risposte del test assente: ricalcolalo dalla pagina del
-              test per avere il test per criterio
+              Dettaglio risposte del test inviato assente: ricalcolalo dalla
+              pagina del test inviato per avere il test per criterio
             </p>
           )}
         </div>

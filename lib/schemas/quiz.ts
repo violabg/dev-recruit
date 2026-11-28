@@ -67,7 +67,7 @@ export function quizGenerationDefaults(position: {
   experienceLevel: string;
 }): Omit<QuizGenerationFormData, "specificModel" | "previousQuestions"> {
   return {
-    quizTitle: `Quiz per ${position.title} (${position.experienceLevel})`,
+    quizTitle: `Test per ${position.title} (${position.experienceLevel})`,
     instructions: "",
     questionCount: 10,
     includeMultipleChoice: true,
@@ -99,7 +99,7 @@ export const quizEditorSchema = z.object({
 export const saveQuizSchema = quizEditorSchema
   .extend({ quizId: baseSchemas.id.optional() })
   .refine((data) => Boolean(data.quizId || data.positionId), {
-    message: "La posizione è obbligatoria per creare un quiz",
+    message: "La posizione è obbligatoria per creare un test",
     path: ["positionId"],
   });
 
@@ -124,8 +124,8 @@ export const addExistingQuizzesSchema = z.object({
   positionId: baseSchemas.id,
   quizIds: z
     .array(baseSchemas.id)
-    .min(1, "Seleziona almeno un quiz")
-    .max(MAX_QUIZZES_PER_ADD, "Puoi aggiungere al massimo 20 quiz alla volta")
+    .min(1, "Seleziona almeno un test")
+    .max(MAX_QUIZZES_PER_ADD, "Puoi aggiungere al massimo 20 test alla volta")
     .transform((ids) => [...new Set(ids)]),
 });
 

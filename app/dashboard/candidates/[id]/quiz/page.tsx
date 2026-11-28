@@ -1,13 +1,10 @@
-import { cn } from "cn";
 import PageHeader from "@/components/page-header";
-import { ArrowLeft } from "lucide-react";
 import type { Route } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { QuizSelectionForm } from "@/components/quiz/quiz-selection-form";
 import { InvitesList } from "@/components/recruiting/invites-list";
-import { buttonVariants } from "@/components/ui/button";
+import { SECTIONS } from "@/components/dashboard/sections";
 import {
   Card,
   CardContent,
@@ -17,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCandidateQuizData } from "@/lib/data/assessments";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { Suspense } from "react";
 import { CandidateQuizSkeleton } from "../sub-page-fallbacks";
 
@@ -64,34 +62,30 @@ async function CandidateQuizContent({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Assegna quiz"
+        title="Assegna test"
         description={`${candidate.name} · ${candidate.email}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/candidates/${candidateId}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Torna al candidato
-          </Link>
-        }
+        breadcrumbs={sectionTrail(
+          SECTIONS.candidates,
+          {
+            label: candidate.name,
+            href: `/dashboard/candidates/${candidate.id}`,
+          },
+          { label: "Assegna test" },
+        )}
       />
 
       <Tabs defaultValue="quizzes">
         <TabsList variant="line">
-          <TabsTrigger value="quizzes">Assegna quiz</TabsTrigger>
+          <TabsTrigger value="quizzes">Assegna test</TabsTrigger>
           <TabsTrigger value="assessments">Test esistenti</TabsTrigger>
         </TabsList>
 
         <TabsContent value="quizzes" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Assegna quiz al candidato</CardTitle>
+              <CardTitle>Assegna test al candidato</CardTitle>
               <CardDescription>
-                Seleziona i quiz e crea i link del test per questo candidato
+                Seleziona i test e crea i link del test per questo candidato
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -30,7 +30,7 @@ const CONFIRMATION_TEXT: Record<
   schedule: {
     title: "Pianificare il colloquio proposto?",
     description:
-      "Si crea il colloquio con il kit in bozza e la candidatura passa a Colloquio, come dalla pianificazione. L'app non invia email: avvisa tu i partecipanti.",
+      "Si crea il colloquio con la preparazione in bozza e la candidatura passa a Colloquio, come dalla pianificazione. L'app non invia email: avvisa tu i partecipanti.",
     confirm: "Pianifica",
   },
   discard: {

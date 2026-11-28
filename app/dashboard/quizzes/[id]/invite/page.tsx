@@ -1,11 +1,11 @@
 import PageHeader from "@/components/page-header";
 import { cn } from "cn";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
 import { CandidateSelectionForm } from "@/components/recruiting/candidate-selection-form";
 import { InvitesList } from "@/components/recruiting/invites-list";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { buttonVariants } from "@/components/ui/button";
 
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getQuizAssignmentData } from "@/lib/data/assessments";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { InviteCandidatesSkeleton } from "./fallbacks";
 
 export default async function InviteCandidatesPage({
@@ -43,12 +44,12 @@ async function InviteCandidatesContent({
   if (!data || !data.quiz || !data.position) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
-        <p className="font-medium text-lg">Quiz o posizione non trovati</p>
+        <p className="font-medium text-lg">Test o posizione non trovati</p>
         <Link
           href="/dashboard/quizzes"
-          className={cn("mt-4", buttonVariants({ variant: "default" }))}
+          className={cn("mt-4", buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Torna ai quiz
+          Vai ai test
         </Link>
       </div>
     );
@@ -61,18 +62,11 @@ async function InviteCandidatesContent({
       <PageHeader
         title="Associa a candidati"
         description={`${quiz.title} · ${position?.title ?? "Senza posizione"}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/quizzes/${quizId}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Torna al quiz
-          </Link>
-        }
+        breadcrumbs={sectionTrail(
+          SECTIONS.quizzes,
+          { label: quiz.title, href: `/dashboard/quizzes/${quizId}` },
+          { label: "Assegna" },
+        )}
       />
 
       <Tabs defaultValue="candidates">
@@ -84,9 +78,9 @@ async function InviteCandidatesContent({
         <TabsContent value="candidates" className="flex flex-col gap-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Assegna il quiz ai candidati</CardTitle>
+              <CardTitle>Assegna il test ai candidati</CardTitle>
               <CardDescription>
-                Seleziona i candidati e crea i link del test per questo quiz
+                Seleziona i candidati e crea i link per questo test
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -103,7 +97,7 @@ async function InviteCandidatesContent({
             <CardHeader>
               <CardTitle>Test creati</CardTitle>
               <CardDescription>
-                Gestisci i test creati per questo quiz
+                Gestisci i test inviati per questo test
               </CardDescription>
             </CardHeader>
             <CardContent>

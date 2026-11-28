@@ -1,6 +1,5 @@
 import {
   GuideDiagram,
-  GuideFigure,
   GuideList,
   GuideSection,
   GuideText,
@@ -35,15 +34,14 @@ export function DecisioneSection() {
       <GuideList>
         <li>
           In alto la <strong>decisione registrata</strong> (se c&apos;è) e il
-          riepilogo: punteggio complessivo, schede inviate, colloqui e criteri
-          indispensabili da motivare. Sotto, due blocchi numerati: Prove per
-          criterio e Registra la decisione.
+          riepilogo: punteggio complessivo, <strong>feedback inviati</strong>,
+          colloqui e criteri indispensabili da motivare. Sotto, due blocchi
+          numerati: Prove per criterio e Registra la decisione.
         </li>
         <li>
-          <strong>Punteggio complessivo</strong> su 5 con i pesi della scheda.
-          Sotto la candidatura non decisa: &quot;Pesi della scheda di
-          valutazione&quot;; dopo la decisione: &quot;Pesi salvati con la
-          decisione del …&quot;.
+          <strong>Punteggio complessivo</strong> su 5 con i pesi dei criteri.
+          Sotto la candidatura non decisa: &quot;Pesi dei criteri.&quot;; dopo
+          la decisione: &quot;Pesi salvati con la decisione del …&quot;.
         </li>
         <li>
           <strong>Matrice</strong>: una riga per criterio, una colonna per fonte
@@ -65,9 +63,11 @@ export function DecisioneSection() {
         </li>
         <li>
           <strong>Indipendenza</strong>: chi è partecipante di un colloquio e non
-          ha ancora inviato la propria scheda vede colonne, valori, punteggio e
-          avvisi chiusi con &quot;•••&quot; e il pulsante{" "}
-          <strong>Mostra</strong>.
+          ha ancora inviato il proprio feedback vede colonne, valori, punteggio e
+          avvisi chiusi, con il messaggio{" "}
+          <strong>Per un giudizio indipendente, invia prima il tuo feedback</strong>{" "}
+          e il pulsante <strong>Mostra</strong>. I feedback già inviati compaiono
+          come <strong>Feedback già inviati (n)</strong>.
         </li>
       </GuideList>
 
@@ -79,14 +79,6 @@ export function DecisioneSection() {
         decisione&quot;). Su Offerta si può registrare una nuova decisione (per
         esempio Assunto): l&apos;ultima sostituisce la precedente.
       </GuideText>
-
-      <GuideFigure
-        src="/guida/12-decisione.png"
-        alt="Pagina Decisione con decisione registrata, riepilogo, matrice criteri per fonte e form"
-        caption="Pagina Decisione: decisione registrata, riepilogo, matrice e form"
-        width={1440}
-        height={1599}
-      />
     </GuideSection>
   );
 }

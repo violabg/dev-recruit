@@ -22,10 +22,13 @@ type CreatedLink = { quizId: string; token: string; quizTitle: string };
 export function SendAssessmentForm({
   candidateId,
   availableQuizzes,
+  primaryAction = false,
 }: {
   candidateId: string;
   /** Quizzes of the position not yet sent, newest first */
   availableQuizzes: { id: string; title: string; timeLimit: number | null }[];
+  /** True when sending is the page's next step: its button is the primary one */
+  primaryAction?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -82,16 +85,22 @@ export function SendAssessmentForm({
         <MultiSelectField
           control={form.control}
           name="quizIds"
-          label="Quiz"
+          label="Test"
           required
           options={availableQuizzes.map((quiz) => ({
             value: quiz.id,
             label: `${quiz.title}${quiz.timeLimit ? ` (${quiz.timeLimit} min)` : ""}`,
           }))}
-          placeholder="Seleziona i quiz da inviare"
+          placeholder="Seleziona i test da inviare"
           showClear
         />
-        <Button type="submit" size="sm" disabled={isPending} className="w-fit">
+        <Button
+          type="submit"
+          size="sm"
+          variant={primaryAction ? "default" : "outline"}
+          disabled={isPending}
+          className="w-fit"
+        >
           {isPending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (

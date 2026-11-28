@@ -49,7 +49,7 @@ export function MoveStageMenu({
         render={<Button variant="outline" size="sm" disabled={isPending} />}
       >
         {isPending && <Loader2 className="size-4 animate-spin" />}
-        Sposta fase
+        Sposta di fase
         <ChevronDown className="size-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

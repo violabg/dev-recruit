@@ -10,7 +10,7 @@ import { Briefcase, User } from "lucide-react";
 export function CandidateFormBodySkeleton({
   mode = "new",
 }: {
-  mode?: "new" | "edit" | "apply";
+  mode?: "new" | "edit";
 }) {
   return (
     <div className="flex flex-col gap-6">

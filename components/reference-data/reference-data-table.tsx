@@ -173,7 +173,7 @@ export function ReferenceDataTable({
   return (
     <div>
       {mounted ? (
-        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <DndContext id="reference-data-table" collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
             items={items.map((i) => i.id)}
             strategy={verticalListSortingStrategy}

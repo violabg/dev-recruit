@@ -52,7 +52,7 @@ export async function QuizListSection({
   if (fetchError) {
     return (
       <div className="bg-destructive/15 p-4 rounded-md text-destructive">
-        <p>Si è verificato un errore nel caricamento dei quiz: {fetchError}</p>
+        <p>Si è verificato un errore nel caricamento dei test: {fetchError}</p>
       </div>
     );
   }
@@ -83,8 +83,8 @@ export async function QuizListSection({
                 hasNextPage,
                 hasPrevPage,
               }}
-              itemLabel="quiz"
-              itemLabelPlural="quiz"
+              itemLabel="test"
+              itemLabelPlural="test"
             />
           </div>
         )}
@@ -94,7 +94,7 @@ export async function QuizListSection({
 }
 
 /**
- * Empty state component for quiz list
+ * Empty state component for test list
  */
 function QuizEmptyState({ hasFilters }: { hasFilters: boolean }) {
   return (
@@ -103,15 +103,15 @@ function QuizEmptyState({ hasFilters }: { hasFilters: boolean }) {
         <EmptyMedia variant="icon">
           <FileQuestion />
         </EmptyMedia>
-        <EmptyTitle>Nessun quiz trovato</EmptyTitle>
+        <EmptyTitle>Nessun test trovato</EmptyTitle>
         <EmptyDescription>
           {hasFilters
-            ? "Nessun quiz trovato con i criteri di ricerca specificati."
-            : "Non hai ancora creato quiz. Crea il tuo primo quiz per iniziare."}
+            ? "Nessun test trovato con i criteri di ricerca specificati."
+            : "Non hai ancora creato test. Crea il tuo primo test per iniziare."}
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <NewQuizButton />
+        <NewQuizButton variant="outline" />
       </EmptyContent>
     </Empty>
   );

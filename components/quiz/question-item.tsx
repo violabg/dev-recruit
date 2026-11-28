@@ -102,7 +102,7 @@ export const QuestionItem = ({
   const handleToggleFavorite = () => {
     if (!hasDbId) {
       toast.error(
-        "Salva prima il quiz per poter aggiungere la domanda ai preferiti",
+        "Salva prima il test per poter aggiungere la domanda ai preferiti",
       );
       return;
     }
@@ -191,7 +191,7 @@ export const QuestionItem = ({
               </TooltipTrigger>
               <TooltipContent>
                 {!hasDbId
-                  ? "Salva il quiz per abilitare i preferiti"
+                  ? "Salva il test per abilitare i preferiti"
                   : isFavorite
                     ? "Rimuovi dai preferiti"
                     : "Aggiungi ai preferiti"}
@@ -238,14 +238,14 @@ export const QuestionItem = ({
                 title="Elimina domanda"
                 description={
                   isFavorite
-                    ? "Questa domanda è nei preferiti. Verrà rimossa dal quiz ma rimarrà disponibile nei preferiti."
+                    ? "Questa domanda è nei preferiti. Verrà rimossa dal test ma rimarrà disponibile nei preferiti."
                     : "Questa azione non può essere annullata. La domanda verrà eliminata permanentemente."
                 }
                 label="Elimina"
                 iconOnly
                 variant="ghost"
                 successMessage={
-                  isFavorite ? "Domanda rimossa dal quiz" : "Domanda eliminata"
+                  isFavorite ? "Domanda rimossa dal test" : "Domanda eliminata"
                 }
               />
             ) : (
@@ -309,7 +309,7 @@ export const QuestionItem = ({
                 control={form.control}
                 name={`questions.${actualIndex}.criterionIds`}
                 label="Criteri verificati"
-                description="Criteri della scheda di valutazione che questa domanda verifica"
+                description="Criteri della posizione che questa domanda verifica"
                 options={criterionOptions}
                 placeholder="Seleziona i criteri..."
               />

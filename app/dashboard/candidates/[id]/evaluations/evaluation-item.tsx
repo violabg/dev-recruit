@@ -124,6 +124,7 @@ function EvaluationItem({
                 onClick={() => handleSaveNotes(evaluation.id)}
                 disabled={savingNotes || notes === (evaluation.notes ?? "")}
                 size="sm"
+                variant="outline"
               >
                 {savingNotes ? (
                   <Loader2 className="mr-2 size-4 animate-spin" />

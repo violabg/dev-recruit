@@ -115,7 +115,7 @@ export const CandidatesRuntimeSection = async ({
               <Link
                 href="/dashboard/candidates/new"
                 className={buttonVariants({
-                  variant: "default",
+                  variant: "outline",
                   size: "sm",
                 })}
               >

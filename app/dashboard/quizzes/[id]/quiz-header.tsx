@@ -2,10 +2,12 @@ import { cn } from "cn";
 import PageHeader from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { SECTIONS } from "@/components/dashboard/sections";
 
 import { getAllPositions } from "@/lib/data/positions";
 import { getQuizById } from "@/lib/data/quizzes";
 import { formatDate } from "@/lib/utils";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { Clock } from "lucide-react";
 import Link from "next/link";
 import { QuizDetailActionsClient } from "./quiz-detail-actions-client";
@@ -21,12 +23,12 @@ export async function QuizHeader({ params }: Props) {
   if (!quiz) {
     return (
       <div className="flex flex-col justify-center items-center h-100">
-        <p className="font-medium text-lg">Quiz non trovato</p>
+        <p className="font-medium text-lg">Test non trovato</p>
         <Link
           href="/dashboard/quizzes"
-          className={cn("mt-4", buttonVariants({ variant: "default" }))}
+          className={cn("mt-4", buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Torna ai quiz
+          Vai ai test
         </Link>
       </div>
     );
@@ -40,9 +42,9 @@ export async function QuizHeader({ params }: Props) {
         <p className="font-medium text-lg">Posizione non trovata</p>
         <Link
           href="/dashboard/quizzes"
-          className={cn("mt-4", buttonVariants({ variant: "default" }))}
+          className={cn("mt-4", buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Torna ai quiz
+          Vai ai test
         </Link>
       </div>
     );
@@ -58,15 +60,18 @@ export async function QuizHeader({ params }: Props) {
   return (
     <PageHeader
       title={quiz.title}
+      breadcrumbs={sectionTrail(SECTIONS.quizzes, { label: quiz.title })}
       info={
         <>
           <Badge variant="outline">{position.title}</Badge>
-          <Badge variant="outline">{position.experienceLevel}</Badge>
+          <span className="text-muted-foreground text-sm">
+            {position.experienceLevel}
+          </span>
           {quiz.timeLimit && (
-            <Badge variant="secondary">
+            <span className="inline-flex items-center text-muted-foreground text-sm">
               <Clock className="mr-1 w-3 h-3" />
               {quiz.timeLimit} minuti
-            </Badge>
+            </span>
           )}
           <span className="text-muted-foreground text-sm">
             Creato il {formatDate(quiz.createdAt)}

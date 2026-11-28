@@ -16,6 +16,7 @@ import { toActor } from "../services/actor";
 import { generateInterviewKit } from "../services/ai/kit-generation";
 import {
   buildKitGenerationContext,
+  KIT_LOCKED_MESSAGE,
   saveInterviewKit,
   setInterviewKitStatus,
 } from "../services/interview-kits";
@@ -52,7 +53,6 @@ async function loadKitItem(kitItemId: string) {
 
 /** Generation runs only while the interview is scheduled */
 const KIT_EDITABLE = ["scheduled"] as const;
-const KIT_LOCKED_MESSAGE = "Il kit si modifica solo prima del colloquio";
 
 /**
  * Ask the AI for a personalized kit from the CV, the test and the previous
@@ -142,7 +142,7 @@ export async function saveKitItemNoteAction(input: SaveKitItemNoteInput) {
       select: { submittedAt: true },
     });
     if (feedback?.submittedAt) {
-      throw new UserError("La scheda è già stata inviata");
+      throw new UserError("Il feedback è già stato inviato");
     }
 
     // undefined = untouched, null = cleared

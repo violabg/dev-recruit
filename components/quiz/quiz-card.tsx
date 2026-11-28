@@ -31,9 +31,9 @@ export function QuizCard({
             entityId={id}
             editHref={`/dashboard/quizzes/${id}/edit`}
             deleteAction={deleteQuizAction.bind(null, id)}
-            deleteTitle="Elimina quiz"
-            deleteDescription="Sei sicuro di voler eliminare questo quiz? Questa azione non può essere annullata."
-            deleteErrorMessage="Errore durante l'eliminazione del quiz"
+            deleteTitle="Elimina test"
+            deleteDescription="Sei sicuro di voler eliminare questo test? Questa azione non può essere annullata."
+            deleteErrorMessage="Errore durante l'eliminazione del test"
           />
         </div>
       </CardHeader>

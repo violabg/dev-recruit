@@ -47,6 +47,8 @@ const detail = {
   stageChangedAt: at(-2),
   createdAt: at(-10),
   owner: { id: "owner-1", name: "Laura" },
+  decision: null,
+  decidedAt: null,
   candidate: {
     id: "cand-1",
     firstName: "Mario",
@@ -57,6 +59,7 @@ const detail = {
     doNotContactNote: null,
   },
   position: { id: "pos-1", title: "Dev", experienceLevel: "senior", status: "open" },
+  otherApplications: [],
   assessments: [
     {
       id: "as-1",

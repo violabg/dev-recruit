@@ -2,14 +2,14 @@ import { cn } from "cn";
 import PageHeader from "@/components/page-header";
 import { CandidateForm } from "@/components/candidates/candidate-form";
 import { buttonVariants } from "@/components/ui/button";
+import { SECTIONS } from "@/components/dashboard/sections";
 import {
   Card,
   CardContent,
   } from "@/components/ui/card";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
 import { getOpenPositionsForSelect } from "@/lib/data/positions";
-import { ArrowLeft } from "lucide-react";
-import type { Route } from "next";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CandidateFormSkeleton } from "../../new/fallbacks";
@@ -46,9 +46,9 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
         </div>
         <Link
           href="/dashboard/candidates"
-          className="font-semibold text-primary text-sm"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "inline-flex")}
         >
-          Torna alla lista dei candidati
+          Vai ai candidati
         </Link>
       </div>
     );
@@ -71,24 +71,18 @@ async function CandidateEditContent({ params }: CandidateEditPageProps) {
   const positionOptions = [...optionsById.values()].sort((a, b) =>
     a.title.localeCompare(b.title),
   );
+  const fullName = `${candidate.firstName} ${candidate.lastName}`.trim();
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Modifica candidato"
-        description={`${candidate.firstName} ${candidate.lastName}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/candidates/${candidate.id}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Torna al candidato
-          </Link>
-        }
+        description={fullName}
+        breadcrumbs={sectionTrail(
+          SECTIONS.candidates,
+          { label: fullName, href: `/dashboard/candidates/${candidate.id}` },
+          { label: "Modifica" },
+        )}
       />
       <Card>
       <CardContent>

@@ -19,8 +19,9 @@ import { getInterviewGuidesByPosition } from "@/lib/data/interview-guides";
 import { getInterviewsByApplication } from "@/lib/data/interviews";
 import { getUserOptions } from "@/lib/data/users";
 import type { ApplicationStage } from "@/lib/schemas";
+import { applicationTrail } from "@/lib/utils/breadcrumbs";
 import { cn } from "cn";
-import { ArrowLeft, BookOpen, Lock } from "lucide-react";
+import { BookOpen, Lock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -64,7 +65,7 @@ function NewInterviewSkeleton() {
     <div className="flex flex-col gap-6">
       <PageHeaderSkeleton description />
       <div className="flex flex-col gap-4 max-w-3xl">
-        <FieldSkeleton label="Guida colloquio" />
+        <FieldSkeleton label="Traccia del colloquio" />
         <FieldSkeleton label="Data e ora" />
         <FieldSkeleton label="Partecipanti" />
       </div>
@@ -102,18 +103,10 @@ async function NewInterviewContent({ params }: { params: NewInterviewParams }) {
       <PageHeader
         title="Pianifica colloquio"
         description={`${candidateName} · ${detail.position.title}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/applications/${id}?tab=colloqui` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="mr-1 size-4" />
-            Torna alla candidatura
-          </Link>
-        }
+        breadcrumbs={applicationTrail(
+          { id, candidateName, position: detail.position },
+          { label: "Pianifica colloquio" },
+        )}
       />
 
       {NO_SCHEDULING_STAGES.includes(detail.stage) ? (
@@ -134,10 +127,10 @@ async function NewInterviewContent({ params }: { params: NewInterviewParams }) {
             <EmptyMedia variant="icon">
               <BookOpen />
             </EmptyMedia>
-            <EmptyTitle>Nessuna guida colloquio</EmptyTitle>
+            <EmptyTitle>Nessuna traccia del colloquio</EmptyTitle>
             <EmptyDescription>
-              Per pianificare un colloquio serve una guida colloquio della
-              posizione.
+              Per pianificare un colloquio serve una traccia del colloquio
+              della posizione.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
@@ -145,7 +138,7 @@ async function NewInterviewContent({ params }: { params: NewInterviewParams }) {
               href={`/dashboard/positions/${detail.position.id}/guides/new`}
               className={cn(buttonVariants({ size: "sm" }), "inline-flex")}
             >
-              Crea la guida
+              Crea la traccia
             </Link>
           </EmptyContent>
         </Empty>

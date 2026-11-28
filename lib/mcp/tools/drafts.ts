@@ -79,7 +79,7 @@ export const createPositionDraftTool = defineTool({
       text: lines(
         `Bozza di posizione creata: ${input.title}`,
         `Livello: ${input.experienceLevel} · Competenze: ${input.skills.join(", ")}`,
-        "Prossimi passi dalla dashboard: scheda di valutazione, quiz e guida colloquio.",
+        "Prossimi passi dalla dashboard: criteri, test e traccia del colloquio.",
         "Per pubblicarla usa il pulsante nel riquadro, o \"Pubblica\" nella pagina della posizione.",
         `Apri in dev-recruit: ${links.position(positionId)}`,
       ),
@@ -132,9 +132,9 @@ async function positionTitle(positionId: string): Promise<string> {
 
 export const openQuizFormTool = defineTool({
   name: "open_quiz_form",
-  title: "Apri il modulo del quiz",
+  title: "Apri il modulo del test",
   description:
-    "Apre nel riquadro i parametri di generazione di un quiz per una posizione (titolo, istruzioni, numero di domande, difficoltà, tipi di domande, limite di tempo; tutti facoltativi oltre a positionId), precompilati con quello che sai. La persona li controlla e preme \"Genera con l'assistente\": ti arriva la richiesta con i parametri, scrivi le domande e mostra l'anteprima con save_quiz_draft. Non crea nulla.",
+    "Apre nel riquadro i parametri di generazione di un test per una posizione (titolo, istruzioni, numero di domande, difficoltà, tipi di domande, limite di tempo; tutti facoltativi oltre a positionId), precompilati con quello che sai. La persona li controlla e preme \"Genera con l'assistente\": ti arriva la richiesta con i parametri, scrivi le domande e mostra l'anteprima con save_quiz_draft. Non crea nulla.",
   scope: "recruit:draft",
   group: "draft",
   inputSchema: openQuizFormInputSchema,
@@ -154,9 +154,9 @@ export const openQuizFormTool = defineTool({
     );
     return {
       text: lines(
-        `Parametri del quiz per ${position.title} aperti nel riquadro: la persona li controlla e preme "Genera con l'assistente".`,
+        `Parametri del test per ${position.title} aperti nel riquadro: la persona li controlla e preme "Genera con l'assistente".`,
         "Non è stato creato nulla. Se il riquadro non è disponibile, concorda i parametri in chat e mostra l'anteprima con save_quiz_draft.",
-        `Quiz della posizione: ${widget.url}`,
+        `Test della posizione: ${widget.url}`,
       ),
       structured: { widget },
       auditSummary: `position=${position.id} quiz_form`,
@@ -166,9 +166,9 @@ export const openQuizFormTool = defineTool({
 
 export const saveQuizDraftTool = defineTool({
   name: "save_quiz_draft",
-  title: "Anteprima quiz",
+  title: "Anteprima test",
   description:
-    "Prepara un quiz per una posizione (titolo, tempo, domande nel formato dell'editor) e ne mostra l'anteprima senza salvarlo. Il salvataggio lo conferma una persona dal riquadro. Nessun candidato viene invitato.",
+    "Prepara un test per una posizione (titolo, tempo, domande nel formato dell'editor) e ne mostra l'anteprima senza salvarlo. Il salvataggio lo conferma una persona dal riquadro. Nessun candidato viene invitato.",
   scope: "recruit:draft",
   group: "draft",
   inputSchema: quizDraftInputSchema,
@@ -178,7 +178,7 @@ export const saveQuizDraftTool = defineTool({
     const title = await positionTitle(input.positionId);
     return {
       text: lines(
-        `Anteprima quiz (non salvato): ${input.title}`,
+        `Anteprima test (non salvato): ${input.title}`,
         `Posizione: ${title} · ${input.questions.length} domande`,
         ...input.questions.map((question, index) => `${index + 1}. ${question.question}`),
         CONFIRM_IN_WIDGET,
@@ -191,8 +191,8 @@ export const saveQuizDraftTool = defineTool({
 
 export const saveQuizTool = defineTool({
   name: "save_quiz",
-  title: "Salva quiz",
-  description: "Salva il quiz dell'anteprima. Solo dal pulsante del riquadro.",
+  title: "Salva test",
+  description: "Salva il test dell'anteprima. Solo dal pulsante del riquadro.",
   scope: "recruit:draft",
   group: "draft",
   inputSchema: quizDraftInputSchema,
@@ -204,7 +204,7 @@ export const saveQuizTool = defineTool({
     const { quizId, positionId } = await saveQuiz(actor, input);
     return {
       text: lines(
-        `Quiz salvato: ${input.title} (${input.questions.length} domande) per ${title}.`,
+        `Test salvato: ${input.title} (${input.questions.length} domande) per ${title}.`,
         "Nessun candidato è stato invitato.",
         `Apri in dev-recruit: ${links.quiz(quizId)}`,
       ),
@@ -223,7 +223,7 @@ export const getSchedulingOptionsTool = defineTool({
   name: "get_scheduling_options",
   title: "Opzioni per pianificare",
   description:
-    "Cosa serve per proporre un colloquio di una candidatura: guide della posizione (id, round, durata), persone del team (id, nome), prossimo round e proposte in attesa.",
+    "Cosa serve per proporre un colloquio di una candidatura: tracce della posizione (id, round, durata), persone del team (id, nome), prossimo round e proposte in attesa.",
   scope: "recruit:read",
   group: "read",
   inputSchema: getSchedulingOptionsInputSchema,
@@ -237,13 +237,13 @@ export const getSchedulingOptionsTool = defineTool({
         `Pianificazione: ${options.application.candidateName} · ${options.application.positionTitle}`,
         `Prossimo round: ${options.nextRound}`,
         "",
-        `Guide (${options.guides.length}):`,
+        `Tracce (${options.guides.length}):`,
         ...(options.guides.length
           ? options.guides.map(
               (guide) =>
                 `- ${guide.title} · round ${guide.round} · ${guide.durationMinutes} minuti · guideId ${guide.id}`,
             )
-          : ["- Nessuna guida: creala dalla dashboard prima di pianificare"]),
+          : ["- Nessuna traccia: creala dalla dashboard prima di pianificare"]),
         "",
         `Team (${options.teamMembers.length}):`,
         ...options.teamMembers.map((member) => `- ${member.name} · userId ${member.id}`),
@@ -276,7 +276,7 @@ export const openScheduleFormTool = defineTool({
   name: "open_schedule_form",
   title: "Apri il modulo del colloquio",
   description:
-    "Apre nel riquadro il modulo per pianificare un colloquio di una candidatura (guida, round, data e ora con fuso, durata, link della call, partecipanti; tutti facoltativi oltre ad applicationId), precompilato con quello che sai. La persona completa i campi e preme \"Pianifica colloquio\" nel riquadro. Non crea nulla e non invia email: usalo nei client con i riquadri al posto di propose_interview_slot.",
+    "Apre nel riquadro il modulo per pianificare un colloquio di una candidatura (traccia, round, data e ora con fuso, durata, link della call, partecipanti; tutti facoltativi oltre ad applicationId), precompilato con quello che sai. La persona completa i campi e preme \"Pianifica colloquio\" nel riquadro. Non crea nulla e non invia email: usalo nei client con i riquadri al posto di propose_interview_slot.",
   scope: "recruit:draft",
   group: "draft",
   inputSchema: openScheduleFormInputSchema,
@@ -290,7 +290,7 @@ export const openScheduleFormTool = defineTool({
       text: lines(
         `Modulo del colloquio di ${options.application.candidateName} · ${options.application.positionTitle} aperto nel riquadro: la persona completa i campi e preme "Pianifica colloquio".`,
         options.guides.length === 0 &&
-          `La posizione non ha guide colloquio: vanno create dalla dashboard prima di pianificare (${widget.guidesUrl}).`,
+          `La posizione non ha tracce del colloquio: vanno create dalla dashboard prima di pianificare (${widget.guidesUrl}).`,
         "Non è stato creato nulla. Se il riquadro non è disponibile, usa get_scheduling_options e propose_interview_slot.",
         `Oppure pianifica dalla dashboard: ${widget.url}`,
       ),
@@ -304,7 +304,7 @@ export const proposeInterviewSlotTool = defineTool({
   name: "propose_interview_slot",
   title: "Proponi un colloquio",
   description:
-    "Propone un colloquio per una candidatura (guida, round, data e ora con fuso, durata, link della call, partecipanti con un solo conduttore). Non pianifica nulla e non invia email: la pianificazione la conferma una persona dal riquadro. Usa prima get_scheduling_options per gli id.",
+    "Propone un colloquio per una candidatura (traccia, round, data e ora con fuso, durata, link della call, partecipanti con un solo conduttore). Non pianifica nulla e non invia email: la pianificazione la conferma una persona dal riquadro. Usa prima get_scheduling_options per gli id.",
   scope: "recruit:draft",
   group: "draft",
   inputSchema: proposeInterviewSlotInputSchema,
@@ -349,9 +349,9 @@ async function kitView(
 
 export const getInterviewKitTool = defineTool({
   name: "get_interview_kit",
-  title: "Kit colloquio modificabile",
+  title: "Preparazione del colloquio modificabile",
   description:
-    "La struttura modificabile del kit di un colloquio: sezioni e domande con i loro id, criteri attivi della scheda (id e nome), briefing, ipotesi, checklist con id. Serve prima di save_interview_kit_draft. Non contiene l'identità del candidato né il CV.",
+    "La struttura modificabile della preparazione di un colloquio: sezioni e domande con i loro id, criteri attivi della posizione (id e nome), briefing, ipotesi, checklist con id. Serve prima di save_interview_kit_draft. Non contiene l'identità del candidato né il CV.",
   scope: "recruit:read",
   group: "read",
   inputSchema: getInterviewKitInputSchema,
@@ -360,8 +360,8 @@ export const getInterviewKitTool = defineTool({
     const view = await kitView(actor, input.interviewId);
     return {
       text: lines(
-        `Kit: ${view.positionTitle} · Round ${view.round} · ${formatDateTime(view.scheduledAt)}`,
-        `Stato kit: ${view.kitStatus === "ready" ? "pronto" : "bozza"} · ${view.editable ? "modificabile" : "non modificabile (kit pronto o colloquio non pianificato)"}`,
+        `Preparazione: ${view.positionTitle} · Round ${view.round} · ${formatDateTime(view.scheduledAt)}`,
+        `Stato preparazione: ${view.kitStatus === "ready" ? "pronta" : "bozza"} · ${view.editable ? "modificabile" : "non modificabile (preparazione pronta o colloquio non pianificato)"}`,
         "",
         "Criteri attivi:",
         ...(view.criteria.length
@@ -393,9 +393,9 @@ export const getInterviewKitTool = defineTool({
 
 export const saveInterviewKitDraftTool = defineTool({
   name: "save_interview_kit_draft",
-  title: "Modifica kit in bozza",
+  title: "Modifica la preparazione in bozza",
   description:
-    "Modifica il kit in bozza di un colloquio pianificato, voce per voce: aggiungi domande a una sezione (addItems), modifica (updateItems) o rimuovi (removeItemIds) domande esistenti, sostituisci briefing o ipotesi, aggiungi o rimuovi voci della checklist. Le domande non indicate restano come sono. Usa gli id di get_interview_kit. Il kit resta in bozza: lo segna pronto una persona dal riquadro.",
+    "Modifica la preparazione in bozza di un colloquio pianificato, voce per voce: aggiungi domande a una sezione (addItems), modifica (updateItems) o rimuovi (removeItemIds) domande esistenti, sostituisci briefing o ipotesi, aggiungi o rimuovi voci della checklist. Le domande non indicate restano come sono. Usa gli id di get_interview_kit. La preparazione resta in bozza: la segna pronta una persona dal riquadro.",
   scope: "recruit:draft",
   group: "draft",
   inputSchema: kitPatchInputSchema,
@@ -414,9 +414,9 @@ export const saveInterviewKitDraftTool = defineTool({
 
     return {
       text: lines(
-        `Kit salvato in bozza: ${view.positionTitle} · Round ${view.round}`,
+        `Preparazione salvata in bozza: ${view.positionTitle} · Round ${view.round}`,
         `Domande nuove ${changes.added}, modificate ${changes.updated}, rimosse ${changes.removed}.`,
-        "Il kit resta in bozza: per segnarlo pronto usa il pulsante nel riquadro o la pagina di preparazione.",
+        "La preparazione resta in bozza: per segnarla pronta usa il pulsante nel riquadro o la pagina di preparazione.",
         `Apri in dev-recruit: ${view.url}`,
       ),
       structured: { interviewId, widget: kitDraftWidget(view, changes) },
@@ -434,7 +434,7 @@ export const publishDraftTool = defineTool({
   name: "publish_draft",
   title: "Conferma bozza",
   description:
-    "Conferma una bozza: apre una posizione in bozza, pianifica una proposta di colloquio o segna pronto un kit. Solo dal pulsante del riquadro.",
+    "Conferma una bozza: apre una posizione in bozza, pianifica una proposta di colloquio o segna pronta una preparazione. Solo dal pulsante del riquadro.",
   scope: "recruit:write",
   group: "write",
   inputSchema: publishDraftInputSchema,
@@ -475,7 +475,7 @@ export const publishDraftTool = defineTool({
         status: "ready",
       });
       return {
-        text: `Kit segnato come pronto. Apri la preparazione: ${links.interviewPrepare(applicationId, interviewId)}`,
+        text: `Preparazione segnata come pronta. Apri la preparazione: ${links.interviewPrepare(applicationId, interviewId)}`,
         structured: {
           interviewId,
           applicationId,

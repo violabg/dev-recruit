@@ -14,7 +14,7 @@ export function ConcettoSection() {
       <GuideText>
         L&apos;applicazione trasforma una <strong>posizione aperta</strong> in
         una <strong>decisione di assunzione</strong>, raccogliendo prove su una{" "}
-        <strong>candidatura</strong>: CV, test, colloqui e schede degli
+        <strong>candidatura</strong>: CV, test, colloqui e feedback degli
         intervistatori. Ogni schermata dice qual è il prossimo passo.
       </GuideText>
 
@@ -32,7 +32,7 @@ export function ConcettoSection() {
           [
             { title: "CV", detail: "valutazione per criterio", tone: "step" },
             { title: "Test", detail: "punteggio per risposta", tone: "step" },
-            { title: "Colloqui", detail: "kit, live, schede", tone: "step" },
+            { title: "Colloqui", detail: "preparazione, live, feedback", tone: "step" },
           ],
           [{ title: "Decisione", detail: "matrice criteri × fonti", tone: "entity" }],
           [
@@ -50,7 +50,7 @@ export function ConcettoSection() {
         rows={[
           [
             <strong key="p">Posizione</strong>,
-            "L'offerta di lavoro: dettagli, scheda di valutazione, quiz, guide colloquio",
+            "L'offerta di lavoro: dettagli, criteri, test, tracce del colloquio",
             <code key="ph">/dashboard/positions</code>,
           ],
           [

@@ -4,7 +4,7 @@ import { baseSchemas } from "./base";
 // ====================
 // SCORECARD SCHEMAS
 // ====================
-// Evaluation scorecard ("Scheda di valutazione") of a position and its criteria.
+// Evaluation scorecard ("Criteri della posizione") of a position and its criteria.
 
 export const CRITERION_CATEGORY_VALUES = ["technical", "soft", "culture"] as const;
 export const CRITERION_PRIORITY_VALUES = ["must", "nice"] as const;

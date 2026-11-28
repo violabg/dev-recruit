@@ -296,7 +296,7 @@ export async function assignCandidatesToQuizAction(input: {
     });
 
     if (!quiz) {
-      throw new UserError("Quiz non trovato");
+      throw new UserError("Test non trovato");
     }
 
     const applications = await prisma.application.findMany({
@@ -316,7 +316,7 @@ export async function assignCandidatesToQuizAction(input: {
 
     if (applications.length !== new Set(candidateIds).size) {
       throw new UserError(
-        "Alcuni candidati non sono validi per la posizione di questo quiz",
+        "Alcuni candidati non sono validi per la posizione di questo test",
       );
     }
 
@@ -403,7 +403,7 @@ export async function assignQuizzesToCandidateAction(input: {
 
     if (quizzes.length !== new Set(quizIds).size) {
       throw new UserError(
-        "Alcuni quiz non sono validi per le posizioni di questo candidato",
+        "Alcuni test non sono validi per le posizioni di questo candidato",
       );
     }
 

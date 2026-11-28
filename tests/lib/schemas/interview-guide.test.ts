@@ -113,7 +113,7 @@ describe("saveInterviewGuideSchema", () => {
     const result = saveInterviewGuideSchema.safeParse(guide);
     expect(result.success).toBe(false);
     expect(firstMessage(result)).toBe(
-      "La posizione è obbligatoria per creare una guida",
+      "La posizione è obbligatoria per creare una traccia",
     );
   });
 });

@@ -42,7 +42,7 @@ A failure never escapes as a throw: `runAction` turns anything thrown into `{ su
 - Expected failure → `throw new UserError` with an Italian message; it is the only way to send a custom message. A schema `.refine()` message reaches the client through the same contract.
 - New code uses `UserError` or `schema.parse`, never `QuizSystemError`. Domain services may throw `UserError`; the action lets it propagate.
 - `redirect()` and `notFound()` pass through `runAction` unchanged: call them at the top level of the body, after invalidation, never inside `try/catch`. A redirecting action resolves to nothing on success, so callers check `if (result && !result.success) toast.error(errorMessage(result.error))` and never `unwrap()` it.
-- Redirecting actions: `deleteInterviewGuideAction` (→ `/dashboard/positions/{positionId}?tab=guide`, used through `DeleteWithConfirm`) and `scheduleInterviewAction` (→ `…/interviews/{interviewId}/prepare?scheduled=1`).
+- Redirecting actions: `deleteInterviewGuideAction` (→ `/dashboard/positions/{positionId}?tab=criteri`, used through `DeleteWithConfirm`) and `scheduleInterviewAction` (→ `…/interviews/{interviewId}/prepare?scheduled=1`).
 
 ## Authentication and public actions
 
@@ -64,10 +64,10 @@ A failure never escapes as a throw: `runAction` turns anything thrown into `{ su
 
 Every expected failure is a `UserError`. The non-obvious ones:
 
-- A missing resource and a refused state often share one message: scheduling gives "Candidatura non trovata o chiusa" for a missing application and for `rejected`, `withdrawn`, `hired`; kit and live-note actions share "Il kit si modifica solo prima del colloquio" and "Il colloquio non accetta più note"; a state refusal is "Operazione non consentita nello stato attuale del colloquio".
-- Criteria sent with a save are validated against the position scorecard: scorecard ("Uno o più criteri non appartengono a questa scheda"), guide, kit and interviewer scorecard all reject a foreign criterion.
+- A missing resource and a refused state often share one message: scheduling gives "Candidatura non trovata o chiusa" for a missing application and for `rejected`, `withdrawn`, `hired`; kit and live-note actions share "La preparazione si modifica solo prima del colloquio" and "Il colloquio non accetta più note"; a state refusal is "Operazione non consentita nello stato attuale del colloquio".
+- Criteria sent with a save are validated against the position scorecard: scorecard ("Uno o più criteri non appartengono a questa posizione"), guide, kit and interviewer scorecard all reject a foreign criterion.
 - Scheduling: "Indica un solo conduttore", "Un partecipante è indicato più volte", "Uno o più partecipanti non sono utenti dell'app", "Durata minima 10 minuti", "Durata massima 480 minuti"; it creates interview, participants and kit and advances the stage in one transaction, then redirects.
-- `upsertInterviewGuideAction` returns `{ id }`; a guide created without a position fails earlier on the schema refine "La posizione è obbligatoria per creare una guida".
+- `upsertInterviewGuideAction` returns `{ id }`; a guide created without a position fails earlier on the schema refine "La posizione è obbligatoria per creare una traccia".
 - `recordApplicationDecisionAction({ applicationId, outcome, rationale })`: rationale 10–5000 characters, closed application refused ("Candidatura chiusa: riaprila per registrare la decisione"), invalid outcome refused; returns `{ stage }` and does not redirect (the client calls `router.refresh()`).
 - `challengeDecisionAction` and the three generation actions are read-only and return a proposal; `challengeDecisionAction` returns `{ challenge: { reasons: { title, explanation, criterionIds }[] } }` plus AI errors through `describeAIError`.
 

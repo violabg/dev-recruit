@@ -120,7 +120,7 @@ describe("useLiveNotesAutosave", () => {
   it("drops the draft and warns when the scorecard is already submitted", async () => {
     vi.mocked(saveKitItemNoteAction).mockResolvedValueOnce({
       success: false,
-      error: "La scheda è già stata inviata",
+      error: "Il feedback è già stato inviato",
     } as any);
     const { result } = renderHook(() => useLiveNotesAutosave(params));
 
@@ -129,7 +129,7 @@ describe("useLiveNotesAutosave", () => {
     });
 
     await waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith("La scheda è già stata inviata"),
+      expect(toast.error).toHaveBeenCalledWith("Il feedback è già stato inviato"),
     );
     expect(stored()).toBeNull();
     expect(result.current.pendingCount).toBe(0);

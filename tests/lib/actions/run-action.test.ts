@@ -57,7 +57,7 @@ describe("runAction", () => {
 
     expect(quiz).toEqual({
       success: false,
-      error: "Quiz non trovato o accesso negato.",
+      error: "Test non trovato o accesso negato.",
     });
     expect(ai).toMatchObject({
       success: false,
@@ -113,8 +113,8 @@ describe("unwrap", () => {
 
   it("throws the action's message on failure", () => {
     expect(() =>
-      unwrap({ success: false as const, error: "Quiz non trovato" }),
-    ).toThrow("Quiz non trovato");
+      unwrap({ success: false as const, error: "Test non trovato" }),
+    ).toThrow("Test non trovato");
   });
 
   it("throws a generic message when there is no result", () => {

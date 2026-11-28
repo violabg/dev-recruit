@@ -62,7 +62,7 @@ export async function challengeDecisionAction(input: ChallengeDecisionInput) {
       throw new UserError("Candidatura non trovata");
     }
     if (decision.criteria.length === 0) {
-      throw new UserError("Crea prima la scheda di valutazione della posizione");
+      throw new UserError("Aggiungi prima i criteri della posizione");
     }
 
     const score = computeDecisionScore({

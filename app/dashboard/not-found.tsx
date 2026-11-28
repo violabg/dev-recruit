@@ -16,8 +16,11 @@ export default function DashboardNotFound() {
           <p className="mb-6 text-muted-foreground text-sm">
             L&apos;elemento che cerchi non esiste o è stato eliminato.
           </p>
-          <Link href="/dashboard" className={buttonVariants({ size: "sm" })}>
-            Torna alla dashboard
+          <Link
+            href="/dashboard"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Vai a Le mie azioni
           </Link>
         </div>
       </CardContent>

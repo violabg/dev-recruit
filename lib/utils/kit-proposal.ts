@@ -7,7 +7,7 @@ import {
 
 /**
  * Merge of an AI kit proposal into the preparation form values. Pure and
- * client-safe: nothing is saved until "Salva kit".
+ * client-safe: nothing is saved until "Salva la preparazione".
  */
 
 export type KitFormItem = KitItemInput & { edited?: boolean };

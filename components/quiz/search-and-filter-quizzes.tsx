@@ -138,7 +138,7 @@ export const SearchAndFilterQuizzes = ({
           ref={inputRef}
           type="search"
           name="search"
-          placeholder="Cerca quiz..."
+          placeholder="Cerca test..."
           className="pl-8"
           value={inputValue}
           onChange={(e) => {

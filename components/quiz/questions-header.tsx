@@ -53,7 +53,7 @@ export const QuestionsHeader = ({
           <div>
             <CardTitle>Domande ({fieldsLength})</CardTitle>
             <CardDescription>
-              Gestisci e genera domande del quiz utilizzando l&apos;AI
+              Gestisci e genera domande del test utilizzando l&apos;AI
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">

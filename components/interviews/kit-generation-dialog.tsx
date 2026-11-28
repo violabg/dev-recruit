@@ -61,7 +61,7 @@ export function KitGenerationDialog({
         const { proposal } = unwrap(await generateInterviewKitAction(input));
         onProposal(proposal);
         onOpenChange(false);
-        toast.info("Proposta pronta: rivedi e salva il kit");
+        toast.info("Proposta pronta: rivedi e salva la preparazione");
       } catch (error) {
         toast.error(errorMessage(error));
       }
@@ -72,11 +72,11 @@ export function KitGenerationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Genera kit con AI</DialogTitle>
+          <DialogTitle>Genera la preparazione con AI</DialogTitle>
           <DialogDescription>
             L&apos;AI propone briefing, ipotesi e domande personalizzate a
             partire da CV, test e round precedenti. Nulla viene salvato finché
-            non premi &quot;Salva kit&quot;.
+            non premi &quot;Salva la preparazione&quot;.
           </DialogDescription>
         </DialogHeader>
 

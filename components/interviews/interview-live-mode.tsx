@@ -288,7 +288,6 @@ export function InterviewLiveMode({
                 <Button
                   type="button"
                   size="sm"
-                  variant="outline"
                   disabled={isChangingStatus}
                   onClick={() => setConfirmComplete(true)}
                 >
@@ -304,7 +303,7 @@ export function InterviewLiveMode({
                   className={cn(buttonVariants({ size: "sm" }), "inline-flex")}
                 >
                   <NotebookPen className="size-4" />
-                  Compila scheda
+                  Scrivi il feedback
                 </Link>
               )}
             </div>
@@ -327,7 +326,7 @@ export function InterviewLiveMode({
 
       {session.viewerSubmitted && (
         <p className="bg-muted px-3 py-2 rounded-md text-muted-foreground text-sm">
-          Hai già inviato la scheda: le tue note sono in sola lettura.
+          Hai già inviato il feedback: le tue note sono in sola lettura.
         </p>
       )}
 
@@ -481,6 +480,7 @@ export function InterviewLiveMode({
                   </Button>
                   <Button
                     type="button"
+                    variant="outline"
                     size="sm"
                     disabled={currentIndex >= items.length - 1}
                     onClick={() => setSelectedId(items[currentIndex + 1].id)}
@@ -493,7 +493,7 @@ export function InterviewLiveMode({
             </Card>
           ) : (
             <p className="text-muted-foreground text-sm">
-              Il kit non ha domande.
+              La preparazione non ha domande.
             </p>
           )}
         </div>
@@ -578,7 +578,7 @@ export function InterviewLiveMode({
             <AlertDialogTitle>Concludere il colloquio?</AlertDialogTitle>
             <AlertDialogDescription>
               Dopo la conclusione le note non si possono più modificare: ogni
-              partecipante compila la propria scheda.
+              partecipante scrive il proprio feedback.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

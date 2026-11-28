@@ -9,7 +9,7 @@ export const links = {
   newPosition: () => url("/dashboard/positions/new"),
   position: (positionId: string) => url(`/dashboard/positions/${positionId}`),
   positionQuiz: (positionId: string) =>
-    url(`/dashboard/positions/${positionId}?tab=quiz`),
+    url(`/dashboard/positions/${positionId}?tab=criteri`),
   quiz: (quizId: string) => url(`/dashboard/quizzes/${quizId}`),
   application: (applicationId: string) =>
     url(`/dashboard/applications/${applicationId}`),

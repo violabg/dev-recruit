@@ -78,7 +78,7 @@ const BLANK_CRITERION: ScorecardCriterionInput = {
 
 /**
  * Editor of the scorecard of a position. Nothing is saved before "Salva
- * scheda": the default soft criteria and the AI proposal are unsaved rows.
+ * i criteri": the default soft criteria and the AI proposal are unsaved rows.
  */
 export function ScorecardEditor({
   positionId,
@@ -187,7 +187,7 @@ export function ScorecardEditor({
     startSaving(async () => {
       try {
         unwrap(await saveScorecardAction(data));
-        toast.success("Scheda di valutazione salvata");
+        toast.success("Criteri salvati");
         router.refresh();
       } catch (error) {
         toast.error(errorMessage(error));
@@ -265,7 +265,7 @@ export function ScorecardEditor({
             Nessun criterio. Aggiungine uno o chiedi una proposta all&apos;AI.
           </p>
         ) : mounted ? (
-          <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <DndContext id="scorecard-editor" collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext
               items={fields.map((field) => field.fieldKey)}
               strategy={verticalListSortingStrategy}
@@ -289,7 +289,7 @@ export function ScorecardEditor({
             ) : (
               <Save className="mr-1 size-4" />
             )}
-            Salva scheda
+            Salva i criteri
           </Button>
         </div>
       </form>
@@ -299,8 +299,7 @@ export function ScorecardEditor({
           <CardHeader>
             <CardTitle>Criteri archiviati</CardTitle>
             <CardDescription>
-              Criteri rimossi dalla scheda ma conservati perché hanno già
-              valutazioni.
+              Criteri rimossi ma conservati perché hanno già prove.
             </CardDescription>
           </CardHeader>
           <CardContent>

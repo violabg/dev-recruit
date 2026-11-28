@@ -111,8 +111,8 @@ export const AIDialogs = ({
       <AIQuizGenerationDialog
         open={fullQuizDialogOpen}
         onOpenChange={setFullQuizDialogOpen}
-        title="Genera Nuovo Quiz con AI"
-        description="Sostituisci tutte le domande del quiz con nuove generate dall'AI. Nulla viene salvato finché non premi Salva."
+        title="Genera un nuovo test con AI"
+        description="Sostituisci tutte le domande del test con nuove generate dall'AI. Nulla viene salvato finché non premi Salva."
         position={position}
         onGenerated={onQuizGenerated}
       />

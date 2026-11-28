@@ -1,5 +1,4 @@
 import { NextActionCard } from "@/components/applications/next-action-card";
-import { stagePointer } from "@/components/applications/stage-stepper";
 import { getApplicationDetail } from "@/lib/data/applications";
 import {
   allFeedbackSubmitted,
@@ -9,10 +8,15 @@ import { getNextAction, type ApplicationFacts } from "@/lib/utils/next-action";
 
 type Props = {
   params: Promise<{ id: string }>;
+  /**
+   * false when the stop body itself holds the action: the callout shows only
+   * the title and description
+   */
+  showAction?: boolean;
 };
 
 /** Computes the next action of the application on the server. */
-export async function NextActionSection({ params }: Props) {
+export async function NextActionSection({ params, showAction = true }: Props) {
   const { id } = await params;
   const detail = await getApplicationDetail(id);
 
@@ -46,8 +50,8 @@ export async function NextActionSection({ params }: Props) {
     <NextActionCard
       applicationId={detail.id}
       action={getNextAction(facts)}
-      pointer={stagePointer(detail.stage)}
       candidateEditHref={`/dashboard/candidates/${detail.candidate.id}/edit`}
+      showAction={showAction}
     />
   );
 }

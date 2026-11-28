@@ -130,7 +130,7 @@ describe("upsertInterviewGuideAction", () => {
       guideId: "g-x",
     });
 
-    expect(result).toEqual({ success: false, error: "Guida non trovata" });
+    expect(result).toEqual({ success: false, error: "Traccia non trovata" });
     expect(syncInterviewGuide).not.toHaveBeenCalled();
   });
 
@@ -150,7 +150,7 @@ describe("upsertInterviewGuideAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "La posizione è obbligatoria per creare una guida",
+      error: "La posizione è obbligatoria per creare una traccia",
     });
   });
 
@@ -203,7 +203,7 @@ describe("upsertInterviewGuideAction", () => {
   it("returns the criteria error and saves nothing when a criterion is not active", async () => {
     vi.mocked(assertActiveCriteria).mockRejectedValueOnce(
       new UserError(
-        "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+        "Uno o più criteri non appartengono a questa posizione",
       ),
     );
 
@@ -215,7 +215,7 @@ describe("upsertInterviewGuideAction", () => {
     expect(result).toEqual({
       success: false,
       error:
-        "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+        "Uno o più criteri non appartengono a questa posizione",
     });
     expect(syncInterviewGuide).not.toHaveBeenCalled();
     expect(invalidateInterviewGuideCache).not.toHaveBeenCalled();
@@ -251,7 +251,7 @@ describe("deleteInterviewGuideAction", () => {
 
     const result = await deleteInterviewGuideAction("g-x");
 
-    expect(result).toEqual({ success: false, error: "Guida non trovata" });
+    expect(result).toEqual({ success: false, error: "Traccia non trovata" });
     expect(redirect).not.toHaveBeenCalled();
   });
 
@@ -265,7 +265,7 @@ describe("deleteInterviewGuideAction", () => {
       guideId: "g-1",
       positionId: "pos-1",
     });
-    expect(redirect).toHaveBeenCalledWith("/dashboard/positions/pos-1?tab=guide");
+    expect(redirect).toHaveBeenCalledWith("/dashboard/positions/pos-1?tab=criteri");
   });
 });
 
@@ -317,7 +317,7 @@ describe("generateInterviewGuideAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Crea prima la scheda di valutazione della posizione",
+      error: "Aggiungi prima i criteri della posizione",
     });
     expect(generateInterviewGuide).not.toHaveBeenCalled();
     expect(invalidateInterviewGuideCache).not.toHaveBeenCalled();

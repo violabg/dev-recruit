@@ -466,7 +466,7 @@ function interviewPrep(model: InterviewPrepWidget, actions: WidgetActions): HTML
               button.remove();
               improve?.remove();
               kitBadge.className = "badge tone-done";
-              kitBadge.textContent = "Kit pronto";
+              kitBadge.textContent = "Preparazione pronta";
               status.className = "note is-success";
               status.textContent = outcome.text;
               return;

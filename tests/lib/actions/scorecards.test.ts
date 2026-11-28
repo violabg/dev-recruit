@@ -17,6 +17,8 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/services/scorecards", () => ({
   getActiveCriteria: vi.fn(),
   saveScorecard: vi.fn(),
+  FOREIGN_CRITERIA_MESSAGE:
+    "Uno o più criteri non appartengono a questa posizione",
 }));
 
 vi.mock("@/lib/services/ai/scorecard-generation", () => ({
@@ -128,7 +130,7 @@ describe("saveScorecardAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Uno o più criteri non appartengono a questa scheda",
+      error: "Uno o più criteri non appartengono a questa posizione",
     });
     expect(saveScorecard).not.toHaveBeenCalled();
     expect(invalidateScorecardCache).not.toHaveBeenCalled();

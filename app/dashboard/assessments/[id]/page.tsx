@@ -18,12 +18,14 @@ import {
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 // Tabs removed — rendering results directly
 import { deleteAssessmentAction } from "@/lib/actions/assessments";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { getEvaluationByAssessmentId } from "@/lib/data/evaluations";
 import {
   getAssessmentDetail,
   getRecentAssessmentIds,
 } from "@/lib/data/assessments";
 import { formatDate } from "@/lib/utils";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AssessmentDetailSkeleton } from "./fallbacks";
@@ -86,9 +88,9 @@ async function AssessmentDetailContent({
         <p className="font-medium text-lg">Test non trovato</p>
         <Link
           href="/dashboard/quizzes"
-          className={cn("mt-4", buttonVariants({ variant: "default" }))}
+          className={cn("mt-4", buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Torna ai quiz
+          Vai ai test
         </Link>
       </div>
     );
@@ -107,12 +109,15 @@ async function AssessmentDetailContent({
         timeLimit={quiz.timeLimit}
       />
       <PageHeader
-        title={`Test: ${quiz.title}`}
+        title={`Test inviato: ${quiz.title}`}
+        breadcrumbs={sectionTrail(SECTIONS.assessments, {
+          label: `${candidate.name ?? ""} · ${quiz.title}`,
+        })}
         info={
           <>
-            <Badge variant="outline">
+            <span className="text-muted-foreground text-sm">
               {quiz.positions?.title ?? "Senza ruolo"}
-            </Badge>
+            </span>
             <Badge className={statusPresentation.badge}>
               {statusPresentation.label}
             </Badge>

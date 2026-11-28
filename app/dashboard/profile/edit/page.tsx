@@ -1,8 +1,6 @@
 import { PageHeaderSkeleton } from "@/components/skeletons";
-import { cn } from "cn";
 import PageHeader from "@/components/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
-import { buttonVariants } from "@/components/ui/button";
 
 import { FieldSkeleton } from "@/components/skeletons";
 import {
@@ -14,8 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProfile } from "@/lib/data/profile";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -69,18 +65,10 @@ async function EditProfileContent() {
       <PageHeader
         title="Modifica profilo"
         description="Aggiorna le informazioni del tuo profilo"
-        actionBtns={
-          <Link
-            href={"/dashboard/profile" as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Profilo
-          </Link>
-        }
+        breadcrumbs={[
+          { label: "Profilo", href: "/dashboard/profile" },
+          { label: "Modifica" },
+        ]}
       />
 
       <ProfileForm profile={profile} userEmail={user.email} />

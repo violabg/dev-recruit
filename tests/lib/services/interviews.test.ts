@@ -376,7 +376,7 @@ describe("syncInterviewParticipants", () => {
 
     await expect(
       syncInterviewParticipants(tx as any, "int-1", [{ userId: "u1", role: "lead" }]),
-    ).rejects.toThrow("Il partecipante ha già note o una scheda");
+    ).rejects.toThrow("Il partecipante ha già note o un feedback");
     expect(tx.interviewParticipant.delete).not.toHaveBeenCalled();
   });
 
@@ -390,7 +390,7 @@ describe("syncInterviewParticipants", () => {
 
     await expect(
       syncInterviewParticipants(tx as any, "int-1", [{ userId: "u1", role: "lead" }]),
-    ).rejects.toThrow("Il partecipante ha già note o una scheda");
+    ).rejects.toThrow("Il partecipante ha già note o un feedback");
     expect(tx.interviewParticipant.delete).not.toHaveBeenCalled();
   });
 });
@@ -551,7 +551,7 @@ describe("scheduleInterview", () => {
     db.interviewGuide.findUnique.mockResolvedValue({ ...guide, positionId: "pos-2" });
 
     await expect(scheduleInterview(actor, input)).rejects.toThrow(
-      "Guida non trovata per questa posizione",
+      "Traccia non trovata per questa posizione",
     );
     expect(db.$transaction).not.toHaveBeenCalled();
   });

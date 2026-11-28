@@ -434,6 +434,7 @@ export function AssessmentResultsClient({
               <Button
                 onClick={handleSaveNotes}
                 size="sm"
+                variant="outline"
                 disabled={
                   isSavingNotes || notes === (savedEvaluation.notes ?? "")
                 }

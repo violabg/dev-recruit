@@ -351,6 +351,7 @@ export function QueueRow({
   context,
   detail,
   verb,
+  primary = false,
 }: {
   href: string;
   title: string;
@@ -358,6 +359,8 @@ export function QueueRow({
   context?: ReactNode;
   detail?: ReactNode;
   verb: string;
+  /** The page's single next step: a filled primary, never a hover fill */
+  primary?: boolean;
 }) {
   return (
     <li>
@@ -376,7 +379,14 @@ export function QueueRow({
         <span className="max-md:order-last max-md:col-span-2 min-w-0 text-muted-foreground text-sm truncate">
           {detail}
         </span>
-        <span className="inline-flex items-center bg-background group-hover:bg-primary px-2.5 border group-hover:border-primary rounded-md h-7 font-medium group-hover:text-primary-foreground text-xs whitespace-nowrap transition-colors">
+        <span
+          className={cn(
+            "inline-flex items-center px-2.5 border rounded-md h-7 font-medium text-xs whitespace-nowrap transition-colors",
+            primary
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-background text-foreground",
+          )}
+        >
           {verb}
         </span>
       </Link>

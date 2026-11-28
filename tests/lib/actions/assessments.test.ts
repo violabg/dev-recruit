@@ -373,7 +373,7 @@ describe("assignCandidatesToQuizAction", () => {
   it("throws when the quiz does not exist", async () => {
     vi.mocked(prisma.quiz.findUnique).mockResolvedValueOnce(null);
 
-    expect(await assignCandidatesToQuizAction({ quizId: "nope", candidateIds: ["c1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Quiz non trovato") });
+    expect(await assignCandidatesToQuizAction({ quizId: "nope", candidateIds: ["c1"] }),).toMatchObject({ success: false, error: expect.stringContaining("Test non trovato") });
   });
 });
 
@@ -472,7 +472,7 @@ describe("assignQuizzesToCandidateAction", () => {
       await assignQuizzesToCandidateAction({ candidateId: "c1", quizIds: ["quiz1"] }),
     ).toEqual({
       success: false,
-      error: "Alcuni quiz non sono validi per le posizioni di questo candidato",
+      error: "Alcuni test non sono validi per le posizioni di questo candidato",
     });
     expect(prisma.assessment.create).not.toHaveBeenCalled();
   });
@@ -576,7 +576,7 @@ describe("assessments on applications", () => {
       await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: ["c9"] }),
     ).toEqual({
       success: false,
-      error: "Alcuni candidati non sono validi per la posizione di questo quiz",
+      error: "Alcuni candidati non sono validi per la posizione di questo test",
     });
     expect(prisma.assessment.create).not.toHaveBeenCalled();
   });
@@ -589,7 +589,7 @@ describe("assessments on applications", () => {
       await assignCandidatesToQuizAction({ quizId: "quiz1", candidateIds: ["c1"] }),
     ).toEqual({
       success: false,
-      error: "Alcuni candidati non sono validi per la posizione di questo quiz",
+      error: "Alcuni candidati non sono validi per la posizione di questo test",
     });
     expect(prisma.application.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

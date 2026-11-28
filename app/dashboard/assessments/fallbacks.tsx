@@ -44,7 +44,7 @@ export const AssessmentsSkeleton = () => (
             rows={5}
             columns={[
               { header: "Candidato" },
-              { header: "Quiz" },
+              { header: "Test" },
               { header: "Posizione" },
               { header: "Competenze", cell: "badge" },
               { header: "Stato", cell: "badge" },

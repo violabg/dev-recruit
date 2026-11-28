@@ -16,37 +16,30 @@ type MapItem = {
   children?: string[];
 };
 
-type MapGroup = { label: string; dot: string; items: MapItem[] };
+type MapGroup = { label?: string; dot: string; items: MapItem[] };
 
-const PANORAMICA: MapGroup = {
-  label: "Panoramica",
+const PRINCIPALE: MapGroup = {
   dot: "bg-primary",
-  items: [{ section: "overview", purpose: "Cosa aspetta me, oggi" }],
-};
-
-const SELEZIONE: MapGroup = {
-  label: "Selezione",
-  dot: "bg-section-candidates",
   items: [
+    { section: "overview", purpose: "Cosa aspetta me, oggi" },
     {
       section: "positions",
       purpose: "Le offerte e tutto ciò che serve a valutarle",
-      children: ["Dettagli", "Scheda di valutazione", "Selezione", "Quiz", "Guide colloquio"],
-    },
-    {
-      section: "applications",
-      purpose: "Il percorso di ogni candidato per una posizione",
-      children: ["Panoramica", "CV", "Test", "Colloqui", "Decisione"],
+      children: ["Candidati", "Criteri e domande", "Dettagli"],
     },
     { section: "candidates", purpose: "Le persone, con dati e CV" },
     { section: "agenda", purpose: "I colloqui in calendario" },
   ],
 };
 
-const LIBRERIA: MapGroup = {
-  label: "Libreria",
+const GESTIONE: MapGroup = {
+  label: "Gestione",
   dot: "bg-section-quizzes",
   items: [
+    {
+      section: "applications",
+      purpose: "Il percorso di ogni candidato per una posizione",
+    },
     { section: "quizzes", purpose: "I test da assegnare ai candidati" },
     { section: "assessments", purpose: "I test assegnati e i risultati" },
     { section: "presets", purpose: "Modelli per generare domande" },
@@ -68,10 +61,12 @@ const IMPOSTAZIONI: MapGroup = {
 function Group({ group }: { group: MapGroup }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="flex items-center gap-2 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-        <span aria-hidden className={cn("rounded-full size-2", group.dot)} />
-        {group.label}
-      </h3>
+      {group.label && (
+        <h3 className="flex items-center gap-2 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+          <span aria-hidden className={cn("rounded-full size-2", group.dot)} />
+          {group.label}
+        </h3>
+      )}
       <ul className="flex flex-col gap-2">
         {group.items.map((item) => {
           const section = SECTIONS[item.section];
@@ -133,11 +128,10 @@ export function AppMap() {
 
       <div className="gap-5 grid md:grid-cols-2">
         <div className="flex flex-col gap-5">
-          <Group group={PANORAMICA} />
-          <Group group={LIBRERIA} />
+          <Group group={PRINCIPALE} />
           <Group group={IMPOSTAZIONI} />
         </div>
-        <Group group={SELEZIONE} />
+        <Group group={GESTIONE} />
       </div>
     </div>
   );

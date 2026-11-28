@@ -240,7 +240,7 @@ export async function syncInterviewParticipants(
       where: { interviewId, interviewerId: stored.userId },
     });
     if (notes > 0 || feedback > 0) {
-      throw new UserError("Il partecipante ha già note o una scheda");
+      throw new UserError("Il partecipante ha già note o un feedback");
     }
 
     await tx.interviewParticipant.delete({ where: { id: stored.id } });

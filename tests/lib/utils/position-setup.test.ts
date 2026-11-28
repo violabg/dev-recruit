@@ -1,6 +1,7 @@
 import {
   getPositionSetup,
   POSITION_TABS,
+  resolvePositionTab,
   SETUP_STEP_LABEL,
   SETUP_STEP_TAB,
   type SetupPart,
@@ -42,34 +43,48 @@ describe("getPositionSetup", () => {
 });
 
 describe("setup labels and tabs", () => {
-  it("names every step in Italian", () => {
+  it("names every step with the current vocabulary", () => {
     expect(SETUP_STEP_LABEL).toEqual({
       details: "Dettagli",
-      scorecard: "Scheda di valutazione",
-      quiz: "Quiz",
-      guide: "Guida colloquio",
+      scorecard: "Criteri",
+      quiz: "Test",
+      guide: "Traccia del colloquio",
     });
   });
 
   it("links every step to a tab of the position page", () => {
     expect(SETUP_STEP_TAB).toEqual({
       details: "dettagli",
-      scorecard: "scheda",
-      quiz: "quiz",
-      guide: "guide",
+      scorecard: "criteri",
+      quiz: "criteri",
+      guide: "criteri",
     });
     for (const tab of Object.values(SETUP_STEP_TAB)) {
       expect(POSITION_TABS).toContain(tab);
     }
   });
 
-  it("lists the five tabs in order", () => {
-    expect(POSITION_TABS).toEqual([
-      "dettagli",
-      "scheda",
-      "selezione",
-      "quiz",
-      "guide",
-    ]);
+  it("lists the three tabs in order", () => {
+    expect(POSITION_TABS).toEqual(["candidati", "criteri", "dettagli"]);
   });
+});
+
+describe("resolvePositionTab", () => {
+  it.each([
+    ["candidati", false, "candidati"],
+    ["criteri", true, "criteri"],
+    ["dettagli", false, "dettagli"],
+    ["selezione", false, "candidati"],
+    ["scheda", true, "criteri"],
+    ["quiz", true, "criteri"],
+    ["guide", true, "criteri"],
+    [undefined, true, "candidati"],
+    [undefined, false, "criteri"],
+    ["boh", true, "candidati"],
+  ] as const)(
+    "%s with setup %s resolves to %s",
+    (raw, setupComplete, expected) => {
+      expect(resolvePositionTab(raw, setupComplete)).toBe(expected);
+    },
+  );
 });

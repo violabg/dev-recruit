@@ -52,8 +52,8 @@ export function QuizDetailActionsClient({
 
       <DeleteWithConfirm
         deleteAction={deleteQuizAction.bind(null, quizId)}
-        description="Questa azione non può essere annullata. Il quiz verrà eliminato permanentemente."
-        errorMessage="Errore durante l'eliminazione del quiz"
+        description="Questa azione non può essere annullata. Il test verrà eliminato permanentemente."
+        errorMessage="Errore durante l'eliminazione del test"
       />
 
       <DuplicateQuizDialog

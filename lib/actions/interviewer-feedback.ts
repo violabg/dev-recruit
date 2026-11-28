@@ -20,6 +20,7 @@ import {
   invalidateCandidateCache,
   invalidateInterviewCache,
 } from "../utils/cache-utils";
+import { FOREIGN_CRITERIA_MESSAGE } from "../services/scorecards";
 import { runAction, UserError } from "./run-action";
 
 /** A draft can be saved unless the interview was cancelled or no-show */
@@ -47,7 +48,7 @@ async function persistFeedback(
     select: { id: true, submittedAt: true },
   });
   if (existing?.submittedAt) {
-    throw new UserError("La scheda è già stata inviata");
+    throw new UserError("Il feedback è già stato inviato");
   }
 
   const scored = data.scores.filter((row) => row.score !== null);
@@ -72,9 +73,7 @@ async function persistFeedback(
         .map((criterion) => criterion.id),
     );
     if (scored.some((row) => !allowed.has(row.criterionId))) {
-      throw new UserError(
-        "Uno o più criteri selezionati non appartengono alla scheda della posizione",
-      );
+      throw new UserError(FOREIGN_CRITERIA_MESSAGE);
     }
   }
 
@@ -159,7 +158,7 @@ export async function submitInterviewerFeedbackAction(
     assertInterviewStatus(
       interview,
       SUBMIT_ALLOWED,
-      "Puoi inviare la scheda solo a colloquio concluso",
+      "Puoi inviare il feedback solo a colloquio concluso",
     );
 
     const { feedbackId, stage } = await prisma.$transaction(async (tx) => {

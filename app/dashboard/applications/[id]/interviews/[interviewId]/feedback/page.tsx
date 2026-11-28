@@ -9,14 +9,11 @@ import { InterviewerFeedbackForm } from "@/components/interviews/interviewer-fee
 import { SubmittedFeedbackList } from "@/components/interviews/submitted-feedback-list";
 import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
-import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth-server";
 import { getInterviewFeedbackPage } from "@/lib/data/interviews";
 import type { InterviewerFeedbackFormData } from "@/lib/schemas";
+import { interviewTrail } from "@/lib/utils/breadcrumbs";
 import { buildFeedbackPrefill } from "@/lib/utils/interview-feedback";
-import { cn } from "cn";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -46,7 +43,7 @@ function FeedbackSkeleton() {
     <div className="flex flex-col gap-6">
       <PageHeaderSkeleton description />
       <div className="flex flex-col gap-4">
-        <FieldSkeleton label="Valutazione per criterio" />
+        <FieldSkeleton label="Voti per criterio" />
         <FieldSkeleton label="Raccomandazione finale" />
       </div>
     </div>
@@ -110,20 +107,13 @@ async function FeedbackContent({ params }: { params: FeedbackParams }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Scheda intervistatore"
+        title="Feedback del colloquio"
         description={`${candidateName} · ${interview.position.title} · Round ${interview.round}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/applications/${id}?tab=colloqui` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Candidatura
-          </Link>
-        }
+        breadcrumbs={interviewTrail(
+          { id, candidateName, position: interview.position },
+          interview,
+          "Feedback",
+        )}
       >
         <div className="flex flex-col">
           <InterviewSteps
@@ -136,8 +126,8 @@ async function FeedbackContent({ params }: { params: FeedbackParams }) {
           {viewerSubmitted && (
             <NextStep
               pointer={stationPointer(interviewStepIndex("feedback"), INTERVIEW_STEP_COUNT)}
-              title="Scheda inviata: passa alla decisione"
-              description="Confronta le schede di tutti i colloqui e registra l'esito."
+              title="Feedback inviato: passa alla decisione"
+              description="Confronta i feedback di tutti i colloqui e registra l'esito."
               href={`/dashboard/applications/${id}/decision`}
               actionLabel="Apri decisione"
             />
@@ -160,7 +150,7 @@ async function FeedbackContent({ params }: { params: FeedbackParams }) {
         />
       ) : (
         <p className="bg-muted px-3 py-2 rounded-md text-muted-foreground text-sm">
-          Non partecipi a questo colloquio: non hai una scheda da compilare
+          Non partecipi a questo colloquio: non hai un feedback da scrivere
         </p>
       )}
 

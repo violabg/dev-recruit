@@ -159,7 +159,7 @@ const PositionsTable = async ({
             <EmptyContent>
               <Link
                 href="/dashboard/positions/new"
-                className={buttonVariants({ variant: "default", size: "sm" })}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
               >
                 <Plus className="mr-1 size-4" />
                 Crea posizione

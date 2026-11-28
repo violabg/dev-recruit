@@ -14,9 +14,9 @@ export default function QuizzesError({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Quiz</h1>
+        <h1 className="font-display font-extrabold text-heading text-[2.125rem] lg:text-[2.5rem] text-balance leading-[2.5rem] lg:leading-[2.875rem] tracking-[-0.03em]">Test</h1>
         <p className="text-muted-foreground">
-          Gestisci i quiz per le tue posizioni aperte
+          Gestisci i test per le tue posizioni aperte
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function QuizzesError({
               <AlertCircle className="w-6 h-6 text-destructive" />
             </div>
             <h2 className="mb-2 font-semibold text-lg">
-              Errore nel caricamento dei quiz
+              Errore nel caricamento dei test
             </h2>
             <p className="mb-6 text-muted-foreground text-sm">
               Si è verificato un errore durante il caricamento della pagina.

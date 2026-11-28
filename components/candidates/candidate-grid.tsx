@@ -101,7 +101,7 @@ export function CandidateGrid({ candidates }: CandidateGridProps) {
                   }
                 >
                   <Link2 className="mr-1 size-4" />
-                  Associa quiz
+                  Associa test
                 </DropdownMenuItem>
                 {candidate.assessments && candidate.assessments.length > 0 && (
                   <DropdownMenuItem

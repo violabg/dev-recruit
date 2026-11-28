@@ -1,11 +1,8 @@
 import PageHeader from "@/components/page-header";
 import { ScorecardEditor } from "@/components/scorecard/scorecard-editor";
-import { buttonVariants } from "@/components/ui/button";
 import { getAllPositions, getPositionById } from "@/lib/data/positions";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
-import { cn } from "cn";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { positionTrail } from "@/lib/utils/breadcrumbs";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ScorecardEditorSkeleton } from "../fallbacks";
@@ -44,20 +41,9 @@ async function ScorecardContent({ params }: ScorecardPageProps) {
   return (
     <>
       <PageHeader
-        title="Scheda di valutazione"
+        title="Criteri della posizione"
         description={position.title}
-        actionBtns={
-          <Link
-            href={`/dashboard/positions/${id}?tab=scheda`}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="mr-1 size-4" />
-            Torna alla posizione
-          </Link>
-        }
+        breadcrumbs={positionTrail(position, { label: "Criteri" })}
       />
       <ScorecardEditor
         positionId={id}

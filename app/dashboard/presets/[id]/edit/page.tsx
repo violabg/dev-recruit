@@ -1,15 +1,14 @@
 import { cn } from "cn";
 import PageHeader from "@/components/page-header";
 import { PresetForm } from "@/components/presets/preset-form";
-import { buttonVariants } from "@/components/ui/button";
+import { SECTIONS } from "@/components/dashboard/sections";
 import {
   Card,
   CardContent,
   } from "@/components/ui/card";
 import { getPresetData } from "@/lib/data/presets";
-import { ArrowLeft } from "lucide-react";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { Route } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EditPresetSkeleton } from "../fallbacks";
@@ -48,18 +47,11 @@ async function EditPresetContent({ params }: EditPresetPageProps) {
       <PageHeader
         title="Modifica preset"
         description={`${preset.name}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/presets/${preset.id}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Torna al preset
-          </Link>
-        }
+        breadcrumbs={sectionTrail(
+          SECTIONS.presets,
+          { label: preset.name, href: `/dashboard/presets/${preset.id}` },
+          { label: "Modifica" },
+        )}
       />
       <Card>
       <CardContent>

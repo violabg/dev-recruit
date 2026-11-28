@@ -89,6 +89,7 @@ export function DevilsAdvocatePanel({
         <div className="flex flex-col items-start gap-1">
           <Button
             type="button"
+            variant="outline"
             onClick={challenge}
             disabled={!draft.outcome || isPending}
           >

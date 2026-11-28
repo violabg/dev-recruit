@@ -8,12 +8,9 @@ import { LegalReminder } from "@/components/interviews/legal-reminder";
 import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { getInterviewForPreparation } from "@/lib/data/interviews";
 import { getUserOptions } from "@/lib/data/users";
-import { cn } from "cn";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { interviewTrail } from "@/lib/utils/breadcrumbs";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -66,28 +63,27 @@ async function EditPrepareContent({ params }: { params: EditPrepareParams }) {
     `${interview.candidate.firstName} ${interview.candidate.lastName}`.trim();
   const status = getInterviewStatusPresentation(interview.status);
   const kitStatus = KIT_STATUS_PRESENTATION[interview.kit.status];
-  const linkClass = cn(
-    buttonVariants({ variant: "outline", size: "sm" }),
-    "inline-flex",
-  );
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Modifica preparazione"
+        title="Modifica la preparazione"
         description={`${candidateName} · ${interview.position.title} · Round ${interview.round}`}
+        breadcrumbs={interviewTrail(
+          { id, candidateName, position: interview.position },
+          interview,
+          "Modifica preparazione",
+        )}
         info={
           <div className="flex flex-wrap items-center gap-2">
             <Badge className={status.badge}>{status.label}</Badge>
-            <Badge className={kitStatus.badge}>{kitStatus.label}</Badge>
+            <span className="text-muted-foreground text-sm">
+              {kitStatus.label}
+            </span>
           </div>
         }
         actionBtns={
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={`${basePath}/prepare` as never} className={linkClass}>
-              <ArrowLeft className="size-4" />
-              Preparazione
-            </Link>
             <InterviewCardActions
               interview={{
                 id: interview.id,

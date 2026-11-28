@@ -70,7 +70,7 @@ const positionStatusBadge = (status: string): WidgetBadge => {
 };
 
 const kitLabel = (status: KitStatus | null) =>
-  status ? KIT_STATUS_PRESENTATION[status].label : "Nessun kit";
+  status ? KIT_STATUS_PRESENTATION[status].label : "Nessuna preparazione";
 
 const join = (...parts: (string | null | undefined | false)[]) =>
   parts.filter(Boolean).join(" · ");
@@ -85,8 +85,8 @@ const askApplication = (candidateName: string, positionTitle: string, id: string
 const SUMMARY: Record<ActionCenterWidget["queues"][number]["key"], string> = {
   setup: "Posizioni",
   tests: "Test",
-  kits: "Kit",
-  scorecards: "Schede",
+  kits: "Preparazioni",
+  scorecards: "Feedback",
   stale: "Ferme",
 };
 
@@ -134,7 +134,7 @@ export function buildActionCenterWidget(
         key: "kits",
         title: QUEUE_TITLES.kits,
         short: SUMMARY.kits,
-        empty: "Kit pronti per oggi e domani",
+        empty: "Preparazioni pronte per oggi e domani",
         rows: data.interviewsWithoutKit.map((row) => ({
           title: row.candidateName,
           meta: join(row.positionTitle, `Round ${row.round}`, formatDateTime(row.scheduledAt)),

@@ -82,12 +82,16 @@ const screenReaderInstructions: ScreenReaderInstructions = {
  */
 export function ApplicationKanban({
   applications,
+  waitingIds,
 }: {
   applications: ApplicationCard[];
+  /** Applications waiting for an action of the viewer: highlighted cards */
+  waitingIds?: string[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const waiting = new Set(waitingIds ?? []);
 
   // The card shows in the target column at once; the stage reverts by itself
   // when the action fails
@@ -157,6 +161,7 @@ export function ApplicationKanban({
 
   return (
     <DndContext
+      id="application-kanban"
       sensors={sensors}
       collisionDetection={closestCenter}
       accessibility={{ announcements, screenReaderInstructions }}
@@ -172,6 +177,7 @@ export function ApplicationKanban({
             cards={columns.get(key) ?? []}
             dragging={activeId !== null}
             disabled={isPending}
+            waiting={waiting}
           />
         ))}
       </div>
@@ -198,11 +204,13 @@ function KanbanColumn({
   cards,
   dragging,
   disabled,
+  waiting,
 }: {
   columnKey: KanbanColumnKey;
   cards: ApplicationCard[];
   dragging: boolean;
   disabled: boolean;
+  waiting: Set<string>;
 }) {
   const droppable = columnKey !== "closed";
   const { setNodeRef, isOver } = useDroppable({
@@ -242,6 +250,7 @@ function KanbanColumn({
             key={card.id}
             card={card}
             disabled={disabled}
+            isWaiting={waiting.has(card.id)}
           />
         ))
       )}
@@ -259,9 +268,12 @@ function KanbanColumn({
 function DraggableCard({
   card,
   disabled,
+  isWaiting,
 }: {
   card: ApplicationCard;
   disabled: boolean;
+  /** The viewer has an action waiting on this application */
+  isWaiting: boolean;
 }) {
   const name = candidateName(card);
   const stage = card.stage;
@@ -274,13 +286,20 @@ function DraggableCard({
   return (
     <Card
       ref={setNodeRef}
-      className={cn("py-3", isDragging && "opacity-40")}
+      className={cn(
+        "py-3",
+        isWaiting && "ring-2 ring-primary",
+        isDragging && "opacity-40",
+      )}
     >
       <CardContent className="flex flex-col gap-2 px-3">
         <div className="flex justify-between items-start gap-1">
           <Link
             href={`/dashboard/applications/${card.id}` as never}
-            className="font-medium hover:underline"
+            className={cn(
+              "font-medium hover:underline",
+              isWaiting && "text-primary",
+            )}
           >
             {name}
           </Link>

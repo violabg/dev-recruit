@@ -40,6 +40,8 @@ const detailRow = {
   stage: "screening",
   stageChangedAt: new Date("2026-01-02"),
   createdAt: new Date("2026-01-01"),
+  decision: null,
+  decidedAt: null,
   candidateId: "cand1",
   positionId: "pos1",
   owner: { id: "u1", name: "Laura" },
@@ -51,6 +53,7 @@ const detailRow = {
     resumeUrl: "https://r2/cv.pdf",
     doNotContact: false,
     doNotContactNote: null,
+    applications: [],
   },
   position: { id: "pos1", title: "Dev", experienceLevel: "senior", status: "open" },
   assessments: [],
@@ -229,6 +232,51 @@ describe("getApplicationDetail", () => {
       availableQuizzes: [{ id: "q-new" }],
     });
     expect(detail).not.toHaveProperty("candidateId");
+  });
+
+  it("loads the decision facts and the candidate's other applications", async () => {
+    const decidedAt = new Date("2026-02-01");
+    db.application.findUnique.mockResolvedValueOnce({
+      ...detailRow,
+      decision: "offer",
+      decidedAt,
+      candidate: {
+        ...detailRow.candidate,
+        applications: [
+          {
+            id: "app0",
+            stage: "screening",
+            stageChangedAt: new Date("2026-01-05"),
+            position: { id: "pos0", title: "QA" },
+          },
+        ],
+      },
+    });
+    db.evaluation.findFirst.mockResolvedValueOnce(null);
+    db.assessment.findMany.mockResolvedValueOnce([]);
+    db.quiz.findMany.mockResolvedValueOnce([]);
+
+    const detail = await getApplicationDetail("app1");
+
+    expect(detail?.decision).toBe("offer");
+    expect(detail?.decidedAt).toEqual(decidedAt);
+    expect(detail?.otherApplications).toEqual([
+      {
+        id: "app0",
+        stage: "screening",
+        stageChangedAt: new Date("2026-01-05"),
+        position: { id: "pos0", title: "QA" },
+      },
+    ]);
+    expect(detail?.candidate).not.toHaveProperty("applications");
+
+    const select = db.application.findUnique.mock.calls[0][0].select;
+    expect(select.decision).toBe(true);
+    expect(select.decidedAt).toBe(true);
+    expect(select.candidate.select.applications).toMatchObject({
+      where: { id: { not: "app1" } },
+      orderBy: { stageChangedAt: "desc" },
+    });
   });
 });
 

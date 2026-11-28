@@ -330,10 +330,10 @@ describe("hasTitleOnPosition", () => {
 
 describe("formatQuizAddSummary", () => {
   it("uses the singular for one quiz", () => {
-    expect(formatQuizAddSummary(1)).toBe("1 quiz aggiunto alla posizione");
+    expect(formatQuizAddSummary(1)).toBe("1 test aggiunto alla posizione");
   });
 
   it("uses the plural for more quizzes", () => {
-    expect(formatQuizAddSummary(3)).toBe("3 quiz aggiunti alla posizione");
+    expect(formatQuizAddSummary(3)).toBe("3 test aggiunti alla posizione");
   });
 });

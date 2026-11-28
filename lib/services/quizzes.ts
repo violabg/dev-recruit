@@ -100,7 +100,7 @@ export async function saveQuiz(
   const parsed = saveQuizSchema.safeParse(input);
   if (!parsed.success) {
     throw new UserError(
-      parsed.error.issues[0]?.message ?? "Dati del quiz non validi",
+      parsed.error.issues[0]?.message ?? "Dati del test non validi",
     );
   }
   const { quizId, positionId, title, timeLimit } = parsed.data;
@@ -112,7 +112,7 @@ export async function saveQuiz(
     });
 
     if (!quiz) {
-      throw new UserError("Quiz non trovato o accesso negato.");
+      throw new UserError("Test non trovato o accesso negato.");
     }
 
     const questions = await checkQuestionCriteria(
@@ -239,11 +239,11 @@ export async function addExistingQuizzesToPosition(
   });
 
   if (sources.length !== params.quizIds.length) {
-    throw new UserError("Uno o più quiz non esistono più");
+    throw new UserError("Uno o più test non esistono più");
   }
 
   if (sources.some((source) => source.positionId === params.positionId)) {
-    throw new UserError("Uno o più quiz appartengono già a questa posizione");
+    throw new UserError("Uno o più test appartengono già a questa posizione");
   }
 
   const sourcesById = new Map(sources.map((source) => [source.id, source]));
@@ -252,7 +252,7 @@ export async function addExistingQuizzesToPosition(
   for (const quizId of params.quizIds) {
     const source = sourcesById.get(quizId);
     if (!source) {
-      throw new UserError("Uno o più quiz non esistono più");
+      throw new UserError("Uno o più test non esistono più");
     }
     const { id } = await copyQuizToPosition(tx, {
       source,

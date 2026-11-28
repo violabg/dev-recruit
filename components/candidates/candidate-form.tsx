@@ -9,7 +9,6 @@ import {
   TextareaField,
 } from "@/components/ui/rhf-inputs";
 import {
-  applyAsCandidateAction,
   createCandidateAction,
   updateCandidateAction,
 } from "@/lib/actions/candidates";
@@ -31,13 +30,6 @@ import { FileUpload } from "../ui/file-upload";
 type CandidateFormProps =
   | {
       mode: "new";
-      positions: { id: string; title: string }[];
-      defaultPositionId?: string;
-      disabled?: boolean;
-      onPositionSelect?: (positionIds: string[]) => void;
-    }
-  | {
-      mode: "apply";
       positions: { id: string; title: string }[];
       defaultPositionId?: string;
       disabled?: boolean;
@@ -68,9 +60,7 @@ export const CandidateForm = (props: CandidateFormProps) => {
   const [isPending, startTransition] = useTransition();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [removeExistingResume, setRemoveExistingResume] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const isEditMode = props.mode === "edit";
-  const isApplyMode = props.mode === "apply";
 
   const formatDateForInput = (value?: Date | string | null) => {
     if (!value) {
@@ -228,11 +218,6 @@ export const CandidateForm = (props: CandidateFormProps) => {
 
     startTransition(async () => {
       try {
-        if (isApplyMode) {
-          unwrap(await applyAsCandidateAction(formData));
-          setIsSubmitted(true);
-          return;
-        }
         const { candidateId } = unwrap(await createCandidateAction(formData));
         router.push(`/dashboard/candidates/${candidateId}`);
       } catch (submitError: unknown) {
@@ -242,34 +227,6 @@ export const CandidateForm = (props: CandidateFormProps) => {
       }
     });
   };
-
-  // Show success message after apply submission
-  if (isApplyMode && isSubmitted) {
-    return (
-      <div className="py-8 text-center">
-        <div className="flex justify-center items-center bg-success/10 mx-auto mb-4 rounded-full w-16 h-16">
-          <svg
-            className="w-8 h-8 text-success"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </div>
-        <h3 className="mb-2 font-semibold text-lg">Candidatura inviata!</h3>
-        <p className="text-muted-foreground">
-          Grazie per esserti candidato. Ti contatteremo presto per fornirti
-          maggiori dettagli sul processo di selezione.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form
@@ -395,16 +352,10 @@ export const CandidateForm = (props: CandidateFormProps) => {
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 size-4 animate-spin" />
-                      {isEditMode
-                        ? "Salvataggio..."
-                        : isApplyMode
-                          ? "Invio..."
-                          : "Creazione..."}
+                      {isEditMode ? "Salvataggio..." : "Creazione..."}
                     </>
                   ) : isEditMode ? (
                     "Aggiorna candidato"
-                  ) : isApplyMode ? (
-                    "Invia candidatura"
                   ) : (
                     "Crea candidato"
                   )}

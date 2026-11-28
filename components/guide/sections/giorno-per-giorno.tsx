@@ -1,6 +1,5 @@
 import {
   GuideDiagram,
-  GuideFigure,
   GuideSection,
   GuideTable,
   GuideText,
@@ -12,9 +11,9 @@ const meta = GUIDE_SECTION["giorno-per-giorno"];
 const flow = `flowchart TD
     A["<b>Le mie azioni</b><br/>cosa aspetta me"]:::entity --> B{"Tipo di lavoro"}:::step
     B -->|Test completato| C["<b>Valuta il test</b><br/>Test inviati"]:::step
-    B -->|Colloquio oggi/domani| D["<b>Prepara il kit</b><br/>o apri il Live"]:::step
-    B -->|Colloquio concluso| E["<b>Compila la scheda</b>"]:::step
-    B -->|Posizione da completare| F["<b>Scheda · Quiz · Guida</b>"]:::step
+    B -->|Colloquio oggi/domani| D["<b>Prepara il colloquio</b><br/>o apri il Live"]:::step
+    B -->|Colloquio concluso| E["<b>Scrivi il feedback</b>"]:::step
+    B -->|Posizione da preparare| F["<b>Criteri · Test · Traccia</b>"]:::step
     C --> G["<b>Candidature</b><br/>pipeline e kanban"]:::entity
     D --> G
     E --> H["<b>Decisione</b>"]:::outcome
@@ -44,9 +43,9 @@ export function GiornoPerGiornoSection() {
             'Filtri per fase e posizione, "Solo le mie"',
           ],
           [
-            "Vedere una posizione nel dettaglio",
-            <strong key="c">Posizioni → Selezione</strong>,
-            'Kanban e "Sposta fase"',
+            "Vedere una posizione",
+            <strong key="c">Posizioni → Candidati</strong>,
+            'Kanban, card in evidenza e "Sposta fase"',
           ],
           [
             "Gestire la giornata di colloqui",
@@ -57,24 +56,18 @@ export function GiornoPerGiornoSection() {
       />
 
       <GuideText>
-        In <strong>Le mie azioni</strong> le code seguono l&apos;ordine della
-        selezione: posizioni con setup incompleto, test da valutare, colloqui
-        senza kit pronto, schede da compilare. In alto i numeri di ogni coda
+        In <strong>Le mie azioni</strong> le code seguono l&apos;ordine
+        dell&apos;applicazione: posizioni da preparare, test da valutare,
+        colloqui senza
+        preparazione pronta, feedback da inviare. In alto i numeri di ogni coda
         (un clic porta alla coda); sotto, una fermata per coda con le righe e
-        il pulsante dell&apos;azione. Una coda vuota è una riga verde; le
-        candidature ferme stanno a parte, in fondo, in ambra. &quot;Solo le
-        mie&quot;, nell&apos;intestazione, lascia le candidature e i test di
-        cui sei responsabile, i colloqui a cui partecipi e le tue schede; le
-        posizioni da completare restano sempre visibili.
+        il pulsante dell&apos;azione, il primo dei quali è l&apos;unico pulsante
+        blu della pagina. Una coda vuota è una riga verde; le candidature ferme
+        stanno a parte, in fondo, in ambra. &quot;Solo le mie&quot;,
+        nell&apos;intestazione, lascia le candidature e i test di cui sei
+        responsabile, i colloqui a cui partecipi e i tuoi feedback; le posizioni
+        da preparare restano sempre visibili.
       </GuideText>
-
-      <GuideFigure
-        src="/guida/01-le-mie-azioni.png"
-        alt="Homepage Le mie azioni con le righe di lavoro in attesa"
-        caption="Le mie azioni: cosa aspetta il recruiter"
-        width={1440}
-        height={1000}
-      />
     </GuideSection>
   );
 }

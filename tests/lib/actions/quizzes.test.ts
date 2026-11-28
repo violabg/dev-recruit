@@ -813,7 +813,7 @@ describe("addExistingQuizzesToPositionAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Seleziona almeno un quiz",
+      error: "Seleziona almeno un test",
     });
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
@@ -826,7 +826,7 @@ describe("addExistingQuizzesToPositionAction", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Puoi aggiungere al massimo 20 quiz alla volta",
+      error: "Puoi aggiungere al massimo 20 test alla volta",
     });
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });

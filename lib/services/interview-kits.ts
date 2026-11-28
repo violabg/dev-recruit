@@ -34,7 +34,7 @@ import { answerToText } from "./assessment-evaluation";
 import { assertInterviewStatus, loadInterview } from "./interviews";
 import { resumePublicUrl } from "./r2-storage";
 import { extractTextFromPDF } from "./resume-evaluation";
-import { type ActiveCriterion, getActiveCriteria } from "./scorecards";
+import { FOREIGN_CRITERIA_MESSAGE, type ActiveCriterion, getActiveCriteria } from "./scorecards";
 import { UserError } from "./user-error";
 
 /** Checklist of every new kit; the legal reminder is a fixed component, never stored */
@@ -105,7 +105,7 @@ export async function loadGuideForSnapshot(
   });
 
   if (!guide || guide.positionId !== positionId) {
-    throw new UserError("Guida non trovata per questa posizione");
+    throw new UserError("Traccia non trovata per questa posizione");
   }
 
   return {
@@ -176,10 +176,10 @@ export async function syncKitItems(
 
   for (const item of items) {
     if (!sectionIds.has(item.sectionId)) {
-      throw new UserError("Sezione del kit non valida");
+      throw new UserError("Sezione della preparazione non valida");
     }
     if (item.id && !storedById.has(item.id)) {
-      throw new UserError("Una o più domande non appartengono a questo kit");
+      throw new UserError("Una o più domande non appartengono a questa preparazione");
     }
   }
 
@@ -297,7 +297,7 @@ export async function cleanKitCriteria(
   const assertUsable = (id: string) => {
     if (known.get(id) && !storedIds.has(id)) {
       throw new UserError(
-        "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+        FOREIGN_CRITERIA_MESSAGE,
       );
     }
   };
@@ -324,7 +324,8 @@ export async function cleanKitCriteria(
 
 /** The kit changes only while the interview is scheduled */
 const KIT_EDITABLE = ["scheduled"] as const;
-const KIT_LOCKED_MESSAGE = "Il kit si modifica solo prima del colloquio";
+export const KIT_LOCKED_MESSAGE =
+  "La preparazione si modifica solo prima del colloquio";
 
 async function loadKit(interviewId: string) {
   const kit = await prisma.interviewKit.findUnique({
@@ -354,7 +355,7 @@ export async function saveInterviewKit(
 
   if (options?.requireDraftStatus && kit.status === "ready") {
     throw new UserError(
-      "Il kit è pronto: riportalo in bozza dalla dashboard per modificarlo",
+      "La preparazione è pronta: riportala in bozza dalla dashboard per modificarla",
     );
   }
 
@@ -541,7 +542,7 @@ export async function buildKitGenerationContext(
 
   const criteria = await getActiveCriteria(application.positionId);
   if (criteria.length === 0) {
-    throw new UserError("Crea prima la scheda di valutazione della posizione");
+    throw new UserError("Aggiungi prima i criteri della posizione");
   }
 
   // CV text: birth date redacted BEFORE sanitizing (mandatory order)

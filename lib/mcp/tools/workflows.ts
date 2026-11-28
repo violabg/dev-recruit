@@ -19,7 +19,7 @@ export const getWorkflowTool = defineTool({
   name: "get_workflow",
   title: "Procedura di lavoro",
   description:
-    "I passi da seguire per un'attività di dev-recruit (Le mie azioni, nuova posizione, quiz, colloquio, kit, preparazione). Chiamalo prima di iniziare l'attività. Non legge dati della selezione.",
+    "I passi da seguire per un'attività di dev-recruit (Le mie azioni, nuova posizione, test, colloquio, preparazione, preparazione a un colloquio). Chiamalo prima di iniziare l'attività. Non legge dati della selezione.",
   scope: "recruit:read",
   group: "read",
   inputSchema: getWorkflowInputSchema,

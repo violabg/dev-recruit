@@ -206,11 +206,11 @@ describe("open_quiz_form", () => {
     expect(saveQuiz).not.toHaveBeenCalled();
     expect(openQuizFormTool.readOnly).toBe(true);
     expect(result.invalidate).toBeUndefined();
-    expect(result.text).toContain(`${APP_URL}/dashboard/positions/pos-1?tab=quiz`);
+    expect(result.text).toContain(`${APP_URL}/dashboard/positions/pos-1?tab=criteri`);
     expect(result.structured?.widget).toMatchObject({
       kind: "quiz-form",
       position: { id: "pos-1", title: "Frontend", skills: ["React"] },
-      prefill: { quizTitle: "Quiz per Frontend (Senior)", questionCount: 5, enableTimeLimit: false },
+      prefill: { quizTitle: "Test per Frontend (Senior)", questionCount: 5, enableTimeLimit: false },
       previewTool: "save_quiz_draft",
     });
   });
@@ -437,6 +437,6 @@ describe("kit tools", () => {
 
     expect(setInterviewKitStatus).toHaveBeenCalledWith(actor, { interviewId: "int-1", status: "ready" });
     expect(result.invalidate).toEqual([{ kind: "interview", interviewId: "int-1", applicationId: "app-1" }]);
-    expect(result.text).toContain("pronto");
+    expect(result.text).toContain("pronta");
   });
 });

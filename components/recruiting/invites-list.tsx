@@ -77,7 +77,7 @@ export function InvitesList({ assignedAssessments }: InvitesListProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Candidato</TableHead>
-              <TableHead>Quiz</TableHead>
+              <TableHead>Test</TableHead>
               <TableHead>Stato</TableHead>
               <TableHead>Creato</TableHead>
               <TableHead className="text-right">Azioni</TableHead>

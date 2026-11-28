@@ -1,4 +1,5 @@
 import PageHeader from "@/components/page-header";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { UserAccessCard } from "@/components/users/user-access-card";
 import { UserDataForm } from "@/components/users/user-data-form";
 import { UserSessionsCard } from "@/components/users/user-sessions-card";
@@ -8,6 +9,7 @@ import {
   getUserSessions,
   getUsersActivity,
 } from "@/lib/data/users";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -51,6 +53,7 @@ async function UserDetailContent({ params }: UserDetailPageProps) {
       <PageHeader
         title={user.name}
         description={user.email}
+        breadcrumbs={sectionTrail(SECTIONS.users, { label: user.name })}
         info={
           <span className="text-muted-foreground text-sm">
             Creato il {createdAt} · Ultimo accesso {lastLogin}

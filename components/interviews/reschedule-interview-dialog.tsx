@@ -38,7 +38,7 @@ export type RescheduleInterviewDefaults = {
 
 /**
  * Edits date, duration, call link and participants of a scheduled
- * interview. Guide and round never change; the kit is kept.
+ * interview. The guide and round never change; the preparation is kept.
  */
 export function RescheduleInterviewDialog({
   open,
@@ -85,7 +85,7 @@ export function RescheduleInterviewDialog({
         <DialogHeader>
           <DialogTitle>Modifica colloquio</DialogTitle>
           <DialogDescription>
-            Cambia data, durata, link e partecipanti. Guida, round e kit
+            Cambia data, durata, link e partecipanti. Traccia, round e preparazione
             restano invariati; l&apos;app non invia email.
           </DialogDescription>
         </DialogHeader>

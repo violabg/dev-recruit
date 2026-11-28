@@ -89,7 +89,7 @@ export function CandidateSelectionForm({
       {unassignedCandidates.length === 0 ? (
         <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-40 text-center">
           <p className="text-muted-foreground text-sm">
-            Nessun candidato da assegnare per la posizione di questo quiz.
+            Nessun candidato da assegnare per la posizione di questo test.
           </p>
           <p className="mt-1 text-muted-foreground text-xs">
             Tutti i candidati di questa posizione sono già stati assegnati,
@@ -108,7 +108,7 @@ export function CandidateSelectionForm({
             label="Seleziona i candidati"
             required
             options={candidateOptions}
-            placeholder="Seleziona i candidati a cui assegnare questo quiz"
+            placeholder="Seleziona i candidati a cui assegnare questo test"
             showClear
           />
 

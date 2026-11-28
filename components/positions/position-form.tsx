@@ -219,10 +219,10 @@ export function PositionForm({
               <div className="flex justify-end">
                 <Button
                   type="button"
+                  variant="outline"
                   size="sm"
                   onClick={handleGenerateDescription}
                   disabled={isGeneratingDescription || isPending}
-                  className="bg-primary/10 hover:bg-primary/20 shadow-none border border-primary/20 text-primary"
                 >
                   {isGeneratingDescription ? (
                     <>

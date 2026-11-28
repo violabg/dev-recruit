@@ -1,18 +1,37 @@
 /**
- * Setup steps of a position: the single rule used by the setup checklist of the
- * position page and by "Le mie azioni".
+ * Setup steps of a position: the single rule used by the tabs of the position
+ * page and by "Le mie azioni".
  * Pure module: no server imports.
  */
 
-export const POSITION_TABS = [
-  "dettagli",
-  "scheda",
-  "selezione",
-  "quiz",
-  "guide",
-] as const;
+export const POSITION_TABS = ["candidati", "criteri", "dettagli"] as const;
 
 export type PositionTab = (typeof POSITION_TABS)[number];
+
+/** Tab values of the former five tabs: they open the new tab, without redirect. */
+export const LEGACY_POSITION_TABS: Readonly<Record<string, PositionTab>> = {
+  selezione: "candidati",
+  scheda: "criteri",
+  quiz: "criteri",
+  guide: "criteri",
+};
+
+/**
+ * The tab a ?tab= value opens: a current value itself, a legacy value its new
+ * tab, anything else the setup-based default (criteri while incomplete).
+ */
+export function resolvePositionTab(
+  raw: string | undefined,
+  setupComplete: boolean,
+): PositionTab {
+  if (raw && (POSITION_TABS as readonly string[]).includes(raw)) {
+    return raw as PositionTab;
+  }
+  if (raw && raw in LEGACY_POSITION_TABS) {
+    return LEGACY_POSITION_TABS[raw];
+  }
+  return setupComplete ? "candidati" : "criteri";
+}
 
 export type SetupPart = "scorecard" | "quiz" | "guide";
 
@@ -53,14 +72,15 @@ export function getPositionSetup(counts: {
 
 export const SETUP_STEP_LABEL: Record<"details" | SetupPart, string> = {
   details: "Dettagli",
-  scorecard: "Scheda di valutazione",
-  quiz: "Quiz",
-  guide: "Guida colloquio",
+  scorecard: "Criteri",
+  quiz: "Test",
+  guide: "Traccia del colloquio",
 };
 
+/** Every missing part is set up in the "Criteri e domande" tab. */
 export const SETUP_STEP_TAB: Record<"details" | SetupPart, PositionTab> = {
   details: "dettagli",
-  scorecard: "scheda",
-  quiz: "quiz",
-  guide: "guide",
+  scorecard: "criteri",
+  quiz: "criteri",
+  guide: "criteri",
 };

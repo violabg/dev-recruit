@@ -55,7 +55,7 @@ describe("saveQuizSchema", () => {
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.message).toBe(
-      "La posizione è obbligatoria per creare un quiz",
+      "La posizione è obbligatoria per creare un test",
     );
   });
 });

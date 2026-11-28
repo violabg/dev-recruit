@@ -7,26 +7,31 @@ import Link from "next/link";
 
 type Props = {
   params: Promise<{ id: string }>;
+  /** This section holds the page's next step: its creation link is primary */
+  primary?: boolean;
 };
 
-/** Tab "Guide colloquio": the interview guides of the position. */
-export async function Guides({ params }: Props) {
+/** Tab "Tracce": the interview guides of the position. */
+export async function Guides({ params, primary = false }: Props) {
   const { id } = await params;
   const guides = await getInterviewGuidesByPosition(id);
   const newGuideHref = `/dashboard/positions/${id}/guides/new` as const;
 
   return (
     <>
-      <div className="flex justify-between">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
-          Guide colloquio
+          Tracce del colloquio
         </h2>
         <Link
           href={newGuideHref}
-          className={buttonVariants({ variant: "default", size: "sm" })}
+          className={buttonVariants({
+            variant: primary ? "default" : "outline",
+            size: "sm",
+          })}
         >
           <Plus className="mr-1 size-4" />
-          Nuova guida
+          Nuova traccia
         </Link>
       </div>
 
@@ -70,11 +75,9 @@ export async function Guides({ params }: Props) {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
-          <p className="text-muted-foreground text-sm">
-            Nessuna guida colloquio per questa posizione
-          </p>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          Nessuna traccia per questa posizione
+        </p>
       )}
     </>
   );

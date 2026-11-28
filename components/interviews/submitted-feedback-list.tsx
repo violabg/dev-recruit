@@ -44,7 +44,7 @@ export function SubmittedFeedbackList({
     return (
       <section className="flex flex-col gap-4">
         <h2 className="font-semibold text-lg">
-          Schede già inviate ({items.length})
+          Feedback già inviati ({items.length})
         </h2>
         {list}
       </section>
@@ -62,12 +62,12 @@ export function SubmittedFeedbackList({
         }
       >
         <span className="font-semibold text-lg">
-          Schede già inviate ({items.length})
+          Feedback già inviati ({items.length})
         </span>
         <ChevronDown className="size-4 text-muted-foreground group-data-[panel-open]:rotate-180 transition-transform" />
       </CollapsibleTrigger>
       <p className="text-muted-foreground text-sm">
-        Per un giudizio indipendente, leggile dopo aver inviato la tua
+        Per un giudizio indipendente, leggili dopo aver inviato il tuo
       </p>
       <CollapsibleContent>{list}</CollapsibleContent>
     </Collapsible>

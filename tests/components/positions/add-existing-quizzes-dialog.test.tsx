@@ -78,14 +78,14 @@ const renderDialog = () =>
 const openDialog = async () => {
   renderDialog();
   fireEvent.click(
-    screen.getByRole("button", { name: "Aggiungi quiz esistenti" }),
+    screen.getByRole("button", { name: "Aggiungi test esistenti" }),
   );
-  expect(await screen.findByText("2 quiz")).toBeTruthy();
+  expect(await screen.findByText("2 test")).toBeTruthy();
 };
 
 /** Opens the dropdown and picks the quiz with this title */
 const pickQuiz = async (title: string) => {
-  const input = screen.getByRole("combobox", { name: "Seleziona quiz" });
+  const input = screen.getByRole("combobox", { name: "Seleziona test" });
   await act(async () => {
     fireEvent.click(input);
     fireEvent.keyDown(input, { key: "ArrowDown" });
@@ -115,7 +115,7 @@ describe("AddExistingQuizzesDialog", () => {
     renderDialog();
 
     const trigger = screen.getByRole("button", {
-      name: "Aggiungi quiz esistenti",
+      name: "Aggiungi test esistenti",
     });
     expect(trigger.hasAttribute("disabled")).toBe(false);
   });
@@ -123,9 +123,9 @@ describe("AddExistingQuizzesDialog", () => {
   it("offers only the quizzes of other positions", async () => {
     await openDialog();
 
-    expect(screen.getByText("Aggiungi quiz esistenti", { selector: "h2" }))
+    expect(screen.getByText("Aggiungi test esistenti", { selector: "h2" }))
       .toBeTruthy();
-    const input = screen.getByRole("combobox", { name: "Seleziona quiz" });
+    const input = screen.getByRole("combobox", { name: "Seleziona test" });
     await act(async () => {
       fireEvent.click(input);
       fireEvent.keyDown(input, { key: "ArrowDown" });
@@ -146,7 +146,7 @@ describe("AddExistingQuizzesDialog", () => {
       target: { value: "react" },
     });
 
-    expect(await screen.findByText("1 quiz")).toBeTruthy();
+    expect(await screen.findByText("1 test")).toBeTruthy();
   });
 
   it("narrows the list by question type", async () => {
@@ -154,7 +154,7 @@ describe("AddExistingQuizzesDialog", () => {
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Aperta" }));
 
-    expect(await screen.findByText("1 quiz")).toBeTruthy();
+    expect(await screen.findByText("1 test")).toBeTruthy();
   });
 
   it("keeps the confirm button disabled until a quiz is selected", async () => {
@@ -183,7 +183,7 @@ describe("AddExistingQuizzesDialog", () => {
     );
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith(
-        "1 quiz aggiunto alla posizione",
+        "1 test aggiunto alla posizione",
       ),
     );
     expect(refresh).toHaveBeenCalled();
@@ -192,7 +192,7 @@ describe("AddExistingQuizzesDialog", () => {
   it("shows the error and keeps the dialog open with the selection", async () => {
     vi.mocked(addExistingQuizzesToPositionAction).mockResolvedValue({
       success: false,
-      error: "Uno o più quiz non esistono più",
+      error: "Uno o più test non esistono più",
     } as never);
     await openDialog();
     await pickQuiz("Quiz Node");
@@ -201,11 +201,11 @@ describe("AddExistingQuizzesDialog", () => {
 
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith(
-        "Uno o più quiz non esistono più",
+        "Uno o più test non esistono più",
       ),
     );
     expect(refresh).not.toHaveBeenCalled();
-    expect(screen.getByText("Aggiungi quiz esistenti", { selector: "h2" }))
+    expect(screen.getByText("Aggiungi test esistenti", { selector: "h2" }))
       .toBeTruthy();
     expect(screen.getByRole("button", { name: "Aggiungi (1)" })).toBeTruthy();
   });

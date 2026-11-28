@@ -61,7 +61,7 @@ const BLANK_SECTION: GuideSectionInput = {
 
 /**
  * Editor of an interview guide: details, ordered sections and questions,
- * "Genera dalla scheda". Nothing is saved before "Salva guida".
+ * "Genera dai criteri". Nothing is saved before "Salva traccia".
  */
 export function InterviewGuideEditor({
   mode,
@@ -130,9 +130,9 @@ export function InterviewGuideEditor({
   function onGenerated(generated: GeneratedInterviewGuide) {
     // Replaces the sections as unsaved changes
     replace(generated.sections);
-    toast.success("Guida generata", {
+    toast.success("Traccia generata", {
       description:
-        "Rivedi sezioni e domande e premi Salva guida per confermare.",
+        "Rivedi sezioni e domande e premi Salva traccia per confermare.",
     });
   }
 
@@ -150,7 +150,7 @@ export function InterviewGuideEditor({
             ...(mode === "edit" ? { guideId: guide.id } : { positionId }),
           }),
         );
-        toast.success("Guida salvata");
+        toast.success("Traccia salvata");
         if (mode === "create") {
           router.push(
             `/dashboard/positions/${positionId}/guides/${id}` as Route<`/dashboard/positions/${string}/guides/${string}`>,
@@ -227,19 +227,19 @@ export function InterviewGuideEditor({
                 disabled={isSaving || !hasActiveCriteria}
               >
                 <BrainCircuit className="mr-1 size-4" />
-                Genera dalla scheda
+                Genera dai criteri
               </Button>
               {!hasActiveCriteria && (
                 <span className="text-muted-foreground text-xs">
-                  Per generare la guida con l&apos;AI crea prima la scheda di
-                  valutazione.{" "}
+                  Per generare la traccia con l&apos;AI aggiungi prima i criteri
+                  della posizione.{" "}
                   <Link
                     href={
                       `/dashboard/positions/${positionId}/scorecard` as Route<`/dashboard/positions/${string}/scorecard`>
                     }
                     className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
                   >
-                    Vai alla scheda
+                    Vai ai criteri
                   </Link>
                 </span>
               )}
@@ -260,10 +260,10 @@ export function InterviewGuideEditor({
 
         {fields.length === 0 ? (
           <p className="py-8 border border-dashed rounded-lg text-muted-foreground text-sm text-center">
-            Nessuna sezione. Aggiungine una o genera la guida dalla scheda.
+            Nessuna sezione. Aggiungine una o genera la traccia dai criteri.
           </p>
         ) : mounted ? (
-          <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <DndContext id="interview-guide-editor" collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext
               items={fields.map((field) => field.fieldKey)}
               strategy={verticalListSortingStrategy}
@@ -287,7 +287,7 @@ export function InterviewGuideEditor({
             ) : (
               <Save className="mr-1 size-4" />
             )}
-            Salva guida
+            Salva traccia
           </Button>
         </div>
       </form>

@@ -16,7 +16,7 @@ Cache Components and Partial Prefetching are on; the framework's `"use cache"`, 
 - Uncached on purpose: `getProfile`, `getAssessmentByToken`, `getInterviewLiveSession`, `getInterviewFeedbackPage`. Apply the same choice to any session-dependent or live read.
 - `requireUser()` and `getCurrentUser()` read the session cookie: NEVER inside a `"use cache"` scope.
 - A server component that reads the session MUST first await a request value: `await connection()`, or `await searchParams` when it already receives them. With Partial Prefetching, awaiting only `params` known from `generateStaticParams` runs the session read during prerender and the route fails with the blocking-route error on `new Date()`.
-- The Decision page and the "Decisione" tab read the session after `await connection()`, outside the cached read. The live and scorecard pages call `await connection()` before reading the session.
+- The Decision page and the Decisione stop of the application page read the session after `await connection()`, outside the cached read. The live and scorecard pages call `await connection()` before reading the session.
 
 ## Tag vocabulary
 

@@ -111,7 +111,7 @@ const interviewWhenSchema = {
 
 export const scheduleInterviewSchema = z.object({
   applicationId: baseSchemas.id,
-  guideId: z.string().min(1, "Seleziona una guida colloquio"),
+  guideId: z.string().min(1, "Seleziona una traccia del colloquio"),
   round: z.number().int().min(1).max(10),
   ...interviewWhenSchema,
 });

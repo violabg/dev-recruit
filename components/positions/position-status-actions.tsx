@@ -20,8 +20,8 @@ const NEXT_STATUS: Record<
 };
 
 /**
- * Publishes, closes or reopens a position from its header. A draft gets the
- * primary button: publishing is its next step.
+ * Publishes, closes or reopens a position from its header. All actions are
+ * outline: the page keeps a single primary button for its next step.
  */
 export function PositionStatusActions({
   positionId,
@@ -54,7 +54,7 @@ export function PositionStatusActions({
   return (
     <Button
       type="button"
-      variant={status === "draft" ? "default" : "outline"}
+      variant="outline"
       size="sm"
       onClick={handleClick}
       disabled={isPending}

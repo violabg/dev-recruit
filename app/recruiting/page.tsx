@@ -1,99 +1,51 @@
-import { ApplyFormClient } from "@/components/recruiting/apply-form-client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  getOpenPositionsForSelect,
-  getPositionById,
-} from "@/lib/data/positions";
+import { ApplyFlow } from "@/components/recruiting/apply-flow";
+import { PublicBody, PublicHeader } from "@/components/recruiting/public-header";
+import { getOpenPositionsForApply } from "@/lib/data/positions";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { ApplyFormSkeleton } from "./fallbacks";
+import { ApplyFlowSkeleton } from "./fallbacks";
 
 type PageProps = {
   searchParams: Promise<{ positionId?: string }>;
 };
 
-export default async function ApplyPage({ searchParams }: PageProps) {
+export default function ApplyPage({ searchParams }: PageProps) {
   return (
-    <div className="flex flex-col items-center bg-background px-4 py-8 min-h-dvh">
-      <div className="w-full max-w-6xl">
-        {/* Header Card */}
-        <Card className="mb-6 w-full">
-          <CardHeader className="flex flex-col gap-3 text-center">
-            <div className="flex justify-center">
-              <div className="flex justify-center items-center bg-primary/10 rounded-full w-14 h-14">
-                <svg
-                  className="w-7 h-7 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <CardTitle className="text-2xl">
-                Unisciti al nostro team! 🚀
-              </CardTitle>
-              <CardDescription className="text-muted-foreground/90 text-base">
-                Cerchiamo talenti come te. Compila il modulo, scegli la
-                posizione che fa per te e allega il tuo CV. Ti ricontatteremo
-                presto!
-              </CardDescription>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Form and Details */}
-        <Suspense fallback={<ApplyFormSkeleton />}>
-          <ApplyFormContent searchParams={searchParams} />
+    <div className="bg-background min-h-dvh">
+      <PublicHeader
+        title="Lavora con noi"
+        description="Scegli una o più posizioni, inserisci i tuoi dati e allega il CV. Ti rispondiamo via email."
+      />
+      <PublicBody>
+        <Suspense fallback={<ApplyFlowSkeleton />}>
+          <ApplyContent searchParams={searchParams} />
         </Suspense>
-      </div>
+      </PublicBody>
     </div>
   );
 }
 
-async function ApplyFormContent({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const positionId = params.positionId;
+async function ApplyContent({ searchParams }: PageProps) {
+  // A link to one position has its own page
+  const { positionId } = await searchParams;
+  if (positionId) {
+    redirect(`/recruiting/positions/${encodeURIComponent(positionId)}`);
+  }
 
-  // Only open positions accept a public application
-  const positions = await getOpenPositionsForSelect();
-
-  // The positionId of the link is valid only for an open position
-  const validPositionId =
-    positionId && positions.some((p) => p.id === positionId)
-      ? positionId
-      : undefined;
+  const positions = await getOpenPositionsForApply();
 
   if (positions.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-8 text-muted-foreground text-center">
-          <p>Al momento non ci sono posizioni aperte.</p>
-          <p className="mt-2 text-sm">Torna a trovarci presto!</p>
-        </CardContent>
-      </Card>
+      <div className="bg-card mx-auto px-6 py-10 border rounded-xl max-w-3xl text-center">
+        <p className="font-display font-bold text-heading text-lg">
+          Al momento non ci sono posizioni aperte
+        </p>
+        <p className="mt-2 text-muted-foreground text-sm">
+          Le nuove posizioni compaiono qui appena vengono aperte.
+        </p>
+      </div>
     );
   }
 
-  return (
-    <ApplyFormClient
-      positions={positions}
-      defaultPositionId={validPositionId}
-      defaultPosition={
-        validPositionId ? await getPositionById(validPositionId) : null
-      }
-    />
-  );
+  return <ApplyFlow positions={positions} />;
 }

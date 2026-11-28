@@ -105,7 +105,7 @@ export function InterviewCard({
 
         {interview.submittedFeedback.length > 0 && (
           <div className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Schede inviate</span>
+            <span className="font-medium">Feedback inviati</span>
             <ul className="flex flex-col gap-1">
               {interview.submittedFeedback.map((feedback) => (
                 <li key={feedback.id}>
@@ -133,7 +133,7 @@ export function InterviewCard({
           </Link>
           <Link href={`${basePath}/feedback` as never} className={linkClass}>
             <NotebookPen className="size-4" />
-            Scheda
+            Feedback
           </Link>
         </div>
 

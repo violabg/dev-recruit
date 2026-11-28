@@ -85,9 +85,9 @@ export function QuizTable({ quizzes }: QuizTableProps) {
                   entityId={quiz.id}
                   editHref={`/dashboard/quizzes/${quiz.id}/edit`}
                   deleteAction={deleteQuizAction.bind(null, quiz.id)}
-                  deleteTitle="Elimina quiz"
-                  deleteDescription="Sei sicuro di voler eliminare questo quiz? Questa azione non può essere annullata."
-                  deleteErrorMessage="Errore durante l'eliminazione del quiz"
+                  deleteTitle="Elimina test"
+                  deleteDescription="Sei sicuro di voler eliminare questo test? Questa azione non può essere annullata."
+                  deleteErrorMessage="Errore durante l'eliminazione del test"
                 >
                   <DropdownMenuItem
                     render={

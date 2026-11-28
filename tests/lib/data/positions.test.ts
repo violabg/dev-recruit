@@ -2,13 +2,25 @@ import {
   getAllPositions,
   getOpenPositionsForSelect,
   getPositionById,
+  getPositionCoverage,
   getPositionLevelsForSelect,
   getPositions,
   getPositionSetupStatus,
 } from "@/lib/data/positions";
 import prisma from "@/lib/prisma";
 import { cacheLife, cacheTag } from "next/cache";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/prisma", () => ({
+  default: {
+    position: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      count: vi.fn(),
+    },
+  },
+}));
 
 describe("positions data layer", () => {
   it("getPositions returns paginated results", async () => {
@@ -151,5 +163,87 @@ describe("getPositionSetupStatus", () => {
       scorecard: null,
     });
     expect((await getPositionSetupStatus("pos-1"))?.complete).toBe(false);
+  });
+});
+
+describe("getPositionCoverage", () => {
+  it("returns null for a missing position and tags every source", async () => {
+    (prisma.position.findUnique as any).mockResolvedValueOnce(null);
+
+    expect(await getPositionCoverage("p1")).toBeNull();
+
+    expect(cacheLife).toHaveBeenCalledWith("hours");
+    expect(cacheTag).toHaveBeenCalledWith(
+      "positions",
+      "scorecards",
+      "quizzes",
+      "questions",
+      "interview-guides",
+      "positions-p1",
+    );
+  });
+
+  it("maps the criteria, the quiz links, the guide questions and the guides", async () => {
+    (prisma.position.findUnique as any).mockResolvedValueOnce({
+      scorecard: {
+        criteria: [
+          { id: "c1", name: "Leadership", priority: "must", order: 0 },
+          { id: "c2", name: "React", priority: "nice", order: 1 },
+        ],
+      },
+      quizzes: [{ quizQuestions: [{ criterionIds: ["c1"] }] }],
+      interviewGuides: [
+        {
+          id: "g1",
+          round: 1,
+          sections: [{ questions: [{ criterionIds: ["c1", "c2"] }] }],
+        },
+        { id: "g2", round: 2, sections: [{ questions: [] }] },
+      ],
+    });
+
+    const coverage = await getPositionCoverage("p1");
+
+    expect(coverage?.rows).toEqual([
+      {
+        criterionId: "c1",
+        name: "Leadership",
+        priority: "must",
+        quizQuestionCount: 1,
+        guideQuestionCount: 1,
+        total: 2,
+        uncovered: false,
+      },
+      {
+        criterionId: "c2",
+        name: "React",
+        priority: "nice",
+        quizQuestionCount: 0,
+        guideQuestionCount: 1,
+        total: 1,
+        uncovered: false,
+      },
+    ]);
+    expect(coverage?.uncovered).toEqual([]);
+    expect(coverage?.guides).toEqual([
+      { id: "g1", round: 1 },
+      { id: "g2", round: 2 },
+    ]);
+  });
+
+  it("reads the active criteria in order and the guides by round", async () => {
+    (prisma.position.findUnique as any).mockResolvedValueOnce(null);
+
+    await getPositionCoverage("p1");
+
+    const select = (prisma.position.findUnique as any).mock.calls.at(-1)[0].select;
+    expect(select.scorecard.select.criteria).toMatchObject({
+      where: { archivedAt: null },
+      orderBy: { order: "asc" },
+    });
+    expect(select.interviewGuides.orderBy).toEqual([
+      { round: "asc" },
+      { id: "asc" },
+    ]);
   });
 });

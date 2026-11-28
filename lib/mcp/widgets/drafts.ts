@@ -64,7 +64,7 @@ export function positionDraftWidget(
     sections,
     note:
       status === "draft"
-        ? "La posizione è salvata in bozza. Pubblica la apre: completa prima scheda, quiz e guida dalla dashboard, se servono."
+        ? "La posizione è salvata in bozza. Pubblica la apre: completa prima criteri, test e traccia dalla dashboard, se servono."
         : "La posizione è aperta.",
     confirm:
       status === "draft"
@@ -99,7 +99,7 @@ export function quizPreviewWidget(
   return {
     kind: "draft-preview",
     draft: "quiz",
-    eyebrow: saved ? "Quiz salvato" : "Anteprima quiz",
+    eyebrow: saved ? "Test salvato" : "Anteprima test",
     title: input.title,
     status: saved
       ? { label: "Salvato", tone: "done" }
@@ -114,12 +114,12 @@ export function quizPreviewWidget(
     ],
     sections: [{ title: "Domande", items }],
     note: saved
-      ? "Il quiz è salvato nella posizione. Nessun candidato è stato invitato."
-      : "Il quiz non è ancora salvato. Salva lo aggiunge alla posizione; nessun candidato viene invitato.",
+      ? "Il test è salvato nella posizione. Nessun candidato è stato invitato."
+      : "Il test non è ancora salvato. Salva lo aggiunge alla posizione; nessun candidato viene invitato.",
     confirm: saved
       ? null
       : {
-          label: "Salva il quiz",
+          label: "Salva il test",
           tool: CONFIRM_TOOLS.saveQuiz,
           arguments: input as unknown as Record<string, unknown>,
         },
@@ -149,7 +149,7 @@ export function proposalWidget(
       { label: "Posizione", value: context.positionTitle },
       { label: "Quando", value: formatDateTime(payload.scheduledAt) },
       { label: "Durata", value: `${payload.durationMinutes} minuti` },
-      { label: "Guida", value: context.guideTitle },
+      { label: "Traccia", value: context.guideTitle },
     ],
     sections: [
       {
@@ -163,8 +163,8 @@ export function proposalWidget(
         : []),
     ],
     note: scheduled
-      ? "Il colloquio è pianificato e il kit è in bozza. Nessuna email è stata inviata."
-      : "Niente è ancora pianificato. Pianifica crea il colloquio e il suo kit; nessuna email viene inviata.",
+      ? "Il colloquio è pianificato e la preparazione è in bozza. Nessuna email è stata inviata."
+      : "Niente è ancora pianificato. Pianifica crea il colloquio e la sua preparazione; nessuna email viene inviata.",
     confirm: scheduled
       ? null
       : {
@@ -241,7 +241,7 @@ export function kitDraftWidget(
   return {
     kind: "draft-preview",
     draft: "kit",
-    eyebrow: ready ? "Kit pronto" : "Kit colloquio in bozza",
+    eyebrow: ready ? "Preparazione pronta" : "Preparazione in bozza",
     title: `${view.positionTitle} · Round ${view.round}`,
     status: ready ? { label: "Pronto", tone: "done" } : { label: "Bozza", tone: "warning" },
     facts: [
@@ -251,14 +251,14 @@ export function kitDraftWidget(
     ],
     sections,
     note: ready
-      ? "Il kit è pronto per il colloquio."
+      ? "La preparazione è pronta per il colloquio."
       : view.editable
-        ? "Le modifiche sono salvate nel kit in bozza. Segna come pronto quando il kit è completo; si può riportare in bozza dalla dashboard."
-        : "Il kit non si può più modificare: il colloquio non è pianificato.",
+        ? "Le modifiche sono salvate nella preparazione in bozza. Segna come pronta quando è completa; si può riportare in bozza dalla dashboard."
+        : "La preparazione non si può più modificare: il colloquio non è pianificato.",
     confirm:
       !ready && view.status === "scheduled"
         ? {
-            label: "Segna il kit come pronto",
+            label: "Segna come pronta",
             tool: CONFIRM_TOOLS.publish,
             arguments: { kind: "kit", id: view.interviewId },
           }

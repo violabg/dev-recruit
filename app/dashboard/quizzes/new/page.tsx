@@ -1,8 +1,5 @@
-import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
-import { cn } from "cn";
 import PageHeader from "@/components/page-header";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { SelectOptionsSkeleton } from "@/components/skeletons";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getAllPositions } from "@/lib/data/positions";
@@ -11,6 +8,7 @@ import { getFavoriteQuestions } from "@/lib/data/questions";
 import { getCriterionOptionsByPosition } from "@/lib/data/scorecards";
 import type { Position } from "@/lib/prisma/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { Suspense } from "react";
 import { NewQuizCreationPage, PositionOption } from "./new-quiz-page";
 
@@ -23,7 +21,7 @@ const positionsLoaderFallback = (
   <>
     <Skeleton className="rounded-lg w-full h-9" />
     <div className="p-6 border border-muted/50 rounded-xl text-center">
-      <p>Seleziona una posizione per iniziare la creazione del quiz.</p>
+      <p>Seleziona una posizione per iniziare la creazione del test.</p>
     </div>
   </>
 );
@@ -34,20 +32,9 @@ export default function NewQuizPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Nuovo quiz"
-        description="Scegli una posizione e costruisci il quiz con le domande che preferisci, oppure avvia la generazione AI completa."
-        actionBtns={
-          <Link
-            href={"/dashboard/quizzes" as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Quiz
-          </Link>
-        }
+        title="Nuovo test"
+        description="Scegli una posizione e costruisci il test con le domande che preferisci, oppure avvia la generazione AI completa."
+        breadcrumbs={sectionTrail(SECTIONS.quizzes, { label: "Nuovo test" })}
       />
       <Suspense fallback={positionsLoaderFallback}>
         <PositionsContent positionsPromise={positionsPromise} />

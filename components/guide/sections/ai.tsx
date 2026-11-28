@@ -17,36 +17,40 @@ export function AiSection() {
         rows={[
           ["Descrizione posizione", "Testo della job description", "Modifica e salva"],
           [
-            "Scheda di valutazione",
+            "Criteri",
             "Criteri, categorie, priorità, pesi",
             "Conferma, modifica, archivia",
           ],
           [
-            "Quiz",
+            "Test",
             "Domande (e collegamento ai criteri)",
             "Rivede, modifica, salva",
           ],
-          ["Guida colloquio", "Sezioni e domande dalla scheda", "Rivede, modifica, salva"],
+          [
+            "Traccia del colloquio",
+            "Sezioni e domande dai criteri",
+            "Rivede, modifica, salva",
+          ],
           [
             "Valutazione CV",
             "Fit, punti di forza e debolezze, voto per criterio",
-            "Legge; può ricalcolare il dettaglio",
+            "Legge; può ricalcolare l'analisi",
           ],
           [
             "Valutazione test",
-            "Punteggio e dettaglio per risposta",
-            "Legge; può ricalcolare il dettaglio",
+            "Punteggio e analisi per risposta",
+            "Legge; può ricalcolare l'analisi",
           ],
           [
-            "Kit colloquio",
+            "Preparazione",
             "Briefing, ipotesi, domande dai CV, dai test e dai round precedenti",
-            "Conferma e salva il kit",
+            "Segna come pronta, dal riquadro o dalla preparazione",
           ],
           ["Decisione", "Avvocato del diavolo", "Sceglie l'esito e scrive la motivazione"],
           [
             "Assistente (Claude, fuori dall'app)",
-            "Bozza di posizione, anteprima del quiz, bozza del kit, proposta di colloquio",
-            "Conferma nel riquadro dell'assistente o dalla dashboard (il quiz solo nel riquadro)",
+            "Bozza di posizione, anteprima del test, preparazione in bozza, proposta di colloquio",
+            "Conferma nel riquadro dell'assistente o dalla dashboard (il test solo nel riquadro)",
           ],
         ]}
       />
@@ -57,7 +61,7 @@ export function AiSection() {
         non compaiono nelle altre pagine. L&apos;assistente esterno (Claude con
         il plugin dev-recruit) può preparare bozze e proposte: restano in attesa
         finché una persona non le conferma, come le proposte di colloquio in
-        &quot;Proposte da confermare&quot;, nel tab Colloqui.
+        &quot;Proposte da confermare&quot;, nella fermata del colloquio.
       </GuideCallout>
 
       <GuideSubsection id="ai-assistente-esterno" title="L'assistente esterno">
@@ -73,7 +77,7 @@ export function AiSection() {
           rows={[
             [
               "Leggere",
-              "Le mie azioni, posizioni, candidature, colloqui, preparazione e kit",
+              "Le mie azioni, posizioni, candidature, colloqui, preparazioni",
               "Niente: la lettura non modifica nulla",
             ],
             [
@@ -82,19 +86,19 @@ export function AiSection() {
               "Pubblica la posizione, dal riquadro o dalla pagina",
             ],
             [
-              "Quiz",
+              "Test",
               "I parametri di generazione e l'anteprima delle domande",
-              "Salva il quiz dal riquadro; nessun candidato viene invitato",
+              "Salva il test dal riquadro; nessun candidato viene invitato",
             ],
             [
               "Colloquio",
-              "Una proposta con guida, round, data, durata e partecipanti",
-              'Pianifica, dal riquadro o da "Pianifica" nella proposta del tab Colloqui',
+              "Una proposta con traccia, round, data, durata e partecipanti",
+              'Pianifica, dal riquadro o da "Pianifica" nella proposta della fermata del colloquio',
             ],
             [
-              "Kit",
+              "Preparazione",
               "Modifiche a domande, briefing, ipotesi e checklist",
-              "Segna il kit come pronto, dal riquadro o dalla preparazione",
+              "Segna come pronta, dal riquadro o dalla preparazione",
             ],
           ]}
         />
@@ -102,9 +106,10 @@ export function AiSection() {
         <GuideText>
           La preparazione del colloquio che l&apos;assistente legge non contiene
           l&apos;identità del candidato né il CV. Una proposta di colloquio non
-          invia email: crea il colloquio e il kit in bozza solo dopo la tua
-          conferma. Nei client senza riquadri, posizione, proposta e kit si
-          confermano dalla pagina; il quiz si salva solo dal riquadro.
+          invia email: crea il colloquio e la preparazione in bozza solo dopo la
+          tua conferma. Nei client senza riquadri, posizione, proposta e
+          preparazione si confermano dalla pagina; il test si salva solo dal
+          riquadro.
         </GuideText>
 
         <GuideCallout title="Cosa resta nella dashboard">

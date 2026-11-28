@@ -13,15 +13,18 @@ export function FaqSection() {
             "Il punteggio complessivo di una candidatura",
             "Candidatura → tab Decisione → Apri la decisione",
           ],
-          ["Cambiare i pesi dei criteri", "Posizione → Scheda di valutazione"],
-          ["Creare o modificare il quiz di una posizione", "Posizione → tab Quiz"],
+          ["Cambiare i pesi dei criteri", "Posizione → Criteri e domande"],
           [
-            "Riusare un quiz di un'altra posizione",
-            "Posizione → tab Quiz → Aggiungi quiz esistenti",
+            "Creare o modificare il test di una posizione",
+            "Posizione → Criteri e domande",
+          ],
+          [
+            "Riusare un test di un'altra posizione",
+            "Posizione → Criteri e domande → Aggiungi test esistenti",
           ],
           [
             "Preparare le domande di un colloquio",
-            "Candidatura → Colloqui → Prepara",
+            "Candidatura → fermata del colloquio → Prepara",
           ],
           [
             "Sapere quali criteri non hanno ancora prove",
@@ -31,12 +34,12 @@ export function FaqSection() {
             "Spostare una candidatura di fase",
             "Candidatura → Sposta fase, oppure kanban della posizione",
           ],
-          ["Vedere tutti i colloqui di domani", "Agenda colloqui"],
+          ["Vedere tutti i colloqui di domani", "Agenda"],
           [
             "Trovare il form che vede il candidato",
-            "/recruiting (posizioni aperte) e /recruiting/[token] (test)",
+            "/recruiting (posizioni aperte), /recruiting/positions/… (una posizione, dal pulsante Copia link candidatura) e /recruiting/[token] (test)",
           ],
-          ["Capire cosa ha fatto un candidato", "Candidatura → Panoramica (cronologia)"],
+          ["Capire cosa ha fatto un candidato", "Candidatura → storia della candidatura"],
         ]}
       />
     </GuideSection>

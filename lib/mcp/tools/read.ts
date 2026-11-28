@@ -43,7 +43,7 @@ export const actionCenterTool = defineTool({
   name: "action_center",
   title: "Le mie azioni",
   description:
-    "Il lavoro che aspetta l'utente: posizioni da completare, test da valutare, colloqui senza kit pronto, schede da compilare, candidature ferme. Con mineOnly (predefinito) solo le proprie.",
+    "Il lavoro che aspetta l'utente: posizioni da preparare, test da valutare, colloqui senza preparazione pronta, feedback da inviare, candidature ferme. Con mineOnly (predefinito) solo le proprie.",
   scope: "recruit:read",
   group: "read",
   inputSchema: actionCenterInputSchema,
@@ -203,7 +203,7 @@ export const getInterviewTool = defineTool({
   name: "get_interview",
   title: "Preparazione colloquio",
   description:
-    "La preparazione di un colloquio: quando, ruoli dei partecipanti, briefing, sezioni e domande del kit con criteri, ipotesi e checklist. Non contiene l'identità del candidato né il CV.",
+    "La preparazione di un colloquio: quando, ruoli dei partecipanti, briefing, sezioni e domande della preparazione con criteri, ipotesi e checklist. Non contiene l'identità del candidato né il CV.",
   scope: "recruit:read",
   group: "read",
   inputSchema: getInterviewInputSchema,

@@ -118,10 +118,10 @@ export function InterviewerFeedbackForm({
         const { stageChanged } = unwrap(
           await submitInterviewerFeedbackAction({ ...data, interviewId }),
         );
-        toast.success("Scheda inviata");
+        toast.success("Feedback inviato");
         if (stageChanged) {
           toast.success(
-            "Tutte le schede sono inviate: la candidatura passa a Decisione",
+            "Tutti i feedback sono inviati: la candidatura passa a Decisione",
           );
         }
         setConfirmSubmit(false);
@@ -172,7 +172,7 @@ export function InterviewerFeedbackForm({
               label={
                 submitted && submittedAt
                   ? formatInterviewDateTime(submittedAt)
-                  : "stato della scheda"
+                  : "stato del feedback"
               }
               tone={submitted ? "success" : "warning"}
             />
@@ -184,12 +184,12 @@ export function InterviewerFeedbackForm({
         <section className="flex flex-col gap-3">
           <ChapterHeader
             number={1}
-            title="Valutazione per criterio"
+            title="Voti per criterio"
             meta="Voto 1–5 con le evidenze, oppure Senza prove"
           />
           {criteria.length === 0 && (
             <p className="py-2 text-muted-foreground text-sm">
-              La scheda di valutazione della posizione non ha criteri.
+              La posizione non ha criteri.
             </p>
           )}
           {criteria.map((criterion, index) => {
@@ -333,7 +333,7 @@ export function InterviewerFeedbackForm({
               onClick={() => setConfirmSubmit(true)}
             >
               <Send className="size-4" />
-              Invia scheda
+              Invia feedback
             </Button>
           </div>
         </div>
@@ -342,9 +342,9 @@ export function InterviewerFeedbackForm({
       <AlertDialog open={confirmSubmit} onOpenChange={setConfirmSubmit}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Inviare la scheda?</AlertDialogTitle>
+            <AlertDialogTitle>Inviare il feedback?</AlertDialogTitle>
             <AlertDialogDescription>
-              Dopo l&apos;invio la scheda non è più modificabile da nessuno.
+              Dopo l&apos;invio il feedback non è più modificabile da nessuno.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -354,7 +354,7 @@ export function InterviewerFeedbackForm({
               onClick={() => void handleSubmit(submit)()}
             >
               {isPending && <Loader2 className="size-4 animate-spin" />}
-              Invia scheda
+              Invia feedback
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

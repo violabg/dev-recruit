@@ -1,12 +1,9 @@
 import { InterviewGuideEditor } from "@/components/interview-guides/interview-guide-editor";
 import PageHeader from "@/components/page-header";
-import { buttonVariants } from "@/components/ui/button";
 import { getInterviewGuidesByPosition } from "@/lib/data/interview-guides";
 import { getAllPositions, getPositionById } from "@/lib/data/positions";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
-import { cn } from "cn";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { positionTrail } from "@/lib/utils/breadcrumbs";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { GuideEditorSkeleton } from "../../fallbacks";
@@ -55,20 +52,9 @@ async function NewGuideContent({ params }: NewGuidePageProps) {
   return (
     <>
       <PageHeader
-        title="Nuova guida colloquio"
+        title="Nuova traccia del colloquio"
         description={position.title}
-        actionBtns={
-          <Link
-            href={`/dashboard/positions/${id}?tab=guide`}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="mr-1 size-4" />
-            Torna alla posizione
-          </Link>
-        }
+        breadcrumbs={positionTrail(position, { label: "Nuova traccia" })}
       />
       <InterviewGuideEditor
         mode="create"

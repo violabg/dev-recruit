@@ -14,7 +14,6 @@ import {
   PageHeaderSkeleton,
   TableSkeleton,
 } from "@/components/skeletons";
-import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   BlockLabel,
@@ -25,12 +24,12 @@ import {
 import { getCurrentUser } from "@/lib/auth-server";
 import { getApplicationDecision } from "@/lib/data/applications";
 import type { ApplicationStage } from "@/lib/schemas";
+import { applicationTrail } from "@/lib/utils/breadcrumbs";
 import { computeDecisionScore } from "@/lib/utils/decision-score";
 import { cn } from "cn";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { AlertTriangle, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -129,18 +128,10 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
       <PageHeader
         title="Decisione"
         description={`${candidateName} · ${decision.position.title}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/applications/${id}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Torna alla candidatura
-          </Link>
-        }
+        breadcrumbs={applicationTrail(
+          { id, candidateName, position: decision.position },
+          { label: "Decisione" },
+        )}
       />
 
       {recorded.outcome && (
@@ -185,8 +176,8 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
         <p className="flex items-start gap-2 bg-warning/10 px-3 py-2 rounded-md text-warning text-sm">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
-            Per un giudizio indipendente, invia prima la tua scheda: punteggio
-            e schede degli altri sono nascosti finché non la mostri
+            Per un giudizio indipendente, invia prima il tuo feedback: punteggio
+            e feedback degli altri sono nascosti finché non lo mostri
           </span>
         </p>
       )}
@@ -200,7 +191,7 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
                 value={
                   <DecisionCollapsible
                     interviewIds={collapsedInterviewIds}
-                    placeholder="Dopo la tua scheda"
+                    placeholder="Dopo il tuo feedback"
                   >
                     {score.overall !== null ? `${score.overall}/5` : "—"}
                   </DecisionCollapsible>
@@ -209,7 +200,7 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
               />
               <Stat
                 value={`${submittedCount}/${expectedCount}`}
-                label="schede inviate"
+                label="feedback inviati"
                 tone={
                   expectedCount > 0 && submittedCount === expectedCount
                     ? "success"
@@ -242,7 +233,7 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
               inclusi.{" "}
               {score.weightsSource === "decision" && recorded.decidedAt
                 ? `Pesi salvati con la decisione del ${formatDate(recorded.decidedAt)}.`
-                : "Pesi della scheda di valutazione."}
+                : "Pesi dei criteri."}
             </p>
           </CardContent>
         </Card>
@@ -256,7 +247,7 @@ async function DecisionContent({ params }: { params: DecisionParams }) {
           {score.warnings.length > 0 && (
             <DecisionCollapsible
               interviewIds={collapsedInterviewIds}
-              placeholder="Avvisi visibili dopo l'invio della tua scheda"
+              placeholder="Avvisi visibili dopo l'invio del tuo feedback"
             >
               <div className="flex flex-col gap-2 bg-warning/10 px-4 py-3 rounded-xl text-warning">
                 <BlockLabel>Criteri indispensabili da motivare</BlockLabel>

@@ -6,7 +6,7 @@ import { criterionAnchorsSchema } from "./scorecard";
 // ====================
 // INTERVIEW GUIDE SCHEMAS
 // ====================
-// Interview guide ("Guida colloquio"): a template of a position with ordered
+// Interview guide ("Traccia del colloquio"): a template of a position with ordered
 // sections and questions.
 
 export const GUIDE_SECTION_KIND_VALUES = [
@@ -75,7 +75,7 @@ export const saveInterviewGuideSchema = interviewGuideEditorSchema
     positionId: baseSchemas.id.optional(),
   })
   .refine((d) => Boolean(d.guideId || d.positionId), {
-    message: "La posizione è obbligatoria per creare una guida",
+    message: "La posizione è obbligatoria per creare una traccia",
     path: ["positionId"],
   });
 

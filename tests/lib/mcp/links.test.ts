@@ -7,7 +7,7 @@ describe("links", () => {
   it.each([
     [links.actionCenter(), "/dashboard"],
     [links.position("pos-1"), "/dashboard/positions/pos-1"],
-    [links.positionQuiz("pos-1"), "/dashboard/positions/pos-1?tab=quiz"],
+    [links.positionQuiz("pos-1"), "/dashboard/positions/pos-1?tab=criteri"],
     [links.application("app-1"), "/dashboard/applications/app-1"],
     [links.applicationDecision("app-1"), "/dashboard/applications/app-1/decision"],
     [

@@ -105,7 +105,7 @@ describe("getNextAction rows", () => {
       ),
     ).toMatchObject({
       kind: "fill_feedback",
-      label: "Compila scheda",
+      label: "Scrivi il feedback",
       interviewId: "interview-1",
     });
   });

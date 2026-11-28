@@ -29,6 +29,9 @@ import { runAction, UserError } from "./run-action";
 
 const INVALID_POSITIONS_MESSAGE =
   "Una o più posizioni selezionate non sono valide";
+// Public form: a position that was closed or unpublished after the page loaded
+const CLOSED_POSITIONS_MESSAGE =
+  "Una o più posizioni non accettano più candidature. Ricarica la pagina per vedere quelle aperte.";
 const EMAIL_TAKEN_MESSAGE = "Esiste già un candidato con questa email";
 
 const readFormValue = (formData: FormData, key: string) => {
@@ -200,7 +203,7 @@ export async function applyAsCandidateAction(formData: FormData) {
     });
 
     if (positions.length !== positionIds.length) {
-      throw new UserError(INVALID_POSITIONS_MESSAGE);
+      throw new UserError(CLOSED_POSITIONS_MESSAGE);
     }
 
     // Validated before the email lookup: the error never depends on it

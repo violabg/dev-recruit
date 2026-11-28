@@ -1,7 +1,9 @@
 import PageHeader from "@/components/page-header";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateUserForm } from "@/components/users/create-user-form";
 import { requireAdminPage } from "@/lib/auth-server";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CreateUserSkeleton } from "../fallbacks";
@@ -16,6 +18,7 @@ async function NewUserContent() {
       <PageHeader
         title="Nuovo utente"
         description="Crea un account e comunica a mano la password iniziale"
+        breadcrumbs={sectionTrail(SECTIONS.users, { label: "Nuovo utente" })}
       />
       <Card>
         <CardContent>

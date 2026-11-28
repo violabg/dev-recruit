@@ -3,14 +3,9 @@ import { LegalReminder } from "@/components/interviews/legal-reminder";
 import { InterviewLiveMode } from "@/components/interviews/interview-live-mode";
 import PageHeader from "@/components/page-header";
 import { FieldSkeleton, PageHeaderSkeleton } from "@/components/skeletons";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { getCurrentUser } from "@/lib/auth-server";
 import { getInterviewLiveSession } from "@/lib/data/interviews";
+import { interviewTrail } from "@/lib/utils/breadcrumbs";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -66,6 +61,11 @@ async function LiveContent({ params }: { params: LiveParams }) {
       <PageHeader
         title="Colloquio live"
         description={`${candidateName} · ${session.position.title} · Round ${session.round}`}
+        breadcrumbs={interviewTrail(
+          { id, candidateName, position: session.position },
+          session,
+          "Live",
+        )}
       >
         <div className="flex flex-col">
           <InterviewSteps
@@ -82,21 +82,18 @@ async function LiveContent({ params }: { params: LiveParams }) {
 
       {session.viewerParticipantId === null && (
         <p className="bg-muted px-3 py-2 rounded-md text-muted-foreground text-sm">
-          Non partecipi a questo colloquio: puoi solo consultare il kit
+          Non partecipi a questo colloquio: puoi solo consultare la
+          preparazione
         </p>
       )}
 
       {session.kit ? (
         <InterviewLiveMode session={session} userId={user.id} />
       ) : (
-        <Empty className="border h-[200px]">
-          <EmptyHeader>
-            <EmptyTitle>Kit non disponibile</EmptyTitle>
-            <EmptyDescription>
-              Questo colloquio non ha un kit da seguire.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <p className="text-muted-foreground text-sm">
+          Preparazione non disponibile. Questo colloquio non ha una preparazione
+          da seguire.
+        </p>
       )}
     </div>
   );

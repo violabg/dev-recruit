@@ -34,7 +34,7 @@ export const getSaveButtonContent = (saveStatus: SaveStatus) => {
       return (
         <>
           <Save className="mr-1 size-4" />
-          Salva Quiz
+          Salva test
         </>
       );
   }

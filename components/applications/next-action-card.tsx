@@ -13,21 +13,20 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 
 /**
- * "Prossima azione" of an application: what to do next, with its action,
- * under the current stage of the track. Stage corrections stay in the
- * header's "Sposta fase".
+ * "Prossima azione" of an application: what to do next, with its action.
+ * Stage corrections stay in the header's "Sposta di fase".
  */
 export function NextActionCard({
   applicationId,
   action,
   candidateEditHref,
-  pointer,
+  showAction = true,
 }: {
   applicationId: string;
   action: NextAction;
   candidateEditHref: string;
-  /** Notch position under the current stage (see stagePointer) */
-  pointer?: number;
+  /** false when the stop body holds the action: no control in the card */
+  showAction?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -50,17 +49,10 @@ export function NextActionCard({
   const renderAction = () => {
     switch (action.kind) {
       case "evaluate_cv":
-        return (
-          <Link href={`${applicationHref}?tab=cv` as never} className={linkClass}>
-            Valuta CV
-          </Link>
-        );
       case "send_assessment":
-        return (
-          <Link href={`${applicationHref}?tab=test` as never} className={linkClass}>
-            Invia test
-          </Link>
-        );
+      case "schedule_interview":
+        // The current stop's body holds this action and its primary button
+        return null;
       case "generate_evaluation":
         return (
           <Link
@@ -69,15 +61,6 @@ export function NextActionCard({
           >
             Genera valutazione
           </Link>
-        );
-      case "schedule_interview":
-        return (
-          <Link
-              href={`${applicationHref}/interviews/new` as never}
-              className={linkClass}
-            >
-              Pianifica colloquio
-            </Link>
         );
       case "prepare_interview":
         return (
@@ -98,7 +81,7 @@ export function NextActionCard({
               }
               className={linkClass}
             >
-              Compila scheda
+              Scrivi il feedback
             </Link>
         );
       case "go_to_decision":
@@ -146,8 +129,7 @@ export function NextActionCard({
   return (
     <NextActionCallout
       title={action.label}
-      action={renderAction()}
-      pointer={pointer}
+      action={showAction ? renderAction() : undefined}
     >
       {action.missingResume && (
         <div className="flex flex-wrap items-center gap-2 bg-warning/10 px-3 py-2 rounded-lg text-warning text-sm">

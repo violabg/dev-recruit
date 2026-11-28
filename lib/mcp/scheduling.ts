@@ -87,7 +87,7 @@ export function proposalContext(
     candidateName: options.application.candidateName,
     positionTitle: options.application.positionTitle,
     guideTitle:
-      options.guides.find((guide) => guide.id === payload.guideId)?.title ?? "Guida",
+      options.guides.find((guide) => guide.id === payload.guideId)?.title ?? "Traccia",
     participants: payload.participants.map((participant) => ({
       name: names.get(participant.userId) ?? "Utente",
       role: participant.role,

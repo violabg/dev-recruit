@@ -15,7 +15,7 @@ const BY_HREF = Object.values(SECTIONS).sort(
 );
 
 /** Sidebar group of each section: the eyebrow of a section's main page. */
-const GROUP_OF = new Map<string, string>([
+const GROUP_OF = new Map<string, string | undefined>([
   ...NAV_GROUPS.flatMap((group) =>
     group.items.map((item) => [item.key, group.label] as const),
   ),
@@ -48,7 +48,9 @@ export function SectionMark() {
   const section = sectionFor(pathname);
   const Icon = section.icon;
   const isMain = pathname === section.href;
-  const label = isMain ? GROUP_OF.get(section.key) : section.label;
+  const label = isMain
+    ? (GROUP_OF.get(section.key) ?? section.label)
+    : section.label;
 
   return (
     <>

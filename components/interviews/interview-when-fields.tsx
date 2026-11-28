@@ -230,8 +230,8 @@ export function InterviewGuideFields({
       <SelectField
         control={control}
         name="guideId"
-        label="Guida colloquio"
-        placeholder="Seleziona una guida"
+        label="Traccia del colloquio"
+        placeholder="Seleziona una traccia"
         required
         triggerProps={{ disabled }}
         options={guides.map((guide) => ({

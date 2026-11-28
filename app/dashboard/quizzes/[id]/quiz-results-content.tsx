@@ -26,13 +26,13 @@ export async function QuizResultsContent({ params }: Props) {
       <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
         <div className="text-center">
           <p className="text-muted-foreground text-sm">
-            Questo quiz non è ancora stato assegnato a nessun candidato
+            Questo test non è ancora stato assegnato a nessun candidato
           </p>
           <Link
             href={`/dashboard/quizzes/${quizId}/invite`}
             className={cn(
               "mt-2",
-              buttonVariants({ variant: "default", size: "sm" }),
+              buttonVariants({ variant: "outline", size: "sm" }),
             )}
           >
             <Link2 className="mr-1 size-4" />

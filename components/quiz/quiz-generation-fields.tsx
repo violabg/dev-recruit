@@ -39,17 +39,17 @@ export function QuizGenerationFields({
       <InputField
         control={control}
         name="quizTitle"
-        label="Titolo del quiz"
-        description="Un titolo descrittivo per il quiz"
+        label="Titolo del test"
+        description="Un titolo descrittivo per il test"
       />
 
       <TextareaField
         control={control}
         name="instructions"
         label="Istruzioni aggiuntive (opzionale)"
-        placeholder="Inserisci istruzioni specifiche per la generazione del quiz..."
+        placeholder="Inserisci istruzioni specifiche per la generazione del test..."
         className="min-h-20"
-        description="Istruzioni specifiche per l'AI che genera il quiz"
+        description="Istruzioni specifiche per l'AI che genera il test"
       />
 
       <div className="gap-4 grid md:grid-cols-2">
@@ -111,7 +111,7 @@ export function QuizGenerationFields({
         control={control}
         name="enableTimeLimit"
         label="Limite di tempo"
-        description="Imposta un limite di tempo per il completamento del quiz"
+        description="Imposta un limite di tempo per il completamento del test"
       />
 
       {enableTimeLimit && (

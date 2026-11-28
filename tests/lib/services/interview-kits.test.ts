@@ -12,7 +12,11 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-vi.mock("@/lib/services/scorecards", () => ({ getActiveCriteria: vi.fn() }));
+vi.mock("@/lib/services/scorecards", () => ({
+  getActiveCriteria: vi.fn(),
+  FOREIGN_CRITERIA_MESSAGE:
+    "Uno o più criteri non appartengono a questa posizione",
+}));
 
 vi.mock("@/lib/services/resume-evaluation", () => ({
   extractTextFromPDF: vi.fn(),
@@ -98,7 +102,7 @@ describe("loadGuideForSnapshot", () => {
     const c = client();
     c.interviewGuide.findUnique.mockResolvedValueOnce(null);
     await expect(loadGuideForSnapshot(c as any, "g1", "pos-1")).rejects.toThrow(
-      "Guida non trovata per questa posizione",
+      "Traccia non trovata per questa posizione",
     );
 
     c.interviewGuide.findUnique.mockResolvedValueOnce({
@@ -107,7 +111,7 @@ describe("loadGuideForSnapshot", () => {
       sections: [],
     });
     await expect(loadGuideForSnapshot(c as any, "g1", "pos-1")).rejects.toThrow(
-      "Guida non trovata per questa posizione",
+      "Traccia non trovata per questa posizione",
     );
   });
 });
@@ -222,11 +226,11 @@ describe("syncKitItems", () => {
     const tx = makeTx();
     await expect(
       syncKitItems(tx as any, "kit-1", [row({ id: "foreign" })]),
-    ).rejects.toThrow("Una o più domande non appartengono a questo kit");
+    ).rejects.toThrow("Una o più domande non appartengono a questa preparazione");
 
     await expect(
       syncKitItems(tx as any, "kit-1", [row({ sectionId: "s-other" })]),
-    ).rejects.toThrow("Sezione del kit non valida");
+    ).rejects.toThrow("Sezione della preparazione non valida");
 
     expect(tx.kitItem.update).not.toHaveBeenCalled();
     expect(tx.kitItem.create).not.toHaveBeenCalled();
@@ -294,7 +298,7 @@ describe("cleanKitCriteria", () => {
         hypotheses: [],
       }),
     ).rejects.toThrow(
-      "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+      "Uno o più criteri non appartengono a questa posizione",
     );
 
     await expect(
@@ -305,7 +309,7 @@ describe("cleanKitCriteria", () => {
         ],
       }),
     ).rejects.toThrow(
-      "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+      "Uno o più criteri non appartengono a questa posizione",
     );
   });
 });
@@ -314,7 +318,7 @@ describe("cleanKitCriteria", () => {
 // saveInterviewKit / setInterviewKitStatus
 // ====================
 
-const KIT_LOCKED = "Il kit si modifica solo prima del colloquio";
+const KIT_LOCKED = "La preparazione si modifica solo prima del colloquio";
 const SESSION_EXPIRED = "Sessione scaduta. Accedi di nuovo per continuare.";
 const actor = { userId: "user-123", role: "user" } as const;
 
@@ -421,7 +425,7 @@ describe("saveInterviewKit", () => {
     await expect(
       saveInterviewKit(actor, kitInput, { requireDraftStatus: true }),
     ).rejects.toThrow(
-      "Il kit è pronto: riportalo in bozza dalla dashboard per modificarlo",
+      "La preparazione è pronta: riportala in bozza dalla dashboard per modificarla",
     );
     expect(db.$transaction).not.toHaveBeenCalled();
   });
@@ -757,7 +761,7 @@ describe("buildKitGenerationContext", () => {
     vi.mocked(getActiveCriteria).mockResolvedValue([]);
 
     await expect(buildKitGenerationContext("int-1")).rejects.toThrow(
-      "Crea prima la scheda di valutazione della posizione",
+      "Aggiungi prima i criteri della posizione",
     );
   });
 

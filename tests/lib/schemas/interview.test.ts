@@ -129,7 +129,7 @@ describe("scheduleInterviewSchema", () => {
   it("requires a guide and refuses an invalid call link", () => {
     expect(
       firstMessage(scheduleInterviewSchema.safeParse(schedule({ guideId: "" }))),
-    ).toBe("Seleziona una guida colloquio");
+    ).toBe("Seleziona una traccia del colloquio");
     expect(
       firstMessage(scheduleInterviewSchema.safeParse(schedule({ meetingUrl: "non un link" }))),
     ).toBe("Link della call non valido");

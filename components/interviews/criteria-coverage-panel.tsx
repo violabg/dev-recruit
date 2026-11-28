@@ -22,7 +22,7 @@ export function CriteriaCoveragePanel({
       <CardContent className="flex flex-col gap-3">
         {coverage.length === 0 && (
           <p className="text-muted-foreground text-sm">
-            Nessun criterio nella scheda di valutazione.
+            Nessun criterio per la posizione.
           </p>
         )}
         {coverage.map((criterion) => {

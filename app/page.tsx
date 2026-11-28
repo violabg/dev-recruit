@@ -39,7 +39,7 @@ export default async function Home() {
                     Selezione tecnica potenziata dall&apos;AI
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Valuta le competenze tecniche dei candidati con quiz
+                    Valuta le competenze tecniche dei candidati con test
                     personalizzati e test in tempo reale supportati
                     dall&apos;intelligenza artificiale.
                   </p>
@@ -62,7 +62,7 @@ export default async function Home() {
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-2 font-semibold text-lg">
                       <BrainCircuit className="w-5 h-5 text-primary" />
-                      <span>Quiz generato dall&apos;AI</span>
+                      <span>Test generato dall&apos;AI</span>
                     </div>
                     <div className="flex flex-col gap-3 text-sm">
                       <div className="bg-muted/50 p-3 border rounded-lg">
@@ -122,10 +122,10 @@ export default async function Home() {
                   <BrainCircuit className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="font-bold text-xl">
-                  Quiz personalizzati con AI
+                  Test personalizzati con AI
                 </h3>
                 <p className="text-muted-foreground">
-                  Genera automaticamente quiz tecnici su misura per ogni
+                  Genera automaticamente test tecnici su misura per ogni
                   posizione e livello di esperienza.
                 </p>
               </div>

@@ -58,7 +58,7 @@ export function DuplicateQuizDialog({
       try {
         const { id } = unwrap(await duplicateQuizAction({ quizId, ...data }));
 
-        toast.success("Quiz duplicato con successo!");
+        toast.success("Test duplicato con successo!");
         onOpenChange(false);
         form.reset();
         router.push(`/dashboard/quizzes/${id}`);
@@ -72,9 +72,9 @@ export function DuplicateQuizDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Duplica Quiz</DialogTitle>
+          <DialogTitle>Duplica test</DialogTitle>
           <DialogDescription>
-            Crea una copia di questo quiz e assegnala a una nuova posizione.
+            Crea una copia di questo test e assegnala a una nuova posizione.
           </DialogDescription>
         </DialogHeader>
 
@@ -87,9 +87,9 @@ export function DuplicateQuizDialog({
             <InputField<DuplicateFormData>
               control={form.control}
               name="newTitle"
-              label="Titolo del Quiz"
+              label="Titolo del test"
               required
-              placeholder="Es: Quiz Sviluppatore - Copia"
+              placeholder="Es: Test Sviluppatore - Copia"
             />
 
             <SelectField<DuplicateFormData>

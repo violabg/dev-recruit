@@ -139,7 +139,7 @@ export function SearchAndFilterAssessments({
         <Input
           ref={inputRef}
           type="search"
-          placeholder="Cerca per candidato, email, quiz o posizione..."
+          placeholder="Cerca per candidato, email, test o posizione..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);

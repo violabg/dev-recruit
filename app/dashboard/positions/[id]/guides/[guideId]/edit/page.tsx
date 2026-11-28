@@ -4,9 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getInterviewGuideById } from "@/lib/data/interview-guides";
 import { getPositionById } from "@/lib/data/positions";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
-import { cn } from "cn";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { positionTrail } from "@/lib/utils/breadcrumbs";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { GuideEditorSkeleton } from "../../../fallbacks";
@@ -70,20 +68,16 @@ async function GuideContent({ params }: GuidePageProps) {
   return (
     <>
       <PageHeader
-        title="Modifica guida"
+        title="Modifica traccia"
         description={`${guide.title} · ${position.title}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/positions/${id}/guides/${guide.id}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="mr-1 size-4" />
-            Torna alla guida
-          </Link>
-        }
+        breadcrumbs={positionTrail(
+          position,
+          {
+            label: guide.title,
+            href: `/dashboard/positions/${id}/guides/${guide.id}`,
+          },
+          { label: "Modifica" },
+        )}
       />
       <InterviewGuideEditor
         mode="edit"

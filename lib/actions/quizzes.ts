@@ -151,7 +151,7 @@ export async function duplicateQuizAction(input: DuplicateQuizInput) {
     const parsed = duplicateQuizSchema.safeParse(input);
     if (!parsed.success) {
       throw new UserError(
-        parsed.error.issues[0]?.message ?? "Dati del quiz non validi",
+        parsed.error.issues[0]?.message ?? "Dati del test non validi",
       );
     }
     const { quizId, newPositionId, newTitle } = parsed.data;

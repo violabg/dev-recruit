@@ -6,6 +6,10 @@ import {
   getPositionSetup,
   type PositionSetup,
 } from "@/lib/utils/position-setup";
+import {
+  computePositionCoverage,
+  type PositionCoverage,
+} from "@/lib/utils/position-coverage";
 import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { Position, Prisma } from "../prisma/client";
@@ -129,11 +133,88 @@ export async function getPositionSetupStatus(
   });
 }
 
+export type PositionCoverageView = PositionCoverage & {
+  guides: { id: string; round: number }[];
+};
+
+/**
+ * Coverage of the position's active criteria by the questions of its tests and
+ * traces, plus its traces (lowest round first) for the fix link. Null when the
+ * position does not exist. No session read.
+ */
+export async function getPositionCoverage(
+  positionId: string,
+): Promise<PositionCoverageView | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(
+    CacheTags.POSITIONS,
+    CacheTags.SCORECARDS,
+    CacheTags.QUIZZES,
+    CacheTags.QUESTIONS,
+    CacheTags.INTERVIEW_GUIDES,
+    entityTag.position(positionId),
+  );
+
+  const position = await prisma.position.findUnique({
+    where: { id: positionId },
+    select: {
+      scorecard: {
+        select: {
+          criteria: {
+            where: { archivedAt: null },
+            orderBy: { order: "asc" },
+            select: { id: true, name: true, priority: true, order: true },
+          },
+        },
+      },
+      quizzes: {
+        select: {
+          quizQuestions: { select: { criterionIds: true } },
+        },
+      },
+      interviewGuides: {
+        orderBy: [{ round: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          round: true,
+          sections: {
+            select: {
+              questions: { select: { criterionIds: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!position) return null;
+
+  const quizLinks = position.quizzes.flatMap(
+    (quiz) => quiz.quizQuestions,
+  );
+  const guideQuestions = position.interviewGuides.flatMap((guide) =>
+    guide.sections.flatMap((section) => section.questions),
+  );
+  const guides = position.interviewGuides.map(({ id, round }) => ({
+    id,
+    round,
+  }));
+
+  return {
+    ...computePositionCoverage(
+      position.scorecard?.criteria ?? [],
+      quizLinks,
+      guideQuestions,
+    ),
+    guides,
+  };
+}
+
 /**
  * Returns all positions without pagination.
  * Use for dropdowns, static params, or other cases where you need the full list.
- */
-export const getAllPositions = async (): Promise<Position[]> => {
+ */export const getAllPositions = async (): Promise<Position[]> => {
   "use cache";
   cacheLife("hours");
   cacheTag(CacheTags.POSITIONS);
@@ -159,6 +240,59 @@ export const getOpenPositionsForSelect = cache(async () => {
     orderBy: { title: "asc" },
   });
 });
+
+/** The fields of a position a visitor sees on the public apply pages. */
+const publicPositionSelect = {
+  id: true,
+  title: true,
+  description: true,
+  experienceLevel: true,
+  contractType: true,
+  skills: true,
+  softSkills: true,
+} satisfies Prisma.PositionSelect;
+
+export type PublicPosition = Prisma.PositionGetPayload<{
+  select: typeof publicPositionSelect;
+}>;
+
+/**
+ * Open positions with their public details, for the apply page
+ * (/recruiting). Sorted alphabetically by title.
+ */
+export const getOpenPositionsForApply = cache(
+  async (): Promise<PublicPosition[]> => {
+    "use cache";
+    cacheLife("hours");
+    cacheTag(CacheTags.POSITIONS);
+
+    return prisma.position.findMany({
+      where: { status: "open" },
+      select: publicPositionSelect,
+      orderBy: { title: "asc" },
+    });
+  },
+);
+
+/**
+ * A position for its own apply page (/recruiting/positions/[id]): the public
+ * details plus the status, which decides whether it still accepts
+ * applications. Null when it does not exist.
+ */
+export const getPublicPositionById = cache(
+  async (
+    positionId: string,
+  ): Promise<(PublicPosition & { status: PositionStatus }) | null> => {
+    "use cache";
+    cacheLife("hours");
+    cacheTag(CacheTags.POSITIONS, entityTag.position(positionId));
+
+    return prisma.position.findUnique({
+      where: { id: positionId },
+      select: { ...publicPositionSelect, status: true },
+    });
+  },
+);
 
 /**
  * Returns positions formatted for Base UI Select items prop.

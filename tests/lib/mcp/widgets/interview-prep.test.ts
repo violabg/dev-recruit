@@ -43,11 +43,11 @@ describe("buildInterviewPrepWidget", () => {
 
     expect(widget.title).toBe("Frontend · Round 2");
     expect(widget.status).toEqual({ label: "Pianificato", tone: "pending" });
-    expect(widget.kit).toEqual({ label: "Kit in bozza", tone: "warning" });
+    expect(widget.kit).toEqual({ label: "Preparazione in bozza", tone: "warning" });
     expect(widget.facts).toEqual([
       { label: "Quando", value: formatDateTime(at) },
       { label: "Durata", value: "60 minuti" },
-      { label: "Guida", value: "Colloquio tecnico" },
+      { label: "Traccia", value: "Colloquio tecnico" },
       { label: "Partecipanti", value: "1 Conduttore, 2 Osservatori" },
     ]);
     expect(widget.outline).toEqual([
@@ -60,7 +60,7 @@ describe("buildInterviewPrepWidget", () => {
 
   it("offers improve and mark ready only for a draft kit of a scheduled interview", () => {
     expect(buildInterviewPrepWidget(view).markReady).toEqual({
-      label: "Segna il kit come pronto",
+      label: "Segna come pronta",
       tool: "publish_draft",
       arguments: { kind: "kit", id: "int-1" },
     });

@@ -23,7 +23,7 @@ export const createPositionWorkflow: McpWorkflow = {
     "   - una descrizione breve (la scrivi tu se l'utente ti dà solo appunti).",
     "2. Riassumi la bozza in poche righe e chiedi se procedere.",
     "3. Chiama `create_position_draft`. La posizione nasce in bozza: non è visibile ai candidati.",
-    "4. Spiega che la pubblica una persona con \"Pubblica\" nella pagina della posizione, e che prima conviene completare scheda di valutazione, quiz e guida colloquio. Indica il link restituito dallo strumento.",
+    "4. Spiega che la pubblica una persona con \"Pubblica\" nella pagina della posizione, e che prima conviene completare criteri, test e traccia del colloquio. Indica il link restituito dallo strumento.",
     "",
     "Non pubblicare tu la posizione e non dire che è aperta finché lo strumento non lo conferma.",
     "",

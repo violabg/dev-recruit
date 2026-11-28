@@ -47,7 +47,7 @@ export function DecisionSummaryCard({
 
         {scoreHidden ? (
           <p className="text-muted-foreground text-sm">
-            Visibile dopo l&apos;invio della tua scheda
+            Visibile dopo l&apos;invio del tuo feedback
           </p>
         ) : (
           <>
@@ -68,7 +68,7 @@ export function DecisionSummaryCard({
         <div>
           <Link
             href={`/dashboard/applications/${applicationId}/decision` as never}
-            className={cn(buttonVariants({ size: "sm" }), "inline-flex")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "inline-flex")}
           >
             Apri la decisione
           </Link>

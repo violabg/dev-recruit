@@ -74,7 +74,7 @@ async function PresetsContent({
                   <Link
                     href="/dashboard/presets/new"
                     className={buttonVariants({
-                      variant: "default",
+                      variant: "outline",
                       size: "sm",
                     })}
                   >

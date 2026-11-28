@@ -18,10 +18,6 @@ vi.mock("@/lib/utils/cache-utils", () => ({
   invalidatePositionCache: vi.fn(),
 }));
 
-vi.mock("@/lib/data/positions", () => ({
-  getPositionById: vi.fn(),
-}));
-
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
   unstable_rethrow: vi.fn(),
@@ -34,11 +30,9 @@ vi.mock("@/lib/services/positions", () => ({
 import {
   createPositionAction,
   deletePositionAction,
-  fetchPositionDataAction,
   updatePositionAction,
   updatePositionStatusAction,
 } from "@/lib/actions/positions";
-import { getPositionById } from "@/lib/data/positions";
 import { requireUser } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 import { createPosition } from "@/lib/services/positions";
@@ -306,49 +300,3 @@ describe("updatePositionStatusAction", () => {
   );
 });
 
-describe("fetchPositionDataAction", () => {
-  it("returns the position wrapped in the action result", async () => {
-    const position = {
-      id: "pos-123",
-      title: "Senior Developer",
-      status: "open",
-    };
-    vi.mocked(getPositionById).mockResolvedValueOnce(position as any);
-
-    const result = await fetchPositionDataAction("pos-123");
-
-    expect(result).toEqual({ success: true, position });
-    expect(getPositionById).toHaveBeenCalledWith("pos-123");
-  });
-
-  it("returns a successful null position when the position does not exist", async () => {
-    vi.mocked(getPositionById).mockResolvedValueOnce(null);
-
-    const result = await fetchPositionDataAction("nope");
-
-    expect(result).toEqual({ success: true, position: null });
-  });
-
-  it.each(["draft", "closed"])(
-    "hides a %s position from the public form",
-    async (status) => {
-      vi.mocked(getPositionById).mockResolvedValueOnce({
-        id: "pos-123",
-        title: "Senior Developer",
-        status,
-      } as any);
-
-      const result = await fetchPositionDataAction("pos-123");
-
-      expect(result).toEqual({ success: true, position: null });
-    },
-  );
-
-  it("is public: no signed-in user needed", async () => {
-    vi.mocked(getPositionById).mockResolvedValueOnce(null);
-
-    await fetchPositionDataAction("pos-123");
-
-    expect(requireUser).not.toHaveBeenCalled();
-  });
-});

@@ -4,9 +4,9 @@ import type { InterviewStatus } from "@/lib/schemas";
 export type InterviewStepKey = "prepare" | "live" | "feedback" | "decision";
 
 const STEPS: { key: InterviewStepKey; label: string; hint: string }[] = [
-  { key: "prepare", label: "Preparazione", hint: "Kit e domande" },
+  { key: "prepare", label: "Preparazione", hint: "Domande e checklist" },
   { key: "live", label: "Live", hint: "Note e copertura" },
-  { key: "feedback", label: "Scheda", hint: "Voti per criterio" },
+  { key: "feedback", label: "Feedback", hint: "Voti per criterio" },
   { key: "decision", label: "Decisione", hint: "Esito candidatura" },
 ];
 
@@ -19,7 +19,7 @@ function reachedIndex(status: InterviewStatus, feedbackSubmitted: boolean) {
 }
 
 /**
- * Where the interview stands in its flow: preparation → live → scorecard →
+ * Where the interview stands in its flow: preparation → live → feedback →
  * decision, as a station track. The page you are on is the current station,
  * passed steps are green, every step is a link.
  */

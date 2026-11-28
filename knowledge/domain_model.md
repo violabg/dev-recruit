@@ -20,7 +20,7 @@ editable: true
 - `getViewerId()` only arranges the view (which ownership button to offer, whether a score is still hidden): browser-cached for the session, never a guard. Authorization always reads `getCurrentUser()` / `requireUser()`.
 - MCP tools follow the same rules: the user of the OAuth token is the signed-in user everywhere (author, owner "me", `decidedBy`, interviewer, visibility of unsubmitted material). OAuth scopes limit what one token may do, never a user or a role.
 - Only visibility exception, never ownership or permission: an interviewer's live notes and scorecard are visible to their author until submitted. Submission publishes and locks: a submitted scorecard, its criterion scores and its author's notes on that interview become read-only for everyone, author included; no action reopens.
-- Independence views are arrangements, never filtered reads: submitted scorecards are returned to everyone and the UI collapses them ("Schede già inviate (n)"), and the Decision columns, overall score and must-warning lists stay closed behind "Per un giudizio indipendente, invia prima la tua scheda" while the participant has not submitted. Outcome and rationale stay usable.
+- Independence views are arrangements, never filtered reads: submitted scorecards are returned to everyone and the UI collapses them ("Feedback già inviati (n)"), and the Decision columns, overall score and must-warning lists stay closed behind "Per un giudizio indipendente, invia prima il tuo feedback" while the participant has not submitted. Outcome and rationale stay usable.
 - `User.role` is `user` or `admin`. The only role check guards user management (creating users, editing them, their role, email verification, password, ban and sessions) and MCP management (global switch, per-user switch, token revocation): actions check `admin` with `requireAdmin` (non-admin → `UserError`), pages with `requireAdminPage` (non-admin → not-found), both after the session check. Hiding the menu entry is presentation, never the guard.
 - `Application.ownerId` = recruiter in charge, for the optional "Solo le mie" flag only: application created from the dashboard → session user (association from the position page also on reopen), candidate edit → editor, public application → null; "Prendi in carico" sets, "Rilascia" clears. The Agenda "Solo i miei" and the home "Solo le mie" filters are view filters on the same field.
 - Candidates are not users: public routes only.
@@ -73,7 +73,7 @@ editable: true
 
 - `Position.status`: `draft`, `open`, `closed`. Only `open` appears in the public form, accepts public applications and candidate associations, and feeds the dashboard selectors; `closed` keeps its applications and everything on them.
 - A position with at least one application cannot be deleted; close it instead.
-- Incomplete setup when lacking at least one of: scorecard with ≥1 active criterion, quiz, guide. `getPositionSetup` is the single rule (`missing` ordered scorecard → quiz → guide; all-archived criteria count as missing); the position checklist (every status) and "Le mie azioni" (`draft` and `open` only) both use it.
+- Incomplete setup when lacking at least one of: scorecard with ≥1 active criterion, quiz, guide. `getPositionSetup` is the single rule (`missing` ordered scorecard → quiz → guide; all-archived criteria count as missing); the "Criteri e domande" tab of the position ("da completare" marker and initial tab, every status) and "Posizioni da preparare" in "Le mie azioni" (`draft` and `open` only) both use it.
 
 ## Scorecard
 
@@ -108,7 +108,7 @@ editable: true
 ## Interview kits
 
 - Born `draft` at scheduling as a copy of the guide: one section per section, one `template` item per question in the same order, default checklist. Copied criteria keep only active ones.
-- Editable only while the interview is `scheduled`, with a single save (`saveInterviewKitAction`); the save never changes the status. "Segna come pronto" and "Riporta in bozza" only while scheduled.
+- Editable only while the interview is `scheduled`, with a single save (`saveInterviewKitAction`); the save never changes the status. "Segna come pronta" and "Riporta in bozza" only while scheduled.
 - `syncKitItems` is the only writer of `KitItem` and never writes `covered`. Rows match by id inside the kit: no id → created with the proposal's origin, otherwise `manual` (never `template`); missing rows are deleted with their notes. `order` = position among the rows of the same section.
 - An AI-origin row whose text, follow-ups or criteria change becomes `edited`; `template` and `manual` rows never become `edited`.
 - Criteria of items and hypotheses: scorecard criteria only; archived allowed only when already on the same kit.
@@ -184,7 +184,8 @@ editable: true
 ## Language
 
 - All user-facing text is Italian: UI, toasts, `UserError`, custom Zod messages, AI content. Identifiers and JSON field names stay English.
-- An `Assessment` is called **Test** for recruiters and candidates. **Colloquio** names an `Interview` only, never an `Assessment` or a `Quiz`.
+- UI names: `Quiz` **Test**, `Assessment` **Test inviato** (the candidate sees "test"), `Scorecard` **Criteri**, `InterviewGuide` **Traccia del colloquio**, `InterviewKit` **Preparazione**, `InterviewerFeedback` **Feedback**. **Colloquio** names an `Interview` only. **Valutazione** names only an AI `Evaluation`.
+- NEVER write "quiz", "kit", "guida colloquio" or "scheda" (for criteri or feedback) in UI text, toasts or `UserError` messages; identifiers keep their English names.
 
 ## Prohibitions
 

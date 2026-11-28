@@ -176,7 +176,7 @@ export function EditQuizForm({
       form.setValue("timeLimit", generated.timeLimit, { shouldDirty: true });
       replace(generated.questions);
       setExpandedQuestions(new Set());
-      toast.success("Quiz generato", {
+      toast.success("Test generato", {
         description:
           "Rivedi le domande e premi Salva per confermare. Finché non salvi, nulla viene modificato.",
       });

@@ -38,7 +38,7 @@ const WIDGET_TITLE: Record<WidgetId, string> = {
   "draft-preview": "Anteprima bozza",
   "interview-prep": "Preparazione colloquio",
   "position-form": "Nuova posizione",
-  "quiz-form": "Nuovo quiz",
+  "quiz-form": "Nuovo test",
   "schedule-form": "Nuovo colloquio",
 };
 

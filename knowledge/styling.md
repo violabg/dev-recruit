@@ -18,7 +18,7 @@ All colours are OKLCH custom properties redefined for dark mode and exposed as T
 - `stage-pending`, `stage-progress`, `stage-done`, `stage-cancelled`, `stage-expired` serve assessment states (including derived `expired`), interview statuses and application stages; `section-<key>` is the identity hue of each dashboard section (sidebar icon, page-title rule).
 - New colours are OKLCH tokens in the global stylesheet (light and dark), never palette classes, hex or arbitrary values.
 - Prefer a tint (`bg-success/10 text-success`) over a filled background. Only `primary`, `secondary` and `accent` have a `-foreground` companion: on `bg-success`/`bg-destructive` use `text-primary-foreground`, never `text-white`/`text-black`.
-- There is no `section-applications` token: Candidature and the Agenda ("Agenda colloqui", `CalendarDays`, Selezione group after Candidati) reuse the candidates hue; the "Le mie azioni" entry uses `primary`.
+- There is no `section-applications` token: the application pages and the Agenda ("Agenda", `CalendarDays`, main group after Candidati) reuse the candidates hue; the "Le mie azioni" entry uses `primary`.
 
 ## Status, score and label maps
 
@@ -37,9 +37,16 @@ Each family has exactly one presentation module. NEVER write a local state → c
 - Unsaved changes are a `warning` tint: "Modifiche non salvate" in the scorecard, guide and kit editors; the scorecard editor adds "Criteri soft di default: non sono ancora salvati", the guide editor flags the minutes mismatch ("Somma sezioni: {minutes} min su {duration}"), and a generation dialog that replaces rows warns the same way.
 - The legal reminder is `LegalReminder`, a `role="note"` block in `warning` holding the fixed `LEGAL_REMINDER_TEXT`; there is no Alert component under `components/ui`.
 
+## Page rules
+
+- One `primary` button per page: the next step. Every other action is `variant="outline"`, delete last.
+- Breadcrumbs carry real names (position title, candidate name, "Colloquio N"), never "Dettaglio"; no back arrow and no "Torna a…" button.
+- At most one badge per item; a hidden or one-line block replaces an empty card; every warning carries the link that fixes it.
+- The application page is a vertical story of stops (done: one line plus "Apri"; current: open, holds the primary button; future: dashed with its unlock condition), never tabs or a separate stepper.
+
 ## Reusable project components
 
-- `PageHeader` with `title`, `description?`, `actionBtns?`, `section` (colours the title rule); `PageHeaderSkeleton`, `TableSkeleton`, `FilterBarSkeleton`, `PaginationSkeleton` for Suspense fallbacks.
+- `PageHeader` with `title`, `description?`, `actionBtns?`, `info?`, `children?` (flow content under the title); the section stripe and eyebrow come from `SectionMark`, which reads the URL (no `section` prop); `PageHeaderSkeleton`, `TableSkeleton`, `FilterBarSkeleton`, `PaginationSkeleton` for Suspense fallbacks.
 - `DeleteWithConfirm` (action returning a result or redirecting), `EntityActionsMenu`, `TableRowLink`, `UrlPagination`.
 - `rhf-inputs` wrappers for form fields; raw `Controller` only for controls without one (`LLMModelSelect`, `CodeEditor`). `toast` from sonner for feedback.
 - `MineToggle` with `label` (default "Solo le mie"; the Agenda passes "Solo i miei"); preset icons from `getPresetIcon(name)` with `PRESET_ICON_OPTIONS`; section metadata from `SECTIONS`, `NAV_GROUPS`, `NAV_FOOTER`.

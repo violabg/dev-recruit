@@ -119,7 +119,7 @@ export function DecisionForm({
           </p>
           <DecisionCollapsible
             interviewIds={collapsedInterviewIds}
-            placeholder="Visibile dopo l'invio della tua scheda"
+            placeholder="Visibile dopo l'invio del tuo feedback"
           >
             <ul className="mt-1 pl-5 list-disc">
               {warnings.map((warning) => (

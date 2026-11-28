@@ -8,9 +8,11 @@ import Link from "next/link";
 
 type Props = {
   params: Promise<{ id: string }>;
+  /** This section holds the page's next step: its creation link is primary */
+  primary?: boolean;
 };
 
-export default async function Quizzes({ params }: Props) {
+export default async function Quizzes({ params, primary = false }: Props) {
   const { id } = await params;
   const quizzes = await getQuizzesForPosition(id);
   // Not awaited: the dialog resolves it with use()
@@ -21,10 +23,13 @@ export default async function Quizzes({ params }: Props) {
     <div className={cn("flex flex-wrap gap-2", className)}>
       <Link
         href={`/dashboard/positions/${id}/quiz/new`}
-        className={buttonVariants({ variant: "default", size: "sm" })}
+        className={buttonVariants({
+          variant: primary ? "default" : "outline",
+          size: "sm",
+        })}
       >
         <Plus className="mr-1 size-4" />
-        Nuovo quiz
+        Nuovo test
       </Link>
       <AddExistingQuizzesDialog
         positionId={id}
@@ -36,8 +41,8 @@ export default async function Quizzes({ params }: Props) {
 
   return (
     <>
-      <div className="flex justify-between">
-        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">Quiz</h2>
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">Test</h2>
         {renderActions()}
       </div>
 
@@ -74,7 +79,7 @@ export default async function Quizzes({ params }: Props) {
                     <Link
                       href={`/dashboard/quizzes/${quiz.id}/invite`}
                       className={buttonVariants({
-                        variant: "secondary",
+                        variant: "outline",
                         size: "sm",
                       })}
                     >
@@ -87,14 +92,9 @@ export default async function Quizzes({ params }: Props) {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col justify-center items-center border border-dashed rounded-lg h-[200px]">
-          <div className="text-center">
-            <p className="text-muted-foreground text-sm">
-              Nessun quiz per questa posizione
-            </p>
-            {renderActions("mt-2 justify-center")}
-          </div>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          Nessun test per questa posizione
+        </p>
       )}
     </>
   );

@@ -207,7 +207,7 @@ describe("saveQuiz: update", () => {
         timeLimit: null,
         questions: [openQuestion()],
       } as any),
-    ).rejects.toThrow("Quiz non trovato o accesso negato.");
+    ).rejects.toThrow("Test non trovato o accesso negato.");
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -553,7 +553,7 @@ describe("addExistingQuizzesToPosition", () => {
 
     await expect(
       addExistingQuizzesToPosition(tx as any, params),
-    ).rejects.toThrow("Uno o più quiz non esistono più");
+    ).rejects.toThrow("Uno o più test non esistono più");
     expect(tx.quiz.create).not.toHaveBeenCalled();
     expect(syncQuizQuestions).not.toHaveBeenCalled();
   });
@@ -566,7 +566,7 @@ describe("addExistingQuizzesToPosition", () => {
 
     await expect(
       addExistingQuizzesToPosition(tx as any, params),
-    ).rejects.toThrow("Uno o più quiz appartengono già a questa posizione");
+    ).rejects.toThrow("Uno o più test appartengono già a questa posizione");
     expect(tx.quiz.create).not.toHaveBeenCalled();
     expect(syncQuizQuestions).not.toHaveBeenCalled();
   });

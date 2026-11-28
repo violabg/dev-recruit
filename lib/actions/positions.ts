@@ -1,9 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { requireUser } from "../auth-server";
-import { getPositionById } from "../data/positions";
 import prisma from "../prisma";
-import { Position } from "../prisma/client";
 import {
   PositionFormData,
   positionFormSchema,
@@ -13,7 +11,6 @@ import {
 import { toActor } from "../services/actor";
 import { createPosition } from "../services/positions";
 import { invalidatePositionCache } from "../utils/cache-utils";
-import type { ActionResult } from "../utils/action-result";
 import { runAction, UserError } from "./run-action";
 
 export async function createPositionAction(values: PositionFormData) {
@@ -124,16 +121,3 @@ export async function deletePositionAction(id: string) {
   });
 }
 
-/**
- * Position details for the public apply form (/recruiting), which loads them
- * as the applicant picks positions. Public on purpose: no requireUser().
- * Only an open position is returned.
- */
-export async function fetchPositionDataAction(
-  positionId: string,
-): Promise<ActionResult<{ position: Position | null }>> {
-  return runAction("fetchPositionDataAction", async () => {
-    const position = await getPositionById(positionId);
-    return { position: position?.status === "open" ? position : null };
-  });
-}

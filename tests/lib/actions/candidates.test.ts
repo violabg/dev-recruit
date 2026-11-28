@@ -145,7 +145,7 @@ describe("candidates actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Una o più posizioni selezionate non sono valide",
+        error: "Una o più posizioni non accettano più candidature. Ricarica la pagina per vedere quelle aperte.",
       });
       expect(prisma.candidate.create).not.toHaveBeenCalled();
     });
@@ -827,7 +827,7 @@ describe("candidates actions — applications, email and public form", () => {
 
         expect(result).toEqual({
           success: false,
-          error: "Una o più posizioni selezionate non sono valide",
+          error: "Una o più posizioni non accettano più candidature. Ricarica la pagina per vedere quelle aperte.",
         });
         expect(prisma.candidate.findUnique).not.toHaveBeenCalled();
         expect(prisma.candidate.create).not.toHaveBeenCalled();

@@ -8,11 +8,11 @@ type Props = {
 };
 
 /**
- * Tab Decisione: compact summary of the decision (recorded outcome, overall
- * score with the scorecard weights, must warnings) and the link to the
+ * Decisione stop body: compact summary of the decision (recorded outcome,
+ * overall score with the scorecard weights, must warnings) and the link to the
  * Decision page.
  */
-export async function DecisionTab({ params }: Props) {
+export async function DecisionStopBody({ params }: Props) {
   const { id } = await params;
   const decision = await getApplicationDecision(id);
 
@@ -20,8 +20,8 @@ export async function DecisionTab({ params }: Props) {
     return null;
   }
 
-  // Session-dependent view arrangement, cached for the session so the tab is
-  // part of the prefetched UI
+  // Session-dependent view arrangement; the page read the session after a
+  // request value first
   const currentUserId = await getViewerId();
 
   // A participant who still has to submit a scorecard does not see the score

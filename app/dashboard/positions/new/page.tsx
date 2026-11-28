@@ -1,13 +1,11 @@
-import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
-import { cn } from "cn";
 import PageHeader from "@/components/page-header";
 import { PositionFormLoading } from "@/components/positions/position-form-with-data";
+import { SECTIONS } from "@/components/dashboard/sections";
 import {
   Card,
   CardContent,
   } from "@/components/ui/card";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 
 // Server component for new position page
 export default async function NewPositionPage() {
@@ -16,18 +14,7 @@ export default async function NewPositionPage() {
       <PageHeader
         title="Nuova posizione"
         description="Compila il modulo sottostante per creare una nuova posizione"
-        actionBtns={
-          <Link
-            href={"/dashboard/positions" as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Posizioni
-          </Link>
-        }
+        breadcrumbs={sectionTrail(SECTIONS.positions, { label: "Nuova posizione" })}
       />
       <Card>
       <CardContent>

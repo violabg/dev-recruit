@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/card";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deletePresetAction } from "@/lib/actions/presets";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { getPresetData } from "@/lib/data/presets";
 import { getRecentPresetIds } from "@/lib/data/presets";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { Edit, Gauge, Hash, ListChecks, Star } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -136,6 +138,7 @@ async function PresetDetailContent({
       <PageHeader
         title={preset.label}
         description={preset.description || "Nessuna descrizione fornita."}
+        breadcrumbs={sectionTrail(SECTIONS.presets, { label: preset.name })}
         actionBtns={
           <>
             <Link

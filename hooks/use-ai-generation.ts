@@ -95,7 +95,7 @@ export const useAIGeneration = ({
     // quiz too, so fall back to the standard position-based title.
     const quizTitle =
       form.getValues("title")?.trim() ||
-      `Quiz per ${position.title} (${position.experienceLevel})`;
+      `Test per ${position.title} (${position.experienceLevel})`;
 
     const baseConfig = {
       quizTitle,

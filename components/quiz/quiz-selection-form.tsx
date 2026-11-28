@@ -98,10 +98,10 @@ export function QuizSelectionForm({
       {availableQuizzes.length === 0 ? (
         <div className="flex flex-col justify-center items-center p-8 border border-dashed rounded-lg h-40 text-center">
           <p className="text-muted-foreground text-sm">
-            Nessun quiz disponibile per la posizione di questo candidato.
+            Nessun test disponibile per la posizione di questo candidato.
           </p>
           <p className="mt-1 text-muted-foreground text-xs">
-            Crea prima un quiz per questa posizione, poi assegnalo ai
+            Crea prima un test per questa posizione, poi assegnalo ai
             candidati.
           </p>
         </div>
@@ -114,10 +114,10 @@ export function QuizSelectionForm({
           <MultiSelectField
             control={form.control}
             name="quizIds"
-            label="Seleziona i quiz"
+            label="Seleziona i test"
             required
             options={quizOptions}
-            placeholder="Seleziona i quiz da assegnare a questo candidato"
+            placeholder="Seleziona i test da assegnare a questo candidato"
             showClear
           />
 

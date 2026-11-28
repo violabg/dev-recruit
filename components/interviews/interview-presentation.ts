@@ -63,8 +63,8 @@ export const KIT_STATUS_PRESENTATION: Record<
   KitStatus,
   { label: string; badge: string }
 > = {
-  draft: { label: "Kit in bozza", badge: "bg-warning/10 text-warning" },
-  ready: { label: "Kit pronto", badge: "bg-success/10 text-success" },
+  draft: { label: "Preparazione in bozza", badge: "bg-warning/10 text-warning" },
+  ready: { label: "Preparazione pronta", badge: "bg-success/10 text-success" },
 };
 
 /** Badge text; previous_round shows 'Round {n}' where n = the round of the cited feedback, or 'Round precedente'. */

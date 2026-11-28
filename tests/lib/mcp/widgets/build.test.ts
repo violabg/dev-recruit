@@ -87,7 +87,7 @@ describe("buildActionCenterWidget", () => {
 
     expect(setup.rows[0]).toMatchObject({
       title: "Backend",
-      meta: "Manca: Quiz, Guida colloquio",
+      meta: "Manca: Test, Traccia del colloquio",
       badge: { label: "Bozza", tone: "warning" },
       url: `${APP_URL}/dashboard/positions/pos-1`,
     });
@@ -175,9 +175,9 @@ describe("buildPositionWidget", () => {
       steps: [
         { label: "Dettagli", done: true, url: `${APP_URL}/dashboard/positions/pos-1?tab=dettagli` },
         {
-          label: "Scheda di valutazione",
+          label: "Criteri",
           done: false,
-          url: `${APP_URL}/dashboard/positions/pos-1?tab=scheda`,
+          url: `${APP_URL}/dashboard/positions/pos-1?tab=criteri`,
         },
       ],
     });
@@ -248,7 +248,7 @@ describe("buildApplicationFlowWidget", () => {
       url: view.decisionUrl,
     });
     expect(widget.interviews[0]).toMatchObject({
-      meta: "Nessun kit · Paola",
+      meta: "Nessuna preparazione · Paola",
       url: view.interviews[0].url,
     });
     expect(widget.interviews[0].ask).toContain("interviewId int-1");

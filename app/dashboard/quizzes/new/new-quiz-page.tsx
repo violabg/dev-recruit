@@ -66,7 +66,7 @@ export const NewQuizCreationPage = ({
 
     return {
       id: `new-${selectedPosition.id}`,
-      title: `Quiz per ${selectedPosition.title} (${selectedPosition.experienceLevel})`,
+      title: `Test per ${selectedPosition.title} (${selectedPosition.experienceLevel})`,
       positionId: selectedPosition.id,
       questions: [],
       timeLimit: null,
@@ -124,7 +124,7 @@ export const NewQuizCreationPage = ({
         <div className="p-6 border border-muted/50 border-dashed rounded-xl text-center">
           <p className="text-muted-foreground">
             Non ci sono ancora posizioni disponibili. Crea una posizione prima
-            di costruire il quiz.
+            di costruire il test.
           </p>
           <Link
             href="/dashboard/positions"
@@ -138,7 +138,7 @@ export const NewQuizCreationPage = ({
         </div>
       ) : !selectedPosition || !blankQuiz ? (
         <div className="p-6 border border-muted/50 rounded-xl text-center">
-          <p>Seleziona una posizione per iniziare la creazione del quiz.</p>
+          <p>Seleziona una posizione per iniziare la creazione del test.</p>
         </div>
       ) : (
         <EditQuizForm

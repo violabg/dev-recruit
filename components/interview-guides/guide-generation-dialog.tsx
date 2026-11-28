@@ -57,7 +57,7 @@ function firstErrorMessage(
 }
 
 /**
- * Options and confirmation of "Genera dalla scheda". It never saves: the
+ * Options and confirmation of "Genera dai criteri". It never saves: the
  * result goes to the editor as unsaved changes.
  */
 export function GuideGenerationDialog({
@@ -112,7 +112,7 @@ export function GuideGenerationDialog({
   function onInvalid(errors: FieldErrors<GenerateInterviewGuideInput>) {
     toast.error(
       firstErrorMessage(errors) ??
-        "Controlla titolo, round e durata della guida",
+        "Controlla titolo, round e durata della traccia",
     );
   }
 
@@ -120,11 +120,11 @@ export function GuideGenerationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Genera dalla scheda</DialogTitle>
+          <DialogTitle>Genera dai criteri</DialogTitle>
           <DialogDescription>
             L&apos;AI propone sezioni e domande a partire dai criteri della
-            scheda di valutazione. Nulla viene salvato finché non premi
-            &quot;Salva guida&quot;.
+            posizione. Nulla viene salvato finché non premi
+            &quot;Salva traccia&quot;.
           </DialogDescription>
         </DialogHeader>
 

@@ -1,7 +1,6 @@
 import { cn } from "cn";
 import { ApplicationStageBadge } from "@/components/applications/application-stage-badge";
 import PageHeader from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import {
@@ -10,7 +9,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { deleteCandidateAction } from "@/lib/actions/candidates";
+import { SECTIONS } from "@/components/dashboard/sections";
 import { getCandidateWithDetails } from "@/lib/data/candidates";
+import { sectionTrail } from "@/lib/utils/breadcrumbs";
 import { furthestApplication } from "@/lib/utils/application-stage";
 import { ClipboardCheck, Edit, Link2 } from "lucide-react";
 import Link from "next/link";
@@ -29,9 +30,9 @@ export async function CandidateHeader({ params }: Props) {
         <p className="font-medium text-lg">Candidato non trovato</p>
         <Link
           href="/dashboard/candidates"
-          className={cn("mt-4", buttonVariants({ variant: "default" }))}
+          className={cn("mt-4", buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Torna ai candidati
+          Vai ai candidati
         </Link>
       </div>
     );
@@ -43,6 +44,8 @@ export async function CandidateHeader({ params }: Props) {
   return (
     <PageHeader
       title={fullName}
+      description="Profilo candidato"
+      breadcrumbs={sectionTrail(SECTIONS.candidates, { label: fullName })}
       info={
         <>
           {furthest && <ApplicationStageBadge stage={furthest.stage} />}
@@ -50,16 +53,14 @@ export async function CandidateHeader({ params }: Props) {
             (candidate.doNotContactNote ? (
               <Tooltip>
                 <TooltipTrigger>
-                  <Badge className="bg-destructive/10 text-destructive">
+                  <span className="text-destructive text-sm">
                     Non ricontattare
-                  </Badge>
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent>{candidate.doNotContactNote}</TooltipContent>
               </Tooltip>
             ) : (
-              <Badge className="bg-destructive/10 text-destructive">
-                Non ricontattare
-              </Badge>
+              <span className="text-destructive text-sm">Non ricontattare</span>
             ))}
           <span className="text-muted-foreground text-sm">
             {candidate.email}
@@ -73,7 +74,7 @@ export async function CandidateHeader({ params }: Props) {
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "inline-flex")}
           >
             <Link2 className="mr-1 size-4" />
-            Associa quiz
+            Associa test
           </Link>
           <Link
             href={`/dashboard/candidates/${candidate.id}/evaluations`}

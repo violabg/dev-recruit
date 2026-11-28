@@ -71,11 +71,11 @@ describe("other interview maps", () => {
 
   it("uses tints for the kit status", () => {
     expect(KIT_STATUS_PRESENTATION.draft).toEqual({
-      label: "Kit in bozza",
+      label: "Preparazione in bozza",
       badge: "bg-warning/10 text-warning",
     });
     expect(KIT_STATUS_PRESENTATION.ready).toEqual({
-      label: "Kit pronto",
+      label: "Preparazione pronta",
       badge: "bg-success/10 text-success",
     });
   });

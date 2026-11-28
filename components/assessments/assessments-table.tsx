@@ -85,7 +85,7 @@ export function AssessmentsTable({ assessments }: AssessmentsTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Candidato</TableHead>
-              <TableHead>Quiz</TableHead>
+              <TableHead>Test</TableHead>
               <TableHead>Posizione</TableHead>
               <TableHead>Competenze</TableHead>
               <TableHead>Stato</TableHead>

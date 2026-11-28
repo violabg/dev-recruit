@@ -23,7 +23,7 @@ const STAGES: {
   {
     key: "pending",
     label: "In attesa",
-    caption: "Invito inviato, quiz non ancora iniziato",
+    caption: "Invito inviato, test non ancora iniziato",
     dot: "bg-stage-pending",
     bar: "bg-stage-pending",
   },
@@ -37,7 +37,7 @@ const STAGES: {
   {
     key: "completed",
     label: "Completati",
-    caption: "Quiz consegnati, pronti da valutare",
+    caption: "Test consegnati, pronti da valutare",
     dot: "bg-stage-done",
     bar: "bg-stage-done",
   },
@@ -153,13 +153,13 @@ export function AssessmentPipeline({
     total === 0 ? (
       <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3 bg-muted/60 px-4 py-3 rounded-lg">
         <p className="text-muted-foreground text-sm">
-          Nessun test ancora. Invita un candidato partendo da un quiz.
+          Nessun test inviato. Invita un candidato partendo da un test.
         </p>
         <Link
           href="/dashboard/quizzes"
           className={buttonVariants({ variant: "outline", size: "sm" })}
         >
-          Vai ai quiz
+          Vai ai test
         </Link>
       </div>
     ) : (

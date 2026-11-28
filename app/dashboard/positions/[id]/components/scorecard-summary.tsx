@@ -7,31 +7,25 @@ import { AnswerAnchors, hasAnchors } from "@/components/interviews/kit-blocks";
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { Card, CardContent } from "@/components/ui/card";
 import { getScorecardByPositionId } from "@/lib/data/scorecards";
 import type { CriterionCategory } from "@/lib/schemas";
-import { ClipboardList, Pencil, Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 
 type Props = {
   params: Promise<{ id: string }>;
+  /** This section holds the page's next step: its creation link is primary */
+  primary?: boolean;
 };
 
 const CATEGORY_ORDER: CriterionCategory[] = ["technical", "soft", "culture"];
 
 /**
- * Tab "Scheda di valutazione": the active criteria of the scorecard, grouped
+ * Tab "Criteri": the active criteria of the scorecard, grouped
  * by category, read-only. Archived criteria are not shown here.
  */
-export async function ScorecardSummary({ params }: Props) {
+export async function ScorecardSummary({ params, primary = false }: Props) {
   const { id } = await params;
   const scorecard = await getScorecardByPositionId(id);
   const criteria = scorecard?.criteria ?? [];
@@ -39,31 +33,24 @@ export async function ScorecardSummary({ params }: Props) {
 
   if (criteria.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-6">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <ClipboardList />
-              </EmptyMedia>
-              <EmptyTitle>Nessuna scheda di valutazione</EmptyTitle>
-              <EmptyDescription>
-                Definisci i criteri con cui valutare i candidati di questa
-                posizione.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Link
-                href={editorHref}
-                className={buttonVariants({ variant: "default", size: "sm" })}
-              >
-                <Plus className="mr-1 size-4" />
-                Crea scheda
-              </Link>
-            </EmptyContent>
-          </Empty>
-        </CardContent>
-      </Card>
+      <section className="flex flex-wrap justify-between items-center gap-3">
+        <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
+          Criteri della posizione
+        </h2>
+        <span className="flex flex-wrap items-center gap-3 text-muted-foreground text-sm">
+          Nessun criterio.
+          <Link
+            href={editorHref}
+            className={buttonVariants({
+              variant: primary ? "default" : "outline",
+              size: "sm",
+            })}
+          >
+            <Plus className="mr-1 size-4" />
+            Aggiungi i criteri
+          </Link>
+        </span>
+      </section>
     );
   }
 
@@ -77,14 +64,14 @@ export async function ScorecardSummary({ params }: Props) {
     <>
       <div className="flex flex-wrap justify-between items-center gap-3">
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
-          Scheda di valutazione
+          Criteri della posizione
         </h2>
         <Link
           href={editorHref}
-          className={buttonVariants({ variant: "default", size: "sm" })}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
         >
           <Pencil className="mr-1 size-4" />
-          Modifica scheda
+          Modifica i criteri
         </Link>
       </div>
 

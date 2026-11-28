@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { setApplicationOwnerAction } from "@/lib/actions/applications";
 import type { ApplicationOwner } from "@/lib/data/applications";
 import { errorMessage, unwrap } from "@/lib/utils/action-result";
-import { Loader2, UserRound } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -40,35 +40,27 @@ export function OwnerControls({
     });
   };
 
-  return (
-    <div className="flex flex-wrap items-center gap-3 text-sm">
-      <span className="flex items-center gap-1.5 text-muted-foreground">
-        <UserRound className="size-4" />
-        {owner ? `Responsabile: ${owner.name}` : "Nessun responsabile"}
-      </span>
-      {isMine ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={isPending}
-          onClick={() => setOwner("none")}
-        >
-          {isPending && <Loader2 className="size-4 animate-spin" />}
-          Rilascia
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={isPending}
-          onClick={() => setOwner("me")}
-        >
-          {isPending && <Loader2 className="size-4 animate-spin" />}
-          Prendi in carico
-        </Button>
-      )}
-    </div>
+  return isMine ? (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={isPending}
+      onClick={() => setOwner("none")}
+    >
+      {isPending && <Loader2 className="size-4 animate-spin" />}
+      Rilascia
+    </Button>
+  ) : (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={isPending}
+      onClick={() => setOwner("me")}
+    >
+      {isPending && <Loader2 className="size-4 animate-spin" />}
+      Prendi in carico
+    </Button>
   );
 }

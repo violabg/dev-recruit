@@ -385,7 +385,7 @@ describe("assertActiveCriteria", () => {
 
   it("throws on a foreign or archived id", async () => {
     await expect(assertActiveCriteria("pos-1", ["c-1", "c-x"])).rejects.toThrow(
-      "Uno o più criteri selezionati non appartengono alla scheda della posizione",
+      "Uno o più criteri non appartengono a questa posizione",
     );
   });
 });

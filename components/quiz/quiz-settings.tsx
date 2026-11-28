@@ -23,7 +23,7 @@ export const QuizSettings = ({
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Impostazioni Quiz</CardTitle>
+            <CardTitle>Impostazioni del test</CardTitle>
           </div>
         </div>
       </CardHeader>
@@ -31,8 +31,8 @@ export const QuizSettings = ({
         <InputField
           control={form.control}
           name="title"
-          label="Titolo del Quiz"
-          placeholder="Inserisci il titolo del quiz"
+          label="Titolo del test"
+          placeholder="Inserisci il titolo del test"
           maxLength={200}
         />
         <InputField
@@ -53,7 +53,7 @@ export const QuizSettings = ({
             disabled={aiLoading}
           >
             <Sparkles className="mr-2 size-4 text-primary" />
-            Genera nuovo quiz con AI
+            Genera un nuovo test con AI
           </Button>
         </div>
       </CardContent>

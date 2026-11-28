@@ -146,7 +146,7 @@ export const useEditQuizForm = ({
         const result = await save(data);
 
         setSaveStatus("success");
-        toast.success("Quiz salvato con successo");
+        toast.success("Test salvato con successo");
 
         // Reset form dirty state after successful save
         form.reset(data);
@@ -162,7 +162,7 @@ export const useEditQuizForm = ({
         toast.error("Errore salvataggio", {
           description: errorMessage(
             error,
-            "Errore durante il salvataggio del quiz",
+            "Errore durante il salvataggio del test",
           ),
         });
 

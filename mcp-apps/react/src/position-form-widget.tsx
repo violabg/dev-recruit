@@ -134,7 +134,7 @@ export function PositionFormWidgetView({
             title={published ? "Posizione pubblicata" : "Bozza salvata"}
           >
             {published
-              ? "La posizione è aperta. Dalla dashboard completa scheda di valutazione, quiz e guida colloquio."
+              ? "La posizione è aperta. Dalla dashboard completa criteri, test e traccia del colloquio."
               : "La posizione è in bozza e non è visibile ai candidati. Pubblicala qui o con \"Pubblica\" nella pagina della posizione."}
           </DoneLine>
           {phase.step === "saved" && phase.error && <ErrorLine>{phase.error}</ErrorLine>}

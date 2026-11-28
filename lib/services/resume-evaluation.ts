@@ -87,7 +87,7 @@ async function readResumeText(
   } catch (error) {
     aiLogger.error("Failed to read the resume", { error, candidateId });
     throw new ResumeEvaluationError(
-      "Il curriculum non è raggiungibile: carica di nuovo il PDF dalla scheda del candidato.",
+      "Il curriculum non è raggiungibile: carica di nuovo il PDF dal profilo del candidato.",
       400,
     );
   }

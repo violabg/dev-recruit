@@ -7,6 +7,10 @@ import type {
 } from "../schemas";
 import { UserError } from "./user-error";
 
+/** The single text of the foreign-criterion refusal, used by every criteria save. */
+export const FOREIGN_CRITERIA_MESSAGE =
+  "Uno o più criteri non appartengono a questa posizione";
+
 /**
  * Scorecard write rules and criteria reads for server code (actions, services,
  * route handlers). Not a "use server" module: expected failures throw
@@ -70,9 +74,7 @@ export async function assertActiveCriteria(
   );
 
   if (criterionIds.some((id) => !activeIds.has(id))) {
-    throw new UserError(
-      "Uno o più criteri selezionati non appartengono alla scheda della posizione",
-    );
+    throw new UserError(FOREIGN_CRITERIA_MESSAGE);
   }
 }
 

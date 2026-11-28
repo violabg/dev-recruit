@@ -79,7 +79,7 @@ export function PositionDetailsSkeleton() {
 }
 
 /**
- * Shared shape of the "Quiz" and "Candidati" tabs: section heading + sm
+ * Shared shape of the "Test" and "Candidati" tabs: section heading + sm
  * button, then a md:2-col grid of cards (title, meta row, two sm buttons).
  * Rendered as a fragment because the TabsContent already applies flex + gap.
  */
@@ -123,24 +123,40 @@ function PositionTabCardsSkeleton({
   );
 }
 
-/** Mirrors SetupChecklist: title and the four step links. */
-export function SetupChecklistSkeleton() {
+/** Mirrors CoverageTable: heading, then the criteria rows. */
+export function CoverageTableSkeleton() {
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardTitle className="text-base">Setup della posizione</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          {["w-20", "w-40", "w-12", "w-32"].map((w, i) => (
-            <div key={i} className="flex items-center gap-2 px-2 py-1">
-              <Skeleton className="rounded-full size-4" />
-              <TextSkeleton className={w} />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <section className="flex flex-col gap-3">
+      <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
+        Copertura dei criteri
+      </h2>
+      <Card>
+        <CardContent>
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex justify-between items-center gap-4">
+                <TextSkeleton className="w-48" />
+                <TextSkeleton className="w-16" />
+                <TextSkeleton className="w-16" />
+                <TextSkeleton className="w-10" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
+/** Mirrors CriteriaAndQuestions: criteria, coverage, tests, traces. */
+export function CriteriaAndQuestionsSkeleton() {
+  return (
+    <div className="flex flex-col gap-10">
+      <PositionScorecardSkeleton />
+      <CoverageTableSkeleton />
+      <PositionQuizzesSkeleton />
+      <PositionGuidesSkeleton />
+    </div>
   );
 }
 
@@ -150,7 +166,7 @@ export function PositionScorecardSkeleton() {
     <>
       <div className="flex justify-between">
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
-          Scheda di valutazione
+          Criteri della posizione
         </h2>
         <ButtonSkeleton size="sm" className="w-36" />
       </div>
@@ -179,7 +195,7 @@ export function PositionScorecardSkeleton() {
 export function PositionGuidesSkeleton() {
   return (
     <PositionTabCardsSkeleton
-      title="Guide colloquio"
+      title="Tracce del colloquio"
       actionClassName="w-28"
       metaRight={<TextSkeleton className="w-20" />}
     />
@@ -189,7 +205,7 @@ export function PositionGuidesSkeleton() {
 export function PositionQuizzesSkeleton() {
   return (
     <PositionTabCardsSkeleton
-      title="Quiz"
+      title="Test"
       actionClassName="w-24"
       metaRight={<TextSkeleton className="w-32" />}
     />
@@ -197,14 +213,14 @@ export function PositionQuizzesSkeleton() {
 }
 
 /**
- * Mirrors the scorecard editor page: page header with the back link, the
+ * Mirrors the scorecard editor page: page header, the
  * toolbar (model select, AI proposal, add) and a few criterion rows.
  */
 export function ScorecardEditorSkeleton() {
   return (
     <>
       <PageHeaderSkeleton
-        title="Scheda di valutazione"
+        title="Criteri della posizione"
         description
         actions={<ButtonSkeleton size="sm" className="w-40" />}
       />
@@ -288,7 +304,7 @@ export function PositionSelectionSkeleton() {
     <>
       <div className="flex justify-between">
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
-          Selezione
+          Candidati
         </h2>
         <ButtonSkeleton size="sm" className="w-40" />
       </div>

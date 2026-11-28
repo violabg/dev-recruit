@@ -71,7 +71,7 @@ export function FavoriteQuestionsDialog({
             Domande Preferite
           </DialogTitle>
           <DialogDescription>
-            Seleziona le domande preferite da aggiungere al quiz
+            Seleziona le domande preferite da aggiungere al test
           </DialogDescription>
         </DialogHeader>
 

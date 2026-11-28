@@ -1,6 +1,6 @@
 ---
 name: schedule-interview
-description: Propone un colloquio per una candidatura di dev-recruit (guida, data, partecipanti), da confermare nel riquadro
+description: Propone un colloquio per una candidatura di dev-recruit (traccia, data, partecipanti), da confermare nel riquadro
 ---
 
 Usa questa skill quando: l'utente vuole fissare o organizzare un colloquio con un candidato.

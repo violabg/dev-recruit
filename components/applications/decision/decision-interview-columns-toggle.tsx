@@ -65,20 +65,20 @@ export function DecisionInterviewColumnsToggle({
   return (
     <div className="flex flex-col items-start gap-1 mt-1 font-normal">
       <span className="bg-warning/10 px-2 py-1 rounded-md text-warning text-xs">
-        Per un giudizio indipendente, invia prima la tua scheda
+        Per un giudizio indipendente, invia prima il tuo feedback
       </span>
       <div className="flex items-center gap-2">
         <Link
           href={feedbackHref as never}
           className="text-primary text-xs underline-offset-4 hover:underline"
         >
-          Compila la tua scheda
+          Scrivi il tuo feedback
         </Link>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          aria-label={`Mostra le schede del Colloquio ${round}`}
+          aria-label={`Mostra i feedback del Colloquio ${round}`}
           onClick={() => context.expand(interviewId)}
         >
           Mostra
@@ -104,7 +104,7 @@ export function DecisionCollapsible({
   }
 
   return (
-    <span aria-label="Nascosto finché non invii la tua scheda">
+    <span aria-label="Nascosto finché non invii il tuo feedback">
       {placeholder ?? "•••"}
     </span>
   );

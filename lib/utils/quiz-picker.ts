@@ -114,6 +114,6 @@ export function hasTitleOnPosition(
 /** Toast text after a successful add. */
 export function formatQuizAddSummary(count: number): string {
   return count === 1
-    ? "1 quiz aggiunto alla posizione"
-    : `${count} quiz aggiunti alla posizione`;
+    ? "1 test aggiunto alla posizione"
+    : `${count} test aggiunti alla posizione`;
 }

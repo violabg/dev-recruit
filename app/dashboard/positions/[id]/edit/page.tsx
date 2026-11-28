@@ -12,7 +12,7 @@ import { PositionFormSkeleton } from "@/components/positions/position-form-skele
 import { TextSkeleton } from "@/components/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPositionById } from "@/lib/data/positions";
-import { ArrowLeft } from "lucide-react";
+import { positionTrail } from "@/lib/utils/breadcrumbs";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -54,9 +54,9 @@ async function EditPositionContent({
         <p className="font-medium text-lg">Posizione non trovata</p>
         <Link
           href="/dashboard/positions"
-          className={cn("mt-4", buttonVariants({ variant: "default" }))}
+          className={cn("mt-4", buttonVariants({ variant: "outline", size: "sm" }))}
         >
-          Torna alle posizioni
+          Vai alle posizioni
         </Link>
       </div>
     );
@@ -67,18 +67,7 @@ async function EditPositionContent({
       <PageHeader
         title="Modifica posizione"
         description={`${position.title}`}
-        actionBtns={
-          <Link
-            href={`/dashboard/positions/${params.id}` as never}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "inline-flex",
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Torna alla posizione
-          </Link>
-        }
+        breadcrumbs={positionTrail(position, { label: "Modifica" })}
       />
       <Card>
       <CardContent>

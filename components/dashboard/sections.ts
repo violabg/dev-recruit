@@ -92,7 +92,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
   // Same hue as the candidates: interviews belong to the hiring workflow
   agenda: {
     key: "agenda",
-    label: "Agenda colloqui",
+    label: "Agenda",
     href: "/dashboard/agenda",
     icon: CalendarDays,
     text: "text-section-candidates",
@@ -101,7 +101,7 @@ export const SECTIONS: Record<SectionKey, Section> = {
   },
   quizzes: {
     key: "quizzes",
-    label: "Quiz",
+    label: "Test",
     href: "/dashboard/quizzes",
     icon: FileQuestion,
     text: "text-section-quizzes",
@@ -148,24 +148,27 @@ export const SECTIONS: Record<SectionKey, Section> = {
   },
 };
 
-/** Sidebar groups: what needs me, the hiring workflow, reusable material. */
-export const NAV_GROUPS: { label: string; items: Section[] }[] = [
+/**
+ * Sidebar groups: the selection flow without a title, then Gestione with the
+ * quick links to the managed entities.
+ */
+export const NAV_GROUPS: { label?: string; items: Section[] }[] = [
   {
-    label: "Panoramica",
-    items: [SECTIONS.overview],
-  },
-  {
-    label: "Selezione",
     items: [
+      SECTIONS.overview,
       SECTIONS.positions,
-      SECTIONS.applications,
       SECTIONS.candidates,
       SECTIONS.agenda,
     ],
   },
   {
-    label: "Libreria",
-    items: [SECTIONS.quizzes, SECTIONS.assessments, SECTIONS.presets],
+    label: "Gestione",
+    items: [
+      SECTIONS.applications,
+      SECTIONS.quizzes,
+      SECTIONS.assessments,
+      SECTIONS.presets,
+    ],
   },
 ];
 

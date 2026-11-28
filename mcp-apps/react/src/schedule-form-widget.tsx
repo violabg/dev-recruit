@@ -89,7 +89,7 @@ export function ScheduleFormWidgetView({
     >
       {phase.step === "editing" && (
         <p className="text-muted-foreground text-sm">
-          Controlla guida, data e partecipanti proposti dall&apos;assistente e pianifica.
+          Controlla traccia, data e partecipanti proposti dall&apos;assistente e pianifica.
           L&apos;app non invia email.
         </p>
       )}

@@ -47,11 +47,11 @@ export function buildInterviewPrepWidget(view: McpInterviewPrepView): InterviewP
     status: { label: status.label, tone: toneOf(status.badge) },
     kit: kit
       ? { label: kit.label, tone: toneOf(kit.badge) }
-      : { label: "Nessun kit", tone: "muted" },
+      : { label: "Nessuna preparazione", tone: "muted" },
     facts: [
       { label: "Quando", value: formatDateTime(view.scheduledAt) },
       { label: "Durata", value: `${view.durationMinutes} minuti` },
-      ...(view.guideTitle ? [{ label: "Guida", value: view.guideTitle }] : []),
+      ...(view.guideTitle ? [{ label: "Traccia", value: view.guideTitle }] : []),
       ...(view.participantRoles.length
         ? [{ label: "Partecipanti", value: rolesLine(view.participantRoles) }]
         : []),
@@ -74,11 +74,11 @@ export function buildInterviewPrepWidget(view: McpInterviewPrepView): InterviewP
         .map((row) => ({ text: row.text, done: row.done })),
     })).filter((group) => group.items.length > 0),
     improve: editable
-      ? `Aiutami a migliorare il kit del colloquio round ${view.round} (interviewId ${view.id}).`
+      ? `Aiutami a migliorare la preparazione del colloquio round ${view.round} (interviewId ${view.id}).`
       : null,
     markReady: editable
       ? {
-          label: "Segna il kit come pronto",
+          label: "Segna come pronta",
           tool: CONFIRM_TOOLS.publish,
           arguments: { kind: "kit", id: view.id },
         }

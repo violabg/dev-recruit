@@ -3,11 +3,13 @@ import {
   NewQuizCreationPage,
   PositionOption,
 } from "@/app/dashboard/quizzes/new/new-quiz-page";
+import PageHeader from "@/components/page-header";
 import { ProgrammingLanguageSelectItems } from "@/components/quiz/programming-language-select-items";
 import { getPositionById } from "@/lib/data/positions";
 import { getAllPresets } from "@/lib/data/presets";
 import { getFavoriteQuestions } from "@/lib/data/questions";
 import { getCriterionOptionsByPosition } from "@/lib/data/scorecards";
+import { positionTrail } from "@/lib/utils/breadcrumbs";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { QuizGeneratorSkeleton } from "./fallbacks";
@@ -51,16 +53,22 @@ async function QuizGeneratorContent({
   };
 
   return (
-    <NewQuizCreationPage
-      fixedPosition={positionOption}
-      criteriaByPosition={criteriaByPosition}
-      presetsPromise={presetsPromise}
-      favoriteQuestionsPromise={favoriteQuestionsPromise}
-      languageOptions={
-        <Suspense fallback={<SelectOptionsSkeleton />}>
-          <ProgrammingLanguageSelectItems />
-        </Suspense>
-      }
-    />
+    <>
+      <PageHeader
+        title="Nuovo test"
+        breadcrumbs={positionTrail(position, { label: "Nuovo test" })}
+      />
+      <NewQuizCreationPage
+        fixedPosition={positionOption}
+        criteriaByPosition={criteriaByPosition}
+        presetsPromise={presetsPromise}
+        favoriteQuestionsPromise={favoriteQuestionsPromise}
+        languageOptions={
+          <Suspense fallback={<SelectOptionsSkeleton />}>
+            <ProgrammingLanguageSelectItems />
+          </Suspense>
+        }
+      />
+    </>
   );
 }

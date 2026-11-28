@@ -3,7 +3,7 @@ import type { McpWorkflow } from "./types";
 export const interviewPrepWorkflow: McpWorkflow = {
   name: "interview-prep",
   title: "Preparazione al colloquio",
-  description: "Aiuta a prepararsi a un colloquio di dev-recruit partendo dal kit (briefing, domande, ipotesi, checklist)",
+  description: "Aiuta a prepararsi a un colloquio di dev-recruit partendo dalla preparazione (briefing, domande, ipotesi, checklist)",
   whenToUse: "L'utente deve condurre o seguire un colloquio e vuole prepararsi.",
   steps: [
     "1. Trova il colloquio: chiama `list_interviews` con `mineOnly: true` (o con l'`applicationId` se l'utente indica una candidatura) e conferma con l'utente quale.",
@@ -12,9 +12,9 @@ export const interviewPrepWorkflow: McpWorkflow = {
     "   - cosa verificare (ipotesi e criteri);",
     "   - le domande obbligatorie e quelle da approfondire, con le domande di follow-up;",
     "   - le voci della checklist ancora aperte.",
-    "4. Se l'utente chiede, proponi altre domande di approfondimento coerenti con i criteri. Restano suggerimenti in chat: il kit si modifica dalla dashboard.",
-    "5. Se il kit non è pronto, dillo e indica il link alla pagina di preparazione.",
+    "4. Se l'utente chiede, proponi altre domande di approfondimento coerenti con i criteri. Restano suggerimenti in chat: la preparazione si modifica dalla dashboard.",
+    "5. Se la preparazione non è pronta, dillo e indica il link alla pagina di preparazione.",
     "",
-    "Non valutare il candidato e non suggerire un esito: la valutazione si fa con la scheda dopo il colloquio.",
+    "Non valutare il candidato e non suggerire un esito: il giudizio si dà con il feedback dopo il colloquio.",
   ].join("\n"),
 };

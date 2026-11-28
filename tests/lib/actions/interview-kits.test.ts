@@ -16,6 +16,8 @@ vi.mock("@/lib/services/interview-kits", () => ({
   buildKitGenerationContext: vi.fn(),
   saveInterviewKit: vi.fn(),
   setInterviewKitStatus: vi.fn(),
+  KIT_LOCKED_MESSAGE:
+    "La preparazione si modifica solo prima del colloquio",
 }));
 
 vi.mock("@/lib/services/ai/kit-generation", () => ({
@@ -45,7 +47,7 @@ import { UserError } from "@/lib/services/user-error";
 import { invalidateInterviewCache } from "@/lib/utils/cache-utils";
 
 const db = prisma as any;
-const LOCKED = "Il kit si modifica solo prima del colloquio";
+const LOCKED = "La preparazione si modifica solo prima del colloquio";
 const NOTES_CLOSED = "Il colloquio non accetta più note";
 
 const interviewRow = (status: string) => ({
@@ -137,11 +139,11 @@ describe("generateInterviewKitAction", () => {
   it("passes on the missing scorecard message", async () => {
     db.interview.findUnique.mockResolvedValue(interviewRow("scheduled"));
     vi.mocked(buildKitGenerationContext).mockRejectedValue(
-      new UserError("Crea prima la scheda di valutazione della posizione"),
+      new UserError("Aggiungi prima i criteri della posizione"),
     );
     expect(await generateInterviewKitAction({ interviewId: "int-1" })).toEqual({
       success: false,
-      error: "Crea prima la scheda di valutazione della posizione",
+      error: "Aggiungi prima i criteri della posizione",
     });
   });
 });
@@ -292,7 +294,7 @@ describe("saveKitItemNoteAction", () => {
     db.interviewerFeedback.findUnique.mockResolvedValue({ submittedAt: new Date() });
     expect(await saveKitItemNoteAction({ kitItemId: "item-1", note: "x" })).toEqual({
       success: false,
-      error: "La scheda è già stata inviata",
+      error: "Il feedback è già stato inviato",
     });
     expect(db.interviewerFeedback.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({

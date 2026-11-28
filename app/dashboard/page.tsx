@@ -28,7 +28,7 @@ export default function DashboardPage({
             </Suspense>
             <Link
               href="/dashboard/positions/new"
-              className={buttonVariants({ variant: "default", className: "ml-2" })}
+              className={buttonVariants({ variant: "outline", className: "ml-2" })}
             >
               <Plus className="mr-1 size-4" />
               Nuova posizione

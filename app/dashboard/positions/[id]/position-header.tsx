@@ -1,6 +1,7 @@
 import { cn } from "cn";
 import PageHeader from "@/components/page-header";
 import { getPositionStatusPresentation } from "@/components/positions/position-status";
+import { CopyApplyLinkButton } from "@/components/positions/copy-apply-link-button";
 import { PositionStatusActions } from "@/components/positions/position-status-actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { DeleteWithConfirm } from "@/components/ui/delete-with-confirm";
 import { deletePositionAction } from "@/lib/actions/positions";
 import { getPositionById } from "@/lib/data/positions";
 import { formatDate } from "@/lib/utils";
+import { positionTrail } from "@/lib/utils/breadcrumbs";
 import { Edit } from "lucide-react";
 import Link from "next/link";
 
@@ -28,10 +30,10 @@ export async function PositionHeader({ params }: Props) {
           href="/dashboard/positions"
           className={cn(
             "mt-4",
-            buttonVariants({ variant: "default", size: "sm" }),
+            buttonVariants({ variant: "outline", size: "sm" }),
           )}
         >
-          Torna alle posizioni
+          Vai alle posizioni
         </Link>
       </div>
     );
@@ -42,12 +44,17 @@ export async function PositionHeader({ params }: Props) {
   return (
     <PageHeader
       title={position.title}
+      breadcrumbs={positionTrail(position)}
       info={
         <>
           <Badge className={cn("w-fit", status.badge)}>{status.label}</Badge>
-          <Badge variant="outline">{position.experienceLevel}</Badge>
+          <span className="text-muted-foreground text-sm">
+            {position.experienceLevel}
+          </span>
           {position.contractType && (
-            <Badge variant="outline">{position.contractType}</Badge>
+            <span className="text-muted-foreground text-sm">
+              {position.contractType}
+            </span>
           )}
           <span className="text-muted-foreground text-sm">
             Creata il {formatDate(position.createdAt.toISOString())}
@@ -60,6 +67,9 @@ export async function PositionHeader({ params }: Props) {
             positionId={position.id}
             status={position.status}
           />
+          {position.status === "open" && (
+            <CopyApplyLinkButton positionId={position.id} />
+          )}
           <Link
             href={`/dashboard/positions/${position.id}/edit`}
             className={cn(

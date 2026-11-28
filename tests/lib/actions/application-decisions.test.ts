@@ -197,7 +197,7 @@ describe("challengeDecisionAction", () => {
 
     expect(await challengeDecisionAction(input)).toEqual({
       success: false,
-      error: "Crea prima la scheda di valutazione della posizione",
+      error: "Aggiungi prima i criteri della posizione",
     });
     expect(generateDecisionChallenge).not.toHaveBeenCalled();
   });

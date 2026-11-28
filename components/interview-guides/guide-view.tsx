@@ -16,6 +16,7 @@ import type { InterviewGuideDetail } from "@/lib/data/interview-guides";
 import type { CriterionPriority } from "@/lib/schemas";
 import { cn } from "cn";
 import { AlertTriangle, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { GUIDE_SECTION_KIND_LABEL } from "./guide-section-kind";
 
 export type GuideViewCriterion = {
@@ -132,12 +133,12 @@ export function GuideView({
         {/* Scorecard criteria coverage */}
         <Card size="sm">
           <CardHeader>
-            <CardTitle>Criteri della scheda</CardTitle>
+            <CardTitle>Criteri della posizione</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {sortedCriteria.length === 0 ? (
               <p className="text-muted-foreground">
-                Nessun criterio nella scheda di valutazione.
+                Nessun criterio per la posizione.
               </p>
             ) : (
               <>
@@ -150,7 +151,15 @@ export function GuideView({
                     <span>
                       {uncoveredCount === 1
                         ? "1 criterio senza domande"
-                        : `${uncoveredCount} criteri senza domande`}
+                        : `${uncoveredCount} criteri senza domande`}{" "}
+                      <Link
+                        href={
+                          `/dashboard/positions/${guide.positionId}/guides/${guide.id}/edit` as never
+                        }
+                        className="font-medium underline underline-offset-2"
+                      >
+                        Aggiungi una domanda
+                      </Link>
                     </span>
                   </p>
                 )}

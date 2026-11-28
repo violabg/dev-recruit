@@ -1,15 +1,23 @@
 import { ApplicationKanban } from "@/components/applications/application-kanban";
 import { AssociateCandidatesDialog } from "@/components/positions/associate-candidates-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getApplicationsByPosition } from "@/lib/data/applications";
+import { getViewerId } from "@/lib/auth-server";
+import {
+  getActionCenterForUser,
+  getApplicationsByPosition,
+} from "@/lib/data/applications";
 import { getCandidatePickerOptions } from "@/lib/data/candidates";
 import {
   getPositionById,
   getPositionItemsForSelect,
 } from "@/lib/data/positions";
+import { waitingApplicationIds } from "@/lib/utils/action-center";
 import { cn } from "cn";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
+import { Suspense } from "react";
+import { CoverageAlert } from "./coverage-alert";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -18,11 +26,21 @@ type Props = {
 const DISABLED_HINT = "Disponibile solo per posizioni aperte";
 
 /**
- * Tab Selezione: the applications of the position by stage. New and existing
- * candidates are added only while the position is open.
+ * Tab Candidati: the applications of the position by stage. New and existing
+ * candidates are added only while the position is open; the cards waiting for
+ * the viewer are highlighted.
  */
 export default async function Selection({ params }: Props) {
   const { id } = await params;
+
+  await connection();
+  const viewerId = await getViewerId();
+  const { data } = await getActionCenterForUser(viewerId, {
+    mineOnly: true,
+    now: new Date(),
+  });
+  const waitingIds = [...waitingApplicationIds(data)];
+
   const [applications, position, positionItems] = await Promise.all([
     getApplicationsByPosition(id),
     getPositionById(id),
@@ -46,13 +64,13 @@ export default async function Selection({ params }: Props) {
         {isOpen ? (
           <Link
             href={newCandidateHref as never}
-            className={cn(buttonVariants({ variant: "default", size: "sm" }))}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             <Icon className="mr-1 size-4" />
             Aggiungi Candidato
           </Link>
         ) : (
-          <Button size="sm" disabled title={DISABLED_HINT}>
+          <Button size="sm" variant="outline" disabled title={DISABLED_HINT}>
             <Icon className="mr-1 size-4" />
             Aggiungi Candidato
           </Button>
@@ -69,9 +87,13 @@ export default async function Selection({ params }: Props) {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <CoverageAlert params={params} />
+      </Suspense>
+
       <div className="flex flex-wrap justify-between gap-2">
         <h2 className="font-display font-bold text-heading text-xl tracking-[-0.02em]">
-          Selezione
+          Candidati
         </h2>
         {renderActions("header")}
       </div>
@@ -92,7 +114,7 @@ export default async function Selection({ params }: Props) {
           </div>
         </div>
       ) : (
-        <ApplicationKanban applications={applications} />
+        <ApplicationKanban applications={applications} waitingIds={waitingIds} />
       )}
     </>
   );

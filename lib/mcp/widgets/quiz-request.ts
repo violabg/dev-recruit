@@ -28,7 +28,7 @@ export function quizRequest(
 ): string {
   const instructions = values.instructions.trim();
   return [
-    `Genera un quiz per la posizione "${position.title}" (${position.experienceLevel}, positionId ${position.id}) con questi parametri:`,
+    `Genera un test per la posizione "${position.title}" (${position.experienceLevel}, positionId ${position.id}) con questi parametri:`,
     `- titolo: "${values.quizTitle.trim()}"`,
     `- ${values.questionCount} domande, difficoltà ${values.difficulty}/5 (${DIFFICULTY[values.difficulty - 1] ?? "media"})`,
     `- tipi di domande: ${chosenQuestionTypes(values).join(", ")}`,
@@ -36,7 +36,7 @@ export function quizRequest(
       ? `- limite di tempo: ${values.timeLimit} minuti`
       : "- nessun limite di tempo",
     instructions && `- istruzioni: ${instructions}`,
-    `Basa le domande sulle competenze della posizione${position.skills.length ? ` (${position.skills.join(", ")})` : ""} e sui criteri della sua scheda di valutazione (get_position).`,
+    `Basa le domande sulle competenze della posizione${position.skills.length ? ` (${position.skills.join(", ")})` : ""} e sui criteri della posizione (get_position).`,
     `Poi mostrami l'anteprima con ${previewTool} (timeLimit ${values.enableTimeLimit ? values.timeLimit : "null"}): la salvo io dal riquadro.`,
   ]
     .filter(Boolean)

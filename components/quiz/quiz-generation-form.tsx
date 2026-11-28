@@ -95,7 +95,7 @@ export function QuizGenerationForm({
         toast.error("Errore", {
           description: errorMessage(
             error,
-            "Si è verificato un errore durante la generazione del quiz",
+            "Si è verificato un errore durante la generazione del test",
           ),
         });
       }
@@ -124,7 +124,7 @@ export function QuizGenerationForm({
           />
         </FieldContent>
         <FieldDescription>
-          Seleziona il modello LLM per la generazione del quiz.
+          Seleziona il modello LLM per la generazione del test.
           <strong> Versatile</strong> è raccomandato per la qualità migliore.
         </FieldDescription>
       </Field>
@@ -147,7 +147,7 @@ export function QuizGenerationForm({
           ) : (
             <>
               <BrainCircuit className="mr-1 size-4" />
-              Genera Quiz
+              Genera test
             </>
           )}
         </Button>
