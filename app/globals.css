@@ -4,6 +4,10 @@
 @import "shadcn/tailwind.css";
 @import "./theme.css";
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* ---------------------------------------------------------------------------
  * Page frame: the content column is centred at 1400px, and the page header
  * band breaks out of it to span the whole content area. The gutter uses
@@ -129,6 +133,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
